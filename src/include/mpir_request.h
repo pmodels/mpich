@@ -149,6 +149,11 @@ struct MPIR_Request {
      * 32 bytes and 32-bit integers */
     MPIR_cc_t cc;
 
+#ifdef MPICH_THREAD_USE_MDTA
+    /* Synchronization variable for wait/signal */
+    MPIR_Thread_sync_t *sync;
+#endif
+
     /* completion notification counter: this must be decremented by
      * the request completion routine, when the completion count hits
      * zero.  this counter allows us to keep track of the completion
@@ -254,6 +259,9 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
         req->comm = NULL;
+#ifdef MPICH_THREAD_USE_MDTA
+        req->sync = NULL;
+#endif
 
         switch (kind) {
             case MPIR_REQUEST_KIND__SEND:
@@ -290,6 +298,14 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     /* inform the device that we are decrementing the ref-count on
      * this request */
     MPID_Request_free_hook(req);
+
+#ifdef MPICH_THREAD_USE_MDTA
+    /* We signal the possible waiter to complete this request. */
+    if (req->sync) {
+        MPIR_Thread_sync_signal(req->sync, 0);
+        req->sync = NULL;
+    }
+#endif
 
     if (inuse == 0) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "freeing request, handle=0x%08x", req->handle);
@@ -331,6 +347,17 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
+#ifdef MPICH_THREAD_USE_MDTA
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_attach_sync(MPIR_Request * req_ptr,
+                                                       MPIR_Thread_sync_t * sync)
+{
+    req_ptr->sync = sync;
+    if (MPIR_Request_is_persistent(req_ptr)) {
+        req_ptr->u.persist.real_request->sync = sync;
+    }
+}
+#endif
+
 /* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
  * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
  * deal with status structures under the assumption that bleeding fast code will
@@ -366,7 +393,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
 
 int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
-int MPIR_Progress_wait_request(MPIR_Request * req);
 
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues
@@ -375,12 +401,6 @@ int MPIR_Progress_wait_request(MPIR_Request * req);
 int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete);
 int MPIR_Grequest_query(MPIR_Request * request_ptr);
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
-
-/* this routine was added to support our extension relaxing the progress rules
- * for generalized requests */
-int MPIR_Grequest_progress_poke(int count, MPIR_Request ** request_ptrs,
-                                MPI_Status array_of_statuses[]);
-int MPIR_Grequest_waitall(int count, MPIR_Request * const *request_ptrs);
 
 void MPIR_Grequest_complete(MPIR_Request * request_ptr);
 int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
@@ -392,5 +412,53 @@ int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPI_Grequest_cancel_function *,
                              MPIX_Grequest_poll_function *,
                              MPIX_Grequest_wait_function *, void *, MPIR_Request **);
+
+/* These routines below are helpers for the Extended generalized requests. */
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_poll_fn(MPIR_Request * request_ptr)
+{
+    return (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->poll_fn != NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_wait_fn(MPIR_Request * request_ptr)
+{
+    return (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->wait_fn != NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_wait(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    return (request_ptr->u.ureq.greq_fns->wait_fn) (1,
+                                                    &request_ptr->u.ureq.greq_fns->
+                                                    grequest_extra_state, 0, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    return (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
+                                                    greq_fns->grequest_extra_state, status);
+}
+
+int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);
+int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
+                      MPI_Status array_of_statuses[], int requests_property);
+int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
+                      int *indx, int *flag, MPI_Status * status);
+int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
+                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
+
+int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status);
+int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
+                      int request_properties);
+int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status);
+int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
+                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
+
+int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status);
+int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
+                 MPI_Status array_of_statuses[]);
+int MPIR_Wait(MPI_Request * request, MPI_Status * status);
+int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[]);
 
 #endif /* MPIR_REQUEST_H_INCLUDED */

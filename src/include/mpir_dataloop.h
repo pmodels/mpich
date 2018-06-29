@@ -11,34 +11,17 @@
 #include <mpi.h>
 
 /*
- * The following macro allows us to reference either the regular or
- * hetero value for the 3 fields (NULL,_size,_depth) in the
+ * The following macro allows us to reference the regular
+ * value for the 3 fields (NULL,_size,_depth) in the
  * MPIR_Datatype structure.  This is used in the many
  * macros that access fields of the datatype.  We need this macro
- * to simplify the definition of the other macros in the case where
- * MPID_HAS_HETERO is *not* defined.
+ * to simplify the definition of the other macros.
  */
-#if defined(MPID_HAS_HETERO) || 1
-#define MPIR_DATALOOP_GET_FIELD(hetero_,value_,fieldname_) do {                          \
-        if (hetero_ != MPIR_DATALOOP_HETEROGENEOUS)                             \
-            value_ = ((MPIR_Datatype *)ptr)->dataloop##fieldname_;              \
-        else value_ = ((MPIR_Datatype *) ptr)->hetero_dloop##fieldname_;        \
-    } while (0)
-#else
-#define MPIR_DATALOOP_GET_FIELD(hetero_,value_,fieldname_) \
+#define MPIR_DATALOOP_GET_FIELD(value_,fieldname_) \
       value_ = ((MPIR_Datatype *)ptr)->dataloop##fieldname_
-#endif
 
-#if defined(MPID_HAS_HETERO) || 1
-#define MPIR_DATALOOP_SET_FIELD(hetero_,value_,fieldname_) do {                          \
-        if (hetero_ != MPIR_DATALOOP_HETEROGENEOUS)                             \
-            ((MPIR_Datatype *)ptr)->dataloop##fieldname_ = value_;              \
-        else ((MPIR_Datatype *) ptr)->hetero_dloop##fieldname_ = value_;        \
-    } while (0)
-#else
-#define MPIR_DATALOOP_SET_FIELD(hetero_,value_,fieldname_) \
+#define MPIR_DATALOOP_SET_FIELD(value_,fieldname_) \
     ((MPIR_Datatype *)ptr)->dataloop##fieldname_ = value_
-#endif
 
 /* These following dataloop-specific types will be used throughout the DLOOP
  * instance:
@@ -68,23 +51,23 @@
 /* NOTE: put get size into mpiimpl.h; the others go here until such time
  * as we see that we need them elsewhere.
  */
-#define DLOOP_Handle_get_loopdepth_macro(handle_,depth_,flag_) \
-    MPIR_Datatype_get_loopdepth_macro(handle_,depth_,flag_)
+#define DLOOP_Handle_get_loopdepth_macro(handle_,depth_) \
+    MPIR_Datatype_get_loopdepth_macro(handle_,depth_)
 
-#define DLOOP_Handle_get_loopsize_macro(handle_,size_,flag_) \
-    MPIR_Datatype_get_loopsize_macro(handle_,size_,flag_)
+#define DLOOP_Handle_get_loopsize_macro(handle_,size_) \
+    MPIR_Datatype_get_loopsize_macro(handle_,size_)
 
-#define DLOOP_Handle_get_loopptr_macro(handle_,lptr_,flag_) \
-    MPIR_Datatype_get_loopptr_macro(handle_,lptr_,flag_)
+#define DLOOP_Handle_get_loopptr_macro(handle_,lptr_) \
+    MPIR_Datatype_get_loopptr_macro(handle_,lptr_)
 
-#define DLOOP_Handle_set_loopptr_macro(handle_,lptr_,flag_) \
-    MPIR_Datatype_set_loopptr_macro(handle_,lptr_,flag_)
+#define DLOOP_Handle_set_loopptr_macro(handle_,lptr_) \
+    MPIR_Datatype_set_loopptr_macro(handle_,lptr_)
 
-#define DLOOP_Handle_set_loopdepth_macro(handle_,depth_,flag_) \
-    MPIR_Datatype_set_loopdepth_macro(handle_,depth_,flag_)
+#define DLOOP_Handle_set_loopdepth_macro(handle_,depth_) \
+    MPIR_Datatype_set_loopdepth_macro(handle_,depth_)
 
-#define DLOOP_Handle_set_loopsize_macro(handle_,size_,flag_) \
-    MPIR_Datatype_set_loopsize_macro(handle_,size_,flag_)
+#define DLOOP_Handle_set_loopsize_macro(handle_,size_) \
+    MPIR_Datatype_set_loopsize_macro(handle_,size_)
 
 #define DLOOP_Handle_get_size_macro(handle_,size_) \
     MPIR_Datatype_get_size_macro(handle_,size_)
@@ -132,16 +115,10 @@
 #define DLOOP_Dataloop_stackelm     MPIR_Dataloop_stackelm
 
 /* These flags are used at creation time to specify what types of
- * optimizations may be applied. They are also passed in at Segment_init
- * time to specify which dataloop to use.
- *
- * Note: The flag to MPIR_Segment_init() was originally simply "hetero"
- * and was a boolean value (0 meaning homogeneous). Some MPICH code
- * may still rely on HOMOGENEOUS being "0" and HETEROGENEOUS being "1".
+ * optimizations may be applied.
  */
-#define DLOOP_DATALOOP_HOMOGENEOUS   0
-#define DLOOP_DATALOOP_HETEROGENEOUS 1
-#define DLOOP_DATALOOP_ALL_BYTES     2
+#define DLOOP_DATALOOP_DEFAULT       0
+#define DLOOP_DATALOOP_ALL_BYTES     1
 
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */
 #define SEGMENT_IGNORE_LAST ((DLOOP_Offset) -1)
@@ -431,7 +408,7 @@ DLOOP_Segment *MPIR_Segment_alloc(void);
 void MPIR_Segment_free(DLOOP_Segment * segp);
 
 int MPIR_Segment_init(const DLOOP_Buffer buf,
-                      DLOOP_Count count, DLOOP_Handle handle, DLOOP_Segment * segp, int hetero);
+                      DLOOP_Count count, DLOOP_Handle handle, DLOOP_Segment * segp);
 
 void
 MPIR_Segment_manipulate(DLOOP_Segment * segp,
@@ -601,8 +578,7 @@ void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
  * Note: DLOOP_DATALOOP_ALL_BYTES is used only when the device
  * defines MPID_NEEDS_DLOOP_ALL_BYTES.
  */
-#define MPIR_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
-#define MPIR_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
+#define MPIR_DATALOOP_DEFAULT       DLOOP_DATALOOP_DEFAULT
 #define MPIR_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
 DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp);

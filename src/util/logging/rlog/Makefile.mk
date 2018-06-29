@@ -32,4 +32,3 @@ src_util_logging_rlog_printrlog_LDADD      = lib/librlogutil.la
 #src_util_logging_rlog_minalignrlog_SOURCES = src/util/logging/rlog/minalignrlog.c $(irlog_sources)
 
 endif BUILD_LOGGING_RLOG
-

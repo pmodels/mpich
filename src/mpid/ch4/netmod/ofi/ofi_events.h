@@ -98,7 +98,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
@@ -326,8 +326,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
 
         /* Clean up the memory region */
         if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+            MPIR_Context_id_t contextid;
+            int type;
+            uint32_t key_back;
             uint64_t key = fi_mr_key(huge_send_mr);
-            int key_back = (key >> MPIDI_Global.huge_rma_shift);
+
+            MPIDI_OFI_rma_key_unpack(key, &contextid, &type, &key_back);
+            MPIR_Assert(type == MPIDI_OFI_KEY_TYPE_HUGE_RMA);
+            MPIR_Assert(contextid == MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id));
+
             MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
         }
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
@@ -360,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry
     mpi_errno =
         MPIDI_OFI_send_event(NULL, req->signal_req, MPIDI_OFI_REQUEST(req->signal_req, event_id));
 
-    MPIDI_OFI_ssendack_request_t_tls_free(req);
+    MPL_free(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SSEND_ACK_EVENT);
     return mpi_errno;
 }
@@ -398,6 +405,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
 
         if (bytesToGet == 0ULL) {
             MPIDI_OFI_send_control_t ctrl;
+            /* recv->localreq may be freed during done_fn.
+             * Need to backup the handle here for later use with MPIDI_CH4U_map_erase. */
+            uint64_t key_to_erase = recv->localreq->handle;
             recv->wc.len = recv->cur_offset;
             recv->done_fn(&recv->wc, recv->localreq, recv->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
@@ -405,17 +415,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                    (&ctrl, NULL, 0, recv->remote_info.origin_rank, recv->comm_ptr,
                                     recv->remote_info.ackreq, FALSE));
 
-            MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters,
-                                 recv->localreq->handle);
+            MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters, key_to_erase);
             MPL_free(recv);
 
             goto fn_exit;
         }
 
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE)
-            remote_key = recv->remote_info.rma_key << MPIDI_Global.huge_rma_shift;
-        else
-            remote_key = recv->remote_info.rma_key;
+        remote_key = recv->remote_info.rma_key;
 
         MPIDI_OFI_cntr_incr();
         MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_Global.ctx[0].tx,    /* endpoint     */
@@ -722,10 +728,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {
-            case MPIDI_OFI_EVENT_AM_MULTI:
-                mpi_errno = MPIDI_OFI_am_repost_event(wc, req);
-                break;
-
             case MPIDI_OFI_EVENT_PEEK:
                 mpi_errno = MPIDI_OFI_peek_event(wc, req);
                 break;

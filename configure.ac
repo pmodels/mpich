@@ -513,6 +513,12 @@ AC_ARG_ENABLE(thread-cs,
                          threads are present.  Values may be global
                          (default), per-object, lock-free]),,enable_thread_cs=global)
 
+AC_ARG_ENABLE(mdta,
+    AC_HELP_STRING([--enable-mdta],
+            [Optimize global granularity using message-driven thread activation.
+                         Only available for ch4 device with --enable-thread-cs=global]),
+    AC_DEFINE(MPICH_THREAD_USE_MDTA,1,[Define to enable message-driven thread activation]))
+
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
@@ -1297,6 +1303,7 @@ AC_ARG_ENABLE([izem],
                           Accepted arguments are:
 			  sync     - use the Izem interface for sychronization objects
                                      (locks and condition variables) instead of the MPL interface
+                          queue    - use the Izem interface for atomic queue objects
                           yes/all  - all of the above features are enabled
                           no/none  - none of the above features are enabled],,
 [enable_izem=no])
@@ -1309,15 +1316,17 @@ for option in $enable_izem ; do
         sync)
             izem_sync=yes
         ;;
+        queue)
+            izem_queue=yes
+        ;;
         yes|all)
             izem_sync=yes
+            izem_queue=yes
         ;;
         no|none)
         ;;
         *)
-            IFS=$save_IFS
-            AC_MSG_WARN([Unknown value $option for enable-debug])
-            IFS=","
+            AC_MSG_ERROR([Unknown value $option for enable-izem])
         ;;
     esac
 done
@@ -1325,6 +1334,10 @@ IFS="$save_IFS"
 
 if test "$izem_sync" = "yes" ; then
     AC_DEFINE(ENABLE_IZEM_SYNC,1,[Define to enable using Izem locks and condition variables])
+fi
+
+if test "$izem_queue" = "yes" ; then
+    AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
 fi
 
 AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
@@ -1501,6 +1514,43 @@ HWLOC_DO_AM_CONDITIONALS
 AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
 AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
 
+# ----------------------------------------------------------------------------
+# NETLOC
+# ----------------------------------------------------------------------------
+AC_ARG_WITH([netloc-prefix],
+            [AS_HELP_STRING([[--with-netloc-prefix[=DIR]]],
+                            [use the NETLOC library installed in DIR]) or system to use the system library], [],
+                            [with_netloc_prefix=no])
+
+netloclibdir=""
+AC_SUBST([netloclibdir])
+
+if test "$have_hwloc" = "yes" ; then
+    if test "${with_netloc_prefix}" != "no" ; then
+        if test "${with_netloc_prefix}" != "system"; then
+            # The user specified an already-installed Netloc; just sanity check,
+            # don't subconfigure it
+            AS_IF([test -s "${with_netloc_prefix}/include/netloc.h"],
+              [:],[AC_MSG_ERROR([the Netloc installation in "${with_netloc_prefix}" appears broken])])
+            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CPPFLAGS])
+            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CFLAGS])
+            PAC_PREPEND_FLAG([-lnetloc],[WRAPPER_LIBS])
+            if test -d ${with_netloc_prefix}/lib64 ; then
+                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib64],[WRAPPER_LDFLAGS])
+                netloclibdir="-L${with_netloc_prefix}/lib64"
+            else
+                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib],[WRAPPER_LDFLAGS])
+                netloclibdir="-L${with_netloc_prefix}/lib"
+            fi
+       else
+           AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "netloc.h"
+                                   ],
+                                   [])],
+                          [AC_MSG_ERROR([the Netloc installation seems to be added from system path])], [])
+       fi
+       AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available in either user specified path or in system path])
+    fi
+fi
 
 # ----------------------------------------------------------------------------
 # Threads
@@ -1631,6 +1681,12 @@ if test "$enable_threads" = "multiple" ; then
     esac
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+
+if test "$enable_mdta" = "yes" ; then
+    if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
+        AC_MSG_ERROR([--enable-mdta is not supported for this setting])
+    fi
+fi
 
 if test "$enable_predefined_refcount" = "no" ; then
     AC_DEFINE([MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])

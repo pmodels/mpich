@@ -102,6 +102,7 @@ fi
 linking=yes
 allargs=""
 interlib_deps=yes
+static_mpi=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -118,6 +119,11 @@ for arg in "$@" ; do
 	# -fc=* -config=*
     -static)
     interlib_deps=no
+    ;;
+    -static-mpi)
+    interlib_deps=no
+    static_mpi=yes
+    addarg=no
     ;;
     -echo)
     addarg=no
@@ -352,7 +358,20 @@ if [ "$linking" = yes ] ; then
         $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs
         rc=$?
     else
-        $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+        if [ "$static_mpi" = no ] ; then
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
+        else
+          fabric_dep=""
+          if [ "@ofi_embedded@" = yes ] ; then
+              fabric_dep=`pkg-config --static --libs $libdir/pkgconfig/libfabric.pc`
+              fabric_dep=`echo $fabric_dep | sed 's/-lfabric//'`
+          elif [ -f @with_libfabric@/lib/pkgconfig/libfabric.pc ] ; then
+              fabric_dep=`pkg-config --static --libs @with_libfabric@/lib/pkgconfig/libfabric.pc`
+          else
+              fabric_dep=`pkg-config --static --libs libfabric`
+          fi
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO $rpath_flags $libdir/libmpi.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@ ${fabric_dep}
+        fi
         rc=$?
     fi
 else
@@ -372,4 +391,3 @@ if [ -n "$rmfiles" ] ; then
     rm -f $rmfiles
 fi
 exit $rc
-

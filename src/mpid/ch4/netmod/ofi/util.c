@@ -29,7 +29,7 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
     return mpi_errno;
 }
 
-int MPIDI_OFI_progress_test_no_inline()
+int MPIDI_OFI_retry_progress()
 {
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.

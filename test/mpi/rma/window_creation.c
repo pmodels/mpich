@@ -14,8 +14,6 @@
 #define NUM_WIN     1000
 #define DATA_SZ     (DATA_NELTS*sizeof(int))
 
-static int verbose = 0;
-
 int main(int argc, char **argv)
 {
     int rank, nproc, i;
@@ -28,14 +26,12 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     if (rank == 0)
-        if (verbose)
-            printf("Starting MPI window creation test with %d processes\n", nproc);
+        MTestPrintfMsg(1, "Starting MPI window creation test with %d processes\n", nproc);
 
     /* Perform a pile of window creations */
     for (i = 0; i < NUM_WIN; i++) {
         if (rank == 0)
-            if (verbose)
-                printf(" + Creating window %d\n", i);
+            MTestPrintfMsg(1, " + Creating window %d\n", i);
 
         MPI_Alloc_mem(DATA_SZ, MPI_INFO_NULL, &base_ptrs[i]);
         MPI_Win_create(base_ptrs[i], DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &windows[i]);
@@ -46,8 +42,7 @@ int main(int argc, char **argv)
     /* Free all the windows */
     for (i = 0; i < NUM_WIN; i++) {
         if (rank == 0)
-            if (verbose)
-                printf(" + Freeing window %d\n", i);
+            MTestPrintfMsg(1, " + Freeing window %d\n", i);
 
         MPI_Win_free(&windows[i]);
         MPI_Free_mem(base_ptrs[i]);

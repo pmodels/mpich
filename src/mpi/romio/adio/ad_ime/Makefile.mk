@@ -22,4 +22,3 @@ romio_other_sources +=                    \
     adio/ad_ime/ad_ime_features.c
 
 endif BUILD_AD_IME
-

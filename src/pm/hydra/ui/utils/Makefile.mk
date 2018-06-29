@@ -7,4 +7,3 @@
 libhydra_la_SOURCES += ui/utils/uiu.c
 
 noinst_HEADERS += ui/utils/uiu.h
-

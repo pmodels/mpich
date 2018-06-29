@@ -10,6 +10,16 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based iallgatherv
+
     - name        : MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -23,6 +33,8 @@ cvars:
         brucks             - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
         ring               - Force ring algorithm
+        recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        recexch_distance_halving     - Force generic transport recursive exchange with neighbours halving in distance in each phase
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -67,6 +79,22 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     __attribute__ ((weak, alias("PMPI_Iallgatherv")));
 #endif
 /* -- End Profiling Symbol Block */
+
+/* This function checks whether the displacements are in increasing order and
+ * that there is no overlap or gap between the data of successive ranks. Some
+ * algorithms can only handle ordered array of data and hence this function for
+ * checking whether the data is ordered. */
+static int is_ordered(int comm_size, const int recvcounts[], const int displs[])
+{
+    int i, pos = 0;
+    for (i = 0; i < comm_size; i++) {
+        if (pos != displs[i]) {
+            return 0;
+        }
+        pos += recvcounts[i];
+    }
+    return 1;
+}
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
@@ -277,6 +305,42 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    int comm_size = comm_ptr->local_size;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Iallgatherv_intra_algo_choice) {
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                    break;
+                mpi_errno =
+                    MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
+                                                                     recvbuf, recvcounts, displs,
+                                                                     recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
+                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                    break;
+                mpi_errno =
+                    MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                                                                    recvbuf, recvcounts, displs,
+                                                                    recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)

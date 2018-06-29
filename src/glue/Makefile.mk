@@ -6,4 +6,3 @@
 ##
 
 include $(top_srcdir)/src/glue/romio/Makefile.mk
-

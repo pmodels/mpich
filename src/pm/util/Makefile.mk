@@ -54,4 +54,3 @@ src_pm_util_libmpiexec_la_SOURCES = \
     src/pm/util/simple_pmiutil2.c
 
 endif BUILD_PM_UTIL
-

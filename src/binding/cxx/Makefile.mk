@@ -45,4 +45,3 @@ mpicovsimple.o: mpicovsimple.cxx mpicovsimple.h
 endif BUILD_COVERAGE
 
 endif BUILD_CXX_BINDING
-

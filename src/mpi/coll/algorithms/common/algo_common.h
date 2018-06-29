@@ -12,6 +12,17 @@
 #ifndef ALGO_COMMON_H_INCLUDED
 #define ALGO_COMMON_H_INCLUDED
 
+/* This is a simple function to compare two integers.
+ * It is used for sorting list of ranks. */
+#undef FUNCNAME
+#define FUNCNAME MPII_Algo_compare_int
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static int MPII_Algo_compare_int(const void *a, const void *b)
+{
+    return (*(int *) a - *(int *) b);
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPII_Algo_calculate_pipeline_chunk_info
 #undef FCNAME
@@ -46,7 +57,7 @@ static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
         *segsize_floor = maxelems;
     *num_segments = (count + *segsize_ceil - 1) / (*segsize_ceil);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "num_segments %d \n", *num_segments));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "num_segments %d", *num_segments));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
 

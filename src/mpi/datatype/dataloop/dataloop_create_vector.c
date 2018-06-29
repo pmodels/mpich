@@ -72,8 +72,8 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
         MPI_Aint old_loop_sz = 0;
         int old_loop_depth = 0;
 
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
+        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
+        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
 
         /* TODO: ACCOUNT FOR PADDING IN LOOP_SZ HERE */
         new_loop_sz = sizeof(DLOOP_Dataloop) + old_loop_sz;
@@ -115,8 +115,8 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
         DLOOP_Dataloop *old_loop_ptr;
         MPI_Aint old_loop_sz = 0;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
+        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
+        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
 
         MPIR_Dataloop_alloc_and_copy(DLOOP_KIND_VECTOR,
                                      count, old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);

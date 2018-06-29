@@ -74,4 +74,3 @@ romio_other_sources +=                  \
     adio/common/onesided_aggregation.c  \
     adio/common/ad_tuning.c             \
     adio/common/utils.c
-

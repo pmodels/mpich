@@ -8,17 +8,18 @@ dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 
+AM_COND_IF([BUILD_CH4],[
+AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
+
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
+build_mpid_common_bc=yes
 
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 MPID_MAX_PROCESSOR_NAME=128
 MPID_MAX_ERROR_STRING=512
-
-AM_COND_IF([BUILD_CH4],[
-AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
@@ -326,34 +327,48 @@ AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
 
+AC_ARG_ENABLE(ch4-netmod-inline,
+    [--enable-ch4-netmod-inline
+       Enables inlined netmod build when a single netmod is used
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ch4_netmod_inline=yes)
+
+
 AC_ARG_ENABLE(ch4-netmod-direct,
     [--enable-ch4-netmod-direct
+       (Deprecated in favor of ch4-netmod-inline)
        Enables inlined netmod build when a single netmod is used
        level:
          yes       - Enabled (default)
          no        - Disabled (may improve build times and code size)
     ],,enable_ch4_netmod_direct=yes)
 
-
-if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DNETMOD_DIRECT=__netmod_direct_${ch4_netmods}__], [CPPFLAGS])
+if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_inline" = "yes" && test "$enable_ch4_netmod_direct" = "yes" ;  then
+   PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
-
-AC_ARG_ENABLE(ch4-shm,
-    [--enable-ch4-shm=level:module
-       Control whether CH4 shared memory is built and/or used. Default
-       shm level depends on selected netmod(s). (OFI=exclusive, UCX=no).
+AC_ARG_ENABLE(ch4-direct,
+    [--enable-ch4-direct
+       Defines the direct communication routine used in CH4 device
        level:
-         no        - Do not build or use CH4 shared memory.
-         yes       - Build CH4 shared memory, but do not use it by default (Your chosen netmod must provide it).
-         exclusive - Build and exclusively use CH4 shared memory.
-       module-list(optional).  comma separated list of shared memory modules:
-         posix     - POSIX shared memory implementation
-    ],,enable_ch4_shm=default)
+         netmod     - Directly transfer data through the chosen netmode
+         auto       - The CH4 device controls whether transfer data through netmod
+                      or through shared memory based on locality
+    ],,enable_ch4_direct=default)
+
+AC_ARG_ENABLE(ch4-shm-inline,
+    [--enable-ch4-shm-inline
+       Enables inlined shared memory build when a single shared memory module is used
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ch4_shm_inline=yes)
 
 AC_ARG_ENABLE(ch4-shm-direct,
     [--enable-ch4-shm-direct
+       (Deprecated in favor of ch4-shm-inline)
        Enables inlined shared memory build when a single shared memory module is used
        level:
          yes       - Enabled (default)
@@ -361,291 +376,36 @@ AC_ARG_ENABLE(ch4-shm-direct,
     ],,enable_ch4_shm_direct=yes)
 
 # setup shared memory defaults
-if test "${enable_ch4_shm}" = "default" ; then
-    if test "${ch4_netmods}" = "ucx" ; then
-        enable_ch4_shm=no
-    else
-	enable_ch4_shm=exclusive:posix
-    fi
-fi
-
-ch4_shm_level=`echo $enable_ch4_shm | sed -e 's/:.*$//'`
-changequote(<<,>>)
-ch4_shm=`echo $enable_ch4_shm | sed -e 's/^[^:]*//' -e 's/^://'`
-changequote([,])
-
-if test "$ch4_shm_level" != "no" -a "$ch4_shm_level" != "yes" -a "$ch4_shm_level" != "exclusive"; then
-    AC_MSG_ERROR([Shared memory level ${ch4_shm_level} is unknown])
-fi
-
-if test "$ch4_shm_level" != "no" ; then
-    AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
-        [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
-fi
-
-if test "$ch4_shm_level" = "exclusive" ; then
-    # This variable is set only when the user wants CH4 to handle all shared memory operations
-    AC_DEFINE(MPIDI_CH4_EXCLUSIVE_SHM, 1, [Define if CH4 will be providing the exclusive implementation of shared memory])
-
-    # This variable can be set either when the user asks for CH4 exclusive shared memory
-    # or when the netmod doesn't want to implement its own locality information
-    AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
-fi
-
-# $ch4_shm - contains the shm mods
-if test -z "${ch4_shm}" ; then
-   if test "$ch4_shm_level" != "no" ; then
-      ch4_shm="posix"
-   fi
-else
-   ch4_shm=`echo ${ch4_shm} | sed -e 's/,/ /g'`
-fi
+# TODO: shm submodules should be chosen with similar configure option as that used for netmod.
+# We can add it when a shm submodule is added. Now we just simply set POSIX.
+ch4_shm=posix
 export ch4_shm
 
-ch4_shm_func_decl=""
-ch4_shm_native_func_decl=""
-ch4_shm_func_array=""
-ch4_shm_native_func_array=""
-ch4_shm_strings=""
-shm_index=0
-for shm in $ch4_shm ; do
-    if test ! -d $srcdir/src/mpid/ch4/shm/${shm} ; then
-        AC_MSG_ERROR([Shared memory module ${shm} is unknown "$srcdir/src/mpid/ch4/shm/${shm}"])
+# setup default direct communication routine
+if test "${enable_ch4_direct}" = "default" ; then
+    # ucx can only choose direct netmod because it does not handle any_src
+    # receive when both nemod and shared memory are used.
+    if test "${ch4_netmods}" = "ucx" ; then
+        enable_ch4_direct=netmod
+    else
+        enable_ch4_direct=auto
     fi
-    shm_macro=`echo $shm | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
-    shm_macro="MPIDI_SHM_${shm_macro}"
+fi
 
-    if test -z "$ch4_shm_array" ; then
-        ch4_shm_array="$shm_macro"
-    else
-        ch4_shm_array="$ch4_shm_array, $shm_macro"
-    fi
+if test "$enable_ch4_direct" != "auto" -a "$enable_ch4_direct" != "netmod"; then
+    AC_MSG_ERROR([Direct comunication option ${enable_ch4_direct} is unknown])
+fi
 
-    if test -z "$ch4_shm_func_decl" ; then
-        ch4_shm_func_decl="MPIDI_SHM_${shm}_funcs"
-    else
-        ch4_shm_func_decl="${ch4_shm_func_decl}, MPIDI_SHM_${shm}_funcs"
-    fi
+if test "$enable_ch4_direct" = "auto" ; then
+    # This variable can be set either when CH4 controls the data transfer routine
+    # or when the netmod doesn't want to implement its own locality information
+    AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
+elif test "$enable_ch4_direct" = "netmod" ; then
+    AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
+fi
 
-    if test -z "$ch4_shm_native_func_decl" ; then
-        ch4_shm_native_func_decl="MPIDI_SHM_native_${shm}_funcs"
-    else
-        ch4_shm_native_func_decl="${ch4_shm_native_func_decl}, MPIDI_SHM_native_${shm}_funcs"
-    fi
-
-    if test -z "$ch4_shm_func_array" ; then
-        ch4_shm_func_array="&MPIDI_SHM_${shm}_funcs"
-    else
-        ch4_shm_func_array="${ch4_shm_func_array}, &MPIDI_SHM_${shm}_funcs"
-    fi
-
-    if test -z "$ch4_shm_native_func_array" ; then
-        ch4_shm_native_func_array="&MPIDI_SHM_native_${shm}_funcs"
-    else
-        ch4_shm_native_func_array="${ch4_shm_native_func_array}, &MPIDI_SHM_native_${shm}_funcs"
-    fi
-
-    if test -z "$ch4_shm_strings" ; then
-        ch4_shm_strings="\"$shm\""
-    else
-        ch4_shm_strings="$ch4_shm_strings, \"$shm\""
-    fi
-
-    if test -z "$ch4_shm_coll_globals_default" ; then
-        ch4_shm_coll_globals_default="#include \"../shm/${shm}/${shm}_coll_globals_default.c\""
-    else
-        ch4_shm_coll_globals_default="${ch4_shm_coll_globals_default}
-#include \"../shm/${shm}/${shm}_coll_globals_default.c\""
-    fi
-
-    if test -z "$ch4_shm_pre_include" ; then
-        ch4_shm_pre_include="#include \"../shm/${shm}/${shm}_pre.h\""
-    else
-        ch4_shm_pre_include="${ch4_shm_pre_include}
-#include \"../shm/${shm}/${shm}_pre.h\""
-    fi
-    if test -z "$ch4_shm_coll_params_include" ; then
-        ch4_shm_coll_params_include="#include \"../shm/${shm}/${shm}_coll_params.h\""
-    else
-        ch4_shm_coll_params_include="${ch4_shm_coll_params_include}
-#include \"../shm/${shm}/${shm}_coll_params.h\""
-    fi
-
-    shm_upper=`echo ${shm} | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
-    if test -z "$ch4_shm_request_decl" ; then
-        ch4_shm_request_decl="MPIDI_${shm_upper}_request_t ${shm};"
-    else
-        ch4_shm_request_decl="${ch4_shm_request_decl} \\
-MPIDI_${shm_upper}_request_t ${shm};"
-    fi
-
-    if test -z "$ch4_shm_comm_decl" ; then
-        ch4_shm_comm_decl="MPIDI_${shm_upper}_comm_t ${shm};"
-    else
-        ch4_shm_comm_decl="${ch4_shm_comm_decl} \\
-MPIDI_${shm_upper}_comm_t ${shm};"
-    fi
-    if test -z "$ch4_shm_barrier_params_decl" ; then
-        ch4_shm_barrier_params_decl="MPIDI_${shm_upper}_BARRIER_PARAMS_DECL;"
-    else
-        ch4_shm_barrier_params_decl="${ch4_shm_barrier_params_decl} \\
-MPIDI_${shm_upper}_BARRIER_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_bcast_params_decl" ; then
-        ch4_shm_bcast_params_decl="MPIDI_${shm_upper}_BCAST_PARAMS_DECL;"
-    else
-        ch4_shm_bcast_params_decl="${ch4_shm_bcast_params_decl} \\
-MPIDI_${shm_upper}_BCAST_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_reduce_params_decl" ; then
-        ch4_shm_reduce_params_decl="MPIDI_${shm_upper}_REDUCE_PARAMS_DECL;"
-    else
-        ch4_shm_reduce_params_decl="${ch4_shm_reduce_params_decl} \\
-MPIDI_${shm_upper}_REDUCE_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_allreduce_params_decl" ; then
-        ch4_shm_allreduce_params_decl="MPIDI_${shm_upper}_ALLREDUCE_PARAMS_DECL;"
-    else
-        ch4_shm_allreduce_params_decl="${ch4_shm_allreduce_params_decl} \\
-MPIDI_${shm_upper}_ALLREDUCE_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_alltoall_params_decl" ; then
-        ch4_shm_alltoall_params_decl="MPIDI_${shm_upper}_ALLTOALL_PARAMS_DECL;"
-    else
-        ch4_shm_alltoall_params_decl="${ch4_shm_alltoall_params_decl} \\
-MPIDI_${shm_upper}_ALLTOALL_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_alltoallv_params_decl" ; then
-        ch4_shm_alltoallv_params_decl="MPIDI_${shm_upper}_ALLTOALLV_PARAMS_DECL;"
-    else
-        ch4_shm_alltoallv_params_decl="${ch4_shm_alltoallv_params_decl} \\
-MPIDI_${shm_upper}_ALLTOALLV_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_alltoallw_params_decl" ; then
-        ch4_shm_alltoallw_params_decl="MPIDI_${shm_upper}_ALLTOALLW_PARAMS_DECL;"
-    else
-        ch4_shm_alltoallw_params_decl="${ch4_shm_alltoallw_params_decl} \\
-MPIDI_${shm_upper}_ALLTOALLW_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_allgather_params_decl" ; then
-        ch4_shm_allgather_params_decl="MPIDI_${shm_upper}_ALLGATHER_PARAMS_DECL;"
-    else
-        ch4_shm_allgather_params_decl="${ch4_shm_allgather_params_decl} \\
-MPIDI_${shm_upper}_ALLGATHER_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_allgatherv_params_decl" ; then
-        ch4_shm_allgatherv_params_decl="MPIDI_${shm_upper}_ALLGATHERV_PARAMS_DECL;"
-    else
-        ch4_shm_allgatherv_params_decl="${ch4_shm_allgatherv_params_decl} \\
-MPIDI_${shm_upper}_ALLGATHERV_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_gather_params_decl" ; then
-        ch4_shm_gather_params_decl="MPIDI_${shm_upper}_GATHER_PARAMS_DECL;"
-    else
-        ch4_shm_gather_params_decl="${ch4_shm_gather_params_decl} \\
-MPIDI_${shm_upper}_GATHER_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_gatherv_params_decl" ; then
-        ch4_shm_gatherv_params_decl="MPIDI_${shm_upper}_GATHERV_PARAMS_DECL;"
-    else
-        ch4_shm_gatherv_params_decl="${ch4_shm_gatherv_params_decl} \\
-MPIDI_${shm_upper}_GATHERV_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_scatter_params_decl" ; then
-        ch4_shm_scatter_params_decl="MPIDI_${shm_upper}_SCATTER_PARAMS_DECL;"
-    else
-        ch4_shm_scatter_params_decl="${ch4_shm_scatter_params_decl} \\
-MPIDI_${shm_upper}_SCATTER_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_scatterv_params_decl" ; then
-        ch4_shm_scatterv_params_decl="MPIDI_${shm_upper}_SCATTERV_PARAMS_DECL;"
-    else
-        ch4_shm_scatterv_params_decl="${ch4_shm_scatterv_params_decl} \\
-MPIDI_${shm_upper}_SCATTERV_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_reduce_scatter_params_decl" ; then
-        ch4_shm_reduce_scatter_params_decl="MPIDI_${shm_upper}_REDUCE_SCATTER_PARAMS_DECL;"
-    else
-        ch4_shm_reduce_scatter_params_decl="${ch4_shm_reduce_scatter_params_decl} \\
-MPIDI_${shm_upper}_REDUCE_SCATTER_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_reduce_scatter_block_params_decl" ; then
-        ch4_shm_reduce_scatter_block_params_decl="MPIDI_${shm_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL;"
-    else
-        ch4_shm_reduce_scatter_block_params_decl="${ch4_shm_reduce_scatter_block_params_decl} \\
-MPIDI_${shm_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_exscan_params_decl" ; then
-        ch4_shm_exscan_params_decl="MPIDI_${shm_upper}_EXSCAN_PARAMS_DECL;"
-    else
-        ch4_shm_exscan_params_decl="${ch4_shm_exscan_params_decl} \\
-MPIDI_${shm_upper}_EXSCAN_PARAMS_DECL;"
-    fi
-    if test -z "$ch4_shm_scan_params_decl" ; then
-        ch4_shm_scan_params_decl="MPIDI_${shm_upper}_SCAN_PARAMS_DECL;"
-    else
-        ch4_shm_scan_params_decl="${ch4_shm_scan_params_decl} \\
-MPIDI_${shm_upper}_SCAN_PARAMS_DECL;"
-    fi
-    shm_index=`expr $shm_index + 1`
-done
-ch4_shm_array_sz=$shm_index
-
-AC_SUBST(ch4_shm)
-AC_SUBST(ch4_shm_array)
-AC_SUBST(ch4_shm_array_sz)
-AC_SUBST(ch4_shm_func_decl)
-AC_SUBST(ch4_shm_native_func_decl)
-AC_SUBST(ch4_shm_func_array)
-AC_SUBST(ch4_shm_native_func_array)
-AC_SUBST(ch4_shm_strings)
-AC_SUBST(ch4_shm_pre_include)
-AC_SUBST(ch4_shm_coll_globals_default)
-AC_SUBST(ch4_shm_coll_params_include)
-AC_SUBST(ch4_shm_request_decl)
-AC_SUBST(ch4_shm_comm_decl)
-AC_SUBST(ch4_shm_barrier_params_decl)
-AC_SUBST(ch4_shm_bcast_params_decl)
-AC_SUBST(ch4_shm_reduce_params_decl)
-AC_SUBST(ch4_shm_allreduce_params_decl)
-AC_SUBST(ch4_shm_alltoall_params_decl)
-AC_SUBST(ch4_shm_alltoallv_params_decl)
-AC_SUBST(ch4_shm_alltoallw_params_decl)
-AC_SUBST(ch4_shm_allgather_params_decl)
-AC_SUBST(ch4_shm_allgatherv_params_decl)
-AC_SUBST(ch4_shm_gather_params_decl)
-AC_SUBST(ch4_shm_gatherv_params_decl)
-AC_SUBST(ch4_shm_scatter_params_decl)
-AC_SUBST(ch4_shm_scatterv_params_decl)
-AC_SUBST(ch4_shm_reduce_scatter_params_decl)
-AC_SUBST(ch4_shm_reduce_scatter_block_params_decl)
-AC_SUBST(ch4_shm_scan_params_decl)
-AC_SUBST(ch4_shm_exscan_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_pre_include)
-AM_SUBST_NOTMAKE(ch4_shm_coll_globals_default)
-AM_SUBST_NOTMAKE(ch4_shm_coll_params_include)
-AM_SUBST_NOTMAKE(ch4_shm_request_decl)
-AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
-AM_SUBST_NOTMAKE(ch4_shm_barrier_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_bcast_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_reduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_allreduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_alltoall_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_alltoallv_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_alltoallw_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_allgather_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_allgatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_gather_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_gatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_scatterv_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_reduce_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_reduce_scatter_block_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_scan_params_decl)
-AM_SUBST_NOTMAKE(ch4_shm_exscan_params_decl)
-
-if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])
+if test "$enable_ch4_shm_inline" = "yes" && test "$enable_ch4_shm_direct" = "yes" ;  then
+   PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)
@@ -692,16 +452,18 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
 
+# make sure we support signal
+AC_CHECK_HEADERS(signal.h)
+AC_CHECK_FUNCS(signal)
+
 AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
-src/mpid/ch4/include/shmpre.h
 src/mpid/ch4/include/coll_algo_params.h
 src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
-AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY

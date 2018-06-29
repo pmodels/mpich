@@ -47,9 +47,6 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TREEALGO_TREE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TREEALGO_TREE_INIT);
 
-    ct->children = NULL;
-    ct->max_children = 0;
-
     switch (tree_type) {
         case TREE_TYPE_KNOMIAL:
             mpi_errno = MPII_Treeutil_tree_knomial_init(rank, nranks, k, root, ct);
@@ -85,5 +82,5 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Treealgo_tree_free(MPII_Treealgo_tree_t * tree)
 {
-    MPL_free(tree->children);
+    utarray_free(tree->children);
 }

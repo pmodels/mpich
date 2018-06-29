@@ -6,8 +6,6 @@
 
 #include "mpidimpl.h"
 
-/* FIXME: HOMOGENEOUS SYSTEMS ONLY -- no data conversion is performed */
-
 /* FIXME: The routines MPID_Isend, MPID_Issend, MPID_Irsend are nearly 
    identical. It would be better if these did roughly:
 

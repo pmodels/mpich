@@ -19,6 +19,10 @@
 #include "datatype.h"
 #include "ch4r_recvq.h"
 
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #ifdef USE_PMI2_API
 /* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
    CH3 uses jobid_size=MAX_JOBID_LEN=1024 when calling
@@ -53,6 +57,16 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-empty, this cvar specifies which shm module to use
+
+    - name        : MPIR_CVAR_CH4_ROOTS_ONLY_PMI
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Enables an optimized business card exchange over PMI for node root processes only.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -118,7 +132,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
     int n_nm_vnis_provided;
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vnis_provided;
 #endif
 #ifndef USE_PMI2_API
@@ -134,17 +148,29 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_CH4_DBG_COMM = MPL_dbg_class_alloc("CH4_COMM", "ch4_comm");
     MPIDI_CH4_DBG_MEMORY = MPL_dbg_class_alloc("CH4_MEMORY", "ch4_memory");
 #endif
+
+#ifdef HAVE_SIGNAL
+    /* install signal handler for process failure notifications from hydra */
+    MPIDI_CH4_Global.sigusr1_count = 0;
+    MPIDI_CH4_Global.my_sigusr1_count = 0;
+    MPIDI_CH4_Global.prev_sighandler = signal(SIGUSR1, MPIDI_sigusr1_handler);
+    MPIR_ERR_CHKANDJUMP1(MPIDI_CH4_Global.prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER,
+                         "**signal", "**signal %s", MPIR_Strerror(errno));
+    if (MPIDI_CH4_Global.prev_sighandler == SIG_IGN || MPIDI_CH4_Global.prev_sighandler == SIG_DFL)
+        MPIDI_CH4_Global.prev_sighandler = NULL;
+#endif
+
     MPIDI_choose_netmod();
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
-    if (pmi_errno != PMI_SUCCESS) {
+    if (pmi_errno != PMI2_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
     pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
-    if (pmi_errno != PMI_SUCCESS) {
+    if (pmi_errno != PMI2_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
                              "**pmi_job_getid %d", pmi_errno);
     }
@@ -318,7 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     {
         int shm_tag_ub = MPIR_Process.attrs.tag_ub, nm_tag_ub = MPIR_Process.attrs.tag_ub;
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_ub);
 
         if (mpi_errno != MPI_SUCCESS) {
@@ -404,7 +430,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_finalize_hook();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -421,6 +447,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
+
+#ifdef USE_PMIX_API
+    PMIx_Finalize(NULL, 0);
+#elif defined(USE_PMI2_API)
+    PMI2_Finalize();
+#else
+    PMI_Finalize();
+#endif
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
@@ -444,13 +478,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
 
 
-#ifndef USE_PMIX_API
-    pmi_errno = PMI_Get_universe_size(universe_size);
-
-    if (pmi_errno != PMI_SUCCESS)
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                             "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
-#else
+#ifdef USE_PMIX_API
     {
         pmix_value_t *pvalue = NULL;
 
@@ -461,6 +489,30 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
         *universe_size = pvalue->data.uint32;
         PMIX_VALUE_RELEASE(pvalue);
     }
+#elif defined(USE_PMI2_API)
+    {
+        char val[PMI2_MAX_VALLEN];
+        int found = 0;
+        char *endptr;
+
+        pmi_errno = PMI2_Info_GetJobAttr("universeSize", val, sizeof(val), &found);
+        if (pmi_errno)
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_getjobattr");
+
+        if (!found) {
+            *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
+        } else {
+            *universe_size = strtol(val, &endptr, 0);
+            MPIR_ERR_CHKINTERNAL(endptr - val != strlen(val), mpi_errno,
+                                 "can't parse universe size");
+        }
+    }
+#else
+    pmi_errno = PMI_Get_universe_size(universe_size);
+
+    if (pmi_errno)
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
 #endif
 
     if (*universe_size < 0)
@@ -520,14 +572,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, in
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr,
-                                              MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr, class);
+    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
     return p;
@@ -697,7 +748,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_type_commit_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -726,7 +777,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_type_free_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -755,7 +806,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_op_commit_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -784,7 +835,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_free_hook(MPIR_Op * op)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_op_free_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

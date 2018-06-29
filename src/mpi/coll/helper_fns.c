@@ -65,18 +65,9 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
     if (request_ptr->kind == MPIR_REQUEST_KIND__SEND)
         request_ptr->status.MPI_TAG = 0;
 
-    if (!MPIR_Request_is_complete(request_ptr)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(request_ptr)) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno) {
-                MPIR_ERR_POP(mpi_errno);
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
         MPIR_Process_status(&request_ptr->status, errflag);

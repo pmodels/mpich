@@ -110,12 +110,6 @@ int MPIR_Comm_map_free(struct MPIR_Comm *comm);
   need to include the implementation of all collective routines in all MPI
   executables, even if the routines are not used.
 
-  The macro 'MPID_HAS_HETERO' may be defined by a device to indicate that
-  the device supports MPI programs that must communicate between processes with
-  different data representations (e.g., different sized integers or different
-  byte orderings).  If the device does need to define this value, it should
-  be defined in the file 'mpidpre.h'.
-
   Please note that the local_size and remote_size fields can be confusing.  For
   intracommunicators both fields are always equal to the size of the
   communicator.  For intercommunicators local_size is equal to the size of
@@ -179,10 +173,6 @@ struct MPIR_Comm {
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
     MPIR_Info *info;            /* Hints to the communicator */
-
-#ifdef MPID_HAS_HETERO
-    int is_hetero;
-#endif
 
 #if defined HAVE_LIBHCOLL
     hcoll_comm_priv_t hcoll_priv;
@@ -316,6 +306,12 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPI
 int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
                             MPIR_Attr_type attrType);
 
+int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
+                                      MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                         MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                      MPIR_Comm ** newcomm_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided

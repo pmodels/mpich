@@ -349,8 +349,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype, seg,
-                          0);
+        MPIR_Segment_init(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype, seg);
         MPIR_Segment_pack(seg, first, &last, resp_req->dev.user_buf);
         MPIR_Segment_free(seg);
     }
@@ -489,7 +488,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(rreq->dev.real_user_buf, 1, rreq->dev.datatype, seg, 0);
+        MPIR_Segment_init(rreq->dev.real_user_buf, 1, rreq->dev.datatype, seg);
         MPIR_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
         MPIR_Segment_free(seg);
     }
@@ -586,7 +585,7 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
                          "**nomem %s", "MPIR_Segment_alloc");
 
     MPIR_Segment_init(rreq->dev.user_buf,
-                      rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
+                      rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -700,7 +699,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 
     MPIR_Segment_init(rreq->dev.user_buf,
                       (rreq->dev.recv_data_sz / basic_type_size),
-                      basic_dtp, rreq->dev.segment_ptr, 0);
+                      basic_dtp, rreq->dev.segment_ptr);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -830,7 +829,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 
         MPIR_Segment_init(rreq->dev.user_buf,
                           (rreq->dev.recv_data_sz / basic_type_size),
-                          basic_dtp, rreq->dev.segment_ptr, 0);
+                          basic_dtp, rreq->dev.segment_ptr);
         rreq->dev.segment_first = 0;
         rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -909,7 +908,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
                          "**nomem %s", "MPIR_Segment_alloc");
 
     MPIR_Segment_init(sreq->dev.user_buf,
-                      sreq->dev.user_count, sreq->dev.datatype, sreq->dev.segment_ptr, 0);
+                      sreq->dev.user_count, sreq->dev.datatype, sreq->dev.segment_ptr);
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = new_dtp->size * sreq->dev.user_count;
 
@@ -1123,9 +1122,6 @@ static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dt
     ptrdiff = (MPI_Aint) ((char *) (new_dtp->dataloop) - (char *)
                           (dtype_info->dataloop));
 
-    /* FIXME: Temp to avoid SEGV when memory tracing */
-    new_dtp->hetero_dloop = 0;
-
     MPIR_Dataloop_update(new_dtp->dataloop, ptrdiff);
 
     new_dtp->contents = NULL;
@@ -1277,7 +1273,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
         MPIR_Segment_init(get_pkt->addr, get_pkt->count,
-                          get_pkt->datatype, sreq->dev.segment_ptr, 0);
+                          get_pkt->datatype, sreq->dev.segment_ptr);
         sreq->dev.segment_first = 0;
         sreq->dev.segment_size = get_pkt->count * type_size;
 
@@ -1491,8 +1487,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype, seg,
-                          0);
+        MPIR_Segment_init(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype, seg);
         MPIR_Segment_pack(seg, first, &last, sreq->dev.user_buf);
         MPIR_Segment_free(seg);
     }
@@ -1637,7 +1632,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(fop_pkt->addr, 1, fop_pkt->datatype, seg, 0);
+        MPIR_Segment_init(fop_pkt->addr, 1, fop_pkt->datatype, seg);
         MPIR_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
         MPIR_Segment_free(seg);
     }

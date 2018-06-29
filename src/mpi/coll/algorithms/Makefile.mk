@@ -8,6 +8,7 @@
 ##  Contributor License Agreement dated February 8, 2012.
 
 include $(top_srcdir)/src/mpi/coll/algorithms/treealgo/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/algorithms/recexchalgo/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/algorithms/stubalgo/Makefile.mk
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/common

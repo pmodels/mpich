@@ -538,7 +538,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	    MPI_Aint last;
 
 	    MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
-			      rreq->dev.datatype, &seg, 0);
+			      rreq->dev.datatype, &seg);
 	    last = unpack_sz;
 	    MPIR_Segment_unpack(&seg, 0, &last, rreq->dev.tmpbuf);
 	    if (last != unpack_sz)

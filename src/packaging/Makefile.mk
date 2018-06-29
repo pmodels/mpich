@@ -7,4 +7,3 @@
 
 include $(top_srcdir)/src/packaging/pkgconfig/Makefile.mk
 include $(top_srcdir)/src/packaging/envmods/Makefile.mk
-

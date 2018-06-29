@@ -28,7 +28,7 @@
 )
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
-#define MPIDI_OFI_NUM_AM_BUFFERS           (8)
+#define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_CACHELINE_SIZE           (64)
 #define MPIDI_OFI_IOV_MAX                  (32)
@@ -68,42 +68,52 @@
 #endif
 
 /* RMA Key Space division
- *    |                  |                  |                    |
- *    ...     Context ID |   Huge RMA       |  Window Instance   |
- *    |                  |                  |                    |
+ *    |                  |                   |                        |
+ *    ...     Context ID | key type flag bit |  Key/window instance   |
+ *    |                  |                   |                        |
  */
 /* 64-bit key space                         */
-/* 2M  window instances per comm           */
-/* 2M  outstanding huge RMAS per comm      */
-/* 4M  communicators                       */
-#define MPIDI_OFI_MAX_WINDOWS_BITS_64  (21)
-#define MPIDI_OFI_MAX_HUGE_RMA_BITS_64 (21)
-#define MPIDI_OFI_MAX_HUGE_RMAS_64     (1<<(MPIDI_OFI_MAX_HUGE_RMA_BITS_64))
-#define MPIDI_OFI_MAX_WINDOWS_64       (1<<(MPIDI_OFI_MAX_WINDOWS_BITS_64))
-#define MPIDI_OFI_HUGE_RMA_SHIFT_64    (MPIDI_OFI_MAX_WINDOWS_BITS_64)
-#define MPIDI_OFI_CONTEXT_SHIFT_64     (MPIDI_OFI_MAX_WINDOWS_BITS_64+MPIDI_OFI_MAX_HUGE_RMA_BITS_64)
+/* 2147483648 window instances per comm           */
+/* 2147483648 outstanding huge RMAS per comm      */
+/* 4294967296 communicators                       */
+#define MPIDI_OFI_MAX_KEY_TYPE_BITS_64 (1)
+#define MPIDI_OFI_MAX_CONTEXT_BITS_64  (32)
+#define MPIDI_OFI_MAX_KEY_BITS_64      (64-(MPIDI_OFI_MAX_KEY_TYPE_BITS_64+MPIDI_OFI_MAX_CONTEXT_BITS_64))
+#define MPIDI_OFI_MAX_HUGE_RMAS_64     (1<<(MPIDI_OFI_MAX_KEY_BITS_64))
+#define MPIDI_OFI_MAX_WINDOWS_64       MPIDI_OFI_MAX_HUGE_RMAS_64
+
+#define MPIDI_OFI_CONTEXT_SHIFT_64     (MPIDI_OFI_MAX_KEY_BITS_64+MPIDI_OFI_MAX_KEY_TYPE_BITS_64)
+#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_64 (MPIDI_OFI_MAX_KEY_BITS_64)
 
 /* 32-bit key space                         */
-/* 4096 window instances per comm           */
-/* 256  outstanding huge RMAS per comm      */
-/* 4096 communicators                       */
-#define MPIDI_OFI_MAX_WINDOWS_BITS_32  (12)
-#define MPIDI_OFI_MAX_HUGE_RMA_BITS_32 (8)
-#define MPIDI_OFI_MAX_HUGE_RMAS_32     (1<<(MPIDI_OFI_MAX_HUGE_RMA_BITS_32))
-#define MPIDI_OFI_MAX_WINDOWS_32       (1<<(MPIDI_OFI_MAX_WINDOWS_BITS_32))
-#define MPIDI_OFI_HUGE_RMA_SHIFT_32    (MPIDI_OFI_MAX_WINDOWS_BITS_32)
-#define MPIDI_OFI_CONTEXT_SHIFT_32     (MPIDI_OFI_MAX_WINDOWS_BITS_32+MPIDI_OFI_MAX_HUGE_RMA_BITS_32)
+/* 32K window instances per comm           */
+/* 32K outstanding huge RMAS per comm      */
+/* 64K communicators                       */
+#define MPIDI_OFI_MAX_KEY_TYPE_BITS_32 (1)
+#define MPIDI_OFI_MAX_CONTEXT_BITS_32  (16)
+#define MPIDI_OFI_MAX_KEY_BITS_32      (32-(MPIDI_OFI_MAX_KEY_TYPE_BITS_32+MPIDI_OFI_MAX_CONTEXT_BITS_32))
+#define MPIDI_OFI_MAX_HUGE_RMAS_32     (1<<(MPIDI_OFI_MAX_KEY_BITS_32))
+#define MPIDI_OFI_MAX_WINDOWS_32       MPIDI_OFI_MAX_HUGE_RMAS_32
+
+#define MPIDI_OFI_CONTEXT_SHIFT_32     (MPIDI_OFI_MAX_KEY_BITS_32+MPIDI_OFI_MAX_KEY_TYPE_BITS_32)
+#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_32 (MPIDI_OFI_MAX_KEY_BITS_32)
 
 /* 16-bit key space                         */
-/* 64 window instances per comm             */
-/* 16 outstanding huge RMAS per comm        */
-/* 64 communicators                          */
-#define MPIDI_OFI_MAX_WINDOWS_BITS_16  (6)
-#define MPIDI_OFI_MAX_HUGE_RMA_BITS_16 (4)
-#define MPIDI_OFI_MAX_HUGE_RMAS_16     (1<<(MPIDI_OFI_MAX_HUGE_RMA_BITS_16))
-#define MPIDI_OFI_MAX_WINDOWS_16       (1<<(MPIDI_OFI_MAX_WINDOWS_BITS_16))
-#define MPIDI_OFI_HUGE_RMA_SHIFT_16    (MPIDI_OFI_MAX_WINDOWS_BITS_16)
-#define MPIDI_OFI_CONTEXT_SHIFT_16     (MPIDI_OFI_MAX_WINDOWS_BITS_16+MPIDI_OFI_MAX_HUGE_RMA_BITS_16)
+/* 128 window instances per comm             */
+/* 128 outstanding huge RMAS per comm        */
+/* 256 communicators                          */
+#define MPIDI_OFI_MAX_KEY_TYPE_BITS_16 (1)
+#define MPIDI_OFI_MAX_CONTEXT_BITS_16  (8)
+#define MPIDI_OFI_MAX_KEY_BITS_16      (16-(MPIDI_OFI_MAX_KEY_TYPE_BITS_16+MPIDI_OFI_MAX_CONTEXT_BITS_16))
+#define MPIDI_OFI_MAX_HUGE_RMAS_16     (1<<(MPIDI_OFI_MAX_KEY_BITS_16))
+#define MPIDI_OFI_MAX_WINDOWS_16       MPIDI_OFI_MAX_HUGE_RMAS_16
+
+#define MPIDI_OFI_CONTEXT_SHIFT_16     (MPIDI_OFI_MAX_KEY_BITS_16+MPIDI_OFI_MAX_KEY_TYPE_BITS_16)
+#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_16 (MPIDI_OFI_MAX_KEY_BITS_16)
+
+#define MPIDI_OFI_KEY_TYPE_HUGE_RMA (0)
+#define MPIDI_OFI_KEY_TYPE_WINDOW (1)
+
 
 #ifdef HAVE_FORTRAN_BINDING
 #ifdef MPICH_DEFINE_2COMPLEX
@@ -197,7 +207,6 @@ enum {
     MPIDI_OFI_EVENT_AM_SEND,
     MPIDI_OFI_EVENT_AM_RECV,
     MPIDI_OFI_EVENT_AM_READ,
-    MPIDI_OFI_EVENT_AM_MULTI,
     MPIDI_OFI_EVENT_PEEK,
     MPIDI_OFI_EVENT_RECV_HUGE,
     MPIDI_OFI_EVENT_RECV_PACK,
@@ -313,6 +322,7 @@ typedef struct {
     int tag_bits;
     int major_version;
     int minor_version;
+    int num_am_buffers;
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {
@@ -354,10 +364,9 @@ typedef struct {
     uint64_t max_write;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
-    int max_windows_bits;
-    int max_huge_rma_bits;
+    uint64_t max_rma_key_bits;
     uint64_t max_huge_rmas;
-    int huge_rma_shift;
+    int rma_key_type_bits;
     int context_shift;
     size_t tx_iov_limit;
     size_t rx_iov_limit;
@@ -383,10 +392,10 @@ typedef struct {
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-    struct fi_msg am_msg[MPIDI_OFI_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_NUM_AM_BUFFERS];
-    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_NUM_AM_BUFFERS];
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
@@ -554,5 +563,38 @@ extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
 
 extern int MPIR_Datatype_init_names(void);
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
+
+/* Build uniform mr_key using contextid, key type and uniq ID passed */
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_rma_key_pack(MPIR_Context_id_t ctx, int key_type,
+                                                         uint64_t key_id)
+{
+    uint64_t rma_key = 0;
+
+    /* place context_id into mr_key */
+    rma_key = ((uint64_t) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctx))) << (MPIDI_Global.context_shift);
+
+    /* set key type bits */
+    rma_key |= (((uint64_t) key_type) & (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1))
+        << MPIDI_Global.max_rma_key_bits;
+
+    /* place Key/window instance-ID into mr_key */
+    rma_key |= ((uint64_t) key_id) & (MPIDI_Global.max_huge_rmas - 1);
+
+    return rma_key;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_rma_key_unpack(uint64_t key, MPIR_Context_id_t * ctx,
+                                                       int *key_type, uint32_t * key_id)
+{
+    if (ctx) {
+        (*ctx) = (MPIR_Context_id_t) (key >> MPIDI_Global.context_shift);
+    }
+
+    (*key_type) =
+        (int) ((key >> MPIDI_Global.max_rma_key_bits) &
+               (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1));
+
+    (*key_id) = (uint32_t) (key & (MPIDI_Global.max_huge_rmas - 1));
+}
 
 #endif /* OFI_TYPES_H_INCLUDED */

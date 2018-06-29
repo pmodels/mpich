@@ -119,7 +119,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(data, count, datatype, segment_ptr);
         segment_first = 0;
         last = data_sz;
         send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
@@ -213,7 +213,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(data, count, datatype, segment_ptr);
         segment_first = 0;
         last = data_sz;
         MPIR_Segment_pack(segment_ptr, segment_first, &last,
@@ -299,7 +299,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(data, count, datatype, segment_ptr);
         segment_first = 0;
         last = data_sz;
         MPIR_Segment_pack(segment_ptr, segment_first, &last,

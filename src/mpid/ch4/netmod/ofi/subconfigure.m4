@@ -49,7 +49,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     else
         ofi_embedded="no"
         PAC_SET_HEADER_LIB_PATH(libfabric)
+        AC_SUBST([with_libfabric])
     fi
+    AC_SUBST([ofi_embedded])
 
     runtime_capabilities="no"
     no_providers="no"
@@ -69,7 +71,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_sockets="no"
         enable_verbs="no"
         enable_usnic="no"
-        enable_mxm="no"
         enable_gni="no"
         enable_bgq="no"
         enable_udp="no"
@@ -77,13 +78,13 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_rxd="no"
         enable_tcp="no"
         enable_shm="no"
+        enable_mlx="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
         enable_sockets="yes"
         enable_verbs="yes"
         enable_usnic="yes"
-        enable_mxm="yes"
         enable_gni="yes"
         enable_bgq="yes"
         enable_udp="yes"
@@ -91,6 +92,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_rxd="yes"
         enable_tcp="yes"
         enable_shm="yes"
+        enable_mlx="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -124,10 +126,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_usnic="yes"
                 runtime_capabilities="yes"
                 ;;
-            "mxm")
-                enable_mxm="yes"
-                runtime_capabilities="yes"
-                ;;
             "udp")
                 enable_udp="yes"
                 runtime_capabilities="yes"
@@ -146,6 +144,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "shm")
                 enable_shm="yes"
+                runtime_capabilities="yes"
+                ;;
+            "mlx")
+                enable_mlx="yes"
                 runtime_capabilities="yes"
                 ;;
             *)
@@ -185,10 +187,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_usnic="yes"
                 ;;
-            "mxm")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-                enable_mxm="yes"
-                ;;
             "udp")
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_udp="yes"
@@ -209,6 +207,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_shm="yes"
                 ;;
+            "mlx")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_mlx="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -225,7 +227,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-sockets=${enable_sockets}"
             prov_config+=" --enable-verbs=${enable_verbs}"
             prov_config+=" --enable-usnic=${enable_usnic}"
-            prov_config+=" --enable-mxm=${enable_mxm}"
             prov_config+=" --enable-gni=${enable_gni}"
             prov_config+=" --enable-bgq=${enable_bgq}"
             prov_config+=" --enable-udp=${enable_udp}"
@@ -233,6 +234,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-rxd=${enable_rxd}"
             prov_config+=" --enable-tcp=${enable_tcp}"
             prov_config+=" --enable-shm=${enable_shm}"
+            prov_config+=" --enable-mlx=${enable_mlx}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then

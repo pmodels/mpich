@@ -10,4 +10,3 @@ kinds_SOURCES      = kinds.f90
 trf90_SOURCES      = trf90.f90
 get_elem_d_SOURCES = get_elem_d.f90
 get_elem_u_SOURCES = get_elem_u.f90
-

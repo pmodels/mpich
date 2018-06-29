@@ -15,6 +15,8 @@
 #include <mpidch4.h>
 #include "mpidig.h"
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+
 /* Static inlines */
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {
@@ -615,6 +617,17 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
         }                                                               \
     } while (0)
 
+/* Generic routine for checking synchronization at every RMA operation.*/
+#define MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win)                                 \
+    do {                                                                               \
+        MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
+        MPIDI_CH4U_EPOCH_OP_REFENCE(win);                                              \
+        /* Check target sync status for any target_rank except PROC_NULL. */           \
+        if (target_rank != MPI_PROC_NULL)                                              \
+            MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno,            \
+                                               goto fn_fail);                          \
+    } while (0);
+
 /*
   Calculate base address of the target window at the origin side
   Return zero to let the target side calculate the actual address
@@ -933,4 +946,235 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_r
   fn_fail:
     goto fn_exit;
 }
+
+/* Collectively allocate shared memory region.
+ * MPL_shm routines and MPI collectives are internally used.
+ *
+ * TODO: If symmetric_flag is true, then the routine will try to get
+ * a symmetric address and give up after tried predefined times. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_allocate_shm_segment
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
+                                                  MPI_Aint shm_segment_len, int symmetric_flag,
+                                                  MPL_shm_hnd_t * shm_segment_hdl_ptr,
+                                                  void **base_ptr)
+{
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int mpi_errno = MPI_SUCCESS;
+    MPL_shm_hnd_t shm_segment_handle;
+    void *map_ptr = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
+
+    mpi_errno = MPL_shm_hnd_init(&shm_segment_handle);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (shm_comm_ptr->rank == 0) {
+        char *serialized_hnd_ptr = NULL;
+
+        /* create shared memory region for all processes in win and map */
+        mpi_errno = MPL_shm_seg_create_and_attach(shm_segment_handle,
+                                                  shm_segment_len, (char **) &map_ptr, 0);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* serialize handle and broadcast it to the other processes in win */
+        mpi_errno = MPL_shm_hnd_get_serialized_by_ref(shm_segment_handle, &serialized_hnd_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
+                               shm_comm_ptr, &errflag);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        /* wait for other processes to attach to win */
+        mpi_errno = MPIR_Barrier(shm_comm_ptr, &errflag);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        /* unlink shared memory region so it gets deleted when all processes exit */
+        mpi_errno = MPL_shm_seg_remove(shm_segment_handle);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    } else {
+        char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
+
+        /* get serialized handle from rank 0 and deserialize it */
+        mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
+                               shm_comm_ptr, &errflag);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        mpi_errno = MPL_shm_hnd_deserialize(shm_segment_handle, serialized_hnd,
+                                            strlen(serialized_hnd));
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* attach to shared memory region created by rank 0 */
+        mpi_errno = MPL_shm_seg_attach(shm_segment_handle, shm_segment_len, (char **) &map_ptr, 0);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Barrier(shm_comm_ptr, &errflag);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    }
+
+    *shm_segment_hdl_ptr = shm_segment_handle;
+    *base_ptr = map_ptr;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Compute accumulate operation.
+ * The source datatype can be only predefined; the target datatype can be
+ * predefined or derived. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_compute_acc_op
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int source_count,
+                                                       MPI_Datatype source_dtp, void *target_buf,
+                                                       int target_count, MPI_Datatype target_dtp,
+                                                       MPI_Aint stream_offset, MPI_Op acc_op)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_User_function *uop = NULL;
+    MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
+    int is_empty_source = FALSE;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_COMPUTE_ACC_OP);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_COMPUTE_ACC_OP);
+
+    /* first Judge if source buffer is empty */
+    if (acc_op == MPI_NO_OP)
+        is_empty_source = TRUE;
+
+    if (is_empty_source == FALSE) {
+        MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
+        MPIR_Datatype_get_size_macro(source_dtp, source_dtp_size);
+        MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
+    }
+
+    if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
+        /* get the function by indexing into the op table */
+        uop = MPIR_OP_HDL_TO_FN(acc_op);
+    } else {
+        /* --BEGIN ERROR HANDLING-- */
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         FCNAME, __LINE__, MPI_ERR_OP,
+                                         "**opnotpredefined", "**opnotpredefined %d", acc_op);
+        return mpi_errno;
+        /* --END ERROR HANDLING-- */
+    }
+
+
+    if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
+        /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
+        MPI_Aint real_stream_offset;
+        void *curr_target_buf;
+
+        if (is_empty_source == FALSE) {
+            MPIR_Assert(source_dtp == target_dtp);
+            real_stream_offset = (stream_offset / source_dtp_size) * source_dtp_extent;
+            curr_target_buf = (void *) ((char *) target_buf + real_stream_offset);
+        } else {
+            curr_target_buf = target_buf;
+        }
+
+        (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
+    } else {
+        /* derived datatype */
+        MPIR_Segment *segp;
+        DLOOP_VECTOR *dloop_vec;
+        MPI_Aint first, last;
+        int vec_len, i, count;
+        MPI_Aint type_extent, type_size;
+        MPI_Datatype type;
+        MPIR_Datatype *dtp;
+        MPI_Aint curr_len;
+        void *curr_loc;
+        int accumulated_count;
+
+        segp = MPIR_Segment_alloc();
+        /* --BEGIN ERROR HANDLING-- */
+        if (!segp) {
+            mpi_errno =
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                     MPI_ERR_OTHER, "**nomem", 0);
+            goto fn_exit;
+        }
+        /* --END ERROR HANDLING-- */
+        MPIR_Segment_init(NULL, target_count, target_dtp, segp);
+        first = stream_offset;
+        last = first + source_count * source_dtp_size;
+
+        MPIR_Datatype_get_ptr(target_dtp, dtp);
+        vec_len = dtp->max_contig_blocks * target_count + 1;
+        /* +1 needed because Rob says so */
+        dloop_vec = (DLOOP_VECTOR *)
+            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_RMA);
+        /* --BEGIN ERROR HANDLING-- */
+        if (!dloop_vec) {
+            mpi_errno =
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                     MPI_ERR_OTHER, "**nomem", 0);
+            goto fn_exit;
+        }
+        /* --END ERROR HANDLING-- */
+
+        MPIR_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
+
+        type = dtp->basic_type;
+        MPIR_Assert(type != MPI_DATATYPE_NULL);
+
+        MPIR_Assert(type == source_dtp);
+        type_size = source_dtp_size;
+        type_extent = source_dtp_extent;
+
+        i = 0;
+        curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
+        curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+        accumulated_count = 0;
+        while (i != vec_len) {
+            if (curr_len < type_size) {
+                MPIR_Assert(i != vec_len);
+                i++;
+                curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                continue;
+            }
+
+            MPIR_Assign_trunc(count, curr_len / type_size, int);
+
+            (*uop) ((char *) source_buf + type_extent * accumulated_count,
+                    (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+
+            if (curr_len % type_size == 0) {
+                i++;
+                if (i != vec_len) {
+                    curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
+                    curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                }
+            } else {
+                curr_loc = (void *) ((char *) curr_loc + type_extent * count);
+                curr_len -= type_size * count;
+            }
+
+            accumulated_count += count;
+        }
+
+        MPIR_Segment_free(segp);
+        MPL_free(dloop_vec);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_COMPUTE_ACC_OP);
+    return mpi_errno;
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */

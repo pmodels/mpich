@@ -10,6 +10,43 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_IREDUCE_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree based ireduce (for tree_kary and tree_knomial)
+
+    - name        : MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        ireduce (tree_kary and tree_knomial). Default value is 0, that is,
+        no pipelining by default
+
+    - name        : MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD
+      category    : COLLECTIVE
+      type        : boolean
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, a rank in tree_kary and tree_knomial algorithms will allocate
+        a dedicated buffer for every child it receives data from. This would mean more
+        memory consumption but it would allow preposting of the receives and hence reduce
+        the number of unexpected messages. If set to false, there is only one buffer that is
+        used to receive the data from all the children. The receives are therefore serialized,
+        that is, only one receive can be posted at a time.
+
     - name        : MPIR_CVAR_IREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -22,6 +59,9 @@ cvars:
         auto                  - Internal algorithm selection
         binomial              - Force binomial algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
+        tree_kary             - Force Generic Transport Tree Kary
+        tree_knomial          - Force Generic Transport Tree Knomial
+        ring                  - Force Generic Transport Ring
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -217,7 +257,46 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ireduce_intra_algo_choice) {
+            case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
+                mpi_errno =
+                    MPIR_Ireduce_intra_tree_knomial(sendbuf, recvbuf, count, datatype, op, root,
+                                                    comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY:
+                mpi_errno =
+                    MPIR_Ireduce_intra_tree_kary(sendbuf, recvbuf, count, datatype, op, root,
+                                                 comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Ireduce_intra_ring(sendbuf, recvbuf, count, datatype, op, root,
+                                            comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

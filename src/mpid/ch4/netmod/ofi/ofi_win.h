@@ -25,38 +25,13 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     uint32_t first;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
-    int raw_prefix, idx, bitpos;
-    unsigned gen_id;
     MPIDI_OFI_win_targetinfo_t *winfo;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
 
-    /* Calculate a canonical context id */
-    raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, comm_ptr->context_id);
-    idx = raw_prefix / MPIR_CONTEXT_INT_BITS;
-    bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
-    gen_id = (idx * MPIR_CONTEXT_INT_BITS) + (31 - bitpos);
-
-    int total_bits_avail = MPIDI_Global.max_mr_key_size * 8;
-    uint64_t window_instance = (uint64_t) (MPIDI_OFI_WIN(win).win_id) >> 32;
-    int bits_for_instance_id = MPIDI_Global.max_windows_bits;
-    int bits_for_context_id;
-    uint64_t max_contexts_allowed;
-    uint64_t max_instances_allowed;
-
-    bits_for_context_id = total_bits_avail -
-        MPIDI_Global.max_windows_bits - MPIDI_Global.max_huge_rma_bits;
-    max_contexts_allowed = (uint64_t) 1 << (bits_for_context_id);
-    max_instances_allowed = (uint64_t) 1 << (bits_for_instance_id);
-    MPIR_ERR_CHKANDSTMT(gen_id >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
-                        goto fn_fail, "**ofid_mr_reg");
-    MPIR_ERR_CHKANDSTMT(window_instance >= max_instances_allowed, mpi_errno, MPI_ERR_OTHER,
-                        goto fn_fail, "**ofid_mr_reg");
-
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        /* Context id in lower bits, instance in upper bits */
-        MPIDI_OFI_WIN(win).mr_key = (gen_id << MPIDI_Global.context_shift) | window_instance;
+        MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_WIN(win).win_id;
     } else {
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
@@ -134,6 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
     struct fi_cntr_attr cntr_attr;
     memset(&cntr_attr, 0, sizeof(cntr_attr));
     cntr_attr.events = FI_CNTR_EVENTS_COMP;
+    cntr_attr.wait_obj = FI_WAIT_UNSPEC;
     MPIDI_OFI_CALL_RETURN(fi_cntr_open(MPIDI_Global.domain,     /* In:  Domain Object        */
                                        &cntr_attr,      /* In:  Configuration object */
                                        &MPIDI_OFI_WIN(win).cmpl_cntr,   /* Out: Counter Object       */
@@ -276,7 +252,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
   fn_fail:
     if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
         /* Push tx idx back into available pool. */
-        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &MPIDI_OFI_WIN(win).sep_tx_idx,
+                          MPL_MEM_RMA);
         MPIDI_OFI_WIN(win).sep_tx_idx = -1;
     }
     if (MPIDI_OFI_WIN(win).ep != NULL) {
@@ -432,7 +409,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                                      MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
-    uint64_t window_instance;
+    uint64_t window_instance, max_contexts_allowed;
     MPIR_Win *win = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
@@ -453,7 +430,18 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     window_instance =
         MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
                                         MPL_MEM_RMA);
-    MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
+    MPIR_ERR_CHKANDSTMT(window_instance >= MPIDI_Global.max_huge_rmas, mpi_errno,
+                        MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
+
+    max_contexts_allowed =
+        (uint64_t) 1 << (MPIDI_Global.max_rma_key_bits - MPIDI_Global.context_shift);
+    MPIR_ERR_CHKANDSTMT(MPIR_CONTEXT_READ_FIELD(PREFIX, win->comm_ptr->context_id)
+                        >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
+                        goto fn_fail, "**ofid_mr_reg");
+
+    MPIDI_OFI_WIN(win).win_id = MPIDI_OFI_rma_key_pack(win->comm_ptr->context_id,
+                                                       MPIDI_OFI_KEY_TYPE_WINDOW, window_instance);
+
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
@@ -719,6 +707,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = *win_ptr;
     uint32_t window_instance;
+    int key_type;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
 
@@ -735,7 +724,8 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    window_instance = (uint32_t) (MPIDI_OFI_WIN(win).win_id >> 32);
+    MPIDI_OFI_rma_key_unpack(MPIDI_OFI_WIN(win).win_id, NULL, &key_type, &window_instance);
+    MPIR_Assert(key_type == MPIDI_OFI_KEY_TYPE_WINDOW);
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
@@ -862,13 +852,10 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                                                    MPIR_Comm * comm_ptr,
                                                    void **base_ptr, MPIR_Win ** win_ptr)
 {
-    int i = 0, fd = -1, rc, first = 0, mpi_errno = MPI_SUCCESS, shm_key_size;
+    int i = 0, mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    void *baseP = NULL;
     MPIR_Win *win = NULL;
     ssize_t total_size = 0LL;
-    MPI_Aint size_out = 0;
-    char *shm_key = NULL;
     void *map_ptr;
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
 
@@ -893,6 +880,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
     shared_table[comm_ptr->rank].size = size;
     shared_table[comm_ptr->rank].disp_unit = disp_unit;
+    shared_table[comm_ptr->rank].shm_base_addr = NULL;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
                                0,
@@ -913,139 +901,37 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     if (total_size == 0)
         goto fn_zero;
 
-    /* Note that two distinct process groups may share the same context id,
-     * thus the window id may be duplicated on a node if windows are owned
-     * by distinct process groups. Therefore, we use [jobid + root_rank + win_id]
-     * as unique shm_key for window, where root_rank is the world rank of the
-     * first process in the group. */
-    int root_rank = 0;
-
-    if (comm_ptr->rank == 0)
-        root_rank = MPIR_Process.comm_world->rank;
-    mpi_errno = MPIR_Bcast(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    shm_key_size = snprintf(NULL, 0, "/mpi-%s-%X-%" PRIx64,
-                            MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
-    shm_key = (char *) MPL_malloc(shm_key_size, MPL_MEM_SHM);
-    MPIR_Assert(shm_key);
-    snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
-             MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
-
-    rc = shm_open(shm_key, O_CREAT | O_EXCL | O_RDWR, 0600);
-    first = (rc != -1);
-
-    if (!first) {
-        rc = shm_open(shm_key, O_RDWR, 0);
-
-        if (rc == -1) {
-            shm_unlink(shm_key);
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-        }
-    }
-
-    /* Make the addresses symmetric by using MAP_FIXED */
+    /* allocate symmetric shared window memory */
     size_t page_sz, mapsize;
 
     mapsize = MPIDI_CH4R_get_mapsize(total_size, &page_sz);
-    fd = rc;
-    rc = ftruncate(fd, mapsize);
 
-    if (rc == -1) {
-        close(fd);
-
-        if (first)
-            shm_unlink(shm_key);
-
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-    }
-
-    int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
-    unsigned anyfail = 1;
-
-    while (anyfail && --iter > 0) {
-        if (comm_ptr->rank == 0) {
-            int map_flags = MAP_SHARED;
-
-            map_ptr = MPIDI_CH4R_generate_random_addr(mapsize);
-#ifdef USE_SYM_HEAP
-            if (MPIDI_CH4R_is_valid_mapaddr(map_ptr))
-                map_flags |= MAP_FIXED; /* Set fixed only when generated a valid address.
-                                         * Otherwise we allow system to pick up one. */
-#endif
-            map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, map_flags, fd, 0);
-
-            if (map_ptr == NULL || map_ptr == MAP_FAILED) {
-                close(fd);
-
-                if (first)
-                    shm_unlink(shm_key);
-
-                mpi_errno = MPIR_Bcast_impl(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-            }
-        }
-
-        mpi_errno = MPIR_Bcast(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
-
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-        MPIR_ERR_CHKANDSTMT(map_ptr == NULL ||
-                            map_ptr == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
-                            "**nomem");
-
-        unsigned map_fail = 0;
-        if (comm_ptr->rank != 0) {
-            int map_flags = MAP_SHARED;
-
-#ifdef USE_SYM_HEAP
-            rc = MPIDI_CH4R_check_maprange_ok(map_ptr, mapsize);
-            map_fail = (rc == 1) ? 0 : 1;
-            map_flags |= MAP_FIXED;     /* Set fixed only when symmetric heap is enabled. */
-#endif
-
-            if (map_fail == 0) {
-                map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, map_flags, fd, 0);
-                if (map_ptr == NULL || map_ptr == MAP_FAILED)
-                    map_fail = 1;
-            }
-        }
-
-        /* If any local process fails to sync range or mmap, then try more
-         * addresses on rank 0. */
-        mpi_errno = MPIR_Allreduce(&map_fail,
-                                   &anyfail, 1, MPI_UNSIGNED, MPI_BOR, comm_ptr, &errflag);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-
-        if (anyfail && map_ptr != NULL && map_ptr != MAP_FAILED)
-            MPL_munmap(map_ptr, mapsize, MPL_MEM_RMA);
-    }
-
-    if (anyfail) {      /* Still fails after retry, report error. */
-        close(fd);
-
-        if (first)
-            shm_unlink(shm_key);
-
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-    }
+    mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
+                                                &MPIDI_CH4U_WIN(win, shm_segment_handle), &map_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     MPIDI_CH4U_WIN(win, mmap_addr) = map_ptr;
     MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
-    /* Scan for my offset into the buffer             */
-    /* Could use exscan if this is expensive at scale */
-    for (i = 0; i < comm_ptr->rank; i++)
-        size_out += shared_table[i].size;
+    /* compute the base addresses of each process within the shared memory segment */
+    {
+        char *cur_base = (char *) map_ptr;
+        for (i = 0; i < comm_ptr->local_size; i++) {
+            if (shared_table[i].size)
+                shared_table[i].shm_base_addr = cur_base;
+            else
+                shared_table[i].shm_base_addr = NULL;
+
+            cur_base += shared_table[i].size;
+        }
+    }
 
   fn_zero:
 
-    baseP = (total_size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
-    win->base = baseP;
+    win->base = shared_table[comm_ptr->rank].shm_base_addr;
     win->size = size;
-    mpi_errno = MPIDI_OFI_win_allgather(win, baseP, disp_unit);
+    mpi_errno = MPIDI_OFI_win_allgather(win, win->base, disp_unit);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -1053,15 +939,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
 
-    if (fd >= 0)
-        close(fd);
-
-    if (first)
-        shm_unlink(shm_key);
-
   fn_exit:
-    if (shm_key != NULL)
-        MPL_free(shm_key);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
     return mpi_errno;
   fn_fail:

@@ -79,7 +79,3 @@ program main
  call MPI_FINALIZE(rc)
  stop
 end
-
-
-
-

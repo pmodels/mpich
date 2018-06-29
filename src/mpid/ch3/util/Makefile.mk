@@ -10,4 +10,3 @@
 
 include $(top_srcdir)/src/mpid/ch3/util/sock/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/util/ftb/Makefile.mk
-

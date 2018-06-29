@@ -59,6 +59,12 @@ int main(int argc, char *argv[])
             MPI_Win_fence(0, shm_win);
         }
 
+        /* Other ranks simply join fence */
+        if (shm_rank > 1) {
+            MPI_Win_fence(0, shm_win);
+            MPI_Win_fence(0, shm_win);
+        }
+
         /* Test for FENCE with assert MPI_MODE_NOPRECEDE. */
 
         if (shm_rank == 1) {
@@ -80,6 +86,12 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Expected: result_data = %d   Actual: result_data = %d\n", one, result_data);
             }
+        }
+
+        /* Other ranks simply join fence */
+        if (shm_rank > 1) {
+            MPI_Win_fence(MPI_MODE_NOPRECEDE, shm_win);
+            MPI_Win_fence(0, shm_win);
         }
 
         MPI_Win_free(&shm_win);

@@ -21,6 +21,29 @@ cvars:
       description : >-
         k value for tree based ibcast (for tree_kary and tree_knomial)
 
+    - name        : MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        ibcast (tree_kary and tree_knomial). Default value is 0, that is,
+        no pipelining by default
+
+    - name        : MPIR_CVAR_IBCAST_RING_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in ibcast ring algorithm.
+        Default value is 0, that is, no pipelining by default
+
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -36,6 +59,28 @@ cvars:
         scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         tree_kary                            - Force Generic Transport Tree Kary
         tree_knomial                         - Force Generic Transport Tree Knomial
+        scatter_recexch_allgather            - Force Generic Transport Scatter followed by Recursive Exchange Allgather algorithm
+        ring                                 - Force Generic Transport Ring algorithm
+
+    - name        : MPIR_CVAR_IBCAST_SCATTER_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree based scatter in scatter_recexch_allgather algorithm
+
+    - name        : MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based allgather in scatter_recexch_allgather algorithm
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -97,17 +142,10 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous ATTRIBUTE((unused));
+    int comm_size;
     MPI_Aint type_size, nbytes;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case right now */
 
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -245,6 +283,10 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
+    size_t type_size, nbytes;
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    nbytes = type_size * count;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -255,6 +297,13 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Ibcast_intra_algo_choice) {
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY:
+                mpi_errno =
+                    MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
             case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
                 mpi_errno =
                     MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr,
@@ -263,9 +312,19 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY:
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_SCATTER_RECEXCH_ALLGATHER:
+                if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
+                    break;
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
+                                                                comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

@@ -35,6 +35,21 @@ typedef struct progress_hook_slot {
     int active;
 } progress_hook_slot_t;
 
+/* Flags for MPIDI_Progress_test
+ *
+ * Flags argument allows to control execution of different parts of progress function,
+ * for aims of prioritization of different transports and reentrant-safety of progress call.
+ *
+ * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internaly,
+ *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
+ * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
+ */
+#define MPIDI_PROGRESS_HOOKS  (1)
+#define MPIDI_PROGRESS_NM     (1<<1)
+#define MPIDI_PROGRESS_SHM    (1<<2)
+
+#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
+
 enum {
     MPIDI_CH4U_SEND = 0,        /* Eager send */
 
@@ -79,7 +94,9 @@ enum {
     MPIDI_CH4U_WIN_LOCKALL,
     MPIDI_CH4U_WIN_LOCKALL_ACK,
     MPIDI_CH4U_WIN_UNLOCKALL,
-    MPIDI_CH4U_WIN_UNLOCKALL_ACK
+    MPIDI_CH4U_WIN_UNLOCKALL_ACK,
+
+    MPIDI_CH4U_COMM_ABORT
 };
 
 enum {
@@ -273,6 +290,12 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t exp_seq_no;
     OPA_int_t nxt_seq_no;
     MPIU_buf_pool_t *buf_pool;
+#ifdef HAVE_SIGNAL
+    void (*prev_sighandler) (int);
+    volatile int sigusr1_count;
+    int my_sigusr1_count;
+#endif
+
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

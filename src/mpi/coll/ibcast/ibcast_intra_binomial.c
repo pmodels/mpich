@@ -23,7 +23,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
     int mpi_errno = MPI_SUCCESS;
     int mask;
     int comm_size, rank;
-    int is_contig, is_homogeneous;
+    int is_contig;
     MPI_Aint nbytes, type_size;
     int relative_rank;
     int src, dst;
@@ -41,33 +41,18 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
     MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Stauts",
                               MPL_MEM_BUFFER);
 
 
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
 
     ibcast_state->n_bytes = nbytes;
 
-    if (!is_contig || !is_homogeneous) {
+    if (!is_contig) {
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
@@ -112,7 +97,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
             src = rank - mask;
             if (src < 0)
                 src += comm_size;
-            if (!is_contig || !is_homogeneous)
+            if (!is_contig)
                 mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
                                                    comm_ptr, &ibcast_state->status, s);
             else
@@ -122,12 +107,10 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
                 MPIR_ERR_POP(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
-            if (is_homogeneous) {
-                mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-            }
+            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            MPIR_SCHED_BARRIER(s);
             break;
         }
         mask <<= 1;
@@ -150,7 +133,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
             dst = rank + mask;
             if (dst >= comm_size)
                 dst -= comm_size;
-            if (!is_contig || !is_homogeneous)
+            if (!is_contig)
                 mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
             else
                 mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
@@ -163,7 +146,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
         mask >>= 1;
     }
 
-    if (!is_contig || !is_homogeneous) {
+    if (!is_contig) {
         if (rank != root) {
             MPIR_SCHED_BARRIER(s);
             mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_PACKED, buffer, count, datatype, s);

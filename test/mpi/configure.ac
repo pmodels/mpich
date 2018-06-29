@@ -233,6 +233,11 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
+AC_ARG_ENABLE(collalgo-tests,
+              [AC_HELP_STRING([--enable-collalgo-tests],
+                              [Run extended collective algorithm tests])],,
+              [enable_collalgo_tests=no])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -699,6 +704,15 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
     largetest=""
 fi
 AC_SUBST(largetest)
+
+# Extended collectives test
+if test "$enable_collalgo_tests" = "yes" ; then
+    source $srcdir/coll/test_coll_algos.sh
+else
+    coll_algo_tests=""
+fi
+AC_SUBST(coll_algo_tests)
+AM_SUBST_NOTMAKE(coll_algo_tests)
 
 
 # Only run the long double complex tests if that type is available

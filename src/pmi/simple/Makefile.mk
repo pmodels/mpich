@@ -19,4 +19,3 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/pmi/simple
 AM_CPPFLAGS += -I$(top_srcdir)/src/pmi/include
 
 endif BUILD_PMI_SIMPLE
-

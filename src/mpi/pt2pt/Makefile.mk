@@ -36,4 +36,3 @@ mpi_core_sources += \
     src/mpi/pt2pt/bsendutil.c
 
 noinst_HEADERS += src/mpi/pt2pt/bsendutil.h
-

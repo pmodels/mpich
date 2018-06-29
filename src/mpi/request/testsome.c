@@ -58,13 +58,8 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        if (request_ptrs[i] != NULL &&
-            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-            mpi_errno =
-                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                             greq_fns->grequest_extra_state,
-                                                             array_of_statuses);
+        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
+            mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
         }

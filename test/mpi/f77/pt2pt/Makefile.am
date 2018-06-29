@@ -43,4 +43,3 @@ greqf_SOURCES = greqf.f dummyf.f
 
 # ensure that dependent tests will be rebuilt when typeaints.h is updated
 greqf.$(OBJEXT): attr1aints.h
-

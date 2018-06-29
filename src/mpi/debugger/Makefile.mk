@@ -48,4 +48,3 @@ src/mpi/debugger/allcommdbg: src/mpi/debugger/allcommdbg.c
 	$(bindir)/mpicc -o $@ $?
 
 endif BUILD_DEBUGGER_DLL
-

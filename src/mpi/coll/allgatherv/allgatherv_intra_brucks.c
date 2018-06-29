@@ -36,12 +36,10 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvbuf_extent, recvtype_extent, recvtype_true_extent, recvtype_true_lb;
-    int pof2, src, recv_cnt, rem, send_cnt;
-    int curr_cnt, dst, total_count;
+    int pof2, src, rem, send_cnt;
+    MPI_Aint curr_cnt, recv_cnt;
+    int dst, total_count;
     void *tmp_buf;
-#ifdef MPID_HAS_HETERO
-    int tmp_buf_size, nbytes;
-#endif
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;

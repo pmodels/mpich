@@ -22,7 +22,6 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
     int mask, dst, total_count, position, offset, my_tree_root, dst_tree_root;
     MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
     void *tmp_buf = NULL;
-    int is_homogeneous ATTRIBUTE((unused));
     MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -33,13 +32,6 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
      * Non power-of-2 comm_size is still experimental */
     MPIR_Assert(!(comm_size & (comm_size - 1)));
 #endif /* HAVE_ERROR_CHECKING */
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we only handle the homogeneous for now */
 
     /* need to receive contiguously into tmp_buf because
      * displs could make the recvbuf noncontiguous */

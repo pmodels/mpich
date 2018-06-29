@@ -8,5 +8,3 @@ attrlangf90_SOURCES = attrlangf90.f90 attrlangc.c
 # Remove any created module files, if we know the extension of those files
 clean-local:
 	if [ "@FCMODEXT@" != "" ] ; then rm -f *.@FCMODEXT@ ; fi
-
-
