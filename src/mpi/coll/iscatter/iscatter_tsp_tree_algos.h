@@ -53,7 +53,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     if (rank == root)
         is_inplace = (recvbuf == MPI_IN_PLACE); /* For scatter, MPI_IN_PLACE is significant only at root */
 
-    tree_type = TREE_TYPE_KNOMIAL;      /* currently only tree_type=TREE_TYPE_KNOMIAL is supported for scatter */
+    tree_type = TREE_TYPE_KNOMIAL_1;    /* currently only tree_type=TREE_TYPE_KNOMIAL_1 is supported for scatter */
     mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

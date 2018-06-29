@@ -31,7 +31,7 @@ cvars:
       description : >-
         Tree type for tree based ibcast
         0 - kary tree type
-        1 - knomial tree type
+        1 - knomial_1 tree type
 
     - name        : MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE
