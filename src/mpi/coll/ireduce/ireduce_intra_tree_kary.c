@@ -17,7 +17,7 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_intra_tree_knomial
+#define FUNCNAME MPIR_Ireduce_intra_tree_kary
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_intra_tree_kary(const void *sendbuf, void *recvbuf, int count,
