@@ -73,7 +73,16 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
     goto fn_exit;
 }
 
-
+/* Some examples of knomial_1 tree */
+/*     4 ranks                8 ranks
+ *       0                      0
+ *     /  \                 /   |   \
+ *    1   3               1     5    7
+ *    |                 /   \   |
+ *    2                2     4  6
+ *                     |
+ *                     3
+ */
 #undef FUNCNAME
 #define FUNCNAME MPII_Treeutil_tree_knomial_1_init
 #undef FCNAME
