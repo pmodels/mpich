@@ -26,6 +26,7 @@
 enum {
     TREE_TYPE_KARY = 0,
     TREE_TYPE_KNOMIAL_1,
+    TREE_TYPE_KNOMIAL_2,
 };
 
 /* enumerator for different recexch types */
