@@ -24,8 +24,8 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
     flat->count = count;
     flat->flag = 0;
 
-    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
-    flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    flat->blocklens = (ADIO_Offset *) ADIOI_Calloc(flat->count, sizeof(ADIO_Offset));
+    flat->indices = (ADIO_Offset *) ADIOI_Calloc(flat->count, sizeof(ADIO_Offset));
     return flat;
 }
 
@@ -1164,7 +1164,7 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
             j = i;      /* set j the first non-zero-length block index */
             continue;
         }
-#if 0
+
         /* Check if displacements are in a monotonic nondecreasing order */
         if (flat_type->indices[j] > flat_type->indices[i])
             flat_type->flag |= ADIOI_TYPE_DECREASE;
@@ -1172,7 +1172,7 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
         /* Check for overlapping regions */
         if (flat_type->indices[j] + flat_type->blocklens[j] > flat_type->indices[i])
             flat_type->flag |= ADIOI_TYPE_OVERLAP;
-#endif
+
         j = i;  /* j is the previous non-zero-length block index */
     }
 
