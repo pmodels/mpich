@@ -57,59 +57,6 @@ static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype * d
     return;
 }
 
-#ifdef ROMIO_DAOS
-/* MSC - Make a generic DAOS function instead */
-static d_rank_list_t *
-daos_rank_list_parse(const char *str, const char *sep)
-{
-    d_rank_t *buf;
-    int cap = 8;
-    d_rank_list_t *ranks = NULL;
-    char *s, *p;
-    int n = 0;
-
-    buf = ADIOI_Malloc(sizeof(d_rank_t) * cap);
-    if (buf == NULL)
-        goto out;
-    s = strdup(str);
-    if (s == NULL)
-        goto out_buf;
-
-    while ((s = strtok_r(s, sep, &p)) != NULL) {
-        if (n == cap) {
-            d_rank_t    *buf_new;
-            int		cap_new;
-
-            /* Double the buffer. */
-            cap_new = cap * 2;
-            buf_new = ADIOI_Malloc(sizeof(d_rank_t) * cap_new);
-            if (buf_new == NULL)
-                goto out_s;
-            memcpy(buf_new, buf, sizeof(d_rank_t) * n);
-            ADIOI_Free(buf);
-            buf = buf_new;
-            cap = cap_new;
-        }
-        buf[n] = atoi(s);
-        n++;
-        s = NULL;
-    }
-
-    ranks = d_rank_list_alloc(n);
-    if (ranks == NULL)
-        goto out_s;
-    memcpy(ranks->rl_ranks, buf, sizeof(*buf) * n);
-
-out_s:
-    if (s)
-        ADIOI_Free(s);
-out_buf:
-    ADIOI_Free(buf);
-out:
-    return ranks;
-}
-#endif /* ROMIO_DAOS */
-
 void ADIO_Init(int *argc, char ***argv, int *error_code)
 {
     int comm_world_rank;
@@ -203,6 +150,7 @@ bcast:
         } else {
             daos_pool_oh = DAOS_HDL_INVAL;
         }
+        daos_rank_list_free(svcl);
     }
 #endif /* ROMIO_DAOS */
 

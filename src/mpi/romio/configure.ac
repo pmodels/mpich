@@ -786,7 +786,7 @@ AS_IF([test "x$with_cart" != xno],
     LDFLAGS="$LDFLAGS -L$with_cart/lib"
     CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
     AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
-    AC_CHECK_LIB([gurt], [d_rank_list_alloc],, [unset CART]))
+    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART]))
 
 AC_ARG_WITH([daos],
     [AS_HELP_STRING([--with-daos],
