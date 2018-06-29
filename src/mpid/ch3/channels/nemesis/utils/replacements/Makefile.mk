@@ -7,4 +7,3 @@
 
 mpi_core_sources +=                                          \
     src/mpid/ch3/channels/nemesis/utils/replacements/mkstemp.c
-

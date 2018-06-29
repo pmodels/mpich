@@ -164,13 +164,13 @@ typedef struct MPIDI_CH4U_req_t {
 } MPIDI_CH4U_req_t;
 
 typedef struct {
-#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
     /* Anysource handling. Netmod and shm specific requests are cross
      * referenced. This must be present all of the time to avoid lots of extra
      * ifdefs in the code. */
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct MPIR_Request *anysource_partner_request;
 #endif
 
@@ -184,13 +184,17 @@ typedef struct {
 
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        MPIDI_workq_elemt_t command;
+#endif
     } ch4;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
 #else
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  NULL
@@ -203,6 +207,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req
 typedef struct MPIDI_CH4U_win_shared_info {
     uint32_t disp_unit;
     size_t size;
+    void *shm_base_addr;
 } MPIDI_CH4U_win_shared_info_t;
 
 #define MPIDI_CH4I_ACCU_ORDER_RAR (1)
@@ -222,6 +227,14 @@ typedef struct MPIDI_CH4U_win_info_args_t {
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDI_CH4U_win_info_accumulate_ops accumulate_ops;
+
+    /* alloc_shm: MPICH specific hint (same in CH3).
+     * If true, MPICH will try to use shared memory routines for the window.
+     * Default is true for allocate-based windows, and false for other
+     * windows. Note that this hint can be also used in create-based windows,
+     * and it means the user window buffer is allocated over shared memory,
+     * thus RMA operation can use shm routines. */
+    int alloc_shm;
 } MPIDI_CH4U_win_info_args_t;
 
 struct MPIDI_CH4U_win_lock {
@@ -304,12 +317,13 @@ typedef struct MPIDI_CH4U_win_t {
     void *mmap_addr;
     int64_t mmap_sz;
 
+    MPL_shm_hnd_t shm_segment_handle;
+
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIR_cc_t remote_acc_cmpl_cnts;     /* for acc only, increase at OP issuing, decrease at remote completion */
 
-    MPI_Aint *sizes;
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
@@ -427,7 +441,7 @@ typedef struct {
 #define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
 
-typedef struct {
+typedef struct MPIDI_av_entry {
     union {
     MPIDI_NM_ADDR_DECL} netmod;
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
@@ -489,6 +503,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type);
 #define MPID_INTERCOMM_NO_DYNPROC(comm) \
     (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
 
+int MPIDI_check_for_failed_procs(void);
+
+#ifdef HAVE_SIGNAL
+void MPIDI_sigusr1_handler(int sig);
+#endif
 
 #include "mpidu_pre.h"
 

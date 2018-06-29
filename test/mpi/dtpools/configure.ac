@@ -8,7 +8,6 @@
 AC_PREREQ([2.67])
 AC_INIT([dtpools], [0.0], [discuss@mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
-AC_CONFIG_MACRO_DIRS([confdb])
 
 AC_CONFIG_HEADER(dtpoolsconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */

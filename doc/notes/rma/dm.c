@@ -261,5 +261,3 @@ MPIDI_Win_acc_eager_hdlr(src, comm, (header,(data,data_sz)))
     dwin->rhc_processed++;
 }
 /* MPIDI_Win_acc_eager_hdlr() */
-
-

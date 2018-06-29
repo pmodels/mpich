@@ -38,25 +38,27 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 
     MPID_Progress_start(&progress_state);
     while (!MPIR_Request_is_complete(request_ptr)) {
-        mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
-        if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptr->u.ureq.greq_fns->wait_fn != NULL) {
-            if (mpi_errno) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-            continue;   /* treating UREQUEST like normal request means we'll
-                         * poll indefinitely. skip over progress_wait */
-        }
-
         mpi_errno = MPID_Progress_wait(&progress_state);
         if (mpi_errno) {
             /* --BEGIN ERROR HANDLING-- */
             MPID_Progress_end(&progress_state);
             MPIR_ERR_POP(mpi_errno);
             /* --END ERROR HANDLING-- */
+        }
+
+        if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                     !MPIR_Request_is_complete(request_ptr) &&
+                     MPID_Request_is_anysource(request_ptr) &&
+                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
+            /* A process fail during progress, which is manifested through this check. */
+            if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
+                /* We only handle receive request at the moment. */
+                MPID_Cancel_recv(request_ptr);
+                MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
+            }
+            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+            mpi_errno = request_ptr->status.MPI_ERROR;
+            goto fn_fail;
         }
     }
     MPID_Progress_end(&progress_state);
@@ -96,9 +98,17 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
             goto fn_exit;
         }
 
-        mpi_errno = MPID_Wait(request_ptr, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        if (MPIR_Request_has_poll_fn(request_ptr)) {
+            while (!MPIR_Request_is_complete(request_ptr)) {
+                mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+        } else {
+            mpi_errno = MPID_Wait(request_ptr, status);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);

@@ -24,4 +24,3 @@ noinst_HEADERS +=                                                \
     src/mpid/ch3/channels/nemesis/netmod/portals4/rptl.h
 
 endif BUILD_NEMESIS_NETMOD_PORTALS4
-

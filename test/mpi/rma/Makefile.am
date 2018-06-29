@@ -162,7 +162,8 @@ noinst_PROGRAMS =          \
     overlap_wins_cas  \
     rget_unlock  \
     lock_nested  \
-    rget_testall
+    rget_testall \
+    win_shared_query_null
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint

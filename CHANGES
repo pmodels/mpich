@@ -31,6 +31,19 @@
  # Added new "non-catastrophic" error codes to expose internal
    resource exhaustion.
 
+ # Added info hints to MPI_Comm_split_type to support splitting
+   communicators by machine topology. Both on-node (socket, core,
+   etc.) and off-node (switch-level) hints are defined.
+
+ # Message Driven Thread Activation (MDTA). An alternative locking
+   model is defined for MPI_THREAD_MULTIPLE in CH4.
+
+ # Added PMI usage optimizations for business card exchange in CH4
+   netmods.
+
+ # Improvements on MPI_Abort. MPI_Abort invoked on subcommunicators will
+   only abort the connected processes within that communicator.
+`
  # Cleanup of whitespace (ch3 excluded) using the
    maint/code-cleanup.sh script. For instructions on how to update
    PRs/branches based on MPICH before the cleanup, see
@@ -42,7 +55,7 @@
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3b1
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3b3
 
    A list of bugs that have been fixed is available at the following
    link:

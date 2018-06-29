@@ -302,7 +302,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                             (MPIR_Process.comm_world).rma_id_allocator,
                                             MPL_MEM_RMA);
         MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
-        lmt_info->rma_key = index << MPIDI_Global.huge_rma_shift;
+        lmt_info->rma_key = MPIDI_OFI_rma_key_pack(comm->context_id,
+                                                   MPIDI_OFI_KEY_TYPE_HUGE_RMA, index);
     } else {
         lmt_info->rma_key = 0;
     }
@@ -470,7 +471,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         segment_first = 0;
         last = data_sz;
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);

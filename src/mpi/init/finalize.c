@@ -160,8 +160,13 @@ int MPI_Finalize(void)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
 #ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.topology);
+    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
     hwloc_bitmap_free(MPIR_Process.bindset);
+#endif
+
+#ifdef HAVE_NETLOC
+    if (MPIR_Process.network_attr.u.tree.node_levels != NULL)
+        MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
 #endif
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
@@ -242,14 +247,14 @@ int MPI_Finalize(void)
     MPIR_Debugger_set_aborting((char *) 0);
 #endif
 
-    mpi_errno = MPII_Coll_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     mpi_errno = MPID_Finalize();
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
+
+    mpi_errno = MPII_Coll_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);

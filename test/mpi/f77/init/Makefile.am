@@ -23,4 +23,3 @@ checksizes_LDADD =
 nodist_checksizes_SOURCES = checksizes.c
 
 DISTCLEANFILES = checksizes.c
-

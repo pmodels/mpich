@@ -28,4 +28,7 @@ noinst_PROGRAMS = cfree \
                   comm_size_nullarg \
                   comm_split_nullarg \
                   comm_split_type_nullarg \
-                  intercomm_create_nullarg
+                  intercomm_create_nullarg \
+                  subcomm_abort \
+                  subcomm_abort2 \
+                  intercomm_abort

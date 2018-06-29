@@ -21,4 +21,3 @@ testconnectserial_LDADD   = $(LDADD) -lm -lpthread
 singjoin_LDADD = $(LDADD) @socklib@ @nslib@
 
 CLEANFILES += test-port
-

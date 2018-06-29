@@ -132,7 +132,7 @@ MPIDI_CH4I_API(int, Win_flush_all, MPIR_Win *);
 MPIDI_CH4I_API(int, Get_accumulate, const void *, int, MPI_Datatype, void *, int, MPI_Datatype, int,
                MPI_Aint, int, MPI_Datatype, MPI_Op, MPIR_Win *);
 MPIDI_CH4I_API(int, Win_lock_all, int, MPIR_Win *);
-MPIDI_CH4I_API(void *, Alloc_mem, size_t, MPIR_Info *, MPL_memory_class class);
+MPIDI_CH4I_API(void *, Alloc_mem, size_t, MPIR_Info *);
 MPIDI_CH4I_API(int, Free_mem, void *);
 MPIDI_CH4I_API(int, Get_node_id, MPIR_Comm *, int rank, int *);
 MPIDI_CH4I_API(int, Get_max_node_id, MPIR_Comm *, int *);
@@ -243,21 +243,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 
 /* Include netmod prototypes */
 #include <netmod.h>
-#ifdef MPIDI_BUILD_CH4_SHM
 #include "shm.h"
-#endif
 
 /* Declare request functions here so netmods can refer to
-   them in the NETMOD_DIRECT mode */
+   them in the NETMOD_INLINE mode */
 #include "ch4_request.h"
 
 /* Include netmod and shm implementations  */
 /* Prototypes are split from impl to avoid */
 /* circular dependencies                   */
 #include <netmod_impl.h>
-#ifdef MPIDI_BUILD_CH4_SHM
 #include "shm_impl.h"
-#endif
 
 #include "ch4_init.h"
 #include "ch4_probe.h"

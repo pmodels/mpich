@@ -25,4 +25,3 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/datatype
 
 noinst_HEADERS +=                                        \
     src/mpi/datatype/dataloop/typesize_support.h
-

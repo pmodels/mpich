@@ -42,8 +42,7 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     MPID_Progress_state progress_state;
     int i;
 
-    if ((requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) &&
-        (requests_property & MPIR_REQUESTS_PROPERTY__NO_NULL)) {
+    if (requests_property & MPIR_REQUESTS_PROPERTY__NO_NULL) {
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; ++i) {
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
@@ -59,34 +58,7 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
             }
         }
         MPID_Progress_end(&progress_state);
-    } else if (requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) {
-        MPID_Progress_start(&progress_state);
-        for (i = 0; i < count; i++) {
-            if (request_ptrs[i] == NULL) {
-                continue;
-            }
-            /* wait for ith request to complete */
-            while (!MPIR_Request_is_complete(request_ptrs[i])) {
-                /* generalized requests should already be finished */
-                MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
-
-                mpi_errno = MPID_Progress_wait(&progress_state);
-                if (mpi_errno != MPI_SUCCESS) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    MPID_Progress_end(&progress_state);
-                    MPIR_ERR_POP(mpi_errno);
-                    /* --END ERROR HANDLING-- */
-                }
-            }
-        }
-        MPID_Progress_end(&progress_state);
     } else {
-        /* Grequest_waitall may run the progress engine - thus, we don't
-         * invoke progress_start until after running Grequest_waitall */
-        /* first, complete any generalized requests */
-        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; i++) {
             if (request_ptrs[i] == NULL) {
@@ -178,8 +150,11 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 if (request_ptrs[i]->kind != MPIR_REQUEST_KIND__RECV &&
                     request_ptrs[i]->kind != MPIR_REQUEST_KIND__SEND) {
                     requests_property &= ~MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY;
-                    if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST) {
-                        requests_property &= ~MPIR_REQUESTS_PROPERTY__NO_GREQUESTS;
+
+                    /* If this is extended generalized request, we can complete it here. */
+                    if (MPIR_Request_has_wait_fn(request_ptrs[i])) {
+                        while (!MPIR_Request_is_complete(request_ptrs[i]))
+                            MPIR_Grequest_wait(request_ptrs[i], &array_of_statuses[i]);
                     }
                 }
             } else {

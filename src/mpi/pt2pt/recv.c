@@ -145,38 +145,9 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
         goto fn_exit;
     }
 
-    /* If a request was returned, then we need to block until the request is
-     * complete */
-    if (!MPIR_Request_is_complete(request_ptr)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(request_ptr)) {
-            /* MT: Progress_wait may release the SINGLE_CS while it
-             * waits */
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                goto fn_fail;
-                /* --END ERROR HANDLING-- */
-            }
-
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         !MPIR_Request_is_complete(request_ptr) &&
-                         MPID_Request_is_anysource(request_ptr) &&
-                         !MPID_Comm_AS_enabled(request_ptr->comm))) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Cancel_recv(request_ptr);
-                MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
-                MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
-                mpi_errno = request_ptr->status.MPI_ERROR;
-                goto fn_fail;
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_extract_status(request_ptr, status);

@@ -26,7 +26,7 @@ static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
      *   communicator
      * - there are no directory operation routines in MPI so we'll do it via
      *   POSIX.  */
-    int pid, rank, nprocs, ret;
+    int rank, nprocs, ret;
     int *ranks;
     MPI_Group comm_group, newgroup;
     int j = 0, mpi_errno = MPI_SUCCESS;

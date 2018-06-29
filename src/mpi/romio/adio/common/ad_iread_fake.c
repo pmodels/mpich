@@ -18,6 +18,8 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
     ADIO_Status status;
     MPI_Count typesize;
     MPI_Offset len;
+    int actual_len=0;
+
 
     MPI_Type_size_x(datatype, &typesize);
     len = (MPI_Offset) count *(MPI_Offset) typesize;
@@ -30,9 +32,9 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
     if (*error_code != MPI_SUCCESS) {
         len = 0;
     } else {
-        MPI_Get_count(&status, MPI_BYTE, &len);
+        MPI_Get_count(&status, MPI_BYTE, &actual_len);
     }
-    MPIO_Completed_request_create(&fd, len, error_code, request);
+    MPIO_Completed_request_create(&fd, actual_len, error_code, request);
 }
 
 

@@ -158,7 +158,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(match_req, buffer), count,
-                          MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr);
 
         last = count * dt_sz;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
@@ -233,7 +233,7 @@ static inline int MPIDI_do_send_target(void **data,
 
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(rreq, buffer),
                           MPIDI_CH4U_REQUEST(rreq, count),
-                          MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr);
 
         if (*p_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -295,7 +295,7 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
         MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_CH4R_NETMOD,
@@ -632,6 +632,39 @@ static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_comm_abort_origin_cb
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_comm_abort_origin_cb(MPIR_Request * sreq)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_ABORT_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_ABORT_ORIGIN_CB);
+    MPID_Request_complete(sreq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_ABORT_ORIGIN_CB);
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_comm_abort_target_msg_cb
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_comm_abort_target_msg_cb(int handler_id, void *am_hdr,
+                                                 void **data,
+                                                 size_t * p_data_sz,
+                                                 int *is_contig,
+                                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
+                                                 MPIR_Request ** req)
+{
+    MPIDI_CH4U_hdr_t *hdr = (MPIDI_CH4U_hdr_t *) am_hdr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_ABORT_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_ABORT_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_ABORT_TARGET_MSG_CB);
+    MPL_exit(hdr->tag);
+    return MPI_SUCCESS;
 }
 
 #endif /* CH4R_CALLBACKS_H_INCLUDED */

@@ -21,10 +21,8 @@
 
 void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
 {
-    int i;
     int len;
     char *slash, *ptr, tmp[PATH_MAX];
-    int pid = 0;
 
     fd->shared_fp_fname = (char *) ADIOI_Malloc(PATH_MAX);
 

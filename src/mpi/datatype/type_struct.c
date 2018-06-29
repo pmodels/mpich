@@ -203,9 +203,6 @@ int MPIR_Type_struct(int count,
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
     new_dtp->dataloop_depth = -1;
-    new_dtp->hetero_dloop = NULL;
-    new_dtp->hetero_dloop_size = -1;
-    new_dtp->hetero_dloop_depth = -1;
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)

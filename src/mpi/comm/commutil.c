@@ -55,7 +55,7 @@ static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
    new communicator.
    Process B then cancels the message, and frees the communicator.
 
-   The likelyhood of this happening can be reduced by introducing a gap
+   The likelihood of this happening can be reduced by introducing a gap
    between when a context id is released and when it is reused.  An alternative
    is to use an explicit message (in the implementation of MPI_Comm_free)
    to indicate that a communicator is being freed; this will often require
@@ -351,9 +351,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_Assert(comm->node_roots_comm == NULL);
 
     /* Notify device of communicator creation */
-    mpi_errno = MPID_Comm_create_hook(comm);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    if (comm != MPIR_Process.comm_world) {
+        mpi_errno = MPID_Comm_create_hook(comm);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        MPIR_Comm_map_free(comm);
+    }
 
     /* Create collectives-specific infrastructure */
     mpi_errno = MPIR_Coll_comm_init(comm);
@@ -477,6 +481,14 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     }
 
   fn_exit:
+    if (comm == MPIR_Process.comm_world) {
+        mpi_errno = MPID_Comm_create_hook(comm);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        MPIR_Comm_map_free(comm);
+    }
+
     if (external_procs != NULL)
         MPL_free(external_procs);
     if (local_procs != NULL)

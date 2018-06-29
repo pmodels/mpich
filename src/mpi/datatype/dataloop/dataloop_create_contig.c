@@ -48,8 +48,8 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
         DLOOP_Offset old_size = 0, old_extent = 0;
         DLOOP_Dataloop *old_loop_ptr;
 
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
+        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
+        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
         DLOOP_Handle_get_size_macro(oldtype, old_size);
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
 
@@ -93,8 +93,8 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
         DLOOP_Dataloop *old_loop_ptr;
         MPI_Aint old_loop_sz = 0;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
+        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
+        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
 
         if (apply_contig_coalescing) {
             /* make a copy of the old loop and multiply the count */
@@ -107,7 +107,7 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
             new_dlp->loop_params.c_t.count *= count;
 
             new_loop_sz = old_loop_sz;
-            DLOOP_Handle_get_loopdepth_macro(oldtype, new_loop_depth, flag);
+            DLOOP_Handle_get_loopdepth_macro(oldtype, new_loop_depth);
         } else {
             /* allocate space for new loop including copy of old */
             MPIR_Dataloop_alloc_and_copy(DLOOP_KIND_CONTIG,

@@ -172,22 +172,13 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             /* --END ERROR HANDLING-- */
         }
 
-        if (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq)) {
-            MPID_Progress_state progress_state;
+        mpi_errno = MPID_Wait(rreq, MPI_STATUS_IGNORE);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-            MPID_Progress_start(&progress_state);
-            while (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq)) {
-                mpi_errno = MPID_Progress_wait(&progress_state);
-                if (mpi_errno != MPI_SUCCESS) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    MPID_Progress_end(&progress_state);
-                    goto fn_fail;
-                    /* --END ERROR HANDLING-- */
-                }
-            }
-            MPID_Progress_end(&progress_state);
-
-        }
+        mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         if (status != MPI_STATUS_IGNORE) {
             *status = rreq->status;

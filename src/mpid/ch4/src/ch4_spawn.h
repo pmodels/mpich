@@ -33,7 +33,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#ifdef USE_PMIX_API
+#if defined(USE_PMIX_API) || defined(USE_PMI2_API)
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME

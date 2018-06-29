@@ -7,12 +7,6 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-struct ibcast_status {
-    int curr_bytes;
-    int n_bytes;
-    MPI_Status status;
-};
-
 #undef FUNCNAME
 #define FUNCNAME sched_test_length
 #undef FCNAME
@@ -20,14 +14,14 @@ struct ibcast_status {
 static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    int recv_size;
-    struct ibcast_status *status = (struct ibcast_status *) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    if (status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
+    MPI_Aint recv_size;
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
+    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
                                          FCNAME, __LINE__, MPI_ERR_OTHER,
                                          "**collective_size_mismatch",
-                                         "**collective_size_mismatch %d %d", status->n_bytes,
+                                         "**collective_size_mismatch %d %d", ibcast_state->n_bytes,
                                          recv_size);
     }
     return mpi_errno;
@@ -40,39 +34,20 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_homogeneous;
     MPI_Aint type_size;
-    struct ibcast_status *status;
+    struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 #endif
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct ibcast_status *,
-                              sizeof(struct ibcast_status), mpi_errno, "MPI_Status",
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case yet */
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-
-    status->n_bytes = type_size * count;
+    ibcast_state->n_bytes = type_size * count;
     /* TODO insert packing here */
 
     /* send to intranode-rank 0 on the root's node */
@@ -83,12 +58,12 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
             mpi_errno =
                 MPIR_Sched_recv_status(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
-                                       &status->status, s);
+                                       &ibcast_state->status, s);
         }
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&sched_test_length, status, s);
+        mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

@@ -28,4 +28,3 @@ foreach $errname (sort(keys(%errkeys))) {
     }
     close FDG;
 }
-

@@ -17,8 +17,7 @@ typedef struct {
     int nranks;
     int parent;
     int num_children;
-    int max_children;
-    int *children;
+    UT_array *children;
 } MPII_Treealgo_tree_t;
 
 #endif /* TREEALGO_TYPES_H_INCLUDED */

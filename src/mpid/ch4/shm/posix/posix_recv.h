@@ -61,7 +61,9 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
     MPIDI_POSIX_REQUEST(rreq)->data_sz = data_sz;
     MPIDI_POSIX_REQUEST(rreq)->next = NULL;
     MPIDI_POSIX_REQUEST(rreq)->segment_ptr = NULL;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+#endif
     MPIR_STATUS_SET_COUNT(rreq->status, 0);
 
     if (!dt_contig) {
@@ -70,7 +72,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
         MPIR_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
                           MPIDI_POSIX_REQUEST(rreq)->datatype,
-                          MPIDI_POSIX_REQUEST(rreq)->segment_ptr, 0);
+                          MPIDI_POSIX_REQUEST(rreq)->segment_ptr);
         MPIDI_POSIX_REQUEST(rreq)->segment_first = 0;
         MPIDI_POSIX_REQUEST(rreq)->segment_size = data_sz;
     }
@@ -201,7 +203,7 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
         MPIR_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
                           MPIDI_POSIX_REQUEST(rreq)->datatype,
-                          MPIDI_POSIX_REQUEST(rreq)->segment_ptr, 0);
+                          MPIDI_POSIX_REQUEST(rreq)->segment_ptr);
         MPIDI_POSIX_REQUEST(rreq)->segment_first = 0;
         MPIDI_POSIX_REQUEST(rreq)->segment_size = data_sz;
     }

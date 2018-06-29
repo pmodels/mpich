@@ -6,8 +6,6 @@
 
 #include "mpidimpl.h"
 
-/* FIXME: HOMOGENEOUS SYSTEMS ONLY -- no data conversion is performed */
-
 /*
  * MPID_Ssend()
  */

@@ -60,7 +60,7 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     segment_ptr = MPIR_Segment_alloc();
     MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                          MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-    MPIR_Segment_init(origin_addr, origin_count, origin_datatype, segment_ptr, 0);
+    MPIR_Segment_init(origin_addr, origin_count, origin_datatype, segment_ptr);
     segment_first = 0;
     last = size;
 
@@ -134,13 +134,9 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
-    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
-    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
-
-    /* Check target sync status for any target_rank except PROC_NULL. */
+    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
     if (target_rank == MPI_PROC_NULL)
         goto fn_exit;
-    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
 
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);

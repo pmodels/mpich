@@ -134,7 +134,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg, 0);
+    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg);
     MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack),
                              &num_contig);
 
@@ -260,7 +260,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         int c = 1;
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
-        MPIDI_OFI_SSEND_ACKREQUEST_CREATE(ackreq);
+        ackreq = MPL_malloc(sizeof(MPIDI_OFI_ssendack_request_t), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(ackreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                             "**nomem %s", "Ssend ack request alloc");
         ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
         ackreq->signal_req = sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -304,8 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         segment_first = 0;
         last = data_sz;
 
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment),
-                          0);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
         MPIR_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer));
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);
@@ -348,8 +349,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             ctrl.rma_key =
                 MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
             MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
-            rma_key = ctrl.rma_key << MPIDI_Global.huge_rma_shift;
+            rma_key = MPIDI_OFI_rma_key_pack(comm->context_id, MPIDI_OFI_KEY_TYPE_HUGE_RMA,
+                                             ctrl.rma_key);
+            ctrl.rma_key = rma_key;
         }
+
         MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,    /* In:  Domain Object       */
                                         send_buf,       /* In:  Lower memory address */
                                         data_sz,        /* In:  Length              */

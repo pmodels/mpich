@@ -58,6 +58,16 @@ cvars:
         to MPI routines.  Only effective when MPICH is configured with
         --enable-error-checking=runtime .
 
+    - name        : MPIR_CVAR_NETLOC_NODE_FILE
+      category    : DEBUGGER
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Subnet json file
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -95,6 +105,14 @@ MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 #endif
 
 MPID_Thread_tls_t MPIR_Per_thread_key;
+
+#ifdef MPICH_THREAD_USE_MDTA
+/* This counts how many threads allowed to stay in the progress engine. */
+OPA_int_t num_server_thread = { 0 };
+
+/* Other threads will wait in a sync object, and are recorded here. */
+MPIR_Thread_sync_list_t sync_wait_list = { NULL };
+#endif
 
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to
@@ -338,16 +356,29 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
 #ifdef HAVE_HWLOC
     MPIR_Process.bindset = hwloc_bitmap_alloc();
-    hwloc_topology_init(&MPIR_Process.topology);
+    hwloc_topology_init(&MPIR_Process.hwloc_topology);
     MPIR_Process.bindset_is_valid = 0;
-    hwloc_topology_set_io_types_filter(MPIR_Process.topology, HWLOC_TYPE_FILTER_KEEP_ALL);
-    if (!hwloc_topology_load(MPIR_Process.topology)) {
+    hwloc_topology_set_io_types_filter(MPIR_Process.hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);
+    if (!hwloc_topology_load(MPIR_Process.hwloc_topology)) {
         MPIR_Process.bindset_is_valid =
-            !hwloc_get_proc_cpubind(MPIR_Process.topology, getpid(), MPIR_Process.bindset,
+            !hwloc_get_proc_cpubind(MPIR_Process.hwloc_topology, getpid(), MPIR_Process.bindset,
                                     HWLOC_CPUBIND_PROCESS);
     }
 #endif
 
+#ifdef HAVE_NETLOC
+    MPIR_Process.network_attr.u.tree.node_levels = NULL;
+    if (strlen(MPIR_CVAR_NETLOC_NODE_FILE)) {
+        mpi_errno =
+            netloc_parse_topology(&MPIR_Process.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
+        if (mpi_errno == NETLOC_SUCCESS) {
+            MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology, &MPIR_Process.network_attr);
+        }
+    } else {
+        MPIR_Process.netloc_topology = NULL;
+        MPIR_Process.network_attr.type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+    }
+#endif
     /* For any code in the device that wants to check for runtime
      * decisions on the value of isThreaded, set a provisional
      * value here. We could let the MPID_Init routine override this */

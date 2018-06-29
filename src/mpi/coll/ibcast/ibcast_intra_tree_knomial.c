@@ -14,7 +14,7 @@
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
@@ -29,7 +29,8 @@ int MPIR_Ibcast_intra_tree_knomial(void *buffer, int count,
 
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
                                                comm_ptr, request, TREE_TYPE_KNOMIAL,
-                                               MPIR_CVAR_IBCAST_TREE_KVAL, 0);
+                                               MPIR_CVAR_IBCAST_TREE_KVAL,
+                                               MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
 
     return mpi_errno;
 }

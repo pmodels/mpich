@@ -8,10 +8,12 @@
 #define BUILD_NODEMAP_H_INCLUDED
 
 #include "mpl.h"
-#ifndef USE_PMIX_API
-#include "pmi.h"
-#else
+#ifdef USE_PMIX_API
 #include "pmix.h"
+#elif defined(USE_PMI2_API)
+#include "pmi2.h"
+#else
+#include "pmi.h"
 #endif
 
 /*
@@ -578,6 +580,44 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static inline void MPIR_NODEMAP_get_local_info(int rank, int size, int *nodemap, int *local_size,
+                                               int *local_rank, int *local_leader)
+{
+    int i, node_id = nodemap[rank];
+
+    *local_size = 0;
+    for (i = 0; i < size; i++) {
+        if (nodemap[i] == node_id) {
+            if (*local_size == 0)
+                *local_leader = i;
+            if (i == rank)
+                *local_rank = *local_size;
+            (*local_size)++;
+        }
+    }
+}
+
+static inline void MPIR_NODEMAP_get_node_roots(int *nodemap, int size, int **node_roots,
+                                               int *num_nodes)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, max_node_id;
+
+    mpi_errno = MPID_Get_max_node_id(MPIR_Process.comm_world, &max_node_id);
+    *num_nodes = max_node_id + 1;
+
+    *node_roots = MPL_malloc(sizeof(int) * (*num_nodes), MPL_MEM_ADDRESS);
+    /* FIXME: do proper error handling */
+    MPIR_Assert(*node_roots);
+    for (i = 0; i < *num_nodes; i++)
+        (*node_roots)[i] = -1;
+
+    for (i = 0; i < size; i++) {
+        if ((*node_roots)[nodemap[i]] == -1)
+            (*node_roots)[nodemap[i]] = i;
+    }
 }
 
 #endif /* BUILD_NODEMAP_H_INCLUDED */

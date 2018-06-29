@@ -146,10 +146,6 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
                               MPI_Datatype datatype,
                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-#ifdef MPID_HAS_HETERO
-    int is_homogeneous;
-    int rc;
-#endif
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int pof2;
@@ -183,21 +179,13 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
 
         goto fn_exit;
     }
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-    else
-        is_homogeneous = 1;
-#endif
 
-#ifdef MPID_HAS_HETERO
-    /* For the heterogeneous case, we call MPI_Reduce followed by MPI_Bcast in
-     * order to meet the requirement that all processes must have the same
-     * result.  For the homogeneous case, we use the following algorithms.  */
-    if (!is_homogeneous) {
-        /* heterogeneous. To get the same result on all processes, we
-         * do a reduce to 0 and then broadcast. */
-        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, errflag);
+    pof2 = comm_ptr->pof2;
+    if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
+        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+        mpi_errno =
+            MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                    comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -206,8 +194,10 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-
-        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr, errflag);
+    } else {
+        mpi_errno =
+            MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op,
+                                                          comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -215,38 +205,6 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
                 MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    } else
-#endif /* MPID_HAS_HETERO */
-    {
-        /* homogeneous */
-
-        pof2 = comm_ptr->pof2;
-        if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-            (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
-            mpi_errno =
-                MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                        comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        } else {
-            mpi_errno =
-                MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op,
-                                                              comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
         }
     }
 

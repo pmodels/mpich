@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                        int context_offset, MPI_Status * status,
                                        MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
@@ -44,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, av, status,
                           request);
@@ -124,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
@@ -168,10 +168,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV_INIT);
     return mpi_errno;
 
-#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
   fn_fail:
     goto fn_exit;
-#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
 }
 
 
@@ -197,7 +197,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
@@ -209,7 +209,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
     while (!MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_test();
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* This should probably be moved to MPICH (above device) level */
@@ -243,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
         MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
         goto fn_exit;
     }
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
@@ -291,7 +293,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
@@ -349,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_RECV);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #else
     if (MPIDI_CH4I_REQUEST(rreq, is_local))

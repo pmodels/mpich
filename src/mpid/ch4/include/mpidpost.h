@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_CREATE_HOOK);
 
     MPIDI_CH4U_REQUEST(req, req) = NULL;
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
 #endif
 
@@ -87,6 +87,78 @@ MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_p
     return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
 }
 
+#ifdef MPICH_THREAD_USE_MDTA
+
+MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
+                                          MPI_Status array_of_statuses[], int request_properties)
+{
+    const int single_threaded = !MPIR_ThreadInfo.isThreaded;
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIR_Thread_sync_t *sync = NULL;
+
+    if (likely(single_threaded))
+        return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+
+    MPIR_Thread_sync_alloc(&sync, count);
+
+    /* Fix up number of pending requests and attach the sync. */
+    for (i = 0; i < count; i++) {
+        if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) {
+            MPIR_Thread_sync_signal(sync, 0);
+        } else {
+            MPIR_Request_attach_sync(request_ptrs[i], sync);
+        }
+    }
+
+    /* Wait on the synchronization object. */
+    MPIR_Thread_sync_wait(sync);
+
+    /* Either being signaled, or become a server, so we poll from now. */
+    mpi_errno = MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+
+    MPIR_Thread_sync_free(sync);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    const int single_threaded = !MPIR_ThreadInfo.isThreaded;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Thread_sync_t *sync = NULL;
+
+    if (likely(single_threaded))
+        return MPIR_Wait_impl(request_ptr, status);
+
+    if (request_ptr == NULL || MPIR_Request_is_complete(request_ptr))
+        goto fn_exit;
+
+    /* The request cannot be completed immediately, wait on a sync. */
+    MPIR_Thread_sync_alloc(&sync, 1);
+    MPIR_Request_attach_sync(request_ptr, sync);
+    MPIR_Thread_sync_wait(sync);
+
+    /* Either being signaled, or become a server, so we poll from now. */
+    mpi_errno = MPIR_Wait_impl(request_ptr, status);
+
+    MPIR_Thread_sync_free(sync);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#else
+
 MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
                                           MPI_Status array_of_statuses[], int request_properties)
 {
@@ -97,6 +169,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
 {
     return MPIR_Wait_impl(request_ptr, status);
 }
+
+#endif /* MPICH_THREAD_USE_MDTA */
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],
                                           int *indx, MPI_Status * status)

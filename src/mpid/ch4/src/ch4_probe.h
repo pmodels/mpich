@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, &flag, status);
 #else
         if (unlikely(source == MPI_ANY_SOURCE)) {
@@ -50,7 +50,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPID_Progress_test();
+
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
@@ -84,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, &flag, message, status);
 #else
@@ -115,7 +119,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPID_Progress_test();
+
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MPROBE);
@@ -148,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, source);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
@@ -176,8 +184,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    if (!*flag)
-        MPID_Progress_test();
+
+    if (!*flag) {
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMPROBE);
@@ -209,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, source);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
@@ -224,8 +237,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    if (!*flag)
-        MPID_Progress_test();
+
+    if (!*flag) {
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IPROBE);

@@ -11,4 +11,3 @@ mpi_core_sources +=   \
     src/nameserv/file/file_nameserv.c
 
 endif BUILD_NAMEPUB_FILE
-

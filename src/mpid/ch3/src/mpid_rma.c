@@ -156,14 +156,14 @@ int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** 
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
+void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *ap = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    ap = MPIDI_CH3I_Alloc_mem(size, info_ptr, class);
+    ap = MPIDI_CH3I_Alloc_mem(size, info_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
     return ap;

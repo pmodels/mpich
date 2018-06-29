@@ -12,4 +12,3 @@ configure MPICH with the following arguments:
 Where (:net_mod) indicates an optional network module parameter such as
 tcp or mx.  Omitting a netmod will select the default netmod ("tcp" as
 of the time of this writing).
-

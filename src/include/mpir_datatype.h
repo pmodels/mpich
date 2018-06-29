@@ -136,11 +136,6 @@ struct MPIR_Datatype {
     struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
     MPI_Aint dataloop_size;
     int dataloop_depth;
-#if defined(MPID_HAS_HETERO) || 1
-    struct MPIR_Dataloop *hetero_dloop; /* heterogeneous dataloop */
-    MPI_Aint hetero_dloop_size;
-    int hetero_dloop_depth;
-#endif                          /* MPID_HAS_HETERO */
     /* MPI-2 attributes and name */
     struct MPIR_Attribute *attributes;
     char name[MPI_MAX_OBJECT_NAME];
@@ -318,17 +313,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
 #define MPIR_Datatype_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
 
-#define MPIR_Datatype_get_loopdepth_macro(a,depth_,hetero_) do {    \
+#define MPIR_Datatype_get_loopdepth_macro(a,depth_) do {            \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_GET_FIELD(hetero_,depth_,_depth);                 \
+            MPIR_DATALOOP_GET_FIELD(depth_,_depth);                 \
             break;                                                  \
         case HANDLE_KIND_INDIRECT:                                  \
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_GET_FIELD(hetero_,depth_,_depth);                 \
+            MPIR_DATALOOP_GET_FIELD(depth_,_depth);                 \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \
@@ -339,17 +334,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
 } while (0)
 
 
-#define MPIR_Datatype_get_loopptr_macro(a,lptr_,hetero_) do {         \
+#define MPIR_Datatype_get_loopptr_macro(a,lptr_) do {         \
     void *ptr;                                    \
     switch (HANDLE_GET_KIND(a)) {                      \
         case HANDLE_KIND_DIRECT:                       \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);               \
-            MPIR_DATALOOP_GET_FIELD(hetero_,lptr_,);                             \
+            MPIR_DATALOOP_GET_FIELD(lptr_,);                             \
             break;                                \
         case HANDLE_KIND_INDIRECT:                     \
             ptr = ((MPIR_Datatype *)                        \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));     \
-            MPIR_DATALOOP_GET_FIELD(hetero_,lptr_,);                             \
+            MPIR_DATALOOP_GET_FIELD(lptr_,);                             \
             break;                                \
         case HANDLE_KIND_INVALID:                      \
         case HANDLE_KIND_BUILTIN:                      \
@@ -359,17 +354,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                             \
 } while (0)
 
-#define MPIR_Datatype_get_loopsize_macro(a,depth_,hetero_) do {     \
+#define MPIR_Datatype_get_loopsize_macro(a,depth_) do {             \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_GET_FIELD(hetero_,depth_,_size);                  \
+            MPIR_DATALOOP_GET_FIELD(depth_,_size);                  \
             break;                                                  \
         case HANDLE_KIND_INDIRECT:                                  \
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_GET_FIELD(hetero_,depth_,_size);                  \
+            MPIR_DATALOOP_GET_FIELD(depth_,_size);                  \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \
@@ -379,17 +374,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                                               \
 } while (0)
 
-#define MPIR_Datatype_set_loopdepth_macro(a,depth_,hetero_) do {    \
+#define MPIR_Datatype_set_loopdepth_macro(a,depth_) do {            \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_SET_FIELD(hetero_,depth_,_depth);                 \
+            MPIR_DATALOOP_SET_FIELD(depth_,_depth);                 \
             break;                                                  \
         case HANDLE_KIND_INDIRECT:                                  \
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_SET_FIELD(hetero_,depth_,_depth);                 \
+            MPIR_DATALOOP_SET_FIELD(depth_,_depth);                 \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \
@@ -399,17 +394,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                                               \
 } while (0)
 
-#define MPIR_Datatype_set_loopptr_macro(a,lptr_,hetero_) do {       \
+#define MPIR_Datatype_set_loopptr_macro(a,lptr_) do {               \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_SET_FIELD(hetero_,lptr_,);                        \
+            MPIR_DATALOOP_SET_FIELD(lptr_,);                        \
             break;                                                  \
         case HANDLE_KIND_INDIRECT:                                  \
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_SET_FIELD(hetero_,lptr_,);                        \
+            MPIR_DATALOOP_SET_FIELD(lptr_,);                        \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \
@@ -419,17 +414,17 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                                               \
 } while (0)
 
-#define MPIR_Datatype_set_loopsize_macro(a,depth_,hetero_) do {     \
+#define MPIR_Datatype_set_loopsize_macro(a,depth_) do {             \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_SET_FIELD(hetero_,depth_,_size);                  \
+            MPIR_DATALOOP_SET_FIELD(depth_,_size);                  \
             break;                                                  \
         case HANDLE_KIND_INDIRECT:                                  \
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_SET_FIELD(hetero_,depth_,_size);                  \
+            MPIR_DATALOOP_SET_FIELD(depth_,_size);                  \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \
@@ -526,11 +521,6 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr)
     if (ptr->dataloop) {
         MPIR_Dataloop_free(&(ptr->dataloop));
     }
-#if defined(MPID_HAS_HETERO) || 1
-    if (ptr->hetero_dloop) {
-        MPIR_Dataloop_free(&(ptr->hetero_dloop));
-    }
-#endif /* MPID_HAS_HETERO */
     MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
 }
 
@@ -654,7 +644,7 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
                                       MPI_Count * true_extent);
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size);
 
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, int *count);
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count);
 int MPIR_Type_commit_impl(MPI_Datatype * datatype);
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
@@ -723,7 +713,7 @@ static inline MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
     } else {
         MPIR_Dataloop *dlp = NULL;
 
-        MPIR_Datatype_get_loopptr_macro(type, dlp, MPIR_DATALOOP_HETEROGENEOUS);
+        MPIR_Datatype_get_loopptr_macro(type, dlp);
 
         return MPIR_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
     }

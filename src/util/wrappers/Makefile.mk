@@ -11,4 +11,3 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/util/wrappers -I$(top_builddir)/src/util/wrap
 noinst_HEADERS +=                             \
     src/util/wrappers/mpiu_sock_wrappers.h    \
     src/util/wrappers/mpiu_util_wrappers.h
-

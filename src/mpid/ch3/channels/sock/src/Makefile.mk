@@ -27,4 +27,3 @@ noinst_HEADERS += \
     src/mpid/ch3/channels/sock/include/mpidu_socki.h
 
 endif BUILD_CH3_SOCK
-

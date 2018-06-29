@@ -12,7 +12,6 @@
    key=value messages
 */
 #include "mpichconf.h"
-#define printf_d(x...)  /* printf(x) */
 
 #include "pmi2compat.h"
 
@@ -29,7 +28,7 @@
 #endif
 #include <errno.h>
 
-#include "pmi.h"
+#include "pmi2.h"
 #include "simple_pmiutil.h"
 
 #define MAXVALLEN 1024
@@ -58,7 +57,7 @@ void PMI2U_Set_rank(int PMI_rank)
 
 void PMI2U_SetServer(void)
 {
-    PMI2U_Strncpy(PMI2U_print_id, "server", PMI2U_IDSIZE);
+    MPL_strncpy(PMI2U_print_id, "server", PMI2U_IDSIZE);
 }
 
 /* Note that vfprintf is part of C89 */
@@ -192,12 +191,12 @@ int PMI2U_writeline(int fd, char *buf)
         if (n < 0) {
             PMI2U_printf(1, "write_line error; fd=%d buf=:%s:\n", fd, buf);
             perror("system msg for write_line failure ");
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         if (n < size)
             PMI2U_printf(1, "write_line failed to write entire message\n");
     }
-    return PMI_SUCCESS;
+    return PMI2_SUCCESS;
 }
 
 /*
@@ -210,7 +209,7 @@ int PMI2U_parse_keyvals(char *st)
     int offset;
 
     if (!st)
-        return PMI_FAIL;
+        return PMI2_FAIL;
 
     PMI2U_keyval_tab_idx = 0;
     p = st;
@@ -221,10 +220,10 @@ int PMI2U_parse_keyvals(char *st)
         if (*p == '=') {
             PMI2U_printf(1, "PMI2U_parse_keyvals:  unexpected = at character %d in %s\n",
                          p - st, st);
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         if (*p == '\n' || *p == '\0')
-            return PMI_SUCCESS; /* normal exit */
+            return PMI2_SUCCESS;        /* normal exit */
         /* got normal character */
         keystart = p;   /* remember where key started */
         while (*p != ' ' && *p != '=' && *p != '\n' && *p != '\0')
@@ -233,18 +232,18 @@ int PMI2U_parse_keyvals(char *st)
             PMI2U_printf(1,
                          "PMI2U_parse_keyvals: unexpected key delimiter at character %d in %s\n",
                          p - st, st);
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         /* Null terminate the key */
         *p = 0;
         /* store key */
-        PMI2U_Strncpy(PMI2U_keyval_tab[PMI2U_keyval_tab_idx].key, keystart, MAXKEYLEN);
+        MPL_strncpy(PMI2U_keyval_tab[PMI2U_keyval_tab_idx].key, keystart, MAXKEYLEN);
 
         valstart = ++p; /* start of value */
         while (*p != ' ' && *p != '\n' && *p != '\0')
             p++;
         /* store value */
-        PMI2U_Strncpy(PMI2U_keyval_tab[PMI2U_keyval_tab_idx].value, valstart, MAXVALLEN);
+        MPL_strncpy(PMI2U_keyval_tab[PMI2U_keyval_tab_idx].value, valstart, MAXVALLEN);
         offset = p - valstart;
         /* When compiled with -fPIC, the pgcc compiler generates incorrect
          * code if "p - valstart" is used instead of using the
@@ -254,7 +253,7 @@ int PMI2U_parse_keyvals(char *st)
         if (*p == ' ')
             continue;
         if (*p == '\n' || *p == '\0')
-            return PMI_FAIL;    /* value has been set to empty */
+            return PMI2_FAIL;   /* value has been set to empty */
     }
 }
 
@@ -271,9 +270,9 @@ char *PMI2U_getval(const char *keystr, char *valstr, int vallen)
 
     for (i = 0; i < PMI2U_keyval_tab_idx; i++) {
         if (strcmp(keystr, PMI2U_keyval_tab[i].key) == 0) {
-            rc = PMI2U_Strncpy(valstr, PMI2U_keyval_tab[i].value, vallen);
+            rc = MPL_strncpy(valstr, PMI2U_keyval_tab[i].value, vallen);
             if (rc != 0) {
-                PMI2U_printf(1, "PMI2U_Strncpy failed in PMI2U_getval\n");
+                PMI2U_printf(1, "MPL_strncpy failed in PMI2U_getval\n");
                 return NULL;
             }
             return valstr;
@@ -289,7 +288,7 @@ void PMI2U_chgval(const char *keystr, char *valstr)
 
     for (i = 0; i < PMI2U_keyval_tab_idx; i++) {
         if (strcmp(keystr, PMI2U_keyval_tab[i].key) == 0) {
-            PMI2U_Strncpy(PMI2U_keyval_tab[i].value, valstr, MAXVALLEN - 1);
+            MPL_strncpy(PMI2U_keyval_tab[i].value, valstr, MAXVALLEN - 1);
             PMI2U_keyval_tab[i].value[MAXVALLEN - 1] = '\0';
         }
     }

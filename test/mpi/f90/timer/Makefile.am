@@ -11,4 +11,3 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = wtimef90
 wtimef90_SOURCES = wtimef90.f90
-

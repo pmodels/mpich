@@ -497,4 +497,3 @@ PAC_POP_FLAG([CC])
 
 AC_MSG_RESULT([done (results in $2)])
 ])
-

@@ -20,17 +20,19 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
-                                                                   ch4_algo_parameters_container)
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *barrier_node_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *barrier_roots_container = MPIDI_coll_get_next_container(barrier_node_container);
-    void *bcast_node_container = MPIDI_coll_get_next_container(barrier_roots_container);
+    const void *barrier_node_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *barrier_roots_container = MPIDI_coll_get_next_container(barrier_node_container);
+    const void *bcast_node_container = MPIDI_coll_get_next_container(barrier_roots_container);
 
     /* do the intranode barrier on all nodes */
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -38,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
         mpi_errno = MPIDI_NM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
     /* do the barrier across roots of all nodes */
@@ -53,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
      * anything) */
     if (comm->node_comm != NULL) {
         int i = 0;
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag, bcast_node_container);
         if (mpi_errno)
@@ -63,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
             MPIDI_NM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag, bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -78,11 +80,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
-                                                                  ch4_algo_parameters_container)
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno = MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
     if (mpi_errno)
@@ -100,7 +103,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
 {
@@ -121,15 +126,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_composition_alpha(MPIR_Comm * c
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, int count,
-                                                                 MPI_Datatype datatype, int root,
-                                                                 MPIR_Comm * comm,
+                                                                 MPI_Datatype datatype,
+                                                                 int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
-                                                                 MPIDI_coll_algo_container_t *
-                                                                 ch4_algo_parameters_container)
+                                                                 const
+                                                                 MPIDI_coll_algo_container_t
+                                                                 * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *bcast_roots_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *bcast_node_container = MPIDI_coll_get_next_container(bcast_roots_container);
+    const void *bcast_roots_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *bcast_node_container = MPIDI_coll_get_next_container(bcast_roots_container);
 
     if (comm->node_roots_comm == NULL && comm->rank == root) {
         mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
@@ -150,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
             MPIR_ERR_POP(mpi_errno);
     }
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
                                 bcast_node_container);
@@ -162,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
                                bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -176,20 +183,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, int count,
-                                                                MPI_Datatype datatype, int root,
-                                                                MPIR_Comm * comm,
+                                                                MPI_Datatype datatype,
+                                                                int root, MPIR_Comm * comm,
                                                                 MPIR_Errflag_t * errflag,
-                                                                MPIDI_coll_algo_container_t *
-                                                                ch4_algo_parameters_container)
+                                                                const
+                                                                MPIDI_coll_algo_container_t
+                                                                * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *bcast_roots_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *bcast_node_container_root_local = MPIDI_coll_get_next_container(bcast_roots_container);
-    void *bcast_node_container_root_remote =
+    const void *bcast_roots_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *bcast_node_container_root_local =
+        MPIDI_coll_get_next_container(bcast_roots_container);
+    const void *bcast_node_container_root_remote =
         MPIDI_coll_get_next_container(bcast_node_container_root_local);
 
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) > 0) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root),
                                 comm->node_comm, errflag, bcast_node_container_root_local);
@@ -201,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
                                comm->node_comm, errflag, bcast_node_container_root_local);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
     if (comm->node_roots_comm != NULL) {
         mpi_errno =
@@ -211,7 +221,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
             MPIR_ERR_POP(mpi_errno);
     }
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) <= 0) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
                                 bcast_node_container_root_remote);
@@ -223,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
                                bcast_node_container_root_remote);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -237,14 +247,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, int count,
-                                                                 MPI_Datatype datatype, int root,
-                                                                 MPIR_Comm * comm,
+                                                                 MPI_Datatype datatype,
+                                                                 int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
-                                                                 MPIDI_coll_algo_container_t *
-                                                                 ch4_algo_parameters_container)
+                                                                 const
+                                                                 MPIDI_coll_algo_container_t
+                                                                 * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag, bcast_container);
     if (mpi_errno)
@@ -261,10 +272,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, i
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, int count,
-                                                                 MPI_Datatype datatype, int root,
-                                                                 MPIR_Comm * comm,
+                                                                 MPI_Datatype datatype,
+                                                                 int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
-                                                                 MPIDI_coll_algo_container_t *
+                                                                 const
+                                                                 MPIDI_coll_algo_container_t
+                                                                 *
                                                                  ch4_algo_parameters_container
                                                                  ATTRIBUTE((unused)))
 {
@@ -287,19 +300,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, i
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, int count,
                                                                      MPI_Datatype datatype,
-                                                                     MPI_Op op, MPIR_Comm * comm,
+                                                                     MPI_Op op,
+                                                                     MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *reduce_node_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *allred_roots_container = MPIDI_coll_get_next_container(reduce_node_container);
-    void *bcast_node_container = MPIDI_coll_get_next_container(allred_roots_container);
+    const void *reduce_node_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *allred_roots_container = MPIDI_coll_get_next_container(reduce_node_container);
+    const void *bcast_node_container = MPIDI_coll_get_next_container(allred_roots_container);
 
     if (comm->node_comm != NULL) {
         if ((sendbuf == MPI_IN_PLACE) && (comm->node_comm->rank != 0)) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_reduce(recvbuf, NULL, count, datatype, op, 0, comm->node_comm,
                                      errflag, reduce_node_container);
@@ -311,9 +328,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                     reduce_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         } else {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
                                      errflag, reduce_node_container);
@@ -325,7 +342,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                     errflag, reduce_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         }
     } else {
         if (sendbuf != MPI_IN_PLACE) {
@@ -344,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
     }
 
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag,
                                         bcast_node_container);
         if (mpi_errno)
@@ -370,13 +387,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
                                                                     void *recvbuf, int count,
                                                                     MPI_Datatype datatype,
-                                                                    MPI_Op op, MPIR_Comm * comm,
+                                                                    MPI_Op op,
+                                                                    MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
-                                                                    MPIDI_coll_algo_container_t *
-                                                                    ch4_algo_parameters_container)
+                                                                    const
+                                                                    MPIDI_coll_algo_container_t
+                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
@@ -397,9 +416,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, int count,
                                                                      MPI_Datatype datatype,
-                                                                     MPI_Op op, MPIR_Comm * comm,
+                                                                     MPI_Op op,
+                                                                     MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
 {
@@ -421,17 +443,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void 
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf, int count,
-                                                                  MPI_Datatype datatype, MPI_Op op,
-                                                                  int root, MPIR_Comm * comm,
+                                                                  MPI_Datatype datatype,
+                                                                  MPI_Op op, int root,
+                                                                  MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
-                                                                  ch4_algo_parameters_container)
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint true_lb, true_extent, extent;
-    void *reduce_roots_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
+    MPI_Aint true_lb = 0;
+    MPI_Aint true_extent = 0;
+    MPI_Aint extent = 0;
+    const void *reduce_roots_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -453,7 +480,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 
     /* do the intranode reduce on all nodes other than the root's node */
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) == -1) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_reduce(sendbuf, tmp_buf, count, datatype, op, 0, comm->node_comm, errflag,
                                  reduce_node_container);
@@ -461,7 +488,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         mpi_errno =
             MPIDI_NM_mpi_reduce(sendbuf, tmp_buf, count, datatype, op, 0, comm->node_comm, errflag,
                                 reduce_node_container);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -534,7 +561,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 
     /* do the intranode reduce on the root's node */
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) != -1) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype,
                                  op, MPIR_Get_intranode_rank(comm, root),
@@ -544,7 +571,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
             MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype,
                                 op, MPIR_Get_intranode_rank(comm, root),
                                 comm->node_comm, errflag, reduce_node_container);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -568,16 +595,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 #define FUNCNAME MPIDI_Reduce_intra_composition_beta
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sendbuf, void *recvbuf,
-                                                                 int count, MPI_Datatype datatype,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sendbuf,
+                                                                 void *recvbuf, int count,
+                                                                 MPI_Datatype datatype,
                                                                  MPI_Op op, int root,
                                                                  MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
-                                                                 MPIDI_coll_algo_container_t *
-                                                                 ch4_algo_parameters_container)
+                                                                 const
+                                                                 MPIDI_coll_algo_container_t
+                                                                 * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root,
@@ -597,10 +626,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf, int count,
-                                                                  MPI_Datatype datatype, MPI_Op op,
-                                                                  int root, MPIR_Comm * comm,
+                                                                  MPI_Datatype datatype,
+                                                                  MPI_Op op, int root,
+                                                                  MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  *
                                                                   ch4_algo_parameters_container
                                                                   ATTRIBUTE((unused)))
 {
@@ -623,15 +655,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_composition_alpha(const void *se
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *sendbuf,
                                                                     int sendcount,
                                                                     MPI_Datatype sendtype,
-                                                                    void *recvbuf, int recvcount,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag,
-                                                                    MPIDI_coll_algo_container_t *
-                                                                    ch4_algo_parameters_container)
+                                                                    const
+                                                                    MPIDI_coll_algo_container_t
+                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *alltoall_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *alltoall_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
@@ -652,11 +686,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_inter_composition_alpha(const void *sendbuf,
                                                                     int sendcount,
                                                                     MPI_Datatype sendtype,
-                                                                    void *recvbuf, int recvcount,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag,
-                                                                    MPIDI_coll_algo_container_t *
+                                                                    const
+                                                                    MPIDI_coll_algo_container_t
+                                                                    *
                                                                     ch4_algo_parameters_container
                                                                     ATTRIBUTE((unused)))
 {
@@ -687,11 +724,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *alltoallv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *alltoallv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls,
@@ -720,7 +759,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_inter_composition_alpha(const void 
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
 {
@@ -746,18 +787,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
                                                                      const int sendcounts[],
                                                                      const int sdispls[],
                                                                      const MPI_Datatype
-                                                                     sendtypes[], void *recvbuf,
+                                                                     sendtypes[],
+                                                                     void *recvbuf,
                                                                      const int recvcounts[],
                                                                      const int rdispls[],
                                                                      const MPI_Datatype
                                                                      recvtypes[],
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *alltoallw_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *alltoallw_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls,
@@ -780,14 +824,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void 
                                                                      const int sendcounts[],
                                                                      const int sdispls[],
                                                                      const MPI_Datatype
-                                                                     sendtypes[], void *recvbuf,
+                                                                     sendtypes[],
+                                                                     void *recvbuf,
                                                                      const int recvcounts[],
                                                                      const int rdispls[],
                                                                      const MPI_Datatype
                                                                      recvtypes[],
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
 {
@@ -812,15 +859,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
                                                                      int sendcount,
                                                                      MPI_Datatype sendtype,
-                                                                     void *recvbuf, int recvcount,
+                                                                     void *recvbuf,
+                                                                     int recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *allgather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *allgather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype,
@@ -842,11 +892,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_inter_composition_alpha(const void *sendbuf,
                                                                      int sendcount,
                                                                      MPI_Datatype sendtype,
-                                                                     void *recvbuf, int recvcount,
+                                                                     void *recvbuf,
+                                                                     int recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_coll_algo_container_t *
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
 {
@@ -876,12 +929,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       MPI_Datatype recvtype,
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag,
+                                                                      const
                                                                       MPIDI_coll_algo_container_t
                                                                       *
                                                                       ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *allgatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *allgatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype,
@@ -909,6 +963,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_composition_alpha(const void
                                                                       MPI_Datatype recvtype,
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag,
+                                                                      const
                                                                       MPIDI_coll_algo_container_t
                                                                       *
                                                                       ch4_algo_parameters_container
@@ -936,14 +991,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *se
                                                                   int sendcount,
                                                                   MPI_Datatype sendtype,
                                                                   void *recvbuf, int recvcount,
-                                                                  MPI_Datatype recvtype, int root,
-                                                                  MPIR_Comm * comm,
+                                                                  MPI_Datatype recvtype,
+                                                                  int root, MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
-                                                                  ch4_algo_parameters_container)
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *gather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *gather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
@@ -965,10 +1021,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_inter_composition_alpha(const void *se
                                                                   int sendcount,
                                                                   MPI_Datatype sendtype,
                                                                   void *recvbuf, int recvcount,
-                                                                  MPI_Datatype recvtype, int root,
-                                                                  MPIR_Comm * comm,
+                                                                  MPI_Datatype recvtype,
+                                                                  int root, MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  *
                                                                   ch4_algo_parameters_container
                                                                   ATTRIBUTE((unused)))
 {
@@ -998,11 +1056,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
-                                                                   ch4_algo_parameters_container)
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *gatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *gatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
@@ -1029,7 +1088,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_composition_alpha(const void *s
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
 {
@@ -1053,15 +1114,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_composition_alpha(const void *s
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
-                                                                   void *recvbuf, int recvcount,
+                                                                   void *recvbuf,
+                                                                   int recvcount,
                                                                    MPI_Datatype recvtype,
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
-                                                                   ch4_algo_parameters_container)
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
@@ -1082,11 +1145,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
-                                                                   void *recvbuf, int recvcount,
+                                                                   void *recvbuf,
+                                                                   int recvcount,
                                                                    MPI_Datatype recvtype,
-                                                                   int root, MPIR_Comm * comm_ptr,
+                                                                   int root,
+                                                                   MPIR_Comm * comm_ptr,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_coll_algo_container_t *
+                                                                   const
+                                                                   MPIDI_coll_algo_container_t
+                                                                   *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
 {
@@ -1111,15 +1178,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
                                                                     const int *sendcounts,
                                                                     const int *displs,
                                                                     MPI_Datatype sendtype,
-                                                                    void *recvbuf, int recvcount,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     int root, MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
-                                                                    MPIDI_coll_algo_container_t *
-                                                                    ch4_algo_parameters_container)
+                                                                    const
+                                                                    MPIDI_coll_algo_container_t
+                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *scatterv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *scatterv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
@@ -1141,11 +1210,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_composition_alpha(const void *
                                                                     const int *sendcounts,
                                                                     const int *displs,
                                                                     MPI_Datatype sendtype,
-                                                                    void *recvbuf, int recvcount,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     int root, MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
-                                                                    MPIDI_coll_algo_container_t *
+                                                                    const
+                                                                    MPIDI_coll_algo_container_t
+                                                                    *
                                                                     ch4_algo_parameters_container
                                                                     ATTRIBUTE((unused)))
 {
@@ -1168,12 +1240,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_composition_alpha(const void *
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
-                                                                          const int recvcounts[],
-                                                                          MPI_Datatype datatype,
-                                                                          MPI_Op op,
+                                                                          const int
+                                                                          recvcounts[],
+                                                                          MPI_Datatype
+                                                                          datatype, MPI_Op op,
                                                                           MPIR_Comm * comm_ptr,
                                                                           MPIR_Errflag_t *
                                                                           errflag,
+                                                                          const
                                                                           MPIDI_coll_algo_container_t
                                                                           *
                                                                           ch4_algo_parameters_container
@@ -1198,18 +1272,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const 
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
-                                                                          const int recvcounts[],
-                                                                          MPI_Datatype datatype,
-                                                                          MPI_Op op,
+                                                                          const int
+                                                                          recvcounts[],
+                                                                          MPI_Datatype
+                                                                          datatype, MPI_Op op,
                                                                           MPIR_Comm * comm_ptr,
                                                                           MPIR_Errflag_t *
                                                                           errflag,
+                                                                          const
                                                                           MPIDI_coll_algo_container_t
                                                                           *
                                                                           ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *reduce_scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *reduce_scatter_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype,
@@ -1236,8 +1313,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_inter_composition_alpha(
                                                                                 MPI_Op op,
                                                                                 MPIR_Comm *
                                                                                 comm_ptr,
-                                                                                MPIR_Errflag_t *
-                                                                                errflag,
+                                                                                MPIR_Errflag_t
+                                                                                * errflag,
+                                                                                const
                                                                                 MPIDI_coll_algo_container_t
                                                                                 *
                                                                                 ch4_algo_parameters_container
@@ -1269,14 +1347,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(
                                                                                 MPI_Op op,
                                                                                 MPIR_Comm *
                                                                                 comm_ptr,
-                                                                                MPIR_Errflag_t *
-                                                                                errflag,
+                                                                                MPIR_Errflag_t
+                                                                                * errflag,
+                                                                                const
                                                                                 MPIDI_coll_algo_container_t
                                                                                 *
                                                                                 ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *reduce_scatter_block_container =
+    const void *reduce_scatter_block_container =
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
@@ -1302,8 +1381,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                                                 MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
                                                                 MPIR_Errflag_t * errflag,
-                                                                MPIDI_coll_algo_container_t *
-                                                                ch4_algo_parameters_container)
+                                                                const
+                                                                MPIDI_coll_algo_container_t
+                                                                * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -1318,9 +1398,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                  * reduce tempbuf & recvbuf */
     MPIR_CHKLMEM_DECL(3);
 
-    void *scan_node_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
-    void *scan_roots_container = MPIDI_coll_get_next_container(scan_node_container);
-    void *bcast_node_container = MPIDI_coll_get_next_container(scan_roots_container);
+    const void *scan_node_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *scan_roots_container = MPIDI_coll_get_next_container(scan_node_container);
+    const void *bcast_node_container = MPIDI_coll_get_next_container(scan_roots_container);
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
@@ -1348,7 +1428,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     /* perform intranode scan to get temporary result in recvbuf. if there is only
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_scan(sendbuf, recvbuf, count, datatype,
                                op, comm_ptr->node_comm, errflag, scan_node_container);
@@ -1360,7 +1440,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                               op, comm_ptr->node_comm, errflag, scan_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         if (mpi_errno)
@@ -1421,7 +1501,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
      * reduce it with recvbuf to get final result if nessesary. */
 
     if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag,
                                 bcast_node_container);
@@ -1433,12 +1513,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, errflag,
                                     bcast_node_container);
@@ -1450,7 +1530,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                    bcast_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         }
 
         mpi_errno = MPIR_Reduce_local(tempbuf, recvbuf, count, datatype, op);
@@ -1476,11 +1556,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendb
                                                                MPI_Op op,
                                                                MPIR_Comm * comm_ptr,
                                                                MPIR_Errflag_t * errflag,
-                                                               MPIDI_coll_algo_container_t *
-                                                               ch4_algo_parameters_container)
+                                                               const
+                                                               MPIDI_coll_algo_container_t
+                                                               * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *scan_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *scan_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag, scan_container);
@@ -1504,11 +1585,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *se
                                                                   MPI_Op op,
                                                                   MPIR_Comm * comm_ptr,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_coll_algo_container_t *
-                                                                  ch4_algo_parameters_container)
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *exscan_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *exscan_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno =
         MPIDI_NM_mpi_exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,

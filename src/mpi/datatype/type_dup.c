@@ -97,21 +97,11 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->dataloop = NULL;
         new_dtp->dataloop_size = old_dtp->dataloop_size;
         new_dtp->dataloop_depth = old_dtp->dataloop_depth;
-        new_dtp->hetero_dloop = NULL;
-        new_dtp->hetero_dloop_size = old_dtp->hetero_dloop_size;
-        new_dtp->hetero_dloop_depth = old_dtp->hetero_dloop_depth;
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
             MPIR_Assert(old_dtp->dataloop != NULL);
             MPIR_Dataloop_dup(old_dtp->dataloop, old_dtp->dataloop_size, &new_dtp->dataloop);
-            if (old_dtp->hetero_dloop != NULL) {
-                /* at this time MPI_COMPLEX doesn't have this loop...
-                 * -- RBR, 02/01/2007
-                 */
-                MPIR_Dataloop_dup(old_dtp->hetero_dloop,
-                                  old_dtp->hetero_dloop_size, &new_dtp->hetero_dloop);
-            }
 #ifdef MPID_Type_commit_hook
             MPID_Type_commit_hook(new_dtp);
 #endif /* MPID_Type_commit_hook */

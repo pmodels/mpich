@@ -36,49 +36,9 @@
 /*
  * Helper routines and macros for request completion
  */
-#define MPIDI_OFI_ssendack_request_t_tls_alloc(req)             \
-    do {                                                                \
-        (req) = (MPIDI_OFI_ssendack_request_t*)                 \
-            MPIR_Request_create(MPIR_REQUEST_KIND__SEND);               \
-        if (req == NULL)                                                \
-            MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,                      \
-                       "Cannot allocate Ssendack Request");             \
-    } while (0)
-
-#define MPIDI_OFI_ssendack_request_t_tls_free(req) \
-  MPIR_Handle_obj_free(&MPIR_Request_mem, (req))
-
-#define MPIDI_OFI_ssendack_request_t_alloc_and_init(req)        \
-    do {                                                                \
-        MPIDI_OFI_ssendack_request_t_tls_alloc(req);            \
-        MPIR_Assert(req != NULL);                                       \
-        MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle)                    \
-                    == MPID_SSENDACK_REQUEST);                          \
-    } while (0)
-
-#define MPIDI_OFI_request_create_null_rreq(rreq_, mpi_errno_, FAIL_) \
-  do {                                                                  \
-    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);             \
-    if ((rreq_) != NULL) {                                              \
-      MPIR_cc_set(&(rreq_)->cc, 0);                                     \
-      (rreq_)->kind = MPIR_REQUEST_KIND__RECV;                                \
-      MPIR_Status_set_procnull(&(rreq_)->status);                       \
-    }                                                                   \
-    else {                                                              \
-      MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq");       \
-    }                                                                   \
-  } while (0)
-
-
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
         mpi_errno = MPID_Progress_test();                        \
-        if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
-    } while (0)
-
-#define MPIDI_OFI_PROGRESS_NONINLINE()                            \
-    do {                                                          \
-        mpi_errno = MPIDI_OFI_progress_test_no_inline();          \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
     } while (0)
 
@@ -144,7 +104,9 @@
                             "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
-        MPIDI_OFI_PROGRESS_NONINLINE();                              \
+        mpi_errno = MPIDI_OFI_retry_progress();                      \
+        if (mpi_errno != MPI_SUCCESS)                                \
+            MPIR_ERR_POP(mpi_errno);                                 \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         _retry--;                                           \
@@ -169,7 +131,9 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
-        MPIDI_OFI_PROGRESS_NONINLINE();                         \
+        mpi_errno = MPIDI_OFI_retry_progress();                      \
+        if (mpi_errno != MPI_SUCCESS)                                \
+            MPIR_ERR_POP(mpi_errno);                                 \
         MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -240,11 +204,6 @@
     } while (0)
 #endif
 
-#define MPIDI_OFI_SSEND_ACKREQUEST_CREATE(req)            \
-    do {                                                          \
-        MPIDI_OFI_ssendack_request_t_tls_alloc(req);      \
-    } while (0)
-
 #define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
@@ -275,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 
 /* Externs:  see util.c for definition */
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
-int MPIDI_OFI_progress_test_no_inline(void);
+int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
@@ -364,7 +323,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     int in_use;
     MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
     MPIR_Object_release_ref(req, &in_use);
-    MPIR_Assert(in_use >= 0);
     if (!in_use) {
         MPL_free(req->noncontig);
         MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
@@ -710,7 +668,7 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);
@@ -719,7 +677,7 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);

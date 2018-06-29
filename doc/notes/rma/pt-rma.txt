@@ -82,4 +82,3 @@ or the get data is sent over. Except in the case of get operations,
 Win_unlock must block until it receives an acknowledgement from the
 target that the RMA operation has completed (for both shared and
 exclusive locks). 
-

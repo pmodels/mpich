@@ -68,5 +68,3 @@ fi
 #
 # mpirun could call this for systems that use SYSV shared memory features,
 # just to keep them friendly.
-
-

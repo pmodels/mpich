@@ -13,11 +13,11 @@
  * We first scatter the buffer using a binomial tree algorithm. This
  * costs lgp.alpha + n.((p-1)/p).beta
  *
- * If the datatype is contiguous and the communicator is homogeneous,
- * we treat the data as bytes and divide (scatter) it among processes
- * by using ceiling division. For the noncontiguous or heterogeneous
- * cases, we first pack the data into a temporary buffer by using
- * MPI_Pack, scatter it as bytes, and unpack it after the allgather.
+ * If the datatype is contiguous, we treat the data as bytes and
+ * divide (scatter) it among processes by using ceiling division.
+ * For the noncontiguous cases, we first pack the data into a
+ * temporary buffer by using MPI_Pack, scatter it as bytes, and
+ * unpack it after the allgather.
  *
  * We use a ring algorithm for the allgather, which takes p-1 steps.
  * This may perform better than recursive doubling for long messages
@@ -34,7 +34,7 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
-    int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
+    int is_contig, type_size, nbytes;
     int scatter_size, curr_size;
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
@@ -56,12 +56,6 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case yet */
     MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
@@ -77,7 +71,6 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
     } else {
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-        /* TODO: Pipeline the packing and communication */
         if (rank == root) {
             mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
             if (mpi_errno)

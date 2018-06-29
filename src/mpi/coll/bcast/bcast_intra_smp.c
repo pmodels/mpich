@@ -21,10 +21,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int is_homogeneous;
     MPI_Aint type_size, nbytes = 0;
     MPI_Status status;
-    int recvd_size;
+    MPI_Aint recvd_size;
 
 #ifdef HAVE_ERROR_CHECKING
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {
@@ -33,26 +32,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 #endif
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous) {
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    } else {
-        /* --BEGIN HETEROGENEOUS-- */
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-        /* --END HETEROGENEOUS-- */
-    }
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
     if (nbytes == 0)
@@ -61,7 +41,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm_ptr->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         /* send to intranode-rank 0 on the root's node */
-        if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {       /* is not the node root (0) *//* and is on our node (!-1) */
+        if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {       /* is not the node root (0) and is on our node (!-1) */
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
                                       MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
@@ -87,8 +67,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                 }
                 /* check that we received as much as we expected */
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-                /* recvd_size may not be accurate for packed heterogeneous data */
-                if (is_homogeneous && recvd_size != nbytes) {
+                if (recvd_size != nbytes) {
                     if (*errflag == MPIR_ERR_NONE)
                         *errflag = MPIR_ERR_OTHER;
                     MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
@@ -136,7 +115,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
             /* medium-sized msg and pof2 np */
 
             /* perform the intranode broadcast on the root's node */
-            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) *//* and is on our node (!-1) */
+            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) and is on our node (!-1) */
                 /* FIXME binomial may not be the best algorithm for on-node
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
@@ -169,7 +148,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
             }
 
             /* perform the intranode broadcast on all except for the root's node */
-            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) <= 0) {  /* 0 if root was local root too *//* -1 if different node than root */
+            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) <= 0) {  /* 0 if root was local root too, -1 if different node than root */
                 /* FIXME binomial may not be the best algorithm for on-node
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */

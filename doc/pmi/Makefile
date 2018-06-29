@@ -100,4 +100,3 @@ install-devdocs: pmi.pdf
 	-fig2dev -L eps -l landscape $*.fig > $*.eps
 	if [ ! -s $*.eps ] ; then \
 		fig2dev -L ps -l landscape $*.fig > $*.eps ; fi
-
