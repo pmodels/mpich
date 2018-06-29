@@ -18,17 +18,17 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_tree_kary
+#define FUNCNAME MPIR_Ibcast_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra_tree_kary(void *buffer, int count,
-                                MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
-                                MPIR_Request ** request)
+int MPIR_Ibcast_intra_tree(void *buffer, int count,
+                           MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+                           MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
-                                               comm_ptr, request, TREE_TYPE_KARY,
+                                               comm_ptr, request, MPIR_CVAR_IBCAST_TREE_TYPE,
                                                MPIR_CVAR_IBCAST_TREE_KVAL,
                                                MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
 
