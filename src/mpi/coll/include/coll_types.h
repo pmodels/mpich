@@ -24,8 +24,8 @@
 
 /* enumerator for different tree types */
 enum {
-    TREE_TYPE_KNOMIAL = 0,
-    TREE_TYPE_KARY
+    TREE_TYPE_KARY = 0,
+    TREE_TYPE_KNOMIAL,
 };
 
 /* enumerator for different recexch types */
