@@ -48,6 +48,8 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->fs_hints.lustre.coll_threshold = 0;
         ADIOI_Info_set(fd->info, "romio_lustre_ds_in_coll", "enable");
         fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_ENABLE;
+        ADIOI_Info_set(fd->info, "romio_lustre_pipelining_io", "enable");
+        fd->hints->fs_hints.lustre.pipelining_io = ADIOI_HINT_ENABLE;
 
         /* has user specified striping or server buffering parameters
          * and do they have the same value on all processes? */
@@ -71,7 +73,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
                 start_iodev = atoll(value);
             }
-
 
             /* direct read and write */
             ADIOI_Info_get(users_info, "direct_read", MPI_MAX_INFO_VAL, value, &flag);
@@ -167,6 +168,10 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                              &(fd->hints->fs_hints.lustre.ds_in_coll), myname,
                                              error_code);
 
+        /* pipelining I/O for two-phase collective I/O */
+        ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_lustre_pipelining_io",
+                                             &(fd->hints->fs_hints.lustre.pipelining_io), myname,
+                                             error_code);
     }
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);

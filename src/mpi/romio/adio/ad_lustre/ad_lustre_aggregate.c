@@ -234,11 +234,11 @@ void ADIOI_LUSTRE_Calc_file_domains(ADIO_File fd,
     striping_unit = fd->hints->striping_unit;
     cb_nodes = fd->hints->cb_nodes;
 
-#ifdef PIPE
-    file_domain->pipelining = 1;
-#else
-    file_domain->pipelining = 0;
-#endif
+    file_domain->pipelining = fd->hints->fs_hints.lustre.pipelining_io;
+    if (file_domain->pipelining == ADIOI_HINT_ENABLE)
+        file_domain->pipelining = 1;
+    else
+        file_domain->pipelining = 0;
 
     /* [Sunwoo] When pipelining two-phase I/O, the buffer size at each round
      * is limited to the stripe size. So, the number of pipeline stages becomes

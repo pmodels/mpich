@@ -69,6 +69,7 @@ struct ADIOI_Hints_struct {
             int co_ratio;
             int coll_threshold;
             int ds_in_coll;
+            int pipelining_io;
             int lock_ahead_read;
             int lock_ahead_write;
             int lock_ahead_num_extents;
