@@ -17,7 +17,7 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
 algo_names="tree scatter_recexch_allgather"
-tree_types="0 1"
+tree_types="0 1 2"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
@@ -53,7 +53,7 @@ testing_env="env=MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE=0 "
 testing_env+="env=MPIR_CVAR_REDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE=0 "
 algo_names="tree ring"
-tree_types="0 1"
+tree_types="0 1 2"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
