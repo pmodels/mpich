@@ -79,7 +79,7 @@ MPIR_Ialltoallw_inter_algo_t MPIR_Ialltoallw_inter_algo_choice = MPIR_IALLTOALLW
 MPIR_Ibarrier_intra_algo_t MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_AUTO;
 MPIR_Ibarrier_inter_algo_t MPIR_Ibarrier_inter_algo_choice = MPIR_IBARRIER_INTER_ALGO_AUTO;
 MPIR_Ibcast_intra_algo_t MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_AUTO;
-MPIR_Tree_type_t MPIR_Ibcast_tree_type = TREE_TYPE_KARY;
+MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ibcast_inter_algo_t MPIR_Ibcast_inter_algo_choice = MPIR_IBCAST_INTER_ALGO_AUTO;
 MPIR_Iexscan_intra_algo_t MPIR_Iexscan_intra_algo_choice = MPIR_IEXSCAN_INTRA_ALGO_AUTO;
 MPIR_Igather_intra_algo_t MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_AUTO;
@@ -108,7 +108,7 @@ MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice
     MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice =
     MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
-MPIR_Tree_type_t MPIR_Ireduce_tree_type = TREE_TYPE_KARY;
+MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ireduce_scatter_inter_algo_t MPIR_Ireduce_scatter_inter_algo_choice =
     MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice =
@@ -500,13 +500,13 @@ int MPII_Coll_init(void)
 
     /* Ibcast */
     if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "kary"))
-        MPIR_Ibcast_tree_type = TREE_TYPE_KARY;
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_1"))
-        MPIR_Ibcast_tree_type = TREE_TYPE_KNOMIAL_1;
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_2"))
-        MPIR_Ibcast_tree_type = TREE_TYPE_KNOMIAL_2;
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
     else
-        MPIR_Ibcast_tree_type = TREE_TYPE_KARY;
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 
     /* Ibcast Intra */
     if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "binomial"))
@@ -674,13 +674,13 @@ int MPII_Coll_init(void)
 
     /* Ireduce */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "kary"))
-        MPIR_Ireduce_tree_type = TREE_TYPE_KARY;
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_1"))
-        MPIR_Ireduce_tree_type = TREE_TYPE_KNOMIAL_1;
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_2"))
-        MPIR_Ireduce_tree_type = TREE_TYPE_KNOMIAL_2;
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
     else
-        MPIR_Ireduce_tree_type = TREE_TYPE_KARY;
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
     /* Ireduce Intra */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "binomial"))

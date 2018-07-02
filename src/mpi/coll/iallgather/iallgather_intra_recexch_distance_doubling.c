@@ -30,7 +30,7 @@ int MPIR_Iallgather_intra_recexch_distance_doubling(const void *sendbuf, int sen
     mpi_errno = MPII_Gentran_Iallgather_intra_recexch(sendbuf, sendcount, sendtype,
                                                       recvbuf, recvcount, recvtype,
                                                       comm, req,
-                                                      IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING,
+                                                      MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING,
                                                       MPIR_CVAR_IALLGATHER_RECEXCH_KVAL);
 
     return mpi_errno;
