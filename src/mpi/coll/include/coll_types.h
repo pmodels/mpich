@@ -23,11 +23,11 @@
 #define MPIR_COLL_FLAG_REDUCE_R 0
 
 /* enumerator for different tree types */
-enum {
+typedef enum MPIR_Tree_type_t {
     TREE_TYPE_KARY = 0,
     TREE_TYPE_KNOMIAL_1,
     TREE_TYPE_KNOMIAL_2,
-};
+} MPIR_Tree_type_t;
 
 /* enumerator for different recexch types */
 enum {
