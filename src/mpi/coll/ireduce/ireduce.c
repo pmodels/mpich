@@ -22,16 +22,16 @@ cvars:
 
     - name        : MPIR_CVAR_IREDUCE_TREE_TYPE
       category    : COLLECTIVE
-      type        : int
-      default     : 0
+      type        : string
+      default     : kary
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Tree type for tree based ireduce
-        0 - kary tree
-        1 - knomial_1 tree
-        2 - knomial_2 tree
+        kary      - kary tree
+        knomial_1 - knomial_1 tree
+        knomial_2 - knomial_2 tree
 
     - name        : MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE
