@@ -28,7 +28,7 @@ int MPIR_Ibcast_intra_tree(void *buffer, int count,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
-                                               comm_ptr, request, MPIR_CVAR_IBCAST_TREE_TYPE,
+                                               comm_ptr, request, MPIR_Ibcast_tree_type,
                                                MPIR_CVAR_IBCAST_TREE_KVAL,
                                                MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
 

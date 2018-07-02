@@ -23,16 +23,16 @@ cvars:
 
     - name        : MPIR_CVAR_IBCAST_TREE_TYPE
       category    : COLLECTIVE
-      type        : int
-      default     : 0
+      type        : string
+      default     : kary
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Tree type for tree based ibcast
-        0 - kary tree type
-        1 - knomial_1 tree type
-        2 - knomial_2 tree type
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type
+        knomial_2 - knomial_2 tree type
 
     - name        : MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE

@@ -410,6 +410,8 @@ typedef enum MPIR_Ireduce_scatter_intra_algo_t {
     MPIR_IREDUCE_SCATTER_INTRA_ALGO_GENTRAN_RECEXCH,
 } MPIR_Ireduce_scatter_intra_algo_t;
 extern MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice;
+extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
+extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
 
 typedef enum MPIR_Ireduce_scatter_inter_algo_t {
     MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO,

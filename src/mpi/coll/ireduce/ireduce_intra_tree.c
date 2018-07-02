@@ -27,7 +27,7 @@ int MPIR_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                comm_ptr, request, MPIR_CVAR_IREDUCE_TREE_TYPE,
+                                                comm_ptr, request, MPIR_Ireduce_tree_type,
                                                 MPIR_CVAR_IREDUCE_TREE_KVAL,
                                                 MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE);
 
