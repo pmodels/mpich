@@ -31,7 +31,7 @@ int MPIR_Iallgatherv_intra_recexch_distance_halving(const void *sendbuf, int sen
     mpi_errno = MPII_Gentran_Iallgatherv_intra_recexch(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm, req,
-                                                       IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING,
+                                                       MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING,
                                                        MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL);
 
     return mpi_errno;

@@ -50,7 +50,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     if (rank == root)
         is_inplace = (sendbuf == MPI_IN_PLACE); /* For gather, MPI_IN_PLACE is significant only at root */
 
-    tree_type = TREE_TYPE_KNOMIAL_1;    /* currently only tree_type=TREE_TYPE_KNOMIAL_1 is supported for gather */
+    tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for gather */
     mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
