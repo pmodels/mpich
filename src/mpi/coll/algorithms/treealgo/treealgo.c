@@ -48,19 +48,19 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TREEALGO_TREE_INIT);
 
     switch (tree_type) {
-        case TREE_TYPE_KARY:
+        case MPIR_TREE_TYPE_KARY:
             mpi_errno = MPII_Treeutil_tree_kary_init(rank, nranks, k, root, ct);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             break;
 
-        case TREE_TYPE_KNOMIAL_1:
+        case MPIR_TREE_TYPE_KNOMIAL_1:
             mpi_errno = MPII_Treeutil_tree_knomial_1_init(rank, nranks, k, root, ct);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             break;
 
-        case TREE_TYPE_KNOMIAL_2:
+        case MPIR_TREE_TYPE_KNOMIAL_2:
             mpi_errno = MPII_Treeutil_tree_knomial_2_init(rank, nranks, k, root, ct);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
