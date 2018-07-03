@@ -13,9 +13,9 @@
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
-#undef MPIR_TSP_Iallgatherv_intra_recexch_data_exchange
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step1
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step2
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step3
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step1
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step2
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step3
 #undef MPIR_TSP_Iallgatherv_intra_recexch
 #undef MPIR_TSP_Iallgatherv_sched_intra_recexch
