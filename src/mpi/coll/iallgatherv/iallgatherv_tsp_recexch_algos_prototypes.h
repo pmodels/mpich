@@ -15,14 +15,14 @@
 
 #include "tsp_namespace_def.h"
 
-#undef MPIR_TSP_Iallgatherv_intra_recexch_data_exchange
-#define MPIR_TSP_Iallgatherv_intra_recexch_data_exchange        MPIR_TSP_NAMESPACE(Iallgatherv_intra_recexch_data_exchange)
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step1
-#define MPIR_TSP_Iallgatherv_intra_recexch_step1                MPIR_TSP_NAMESPACE(Iallgatherv_intra_recexch_step1)
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step2
-#define MPIR_TSP_Iallgatherv_intra_recexch_step2                MPIR_TSP_NAMESPACE(Iallgatherv_intra_recexch_step2)
-#undef MPIR_TSP_Iallgatherv_intra_recexch_step3
-#define MPIR_TSP_Iallgatherv_intra_recexch_step3                MPIR_TSP_NAMESPACE(Iallgatherv_intra_recexch_step3)
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange
+#define MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange        MPIR_TSP_NAMESPACE(Iallgatherv_sched_intra_recexch_data_exchange)
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step1
+#define MPIR_TSP_Iallgatherv_sched_intra_recexch_step1                MPIR_TSP_NAMESPACE(Iallgatherv_sched_intra_recexch_step1)
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step2
+#define MPIR_TSP_Iallgatherv_sched_intra_recexch_step2                MPIR_TSP_NAMESPACE(Iallgatherv_sched_intra_recexch_step2)
+#undef MPIR_TSP_Iallgatherv_sched_intra_recexch_step3
+#define MPIR_TSP_Iallgatherv_sched_intra_recexch_step3                MPIR_TSP_NAMESPACE(Iallgatherv_sched_intra_recexch_step3)
 #undef MPIR_TSP_Iallgatherv_intra_recexch
 #define MPIR_TSP_Iallgatherv_intra_recexch                      MPIR_TSP_NAMESPACE(Iallgatherv_intra_recexch)
 #undef MPIR_TSP_Iallgatherv_sched_intra_recexch
