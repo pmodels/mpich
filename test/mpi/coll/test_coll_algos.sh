@@ -182,8 +182,6 @@ for algo_name in ${algo_names}; do
     done
 done
 
-export coll_algo_tests
-
 ######### Add tests for Scatter algorithms ###########
 
 #disable device collectives for scatter to test MPIR algorithms
