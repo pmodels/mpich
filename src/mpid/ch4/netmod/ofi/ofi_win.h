@@ -327,34 +327,33 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
         goto fn_fail;
     }
 
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.rma_stx_ctx->fid, 0),
+                          ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind endpoint to shared transmit contxt.\n");
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
+                                     &MPIDI_Global.ctx[0].cq->fid,
+                                     FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind endpoint to completion queue.\n");
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to bind endpoint to address vector.\n");
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
     if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.rma_stx_ctx->fid, 0),
-                              ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to bind endpoint to shared transmit contxt.\n");
-            mpi_errno = MPIDI_OFI_EPERROR;
-            goto fn_fail;
-        }
-
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                         &MPIDI_Global.ctx[0].cq->fid,
-                                         FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to bind endpoint to completion queue.\n");
-            mpi_errno = MPIDI_OFI_EPERROR;
-            goto fn_fail;
-        }
-
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to bind endpoint to address vector.\n");
-            mpi_errno = MPIDI_OFI_EPERROR;
-            goto fn_fail;
-        }
-
         MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
