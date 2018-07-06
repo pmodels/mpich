@@ -251,31 +251,7 @@ static inline int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_
 
 static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 {
-
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_Win *win = *win_ptr;
-
-    MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
-    MPIDI_CH4U_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
-
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-    if (win->create_flavor != MPI_WIN_FLAVOR_SHARED && win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {
-        if (win->size > 0)
-            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
-        MPL_free(MPIDI_UCX_WIN(win).info_table);
-    }
-    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
-        win->base = NULL;
-    MPIDI_CH4R_win_finalize(win_ptr);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_FREE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
+    return MPIDI_CH4R_mpi_win_free(win_ptr);
 }
 
 static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
@@ -307,44 +283,7 @@ static inline int MPIDI_NM_mpi_win_create(void *base,
                                           MPIR_Info * info, MPIR_Comm * comm_ptr,
                                           MPIR_Win ** win_ptr)
 {
-
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_Win *win;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CREATE);
-
-    mpi_errno = MPIDI_CH4R_win_init(length, disp_unit, &win, info, comm_ptr,
-                                    MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED);
-    MPIR_ERR_CHKANDSTMT(mpi_errno != MPI_SUCCESS,
-                        mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-    *win_ptr = win;
-
-    mpi_errno = MPIDI_UCX_Win_init(win);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    mpi_errno = MPIDI_UCX_Win_allgather(win, length, disp_unit, &base);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    win->base = base;
-
-
-
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_CREATE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
-
+    return MPIDI_CH4R_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
 }
 
 static inline int MPIDI_NM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
@@ -381,46 +320,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
                                             MPIR_Win ** win_ptr)
 {
 
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_Win *win;
-    void *base = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_WIN_ALLOCATE);
-
-    mpi_errno = MPIDI_CH4R_win_init(length, disp_unit, &win, info, comm_ptr,
-                                    MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED);
-    MPIR_ERR_CHKANDSTMT(mpi_errno != MPI_SUCCESS,
-                        mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
-    *win_ptr = win;
-
-    mpi_errno = MPIDI_UCX_Win_init(win);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    mpi_errno = MPIDI_UCX_Win_allgather(win, length, disp_unit, &base);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-    win->base = base;
-
-
-    *(void **) baseptr = (void *) base;
-
-
-    mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
-
+    return MPIDI_CH4R_mpi_win_allocate(length, disp_unit, info, comm_ptr, baseptr, win_ptr);
 }
 
 static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
