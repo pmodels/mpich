@@ -29,15 +29,11 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
                                                           MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
-    int num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0;
     size_t extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank;
     int is_contig;
-    int recv_id;
-    int tag;
+    int tag = -1;
     void *tmp_buf = NULL;
     size_t nbytes;
     int scatter_k = MPIR_CVAR_IBCAST_SCATTER_KVAL;
@@ -123,7 +119,6 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
                                                     int root, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
