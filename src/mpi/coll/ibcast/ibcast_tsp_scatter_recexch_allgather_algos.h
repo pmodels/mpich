@@ -82,8 +82,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
                                            MPI_DATATYPE_NULL, root, comm, scatter_k, sched);
     else
         MPIR_TSP_Iscatter_sched_intra_tree(NULL, 0, MPI_DATATYPE_NULL,
-                                           tmp_buf + rank * bytes_per_rank, bytes_per_rank,
-                                           MPI_BYTE, root, comm, scatter_k, sched);
+                                           ((char *) tmp_buf) + (rank * bytes_per_rank),
+                                           bytes_per_rank, MPI_BYTE, root, comm, scatter_k, sched);
     MPIR_TSP_sched_fence(sched);        /* wait for scatter to complete */
 
     /* Schedule Allgather */
