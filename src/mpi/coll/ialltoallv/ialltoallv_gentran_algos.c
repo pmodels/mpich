@@ -18,4 +18,9 @@
 #include "ialltoallv_tsp_blocked_algos.h"
 #include "ialltoallv_tsp_blocked_algos_undef.h"
 
+/* instantiate ialltoallv  algorithms for the gentran transport */
+#include "ialltoallv_tsp_inplace_algos_prototypes.h"
+#include "ialltoallv_tsp_inplace_algos.h"
+#include "ialltoallv_tsp_inplace_algos_undef.h"
+
 #include "tsp_undef.h"
