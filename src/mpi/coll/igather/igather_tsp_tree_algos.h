@@ -36,7 +36,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
     size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id, *recv_id = NULL;
-    void *tmp_buf = NULL, *data_buf = NULL;
+    void *tmp_buf = NULL;
+    const void *data_buf = NULL;
     int tree_type;
     MPII_Treealgo_tree_t my_tree, parents_tree;
     int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
