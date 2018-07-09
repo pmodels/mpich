@@ -23,7 +23,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
-                                                 int *recvcounts, MPI_Datatype datatype,
+                                                 const int *recvcounts, MPI_Datatype datatype,
                                                  MPI_Op op, int tag, MPIR_Comm * comm, int k,
                                                  MPIR_TSP_sched_t * sched)
 {
@@ -229,9 +229,9 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf, int *recvcounts,
-                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                           MPIR_Request ** req, int k)
+int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
+                                           const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
+                                           MPIR_Comm * comm, MPIR_Request ** req, int k)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
