@@ -26,7 +26,6 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     int mpi_errno = MPI_SUCCESS;
     int dest;
     int size = 0;
-    int buf = exit_code;
     MPIR_Request *sreq = NULL;
     MPIDI_CH4U_hdr_t am_hdr;
 
