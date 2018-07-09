@@ -22,6 +22,7 @@ cvars:
         auto              - Internal algorithm selection
         blocked           - Force blocked algorithm
         inplace           - Force inplace algorithm
+        gentran_blocked   - Force generic transport blocked algorithm
 
     - name        : MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -210,6 +211,30 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
 
     *request = NULL;
 
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ialltoallv_intra_algo_choice) {
+            case MPIR_IALLTOALLV_INTRA_ALGO_GENTRAN_BLOCKED:
+                if (sendbuf != MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                              sendtype, recvbuf, recvcounts,
+                                                              rdispls, recvtype, comm_ptr, request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
