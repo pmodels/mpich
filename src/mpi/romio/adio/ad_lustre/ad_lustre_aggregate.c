@@ -34,8 +34,8 @@ void ADIOI_LUSTRE_Calc_my_off_len(ADIO_File fd,
     ADIOI_Flatlist_node *flat_file;
     MPI_Aint filetype_extent, filetype_lb;
 
-/* For this process's request, calculate the list of offsets and
- * length in the file and determine the start and end offsets. */
+    /* For this process's request, calculate the list of offsets and
+     * length in the file and determine the start and end offsets. */
     my_access->end_offset = 0;
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
