@@ -104,7 +104,6 @@ int MPIR_TSP_Ibcast_intra_ring(void *buffer, int count, MPI_Datatype datatype, i
                                MPIR_Comm * comm, MPIR_Request ** req, int maxbytes)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
