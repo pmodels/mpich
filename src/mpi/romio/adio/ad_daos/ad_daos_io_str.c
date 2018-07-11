@@ -124,13 +124,13 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
 
     daos_sg_list_t *sgl, loc_sgl;
     daos_iov_t *iovs;
-    daos_array_ranges_t *ranges, loc_ranges;
+    daos_array_iod_t *iod, loc_iod;
     daos_range_t *rgs;
 
     if (request) {
         aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
-        ranges = &aio_req->ranges;
+        iod = &aio_req->iod;
         sgl = &aio_req->sgl;
 
         if (ADIOI_DAOS_greq_class == 0) {
@@ -144,7 +144,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         aio_req->nbytes = 0;
     }
     else {
-        ranges = &loc_ranges;
+        iod = &loc_iod;
         sgl = &loc_sgl;
     }
 
@@ -357,13 +357,13 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     }
 
     /** set array location */
-    ranges->arr_nr = n_write_lists;
-    ranges->arr_rgs = rgs;
+    iod->arr_nr = n_write_lists;
+    iod->arr_rgs = rgs;
     if (request)
         aio_req->rgs = rgs;
 
     if (rw_type == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, cont->epoch++, ranges, sgl, NULL,
+        ret = daos_array_write(cont->oh, cont->epoch++, iod, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
@@ -376,7 +376,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         }
     }
     else if (rw_type == DAOS_READ) {
-        ret = daos_array_read(cont->oh, cont->epoch, ranges, sgl, NULL,
+        ret = daos_array_read(cont->oh, cont->epoch, iod, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);

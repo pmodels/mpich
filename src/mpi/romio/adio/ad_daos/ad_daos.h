@@ -53,7 +53,7 @@ struct ADIO_DAOS_req {
     MPI_Request req;
     MPI_Offset nbytes;
     daos_event_t daos_event;
-    daos_array_ranges_t ranges;
+    daos_array_iod_t iod;
     daos_range_t rg;
     daos_sg_list_t sgl;
     daos_iov_t iov;

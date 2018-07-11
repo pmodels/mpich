@@ -29,7 +29,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
 {
     MPI_Count datatype_size;
     uint64_t len;
-    daos_array_ranges_t *ranges, loc_ranges;
+    daos_array_iod_t *iod, loc_iod;
     daos_range_t *rg, loc_rg;
     daos_sg_list_t *sgl, loc_sgl;
     daos_iov_t *iov, loc_iov;
@@ -45,7 +45,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
 
-        ranges = &aio_req->ranges;
+        iod = &aio_req->iod;
         rg = &aio_req->rg;
         sgl = &aio_req->sgl;
         iov = &aio_req->iov;
@@ -62,7 +62,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         aio_req->nbytes = len;
     }
     else {
-        ranges = &loc_ranges;
+        iod = &loc_iod;
         rg = &loc_rg;
         sgl = &loc_sgl;
         iov = &loc_iov;
@@ -84,10 +84,10 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     printf("MEM : off %lld len %zu\n", buf, len);
 #endif
     /** set array location */
-    ranges->arr_nr = 1;
+    iod->arr_nr = 1;
     rg->rg_len = len;
     rg->rg_idx = offset;
-    ranges->arr_rgs = rg;
+    iod->arr_rgs = rg;
 
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
@@ -102,7 +102,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
 #endif
 
     if (flag == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, cont->epoch++, ranges, sgl, NULL,
+        ret = daos_array_write(cont->oh, cont->epoch++, iod, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
@@ -115,7 +115,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         }
     }
     else if (flag == DAOS_READ) {
-        ret = daos_array_read(cont->oh, cont->epoch, ranges, sgl, NULL,
+        ret = daos_array_read(cont->oh, cont->epoch, iod, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
