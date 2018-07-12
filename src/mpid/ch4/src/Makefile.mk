@@ -24,7 +24,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_proc.h     \
                   src/mpid/ch4/src/ch4_recv.h     \
                   src/mpid/ch4/src/ch4_rma.h      \
-                  src/mpid/ch4/src/ch4_spawn.h    \
                   src/mpid/ch4/src/ch4_win.h      \
                   src/mpid/ch4/src/ch4r_probe.h   \
                   src/mpid/ch4/src/ch4r_rma.h     \
@@ -40,6 +39,18 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_request.h
 
 mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
+                    src/mpid/ch4/src/ch4_init.c           \
+                    src/mpid/ch4/src/ch4_comm.c           \
+                    src/mpid/ch4/src/ch4_spawn.c          \
+                    src/mpid/ch4/src/ch4_win.c            \
+                    src/mpid/ch4/src/ch4i_comm.c          \
+                    src/mpid/ch4/src/ch4r_init.c          \
+                    src/mpid/ch4/src/ch4r_comm.c          \
+                    src/mpid/ch4/src/ch4r_callbacks.c     \
+                    src/mpid/ch4/src/ch4r_rma_target_callbacks.c \
+                    src/mpid/ch4/src/ch4r_rma_origin_callbacks.c \
+                    src/mpid/ch4/src/ch4r_symheap.c \
+                    src/mpid/ch4/src/ch4r_win.c \
                     src/mpid/ch4/src/mpid_ch4_net_array.c
 
 if BUILD_CH4_COLL_TUNING

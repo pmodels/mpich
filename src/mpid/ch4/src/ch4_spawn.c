@@ -1,17 +1,15 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
+ *  (C) 2018 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef CH4_SPAWN_H_INCLUDED
-#define CH4_SPAWN_H_INCLUDED
 
-#include "ch4_impl.h"
+#include "mpidimpl.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -38,20 +36,19 @@ cvars:
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
-                                                      char *commands[],
-                                                      char **argvs[],
-                                                      const int maxprocs[],
-                                                      MPIR_Info * info_ptrs[],
-                                                      int root,
-                                                      MPIR_Comm * comm_ptr,
-                                                      MPIR_Comm ** intercomm, int errcodes[])
+int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
+                             MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
+                             MPIR_Comm ** intercomm, int errcodes[])
 {
     MPIR_Assert(0);
 }
 #else
-static inline int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr,
-                                           PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
+int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
+#undef FUNCNAME
+#define FUNCNAME MPIDI_mpi_to_pmi_keyvals
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
 {
     char key[MPI_MAX_INFO_KEY];
     PMI_keyval_t *kv = 0;
@@ -90,7 +87,12 @@ static inline int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr,
     goto fn_exit;
 }
 
-static inline void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
+void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
+#undef FUNCNAME
+#define FUNCNAME MPIDI_free_pmi_keyvals
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
 {
     int i, j;
 
@@ -117,14 +119,9 @@ static inline void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *cou
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
-                                                      char *commands[],
-                                                      char **argvs[],
-                                                      const int maxprocs[],
-                                                      MPIR_Info * info_ptrs[],
-                                                      int root,
-                                                      MPIR_Comm * comm_ptr,
-                                                      MPIR_Comm ** intercomm, int errcodes[])
+int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
+                             MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
+                             MPIR_Comm ** intercomm, int errcodes[])
 {
     char port_name[MPI_MAX_PORT_NAME];
     int *info_keyval_sizes = 0, i, mpi_errno = MPI_SUCCESS;
@@ -255,9 +252,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
 #define FUNCNAME MPID_Comm_connect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
-                                               MPIR_Info * info,
-                                               int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
+                      MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int timeout = MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT;
@@ -289,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
 #define FUNCNAME MPID_Comm_disconnect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
+int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_DISCONNECT);
@@ -311,7 +307,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
 #define FUNCNAME MPID_Open_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_OPEN_PORT);
@@ -333,7 +329,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Open_port(MPIR_Info * info_ptr, char *port_nam
 #define FUNCNAME MPID_Close_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Close_port(const char *port_name)
+int MPID_Close_port(const char *port_name)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CLOSE_PORT);
@@ -355,9 +351,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Close_port(const char *port_name)
 #define FUNCNAME MPID_Comm_accept
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_accept(const char *port_name,
-                                              MPIR_Info * info,
-                                              int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+int MPID_Comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
+                     MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_ACCEPT);
@@ -374,5 +369,3 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_accept(const char *port_name,
   fn_fail:
     goto fn_exit;
 }
-
-#endif /* CH4_SPAWN_H_INCLUDED */

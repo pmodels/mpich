@@ -15,6 +15,12 @@
 #include "ch4r_recvq.h"
 #include "ch4r_proc.h"
 #include "ch4r_init.h"
+/* from ch4r_init.h */
+#include "ch4r_callbacks.h"
+#include "ch4r_rma_target_callbacks.h"
+#include "ch4r_rma_origin_callbacks.h"
+#include "uthash.h"
+/* END */
 #include "ch4r_comm.h"
 #include "ch4r_probe.h"
 #include "mpidig_recv.h"
