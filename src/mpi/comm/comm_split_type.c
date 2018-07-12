@@ -607,6 +607,93 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
   fn_fail:
     goto fn_exit;
 }
+
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+                                        MPIR_Comm ** newcomm_ptr)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    netloc_node_t *network_node;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+
+    /* Get available memory in the node */
+    hwloc_obj_t memory_obj = NULL;
+    long total_memory_size = 0;
+    long *memory_at_nodes = NULL;
+
+    while ((memory_obj =
+            hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, HWLOC_OBJ_NUMANODE,
+                                       memory_obj)) != NULL) {
+        total_memory_size += memory_obj->total_memory;
+    }
+
+    if (min_mem_size == 0 || comm_size < min_mem_size ||
+        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        color = MPI_UNDEFINED;
+    } else
+        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
+            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+        int node_index;
+        int subset_mem_size;
+        int prev_comm_color, current_comm_color;
+        int num_nodes;
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
+
+        mpi_errno =
+            MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Process.network_attr,
+                                                   MPIR_Process.netloc_topology, network_node,
+                                                   &node_index, &num_nodes);
+
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        memory_at_nodes = (long *) MPL_calloc(num_nodes, sizeof(long), MPL_MEM_OTHER);
+        memory_at_nodes[node_index] = total_memory_size;
+
+        /* Send the memory count to processes */
+        mpi_errno =
+            MPIR_Allreduce(MPI_IN_PLACE, memory_at_nodes, num_nodes, MPI_LONG,
+                           MPI_SUM, comm_ptr, &errflag);
+
+        subset_mem_size = 0;
+        current_comm_color = 0;
+        prev_comm_color = -1;
+
+        for (i = 0; i < num_nodes; i++) {
+            if (subset_mem_size >= min_mem_size) {
+                subset_mem_size = 0;
+                prev_comm_color = current_comm_color;
+                current_comm_color = i;
+            }
+            subset_mem_size += memory_at_nodes[i];
+            if (i == node_index) {
+                color = current_comm_color;
+            }
+        }
+        if (subset_mem_size < min_mem_size && i == num_nodes)
+            color = prev_comm_color;
+
+        MPL_free(memory_at_nodes);
+    } else {
+        color = MPI_UNDEFINED;
+    }
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    if (memory_at_nodes != NULL) {
+        MPL_free(memory_at_nodes);
+    }
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -770,6 +857,10 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
                && *(hintval + strlen("subcomm_min_size:")) != '\0') {
         int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
         mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hintval + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
     }
 #endif
   fn_exit:
