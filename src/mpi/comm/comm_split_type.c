@@ -607,6 +607,47 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
   fn_fail:
     goto fn_exit;
 }
+
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+                                        MPIR_Comm ** newcomm_ptr)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    netloc_node_t *network_node;
+
+    /* Get available memory in the node */
+    hwloc_obj_t memory_obj = NULL;
+    long total_memory_size = 0;
+    int memory_per_process;
+
+    while ((memory_obj =
+            hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, HWLOC_OBJ_NUMANODE,
+                                       memory_obj)) != NULL) {
+        /* Memory size is in bytes here */
+        total_memory_size += memory_obj->total_memory;
+    }
+
+    if (min_mem_size == 0 || MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        *newcomm_ptr = NULL;
+    } else {
+        int num_ranks_node;
+        if (MPIR_Process.comm_world->node_comm != NULL) {
+            num_ranks_node = MPIR_Comm_size(MPIR_Process.comm_world->node_comm);
+        } else {
+            num_ranks_node = 1;
+        }
+        memory_per_process = total_memory_size / num_ranks_node;
+        mpi_errno = network_split_by_minsize(comm_ptr, key, min_mem_size / memory_per_process,
+                                             newcomm_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -770,6 +811,11 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
                && *(hintval + strlen("subcomm_min_size:")) != '\0') {
         int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
         mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hintval + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+        /* Split by minimum memory size per subcommunicator in bytes */
+        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
     }
 #endif
   fn_exit:
