@@ -71,7 +71,8 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
         str++;
         hex[1] = *str;
         str++;
-        sscanf(hex, "%X", &value);
+        if (0 == sscanf(hex, "%X", &value))
+            return MPL_STR_TRUNCATED;
         *dest = (char) value;
         /*MPL_DBG_MSG_FMT(STRING,VERBOSE,(MPL_DBG_FDEST," %s = %c",
          * hex, *dest)); */
