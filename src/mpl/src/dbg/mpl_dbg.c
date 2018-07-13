@@ -351,7 +351,11 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                         if (strcmp(p, "-default") == 0) {
                             file_pattern = default_file_pattern;
                         } else {
-                            strncpy(file_pattern_buf, p, sizeof(file_pattern_buf));
+                            strncpy(file_pattern_buf, p, sizeof(file_pattern_buf) - 1);
+
+                            /* Make sure the string is NULL-terminated */
+                            file_pattern_buf[MAXPATHLEN - 1] = '\0';
+
                             file_pattern = file_pattern_buf;
                         }
                     }
@@ -421,7 +425,11 @@ static int dbg_process_env(void)
 
     s = getenv_either("MPICH_DBG_FILENAME", "MPL_DBG_FILENAME");
     if (s) {
-        strncpy(file_pattern_buf, s, sizeof(file_pattern_buf));
+        strncpy(file_pattern_buf, s, sizeof(file_pattern_buf) - 1);
+
+        /* Make sure the string is NULL-terminated */
+        file_pattern_buf[MAXPATHLEN - 1] = '\0';
+
         file_pattern = file_pattern_buf;
     }
 
