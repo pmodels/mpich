@@ -48,8 +48,7 @@ static HYD_status lsf_get_path(char **path)
         *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
 
     if (*path == NULL) {
-        MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
-        if (bin_dir) {
+        if (MPL_env2str("LSF_BINDIR", (const char **) &bin_dir) && bin_dir) {
             length = strlen(bin_dir) + 2 + strlen("blaunch");
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             MPL_snprintf(*path, length, "%s/blaunch", bin_dir);
@@ -77,9 +76,8 @@ static HYD_status sge_get_path(char **path)
         *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
 
     if (*path == NULL) {
-        MPL_env2str("SGE_ROOT", (const char **) &sge_root);
-        MPL_env2str("ARC", (const char **) &arc);
-        if (sge_root && arc) {
+        if (MPL_env2str("SGE_ROOT", (const char **) &sge_root) &&
+            MPL_env2str("ARC", (const char **) &arc) && sge_root && arc) {
             length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             MPL_snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);

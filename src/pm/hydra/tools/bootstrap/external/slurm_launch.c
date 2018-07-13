@@ -108,8 +108,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     targs[idx++] = MPL_strdup("--input");
     targs[idx++] = MPL_strdup("none");
 
-    MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
-    if (extra_arg_list) {
+    if (MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list)) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
             targs[idx++] = MPL_strdup(extra_arg);
