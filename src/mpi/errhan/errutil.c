@@ -720,6 +720,9 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
     rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
                                      specific_msg, Argp);
     va_end(Argp);
+    /* Looks like Coverity has a hard time understanding that logic that
+     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
+    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
     return rc;
 }
 
@@ -856,6 +859,9 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
     rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
                                      specific_msg, Argp);
     va_end(Argp);
+    /* Looks like Coverity has a hard time understanding that logic that
+     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
+    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
     return rc;
 }
 
