@@ -304,19 +304,21 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_MALLOC_OR_JUMP(buf, char *, HYD_TMPBUF_SIZE, status);
         HYDU_ERR_POP(status, "unable to allocate memory\n");
 
-        HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed, HYDU_SOCK_COMM_NONE);
+        status =
+            HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed,
+                           HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading from stdin\n");
 
         hdr.buflen = count;
 
-        HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
+                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error writing to control socket\n");
         HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed,
-                            HYDU_SOCK_COMM_MSGWAIT);
+            status = HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed,
+                                     HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
 
@@ -487,8 +489,8 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         } else {
             hdr.cmd = STDIN;
             hdr.buflen = 0;
-            HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
-                            HYDU_SOCK_COMM_MSGWAIT);
+            status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
+                                     HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
         }
