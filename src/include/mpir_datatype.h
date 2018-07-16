@@ -8,17 +8,85 @@
 #ifndef MPIR_DATATYPE_H_INCLUDED
 #define MPIR_DATATYPE_H_INCLUDED
 
-/* This value should be set to greatest value used as the type index suffix in
- * the predefined handles.  That is, look at the last two hex digits of all
- * predefined datatype handles, take the greatest one, and convert it to decimal
- * here. */
-/* FIXME calculating this value this way is foolish, we should make this more
- * automatic and less error prone */
-/* FIXME: Given that this is relatively static, an adequate alternative is
-   to provide a check that this value is valid. */
-#define MPIR_DATATYPE_N_BUILTIN 69
 #define MPIR_DTYPE_BEGINNING  0
 #define MPIR_DTYPE_END       -1
+
+/* This enum should be kept in sync with the array in src/mpi/datatype/typeutil.c */
+typedef enum {
+    MPIR_CHAR,
+    MPIR_UNSIGNED_CHAR,
+    MPIR_SIGNED_CHAR,
+    MPIR_BYTE,
+    MPIR_WCHAR,
+    MPIR_SHORT,
+    MPIR_UNSIGNED_SHORT,
+    MPIR_INT,
+    MPIR_UNSIGNED,
+    MPIR_LONG,
+    MPIR_UNSIGNED_LONG,
+    MPIR_FLOAT,
+    MPIR_DOUBLE,
+    MPIR_LONG_DOUBLE,
+    MPIR_LONG_LONG,
+    MPIR_UNSIGNED_LONG_LONG,
+    MPIR_PACKED,
+    MPIR_LB,
+    MPIR_UB,
+    MPIR_2INT,
+
+    /* C99 types */
+    MPIR_INT8_T,
+    MPIR_INT16_T,
+    MPIR_INT32_T,
+    MPIR_INT64_T,
+    MPIR_UINT8_T,
+    MPIR_UINT16_T,
+    MPIR_UINT32_T,
+    MPIR_UINT64_T,
+    MPIR_C_BOOL,
+    MPIR_C_FLOAT_COMPLEX,
+    MPIR_C_DOUBLE_COMPLEX,
+    MPIR_C_LONG_DOUBLE_COMPLEX,
+
+    /* address/offset/count types */
+    MPIR_AINT,
+    MPIR_OFFSET,
+    MPIR_COUNT,
+
+    /* Fortran types */
+    MPIR_COMPLEX,
+    MPIR_DOUBLE_COMPLEX,
+    MPIR_LOGICAL,
+    MPIR_REAL,
+    MPIR_DOUBLE_PRECISION,
+    MPIR_INTEGER,
+    MPIR_2INTEGER,
+#ifdef MPICH_DEFINE_2COMPLEX
+    MPIR_2COMPLEX,
+    MPIR_2DOUBLE_COMPLEX,
+#endif
+    MPIR_2REAL,
+    MPIR_2DOUBLE_PRECISION,
+    MPIR_CHARACTER,
+#ifdef HAVE_FORTRAN_BINDING
+    /* Size-specific types; these are in section 10.2.4 (Extended Fortran
+     * Support) as well as optional in MPI-1
+     */
+    MPIR_REAL4,
+    MPIR_REAL8,
+    MPIR_REAL16,
+    MPIR_COMPLEX8,
+    MPIR_COMPLEX16,
+    MPIR_COMPLEX32,
+    MPIR_INTEGER1,
+    MPIR_INTEGER2,
+    MPIR_INTEGER4,
+    MPIR_INTEGER8,
+    MPIR_INTEGER16,
+#endif
+    /* This entry is a guaranteed end-of-list item */
+    MPIR_DATATYPE_N_BUILTIN
+} MPIR_Builtin_datatypes_enum;
 
 /*S
   MPIR_Datatype_contents - Holds envelope and contents data for a given

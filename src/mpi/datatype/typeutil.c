@@ -41,6 +41,7 @@ static int datatype_attr_finalize_cb(void *dummy);
    particular?  There are several lists of predefined types sprinkled throughout
    the codebase and it's unclear which (if any) of them must match exactly.
    [goodell@ 2009-03-17] */
+/* This struct should be kept in sync with the enum in src/include/mpir_datatype.h */
 static MPI_Datatype mpi_dtypes[] = {
     MPI_CHAR,
     MPI_UNSIGNED_CHAR,
