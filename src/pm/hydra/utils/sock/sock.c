@@ -672,7 +672,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp)
 {
-    int listenfd;
+    int listenfd = -1;
     char *sport, *real_port_range, *ip = NULL;
     uint16_t port;
     HYD_status status = HYD_SUCCESS;
@@ -713,6 +713,8 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     return status;
 
   fn_fail:
+    if (-1 != listenfd)
+        close(listenfd);
     goto fn_exit;
 }
 

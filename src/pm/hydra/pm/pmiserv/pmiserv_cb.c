@@ -506,7 +506,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd, pgid;
+    int accept_fd = -1, pgid;
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
@@ -538,5 +538,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     return status;
 
   fn_fail:
+    if (-1 != accept_fd)
+        close(accept_fd);
     goto fn_exit;
 }

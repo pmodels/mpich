@@ -424,7 +424,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
 static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd;
+    int accept_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -440,6 +440,8 @@ static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
     return status;
 
   fn_fail:
+    if (-1 != accept_fd)
+        close(accept_fd);
     goto fn_exit;
 }
 

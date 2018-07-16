@@ -258,7 +258,7 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int client_fd;
+    int client_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -276,6 +276,8 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     return status;
 
   fn_fail:
+    if (-1 != client_fd)
+        close(client_fd);
     goto fn_exit;
 }
 
