@@ -255,7 +255,7 @@ char *HYDU_getcwd(void)
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
-    char *hostname, *procs, *binding, *tmp, *user, *saveptr;
+    char *hostname, *procs, *binding, *tmp, *user, *saveptr = NULL;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
