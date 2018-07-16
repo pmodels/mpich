@@ -1268,6 +1268,9 @@ int MPIR_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
 
 /******************************** Iscatter ********************************/
