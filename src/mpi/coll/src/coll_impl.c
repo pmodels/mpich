@@ -677,6 +677,8 @@ int MPII_Coll_init(void)
     /* Iscan Intra */
     if (0 == strcmp(MPIR_CVAR_ISCAN_INTRA_ALGORITHM, "recursive_doubling"))
         MPIR_Iscan_intra_algo_choice = MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_ISCAN_INTRA_ALGORITHM, "gentran_recursive_doubling"))
+        MPIR_Iscan_intra_algo_choice = MPIR_ISCAN_INTRA_ALGO_GENTRAN_RECURSIVE_DOUBLING;
     else
         MPIR_Iscan_intra_algo_choice = MPIR_ISCAN_INTRA_ALGO_AUTO;
 

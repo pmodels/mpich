@@ -448,6 +448,7 @@ extern MPIR_Ireduce_inter_algo_t MPIR_Ireduce_inter_algo_choice;
 typedef enum MPIR_Iscan_intra_algo_t {
     MPIR_ISCAN_INTRA_ALGO_AUTO,
     MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING,
+    MPIR_ISCAN_INTRA_ALGO_GENTRAN_RECURSIVE_DOUBLING,
 } MPIR_Iscan_intra_algo_t;
 extern MPIR_Iscan_intra_algo_t MPIR_Iscan_intra_algo_choice;
 
