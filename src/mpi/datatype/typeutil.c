@@ -234,13 +234,11 @@ int MPIR_Datatype_builtin_fillin(void)
     }
 
     if (!is_init) {
-        for (i = 0; i < MPIR_DATATYPE_N_BUILTIN; i++) {
+        /* If the datatype is -1, we're at the end of mpi_dtypes */
+        for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i] != -1; i++) {
             /* Compute the index from the value of the handle */
             d = mpi_dtypes[i];
-            if (d == -1) {
-                /* At the end of mpi_dtypes */
-                break;
-            }
+
             /* Some of the size-specific types may be null, as might be types
              * based on 'long long' and 'long double' if those types were
              * disabled at configure time.  skip those cases. */
