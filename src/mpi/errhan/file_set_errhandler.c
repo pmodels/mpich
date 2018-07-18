@@ -175,12 +175,6 @@ void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *
         *kind = 1;      /* Use errors return as the default */
     } else {
         MPIR_ERRTEST_ERRHANDLER(e, mpi_errno);
-        if (mpi_errno != MPI_SUCCESS) {
-            /* FIXME: We need an error return */
-            *c = 0;
-            *kind = 1;
-            return;
-        }
         MPIR_Errhandler_get_ptr(e, e_ptr);
         if (!e_ptr) {
             /* FIXME: We need an error return */
