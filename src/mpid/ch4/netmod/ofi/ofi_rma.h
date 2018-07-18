@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, alloc_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
@@ -208,7 +208,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, alloc_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
@@ -264,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, r_size, alloc_iovs, alloc_rma_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
@@ -321,10 +321,10 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    MPIR_Win * win, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t offset, omax, tmax, tout, oout;
     uint64_t flags;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
     unsigned i;
     struct iovec *originv;
@@ -482,10 +482,10 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    MPIR_Win * win, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t offset, omax, tmax, tout, oout;
     uint64_t flags;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
     struct iovec *originv;
     struct fi_rma_iov *targetv;
@@ -878,9 +878,9 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 {
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t origin_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout, oout;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     MPI_Datatype basic_type;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
@@ -1026,9 +1026,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 {
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t target_bytes, offset, max_count, max_size, dt_size, omax, rmax, tmax, tout, rout, oout;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     MPI_Datatype rt, basic_type, basic_type_res;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
