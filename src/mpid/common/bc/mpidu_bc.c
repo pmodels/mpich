@@ -48,7 +48,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
                        void **bc_table, size_t ** bc_indices)
 {
     int mpi_errno = MPI_SUCCESS;
-    int local_rank, local_leader;
+    int local_rank = -1, local_leader = -1;
     int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
@@ -327,7 +327,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int start, end, i;
     int key_max, val_max, name_max, out_len, rem;
     char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
-    int local_rank, local_leader;
+    int local_rank = -1, local_leader = -1;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
