@@ -87,8 +87,6 @@ int MPI_Win_free(MPI_Win * win)
             /* TODO: Check for unterminated passive target epoch */
 
             /* TODO: check for unterminated active mode epoch */
-            if (mpi_errno)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -130,9 +130,6 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
             MPIR_ERR_CHKANDJUMP1(size > 0 && baseptr == NULL, mpi_errno, MPI_ERR_ARG,
                                  "**nullptr", "**nullptr %s",
                                  "NULL base pointer is invalid when size is nonzero");
-
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
