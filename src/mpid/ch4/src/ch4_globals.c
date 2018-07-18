@@ -140,7 +140,7 @@ int MPIDI_check_for_failed_procs(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     int len;
-    char *kvsname = NULL;
+    char *kvsname = MPIDI_CH4_Global.jobid;
     char *failed_procs_string = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
@@ -163,8 +163,6 @@ int MPIDI_check_for_failed_procs(void)
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    pmi_errno = PMI_KVS_Get_my_name(kvsname, len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
     pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", failed_procs_string, len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
 #endif
