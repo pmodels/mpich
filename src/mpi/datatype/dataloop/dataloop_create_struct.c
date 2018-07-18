@@ -410,8 +410,6 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
                                      0,
                                      &bytes,
                                      &tmp_blklens[first_ind], &tmp_disps[first_ind], &last_ind);
-            if (err)
-                return err;
             first_ind += last_ind;
         }
     }
