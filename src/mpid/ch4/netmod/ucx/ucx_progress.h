@@ -87,10 +87,6 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
-    if (status == UCS_ERR_CANCELED) {
-        goto fn_exit;
-    }
-  fn_exit:
     return;
 }
 
