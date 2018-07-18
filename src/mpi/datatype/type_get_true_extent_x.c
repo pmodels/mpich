@@ -86,8 +86,6 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * true_lb, MPI_C
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
