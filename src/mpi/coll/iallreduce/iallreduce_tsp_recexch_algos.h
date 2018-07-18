@@ -44,7 +44,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     int *send_id, *reduce_id;
     bool in_step2;
     void *tmp_buf;
-    void **step1_recvbuf;
+    void **step1_recvbuf = NULL;
     void **nbr_buffer;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH);
