@@ -520,8 +520,7 @@ int MPIR_Err_combine_codes(int error1, int error2)
         return error2_code;
 
     error2_class = MPIR_ERR_GET_CLASS(error2_code);
-    if (MPIR_ERR_GET_CLASS(error2_class) < MPI_SUCCESS ||
-        MPIR_ERR_GET_CLASS(error2_class) > MPICH_ERR_LAST_MPIX) {
+    if (error2_class < MPI_SUCCESS || error2_class > MPICH_ERR_LAST_MPIX) {
         error2_class = MPI_ERR_OTHER;
     }
 
