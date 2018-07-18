@@ -878,8 +878,7 @@ static int dbg_openfile(FILE ** dbg_fp)
             *dbg_fp = fopen(filename, "w");
             if (!*dbg_fp) {
                 MPL_error_printf("Could not open log file %s\n", filename);
-                if (mpl_errno)
-                    goto fn_fail;
+                goto fn_fail;
             }
         }
     }
