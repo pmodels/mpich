@@ -856,7 +856,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
     ssize_t total_size = 0LL;
-    void *map_ptr;
+    void *map_ptr = NULL;
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
