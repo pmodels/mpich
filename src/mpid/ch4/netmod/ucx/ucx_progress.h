@@ -92,8 +92,6 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
     }
   fn_exit:
     return;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -134,8 +132,6 @@ static inline int MPIDI_NM_progress(int vni, int blocking)
 
   fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* UCX_PROGRESS_H_INCLUDED */
