@@ -87,8 +87,6 @@ int MPI_Status_set_elements_x(MPI_Status * status, MPI_Datatype datatype, MPI_Co
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
