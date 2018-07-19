@@ -447,3 +447,36 @@ void ADIOI_DAOS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     return;
 }
+
+void ADIOI_DAOS_IreadStridedColl(ADIO_File fd, void *buf, int count, 
+                                 MPI_Datatype datatype, int file_ptr_type,
+                                 ADIO_Offset offset, ADIO_Request *request,
+                                 int *error_code)
+{
+    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
+    daos_epoch_t max_epoch;
+
+    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
+    cont->epoch = max_epoch;
+
+    ADIOI_DAOS_StridedListIO(fd, buf, count, datatype, file_ptr_type,
+                             offset, NULL, request, DAOS_READ, error_code);
+    return;
+}
+
+void ADIOI_DAOS_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
+                                  MPI_Datatype datatype, int file_ptr_type,
+                                  ADIO_Offset offset, MPI_Request *request,
+                                  int *error_code)
+{
+    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
+    daos_epoch_t max_epoch;
+
+    ADIOI_DAOS_StridedListIO(fd, (void *)buf, count, datatype, file_ptr_type,
+                             offset, NULL, request, DAOS_WRITE, error_code);
+
+    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
+    cont->epoch = max_epoch;
+
+    return;
+}
