@@ -16,6 +16,11 @@
 #include "netloc_util.h"
 #endif
 
+#ifdef HAVE_NETLOC
+#include "netloc_util.h"
+#include <math.h>
+#endif
+
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Comm_split_type = PMPI_Comm_split_type
@@ -474,10 +479,45 @@ static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_
 
 }
 
-static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
-                                    MPIR_Comm ** newcomm_ptr)
+static void get_prime_factors(int num, int node_dimensions, int **prime_factors, int *num_factors)
 {
+    int i = 0, j;
+    int *factors = (int *) MPL_malloc(node_dimensions * sizeof(int), MPL_MEM_OTHER);
+    while (true) {
+        if (num / 2 == 0)
+            break;
+        factors = (int *) MPL_realloc(factors, (i + 1) * sizeof(int), MPL_MEM_OTHER);
+        factors[i++] = 2;
+        num = num / 2;
+    }
 
+    for (j = 3; j < sqrt(num); j++) {
+        while (true) {
+            if (num / j == 0)
+                break;
+            factors = (int *) MPL_realloc(factors, (i + 1) * sizeof(int), MPL_MEM_OTHER);
+            factors[i++] = j;
+            num = num / j;
+        }
+    }
+
+    while (i < node_dimensions) {
+        factors[i++] = 1;
+    }
+
+    *num_factors = i;
+    *prime_factors = factors;
+
+  fn_exit:
+    return;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key,
+                                    int subcomm_min_size, MPIR_Comm ** newcomm_ptr)
+{
     int mpi_errno = MPI_SUCCESS;
     int i, color;
     int comm_size = MPIR_Comm_size(comm_ptr);
@@ -694,6 +734,147 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
   fn_fail:
     goto fn_exit;
 }
+
+static int network_split_by_min_torus_size(MPIR_Comm * comm_ptr, int key,
+                                           int min_size, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+    netloc_node_t *network_node;
+
+    if (min_size == 0 || comm_size < min_size ||
+        MPIR_Process.network_attr.type != MPIR_NETLOC_NETWORK_TYPE__TORUS) {
+        *newcomm_ptr = NULL;
+    } else {
+        int *node_dimensions;
+        int num_factors;
+        int tile_size;
+        int comm_size;
+        long node_coordinates;
+        int *prime_factors;
+        int *partition_dimensions;
+        int total_num_nodes;
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
+        node_coordinates =
+            MPIR_Process.network_attr.u.torus.node_coordinates[network_node->__uid__];
+
+        partition_dimensions =
+            (int *) MPL_malloc(MPIR_Process.network_attr.u.torus.dimension * sizeof(int),
+                               MPL_MEM_OTHER);
+        total_num_nodes = 0;
+        node_dimensions = MPIR_Process.network_attr.u.torus.geometry;
+        for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+            partition_dimensions[i] = 1;
+            if (total_num_nodes == 0) {
+                total_num_nodes = node_dimensions[i];
+            } else {
+                total_num_nodes = total_num_nodes * node_dimensions[i];
+            }
+        }
+
+        for (tile_size = min_size; tile_size <= total_num_nodes; tile_size++) {
+            get_prime_factors(tile_size, MPIR_Process.network_attr.u.torus.dimension,
+                              &prime_factors, &num_factors);
+            /* Find the right size of tile along each dimension */
+            for (i = MPIR_Process.network_attr.u.torus.dimension; i >= 1; i--) {
+                int max_allocation = 0;
+                int j, k = i - 1, l, m;
+                int dim;
+                for (j = num_factors; j > 0; j--) {
+                    max_allocation += (i - 1) * pow(i, j - 1);
+                }
+
+                for (k = max_allocation; k > 0; k--) {
+                    int *unique_dimension_covered =
+                        (int *) MPL_malloc(i * sizeof(int), MPL_MEM_OTHER);
+                    int *unique_factors_covered =
+                        (int *) MPL_malloc(num_factors * sizeof(int), MPL_MEM_OTHER);
+                    int *count_along_dim = (int *) MPL_calloc(1, i * sizeof(int), MPL_MEM_OTHER);
+                    int num_config_dim = 0;
+                    int factor = k;
+                    int factors_covered = 0;
+                    int flag = -1;
+
+                    for (j = 0; j < num_factors; j++) {
+                        count_along_dim[j] = 1;
+                    }
+
+                    dim = 0;
+                    m = 0;
+
+                    for (j = num_factors - 1; j >= 0; j--) {
+                        int current_factor = factor % i;
+                        for (l = 0; l < m; l++) {
+                            if (unique_dimension_covered[l] == current_factor) {
+                                break;
+                            }
+                        }
+                        if (l == m) {
+                            dim++;
+                        }
+
+                        unique_dimension_covered[m++] = current_factor;
+                        count_along_dim[current_factor] =
+                            count_along_dim[current_factor] * prime_factors[current_factor];
+
+                        /* Check if the size along that dimension is smaller than the current config generated */
+                        if (count_along_dim[current_factor] > node_dimensions[current_factor] ||
+                            count_along_dim[current_factor] % comm_size) {
+                            flag = current_factor;
+                            break;
+                        }
+                        factor = factor / i;
+                    }
+
+                    if (dim != i) {
+                        continue;
+                    }
+
+                    if (flag == -1 && dim == i) {
+                        for (j = 0; j < i; j++) {
+                            MPIR_Assert(count_along_dim[j] <= node_dimensions[j]);
+                        }
+                        partition_dimensions = count_along_dim;
+                        goto assign_color;
+                    }
+                }
+            }
+        }
+
+      assign_color:
+        color = 0;
+
+        for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+            int coordinate_along_dim = node_coordinates % node_dimensions[i];
+            coordinate_along_dim = coordinate_along_dim / partition_dimensions[i];
+            if (i == 0) {
+                color += coordinate_along_dim;
+            } else {
+                color = color + coordinate_along_dim * (node_dimensions[i - 1] /
+                                                        partition_dimensions[i - 1]);
+            }
+            node_coordinates = node_coordinates / node_dimensions[i];
+        }
+
+        if (partition_dimensions != NULL) {
+            MPL_free(partition_dimensions);
+        }
+        if (prime_factors != NULL) {
+            MPL_free(prime_factors);
+        }
+
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -861,6 +1042,10 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
                && *(hintval + strlen("min_mem_size:")) != '\0') {
         long min_mem_size = atol(hintval + strlen("min_mem_size:"));
         mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("torus_size:"), strlen("torus_size:"))
+               && *(hintval + strlen("torus_size:")) != '\0') {
+        int min_size = atol(hintval + strlen("torus_size:"));
+        mpi_errno = network_split_by_min_torus_size(comm_ptr, key, min_size, newcomm_ptr);
     }
 #endif
   fn_exit:
@@ -878,8 +1063,9 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     int mpi_errno = MPI_SUCCESS;
 
     /* split out the undefined processes */
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
+    mpi_errno =
+        MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                             key, &comm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
