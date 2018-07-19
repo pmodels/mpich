@@ -25,6 +25,7 @@ cvars:
         pairwise          - Force pairwise algorithm
         permuted_sendrecv - Force permuted sendrecv algorithm
         gentran_brucks    - Force generic transport based brucks algorithm
+        gentran_scattered - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -74,6 +75,27 @@ cvars:
         dedicated send and receive buffers for every neighbor in the brucks
         algorithm. Otherwise, it would reuse a single buffer for sending
         and receiving data to/from neighbors
+
+    - name        : MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS
+      category    : COLLECTIVE
+      type        : int
+      default     : 64
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum number of outstanding sends and recvs posted at a time
+
+    - name        : MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Number of send/receive tasks that scattered algorithm waits for
+        completion before posting another batch of send/receives of that size
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -310,6 +332,15 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                         recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_SCATTERED:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_scattered(sendbuf, sendcount,
+                                                           sendtype, recvbuf,
+                                                           recvcount, recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
