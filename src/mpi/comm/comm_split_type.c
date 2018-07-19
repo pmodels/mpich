@@ -648,6 +648,46 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
   fn_fail:
     goto fn_exit;
 }
+
+static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
+                                            int dimension, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+
+    /* Dimension is assumed to be indexed from 0 */
+    if (MPIR_Process.network_attr.type != MPIR_NETLOC_NETWORK_TYPE__TORUS ||
+        dimension >= MPIR_Process.network_attr.u.torus.dimension) {
+        *newcomm_ptr = NULL;
+    } else {
+        int node_coordinates = MPIR_Process.network_attr.u.torus.node_idx;
+        int *node_dimensions = MPIR_Process.network_attr.u.torus.geometry;
+        color = 0;
+        for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+            int coordinate_along_dim;
+            if (i == dimension) {
+                coordinate_along_dim = 0;
+            } else {
+                coordinate_along_dim = node_coordinates % node_dimensions[i];
+            }
+            if (i == 0) {
+                color = coordinate_along_dim;
+            } else {
+                color = color + coordinate_along_dim * node_dimensions[i - 1];
+            }
+            node_coordinates = node_coordinates / node_dimensions[i];
+        }
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -816,6 +856,10 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         long min_mem_size = atol(hintval + strlen("min_mem_size:"));
         /* Split by minimum memory size per subcommunicator in bytes */
         mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
+               && *(hintval + strlen("torus_dimension:")) != '\0') {
+        int dimension = atol(hintval + strlen("torus_dimension:"));
+        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
 #endif
   fn_exit:
