@@ -910,13 +910,23 @@ int MPII_Coll_init(void)
         MPIR_ERR_POP(mpi_errno);
 
     /* initialize transports */
-    MPII_Stubtran_init();
-    MPII_Gentran_init();
+    mpi_errno = MPII_Stubtran_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* initialize algorithms */
-    MPII_Stubalgo_init();
-    MPII_Treealgo_init();
-    MPII_Recexchalgo_init();
+    mpi_errno = MPII_Stubalgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Treealgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Recexchalgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -935,10 +945,17 @@ int MPII_Coll_finalize(void)
     /* deregister non blocking collectives progress hook */
     MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
 
-    MPII_Gentran_finalize();
-    MPII_Stubtran_finalize();
+    mpi_errno = MPII_Gentran_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Stubtran_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Function used by CH3 progress engine to decide whether to
@@ -954,15 +971,26 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     /* initialize any stub algo related data structures */
-    MPII_Stubalgo_comm_init(comm);
+    mpi_errno = MPII_Stubalgo_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     /* initialize any tree algo related data structures */
-    MPII_Treealgo_comm_init(comm);
+    mpi_errno = MPII_Treealgo_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* initialize any transport data structures */
-    MPII_Stubtran_comm_init(comm);
-    MPII_Gentran_comm_init(comm);
+    mpi_errno = MPII_Stubtran_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Function to cleanup any communicators for collectives */
@@ -971,12 +999,23 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     /* cleanup all collective communicators */
-    MPII_Stubalgo_comm_cleanup(comm);
-    MPII_Treealgo_comm_cleanup(comm);
+    mpi_errno = MPII_Stubalgo_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Treealgo_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* cleanup transport data */
-    MPII_Stubtran_comm_cleanup(comm);
-    MPII_Gentran_comm_cleanup(comm);
+    mpi_errno = MPII_Stubtran_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
