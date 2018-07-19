@@ -38,4 +38,6 @@ struct ADIOI_Fns_struct ADIO_DAOS_operations = {
     ADIOI_DAOS_Delete, /* Delete */
     ADIOI_DAOS_Feature, /* Features */
     "DAOS: ROMIO driver for DAOS",
+    ADIOI_DAOS_IreadStrided, /* IreadStrided */
+    ADIOI_DAOS_IwriteStrided, /* IwriteStrided */
 };
