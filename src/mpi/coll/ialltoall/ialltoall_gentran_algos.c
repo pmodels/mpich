@@ -22,4 +22,9 @@
 #include "ialltoall_tsp_brucks_algos.h"
 #include "ialltoall_tsp_brucks_algos_undef.h"
 
+/* instantiate ialltoall scattered algorithms for the gentran transport */
+#include "ialltoall_tsp_scattered_algos_prototypes.h"
+#include "ialltoall_tsp_scattered_algos.h"
+#include "ialltoall_tsp_scattered_algos_undef.h"
+
 #include "tsp_undef.h"
