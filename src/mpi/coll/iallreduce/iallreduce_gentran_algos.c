@@ -28,4 +28,8 @@
 #include "iallreduce_tsp_ring_algos.h"
 #include "iallreduce_tsp_ring_algos_undef.h"
 
+#include "iallreduce_tsp_recursive_exchange_common_prototypes.h"
+#include "iallreduce_tsp_recursive_exchange_common.h"
+#include "iallreduce_tsp_recursive_exchange_common_undef.h"
+
 #include "tsp_undef.h"
