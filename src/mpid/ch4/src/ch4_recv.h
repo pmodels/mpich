@@ -212,6 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         mpi_errno = MPID_Progress_test();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
     /* This should probably be moved to MPICH (above device) level */
