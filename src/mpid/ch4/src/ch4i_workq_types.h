@@ -85,7 +85,8 @@ typedef enum MPIDI_workq_op MPIDI_workq_op_t;
 
 /* Indentifies the delegated operation */
 enum MPIDI_workq_op { SEND, ISEND, SSEND, ISSEND, RSEND, IRSEND, RECV, IRECV, IPROBE,
-    IMPROBE, PUT, GET, POST, CMPL_HOOK, LOCAL_CMPL_HOOK, TARGET_CMPL_HOOK, TARGET_LOCAL_CMPL_HOOK
+    IMPROBE, PUT, GET, POST, CMPL_HOOK, LOCAL_CMPL_HOOK, TARGET_CMPL_HOOK, TARGET_LOCAL_CMPL_HOOK,
+    ACC, GET_ACC, FOP, CAS
 };
 
 typedef struct MPIDI_workq_elemt MPIDI_workq_elemt_t;
