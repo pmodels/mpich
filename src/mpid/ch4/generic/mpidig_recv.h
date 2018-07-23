@@ -361,6 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
 
     while (!MPIR_Request_is_complete(rreq)) {
         MPID_Progress_test();
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
     MPIR_Request_extract_status(rreq, status);
