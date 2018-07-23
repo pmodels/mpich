@@ -11,6 +11,10 @@
 #include "netloc_util.h"
 #include "mpl.h"
 
+#undef FUNCNAME
+#define FUNCNAME get_tree_attributes
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_tree_attributes(netloc_topology_t topology,
                                MPIR_Netloc_network_attributes * network_attr)
 {
@@ -36,13 +40,14 @@ static int get_tree_attributes(netloc_topology_t topology,
         (netloc_dt_lookup_table_t *) MPL_malloc(sizeof(netloc_dt_lookup_table_t), MPL_MEM_OTHER);
     mpi_errno = netloc_get_all_host_nodes(topology, host_nodes);
 
+    MPIR_CHKPMEM_DECL(3);
     if (!mpi_errno) {
         int host_node_at_leaf_level;
 
         /* Traversal order never exceeds the total number of nodes */
-        traversal_order =
-            (netloc_node_t **) MPL_malloc(sizeof(netloc_node_t *) * topology->num_nodes,
-                                          MPL_MEM_OTHER);
+        MPIR_CHKPMEM_MALLOC(traversal_order, netloc_node_t **,
+                            sizeof(netloc_node_t *) * topology->num_nodes, mpi_errno,
+                            "traversal_order", MPL_MEM_OTHER);
 
         hti = netloc_dt_lookup_table_iterator_t_construct(*host_nodes);
 
@@ -146,8 +151,10 @@ static int get_tree_attributes(netloc_topology_t topology,
             /*Assign depths to nodes of the graph bottom up, in breadth first order */
             /* indexed by node id, visited_node_list[i] > -1 indicates that the
              * node i has been visited */
-            network_attr->u.tree.node_levels =
-                (int *) MPL_malloc(sizeof(int) * topology->num_nodes, MPL_MEM_OTHER);
+
+            MPIR_CHKPMEM_MALLOC(network_attr->u.tree.node_levels, int *,
+                                sizeof(int) * topology->num_nodes, mpi_errno,
+                                "network_attr->u.tree.node_levels", MPL_MEM_OTHER);
 
             for (i = 0; i < topology->num_nodes; i++) {
                 network_attr->u.tree.node_levels[i] = -1;
@@ -280,9 +287,8 @@ static int get_tree_attributes(netloc_topology_t topology,
     }
 
   fn_exit:
-    if (traversal_order != NULL) {
-        MPL_free(traversal_order);
-    }
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_REAP();
     if (host_nodes != NULL) {
         MPL_free(host_nodes);
     }
