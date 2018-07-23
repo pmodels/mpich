@@ -64,7 +64,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
         }
     }
 #endif
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
@@ -120,9 +119,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
     ret = MPID_Progress_test();
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
+
+  fn_exit:
     return ret;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 
