@@ -29,13 +29,16 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq);
 static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
                                          MPIDIG_am_target_cmpl_cb target_cmpl_cb)
 {
+    int ret = 0;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_CMPL_ORDER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_CMPL_ORDER);
 
     if (MPIDI_CH4U_REQUEST(req, req->seq_no) ==
         (uint64_t) OPA_load_int(&MPIDI_CH4_Global.exp_seq_no)) {
         OPA_incr_int(&MPIDI_CH4_Global.exp_seq_no);
-        return 1;
+        ret = 1;
+        goto fn_exit;
     }
 
     MPIDI_CH4U_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
@@ -44,8 +47,9 @@ static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
     DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_CMPL_ORDER);
-    return 0;
+    return ret;
 }
 
 #undef FUNCNAME
