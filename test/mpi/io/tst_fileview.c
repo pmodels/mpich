@@ -21,7 +21,7 @@
         if (errorclass != (exp)) {                                      \
             char errorString[MPI_MAX_ERROR_STRING+1];                   \
             MPI_Error_string((err), errorString, &errorStringLen);      \
-            printf("Error at line %d: expect %s but got %d\n",          \
+            printf("Error at line %d: expect %s but got %s\n",          \
                    __LINE__,#exp, errorString);                         \
             (nerrs)++;                                                  \
         }                                                               \
