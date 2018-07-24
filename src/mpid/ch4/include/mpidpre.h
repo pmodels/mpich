@@ -30,7 +30,9 @@ typedef struct {
 } MPIDI_Devdt_t;
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 
-typedef int MPID_Progress_state;
+typedef struct {
+    int progress_count;
+} MPID_Progress_state;
 
 #define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
