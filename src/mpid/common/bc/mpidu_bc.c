@@ -147,7 +147,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= VALLEN;
+        bc_len = VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -253,7 +253,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= PMI2_MAX_VALLEN;
+        bc_len = PMI2_MAX_VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -364,7 +364,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= val_max;
+        bc_len = val_max;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
