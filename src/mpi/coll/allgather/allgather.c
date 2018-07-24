@@ -114,29 +114,97 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint tot_bytes;
-    int type_size;
+    int type_size, rank, color, count = 0, i, num_of_nodes = -1;
+    int *rank_node_map, *node_to_rank_map;
+    int uniform_ranks_per_node = 1;
+    int threshold = 0, proc_per_node = 0;
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         return MPI_SUCCESS;
 
-    comm_size = comm_ptr->local_size;
+    // comm_size = comm_ptr->local_size;
+    comm_size = MPIR_Comm_size(comm_ptr);
+    rank = MPIR_Comm_rank(comm_ptr);
+
+    rank_node_map = MPL_calloc(comm_size, sizeof(int), MPL_MEM_OTHER);
 
     MPIR_Datatype_get_size_macro(recvtype, type_size);
 
     tot_bytes = (MPI_Aint) recvcount *comm_size * type_size;
-    if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        mpi_errno =
-            MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
-                                                    recvcount, recvtype, comm_ptr, errflag);
-    } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        mpi_errno =
-            MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                        comm_ptr, errflag);
+
+    mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+    /* Topology information collection for selection logic */
+    rank_node_map[rank] = color;
+    MPIR_Allreduce(MPI_IN_PLACE, rank_node_map, comm_size, MPI_INT, MPI_MAX, comm_ptr, errflag);
+
+    for (i = 0; i < comm_size; i++) {
+        if (rank_node_map[i] == color) {
+            count++;
+        }
+        if (num_of_nodes < rank_node_map[i]) {
+            num_of_nodes = rank_node_map[i];
+        }
+    }
+
+    node_to_rank_map = MPL_calloc(num_of_nodes + 1, sizeof(int), MPL_MEM_OTHER);
+    for (i = 0; i < comm_size; i++) {
+        node_to_rank_map[rank_node_map[i]]++;
+    }
+
+    for (i = 0; i < num_of_nodes + 1; i++) {
+        if (count != node_to_rank_map[i]) {
+            uniform_ranks_per_node = 0;
+            break;
+        }
+    }
+
+    if ((!uniform_ranks_per_node) && !(comm_size & (comm_size - 1))) {
+        /* Use default selection logic */
+        if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
+            mpi_errno =
+                MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, errflag);
+        } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
+            mpi_errno =
+                MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                            recvtype, comm_ptr, errflag);
+        } else {
+            mpi_errno =
+                MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                          recvtype, comm_ptr, errflag);
+        }
+
+    } else {
+        /* Threshold Computation for new selection logic */
+        proc_per_node = count;
+
+        if (((num_of_nodes + 1) > 32) && (proc_per_node <= ((num_of_nodes + 1) / 32))) {
+            threshold = MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE;
+        } else {
+            threshold = ((num_of_nodes + 1) * 32768) / proc_per_node;
+        }
+    }
+    /* Use new selection logic */
+    if ((tot_bytes < threshold) || ((num_of_nodes + 1) == 1)) {
+        if (!(comm_size & (comm_size - 1))) {
+            mpi_errno =
+                MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, errflag);
+        } else {
+            mpi_errno =
+                MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                            recvtype, comm_ptr, errflag);
+        }
     } else {
         mpi_errno =
             MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                                       comm_ptr, errflag);
     }
+
+
+    MPL_free(rank_node_map);
+    MPL_free(node_to_rank_map);
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
