@@ -135,6 +135,7 @@ struct MPIDI_workq_elemt {
             int assert;         /* assert for sync functions */
             MPIR_Win *win_ptr;
             MPIDI_av_entry_t *addr;
+            MPIR_Request *request;
         } rma;
     };
 };

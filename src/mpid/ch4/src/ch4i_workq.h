@@ -137,6 +137,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue_body(MPIDI_workq_t * workq
                                                            int assert,
                                                            MPIR_Win * win_ptr,
                                                            MPIDI_av_entry_t * addr,
+                                                           MPIR_Request * request,
                                                            OPA_int_t * processed)
 {
     MPIDI_workq_elemt_t *rma_elemt = NULL;
@@ -160,6 +161,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue_body(MPIDI_workq_t * workq
     rma_elemt->rma.assert = assert;
     rma_elemt->rma.win_ptr = win_ptr;
     rma_elemt->rma.addr = addr;
+    rma_elemt->rma.request = request;
 
     MPIDI_workq_enqueue(workq, rma_elemt);
 }
@@ -391,13 +393,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
                                                       int lock_type,
                                                       int assert,
                                                       MPIR_Win * win_ptr, MPIDI_av_entry_t * addr,
-                                                      OPA_int_t * processed)
+                                                      MPIR_Request * request, OPA_int_t * processed)
 {
     MPIDI_WORKQ_RMA_ENQUEUE_START;
     MPIDI_workq_rma_enqueue_body(workq, op, origin_addr, origin_count, origin_datatype,
                                  compare_addr, result_addr, result_count, result_datatype,
                                  target_rank, target_disp, target_count, target_datatype,
-                                 acc_op, group, lock_type, assert, win_ptr, addr, processed);
+                                 acc_op, group, lock_type, assert, win_ptr, addr, request,
+                                 processed);
     MPIDI_WORKQ_RMA_ENQUEUE_STOP;
 }
 

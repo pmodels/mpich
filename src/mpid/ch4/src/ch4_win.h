@@ -94,7 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_win_cmpl_hook(int transport, MPIR_Win * win)
             MPIDI_CH4U_win_drain_queue(win);
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), CMPL_HOOK, NULL, 0,
                                     MPI_DATATYPE_NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, 0, 0, 0,
-                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL, NULL,
                                     &processed);
             /* Busy loop to block until cmpl hook completes. */
             while (!OPA_load_int(&processed));
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_win_local_cmpl_hook(int transport, MPIR_Win *
             MPIDI_CH4U_win_drain_queue(win);
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), LOCAL_CMPL_HOOK, NULL, 0,
                                     MPI_DATATYPE_NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, 0, 0, 0,
-                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL, NULL,
                                     &processed);
             /* Busy loop to block until local cmpl hook completes. */
             while (!OPA_load_int(&processed));
@@ -162,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_win_target_cmpl_hook(int transport, int rank,
             MPIDI_CH4U_win_drain_queue(win);
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), TARGET_CMPL_HOOK, NULL, 0,
                                     MPI_DATATYPE_NULL, NULL, NULL, 0, MPI_DATATYPE_NULL, rank, 0, 0,
-                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL, NULL,
                                     &processed);
             /* Busy loop to block until target cmpl hook completes. */
             while (!OPA_load_int(&processed));
@@ -198,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_win_target_local_cmpl_hook(int transport, int
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), TARGET_LOCAL_CMPL_HOOK,
                                     NULL, 0, MPI_DATATYPE_NULL, NULL, NULL, 0, MPI_DATATYPE_NULL,
                                     rank, 0, 0, MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win,
-                                    NULL, &processed);
+                                    NULL, NULL, &processed);
             /* Busy loop to block until target local cmpl hook completes. */
             while (!OPA_load_int(&processed));
 
