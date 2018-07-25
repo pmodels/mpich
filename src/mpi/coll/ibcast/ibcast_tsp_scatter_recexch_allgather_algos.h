@@ -88,8 +88,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
     /* Schedule Allgather */
     MPIR_TSP_Iallgather_sched_intra_recexch(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf,
-                                            bytes_per_rank, MPI_BYTE, tag, comm, 0, allgather_k,
-                                            sched);
+                                            bytes_per_rank, MPI_BYTE, comm, 0, allgather_k, sched);
     MPIR_TSP_sched_fence(sched);        /* wait for allgather to complete */
 
     if (!is_contig) {

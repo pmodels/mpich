@@ -59,7 +59,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_r
 
 int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                                            MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
+                                            MPI_Datatype recvtype, MPIR_Comm * comm,
                                             int is_dist_halving, int k, MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
