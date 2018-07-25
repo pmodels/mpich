@@ -35,7 +35,7 @@
     do {                                                                \
         if (sigreq)                                                     \
         {                                                               \
-            MPIDI_OFI_REQUEST_CREATE((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
             MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
@@ -678,14 +678,12 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
 
     if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL))) {
         mpi_errno = MPI_SUCCESS;
-        *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*request, MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*request);
         MPIDI_CH4U_request_complete(*request);
     } else if (target_rank == win->comm_ptr->rank) {
-        *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_Request_add_ref(*request);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*request, MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -1019,10 +1017,9 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*(sigreq), MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
         MPIDI_CH4U_request_complete(*sigreq);
     }
     goto fn_exit;
@@ -1213,10 +1210,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*(sigreq), MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
         MPIDI_CH4U_request_complete(*sigreq);
     }
     goto fn_exit;
@@ -1385,19 +1381,17 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
 
     if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL))) {
         mpi_errno = MPI_SUCCESS;
-        *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*request, MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*request);
         MPIDI_CH4U_request_complete(*request);
         goto fn_exit;
     }
 
     if (target_rank == win->comm_ptr->rank) {
-        *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(*request, MPIR_REQUEST_KIND__RMA);
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
-        MPIR_Request_add_ref(*request);
         offset = win->disp_unit * target_disp;
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
