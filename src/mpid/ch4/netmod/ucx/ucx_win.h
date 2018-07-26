@@ -338,9 +338,8 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entr
         ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
         /* only flush the endpoint */
         ucp_status = ucp_ep_flush(ep);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
     }
-
-    MPIDI_UCX_CHK_STATUS(ucp_status);
 #endif
 
   fn_exit:
