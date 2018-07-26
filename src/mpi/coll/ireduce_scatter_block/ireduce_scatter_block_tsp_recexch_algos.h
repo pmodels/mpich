@@ -230,7 +230,9 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(sendbuf, recvbuf, recvcount, datatype,
