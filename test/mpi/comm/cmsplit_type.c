@@ -22,7 +22,8 @@ static const char *split_topo[] = {
 };
 
 static const char *split_topo_network[] = {
-    "switch_level:2", "subcomm_min_size:2", "min_mem_size:512" /* Minimum memory size in bytes */ , NULL
+    "switch_level:2", "subcomm_min_size:2", "min_mem_size:512" /* Minimum memory size in bytes */ ,
+    "torus_dimension:2", NULL
 };
 
 int main(int argc, char *argv[])
