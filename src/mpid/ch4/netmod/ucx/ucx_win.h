@@ -25,9 +25,9 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     ucp_mem_h mem_h;
     int cntr = 0;
     size_t rkey_size = 0;
-    int *rkey_sizes, *recv_disps, i;
+    int *rkey_sizes = NULL, *recv_disps = NULL, i;
     char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
-    struct _UCX_share *share_data;
+    struct _UCX_share *share_data = NULL;
     ucp_mem_map_params_t mem_map_params;
     ucp_mem_attr_t mem_attr;
     MPIR_Comm *comm_ptr = win->comm_ptr;
