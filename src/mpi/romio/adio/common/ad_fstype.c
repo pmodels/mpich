@@ -34,10 +34,6 @@
 #include "gpfs.h"
 #endif
 
-#ifdef HAVE_IM_CLIENT_NATIVE2_H
-#include "im_client_native2.h"
-#endif
-
 /* Notes on detection process:
  *
  * There are three more "general" mechanisms that we use for detecting
