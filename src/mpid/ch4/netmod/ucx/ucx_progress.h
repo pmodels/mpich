@@ -14,7 +14,7 @@
 
 static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
