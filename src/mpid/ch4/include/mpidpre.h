@@ -428,6 +428,10 @@ typedef struct {
 
 typedef unsigned MPIDI_locality_t;
 
+/* ch4 level comm. attributes related to comm. info hints */
+typedef struct MPIDIG_comm_info_args_t {
+} MPIDIG_comm_info_args_t;
+
 typedef struct MPIDIG_comm_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
@@ -436,6 +440,7 @@ typedef struct MPIDIG_comm_t {
     MPIDIG_rreq_t **posted_head_ptr;
     MPIDIG_rreq_t **unexp_head_ptr;
 #endif
+    MPIDIG_comm_info_args_t info_args;
 } MPIDIG_comm_t;
 
 #define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
