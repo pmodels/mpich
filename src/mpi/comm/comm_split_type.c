@@ -606,12 +606,8 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
     }
 #endif
-
   fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
