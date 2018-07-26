@@ -65,11 +65,12 @@ typedef void (*MPIDI_SHM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_SHM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_mpi_send_t) (const void *buf, MPI_Aint count,
                                      MPI_Datatype datatype, int rank, int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request);
+                                     MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_SHM_mpi_ssend_t) (const void *buf, MPI_Aint count,
                                       MPI_Datatype datatype, int rank, int tag,
                                       MPIR_Comm * comm, int context_offset,
-                                      MPIR_Request ** request);
+                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_SHM_mpi_startall_t) (int count, MPIR_Request * requests[]);
 typedef int (*MPIDI_SHM_mpi_send_init_t) (const void *buf, int count,
                                           MPI_Datatype datatype, int rank, int tag,
@@ -90,11 +91,11 @@ typedef int (*MPIDI_SHM_mpi_bsend_init_t) (const void *buf, int count,
 typedef int (*MPIDI_SHM_mpi_isend_t) (const void *buf, MPI_Aint count,
                                       MPI_Datatype datatype, int rank, int tag,
                                       MPIR_Comm * comm, int context_offset,
-                                      MPIR_Request ** request);
+                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_SHM_mpi_issend_t) (const void *buf, MPI_Aint count,
                                        MPI_Datatype datatype, int rank, int tag,
                                        MPIR_Comm * comm, int context_offset,
-                                       MPIR_Request ** request);
+                                       MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_SHM_mpi_cancel_send_t) (MPIR_Request * sreq);
 typedef int (*MPIDI_SHM_mpi_recv_init_t) (void *buf, int count, MPI_Datatype datatype,
                                           int rank, int tag, MPIR_Comm * comm,

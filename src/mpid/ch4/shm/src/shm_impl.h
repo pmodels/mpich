@@ -358,7 +358,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_send(buf, count, datatype, rank, tag, comm, context_offset,
-                                            request);
+                                            addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND);
     return ret;
@@ -376,7 +376,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset,
-                                             request);
+                                             addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SSEND);
     return ret;
@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_isend(buf, count, datatype, rank, tag, comm, context_offset,
-                                             request);
+                                             addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISEND);
     return ret;
@@ -493,7 +493,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint coun
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_issend(buf, count, datatype, rank, tag, comm, context_offset,
-                                              request);
+                                              addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
     return ret;
