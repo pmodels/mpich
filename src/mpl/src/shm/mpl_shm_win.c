@@ -59,7 +59,18 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
-        *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
+        if (flag & MPLI_SHM_FLAG_FIXED_ADDR) {
+            void *start_addr = (void *) *shm_addr_ptr;
+            /* The start_addr must be a multiple of the system's memory allocation granularity,
+             * or the function fails. To determine the memory allocation granularity of the system,
+             * use the GetSystemInfo function. If there is not enough address space at the
+             * specified address, the function fails.
+             * If the function fails, the return value is NULL.*/
+            *shm_addr_ptr = MapViewOfFileEx(MPLI_shm_lhnd_get(hnd),
+                                            FILE_MAP_WRITE, 0, offset, 0, start_addr);
+        } else {
+            *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
+        }
         if (*shm_addr_ptr == NULL) {
             rc = -1;
         }
@@ -113,6 +124,34 @@ int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, 
 {
     return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
                                            MPLI_SHM_FLAG_SHM_ATTACH);
+}
+
+/* Create new SHM segment and attach to it with specified starting address
+ * hnd : A "init"ed shared mem handle
+ * seg_sz: Size of shared mem segment
+ * shm_addr_ptr (inout): Pointer to specified starting address, the address cannot be NULL.
+ *                       The actual attached memory address is updated at return.
+ * offset : Offset to attach the shared memory address to
+ */
+int MPL_shm_fixed_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                        void **shm_addr_ptr, int offset)
+{
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH |
+                                           MPLI_SHM_FLAG_FIXED_ADDR, MPL_MEM_SHM);
+}
+
+/* Attach to an existing SHM segment with specified starting address
+ * hnd : A "init"ed shared mem handle
+ * seg_sz: Size of shared mem segment
+ * shm_addr_ptr (inout): Pointer to specified starting address, the address cannot be NULL.
+ *                       The actual attached memory address is updated at return.
+ * offset : Offset to attach the shared memory address to
+ */
+int MPL_shm_fixed_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset)
+{
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_ATTACH | MPLI_SHM_FLAG_FIXED_ADDR);
 }
 
 /* Detach from an attached SHM segment */

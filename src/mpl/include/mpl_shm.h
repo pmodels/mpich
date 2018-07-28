@@ -26,6 +26,7 @@
 #define MPLI_SHM_FLAG_SHM_CREATE  0x1
 #define MPLI_SHM_FLAG_SHM_ATTACH  0x10
 #define MPLI_SHM_FLAG_GHND_STATIC 0x100
+#define MPLI_SHM_FLAG_FIXED_ADDR  0x1000
 
 #define MPL_SHM_HND_INVALID    NULL
 #define MPLI_SHM_GHND_INVALID  NULL
@@ -153,6 +154,9 @@ int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz);
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                   void **shm_addr_ptr, int offset);
 int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset);
+int MPL_shm_fixed_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                        void **shm_addr_ptr, int offset);
+int MPL_shm_fixed_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset);
 int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz);
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd);
 
