@@ -35,8 +35,7 @@ int MPIR_Netloc_parse_topology(netloc_topology_t topology,
 
 int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes,
                                       netloc_topology_t netloc_topology,
-                                      hwloc_topology_t hwloc_topology, hwloc_cpuset_t bindset,
-                                      netloc_node_t ** end_point);
+                                      hwloc_topology_t hwloc_topology, netloc_node_t ** end_point);
 
 int MPIR_Netloc_get_switches_at_level(netloc_topology_t netloc_topology,
                                       MPIR_Netloc_network_attributes attributes, int level,
