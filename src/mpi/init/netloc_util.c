@@ -350,8 +350,7 @@ static int get_physical_address(hwloc_obj_t hwloc_obj, char **device_physical_ad
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_attributes,
                                       netloc_topology_t netloc_topology,
-                                      hwloc_topology_t hwloc_topology, hwloc_cpuset_t bindset,
-                                      netloc_node_t ** end_point)
+                                      hwloc_topology_t hwloc_topology, netloc_node_t ** end_point)
 {
     hwloc_obj_t io_device = NULL;
     int mpi_errno = MPI_SUCCESS;
