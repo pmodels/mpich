@@ -130,6 +130,7 @@ for algo_name in ${algo_names}; do
             coll_algo_tests+="allgatherv4 4 timeLimit=600 ${env}${nl}"
         done
     else
+        env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name} "
         coll_algo_tests+="allgatherv2 10 ${env}${nl}"
         coll_algo_tests+="allgatherv3 10 ${env}${nl}"
         coll_algo_tests+="allgatherv4 4 timeLimit=600 ${env}${nl}"
