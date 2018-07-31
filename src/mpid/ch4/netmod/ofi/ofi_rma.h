@@ -36,7 +36,6 @@
         if (sigreq)                                                     \
         {                                                               \
             MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
-            MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
         else {                                                          \
@@ -389,6 +388,11 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, 0, sigreq),
                               fi_writemsg(ep, &msg, flags), rdma_write);
     }
+    /* Fix one extra count in request. */
+    if (sigreq) {
+        int tmp;
+        MPIR_cc_decr((*sigreq)->cc_ptr, &tmp);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -550,6 +554,11 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         msg.rma_iov_count = tout;
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, 0, sigreq),
                               fi_readmsg(ep, &msg, flags), rdma_write);
+    }
+    /* Fix one extra count in request. */
+    if (sigreq) {
+        int tmp;
+        MPIR_cc_decr((*sigreq)->cc_ptr, &tmp);
     }
 
   fn_exit:
@@ -998,6 +1007,11 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, vni_idx, sigreq),
                               fi_atomicmsg(ep, &msg, flags), rdma_atomicto);
     }
+    /* Fix one extra count in request. */
+    if (sigreq) {
+        int tmp;
+        MPIR_cc_decr((*sigreq)->cc_ptr, &tmp);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
@@ -1183,6 +1197,11 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, vni_idx, sigreq),
                               fi_fetch_atomicmsg(ep, &msg, resultv,
                                                  NULL, rout, flags), rdma_readfrom);
+    }
+    /* Fix one extra count in request. */
+    if (sigreq) {
+        int tmp;
+        MPIR_cc_decr((*sigreq)->cc_ptr, &tmp);
     }
 
   fn_exit:
