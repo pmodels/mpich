@@ -17,7 +17,8 @@ typedef enum {
     MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id,
     MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id,
     MPIDI_POSIX_Bcast_intra_auto_id,
-    MPIDI_POSIX_Bcast_intra_invalid_id
+    MPIDI_POSIX_Bcast_intra_invalid_id,
+    MPIDI_POSIX_Bcast_intra_release_gather_id
 } MPIDI_POSIX_Bcast_id_t;
 
 typedef union {
@@ -26,6 +27,12 @@ typedef union {
         int radix;
         int block_size;
     } posix_bcast_knomial_parameters;
+    struct MPIDI_POSIX_Bcast_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_bcast_release_gather_parameters;
     struct MPIDI_POSIX_Bcast_empty_parameters {
         int empty;
     } posix_bcast_empty_parameters;

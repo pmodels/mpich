@@ -25,7 +25,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Variable to select algorithm for intra-node bcast
-        auto - Internal algorithm selection from pt2pt based algorithms
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -51,7 +53,10 @@ int collective_cvars_init(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* Bcast */
-    MPIDI_POSIX_Bcast_algo_choice = MPIDI_POSIX_Bcast_intra_auto_id;
+    if (0 == strcmp(MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM, "release_gather"))
+        MPIDI_POSIX_Bcast_algo_choice = MPIDI_POSIX_Bcast_intra_release_gather_id;
+    else
+        MPIDI_POSIX_Bcast_algo_choice = MPIDI_POSIX_Bcast_intra_auto_id;
 
     /* Reduce */
     MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_auto_id;

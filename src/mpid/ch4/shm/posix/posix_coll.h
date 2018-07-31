@@ -16,6 +16,9 @@
 #include "ch4_coll_select.h"
 #include "posix_coll_params.h"
 #include "posix_coll_select.h"
+#ifdef ENABLE_IZEM_ATOMIC
+#include "posix_coll_release_gather.h"
+#endif
 
 static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
                                           const void *ch4_algo_parameters_container_in)
@@ -77,6 +80,18 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
                 MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype,
                                                         root, comm, errflag);
             break;
+        case MPIDI_POSIX_Bcast_intra_release_gather_id:
+#ifdef ENABLE_IZEM_ATOMIC
+            mpi_errno =
+                MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
+#else
+            /* else block is needed to keep the compiler happy */
+            /* release_gather based algorithms cannot be used without izem submodule */
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
+#endif
+            break;
+        case MPIDI_POSIX_Bcast_intra_invalid_id:
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
         default:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
             break;

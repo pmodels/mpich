@@ -26,6 +26,10 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_invalid_cnt = {
     .id = MPIDI_POSIX_Bcast_intra_invalid_id
 };
 
+const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_release_gather_cnt = {
+    .id = MPIDI_POSIX_Bcast_intra_release_gather_id
+};
+
 /* Reduce default POSIX containers initialization*/
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_cnt = {
     .id = MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id
