@@ -22,7 +22,6 @@ cvars:
         auto              - Internal algorithm selection
         blocked           - Force blocked algorithm
         inplace           - Force inplace algorithm
-        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -34,6 +33,7 @@ cvars:
       description : |-
         Variable to select ialltoallw algorithm
         auto - Internal algorithm selection
+        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
       category    : COLLECTIVE
