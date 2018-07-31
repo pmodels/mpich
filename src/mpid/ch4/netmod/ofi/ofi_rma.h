@@ -36,8 +36,7 @@
     do {                                                                \
         if (sigreq)                                                     \
         {                                                               \
-            MPIDI_OFI_REQUEST_CREATE((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
-            MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
         else {                                                          \
@@ -168,6 +167,18 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
         *count = (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+{
+    if (sigreq) {
+        /* If sigreq is not NULL, *sigreq should be a valid object after
+         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
+         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
+         * depending on MPIDI_CH4_MT_MODEL. */
+        MPIR_Assert(*sigreq != NULL);
+        MPID_Request_complete(*sigreq);
+    }
 }
 
 /* _count: count of data elements of certain datatype
@@ -451,6 +462,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
@@ -511,6 +524,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -625,6 +640,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
@@ -687,6 +704,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
@@ -986,6 +1005,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     MPIDI_OFI_finalize_seg_state(p);
 
@@ -1169,6 +1190,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     if (op != MPI_NO_OP)
         MPIDI_OFI_finalize_seg_state2(p);
