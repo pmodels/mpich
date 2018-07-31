@@ -35,6 +35,9 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_proc.h      \
                   src/mpid/ch4/shm/posix/posix_types.h
 
+if ENABLE_IZEM_ATOMIC
+noinst_HEADERS += src/mpid/ch4/shm/posix/posix_coll_release_gather.h
+endif
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_comm.c \
                     src/mpid/ch4/shm/posix/posix_init.c \

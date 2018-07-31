@@ -10,6 +10,7 @@ extern const MPIDI_POSIX_coll_algo_container_t
     MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_invalid_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_release_gather_cnt;
 
 /* Reduce POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_binomial_cnt;
