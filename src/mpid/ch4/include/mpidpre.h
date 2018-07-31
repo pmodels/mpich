@@ -338,6 +338,9 @@ typedef struct {
     MPIDI_CH4U_win_t ch4u;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+    struct {
+        /* multiple shmmods may co-exist. */
+    MPIDI_SHM_WIN_DECL} shm;
 } MPIDI_Devwin_t;
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
