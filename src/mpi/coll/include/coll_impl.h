@@ -268,6 +268,7 @@ typedef enum MPIR_Ialltoallw_intra_algo_t {
     MPIR_IALLTOALLW_INTRA_ALGO_AUTO,
     MPIR_IALLTOALLW_INTRA_ALGO_BLOCKED,
     MPIR_IALLTOALLW_INTRA_ALGO_INPLACE,
+    MPIR_IALLTOALLW_INTRA_ALGO_GENTRAN_BLOCKED,
 } MPIR_Ialltoallw_intra_algo_t;
 extern MPIR_Ialltoallw_intra_algo_t MPIR_Ialltoallw_intra_algo_choice;
 
