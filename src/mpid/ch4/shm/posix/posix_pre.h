@@ -38,6 +38,11 @@ typedef struct {
     int dummy;
 } MPIDI_POSIX_comm_t;
 
+typedef struct {
+    MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
+    MPL_shm_hnd_t shm_mutex_segment_handle;
+} MPIDI_POSIX_win_t;
+
 #include "posix_coll_params.h"
 #include "posix_coll_containers.h"
 #endif /* POSIX_PRE_H_INCLUDED */
