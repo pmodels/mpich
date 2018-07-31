@@ -227,6 +227,18 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                     goto fn_exit;
                 }
                 break;
+            case MPIR_IALLTOALLW_INTRA_ALGO_GENTRAN_INPLACE:
+                if (sendbuf == MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                              sendtypes, recvbuf, recvcounts,
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
                 break;
