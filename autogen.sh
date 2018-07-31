@@ -278,7 +278,7 @@ done
 ########################################################################
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc test/mpi"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
 
 if [ "yes" = "$do_izem" ] ; then
     externals="${externals} src/izem"
@@ -601,7 +601,7 @@ echo
 check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc test/mpi"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem
@@ -636,11 +636,14 @@ confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
 confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
 
 # hydra's copies of mpl and hwloc
 sync_external src/mpl src/pm/hydra/mpl
+sync_external src/mpl src/pm/hydra2/mpl
 
 # ROMIO's copy of mpl
 sync_external src/mpl src/mpi/romio/mpl
@@ -652,10 +655,12 @@ done
 
 # Copying hwloc to hydra
 sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+sync_external src/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
 
 # a couple of other random files
 if [ -f maint/version.m4 ] ; then
     cp -pPR maint/version.m4 src/pm/hydra/version.m4
+    cp -pPR maint/version.m4 src/pm/hydra2/version.m4
     cp -pPR maint/version.m4 src/mpi/romio/version.m4
     cp -pPR maint/version.m4 test/mpi/version.m4
 fi
