@@ -1027,6 +1027,36 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
     goto fn_exit;
 }
 
+/* Destroy shared memory region on the local process.
+ * MPL_shm routines are internally used. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_destroy_shm_segment
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4U_destroy_shm_segment(MPI_Aint shm_segment_len,
+                                                 MPL_shm_hnd_t * shm_segment_hdl_ptr,
+                                                 void **base_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_DESTROY_SHM_SEGMENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_DESTROY_SHM_SEGMENT);
+
+    mpi_errno = MPL_shm_seg_detach(*shm_segment_hdl_ptr, (char **) base_ptr, shm_segment_len);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPL_shm_hnd_finalize(shm_segment_hdl_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_DESTROY_SHM_SEGMENT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Compute accumulate operation.
  * The source datatype can be only predefined; the target datatype can be
  * predefined or derived. */
