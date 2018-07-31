@@ -845,13 +845,10 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
 
     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if (MPIDI_CH4U_WIN(win, mmap_sz) > 0) {
-            /* destroy and detach shared window memory */
-            mpi_errno = MPL_shm_seg_detach(MPIDI_CH4U_WIN(win, shm_segment_handle),
-                                           (char **) &MPIDI_CH4U_WIN(win, mmap_addr),
-                                           MPIDI_CH4U_WIN(win, mmap_sz));
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-            mpi_errno = MPL_shm_hnd_finalize(&MPIDI_CH4U_WIN(win, shm_segment_handle));
+            /* destroy shared window memory */
+            mpi_errno = MPIDI_CH4U_destroy_shm_segment(MPIDI_CH4U_WIN(win, mmap_sz),
+                                                       &MPIDI_CH4U_WIN(win, shm_segment_handle),
+                                                       &MPIDI_CH4U_WIN(win, mmap_addr));
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
