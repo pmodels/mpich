@@ -17,7 +17,7 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
 algo_names="tree scatter_recexch_allgather"
-tree_types="kary knomial_1 knomial_2"
+tree_types="kary knomial_1 knomial_2 ring"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
