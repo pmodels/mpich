@@ -349,7 +349,7 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_win_cntrl_msg_t msg;
-    int index, peer;
+    int win_grp_idx, peer;
     MPIR_Group *group;
     int *ranks_in_win_grp = NULL;
     int all_local_completed = 0;
@@ -391,8 +391,8 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
                                               &all_local_completed);
     } while (all_local_completed != 1);
 
-    for (index = 0; index < group->size; ++index) {
-        peer = ranks_in_win_grp[index];
+    for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
+        peer = ranks_in_win_grp[win_grp_idx];
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_CH4_rank_is_local(peer, win->comm_ptr))
@@ -433,7 +433,7 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_win_cntrl_msg_t msg;
-    int index, peer;
+    int win_grp_idx, peer;
     int *ranks_in_win_grp = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_POST);
@@ -461,8 +461,8 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
-    for (index = 0; index < group->size; ++index) {
-        peer = ranks_in_win_grp[index];
+    for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
+        peer = ranks_in_win_grp[win_grp_idx];
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_CH4_rank_is_local(peer, win->comm_ptr))
