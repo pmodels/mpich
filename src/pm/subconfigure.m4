@@ -9,12 +9,14 @@ dnl we handle the AM_CONDITIONAL for hydra to keep hydra buildable as a
 dnl standalone package
 for pm_name in $pm_names ; do
     AS_CASE([$pm_name],
-            [hydra],[build_pm_hydra=yes])
+            [hydra],[build_pm_hydra=yes],
+            [hydra2],[build_pm_hydra2=yes])
 done
 
 # we handle these conditionals here in the BODY because they depend on logic in
 # the main portion of the top-level configure
 AM_CONDITIONAL([BUILD_PM_HYDRA],[test "x$build_pm_hydra" = "xyes"])
+AM_CONDITIONAL([BUILD_PM_HYDRA2],[test "x$build_pm_hydra2" = "xyes"])
 
 dnl AC_MSG_NOTICE([RUNNING CONFIGURE FOR PROCESS MANAGERS])
 # do nothing extra here for now
