@@ -30,3 +30,10 @@ SUBDIRS += src/pm/hydra
 DIST_SUBDIRS += src/pm/hydra
 MANDOC_SUBDIRS += src/pm/hydra
 endif BUILD_PM_HYDRA
+
+# has its own full automake setup, not Makefile.mk
+if BUILD_PM_HYDRA2
+SUBDIRS += src/pm/hydra2
+DIST_SUBDIRS += src/pm/hydra2
+MANDOC_SUBDIRS += src/pm/hydra2
+endif BUILD_PM_HYDRA2
