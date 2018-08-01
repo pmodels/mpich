@@ -24,7 +24,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
-    int dtcopy_id = 0;
     int nphases = 0;
     int n_invtcs;
     int tag;
@@ -97,13 +96,12 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 
     /* Step1: copy own data from sendbuf to top of recvbuf. */
     if (is_inplace && rank != 0)
-        dtcopy_id =
-            MPIR_TSP_sched_localcopy((char *) recvbuf + rank * recvcount * recvtype_extent,
-                                     recvcount, recvtype, tmp_recvbuf, recvcount,
-                                     recvtype, sched, 0, NULL);
+        MPIR_TSP_sched_localcopy((char *) recvbuf + rank * recvcount * recvtype_extent,
+                                 recvcount, recvtype, tmp_recvbuf, recvcount,
+                                 recvtype, sched, 0, NULL);
     else if (!is_inplace)
-        dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf,
-                                             recvcount, recvtype, sched, 0, NULL);
+        MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf,
+                                 recvcount, recvtype, sched, 0, NULL);
 
     /* All following sends/recvs and copies depend on this dtcopy */
     MPIR_TSP_sched_fence(sched);
