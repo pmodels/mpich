@@ -90,8 +90,6 @@ typedef struct {
 struct MPIR_Segment;
 
 typedef struct {
-    struct MPIR_Request *next;
-    struct MPIR_Request *pending;
     int dest;
     int rank;
     int tag;
