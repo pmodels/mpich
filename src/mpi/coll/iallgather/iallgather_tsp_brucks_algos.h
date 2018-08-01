@@ -16,6 +16,10 @@
 #include "algo_common.h"
 #include "tsp_namespace_def.h"
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_brucks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
