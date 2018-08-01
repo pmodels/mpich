@@ -14,36 +14,6 @@
 #include "posix_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_clear_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_POSIX_am_clear_request(MPIR_Request * sreq)
-{
-    MPIDI_POSIX_am_request_header_t *req_hdr;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_CLEAR_REQ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_CLEAR_REQ);
-
-    MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(sreq);
-
-    req_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
-
-    if (!req_hdr)
-        return;
-
-    if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0]) {
-        MPL_free(req_hdr->am_hdr);
-    }
-#ifndef POSIX_AM_REQUEST_INLINE
-    MPIDI_CH4R_release_buf(req_hdr);
-#endif /* POSIX_AM_REQUEST_INLINE */
-    MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_CLEAR_REQ);
-    return;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_am_init_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

@@ -219,8 +219,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
 
         MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
 
-        MPIDI_POSIX_am_clear_request(rreq);
-
         if (curr_rreq_hdr->cmpl_handler_fn) {
             curr_rreq_hdr->cmpl_handler_fn(rreq);
         }
@@ -277,8 +275,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
         }
 
         MPIDIG_global.origin_cbs[curr_sreq_hdr->handler_id] (sreq);
-
-        MPIDI_POSIX_am_clear_request(sreq);
 
         goto fn_exit;
     }
