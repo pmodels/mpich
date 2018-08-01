@@ -139,9 +139,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                                      "Phase#%d:, k:%d Recv at:%p for count:%d", i,
-                                                     k,
-                                                     ((char *) tmp_recvbuf +
-                                                      j * recvcount * delta * recvtype_extent),
+                                                     k, ((char *) tmp_recvbuf +
+                                                         j * recvcount * delta * recvtype_extent),
                                                      count));
 
             /* Send from the start of recv till `count` amount of data. */
