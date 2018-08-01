@@ -31,17 +31,28 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
 
     if (!MPLI_shm_ghnd_is_valid(hnd)) {
         rc = MPLI_shm_ghnd_set_uniq(hnd);
+        if (rc) {
+            goto fn_exit;
+        }
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
         lhnd = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
                                  PAGE_READWRITE, seg_sz_large.HighPart, seg_sz_large.LowPart,
                                  MPLI_shm_ghnd_get_by_ref(hnd));
+        if (lhnd == NULL) {
+            rc = -1;
+            goto fn_exit;
+        }
         MPLI_shm_lhnd_set(hnd, lhnd);
     } else {
         if (!MPLI_shm_lhnd_is_valid(hnd)) {
             /* Strangely OpenFileMapping() returns NULL on error! */
             lhnd = OpenFileMapping(FILE_MAP_WRITE, FALSE, MPLI_shm_ghnd_get_by_ref(hnd));
+            if (lhnd == NULL) {
+                rc = -1;
+                goto fn_exit;
+            }
 
             MPLI_shm_lhnd_set(hnd, lhnd);
         }
@@ -49,6 +60,9 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
         *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
+        if (*shm_addr_ptr == NULL) {
+            rc = -1;
+        }
     }
 
   fn_exit:

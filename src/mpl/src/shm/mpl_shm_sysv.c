@@ -32,7 +32,13 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         lhnd = shmget(IPC_PRIVATE, seg_sz, IPC_CREAT | S_IRWXU);
         MPLI_shm_lhnd_set(hnd, lhnd);
         rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
+        if (rc) {
+            goto fn_exit;
+        }
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
+        if (rc < 0) {
+            goto fn_exit;
+        }
     } else {
         /* Open an existing shared memory seg */
         if (!MPLI_shm_lhnd_is_valid(hnd)) {
@@ -44,6 +50,9 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
         /* Attach to shared mem seg */
         *shm_addr_ptr = shmat(MPLI_shm_lhnd_get(hnd), NULL, 0x0);
+        if (*shm_addr_ptr == (void *) -1) {
+            rc = -1;
+        }
     }
 
   fn_exit:
