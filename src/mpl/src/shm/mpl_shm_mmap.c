@@ -143,11 +143,9 @@ int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz)
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                   void **shm_addr_ptr, int offset)
 {
-    int rc = 0;
-    rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
-                                         MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH,
-                                         MPL_MEM_SHM);
-    return rc;
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH,
+                                           MPL_MEM_SHM);
 }
 
 /* Attach to an existing SHM segment
@@ -159,10 +157,8 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
  */
 int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset)
 {
-    int rc = 0;
-    rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
-                                         MPLI_SHM_FLAG_SHM_ATTACH, MPL_MEM_SHM);
-    return rc;
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_ATTACH, MPL_MEM_SHM);
 }
 
 /* Detach from an attached SHM segment */
@@ -187,11 +183,7 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
-    int rc = -1;
-
-    rc = unlink(MPLI_shm_ghnd_get_by_ref(hnd));
-
-    return rc;
+    return unlink(MPLI_shm_ghnd_get_by_ref(hnd));
 }
 
 #endif /* MPL_USE_MMAP_SHM */
