@@ -73,10 +73,10 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "send_type_size: %d, send_type_extent: %d, send_count: %d",
+                                             "send_type_size: %zu, send_type_extent: %zu, send_count: %d",
                                              sendtype_size, sendtype_extent, sendcount));
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "recv_type_size: %d, recv_type_extent: %d, recv_count: %d",
+                                             "recv_type_size: %zu, recv_type_extent: %zu, recv_count: %d",
                                              recvtype_size, recvtype_extent, recvcount));
 
     while (max) {
@@ -140,7 +140,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
                                      count, recvtype, src, tag, comm, sched, 0, NULL);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                                     "Phase#%d:, k:%d Recv at:%04x for count:%d", i,
+                                                     "Phase#%d:, k:%d Recv at:%p for count:%d", i,
                                                      k,
                                                      ((char *) tmp_recvbuf +
                                                       j * recvcount * delta * recvtype_extent),
@@ -154,7 +154,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
                                      comm, sched, n_invtcs, recv_id);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                                     "Phase#%d:, k:%d Send from:%04x for count:%d",
+                                                     "Phase#%d:, k:%d Send from:%p for count:%d",
                                                      i, k, tmp_recvbuf, count));
 
         }
