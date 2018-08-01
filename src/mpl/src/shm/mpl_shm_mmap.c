@@ -47,7 +47,8 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
                                                   void **shm_addr_ptr, int offset, int flag,
                                                   MPL_memory_class class)
 {
-    MPLI_shm_lhnd_t lhnd = -1, rc = -1;
+    MPLI_shm_lhnd_t lhnd = -1;
+    int rc = 0, rc_close = 0;
 
     if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
         char dev_shm_fname[] = "/dev/shm/mpich_shar_tmpXXXXXX";
@@ -59,6 +60,9 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         if (lhnd == -1) {
             chosen_fname = tmp_fname;
             lhnd = mkstemp(chosen_fname);
+            if (lhnd == -1) {
+                goto fn_fail;
+            }
         }
 
         MPLI_shm_lhnd_set(hnd, lhnd);
@@ -68,11 +72,20 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         } while ((rc == -1) && (errno == EINTR));
 
         rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
+        if (rc) {
+            goto fn_fail;
+        }
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%s", chosen_fname);
+        if (rc < 0) {
+            goto fn_fail;
+        }
     } else {
         /* Open an existing shared memory seg */
         if (!MPLI_shm_lhnd_is_valid(hnd)) {
             lhnd = open(MPLI_shm_ghnd_get_by_ref(hnd), O_RDWR);
+            if (lhnd == -1) {
+                goto fn_fail;
+            }
             MPLI_shm_lhnd_set(hnd, lhnd);
         }
     }
@@ -80,13 +93,20 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
         *shm_addr_ptr = MPL_mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
                                  MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0, MPL_MEM_SHM);
+        if (*shm_addr_ptr == MAP_FAILED || *shm_addr_ptr == NULL) {
+            goto fn_fail;
+        }
     }
 
+  fn_exit:
     /* FIXME: Close local handle only when closing the shm handle */
     if (MPLI_shm_lhnd_is_valid(hnd)) {
-        rc = MPLI_shm_lhnd_close(hnd);
+        rc_close = MPLI_shm_lhnd_close(hnd);
     }
-    return rc;
+    return (rc == -1) ? rc : rc_close;
+  fn_fail:
+    rc = -1;
+    goto fn_exit;
 }
 
 /* Create new SHM segment
