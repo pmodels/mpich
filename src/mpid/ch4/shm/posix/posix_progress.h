@@ -267,7 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
 
         /* Remove element from postponed queue */
 
-        DL_DELETE(MPIDI_POSIX_global.postponed_queue, &sreq->dev.ch4.am.req->rreq);
+        DL_DELETE(MPIDI_POSIX_global.postponed_queue, MPIDI_POSIX_AMREQUEST_PTR(sreq));
 
         /* Request has been completed */
 

@@ -24,6 +24,7 @@ enum {
 #define MPIDI_POSIX_BUF_POOL_SIZE            (1024)
 #define MPIDI_POSIX_BUF_POOL_NUM             (1024)
 
+#define MPIDI_POSIX_AMREQUEST_PTR(req)        (&((req)->dev.ch4.am.shm_am.posix))
 #define MPIDI_POSIX_AMREQUEST(req,field)      ((req)->dev.ch4.am.shm_am.posix.field)
 #define MPIDI_POSIX_AMREQUEST_HDR(req, field) ((req)->dev.ch4.am.shm_am.posix.req_hdr->field)
 #define MPIDI_POSIX_AMREQUEST_HDR_PTR(req)    ((req)->dev.ch4.am.shm_am.posix.req_hdr)
@@ -34,7 +35,7 @@ typedef struct {
 
     /* Postponed queue */
 
-    MPIDI_CH4U_rreq_t *postponed_queue;
+    MPIDI_POSIX_am_request_t *postponed_queue;
 
     /* Active recv requests array */
 
