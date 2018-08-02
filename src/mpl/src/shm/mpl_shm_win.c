@@ -22,7 +22,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                                  char **shm_addr_ptr, int offset, int flag)
+                                                  void **shm_addr_ptr, int offset, int flag)
 {
     HANDLE lhnd = INVALID_HANDLE_VALUE;
     int rc = -1;
@@ -48,8 +48,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
-        *shm_addr_ptr = (char *) MapViewOfFile(MPLI_shm_lhnd_get(hnd),
-                                               FILE_MAP_WRITE, 0, offset, 0);
+        *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
     }
 
   fn_exit:
@@ -89,7 +88,7 @@ int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz)
  * offset : Offset to attach the shared memory address to
  */
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                  char **shm_addr_ptr, int offset)
+                                  void **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
@@ -104,7 +103,7 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
  *                  the shared mem segment
  * offset : Offset to attach the shared memory address to
  */
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset)
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
@@ -117,7 +116,7 @@ int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, 
 #define FUNCNAME MPL_shm_seg_detach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
+static inline int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 {
     int rc = -1;
 
