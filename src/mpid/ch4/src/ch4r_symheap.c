@@ -13,9 +13,9 @@
 #include "ch4r_symheap.h"
 
 /* BEGIN internal function decls */
-void *MPIDIU_generate_random_addr(size_t size);
-int MPIDIU_check_maprange_ok(void *start, size_t size);
-int MPIDIU_is_valid_mapaddr(void *start);
+void *generate_random_addr(size_t size);
+int check_maprange_ok(void *start, size_t size);
+int is_valid_mapaddr(void *start);
 /* END   internal function decls */
 
 #undef FUNCNAME
@@ -36,19 +36,19 @@ size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIU_is_valid_mapaddr
+#define FUNCNAME is_valid_mapaddr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_is_valid_mapaddr(void *start)
+int is_valid_mapaddr(void *start)
 {
     return ((uintptr_t) start == -1ULL) ? 0 : 1;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIU_check_maprange_ok
+#define FUNCNAME check_maprange_ok
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_check_maprange_ok(void *start, size_t size)
+int check_maprange_ok(void *start, size_t size)
 {
     int rc = 0;
     int ret = 0;
@@ -57,8 +57,8 @@ int MPIDIU_check_maprange_ok(void *start, size_t size)
     size_t i, num_pages = mapsize / page_sz;
     char *ptr = (char *) start;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_MAPRANGE_OK);
 
     for (i = 0; i < num_pages; i++) {
         rc = msync(ptr, page_sz, 0);
@@ -74,15 +74,15 @@ int MPIDIU_check_maprange_ok(void *start, size_t size)
   fn_fail:
     ret = 1;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_MAPRANGE_OK);
     return ret;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIU_generate_random_addr
+#define FUNCNAME generate_random_addr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void *MPIDIU_generate_random_addr(size_t size)
+void *generate_random_addr(size_t size)
 {
     /* starting position for pointer to map
      * This is not generic, probably only works properly on Linux
@@ -101,8 +101,8 @@ void *MPIDIU_generate_random_addr(size_t size)
     struct random_data rbuf;
 #endif
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GENERATE_RANDOM_ADDR);
 
 #ifndef USE_SYM_HEAP
     map_pointer = -1ULL;
@@ -121,7 +121,7 @@ void *MPIDIU_generate_random_addr(size_t size)
     random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
     map_pointer = MPIDI_CH4I_MAP_POINTER;
 
-    while (MPIDIU_check_maprange_ok((void *) map_pointer, mapsize) == 0) {
+    while (check_maprange_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
         random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
@@ -137,7 +137,7 @@ void *MPIDIU_generate_random_addr(size_t size)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GENERATE_RANDOM_ADDR);
     return (void *) map_pointer;
 }
 
@@ -188,7 +188,7 @@ int MPIDIU_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR
             baseP = (void *) -1ULL;
 
             if (comm->rank == maxloc_result.loc) {
-                void *p = MPIDIU_generate_random_addr(mapsize);
+                void *p = generate_random_addr(mapsize);
                 map_pointer = (uintptr_t) p;
                 baseP = MPL_mmap((void *) map_pointer, mapsize,
                                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0,
@@ -202,7 +202,7 @@ int MPIDIU_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR
                 goto fn_fail;
 
             if (comm->rank != maxloc_result.loc) {
-                int rc = MPIDIU_check_maprange_ok((void *) map_pointer, mapsize);
+                int rc = check_maprange_ok((void *) map_pointer, mapsize);
 
                 if (rc) {
                     baseP = MPL_mmap((void *) map_pointer, mapsize,
