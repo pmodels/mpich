@@ -77,6 +77,143 @@ MPL_STATIC_INLINE_PREFIX MPIDI_workq_t *MPIDI_win_vni_to_workq(MPIR_Win * win_pt
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_win_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_win_cmpl_hook(int transport, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_CMPL_HOOK);
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            OPA_int_t processed;
+            OPA_store_int(&processed, 0);
+            MPIDI_CH4U_win_drain_queue(win);
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), CMPL_HOOK, NULL, 0,
+                                    MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL, 0, 0, 0,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    &processed);
+            /* Busy loop to block until cmpl hook completes. */
+            while (!OPA_load_int(&processed));
+
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_CMPL_HOOK);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_win_local_cmpl_hook(int transport, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCAL_CMPL_HOOK);
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            OPA_int_t processed;
+            OPA_store_int(&processed, 0);
+            MPIDI_CH4U_win_drain_queue(win);
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), LOCAL_CMPL_HOOK, NULL, 0,
+                                    MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL, 0, 0, 0,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    &processed);
+            /* Busy loop to block until local cmpl hook completes. */
+            while (!OPA_load_int(&processed));
+
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_rma_win_local_cmpl_hook(win);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_target_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_win_target_cmpl_hook(int transport, int rank, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_TARGET_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_TARGET_CMPL_HOOK);
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            OPA_int_t processed;
+            OPA_store_int(&processed, 0);
+            MPIDI_CH4U_win_drain_queue(win);
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), TARGET_CMPL_HOOK, NULL, 0,
+                                    MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL, rank, 0, 0,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    &processed);
+            /* Busy loop to block until target cmpl hook completes. */
+            while (!OPA_load_int(&processed));
+
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_rma_target_cmpl_hook(rank, win);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_TARGET_CMPL_HOOK);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_target_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_win_target_local_cmpl_hook(int transport, int rank,
+                                                              MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_TARGET_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_TARGET_LOCAL_CMPL_HOOK);
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            OPA_int_t processed;
+            OPA_store_int(&processed, 0);
+            MPIDI_CH4U_win_drain_queue(win);
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx), TARGET_LOCAL_CMPL_HOOK,
+                                    NULL, 0, MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL, rank, 0,
+                                    0, MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, NULL,
+                                    &processed);
+            /* Busy loop to block until target local cmpl hook completes. */
+            while (!OPA_load_int(&processed));
+
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_rma_target_local_cmpl_hook(rank, win);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_TARGET_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Win_set_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

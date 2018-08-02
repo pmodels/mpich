@@ -17,6 +17,15 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_drain_queue(MPIR_Win * win)
+{
+    /* Make sure pending ops are issued. */
+    while (OPA_load_int(&MPIDI_CH4U_WIN(win, local_enq_cnts))) {
+        /* Only need MPIDI_PROGRESS_HOOKS flag to drain workq. */
+        MPIDI_Progress_test(MPIDI_PROGRESS_HOOKS);
+    }
+}
+
 /* Static inlines */
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {

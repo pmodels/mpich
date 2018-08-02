@@ -36,6 +36,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put(int transport,
         if (!cs_acq) {
             MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
             MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
             /* result addr/count/datatye is used for Get */
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
                                     PUT, origin_addr, origin_count, origin_datatype, NULL, 0,
@@ -123,6 +125,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get(int transport,
         if (!cs_acq) {
             MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
             MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
             /* result addr/count/datatye is used for enqueuing Get because origin_addr in the
              * enqueue function is defined as const void *. */
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),

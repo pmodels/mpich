@@ -248,6 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                              workq_elemt->rma.target_disp, workq_elemt->rma.target_count,
                              workq_elemt->rma.target_datatype, workq_elemt->rma.win_ptr,
                              workq_elemt->rma.addr);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
             MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.origin_datatype);
             MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
             MPIDI_workq_elemt_free(workq_elemt);
@@ -258,9 +259,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                              workq_elemt->rma.target_disp, workq_elemt->rma.target_count,
                              workq_elemt->rma.target_datatype, workq_elemt->rma.win_ptr,
                              workq_elemt->rma.addr);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
             /* Get handoff uses result_datatype instead of origin_datatype */
             MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.result_datatype);
             MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case CMPL_HOOK:
+            MPIDI_NM_rma_win_cmpl_hook(workq_elemt->rma.win_ptr);
+            OPA_store_int(workq_elemt->processed, 1);   /* set to true to let the main thread
+                                                         * learn that the item is processed */
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case LOCAL_CMPL_HOOK:
+            MPIDI_NM_rma_win_local_cmpl_hook(workq_elemt->rma.win_ptr);
+            OPA_store_int(workq_elemt->processed, 1);   /* set to true to let the main thread
+                                                         * learn that the item is processed */
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case TARGET_CMPL_HOOK:
+            MPIDI_NM_rma_target_cmpl_hook(workq_elemt->rma.target_rank, workq_elemt->rma.win_ptr);
+            OPA_store_int(workq_elemt->processed, 1);   /* set to true to let the main thread
+                                                         * learn that the item is processed */
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case TARGET_LOCAL_CMPL_HOOK:
+            MPIDI_NM_rma_target_local_cmpl_hook(workq_elemt->rma.target_rank,
+                                                workq_elemt->rma.win_ptr);
+            OPA_store_int(workq_elemt->processed, 1);   /* set to true to let the main thread
+                                                         * learn that the item is processed */
             MPIDI_workq_elemt_free(workq_elemt);
             break;
         default:
