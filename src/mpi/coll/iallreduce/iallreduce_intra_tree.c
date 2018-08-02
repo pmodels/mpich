@@ -17,17 +17,17 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_tree_knomial
+#define FUNCNAME MPIR_Iallreduce_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_tree_kary(const void *sendbuf, void *recvbuf, int count,
-                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                    MPIR_Request ** request)
+int MPIR_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                   comm_ptr, request, MPIR_TREE_TYPE_KARY,
+                                                   comm_ptr, request, MPIR_Iallreduce_tree_type,
                                                    MPIR_CVAR_IALLREDUCE_TREE_KVAL,
                                                    MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE);
     return mpi_errno;
