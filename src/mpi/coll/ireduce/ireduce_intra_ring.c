@@ -28,7 +28,7 @@ int MPIR_Ireduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
 
     /* Ring algorithm is equivalent to kary tree with k = 1 */
     mpi_errno = MPII_Gentran_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                comm_ptr, request, TREE_TYPE_KARY,
+                                                comm_ptr, request, MPIR_TREE_TYPE_KARY,
                                                 1, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE);
 
     return mpi_errno;
