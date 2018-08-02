@@ -27,7 +27,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_free(win_ptr);
+    mpi_errno = MPIDIG_mpi_win_free(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -56,7 +56,7 @@ int MPID_Win_create(void *base,
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -84,7 +84,7 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_attach(win, base, size);
+    mpi_errno = MPIDIG_mpi_win_attach(win, base, size);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -115,8 +115,8 @@ int MPID_Win_allocate_shared(MPI_Aint size,
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_allocate_shared(size, disp_unit, info_ptr,
-                                                   comm_ptr, base_ptr, win_ptr);
+    mpi_errno = MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr,
+                                               comm_ptr, base_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -143,7 +143,7 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_detach(win, base);
+    mpi_errno = MPIDIG_mpi_win_detach(win, base);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -169,7 +169,7 @@ int MPID_Win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size, int *disp_u
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
+    mpi_errno = MPIDIG_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -198,7 +198,7 @@ int MPID_Win_allocate(MPI_Aint size,
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
+    mpi_errno = MPIDIG_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -224,7 +224,7 @@ int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
+    mpi_errno = MPIDIG_mpi_win_create_dynamic(info, comm, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif

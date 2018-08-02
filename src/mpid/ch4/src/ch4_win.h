@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
+    mpi_errno = MPIDIG_mpi_win_set_info(win, info);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -59,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_start(group, assert, win);
+    mpi_errno = MPIDIG_mpi_win_start(group, assert, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
+    mpi_errno = MPIDIG_mpi_win_complete(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_post(group, assert, win);
+    mpi_errno = MPIDIG_mpi_win_post(group, assert, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -142,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_wait(win);
+    mpi_errno = MPIDIG_mpi_win_wait(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_test(win, flag);
+    mpi_errno = MPIDIG_mpi_win_test(win, flag);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -199,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
+    mpi_errno = MPIDIG_mpi_win_lock(lock_type, rank, assert, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -227,7 +227,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
+    mpi_errno = MPIDIG_mpi_win_unlock(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -255,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_get_info(win, info_p_p);
+    mpi_errno = MPIDIG_mpi_win_get_info(win, info_p_p);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -284,7 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_fence(assert, win);
+    mpi_errno = MPIDIG_mpi_win_fence(assert, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -312,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
+    mpi_errno = MPIDIG_mpi_win_flush_local(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -340,7 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
+    mpi_errno = MPIDIG_mpi_win_flush(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -368,7 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_local_all(win);
+    mpi_errno = MPIDIG_mpi_win_flush_local_all(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -396,7 +396,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
+    mpi_errno = MPIDIG_mpi_win_unlock_all(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -424,7 +424,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_sync(win);
+    mpi_errno = MPIDIG_mpi_win_sync(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -452,7 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);
+    mpi_errno = MPIDIG_mpi_win_flush_all(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -480,7 +480,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int assert, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
     }
 #else
-    mpi_errno = MPIDI_CH4R_mpi_win_lock_all(assert, win);
+    mpi_errno = MPIDIG_mpi_win_lock_all(assert, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 #endif
