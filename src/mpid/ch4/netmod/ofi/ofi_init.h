@@ -935,7 +935,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
-    MPIDI_CH4U_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -1105,7 +1105,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
     MPIDIG_finalize();
 
-    MPIDI_CH4U_map_destroy(MPIDI_Global.win_map);
+    MPIDIU_map_destroy(MPIDI_Global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)

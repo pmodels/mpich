@@ -16,7 +16,7 @@
 #include "mpir_cvars.h"
 
 /* Macros and inlines */
-#define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
+#define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
 #define MAX_PROGRESS_HOOKS 4
 
@@ -259,11 +259,11 @@ typedef struct {
     uint64_t key;
     void *value;
     UT_hash_handle hh;          /* makes this structure hashable */
-} MPIDI_CH4U_map_entry_t;
+} MPIDIU_map_entry_t;
 
-typedef struct MPIDI_CH4U_map_t {
-    MPIDI_CH4U_map_entry_t *head;
-} MPIDI_CH4U_map_t;
+typedef struct MPIDIU_map_t {
+    MPIDIU_map_entry_t *head;
+} MPIDIU_map_t;
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
@@ -280,7 +280,7 @@ typedef struct MPIDI_CH4_Global_t {
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[3];
-    MPIDI_CH4U_map_t *win_map;
+    MPIDIU_map_t *win_map;
     char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_CH4U_rreq_t *posted_list;
