@@ -235,7 +235,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         if (local_rank == 0) {
             mpi_errno =
                 MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              &(memory->base_addr), 0);
+                                              (void **) &(memory->base_addr), 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -282,9 +282,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno =
-                MPL_shm_seg_attach(memory->hnd, memory->segment_len, (char **) &memory->base_addr,
-                                   0);
+            mpi_errno = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
+                                           (void **) &memory->base_addr, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -359,7 +358,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         if (local_rank == 0) {
             mpi_errno =
                 MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              &(memory->base_addr), 0);
+                                              (void **) &(memory->base_addr), 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -433,9 +432,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                 MPIR_ERR_POP(mpi_errno);
             PMIX_VALUE_RELEASE(pvalue);
 
-            mpi_errno =
-                MPL_shm_seg_attach(memory->hnd, memory->segment_len, (char **) &memory->base_addr,
-                                   0);
+            mpi_errno = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
+                                           (void **) &memory->base_addr, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -517,7 +515,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         if (local_rank == 0) {
             mpi_errno =
                 MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              &(memory->base_addr), 0);
+                                              (void **) &(memory->base_addr), 0);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -567,9 +565,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno =
-                MPL_shm_seg_attach(memory->hnd, memory->segment_len, (char **) &memory->base_addr,
-                                   0);
+            mpi_errno = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
+                                           (void **) &memory->base_addr, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -667,7 +664,8 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
     if (num_local == 1)
         MPL_free(memory->base_addr);
     else {
-        mpi_errno = MPL_shm_seg_detach(memory->hnd, &(memory->base_addr), memory->segment_len);
+        mpi_errno = MPL_shm_seg_detach(memory->hnd, (void **) &(memory->base_addr),
+                                       memory->segment_len);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

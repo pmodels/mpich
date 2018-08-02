@@ -976,7 +976,7 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
 
         /* create shared memory region for all processes in win and map */
         mpi_errno = MPL_shm_seg_create_and_attach(*shm_segment_hdl_ptr,
-                                                  shm_segment_len, (char **) base_ptr, 0);
+                                                  shm_segment_len, base_ptr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -1011,8 +1011,7 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
             MPIR_ERR_POP(mpi_errno);
 
         /* attach to shared memory region created by rank 0 */
-        mpi_errno = MPL_shm_seg_attach(*shm_segment_hdl_ptr, shm_segment_len,
-                                       (char **) base_ptr, 0);
+        mpi_errno = MPL_shm_seg_attach(*shm_segment_hdl_ptr, shm_segment_len, base_ptr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -1042,7 +1041,7 @@ static inline int MPIDI_CH4U_destroy_shm_segment(MPI_Aint shm_segment_len,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_DESTROY_SHM_SEGMENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_DESTROY_SHM_SEGMENT);
 
-    mpi_errno = MPL_shm_seg_detach(*shm_segment_hdl_ptr, (char **) base_ptr, shm_segment_len);
+    mpi_errno = MPL_shm_seg_detach(*shm_segment_hdl_ptr, base_ptr, shm_segment_len);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

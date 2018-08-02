@@ -39,18 +39,12 @@ inline int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd)
 /* A template function which creates/attaches shm seg handle
  * to the shared memory. Used by user-exposed functions below
  */
-/* FIXME: Pass (void **)shm_addr_ptr instead of (char **) shm_addr_ptr
- *  since a util func should be generic
- *  Currently not passing (void **) to reduce warning in nemesis
- *  code which passes (char **) ptrs to be attached to a seg
- */
-
 #undef FUNCNAME
 #define FUNCNAME MPL_shm_seg_create_attach_templ
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                                  char **shm_addr_ptr, int offset, int flag,
+                                                  void **shm_addr_ptr, int offset, int flag,
                                                   MPL_memory_class class)
 {
     MPLI_shm_lhnd_t lhnd = -1, rc = -1;
@@ -84,10 +78,8 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
-        void *buf_ptr = NULL;
-        buf_ptr = MPL_mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
-                           MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0, MPL_MEM_SHM);
-        *shm_addr_ptr = (char *) buf_ptr;
+        *shm_addr_ptr = MPL_mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
+                                 MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0, MPL_MEM_SHM);
     }
 
     /* FIXME: Close local handle only when closing the shm handle */
@@ -129,7 +121,7 @@ int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz)
  * offset : Offset to attach the shared memory address to
  */
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                  char **shm_addr_ptr, int offset)
+                                  void **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
@@ -145,7 +137,7 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
  *                  the shared mem segment
  * offset : Offset to attach the shared memory address to
  */
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset)
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
@@ -158,7 +150,7 @@ int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, 
 #define FUNCNAME MPL_shm_seg_detach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
+int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 {
     int rc = -1;
 

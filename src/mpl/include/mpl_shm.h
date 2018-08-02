@@ -151,9 +151,9 @@ int MPL_shm_hnd_finalize(MPL_shm_hnd_t * hnd_ptr);
 int MPL_shm_seg_create(MPL_shm_hnd_t hnd, intptr_t seg_sz);
 int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz);
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
-                                  char **shm_addr_ptr, int offset);
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset);
-int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz);
+                                  void **shm_addr_ptr, int offset);
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset);
+int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz);
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd);
 
 #endif /* MPL_SHM_H_INCLUDED */
