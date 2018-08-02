@@ -17,7 +17,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
             [posix_eager_modules=])
 
     if test -z "${posix_eager_modules}" ; then
-        ch4_posix_eager_modules="fbox"
+        ch4_posix_eager_modules="iqueue"
     else
         ch4_posix_eager_modules=`echo ${posix_eager_modules} | sed -e 's/,/ /g'`
     fi
