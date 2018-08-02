@@ -21,24 +21,24 @@
 static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
-    MPIDI_CH4U_ssend_ack_msg_t ack_msg;
+    MPIDIG_ssend_ack_msg_t ack_msg;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REPLY_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REPLY_SSEND);
     MPIR_cc_incr(rreq->cc_ptr, &c);
-    ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
+    ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
-                                     MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
+            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
+                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
                                      sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
     else
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
-                                    MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
+            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
+                                    MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
                                     sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
     }
 
@@ -73,14 +73,14 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
 
-    rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
+    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    buf = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_buffer);
-    count = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_count);
-    datatype = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_datatype);
+    buf = MPIDIG_REQUEST(rreq, req->rreq.mrcv_buffer);
+    count = MPIDIG_REQUEST(rreq, req->rreq.mrcv_count);
+    datatype = MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype);
 
-    message_sz = MPIDI_CH4U_REQUEST(rreq, count);
+    message_sz = MPIDIG_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
     MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
@@ -101,7 +101,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
         MPIR_Segment_init(buf, count, datatype, segment_ptr);
 
         last = count * dt_sz;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
+        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
         MPIR_Segment_free(segment_ptr);
         if (last != (MPI_Aint) (count * dt_sz)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -110,13 +110,13 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
             rreq->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDI_CH4U_REQUEST(rreq, buffer), data_sz);
+        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), data_sz);
     }
 
-    MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
+    MPL_free(MPIDIG_REQUEST(rreq, buffer));
     rreq->kind = MPIR_REQUEST_KIND__RECV;
 
-    if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
+    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);

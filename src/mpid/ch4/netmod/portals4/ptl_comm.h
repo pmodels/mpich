@@ -20,7 +20,7 @@
 static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIDI_CH4U_init_comm(comm);
+    mpi_errno = MPIDIG_init_comm(comm);
     return mpi_errno;
 }
 
@@ -31,7 +31,7 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIDI_CH4U_destroy_comm(comm);
+    mpi_errno = MPIDIG_destroy_comm(comm);
     return mpi_errno;
 }
 

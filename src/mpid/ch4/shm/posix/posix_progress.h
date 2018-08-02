@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking, int *comple
             MPIDI_POSIX_ENVELOPE_GET(MPIDI_POSIX_REQUEST(req), sender_rank, tag, context_id);
             MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
                             (MPL_DBG_FDEST, "Posted from grank %d to %d in progress %d,%d,%d\n",
-                             MPIDI_CH4U_rank_to_lpid(sender_rank, req->comm),
+                             MPIDIU_rank_to_lpid(sender_rank, req->comm),
                              MPIDI_POSIX_mem_region.rank, sender_rank, tag, context_id));
 
             if ((in_cell && MPIDI_POSIX_ENVELOPE_MATCH(cell, sender_rank, tag, context_id)) ||
@@ -83,22 +83,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking, int *comple
 
                 continue_matching = 1;
 
-                if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                    MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
-                                                 MPIDI_CH4R_SHM, &continue_matching);
+                if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)) {
+                    MPIDIU_anysource_matched(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req),
+                                             MPIDI_SHM, &continue_matching);
 
                     /* The request might have been freed during
-                     * MPIDI_CH4R_anysource_matched. Double check that it still
+                     * MPIDIU_anysource_matched. Double check that it still
                      * exists. */
-                    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+                    if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)) {
+                        MPIR_Request_free(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
                         /* Decouple requests */
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER
-                                                             (req))
+                        MPIDIU_REQUEST_ANYSOURCE_PARTNER(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req))
                             = NULL;
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                        MPIDIU_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
 #endif
                     }
 
@@ -289,7 +288,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking, int *comple
         /*
          * TODO: make request field dest_lpid (or even recvQ[dest_lpid]) instead of dest - no need to do rank_to_lpid each time
          */
-        int grank = MPIDI_CH4U_rank_to_lpid(dest, sreq->comm);
+        int grank = MPIDIU_rank_to_lpid(dest, sreq->comm);
         cell->pending = NULL;
 
         if (MPIDI_POSIX_REQUEST(sreq)->type == MPIDI_POSIX_TYPESYNC) {

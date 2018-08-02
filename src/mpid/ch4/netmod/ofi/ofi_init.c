@@ -745,7 +745,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_ub, MPIR_Co
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
-    MPIDI_CH4U_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -759,7 +759,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_ub, MPIR_Co
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
-            MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
+            MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
 
         MPIDI_Global.cq_buffered_dynamic_head = MPIDI_Global.cq_buffered_dynamic_tail = NULL;
         MPIDI_Global.cq_buffered_static_head = MPIDI_Global.cq_buffered_static_tail = 0;
@@ -918,13 +918,13 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIDIG_finalize();
 
-    MPIDI_CH4U_map_destroy(MPIDI_Global.win_map);
+    MPIDIU_map_destroy(MPIDI_Global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
             MPL_free(MPIDI_Global.am_bufs[i]);
 
-        MPIDI_CH4R_destroy_buf_pool(MPIDI_Global.am_buf_pool);
+        MPIDIU_destroy_buf_pool(MPIDI_Global.am_buf_pool);
 
         MPIR_Assert(MPIDI_Global.cq_buffered_static_head == MPIDI_Global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_Global.cq_buffered_dynamic_head);

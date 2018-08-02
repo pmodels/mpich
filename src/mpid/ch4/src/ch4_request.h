@@ -98,9 +98,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         if (req->completion_notification)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
-        if (MPIDI_CH4U_REQUEST(req, req)) {
-            MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
-            MPIDI_CH4U_REQUEST(req, req) = NULL;
+        if (MPIDIG_REQUEST(req, req)) {
+            MPIDIU_release_buf(MPIDIG_REQUEST(req, req));
+            MPIDIG_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
         }
         MPIR_Request_free(req);

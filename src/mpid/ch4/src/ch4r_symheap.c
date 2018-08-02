@@ -36,12 +36,12 @@ static int check_maprage_ok(void *start, size_t size)
     int rc = 0;
     int ret = 0;
     size_t page_sz;
-    size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
+    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
     size_t i, num_pages = mapsize / page_sz;
     char *ptr = (char *) start;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
 
     for (i = 0; i < num_pages; i++) {
         rc = msync(ptr, page_sz, 0);
@@ -57,7 +57,7 @@ static int check_maprage_ok(void *start, size_t size)
   fn_fail:
     ret = 1;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
     return ret;
 }
 
@@ -71,21 +71,21 @@ static void *generate_random_addr(size_t size)
      * This is not generic, probably only works properly on Linux
      * but it's not fatal since we bail after a fixed number of iterations
      */
-#define MPIDI_CH4I_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
+#define MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
 #ifdef USE_SYM_HEAP
     char random_state[256];
     size_t page_sz;
     uint64_t random_unsigned;
-    size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
+    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
     struct timeval ts;
     int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
     int32_t rh, rl;
     struct random_data rbuf;
 #endif
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
 
 #ifndef USE_SYM_HEAP
     map_pointer = -1ULL;
@@ -102,13 +102,13 @@ static void *generate_random_addr(size_t size)
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
     random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-    map_pointer = MPIDI_CH4I_MAP_POINTER;
+    map_pointer = MAP_POINTER;
 
     while (check_maprage_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
         random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-        map_pointer = MPIDI_CH4I_MAP_POINTER;
+        map_pointer = MAP_POINTER;
         iter--;
 
         if (iter == 0) {
@@ -120,32 +120,32 @@ static void *generate_random_addr(size_t size)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
     return (void *) map_pointer;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_mapsize
+#define FUNCNAME MPIDIU_get_mapsize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
+size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAPSIZE);
 
     long page_sz = sysconf(_SC_PAGESIZE);
     size_t mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
     *psz = page_sz;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAPSIZE);
     return mapsize;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_symmetric_heap
+#define FUNCNAME MPIDIU_get_symmetric_heap
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR_Win * win)
+int MPIDIU_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int iter = MPIR_CVAR_CH4_SYMHEAP_RETRY;
@@ -157,14 +157,14 @@ int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, 
     size_t page_sz;
 #endif
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_SYMMETRIC_HEAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_SYMMETRIC_HEAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_SYMMETRIC_HEAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_SYMMETRIC_HEAP);
 
 #ifndef USE_SYM_HEAP
     iter = 0;
 #else
 
-    mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
+    mapsize = MPIDIU_get_mapsize(size, &page_sz);
 
     struct {
         uint64_t sz;
@@ -233,17 +233,17 @@ int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, 
                     "WARNING: Win_allocate:  Unable to allocate symmetric heap\n");
         baseP = MPL_malloc(size, MPL_MEM_RMA);
         MPIR_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
-        MPIDI_CH4U_WIN(win, mmap_sz) = -1ULL;
-        MPIDI_CH4U_WIN(win, mmap_addr) = NULL;
+        MPIDIU_WIN(win, mmap_sz) = -1ULL;
+        MPIDIU_WIN(win, mmap_addr) = NULL;
     } else {
-        MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
-        MPIDI_CH4U_WIN(win, mmap_addr) = baseP;
+        MPIDIU_WIN(win, mmap_sz) = mapsize;
+        MPIDIU_WIN(win, mmap_addr) = baseP;
     }
 
     *base = baseP;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SYMMETRIC_HEAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SYMMETRIC_HEAP);
     return mpi_errno;
   fn_fail:
     *base = NULL;

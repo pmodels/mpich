@@ -15,16 +15,16 @@
 #include "ch4r_buf.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_am_request_create
+#define FUNCNAME MPIDIG_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count)
+static inline MPIR_Request *MPIDIG_am_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
     MPIR_Request *req;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
     if (req == NULL)
@@ -44,14 +44,13 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
 
     MPIDI_NM_am_request_init(req);
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
-    MPIDI_CH4U_REQUEST(req, req) =
-        (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
-    MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
-    MPIDI_CH4U_REQUEST(req, req->status) = 0;
+    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_BUF_POOL_SZ);
+    MPIDIG_REQUEST(req, req) = (MPIDIG_req_ext_t *) MPIDIU_get_buf(MPIDI_CH4_Global.buf_pool);
+    MPIR_Assert(MPIDIG_REQUEST(req, req));
+    MPIDIG_REQUEST(req, req->status) = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
     return req;
   fn_fail:
     goto fn_exit;
@@ -61,17 +60,16 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
  * the upper layer will have a chance to arbitrate who wins the race between
  * the netmod and the shmod. This will cancel the request of the other side and
  * take care of copying any relevant data. */
-static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
-                                               int *continue_matching)
+static inline int MPIDIU_anysource_matched(MPIR_Request * rreq, int caller, int *continue_matching)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ANYSOURCE_MATCHED);
 
-    MPIR_Assert(MPIDI_CH4R_NETMOD == caller || MPIDI_CH4R_SHM == caller);
+    MPIR_Assert(MPIDI_NETMOD == caller || MPIDI_SHM == caller);
 
-    if (MPIDI_CH4R_NETMOD == caller) {
+    if (MPIDI_NETMOD == caller) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
 
@@ -81,11 +79,11 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
         if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
             /* If the request is cancelled, copy the status object from the
              * partner request */
-            rreq->status = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
+            rreq->status = MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
         }
 #endif
         *continue_matching = 0;
-    } else if (MPIDI_CH4R_SHM == caller) {
+    } else if (MPIDI_SHM == caller) {
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 
         /* If the netmod has already matched this request, shared memory will
@@ -93,7 +91,7 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
         *continue_matching = !MPIR_STATUS_GET_CANCEL_BIT(rreq->status);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ANYSOURCE_MATCHED);
     return mpi_errno;
 }
 

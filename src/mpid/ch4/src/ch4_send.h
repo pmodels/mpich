@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -158,7 +158,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -193,7 +193,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -211,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -263,7 +263,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -297,7 +297,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIU_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
         mpi_errno =
             MPIDI_NM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST(*request, is_local) = r;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -357,8 +357,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
         mpi_errno = MPIDI_NM_mpi_send_init(buf, count, datatype, rank, tag,
                                            comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS)
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
-    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
+        MPIDIU_REQUEST(*request, is_local) = r;
+    MPIDIU_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -399,8 +399,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
         mpi_errno = MPIDI_NM_mpi_ssend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request) {
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
+        MPIDIU_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
     }
 #endif
     if (mpi_errno != MPI_SUCCESS) {
@@ -442,8 +442,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
         mpi_errno = MPIDI_NM_mpi_bsend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request) {
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
+        MPIDIU_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
     }
 #endif
     if (mpi_errno != MPI_SUCCESS) {
@@ -485,8 +485,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
         mpi_errno = MPIDI_NM_mpi_rsend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request) {
-        MPIDI_CH4I_REQUEST(*request, is_local) = r;
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
+        MPIDIU_REQUEST(*request, is_local) = r;
+        MPIDIU_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
     }
 #endif
     if (mpi_errno != MPI_SUCCESS) {
@@ -512,7 +512,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_cancel_send(sreq);
 #else
-    if (MPIDI_CH4I_REQUEST(sreq, is_local))
+    if (MPIDIU_REQUEST(sreq, is_local))
         mpi_errno = MPIDI_SHM_mpi_cancel_send(sreq);
     else
         mpi_errno = MPIDI_NM_mpi_cancel_send(sreq);

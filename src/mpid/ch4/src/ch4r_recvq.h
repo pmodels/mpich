@@ -26,26 +26,25 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_time_matching_unexpectedq ATTRIBUTE((unuse
 MPL_STATIC_INLINE_PREFIX int MPIDIG_match_posted(int rank, int tag,
                                                  MPIR_Context_id_t context_id, MPIR_Request * req)
 {
-    return (rank == MPIDI_CH4U_REQUEST(req, rank) ||
-            MPIDI_CH4U_REQUEST(req, rank) == MPI_ANY_SOURCE) &&
-        (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDI_CH4U_REQUEST(req, tag)) ||
-         MPIDI_CH4U_REQUEST(req, tag) == MPI_ANY_TAG) &&
-        context_id == MPIDI_CH4U_REQUEST(req, context_id);
+    return (rank == MPIDIG_REQUEST(req, rank) ||
+            MPIDIG_REQUEST(req, rank) == MPI_ANY_SOURCE) &&
+        (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, tag)) ||
+         MPIDIG_REQUEST(req, tag) == MPI_ANY_TAG) && context_id == MPIDIG_REQUEST(req, context_id);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_match_unexp(int rank, int tag,
                                                 MPIR_Context_id_t context_id, MPIR_Request * req)
 {
-    return (rank == MPIDI_CH4U_REQUEST(req, rank) || rank == MPI_ANY_SOURCE) &&
-        (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDI_CH4U_REQUEST(req, tag)) ||
-         tag == MPI_ANY_TAG) && context_id == MPIDI_CH4U_REQUEST(req, context_id);
+    return (rank == MPIDIG_REQUEST(req, rank) || rank == MPI_ANY_SOURCE) &&
+        (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, tag)) ||
+         tag == MPI_ANY_TAG) && context_id == MPIDIG_REQUEST(req, context_id);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_Recvq_init
+#define FUNCNAME MPIDIG_Recvq_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_Recvq_init(void)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_Recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_PVAR_LEVEL_REGISTER_STATIC(RECVQ, MPI_UNSIGNED, posted_recvq_length, 0,      /* init value */
@@ -80,67 +79,64 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_Recvq_init(void)
 #ifdef MPIDI_CH4U_USE_PER_COMM_QUEUE
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_posted
+#define FUNCNAME MPIDIG_enqueue_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
-                                                        MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_posted(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
-    MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
+    MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
+    DL_APPEND(*list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, posted_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_unexp
+#define FUNCNAME MPIDIG_enqueue_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
-                                                       MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_unexp(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
-    MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
+    MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
+    DL_APPEND(*list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_unexp
+#define FUNCNAME MPIDIG_delete_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_delete_unexp(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
-    DL_DELETE(*list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_UNEXP);
+    DL_DELETE(*list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DELETE_UNEXP);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp_strict
+#define FUNCNAME MPIDIG_dequeue_unexp_strict
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
-                                                                       int tag,
-                                                                       MPIR_Context_id_t context_id,
-                                                                       MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp_strict(int rank, int tag,
+                                                                   MPIR_Context_id_t context_id,
+                                                                   MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if (!(MPIDI_CH4U_REQUEST(req, req->status) & MPIDI_CH4U_REQ_BUSY) &&
+        if (!(MPIDIG_REQUEST(req, req->status) & MPIDIG_REQ_BUSY) &&
             MPIDIG_match_unexp(rank, tag, context_id, req)) {
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
@@ -149,23 +145,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp
+#define FUNCNAME MPIDIG_dequeue_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
-                                                                int tag,
-                                                                MPIR_Context_id_t context_id,
-                                                                MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp(int rank, int tag,
+                                                            MPIR_Context_id_t context_id,
+                                                            MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
@@ -179,23 +174,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_find_unexp
+#define FUNCNAME MPIDIG_find_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
-                                                             int tag,
-                                                             MPIR_Context_id_t context_id,
-                                                             MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_find_unexp(int rank, int tag,
+                                                         MPIR_Context_id_t context_id,
+                                                         MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_FIND_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
@@ -207,23 +201,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_FIND_UNEXP);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_posted
+#define FUNCNAME MPIDIG_dequeue_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
-                                                                 int tag,
-                                                                 MPIR_Context_id_t context_id,
-                                                                 MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
+                                                             MPIR_Context_id_t context_id,
+                                                             MPIDIG_rreq_t ** list)
 {
     MPIR_Request *req = NULL;
-    MPIDI_CH4U_rreq_t *curr, *tmp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
+    MPIDIG_rreq_t *curr, *tmp;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
@@ -239,21 +232,20 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
     if (!req)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_posted
+#define FUNCNAME MPIDIG_delete_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
-                                                      MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_delete_posted(MPIDIG_rreq_t * req, MPIDIG_rreq_t ** list)
 {
     int found = 0;
-    MPIDI_CH4U_rreq_t *curr, *tmp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
+    MPIDIG_rreq_t *curr, *tmp;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_POSTED);
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
@@ -267,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
     if (!found)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DELETE_POSTED);
     return found;
 }
 
@@ -276,67 +268,64 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
 /* Use global queue */
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_posted
+#define FUNCNAME MPIDIG_enqueue_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
-                                                        MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_posted(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
-    MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(MPIDI_CH4_Global.posted_list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
+    MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
+    DL_APPEND(MPIDI_CH4_Global.posted_list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, posted_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_unexp
+#define FUNCNAME MPIDIG_enqueue_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
-                                                       MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_unexp(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
-    MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
+    MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
+    DL_APPEND(MPIDI_CH4_Global.unexp_list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_unexp
+#define FUNCNAME MPIDIG_delete_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_delete_unexp(MPIR_Request * req, MPIDIG_rreq_t ** list)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
-    DL_DELETE(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_UNEXP);
+    DL_DELETE(MPIDI_CH4_Global.unexp_list, &MPIDIG_REQUEST(req, req->rreq));
     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DELETE_UNEXP);
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp_strict
+#define FUNCNAME MPIDIG_dequeue_unexp_strict
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
-                                                                       int tag,
-                                                                       MPIR_Context_id_t context_id,
-                                                                       MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp_strict(int rank, int tag,
+                                                                   MPIR_Context_id_t context_id,
+                                                                   MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if (!(MPIDI_CH4U_REQUEST(req, req->status) & MPIDI_CH4U_REQ_BUSY) &&
+        if (!(MPIDIG_REQUEST(req, req->status) & MPIDIG_REQ_BUSY) &&
             MPIDIG_match_unexp(rank, tag, context_id, req)) {
             DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
@@ -345,23 +334,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP_STRICT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp
+#define FUNCNAME MPIDIG_dequeue_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
-                                                                int tag,
-                                                                MPIR_Context_id_t context_id,
-                                                                MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp(int rank, int tag,
+                                                            MPIR_Context_id_t context_id,
+                                                            MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
@@ -375,23 +363,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_find_unexp
+#define FUNCNAME MPIDIG_find_unexp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
-                                                             int tag,
-                                                             MPIR_Context_id_t context_id,
-                                                             MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_find_unexp(int rank, int tag,
+                                                         MPIR_Context_id_t context_id,
+                                                         MPIDIG_rreq_t ** list)
 {
-    MPIDI_CH4U_rreq_t *curr, *tmp;
+    MPIDIG_rreq_t *curr, *tmp;
     MPIR_Request *req = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_FIND_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
     DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
@@ -403,23 +390,22 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
         req = NULL;
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_FIND_UNEXP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_FIND_UNEXP);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_posted
+#define FUNCNAME MPIDIG_dequeue_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
-                                                                 int tag,
-                                                                 MPIR_Context_id_t context_id,
-                                                                 MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
+                                                             MPIR_Context_id_t context_id,
+                                                             MPIDIG_rreq_t ** list)
 {
     MPIR_Request *req = NULL;
-    MPIDI_CH4U_rreq_t *curr, *tmp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
+    MPIDIG_rreq_t *curr, *tmp;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     DL_FOREACH_SAFE(MPIDI_CH4_Global.posted_list, curr, tmp) {
@@ -435,21 +421,20 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
     if (!req)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DEQUEUE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
     return req;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_posted
+#define FUNCNAME MPIDIG_delete_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
-                                                      MPIDI_CH4U_rreq_t ** list)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_delete_posted(MPIDIG_rreq_t * req, MPIDIG_rreq_t ** list)
 {
     int found = 0;
-    MPIDI_CH4U_rreq_t *curr, *tmp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
+    MPIDIG_rreq_t *curr, *tmp;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_POSTED);
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     DL_FOREACH_SAFE(MPIDI_CH4_Global.posted_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
@@ -463,7 +448,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
     if (!found)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DELETE_POSTED);
     return found;
 }
 

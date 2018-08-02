@@ -174,8 +174,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_PTL_global.node_map =
         MPL_malloc(size * sizeof(*MPIDI_PTL_global.node_map), MPL_MEM_ADDRESS);
     mpi_errno =
-        MPIDI_CH4U_build_nodemap(rank, comm_world, size, MPIDI_PTL_global.node_map,
-                                 &MPIDI_PTL_global.max_node_id);
+        MPIDIU_build_nodemap(rank, comm_world, size, MPIDI_PTL_global.node_map,
+                             &MPIDI_PTL_global.max_node_id);
 
   fn_exit:
     MPL_free(keyS);
@@ -251,12 +251,12 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 
 static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_mpi_free_mem(ptr);
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 

@@ -20,7 +20,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
                                        MPIDI_av_entry_t * addr,
                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
-    return MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+    return MPIDIG_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
 }
 
 static inline int MPIDI_NM_mpi_iprobe(int source,
@@ -29,7 +29,7 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
                                       int context_offset,
                                       MPIDI_av_entry_t * addr, int *flag, MPI_Status * status)
 {
-    return MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+    return MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
 }
 
 #endif /* PTL_PROBE_H_INCLUDED */

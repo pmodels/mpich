@@ -70,7 +70,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz);
-int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR_Win * win);
+size_t MPIDIU_get_mapsize(size_t size, size_t * psz);
+int MPIDIU_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR_Win * win);
 
 #endif /* CH4R_SYMHEAP_H_INCLUDED */

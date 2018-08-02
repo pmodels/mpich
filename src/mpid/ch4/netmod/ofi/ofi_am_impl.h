@@ -69,7 +69,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
         MPL_free(req_hdr->am_hdr);
     }
 
-    MPIDI_CH4R_release_buf(req_hdr);
+    MPIDIU_release_buf(req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
     return;
@@ -89,7 +89,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
-            MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+            MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         MPIR_Assert(req_hdr);
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 
@@ -438,22 +438,22 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
 
-    if (handler_id == MPIDI_CH4U_SEND &&
+    if (handler_id == MPIDIG_SEND &&
         am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) > MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
-        MPIDI_CH4U_send_long_req_msg_t lreq_hdr;
+        MPIDIG_send_long_req_msg_t lreq_hdr;
 
         MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
         lreq_hdr.data_sz = data_sz;
         lreq_hdr.sreq_ptr = (uint64_t) sreq;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf = buf;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).count = count;
+        MPIDIG_REQUEST(sreq, req->lreq).src_buf = buf;
+        MPIDIG_REQUEST(sreq, req->lreq).count = count;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
-        MPIDI_CH4U_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
+        MPIDIG_REQUEST(sreq, req->lreq).datatype = datatype;
+        MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
+        MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
+        MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
+        MPIDIG_REQUEST(sreq, rank) = rank;
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);

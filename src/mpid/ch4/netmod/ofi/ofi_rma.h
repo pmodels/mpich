@@ -413,13 +413,12 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     size_t offset;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
-                                       target_rank, target_disp, target_count,
-                                       target_datatype, win);
+        mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto fn_exit;
 
@@ -576,13 +575,12 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
-                                       target_rank, target_disp, target_count,
-                                       target_datatype, win);
+        mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto fn_exit;
 
@@ -658,13 +656,12 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
     size_t offset;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
-                                        target_rank, target_disp, target_count,
-                                        target_datatype, win, request);
+        mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
 
@@ -674,7 +671,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*request);
-        MPIDI_CH4U_request_complete(*request);
+        MPIDIU_request_complete(*request);
     } else if (target_rank == win->comm_ptr->rank) {
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Request_add_ref(*request);
@@ -685,7 +682,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                    origin_count,
                                    origin_datatype,
                                    (char *) win->base + offset, target_count, target_datatype);
-        MPIDI_CH4U_request_complete(*request);
+        MPIDIU_request_complete(*request);
     } else {
         mpi_errno = MPIDI_OFI_do_put((void *) origin_addr,
                                      origin_count,
@@ -732,16 +729,15 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr,
-                                                    result_addr, datatype,
-                                                    target_rank, target_disp, win);
+        mpi_errno = MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
+                                                target_rank, target_disp, win);
         goto fn_exit;
     }
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto fn_exit;
 
@@ -763,9 +759,8 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
     /* Compare_and_swap is READ and WRITE. */
-    MPIDI_CH4U_wait_am_acc(win, target_rank,
-                           (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                            MPIDI_CH4I_ACCU_ORDER_WAW));
+    MPIDIU_wait_am_acc(win, target_rank,
+                       (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW));
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -799,14 +794,14 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+    if (MPIDIU_WIN(win, info_args).accumulate_ordering &
+        (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR)) {
         /* Wait for OFI cas to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
     }
-    return MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                           datatype, target_rank, target_disp, win);
+    return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
+                                       target_rank, target_disp, win);
 }
 
 #undef FUNCNAME
@@ -902,7 +897,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
         goto am_fallback;
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
     if (target_rank == MPI_PROC_NULL)
         goto null_op_exit;
 
@@ -929,8 +924,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
-    MPIDI_CH4U_wait_am_acc(win, target_rank,
-                           (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR));
+    MPIDIU_wait_am_acc(win, target_rank, (MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR));
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
                             target_datatype, max_size, &req, &flags, &ep, sigreq));
@@ -993,15 +987,14 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+    if (MPIDIU_WIN(win, info_args).accumulate_ordering &
+        (MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR)) {
         /* Wait for OFI acc to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
     }
-    return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
-                                     target_rank, target_disp, target_count, target_datatype, op,
-                                     win);
+    return MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                 target_disp, target_count, target_datatype, op, win);
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
@@ -1009,7 +1002,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
+        MPIDIU_request_complete(*sigreq);
     }
     goto fn_exit;
 }
@@ -1050,7 +1043,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
         goto am_fallback;
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
     if (target_rank == MPI_PROC_NULL)
         goto null_op_exit;
 
@@ -1083,11 +1076,10 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {
         /* Get_accumulate is READ and WRITE, except NO_OP (it is READ only). */
-        MPIDI_CH4U_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+        MPIDIU_wait_am_acc(win, target_rank, MPIDI_ACCU_ORDER_RAW);
     } else {
-        MPIDI_CH4U_wait_am_acc(win, target_rank,
-                               (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                                MPIDI_CH4I_ACCU_ORDER_WAW));
+        MPIDIU_wait_am_acc(win, target_rank,
+                           (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW));
     }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
@@ -1178,21 +1170,20 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+        if (MPIDIU_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAW) {
             /* Wait for OFI acc to complete.
              * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
             MPIDI_OFI_win_progress_fence(win);
         }
     } else {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+        if (MPIDIU_WIN(win, info_args).accumulate_ordering &
+            (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW)) {
             MPIDI_OFI_win_progress_fence(win);
         }
     }
-    return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                         result_addr, result_count, result_datatype,
-                                         target_rank, target_disp, target_count,
-                                         target_datatype, op, win);
+    return MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
+                                     result_count, result_datatype, target_rank, target_disp,
+                                     target_count, target_datatype, op, win);
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
@@ -1200,7 +1191,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
+        MPIDIU_request_complete(*sigreq);
     }
     goto fn_exit;
 }
@@ -1231,9 +1222,9 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
-                                               target_rank, target_disp, target_count,
-                                               target_datatype, op, win, request);
+        mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                           target_disp, target_count, target_datatype, op, win,
+                                           request);
         goto fn_exit;
     }
 
@@ -1277,10 +1268,10 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
-                                                   result_addr, result_count, result_datatype,
-                                                   target_rank, target_disp, target_count,
-                                                   target_datatype, op, win, request);
+        mpi_errno = MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
+                                               result_addr, result_count, result_datatype,
+                                               target_rank, target_disp, target_count,
+                                               target_datatype, op, win, request);
         goto fn_exit;
     }
 
@@ -1316,8 +1307,8 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
-                                                target_rank, target_disp, op, win);
+        mpi_errno = MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
+                                            target_disp, op, win);
         goto fn_exit;
     }
 
@@ -1355,13 +1346,12 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
     size_t offset;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
-                                        target_rank, target_disp, target_count, target_datatype,
-                                        win, request);
+        mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIU_RMA_OP_CHECK_SYNC(target_rank, win);
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
 
@@ -1371,7 +1361,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
         MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*request);
-        MPIDI_CH4U_request_complete(*request);
+        MPIDIU_request_complete(*request);
         goto fn_exit;
     }
 
@@ -1384,7 +1374,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
-        MPIDI_CH4U_request_complete(*request);
+        MPIDIU_request_complete(*request);
         goto fn_exit;
     }
 
@@ -1429,10 +1419,10 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                                  result_addr, result_count, result_datatype,
-                                                  target_rank, target_disp, target_count,
-                                                  target_datatype, op, win);
+        mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                              result_addr, result_count, result_datatype,
+                                              target_rank, target_disp, target_count,
+                                              target_datatype, op, win);
         goto fn_exit;
     }
 
@@ -1470,9 +1460,8 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS)
 #endif
     {
-        mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
-                                              target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
+        mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                          target_disp, target_count, target_datatype, op, win);
         goto fn_exit;
     }
 

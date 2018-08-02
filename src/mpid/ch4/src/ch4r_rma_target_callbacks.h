@@ -41,7 +41,7 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov_ack ATTRIBUTE((un
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 
-int MPIDI_CH4R_RMA_Init_targetcb_pvars(void);
+int MPIDIG_RMA_Init_targetcb_pvars(void);
 int MPIDI_get_target_cmpl_cb(MPIR_Request * req);
 int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq);
 int MPIDI_put_iov_target_cmpl_cb(MPIR_Request * rreq);
