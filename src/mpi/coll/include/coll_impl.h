@@ -227,8 +227,7 @@ typedef enum MPIR_Iallreduce_intra_algo_t {
     MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER,
-    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY,
-    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL,
+    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE,
 } MPIR_Iallreduce_intra_algo_t;
 extern MPIR_Iallreduce_intra_algo_t MPIR_Iallreduce_intra_algo_choice;
 
@@ -237,6 +236,7 @@ typedef enum MPIR_Iallreduce_inter_algo_t {
     MPIR_IALLREDUCE_INTER_ALGO_REMOTE_REDUCE_LOCAL_BCAST,
 } MPIR_Iallreduce_inter_algo_t;
 extern MPIR_Iallreduce_inter_algo_t MPIR_Iallreduce_inter_algo_choice;
+extern MPIR_Tree_type_t MPIR_Iallreduce_tree_type;
 
 typedef enum MPIR_Ialltoall_intra_algo_t {
     MPIR_IALLTOALL_INTRA_ALGO_AUTO,

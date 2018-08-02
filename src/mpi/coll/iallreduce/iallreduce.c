@@ -20,6 +20,19 @@ cvars:
       description : >-
         k value for tree based iallreduce (for tree_kary and tree_knomial)
 
+    - name        : MPIR_CVAR_IALLREDUCE_TREE_TYPE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for tree based ibcast
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type
+        knomial_2 - knomial_2 tree type
+
     - name        : MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE
       type        : int
@@ -29,8 +42,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Maximum chunk size (in bytes) for pipelining in tree based
-        iallreduce (tree_kary and tree_knomial). Default value is 0, that is,
-        no pipelining by default
+        iallreduce. Default value is 0, that is, no pipelining by default
 
     - name        : MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD
       category    : COLLECTIVE
@@ -72,8 +84,7 @@ cvars:
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
-        tree_kary                - Force generic transport kary tree algorithm
-        tree_knomial             - Force generic transport knomial tree algorithm
+        tree                     - Force generic transport tree algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -307,18 +318,10 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY:
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_tree_kary(sendbuf, recvbuf, count, datatype,
-                                                    op, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                goto fn_exit;
-                break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
-                mpi_errno =
-                    MPIR_Iallreduce_intra_tree_knomial(sendbuf, recvbuf, count, datatype,
-                                                       op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype,
+                                               op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
