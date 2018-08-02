@@ -15,6 +15,14 @@
 **nomem %d:Out of memory (unable to allocate %d bytes)
 **nomem2:Unable to allocate memory (probably out of memory)
 **nomem2 %d %s:Unable to allocate %d bytes of memory for %s (probably out of memory)
+**alloc_shar_mem:unable to allocate shared memory
+**alloc_shar_mem %s %s:unable to allocate shared memory - %s %s
+**attach_shar_mem:unable to attach to shared memory
+**attach_shar_mem %s %s:unable to attach to shared memory - %s %s
+**remove_shar_mem:unable to remove shared memory
+**remove_shar_mem %s %s:unable to remove shared memory - %s %s
+**detach_shar_mem:unable to detach shared memory
+**detach_shar_mem %s %s:unable to detach shared memory - %s %s
 **notimpl:Function not implemented
 **notimpl %s:Function %s not implemented
 **nullptr:Null pointer
@@ -717,14 +725,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 **ioctl:ioctl failed
 **ioctl %d %s:ioctl failed errno=%d - %s
-**alloc_shar_mem:unable to allocate shared memory
-**alloc_shar_mem %s %s:unable to allocate shared memory - %s %s
-**attach_shar_mem:unable to attach to shared memory
-**attach_shar_mem %s %s:unable to attach to shared memory - %s %s
-**remove_shar_mem:unable to remove shared memory
-**remove_shar_mem %s %s:unable to remove shared memory - %s %s
-**detach_shar_mem:unable to detach shared memory
-**detach_shar_mem %s %s:unable to detach shared memory - %s %s
 **read %d %s:read from socket failed - nread=%d %s
 **winput_oob:target pointer for win_put is out of bounds
 **winget_oob:source pointer for win_get is out of bounds
