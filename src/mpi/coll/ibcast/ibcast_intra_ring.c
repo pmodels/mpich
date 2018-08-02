@@ -29,7 +29,7 @@ int MPIR_Ibcast_intra_ring(void *buffer, int count,
 
     /* Ring algorithm is equivalent to kary tree algorithm with k = 1 */
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
-                                               comm_ptr, request, TREE_TYPE_KARY,
+                                               comm_ptr, request, MPIR_TREE_TYPE_KARY,
                                                1, MPIR_CVAR_IBCAST_RING_CHUNK_SIZE);
 
     return mpi_errno;
