@@ -149,7 +149,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);
         am_req->event_id = MPIDI_OFI_EVENT_AM_READ;
-        comm = MPIDI_CH4U_context_id_to_comm(context_id);
+        comm = MPIDIG_context_id_to_comm(context_id);
         MPIR_Assert(comm);
         MPIDI_OFI_cntr_incr();
 
@@ -415,7 +415,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
 
-    comm = MPIDI_CH4U_context_id_to_comm(context_id);
+    comm = MPIDIG_context_id_to_comm(context_id);
 
     msg.hdr.am_hdr_sz = sizeof(msg.pyld);
     msg.hdr.data_sz = 0;

@@ -44,23 +44,23 @@ typedef enum {
     MPIDI_PTYPE_SSEND
 } MPIDI_ptype;
 
-#define MPIDI_CH4U_REQ_BUSY           (0x1)
-#define MPIDI_CH4U_REQ_PEER_SSEND     (0x1 << 1)
-#define MPIDI_CH4U_REQ_UNEXPECTED     (0x1 << 2)
-#define MPIDI_CH4U_REQ_UNEXP_DQUED    (0x1 << 3)
-#define MPIDI_CH4U_REQ_UNEXP_CLAIMED  (0x1 << 4)
-#define MPIDI_CH4U_REQ_RCV_NON_CONTIG (0x1 << 5)
-#define MPIDI_CH4U_REQ_MATCHED (0x1 << 6)
-#define MPIDI_CH4U_REQ_LONG_RTS (0x1 << 7)
+#define MPIDIG_REQ_BUSY           (0x1)
+#define MPIDIG_REQ_PEER_SSEND     (0x1 << 1)
+#define MPIDIG_REQ_UNEXPECTED     (0x1 << 2)
+#define MPIDIG_REQ_UNEXP_DQUED    (0x1 << 3)
+#define MPIDIG_REQ_UNEXP_CLAIMED  (0x1 << 4)
+#define MPIDIG_REQ_RCV_NON_CONTIG (0x1 << 5)
+#define MPIDIG_REQ_MATCHED (0x1 << 6)
+#define MPIDIG_REQ_LONG_RTS (0x1 << 7)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
 
-typedef struct MPIDI_CH4U_sreq_t {
+typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
-} MPIDI_CH4U_sreq_t;
+} MPIDIG_sreq_t;
 
-typedef struct MPIDI_CH4U_lreq_t {
+typedef struct MPIDIG_lreq_t {
     /* Long send fields */
     const void *src_buf;
     MPI_Count count;
@@ -68,9 +68,9 @@ typedef struct MPIDI_CH4U_lreq_t {
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
-} MPIDI_CH4U_lreq_t;
+} MPIDIG_lreq_t;
 
-typedef struct MPIDI_CH4U_rreq_t {
+typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
     void *mrcv_buffer;
     uint64_t mrcv_count;
@@ -81,10 +81,10 @@ typedef struct MPIDI_CH4U_rreq_t {
     uint64_t match_req;
     uint64_t request;
 
-    struct MPIDI_CH4U_rreq_t *prev, *next;
-} MPIDI_CH4U_rreq_t;
+    struct MPIDIG_rreq_t *prev, *next;
+} MPIDIG_rreq_t;
 
-typedef struct MPIDI_CH4U_put_req_t {
+typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
     uint64_t preq_ptr;
     void *dt_iov;
@@ -92,9 +92,9 @@ typedef struct MPIDI_CH4U_put_req_t {
     int origin_count;
     MPI_Datatype origin_datatype;
     int n_iov;
-} MPIDI_CH4U_put_req_t;
+} MPIDIG_put_req_t;
 
-typedef struct MPIDI_CH4U_get_req_t {
+typedef struct MPIDIG_get_req_t {
     MPIR_Win *win_ptr;
     uint64_t greq_ptr;
     uint64_t addr;
@@ -102,18 +102,18 @@ typedef struct MPIDI_CH4U_get_req_t {
     int count;
     int n_iov;
     void *dt_iov;
-} MPIDI_CH4U_get_req_t;
+} MPIDIG_get_req_t;
 
-typedef struct MPIDI_CH4U_cswap_req_t {
+typedef struct MPIDIG_cswap_req_t {
     MPIR_Win *win_ptr;
     uint64_t creq_ptr;
     uint64_t addr;
     MPI_Datatype datatype;
     void *data;
     void *result_addr;
-} MPIDI_CH4U_cswap_req_t;
+} MPIDIG_cswap_req_t;
 
-typedef struct MPIDI_CH4U_acc_req_t {
+typedef struct MPIDIG_acc_req_t {
     MPIR_Win *win_ptr;
     uint64_t req_ptr;
     MPI_Datatype origin_datatype;
@@ -130,17 +130,17 @@ typedef struct MPIDI_CH4U_acc_req_t {
     int result_count;
     void *origin_addr;
     MPI_Datatype result_datatype;
-} MPIDI_CH4U_acc_req_t;
+} MPIDIG_acc_req_t;
 
-typedef struct MPIDI_CH4U_req_ext_t {
+typedef struct MPIDIG_req_ext_t {
     union {
-        MPIDI_CH4U_sreq_t sreq;
-        MPIDI_CH4U_lreq_t lreq;
-        MPIDI_CH4U_rreq_t rreq;
-        MPIDI_CH4U_put_req_t preq;
-        MPIDI_CH4U_get_req_t greq;
-        MPIDI_CH4U_cswap_req_t creq;
-        MPIDI_CH4U_acc_req_t areq;
+        MPIDIG_sreq_t sreq;
+        MPIDIG_lreq_t lreq;
+        MPIDIG_rreq_t rreq;
+        MPIDIG_put_req_t preq;
+        MPIDIG_get_req_t greq;
+        MPIDIG_cswap_req_t creq;
+        MPIDIG_acc_req_t areq;
     };
 
     struct iovec *iov;
@@ -148,14 +148,14 @@ typedef struct MPIDI_CH4U_req_ext_t {
     uint64_t seq_no;
     uint64_t request;
     uint64_t status;
-    struct MPIDI_CH4U_req_ext_t *next, *prev;
+    struct MPIDIG_req_ext_t *next, *prev;
 
-} MPIDI_CH4U_req_ext_t;
+} MPIDIG_req_ext_t;
 
-typedef struct MPIDI_CH4U_req_t {
+typedef struct MPIDIG_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
-    MPIDI_CH4U_req_ext_t *req;
+    MPIDIG_req_ext_t *req;
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
     uint64_t count;
@@ -163,7 +163,7 @@ typedef struct MPIDI_CH4U_req_t {
     int tag;
     MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
-} MPIDI_CH4U_req_t;
+} MPIDIG_req_t;
 
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -178,7 +178,7 @@ typedef struct {
 
     union {
         /* The first fields are used by the CH4U apis */
-        MPIDI_CH4U_req_t am;
+        MPIDIG_req_t am;
 
         /* Used by the netmod direct apis */
         union {
@@ -194,7 +194,7 @@ typedef struct {
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
-#define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
+#define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
@@ -345,11 +345,11 @@ typedef struct {
 
 typedef unsigned MPIDI_locality_t;
 
-typedef struct MPIDI_CH4U_comm_t {
-    MPIDI_CH4U_rreq_t *posted_list;
-    MPIDI_CH4U_rreq_t *unexp_list;
+typedef struct MPIDIG_comm_t {
+    MPIDIG_rreq_t *posted_list;
+    MPIDIG_rreq_t *unexp_list;
     uint32_t window_instance;
-} MPIDI_CH4U_comm_t;
+} MPIDIG_comm_t;
 
 #define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
     ((rank) / (blocksize) * ((stride) - (blocksize)) + (rank) + (offset))
@@ -417,7 +417,7 @@ typedef struct {
 typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the CH4U apis */
-        MPIDI_CH4U_comm_t ch4u;
+        MPIDIG_comm_t ch4u;
 
         /* Used by the netmod direct apis */
         union {
@@ -430,7 +430,7 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t local_map;
     } ch4;
 } MPIDI_Devcomm_t;
-#define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
+#define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
 
 typedef struct {

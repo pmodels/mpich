@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_isend(const void *buf,
     MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
                     (MPL_DBG_FDEST,
                      "Enqueued to grank %d from %d (comm_kind %d) in recv %d,%d,%d\n",
-                     MPIDI_CH4U_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
+                     MPIDIG_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
                      (int) comm->comm_kind, comm->rank, tag, comm->context_id + context_offset));
 
   fn_exit:
@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_send(const void *buf, MPI_Aint coun
     /* try to send immediately, contig, short message */
     if (dt_contig && data_sz <= MPIDI_POSIX_EAGER_THRESHOLD) {
         /* eager message */
-        int grank = MPIDI_CH4U_rank_to_lpid(rank, comm);
+        int grank = MPIDIG_rank_to_lpid(rank, comm);
 
         /* Try freeQ */
         if (!MPIDI_POSIX_queue_empty(MPIDI_POSIX_mem_region.my_freeQ)) {

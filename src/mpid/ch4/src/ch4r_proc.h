@@ -212,11 +212,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
     return *index;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_RANK_IS_LOCAL);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
@@ -224,15 +224,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_RANK_IS_LOCAL);
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_av_is_local(MPIDI_av_entry_t * av)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AV_IS_LOCAL);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = av->is_local;
@@ -240,15 +240,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_av_is_local(MPIDI_av_entry_t * av)
                     (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void *) av));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AV_IS_LOCAL);
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_RANK_TO_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_RANK_TO_LPID);
 
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
@@ -258,53 +258,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
         ret = -1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_RANK_TO_LPID);
     return ret;
 }
 
-static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
+static inline int MPIDIG_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_NODE_ID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_NODE_ID);
 
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
     *id_p = MPIDI_CH4_Global.node_map[avtid][lpid];
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_NODE_ID);
     return mpi_errno;
 }
 
-static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
+static inline int MPIDIG_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_MAX_NODE_ID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_MAX_NODE_ID);
 
     *max_id_p = MPIDI_CH4_Global.max_node_id;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_MAX_NODE_ID);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_build_nodemap
+#define FUNCNAME MPIDIG_build_nodemap
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_build_nodemap(int myrank,
-                                           MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
+static inline int MPIDIG_build_nodemap(int myrank,
+                                       MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_BUILD_NODEMAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_BUILD_NODEMAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_BUILD_NODEMAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_BUILD_NODEMAP);
 
     ret = MPIR_NODEMAP_build_nodemap(sz, myrank, out_nodemap, sz_out);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_BUILD_NODEMAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_BUILD_NODEMAP);
     return ret;
 }
 
@@ -567,8 +567,8 @@ static inline int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int s
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
-    ret = MPIDI_CH4U_build_nodemap(myrank, comm, sz,
-                                   MPIDI_CH4_Global.node_map[avtid], &MPIDI_CH4_Global.max_node_id);
+    ret = MPIDIG_build_nodemap(myrank, comm, sz,
+                               MPIDI_CH4_Global.node_map[avtid], &MPIDI_CH4_Global.max_node_id);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
     return ret;

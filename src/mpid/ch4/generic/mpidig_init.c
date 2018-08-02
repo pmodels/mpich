@@ -43,10 +43,10 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
 
     MPIDI_CH4_Global.is_ch4u_initialized = 0;
 
-    MPIDI_CH4_Global.comm_req_lists = (MPIDI_CH4U_comm_req_list_t *)
+    MPIDI_CH4_Global.comm_req_lists = (MPIDIG_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
-                   sizeof(MPIDI_CH4U_comm_req_list_t), MPL_MEM_OTHER);
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
+                   sizeof(MPIDIG_comm_req_list_t), MPL_MEM_OTHER);
+#ifndef MPIDIG_USE_PER_COMM_QUEUE
     MPIDI_CH4_Global.posted_list = NULL;
     MPIDI_CH4_Global.unexp_list = NULL;
 #endif
@@ -55,84 +55,80 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     OPA_store_int(&MPIDI_CH4_Global.exp_seq_no, 0);
     OPA_store_int(&MPIDI_CH4_Global.nxt_seq_no, 0);
 
-    MPIDI_CH4_Global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM,
-                                                       MPIDIU_BUF_POOL_SZ);
+    MPIDI_CH4_Global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM, MPIDIU_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_CH4_Global.buf_pool);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SEND, &MPIDI_send_origin_cb, &MPIDI_send_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDI_send_origin_cb, &MPIDI_send_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SEND_LONG_REQ, NULL /* Injection only */ ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_REQ, NULL /* Injection only */ ,
                                  &MPIDI_send_long_req_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SEND_LONG_ACK, NULL /* Injection only */ ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_ACK, NULL /* Injection only */ ,
                                  &MPIDI_send_long_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SEND_LONG_LMT,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_LMT,
                                  &MPIDI_send_long_lmt_origin_cb,
                                  &MPIDI_send_long_lmt_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SSEND_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ,
                                  &MPIDI_send_origin_cb, &MPIDI_ssend_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SSEND_ACK,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK,
                                  &MPIDI_ssend_ack_origin_cb, &MPIDI_ssend_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno =
-        MPIDIG_am_reg_cb(MPIDI_CH4U_PUT_REQ, &MPIDI_put_origin_cb, &MPIDI_put_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDI_put_origin_cb, &MPIDI_put_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_PUT_ACK, NULL, &MPIDI_put_ack_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_ACK, NULL, &MPIDI_put_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno =
-        MPIDIG_am_reg_cb(MPIDI_CH4U_GET_REQ, &MPIDI_get_origin_cb, &MPIDI_get_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_REQ, &MPIDI_get_origin_cb, &MPIDI_get_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACK,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACK,
                                  &MPIDI_get_ack_origin_cb, &MPIDI_get_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_CSWAP_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_CSWAP_REQ,
                                  &MPIDI_cswap_origin_cb, &MPIDI_cswap_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_CSWAP_ACK,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_CSWAP_ACK,
                                  &MPIDI_cswap_ack_origin_cb, &MPIDI_cswap_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno =
-        MPIDIG_am_reg_cb(MPIDI_CH4U_ACC_REQ, &MPIDI_acc_origin_cb, &MPIDI_acc_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_ACC_REQ, &MPIDI_acc_origin_cb, &MPIDI_acc_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACC_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACC_REQ,
                                  &MPIDI_get_acc_origin_cb, &MPIDI_get_acc_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_ACC_ACK, NULL, &MPIDI_acc_ack_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_ACC_ACK, NULL, &MPIDI_acc_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACC_ACK,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACC_ACK,
                                  &MPIDI_get_acc_ack_origin_cb, &MPIDI_get_acc_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -177,60 +173,60 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_PUT_IOV_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_REQ,
                                  &MPIDI_put_iov_origin_cb, &MPIDI_put_iov_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_PUT_IOV_ACK, NULL, &MPIDI_put_iov_ack_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_ACK, NULL, &MPIDI_put_iov_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_PUT_DAT_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
                                  &MPIDI_put_data_origin_cb, &MPIDI_put_data_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_ACC_IOV_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_REQ,
                                  &MPIDI_acc_iov_origin_cb, &MPIDI_acc_iov_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACC_IOV_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_REQ,
                                  &MPIDI_get_acc_iov_origin_cb, &MPIDI_get_acc_iov_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_ACC_IOV_ACK, NULL, &MPIDI_acc_iov_ack_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_ACK, NULL, &MPIDI_acc_iov_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACC_IOV_ACK,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_ACK,
                                  NULL, &MPIDI_get_acc_iov_ack_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_ACC_DAT_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_ACC_DAT_REQ,
                                  &MPIDI_acc_data_origin_cb, &MPIDI_acc_data_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_GET_ACC_DAT_REQ,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                                  &MPIDI_get_acc_data_origin_cb, &MPIDI_get_acc_data_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_COMM_ABORT,
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_COMM_ABORT,
                                  &MPIDI_comm_abort_origin_cb, &MPIDI_comm_abort_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
 
-    mpi_errno = MPIDI_CH4U_init_comm(comm_world);
+    mpi_errno = MPIDIG_init_comm(comm_world);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_CH4U_init_comm(comm_self);
+    mpi_errno = MPIDIG_init_comm(comm_self);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

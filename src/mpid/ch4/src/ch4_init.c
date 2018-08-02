@@ -260,7 +260,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     MPIR_Group_init();
 
     /* setup receive queue statistics */
-    mpi_errno = MPIDI_CH4U_Recvq_init();
+    mpi_errno = MPIDIG_Recvq_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -270,11 +270,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
-    mpi_errno = MPIDI_CH4U_build_nodemap(MPIR_Process.comm_world->rank,
-                                         MPIR_Process.comm_world,
-                                         MPIR_Process.comm_world->local_size,
-                                         MPIDI_CH4_Global.node_map[0],
-                                         &MPIDI_CH4_Global.max_node_id);
+    mpi_errno = MPIDIG_build_nodemap(MPIR_Process.comm_world->rank,
+                                     MPIR_Process.comm_world,
+                                     MPIR_Process.comm_world->local_size,
+                                     MPIDI_CH4_Global.node_map[0], &MPIDI_CH4_Global.max_node_id);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -631,7 +630,7 @@ int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_NODE_ID);
 
-    MPIDI_CH4U_get_node_id(comm, rank, id_p);
+    MPIDIG_get_node_id(comm, rank, id_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_NODE_ID);
     return mpi_errno;
@@ -647,7 +646,7 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_MAX_NODE_ID);
 
-    MPIDI_CH4U_get_max_node_id(comm, max_id_p);
+    MPIDIG_get_max_node_id(comm, max_id_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_MAX_NODE_ID);
     return mpi_errno;

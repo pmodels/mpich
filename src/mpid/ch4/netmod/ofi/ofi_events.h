@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
             MPIR_ERR_POP(mpi_errno);
     }
 
-    MPIDI_CH4U_request_complete(rreq);
+    MPIDIG_request_complete(rreq);
 
     /* Polling loop will check for truncation */
   fn_exit:

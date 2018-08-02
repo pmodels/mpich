@@ -51,39 +51,39 @@ typedef struct progress_hook_slot {
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
 enum {
-    MPIDI_CH4U_SEND = 0,        /* Eager send */
+    MPIDIG_SEND = 0,            /* Eager send */
 
-    MPIDI_CH4U_SEND_LONG_REQ,   /* Rendezvous send RTS (request to send) */
-    MPIDI_CH4U_SEND_LONG_ACK,   /* Rendezvous send CTS (clear to send) */
-    MPIDI_CH4U_SEND_LONG_LMT,   /* Rendezvous send LMT */
+    MPIDIG_SEND_LONG_REQ,       /* Rendezvous send RTS (request to send) */
+    MPIDIG_SEND_LONG_ACK,       /* Rendezvous send CTS (clear to send) */
+    MPIDIG_SEND_LONG_LMT,       /* Rendezvous send LMT */
 
-    MPIDI_CH4U_SSEND_REQ,
-    MPIDI_CH4U_SSEND_ACK,
+    MPIDIG_SSEND_REQ,
+    MPIDIG_SSEND_ACK,
 
-    MPIDI_CH4U_PUT_REQ,
-    MPIDI_CH4U_PUT_ACK,
-    MPIDI_CH4U_PUT_IOV_REQ,
-    MPIDI_CH4U_PUT_DAT_REQ,
-    MPIDI_CH4U_PUT_IOV_ACK,
+    MPIDIG_PUT_REQ,
+    MPIDIG_PUT_ACK,
+    MPIDIG_PUT_IOV_REQ,
+    MPIDIG_PUT_DAT_REQ,
+    MPIDIG_PUT_IOV_ACK,
 
-    MPIDI_CH4U_GET_REQ,
-    MPIDI_CH4U_GET_ACK,
+    MPIDIG_GET_REQ,
+    MPIDIG_GET_ACK,
 
-    MPIDI_CH4U_ACC_REQ,
-    MPIDI_CH4U_ACC_ACK,
-    MPIDI_CH4U_ACC_IOV_REQ,
-    MPIDI_CH4U_ACC_DAT_REQ,
-    MPIDI_CH4U_ACC_IOV_ACK,
+    MPIDIG_ACC_REQ,
+    MPIDIG_ACC_ACK,
+    MPIDIG_ACC_IOV_REQ,
+    MPIDIG_ACC_DAT_REQ,
+    MPIDIG_ACC_IOV_ACK,
 
-    MPIDI_CH4U_GET_ACC_REQ,
-    MPIDI_CH4U_GET_ACC_ACK,
-    MPIDI_CH4U_GET_ACC_IOV_REQ,
-    MPIDI_CH4U_GET_ACC_DAT_REQ,
-    MPIDI_CH4U_GET_ACC_IOV_ACK,
+    MPIDIG_GET_ACC_REQ,
+    MPIDIG_GET_ACC_ACK,
+    MPIDIG_GET_ACC_IOV_REQ,
+    MPIDIG_GET_ACC_DAT_REQ,
+    MPIDIG_GET_ACC_IOV_ACK,
 
-    MPIDI_CH4U_CSWAP_REQ,
-    MPIDI_CH4U_CSWAP_ACK,
-    MPIDI_CH4U_FETCH_OP,
+    MPIDIG_CSWAP_REQ,
+    MPIDIG_CSWAP_ACK,
+    MPIDIG_FETCH_OP,
 
     MPIDIG_WIN_COMPLETE,
     MPIDIG_WIN_POST,
@@ -96,17 +96,17 @@ enum {
     MPIDIG_WIN_UNLOCKALL,
     MPIDIG_WIN_UNLOCKALL_ACK,
 
-    MPIDI_CH4U_COMM_ABORT
+    MPIDIG_COMM_ABORT
 };
 
 enum {
-    MPIDI_CH4U_EPOTYPE_NONE = 0,          /**< No epoch in affect */
-    MPIDI_CH4U_EPOTYPE_LOCK = 1,          /**< MPI_Win_lock access epoch */
-    MPIDI_CH4U_EPOTYPE_START = 2,         /**< MPI_Win_start access epoch */
-    MPIDI_CH4U_EPOTYPE_POST = 3,          /**< MPI_Win_post exposure epoch */
-    MPIDI_CH4U_EPOTYPE_FENCE = 4,         /**< MPI_Win_fence access/exposure epoch */
-    MPIDI_CH4U_EPOTYPE_REFENCE = 5,       /**< MPI_Win_fence possible access/exposure epoch */
-    MPIDI_CH4U_EPOTYPE_LOCK_ALL = 6       /**< MPI_Win_lock_all access epoch */
+    MPIDIG_EPOTYPE_NONE = 0,          /**< No epoch in affect */
+    MPIDIG_EPOTYPE_LOCK = 1,          /**< MPI_Win_lock access epoch */
+    MPIDIG_EPOTYPE_START = 2,         /**< MPI_Win_start access epoch */
+    MPIDIG_EPOTYPE_POST = 3,          /**< MPI_Win_post exposure epoch */
+    MPIDIG_EPOTYPE_FENCE = 4,         /**< MPI_Win_fence access/exposure epoch */
+    MPIDIG_EPOTYPE_REFENCE = 5,       /**< MPI_Win_fence possible access/exposure epoch */
+    MPIDIG_EPOTYPE_LOCK_ALL = 6       /**< MPI_Win_lock_all access epoch */
 };
 
 /* Enum for calling types between netmod and shm */
@@ -115,35 +115,35 @@ enum {
     MPIDI_CH4R_SHM = 1
 };
 
-typedef struct MPIDI_CH4U_hdr_t {
+typedef struct MPIDIG_hdr_t {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
-} MPIDI_CH4U_hdr_t;
+} MPIDIG_hdr_t;
 
-typedef struct MPIDI_CH4U_send_long_req_msg_t {
-    MPIDI_CH4U_hdr_t hdr;
+typedef struct MPIDIG_send_long_req_msg_t {
+    MPIDIG_hdr_t hdr;
     size_t data_sz;             /* Message size in bytes */
     uint64_t sreq_ptr;          /* Pointer value of the request object at the sender side */
-} MPIDI_CH4U_send_long_req_msg_t;
+} MPIDIG_send_long_req_msg_t;
 
-typedef struct MPIDI_CH4U_send_long_ack_msg_t {
+typedef struct MPIDIG_send_long_ack_msg_t {
     uint64_t sreq_ptr;
     uint64_t rreq_ptr;
-} MPIDI_CH4U_send_long_ack_msg_t;
+} MPIDIG_send_long_ack_msg_t;
 
-typedef struct MPIDI_CH4U_send_long_lmt_msg_t {
+typedef struct MPIDIG_send_long_lmt_msg_t {
     uint64_t rreq_ptr;
-} MPIDI_CH4U_send_long_lmt_msg_t;
+} MPIDIG_send_long_lmt_msg_t;
 
-typedef struct MPIDI_CH4U_ssend_req_msg_t {
-    MPIDI_CH4U_hdr_t hdr;
+typedef struct MPIDIG_ssend_req_msg_t {
+    MPIDIG_hdr_t hdr;
     uint64_t sreq_ptr;
-} MPIDI_CH4U_ssend_req_msg_t;
+} MPIDIG_ssend_req_msg_t;
 
-typedef struct MPIDI_CH4U_ssend_ack_msg_t {
+typedef struct MPIDIG_ssend_ack_msg_t {
     uint64_t sreq_ptr;
-} MPIDI_CH4U_ssend_ack_msg_t;
+} MPIDIG_ssend_ack_msg_t;
 
 typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
@@ -151,7 +151,7 @@ typedef struct MPIDIG_win_cntrl_msg_t {
     int16_t lock_type;
 } MPIDIG_win_cntrl_msg_t;
 
-typedef struct MPIDI_CH4U_put_msg_t {
+typedef struct MPIDIG_put_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t preq_ptr;
@@ -159,27 +159,27 @@ typedef struct MPIDI_CH4U_put_msg_t {
     uint64_t count;
     MPI_Datatype datatype;
     int n_iov;
-} MPIDI_CH4U_put_msg_t;
+} MPIDIG_put_msg_t;
 
-typedef struct MPIDI_CH4U_put_iov_ack_msg_t {
+typedef struct MPIDIG_put_iov_ack_msg_t {
     int src_rank;
     uint64_t target_preq_ptr;
     uint64_t origin_preq_ptr;
-} MPIDI_CH4U_put_iov_ack_msg_t;
-typedef MPIDI_CH4U_put_iov_ack_msg_t MPIDI_CH4U_acc_iov_ack_msg_t;
-typedef MPIDI_CH4U_put_iov_ack_msg_t MPIDI_CH4U_get_acc_iov_ack_msg_t;
+} MPIDIG_put_iov_ack_msg_t;
+typedef MPIDIG_put_iov_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
+typedef MPIDIG_put_iov_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
 
-typedef struct MPIDI_CH4U_put_dat_msg_t {
+typedef struct MPIDIG_put_dat_msg_t {
     uint64_t preq_ptr;
-} MPIDI_CH4U_put_dat_msg_t;
-typedef MPIDI_CH4U_put_dat_msg_t MPIDI_CH4U_acc_dat_msg_t;
-typedef MPIDI_CH4U_put_dat_msg_t MPIDI_CH4U_get_acc_dat_msg_t;
+} MPIDIG_put_dat_msg_t;
+typedef MPIDIG_put_dat_msg_t MPIDIG_acc_dat_msg_t;
+typedef MPIDIG_put_dat_msg_t MPIDIG_get_acc_dat_msg_t;
 
-typedef struct MPIDI_CH4U_put_ack_msg_t {
+typedef struct MPIDIG_put_ack_msg_t {
     uint64_t preq_ptr;
-} MPIDI_CH4U_put_ack_msg_t;
+} MPIDIG_put_ack_msg_t;
 
-typedef struct MPIDI_CH4U_get_req_msg_t {
+typedef struct MPIDIG_get_req_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t greq_ptr;
@@ -187,25 +187,25 @@ typedef struct MPIDI_CH4U_get_req_msg_t {
     uint64_t count;
     MPI_Datatype datatype;
     int n_iov;
-} MPIDI_CH4U_get_req_msg_t;
+} MPIDIG_get_req_msg_t;
 
-typedef struct MPIDI_CH4U_get_ack_msg_t {
+typedef struct MPIDIG_get_ack_msg_t {
     uint64_t greq_ptr;
-} MPIDI_CH4U_get_ack_msg_t;
+} MPIDIG_get_ack_msg_t;
 
-typedef struct MPIDI_CH4U_cswap_req_msg_t {
+typedef struct MPIDIG_cswap_req_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t req_ptr;
     MPI_Aint target_disp;
     MPI_Datatype datatype;
-} MPIDI_CH4U_cswap_req_msg_t;
+} MPIDIG_cswap_req_msg_t;
 
-typedef struct MPIDI_CH4U_cswap_ack_msg_t {
+typedef struct MPIDIG_cswap_ack_msg_t {
     uint64_t req_ptr;
-} MPIDI_CH4U_cswap_ack_msg_t;
+} MPIDIG_cswap_ack_msg_t;
 
-typedef struct MPIDI_CH4U_acc_req_msg_t {
+typedef struct MPIDIG_acc_req_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t req_ptr;
@@ -217,20 +217,20 @@ typedef struct MPIDI_CH4U_acc_req_msg_t {
     MPI_Aint target_disp;
     uint64_t result_data_sz;
     int n_iov;
-} MPIDI_CH4U_acc_req_msg_t;
+} MPIDIG_acc_req_msg_t;
 
-typedef struct MPIDI_CH4U_acc_req_msg_t MPIDI_CH4U_get_acc_req_msg_t;
+typedef struct MPIDIG_acc_req_msg_t MPIDIG_get_acc_req_msg_t;
 
-typedef struct MPIDI_CH4U_acc_ack_msg_t {
+typedef struct MPIDIG_acc_ack_msg_t {
     uint64_t req_ptr;
-} MPIDI_CH4U_acc_ack_msg_t;
+} MPIDIG_acc_ack_msg_t;
 
-typedef MPIDI_CH4U_acc_ack_msg_t MPIDI_CH4U_get_acc_ack_msg_t;
+typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
-typedef struct MPIDI_CH4U_comm_req_list_t {
+typedef struct MPIDIG_comm_req_list_t {
     MPIR_Comm *comm[2][4];
-    MPIDI_CH4U_rreq_t *uelist[2][4];
-} MPIDI_CH4U_comm_req_list_t;
+    MPIDIG_rreq_t *uelist[2][4];
+} MPIDIG_comm_req_list_t;
 
 typedef struct MPIU_buf_pool_t {
     int size;
@@ -275,18 +275,18 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_CH4_avt_manager avt_mgr;
     int is_ch4u_initialized;
     int **node_map, max_node_id;
-    MPIDI_CH4U_comm_req_list_t *comm_req_lists;
+    MPIDIG_comm_req_list_t *comm_req_lists;
     OPA_int_t active_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[3];
     MPIDIU_map_t *win_map;
     char *jobid;
-#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
-    MPIDI_CH4U_rreq_t *posted_list;
-    MPIDI_CH4U_rreq_t *unexp_list;
+#ifndef MPIDIG_USE_PER_COMM_QUEUE
+    MPIDIG_rreq_t *posted_list;
+    MPIDIG_rreq_t *unexp_list;
 #endif
-    MPIDI_CH4U_req_ext_t *cmpl_list;
+    MPIDIG_req_ext_t *cmpl_list;
     OPA_int_t exp_seq_no;
     OPA_int_t nxt_seq_no;
     MPIU_buf_pool_t *buf_pool;

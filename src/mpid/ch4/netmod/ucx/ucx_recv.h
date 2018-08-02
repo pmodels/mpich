@@ -26,7 +26,7 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
 
     if (ucp_request->req) {
         rreq = ucp_request->req;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
@@ -66,7 +66,7 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
 
     if (ucp_request->req) {
         MPIR_Request *rreq = ucp_request->req;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
 
@@ -202,7 +202,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
             MPIR_STATUS_SET_COUNT(message->status, info->length);
             MPL_free(ucp_request->req);
         }
-        MPIDI_CH4U_request_complete(message);
+        MPIDIG_request_complete(message);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {

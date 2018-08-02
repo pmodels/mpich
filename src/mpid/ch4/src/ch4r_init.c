@@ -12,21 +12,21 @@
 #include "mpidimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_init_comm
+#define FUNCNAME MPIDIG_init_comm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
+int MPIDIG_init_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
-    MPIDI_CH4U_rreq_t **uelist;
+    MPIDIG_rreq_t **uelist;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_INIT_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_INIT_COMM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT_COMM);
 
     /*
      * Prevents double initialization of some special communicators.
      *
-     * comm_world and comm_self may exhibit this function twice, first during MPIDI_CH4U_mpi_init
+     * comm_world and comm_self may exhibit this function twice, first during MPIDIG_mpi_init
      * and the second during MPIR_Comm_commit in MPID_Init.
      * If there is an early arrival of an unexpected message before the second visit,
      * the following code will wipe out the unexpected queue andthe message is lost forever.
@@ -37,46 +37,46 @@ int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
-    comm_idx = MPIDI_CH4U_get_context_index(comm->recvcontext_id);
+    comm_idx = MPIDIG_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
     MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = comm;
-    MPIDI_CH4U_COMM(comm, posted_list) = NULL;
-    MPIDI_CH4U_COMM(comm, unexp_list) = NULL;
+    MPIDIG_COMM(comm, posted_list) = NULL;
+    MPIDIG_COMM(comm, unexp_list) = NULL;
 
-    uelist = MPIDI_CH4U_context_id_to_uelist(comm->context_id);
+    uelist = MPIDIG_context_id_to_uelist(comm->context_id);
     if (*uelist) {
-        MPIDI_CH4U_rreq_t *curr, *tmp;
+        MPIDIG_rreq_t *curr, *tmp;
         DL_FOREACH_SAFE(*uelist, curr, tmp) {
             DL_DELETE(*uelist, curr);
             MPIR_Comm_add_ref(comm);    /* +1 for each entry in unexp_list */
-            DL_APPEND(MPIDI_CH4U_COMM(comm, unexp_list), curr);
+            DL_APPEND(MPIDIG_COMM(comm, unexp_list), curr);
         }
         *uelist = NULL;
     }
 
-    MPIDI_CH4U_COMM(comm, window_instance) = 0;
+    MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_COMM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT_COMM);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_destroy_comm
+#define FUNCNAME MPIDIG_destroy_comm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
+int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DESTROY_COMM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DESTROY_COMM);
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
-    comm_idx = MPIDI_CH4U_get_context_index(comm->recvcontext_id);
+    comm_idx = MPIDIG_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
 
@@ -93,34 +93,34 @@ int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
     MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_mpi_alloc_mem
+#define FUNCNAME MPIDIG_mpi_alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_ALLOC_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
     void *p;
     p = MPL_malloc(size, MPL_MEM_USER);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
     return p;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_mpi_free_mem
+#define FUNCNAME MPIDIG_mpi_free_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4U_mpi_free_mem(void *ptr)
+int MPIDIG_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_FREE_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_FREE_MEM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_FREE_MEM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_FREE_MEM);
     MPL_free(ptr);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_FREE_MEM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_FREE_MEM);
     return mpi_errno;
 }

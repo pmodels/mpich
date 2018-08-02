@@ -432,7 +432,7 @@ AC_ARG_ENABLE(ch4r-per-comm-msg-queue,
     ],,enable_ch4r_per_comm_msg_queue=yes)
 
 if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
-    AC_DEFINE([MPIDI_CH4U_USE_PER_COMM_QUEUE], [1],
+    AC_DEFINE([MPIDIG_USE_PER_COMM_QUEUE], [1],
         [Define if CH4U will use per-communicator message queues])
 fi
 

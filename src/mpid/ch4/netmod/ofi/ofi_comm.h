@@ -30,7 +30,7 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_index_allocator_create(&MPIDI_OFI_COMM(comm).win_id_allocator, 0, MPL_MEM_RMA);
     MPIDI_OFI_index_allocator_create(&MPIDI_OFI_COMM(comm).rma_id_allocator, 1, MPL_MEM_RMA);
 
-    mpi_errno = MPIDI_CH4U_init_comm(comm);
+    mpi_errno = MPIDIG_init_comm(comm);
 
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
@@ -90,7 +90,7 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
 
-    mpi_errno = MPIDI_CH4U_destroy_comm(comm);
+    mpi_errno = MPIDIG_destroy_comm(comm);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
     MPIDI_OFI_index_allocator_destroy(MPIDI_OFI_COMM(comm).win_id_allocator);

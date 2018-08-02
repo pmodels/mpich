@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = tag;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -293,7 +293,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = tag;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }

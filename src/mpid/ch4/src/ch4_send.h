@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -193,7 +193,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
@@ -297,7 +297,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(rreq);
         *request = rreq;
-        MPIDI_CH4U_request_complete(rreq);
+        MPIDIG_request_complete(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }

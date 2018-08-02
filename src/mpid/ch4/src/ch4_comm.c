@@ -429,7 +429,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader,
             MPIR_CHKLMEM_MALLOC(remote_node_ids, int *, (*remote_size) * sizeof(int), mpi_errno,
                                 "remote_node_ids", MPL_MEM_ADDRESS);
             for (i = 0; i < local_size; i++) {
-                MPIDI_CH4U_get_node_id(local_comm, i, &local_node_ids[i]);
+                MPIDIG_get_node_id(local_comm, i, &local_node_ids[i]);
             }
             mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(int), MPI_BYTE,
                                       remote_leader, cts_tag,

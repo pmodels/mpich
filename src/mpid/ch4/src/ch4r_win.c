@@ -234,8 +234,8 @@ int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FREE);
 
-    MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
-    MPIDI_CH4U_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+    MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+    MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
 
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
@@ -365,9 +365,9 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     mapsize = MPIDIU_get_mapsize(total_size, &page_sz);
     MPIDIG_WIN(win, mmap_sz) = mapsize;
 
-    mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
-                                                &MPIDIG_WIN(win, shm_segment_handle),
-                                                &MPIDIG_WIN(win, mmap_addr));
+    mpi_errno = MPIDIU_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
+                                            &MPIDIG_WIN(win, shm_segment_handle),
+                                            &MPIDIG_WIN(win, mmap_addr));
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
