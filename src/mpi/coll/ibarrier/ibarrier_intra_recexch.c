@@ -27,7 +27,7 @@ int MPIR_Ibarrier_intra_recexch(MPIR_Comm * comm, MPIR_Request ** req)
 
     mpi_errno =
         MPII_Gentran_Iallreduce_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE, MPI_SUM, comm,
-                                              req, IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
+                                              req, MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                               MPIR_CVAR_IBARRIER_RECEXCH_KVAL);
 
     return mpi_errno;

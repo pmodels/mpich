@@ -80,8 +80,8 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
     if (!is_commutative) {
         if (k > 1)
-            tree_type = TREE_TYPE_KNOMIAL_1;    /* Force tree_type to be knomial_1 because kary trees cannot
-                                                 * handle non-commutative operations correctly */
+            tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* Force tree_type to be knomial_1 because kary trees cannot
+                                                         * handle non-commutative operations correctly */
         tree_root = 0;  /* Force the tree root to be rank 0 */
     } else {
         tree_root = root;
