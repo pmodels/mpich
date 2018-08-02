@@ -29,8 +29,8 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     in_data_sz = data_sz = msg_hdr->data_sz;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                       &p_data, &data_sz, &is_contig,
-                                                       &target_cmpl_cb, &rreq);
+                                                       &p_data, &data_sz, 0 /* is_local */ ,
+                                                       &is_contig, &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
