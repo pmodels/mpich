@@ -85,16 +85,16 @@ enum {
     MPIDI_CH4U_CSWAP_ACK,
     MPIDI_CH4U_FETCH_OP,
 
-    MPIDI_CH4U_WIN_COMPLETE,
-    MPIDI_CH4U_WIN_POST,
-    MPIDI_CH4U_WIN_LOCK,
-    MPIDI_CH4U_WIN_LOCK_ACK,
-    MPIDI_CH4U_WIN_UNLOCK,
-    MPIDI_CH4U_WIN_UNLOCK_ACK,
-    MPIDI_CH4U_WIN_LOCKALL,
-    MPIDI_CH4U_WIN_LOCKALL_ACK,
-    MPIDI_CH4U_WIN_UNLOCKALL,
-    MPIDI_CH4U_WIN_UNLOCKALL_ACK,
+    MPIDIG_WIN_COMPLETE,
+    MPIDIG_WIN_POST,
+    MPIDIG_WIN_LOCK,
+    MPIDIG_WIN_LOCK_ACK,
+    MPIDIG_WIN_UNLOCK,
+    MPIDIG_WIN_UNLOCK_ACK,
+    MPIDIG_WIN_LOCKALL,
+    MPIDIG_WIN_LOCKALL_ACK,
+    MPIDIG_WIN_UNLOCKALL,
+    MPIDIG_WIN_UNLOCKALL_ACK,
 
     MPIDI_CH4U_COMM_ABORT
 };
@@ -145,11 +145,11 @@ typedef struct MPIDI_CH4U_ssend_ack_msg_t {
     uint64_t sreq_ptr;
 } MPIDI_CH4U_ssend_ack_msg_t;
 
-typedef struct MPIDI_CH4U_win_cntrl_msg_t {
+typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;
     int16_t lock_type;
-} MPIDI_CH4U_win_cntrl_msg_t;
+} MPIDIG_win_cntrl_msg_t;
 
 typedef struct MPIDI_CH4U_put_msg_t {
     int src_rank;

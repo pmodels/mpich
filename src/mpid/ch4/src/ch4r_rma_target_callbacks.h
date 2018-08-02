@@ -21,14 +21,12 @@ int MPIDI_ack_cswap(MPIR_Request * rreq);
 int MPIDI_ack_acc(MPIR_Request * rreq);
 int MPIDI_ack_get_acc(MPIR_Request * rreq);
 int MPIDI_win_lock_advance(MPIR_Win * win);
-void MPIDI_win_lock_req_proc(int handler_id,
-                             const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
-void MPIDI_win_lock_ack_proc(int handler_id,
-                             const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
-void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
-void MPIDI_win_complete_proc(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
-void MPIDI_win_post_proc(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
-void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_lock_ack_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_complete_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_post_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+void MPIDI_win_unlock_done(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
 int MPIDI_handle_acc_cmpl(MPIR_Request * rreq);
 int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq);
 void MPIDI_handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq);

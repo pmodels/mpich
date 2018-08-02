@@ -137,43 +137,43 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_COMPLETE, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_COMPLETE, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_POST, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_POST, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_LOCK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_LOCK_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_LOCK_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_UNLOCK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_UNLOCK_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCK_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_LOCKALL, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_LOCKALL_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_UNLOCKALL, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_WIN_UNLOCKALL_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDI_win_ctrl_target_msg_cb);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

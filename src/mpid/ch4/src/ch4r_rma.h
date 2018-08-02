@@ -81,7 +81,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     am_hdr.count = target_count;
     am_hdr.datatype = target_datatype;
     am_hdr.preq_ptr = (uint64_t) sreq;
-    am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
@@ -254,7 +254,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     am_hdr.count = target_count;
     am_hdr.datatype = target_datatype;
     am_hdr.greq_ptr = (uint64_t) sreq;
-    am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
     /* Increase local and remote completion counters and set the local completion
@@ -399,7 +399,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_hdr.target_datatype = target_datatype;
     am_hdr.target_disp = target_disp;
     am_hdr.op = op;
-    am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
     /* Increase local and remote completion counters and set the local completion
@@ -596,7 +596,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     am_hdr.target_datatype = target_datatype;
     am_hdr.target_disp = target_disp;
     am_hdr.op = op;
-    am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
     am_hdr.result_data_sz = result_data_sz;
@@ -1074,7 +1074,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     am_hdr.target_disp = target_disp;
     am_hdr.datatype = datatype;
     am_hdr.req_ptr = (uint64_t) sreq;
-    am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 

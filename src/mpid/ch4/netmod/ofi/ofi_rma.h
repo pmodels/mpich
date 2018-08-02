@@ -793,7 +793,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
         (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
         /* Wait for OFI cas to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
@@ -987,7 +987,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
         (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
         /* Wait for OFI acc to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
@@ -1172,13 +1172,13 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
             /* Wait for OFI acc to complete.
              * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
             MPIDI_OFI_win_progress_fence(win);
         }
     } else {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering &
             (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
             MPIDI_OFI_win_progress_fence(win);
         }

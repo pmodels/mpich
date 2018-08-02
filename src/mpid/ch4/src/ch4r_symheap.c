@@ -233,11 +233,11 @@ int MPIDIU_get_symmetric_heap(MPI_Aint size, MPIR_Comm * comm, void **base, MPIR
                     "WARNING: Win_allocate:  Unable to allocate symmetric heap\n");
         baseP = MPL_malloc(size, MPL_MEM_RMA);
         MPIR_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
-        MPIDI_CH4U_WIN(win, mmap_sz) = -1ULL;
-        MPIDI_CH4U_WIN(win, mmap_addr) = NULL;
+        MPIDIG_WIN(win, mmap_sz) = -1ULL;
+        MPIDIG_WIN(win, mmap_addr) = NULL;
     } else {
-        MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
-        MPIDI_CH4U_WIN(win, mmap_addr) = baseP;
+        MPIDIG_WIN(win, mmap_sz) = mapsize;
+        MPIDIG_WIN(win, mmap_addr) = baseP;
     }
 
     *base = baseP;
