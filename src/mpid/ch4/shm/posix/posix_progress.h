@@ -64,7 +64,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
                                                            am_hdr,
                                                            &p_data,
                                                            &p_data_sz,
-                                                           &is_contig, &target_cmpl_cb, &rreq);
+                                                           1 /* is_local */ , &is_contig,
+                                                           &target_cmpl_cb, &rreq);
         POSIX_TRACE("POSIX AM target callback: handler_id = %d, am_hdr = %p, p_data = %p "
                     "p_data_sz = %lu, is_contig = %d, target_cmpl_cb = %p rreq = %p\n",
                     msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, target_cmpl_cb,
