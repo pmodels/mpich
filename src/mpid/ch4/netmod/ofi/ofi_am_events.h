@@ -144,7 +144,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         curr_len = MPL_MIN(rem, MPIDI_Global.max_send);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_BUF_POOL_SIZE);
-        am_req = (MPIDI_OFI_am_request_t *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+        am_req = (MPIDI_OFI_am_request_t *) MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         MPIR_Assert(am_req);
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);

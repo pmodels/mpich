@@ -69,7 +69,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
         MPL_free(req_hdr->am_hdr);
     }
 
-    MPIDI_CH4R_release_buf(req_hdr);
+    MPIDIU_release_buf(req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
     return;
@@ -89,7 +89,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
-            MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+            MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         MPIR_Assert(req_hdr);
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 

@@ -26,8 +26,8 @@ enum {
     MPIDI_VNI_RX = 0x2, /* Can receive */
 };
 
-#define MPIDI_CH4I_BUF_POOL_NUM (1024)
-#define MPIDI_CH4I_BUF_POOL_SZ (256)
+#define MPIDIU_BUF_POOL_NUM (1024)
+#define MPIDIU_BUF_POOL_SZ (256)
 
 typedef int (*progress_func_ptr_t) (int *made_progress);
 typedef struct progress_hook_slot {

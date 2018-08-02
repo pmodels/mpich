@@ -670,7 +670,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
     MPID_Request_complete(rreq);        /* FIXME: Should not call MPIDI in NM ? */
     ofi_req->req_hdr->target_cmpl_cb(rreq);
   fn_exit:
-    MPIDI_CH4R_release_buf((void *) ofi_req);
+    MPIDIU_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_HANDLE_READ_COMPLETION);
     return mpi_errno;
   fn_fail:

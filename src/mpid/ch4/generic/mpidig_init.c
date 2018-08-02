@@ -55,8 +55,8 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     OPA_store_int(&MPIDI_CH4_Global.exp_seq_no, 0);
     OPA_store_int(&MPIDI_CH4_Global.nxt_seq_no, 0);
 
-    MPIDI_CH4_Global.buf_pool = MPIDI_CH4U_create_buf_pool(MPIDI_CH4I_BUF_POOL_NUM,
-                                                           MPIDI_CH4I_BUF_POOL_SZ);
+    MPIDI_CH4_Global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM,
+                                                       MPIDIU_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_CH4_Global.buf_pool);
 
     mpi_errno = MPIDIG_am_reg_cb(MPIDI_CH4U_SEND, &MPIDI_send_origin_cb, &MPIDI_send_target_msg_cb);
@@ -264,7 +264,7 @@ void MPIDIG_finalize(void)
 
     MPIDI_CH4_Global.is_ch4u_initialized = 0;
     MPIDI_CH4U_map_destroy(MPIDI_CH4_Global.win_map);
-    MPIDI_CH4R_destroy_buf_pool(MPIDI_CH4_Global.buf_pool);
+    MPIDIU_destroy_buf_pool(MPIDI_CH4_Global.buf_pool);
     MPL_free(MPIDI_CH4_Global.comm_req_lists);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_FINALIZE);

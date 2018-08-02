@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
         if (MPIDI_CH4U_REQUEST(req, req)) {
-            MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
+            MPIDIU_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
         }

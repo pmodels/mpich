@@ -79,7 +79,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
         am_hdr_buf = (char *) MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (char *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+        am_hdr_buf = (char *) MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         is_allocated = 0;
     }
 
@@ -97,7 +97,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDI_CH4R_release_buf(am_hdr_buf);
+        MPIDIU_release_buf(am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AMV);
     return mpi_errno;

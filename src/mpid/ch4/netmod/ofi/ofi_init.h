@@ -949,7 +949,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
-            MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
+            MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
 
         MPIDI_Global.cq_buffered_dynamic_head = MPIDI_Global.cq_buffered_dynamic_tail = NULL;
         MPIDI_Global.cq_buffered_static_head = MPIDI_Global.cq_buffered_static_tail = 0;
@@ -1111,7 +1111,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
             MPL_free(MPIDI_Global.am_bufs[i]);
 
-        MPIDI_CH4R_destroy_buf_pool(MPIDI_Global.am_buf_pool);
+        MPIDIU_destroy_buf_pool(MPIDI_Global.am_buf_pool);
 
         MPIR_Assert(MPIDI_Global.cq_buffered_static_head == MPIDI_Global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_Global.cq_buffered_dynamic_head);
