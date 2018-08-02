@@ -197,6 +197,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
                               size_t * data_sz,
+                              int is_local,
                               int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
