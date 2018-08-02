@@ -1633,6 +1633,9 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_put_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     offset = win->disp_unit * msg_hdr->target_disp;
     if (msg_hdr->n_iov) {
@@ -1726,6 +1729,9 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_put_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     /* Base adjustment for iov will be done after we get the entire iovs,
      * at MPIDI_CH4U_put_data_target_msg_cb */
@@ -2087,6 +2093,9 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_cswap_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     MPIDI_Datatype_check_contig_size(msg_hdr->datatype, 1, dt_contig, data_sz);
     *is_contig = dt_contig;
@@ -2158,6 +2167,9 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_acc_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     if (is_contig) {
         *is_contig = 1;
@@ -2296,6 +2308,9 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_acc_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_iov);
@@ -2364,6 +2379,9 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
     *target_cmpl_cb = MPIDI_get_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
@@ -2438,6 +2456,9 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_get_ack_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(greq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(greq, is_local) = is_local;
+#endif
 
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(rreq, req->greq.count),
                             MPIDI_CH4U_REQUEST(rreq, req->greq.datatype),
