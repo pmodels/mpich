@@ -27,7 +27,7 @@ int MPIR_Iallreduce_intra_tree_kary(const void *sendbuf, void *recvbuf, int coun
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                   comm_ptr, request, TREE_TYPE_KARY,
+                                                   comm_ptr, request, MPIR_TREE_TYPE_KARY,
                                                    MPIR_CVAR_IALLREDUCE_TREE_KVAL,
                                                    MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE);
     return mpi_errno;
