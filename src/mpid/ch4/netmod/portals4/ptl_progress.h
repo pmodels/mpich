@@ -30,8 +30,8 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     int handler_id = e->hdr_data >> 56;
 
     MPIDIG_global.target_msg_cbs[handler_id] (handler_id, e->start,
-                                              &p_data, &data_sz, &is_contig, &target_cmpl_cb,
-                                              &rreq);
+                                              &p_data, &data_sz, 0 /* is_local */ ,
+                                              &is_contig, &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
