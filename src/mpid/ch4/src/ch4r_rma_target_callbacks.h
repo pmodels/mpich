@@ -528,7 +528,8 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
 #define FUNCNAME MPIDI_CH4U_win_unlock_ack_proc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win)
+static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info,
+                                         int is_local, MPIR_Win * win)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -546,7 +547,7 @@ static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info
     msg.origin_rank = win->comm_ptr->rank;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(info->origin_rank, win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDI_CH4U_win_to_context(win),
                                                 info->origin_rank,
                                                 MPIDI_CH4U_WIN_UNLOCK_ACK, &msg, sizeof(msg));
@@ -897,7 +898,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
 
     if (MPIDI_CH4U_REQUEST(req, req->greq.n_iov) == 0) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(req, rank), win->comm_ptr))
+        if (MPIDI_CH4I_REQUEST(req, is_local))
             mpi_errno = MPIDI_SHM_am_isend_reply(context_id,
                                                  MPIDI_CH4U_REQUEST(req, rank),
                                                  MPIDI_CH4U_GET_ACK,
@@ -945,7 +946,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
     MPIDI_CH4U_REQUEST(req, req->greq.dt_iov) = (void *) p_data;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(req, rank), win->comm_ptr))
+    if (MPIDI_CH4I_REQUEST(req, is_local))
         mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDI_CH4U_REQUEST(req, rank),
                                              MPIDI_CH4U_GET_ACK, &get_ack, sizeof(get_ack), p_data,
                                              data_sz, MPI_BYTE, req);
@@ -1557,7 +1558,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 
         case MPIDI_CH4U_WIN_UNLOCK:
         case MPIDI_CH4U_WIN_UNLOCKALL:
-            MPIDI_win_unlock_proc(msg_hdr, win);
+            MPIDI_win_unlock_proc(msg_hdr, is_local, win);
             break;
 
         case MPIDI_CH4U_WIN_UNLOCK_ACK:
@@ -1783,7 +1784,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     win = MPIDI_CH4U_REQUEST(origin_req, req->preq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_PUT_DAT_REQ,
@@ -1850,7 +1851,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     win = MPIDI_CH4U_REQUEST(origin_req, req->areq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_ACC_DAT_REQ,
@@ -1917,7 +1918,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
     win = MPIDI_CH4U_REQUEST(origin_req, req->areq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_GET_ACC_DAT_REQ,
