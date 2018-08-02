@@ -27,7 +27,7 @@ int MPIR_Iallreduce_intra_tree_knomial(const void *sendbuf, void *recvbuf, int c
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                   comm_ptr, request, TREE_TYPE_KNOMIAL,
+                                                   comm_ptr, request, MPIR_TREE_TYPE_KNOMIAL_1,
                                                    MPIR_CVAR_IALLREDUCE_TREE_KVAL,
                                                    MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE);
 

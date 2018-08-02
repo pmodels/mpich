@@ -75,8 +75,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
                                              chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
-        tree_type = TREE_TYPE_KNOMIAL;  /* Force tree_type to be knomial because kary trees cannot
-                                         * handle non-commutative operations correctly */
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;   /* Force tree_type to be knomial because kary trees cannot
+                                                 * handle non-commutative operations correctly */
     }
 
     /* initialize the tree */
