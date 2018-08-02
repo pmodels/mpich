@@ -72,6 +72,8 @@ cvars:
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        tree_kary                - Force generic transport kary tree algorithm
+        tree_knomial             - Force generic transport knomial tree algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
