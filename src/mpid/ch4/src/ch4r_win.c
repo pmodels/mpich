@@ -362,7 +362,7 @@ int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info *
     /* allocate symmetric shared window memory */
     size_t page_sz, mapsize;
 
-    mapsize = MPIDI_CH4R_get_mapsize(total_size, &page_sz);
+    mapsize = MPIDIU_get_mapsize(total_size, &page_sz);
     MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
     mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
@@ -488,7 +488,7 @@ int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPIDI_CH4R_get_symmetric_heap(size, comm, &baseP, *win_ptr);
+    mpi_errno = MPIDIU_get_symmetric_heap(size, comm, &baseP, *win_ptr);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
