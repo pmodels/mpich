@@ -119,7 +119,11 @@ noinst_PROGRAMS =      \
     nbicreduce         \
     nbicscatter        \
     nbicscatterv       \
-    neighb_coll
+    neighb_allgather   \
+    neighb_allgatherv  \
+    neighb_alltoall    \
+    neighb_alltoallv   \
+    neighb_alltoallw
 allgatherv4_LDADD = $(LDADD) -lm
 
 # Generate tests of the nonblocking collectives by reusing the blocking tests.

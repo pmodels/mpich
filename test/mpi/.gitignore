@@ -115,7 +115,11 @@
 /coll/nbredscat
 /coll/nbredscat3
 /coll/nbredscatinter
-/coll/neighb_coll
+/coll/neighb_allgather
+/coll/neighb_allgatherv
+/coll/neighb_alltoall
+/coll/neighb_alltoallv
+/coll/neighb_alltoallw
 /coll/nonblocking
 /coll/nonblocking2
 /coll/nonblocking3
