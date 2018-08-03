@@ -1651,7 +1651,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIDI_CH4U_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDI_CH4U_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
         *is_contig = 0;
-        *data = iov;
+        *data = dt_iov;
         *p_data_sz = msg_hdr->n_iov;
         goto fn_exit;
     }
