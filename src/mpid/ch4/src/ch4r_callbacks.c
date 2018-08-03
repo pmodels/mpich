@@ -296,8 +296,8 @@ int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
-        MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_CH4R_NETMOD,
-                                     &continue_matching);
+        MPIDIG_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDIG_NETMOD,
+                                 &continue_matching);
         if (unlikely(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq))) {
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;

@@ -111,8 +111,8 @@ enum {
 
 /* Enum for calling types between netmod and shm */
 enum {
-    MPIDI_CH4R_NETMOD = 0,
-    MPIDI_CH4R_SHM = 1
+    MPIDIG_NETMOD = 0,
+    MPIDIG_SHM = 1
 };
 
 typedef struct MPIDIG_hdr_t {

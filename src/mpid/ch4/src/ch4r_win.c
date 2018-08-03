@@ -29,7 +29,7 @@ int win_finalize(MPIR_Win ** win_ptr);
 #define FUNCNAME MPIDI_CH4_RMA_Init_sync_pvars
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4R_RMA_Init_sync_pvars(void)
+int MPIDIG_RMA_Init_sync_pvars(void)
 {
     int mpi_errno = MPI_SUCCESS;
     /* rma_winlock_getlocallock */
@@ -74,8 +74,8 @@ int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * in
     MPIDIG_win_target_t *targets = NULL;
     MPIR_Comm *win_comm_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_INIT);
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4R_WIN_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_INIT);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDIG_WIN_INIT);
 
     MPIR_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
     *win_ptr = win;
@@ -140,7 +140,7 @@ int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * in
     MPIDIU_map_set(MPIDI_CH4_Global.win_map, MPIDIG_WIN(win, win_id), win, MPL_MEM_RMA);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH4R_WIN_INIT);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -155,8 +155,8 @@ int win_finalize(MPIR_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     int all_completed = 0;
     MPIR_Win *win = *win_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_FINALIZE);
 
     /* All local outstanding OPs should have been completed. */
     MPIR_Assert(MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) == 0);
@@ -166,7 +166,7 @@ int win_finalize(MPIR_Win ** win_ptr)
     do {
         int all_local_completed = 0, all_remote_completed = 0;
 
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
 
         MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
         MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
@@ -216,7 +216,7 @@ int win_finalize(MPIR_Win ** win_ptr)
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -43,7 +43,7 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unuse
 #define FUNCNAME MPIDI_CH4_RMA_Init_targetcb_pvars
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH4R_RMA_Init_targetcb_pvars(void)
+int MPIDIG_RMA_Init_targetcb_pvars(void)
 {
     int mpi_errno = MPI_SUCCESS;
     /* rma_targetcb_put */

@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source,
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
     }
     /* MPIDI_CS_EXIT(); */
 
@@ -115,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source,
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
     }
     /* MPIDI_CS_EXIT(); */
 

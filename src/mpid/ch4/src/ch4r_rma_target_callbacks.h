@@ -14,7 +14,7 @@
 #include "ch4r_request.h"
 #include "ch4r_callbacks.h"
 
-int MPIDI_CH4R_RMA_Init_targetcb_pvars(void);
+int MPIDIG_RMA_Init_targetcb_pvars(void);
 
 int MPIDI_ack_put(MPIR_Request * rreq);
 int MPIDI_ack_cswap(MPIR_Request * rreq);

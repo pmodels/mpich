@@ -45,7 +45,7 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
-int MPIDI_CH4R_RMA_Init_sync_pvars(void);
+int MPIDIG_RMA_Init_sync_pvars(void);
 int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
@@ -214,7 +214,7 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
         goto no_check;
     }
 
-    MPIDI_CH4R_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).pw.count);
+    MPIDIG_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).pw.count);
   no_check:
     MPIDIG_WIN(win, sync).pw.count = 0;
 
@@ -269,7 +269,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
         MPIDI_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
                                               &all_local_completed);
     } while (all_local_completed != 1);
@@ -387,7 +387,7 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
 
     MPIDIG_EXPOSURE_EPOCH_CHECK(win, MPIDIG_EPOTYPE_POST, mpi_errno, goto fn_fail);
     group = MPIDIG_WIN(win, sync).pw.group;
-    MPIDI_CH4R_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).sc.count);
+    MPIDIG_PROGRESS_WHILE(group->size != (int) MPIDIG_WIN(win, sync).sc.count);
 
     MPIDIG_WIN(win, sync).sc.count = 0;
     MPIDIG_WIN(win, sync).pw.group = NULL;
@@ -424,7 +424,7 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
         MPIR_Group_release(group);
         MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
     } else {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
         *flag = 0;
     }
 
@@ -480,7 +480,7 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDI_CH4R_PROGRESS_WHILE(slock->locked != locked);
+    MPIDIG_PROGRESS_WHILE(slock->locked != locked);
   no_check:
     target_ptr->sync.access_epoch_type = MPIDIG_EPOTYPE_LOCK;
 
@@ -531,7 +531,7 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
     } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
     if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
@@ -556,7 +556,7 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDI_CH4R_PROGRESS_WHILE(slock->locked != unlocked);
+    MPIDIG_PROGRESS_WHILE(slock->locked != unlocked);
   no_check:
     /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
     if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
@@ -703,7 +703,7 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
     } while (MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0);
     MPIDIG_EPOCH_FENCE_EVENT(win, massert);
 
@@ -756,7 +756,7 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
 
         do {
-            MPIDI_CH4R_PROGRESS();
+            MPIDIG_PROGRESS();
         } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
     }
 
@@ -790,7 +790,7 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
         MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
     } while (all_local_completed != 1);
 
@@ -828,7 +828,7 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
         MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
     } while (all_remote_completed != 1);
 
@@ -856,7 +856,7 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPIDI_CH4R_PROGRESS_WHILE(MPIDIG_WIN(win, sync).lockall.allLocked);
+    MPIDIG_PROGRESS_WHILE(MPIDIG_WIN(win, sync).lockall.allLocked);
   no_check:
     /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
     if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
@@ -899,7 +899,7 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
 
         do {
-            MPIDI_CH4R_PROGRESS();
+            MPIDIG_PROGRESS();
         } while (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
     }
 
@@ -950,7 +950,7 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
-        MPIDI_CH4R_PROGRESS();
+        MPIDIG_PROGRESS();
 
         /* FIXME: now we simply set per-target counters for lockall in case
          * user flushes per target, but this should be optimized. */
@@ -1009,7 +1009,7 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPIDI_CH4R_PROGRESS_WHILE(size != (int) MPIDIG_WIN(win, sync).lockall.allLocked);
+    MPIDIG_PROGRESS_WHILE(size != (int) MPIDIG_WIN(win, sync).lockall.allLocked);
   no_check:
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_LOCK_ALL;
 
