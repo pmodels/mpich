@@ -1645,9 +1645,11 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(dt_iov);
 
         iov = (struct iovec *) ((char *) am_hdr + sizeof(*msg_hdr));
-        for (i = 0; i < msg_hdr->n_iov; i++)
-            iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
-        MPIR_Memcpy(dt_iov, iov, sizeof(struct iovec) * msg_hdr->n_iov);
+        for (i = 0; i < msg_hdr->n_iov; i++) {
+            dt_iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
+            dt_iov[i].iov_len = iov[i].iov_len;
+        }
+
         MPIDI_CH4U_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDI_CH4U_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
         *is_contig = 0;
