@@ -33,7 +33,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     MPI_Aint true_lb, true_extent;
     int size, rank;
     int is_contig;
-    int tag = -1;
     void *tmp_buf = NULL;
     size_t nbytes;
     int scatter_k = MPIR_CVAR_IBCAST_SCATTER_KVAL;
