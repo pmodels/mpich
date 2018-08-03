@@ -250,7 +250,4 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
 
   fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
