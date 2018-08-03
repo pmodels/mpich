@@ -509,7 +509,7 @@ int MPIR_Iallgatherv_intra_recexch_distance_halving(const void *sendbuf, int sen
                                                     MPIR_Request ** req);
 int MPIR_Iallgatherv_intra_gentran_ring(const void *sendbuf, int sendcount,
                                         MPI_Datatype sendtype, void *recvbuf,
-                                        int *recvcounts, int *displs,
+                                        const int *recvcounts, const int *displs,
                                         MPI_Datatype recvtype, MPIR_Comm * comm,
                                         MPIR_Request ** req);
 
