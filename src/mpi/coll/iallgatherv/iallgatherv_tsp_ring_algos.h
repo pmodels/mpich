@@ -52,7 +52,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     } else
         data_buf = (char *) sendbuf;
 
-    MPIR_Datatype_get_size_macro(recvtype, type_size);
     MPIR_Datatype_get_extent_macro(recvtype, extent);
     MPIR_Type_get_true_extent_impl(recvtype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
