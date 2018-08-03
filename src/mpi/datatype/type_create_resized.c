@@ -148,7 +148,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
                             MPI_Aint lb, MPI_Aint extent, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
+    MPI_Datatype new_handle = MPI_DATATYPE_NULL;
     MPIR_Datatype *new_dtp;
     MPI_Aint aints[2];
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
