@@ -37,12 +37,12 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int size;
     int rank;
     int num_children;
-    int is_tree_leaf, is_tree_intermediate;     /* Variables to store location of this rank in the tree */
+    int is_tree_leaf;           /* Variables to store location of this rank in the tree */
     MPII_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
-    int send_id, sink_id, bcast_recv_id;
+    int sink_id, bcast_recv_id;
     int nvtcs;
     int buffer_per_child = MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
@@ -88,7 +88,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
     /* identify my locaion in the tree */
     is_tree_leaf = (num_children == 0) ? 1 : 0;
-    is_tree_intermediate = (!is_tree_leaf);
 
     /* Allocate buffers to receive data from children. Any memory required for execution
      * of the schedule, for example child_buffer, reduce_buffer below, is allocated using
@@ -197,9 +196,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
         /* send data to the parent */
         if (rank != root)
-            send_id =
-                MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs);
+            MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
+                                 sched, nvtcs, vtcs);
 
         /* Broadcast start here */
         sink_id = MPIR_TSP_sched_sink(sched);
@@ -249,7 +247,6 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
                                    MPIR_Request ** req, int tree_type, int k, int maxbytes)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
