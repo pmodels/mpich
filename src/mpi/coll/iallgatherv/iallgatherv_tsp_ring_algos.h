@@ -22,11 +22,12 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
-                                          MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                                          int *displs, MPI_Datatype recvtype, int tag,
-                                          MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                          MPI_Datatype sendtype, void *recvbuf,
+                                          const int *recvcounts, const int *displs,
+                                          MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
+                                          MPIR_TSP_sched_t * sched)
 {
-    size_t type_size, extent;
+    size_t extent;
     MPI_Aint lb, true_extent;
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
@@ -149,7 +150,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int *recvcounts, int *displs,
+                                    void *recvbuf, const int *recvcounts, const int *displs,
                                     MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
