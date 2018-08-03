@@ -769,7 +769,10 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             int minfree;
             context_mask_stats(&nfree, &ntotal);
             minfree = nfree;
-            MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
+            mpi_errno =
+                MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             if (minfree > 0) {
                 MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                      "**toomanycommfrag", "**toomanycommfrag %d %d %d",
