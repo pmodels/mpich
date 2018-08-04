@@ -91,23 +91,42 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
 algo_names="recexch_single_buffer recexch_multiple_buffer tree"
+tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        #set the environment
-        env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
+        if [ "${algo_name}" = "tree" ]; then
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
 
-        coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
-        coll_algo_tests+="allred 7 ${env}${nl}"
-        coll_algo_tests+="allredmany 4 ${env}${nl}"
-        coll_algo_tests+="allred2 4 ${env}${nl}"
-        coll_algo_tests+="allred3 10 ${env}${nl}"
-        coll_algo_tests+="allred4 4 ${env}${nl}"
-        coll_algo_tests+="allred5 5 ${env}${nl}"
-        coll_algo_tests+="allred6 4 ${env}${nl}"
-        coll_algo_tests+="allred6 7 ${env}${nl}"
+                coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
+                coll_algo_tests+="allred 7 ${env}${nl}"
+                coll_algo_tests+="allredmany 4 ${env}${nl}"
+                coll_algo_tests+="allred2 4 ${env}${nl}"
+                coll_algo_tests+="allred3 10 ${env}${nl}"
+                coll_algo_tests+="allred4 4 ${env}${nl}"
+                coll_algo_tests+="allred5 5 ${env}${nl}"
+                coll_algo_tests+="allred6 4 ${env}${nl}"
+                coll_algo_tests+="allred6 7 ${env}${nl}"
+            done
+        else
+            #set the environment
+            env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
+            env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval} "
+
+            coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
+            coll_algo_tests+="allred 7 ${env}${nl}"
+            coll_algo_tests+="allredmany 4 ${env}${nl}"
+            coll_algo_tests+="allred2 4 ${env}${nl}"
+            coll_algo_tests+="allred3 10 ${env}${nl}"
+            coll_algo_tests+="allred4 4 ${env}${nl}"
+            coll_algo_tests+="allred5 5 ${env}${nl}"
+            coll_algo_tests+="allred6 4 ${env}${nl}"
+            coll_algo_tests+="allred6 7 ${env}${nl}"
+        fi
     done
 done
 
