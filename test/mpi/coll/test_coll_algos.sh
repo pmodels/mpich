@@ -101,6 +101,7 @@ for algo_name in ${algo_names}; do
                 #set the environment
                 env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
                 env+="env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
+                env+="env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval} "
 
                 coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
                 coll_algo_tests+="allred 7 ${env}${nl}"
