@@ -17,7 +17,8 @@
 #define FUNCNAME MPIDI_OFI_dispatch_ack
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr, int am_type)
+static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr,
+                                         uint64_t rreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;
@@ -32,6 +33,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
     msg.hdr.data_sz = 0;
     msg.hdr.am_type = am_type;
     msg.pyld.sreq_ptr = sreq_ptr;
+    msg.pyld.rreq_ptr = rreq_ptr;
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, &msg, sizeof(msg),
                                       MPIDI_OFI_comm_to_phys(comm, rank)),
                             FALSE /* no lock */ , inject);

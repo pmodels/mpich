@@ -66,6 +66,7 @@ typedef struct {
 
 typedef struct {
     uint64_t sreq_ptr;
+    uint64_t rreq_ptr;
 } MPIDI_OFI_ack_msg_payload_t;
 
 typedef struct MPIDI_OFI_am_header_t {
