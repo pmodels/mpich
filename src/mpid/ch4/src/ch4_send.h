@@ -352,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
     int r;
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_send_init(buf, count, datatype, rank, tag,
-                                            comm, context_offset, request);
+                                            comm, context_offset, av, request);
     else
         mpi_errno = MPIDI_NM_mpi_send_init(buf, count, datatype, rank, tag,
                                            comm, context_offset, av, request);
@@ -394,7 +394,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
     int r;
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_ssend_init(buf, count, datatype, rank, tag,
-                                             comm, context_offset, request);
+                                             comm, context_offset, av, request);
     else
         mpi_errno = MPIDI_NM_mpi_ssend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
@@ -437,7 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
     int r;
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_bsend_init(buf, count, datatype, rank, tag,
-                                             comm, context_offset, request);
+                                             comm, context_offset, av, request);
     else
         mpi_errno = MPIDI_NM_mpi_bsend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
@@ -480,7 +480,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
     int r;
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rsend_init(buf, count, datatype, rank, tag,
-                                             comm, context_offset, request);
+                                             comm, context_offset, av, request);
     else
         mpi_errno = MPIDI_NM_mpi_rsend_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, av, request);
