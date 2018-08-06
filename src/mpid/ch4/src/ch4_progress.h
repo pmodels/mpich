@@ -34,6 +34,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
 
+    if (MPIDI_have_progress_thread())
+        flags &= ~(MPIDI_PROGRESS_NM);
+
 #ifdef HAVE_SIGNAL
     if (MPIDI_CH4_Global.sigusr1_count > MPIDI_CH4_Global.my_sigusr1_count) {
         MPIDI_CH4_Global.my_sigusr1_count = MPIDI_CH4_Global.sigusr1_count;
@@ -101,10 +104,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
 {
     int flags = MPIDI_PROGRESS_ALL;
-
-    if (MPIDI_have_progress_thread())
-        flags &= ~(MPIDI_PROGRESS_NM);
-
     return MPIDI_Progress_test(flags);
 }
 
