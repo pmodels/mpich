@@ -14,6 +14,35 @@
 #include "ofi_am_impl.h"
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_dispatch_ack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr, int am_type)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_ack_msg_t msg;
+    MPIR_Comm *comm;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
+
+    comm = MPIDI_CH4U_context_id_to_comm(context_id);
+
+    msg.hdr.am_hdr_sz = sizeof(msg.pyld);
+    msg.hdr.data_sz = 0;
+    msg.hdr.am_type = am_type;
+    msg.pyld.sreq_ptr = sreq_ptr;
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, &msg, sizeof(msg),
+                                      MPIDI_OFI_comm_to_phys(comm, rank)),
+                            FALSE /* no lock */ , inject);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_handle_short_am
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -363,35 +392,5 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
   fn_fail:
     goto fn_exit;
 }
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_dispatch_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr, int am_type)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_ack_msg_t msg;
-    MPIR_Comm *comm;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
-
-    comm = MPIDI_CH4U_context_id_to_comm(context_id);
-
-    msg.hdr.am_hdr_sz = sizeof(msg.pyld);
-    msg.hdr.data_sz = 0;
-    msg.hdr.am_type = am_type;
-    msg.pyld.sreq_ptr = sreq_ptr;
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank)),
-                            FALSE /* no lock */ , inject);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 
 #endif /* OFI_AM_EVENTS_H_INCLUDED */
