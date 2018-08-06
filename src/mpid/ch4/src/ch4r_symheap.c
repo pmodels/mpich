@@ -88,7 +88,7 @@ void *generate_random_addr(size_t size)
      * This is not generic, probably only works properly on Linux
      * but it's not fatal since we bail after a fixed number of iterations
      */
-#define MPIDI_CH4I_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
+#define MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
 #ifdef USE_SYM_HEAP
     char random_state[256];
@@ -119,13 +119,13 @@ void *generate_random_addr(size_t size)
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
     random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-    map_pointer = MPIDI_CH4I_MAP_POINTER;
+    map_pointer = MAP_POINTER;
 
     while (check_maprange_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
         random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-        map_pointer = MPIDI_CH4I_MAP_POINTER;
+        map_pointer = MAP_POINTER;
         iter--;
 
         if (iter == 0) {
