@@ -96,19 +96,19 @@ static inline int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 if (!memcmp(token, "rar", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
                         (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_CH4I_ACCU_ORDER_RAR);
+                         MPIDI_ACCU_ORDER_RAR);
                 else if (!memcmp(token, "raw", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
                         (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_CH4I_ACCU_ORDER_RAW);
+                         MPIDI_ACCU_ORDER_RAW);
                 else if (!memcmp(token, "war", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
                         (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_CH4I_ACCU_ORDER_WAR);
+                         MPIDI_ACCU_ORDER_WAR);
                 else if (!memcmp(token, "waw", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
                         (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_CH4I_ACCU_ORDER_WAW);
+                         MPIDI_ACCU_ORDER_WAW);
                 else
                     MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
 
@@ -119,9 +119,9 @@ static inline int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDIG_WIN(win, info_args).accumulate_ordering = save_ordering;
         } else if (!strcmp(curr_ptr->key, "accumulate_ops")) {
             if (!strcmp(curr_ptr->value, "same_op"))
-                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP;
+                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_ACCU_SAME_OP;
             else if (!strcmp(curr_ptr->value, "same_op_no_op"))
-                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
+                MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_ACCU_SAME_OP_NO_OP;
         } else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDIG_WIN(win, info_args).same_disp_unit = 1;
@@ -610,16 +610,16 @@ static inline int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 
         CH4_COMPILE_TIME_ASSERT(BUFSIZE >= 16); /* maximum: strlen("rar,raw,war,waw") + 1 */
 
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR)
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAR)
             c += snprintf(buf, BUFSIZE, "rar");
 
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAW)
             c += snprintf(buf + c, BUFSIZE - c, "%sraw", (c > 0) ? "," : "");
 
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAR)
             c += snprintf(buf + c, BUFSIZE - c, "%swar", (c > 0) ? "," : "");
 
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAW)
             c += snprintf(buf + c, BUFSIZE - c, "%swaw", (c > 0) ? "," : "");
 
         if (c == 0) {
@@ -632,7 +632,7 @@ static inline int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 #undef BUFSIZE
     }
 
-    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDI_CH4I_ACCU_SAME_OP)
+    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDI_ACCU_SAME_OP)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ops", "same_op");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ops", "same_op_no_op");

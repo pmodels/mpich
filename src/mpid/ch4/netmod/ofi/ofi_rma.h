@@ -756,8 +756,8 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
         goto am_fallback;
     /* Compare_and_swap is READ and WRITE. */
     MPIDIG_wait_am_acc(win, target_rank,
-                       (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                        MPIDI_CH4I_ACCU_ORDER_WAW));
+                       (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR |
+                        MPIDI_ACCU_ORDER_WAW));
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -792,7 +792,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+        (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR)) {
         /* Wait for OFI cas to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
@@ -921,7 +921,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
-    MPIDIG_wait_am_acc(win, target_rank, (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR));
+    MPIDIG_wait_am_acc(win, target_rank, (MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR));
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
                             target_datatype, max_size, &req, &flags, &ep, sigreq));
@@ -985,7 +985,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+        (MPIDI_ACCU_ORDER_WAW | MPIDI_ACCU_ORDER_WAR)) {
         /* Wait for OFI acc to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
@@ -1073,11 +1073,11 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {
         /* Get_accumulate is READ and WRITE, except NO_OP (it is READ only). */
-        MPIDIG_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+        MPIDIG_wait_am_acc(win, target_rank, MPIDI_ACCU_ORDER_RAW);
     } else {
         MPIDIG_wait_am_acc(win, target_rank,
-                           (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                            MPIDI_CH4I_ACCU_ORDER_WAW));
+                           (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR |
+                            MPIDI_ACCU_ORDER_WAW));
     }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
@@ -1168,14 +1168,14 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAW) {
             /* Wait for OFI acc to complete.
              * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
             MPIDI_OFI_win_progress_fence(win);
         }
     } else {
         if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+            (MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW)) {
             MPIDI_OFI_win_progress_fence(win);
         }
     }

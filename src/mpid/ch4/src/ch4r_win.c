@@ -107,11 +107,11 @@ int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * in
 
     /* Initialize the info (hint) flags per window */
     MPIDIG_WIN(win, info_args).no_locks = 0;
-    MPIDIG_WIN(win, info_args).accumulate_ordering = (MPIDI_CH4I_ACCU_ORDER_RAR |
-                                                      MPIDI_CH4I_ACCU_ORDER_RAW |
-                                                      MPIDI_CH4I_ACCU_ORDER_WAR |
-                                                      MPIDI_CH4I_ACCU_ORDER_WAW);
-    MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
+    MPIDIG_WIN(win, info_args).accumulate_ordering = (MPIDI_ACCU_ORDER_RAR |
+                                                      MPIDI_ACCU_ORDER_RAW |
+                                                      MPIDI_ACCU_ORDER_WAR |
+                                                      MPIDI_ACCU_ORDER_WAW);
+    MPIDIG_WIN(win, info_args).accumulate_ops = MPIDI_ACCU_SAME_OP_NO_OP;
     MPIDIG_WIN(win, info_args).same_size = 0;
     MPIDIG_WIN(win, info_args).same_disp_unit = 0;
     MPIDIG_WIN(win, info_args).alloc_shared_noncontig = 0;

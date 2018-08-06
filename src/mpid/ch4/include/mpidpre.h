@@ -212,14 +212,14 @@ typedef struct MPIDIG_win_shared_info {
     void *shm_base_addr;
 } MPIDIG_win_shared_info_t;
 
-#define MPIDI_CH4I_ACCU_ORDER_RAR (1)
-#define MPIDI_CH4I_ACCU_ORDER_RAW (1 << 1)
-#define MPIDI_CH4I_ACCU_ORDER_WAR (1 << 2)
-#define MPIDI_CH4I_ACCU_ORDER_WAW (1 << 3)
+#define MPIDI_ACCU_ORDER_RAR (1)
+#define MPIDI_ACCU_ORDER_RAW (1 << 1)
+#define MPIDI_ACCU_ORDER_WAR (1 << 2)
+#define MPIDI_ACCU_ORDER_WAW (1 << 3)
 
 typedef enum {
-    MPIDI_CH4I_ACCU_SAME_OP,
-    MPIDI_CH4I_ACCU_SAME_OP_NO_OP
+    MPIDI_ACCU_SAME_OP,
+    MPIDI_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
 typedef struct MPIDIG_win_info_args_t {

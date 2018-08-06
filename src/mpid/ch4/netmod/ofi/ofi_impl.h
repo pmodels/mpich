@@ -253,18 +253,18 @@ void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
 {
     /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAR)
         && MPIDI_Global.max_order_war != -1) {
         /* An order size value of 0 indicates that ordering is not guaranteed. */
         MPIR_Assert(MPIDI_Global.max_order_war != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
     }
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAW)
         && MPIDI_Global.max_order_waw != -1) {
         MPIR_Assert(MPIDI_Global.max_order_waw != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
     }
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAW)
         && MPIDI_Global.max_order_raw != -1) {
         MPIR_Assert(MPIDI_Global.max_order_raw != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
@@ -283,17 +283,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct f
      * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
      * after window is created. */
     finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
-        MPIDI_CH4I_ACCU_ORDER_RAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAR) ==
+        MPIDI_ACCU_ORDER_RAR)
         finfo->tx_attr->msg_order |= FI_ORDER_RAR;
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
-        MPIDI_CH4I_ACCU_ORDER_RAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_RAW) ==
+        MPIDI_ACCU_ORDER_RAW)
         finfo->tx_attr->msg_order |= FI_ORDER_RAW;
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
-        MPIDI_CH4I_ACCU_ORDER_WAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAR) ==
+        MPIDI_ACCU_ORDER_WAR)
         finfo->tx_attr->msg_order |= FI_ORDER_WAR;
-    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
-        MPIDI_CH4I_ACCU_ORDER_WAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDI_ACCU_ORDER_WAW) ==
+        MPIDI_ACCU_ORDER_WAW)
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
