@@ -384,7 +384,7 @@ int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     if (rreq == NULL) {
-        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        rreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         if (p_data_sz) {
@@ -457,7 +457,7 @@ int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     if (rreq == NULL) {
-        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        rreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
         MPIDIG_REQUEST(rreq, buffer) = NULL;

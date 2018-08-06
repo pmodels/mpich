@@ -15,16 +15,16 @@
 #include "ch4r_buf.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_am_request_create
+#define FUNCNAME MPIDIG_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count)
+static inline MPIR_Request *MPIDIG_am_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
     MPIR_Request *req;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
     if (req == NULL)
@@ -50,7 +50,7 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIDIG_REQUEST(req, req->status) = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REQUEST_CREATE);
     return req;
   fn_fail:
     goto fn_exit;

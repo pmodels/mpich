@@ -39,7 +39,7 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
         if (!is_blocking) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+            *request = MPIDIG_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
             MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                                 "**nomemreq");
             MPID_Request_complete((*request));
@@ -47,7 +47,7 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
         goto fn_exit;
     }
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = sreq;
@@ -119,7 +119,7 @@ static inline int MPIDI_psend_init(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PSEND_INIT);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *request = sreq;
 

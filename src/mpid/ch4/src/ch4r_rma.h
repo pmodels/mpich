@@ -70,7 +70,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then put needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->preq.win_ptr) = win;
 
@@ -239,7 +239,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then get needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->greq.win_ptr) = win;
@@ -378,7 +378,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then acc needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->areq.win_ptr) = win;
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -569,7 +569,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then get_acc needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->areq.win_ptr) = win;
@@ -1059,7 +1059,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
     MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    sreq = MPIDIG_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->creq.win_ptr) = win;
