@@ -150,6 +150,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     if (unlikely(ret))
         MPIR_ERR_POP(ret);
 
+    if (MPIDI_have_progress_thread())
+        return ret;
+
     while (state->progress_count == OPA_load_int(&MPIDI_CH4_Global.progress_count)) {
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         ret = MPID_Progress_test();
