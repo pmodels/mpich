@@ -1550,7 +1550,7 @@ int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
 
     MPIDIG_REQUEST(rreq, req->preq.win_ptr) = win;
 
@@ -1888,7 +1888,7 @@ int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
 
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = MPIDIG_REQUEST(rreq, req->preq.win_ptr);
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
 
     /* Adjust the target addresses using the window base address */
     iov = (struct iovec *) MPIDIG_REQUEST(rreq, req->preq.dt_iov);
@@ -2002,7 +2002,7 @@ int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
     offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(*req, req->creq.win_ptr) = win;
@@ -2074,7 +2074,7 @@ int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
     offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(*req, req->areq.win_ptr) = win;
@@ -2171,7 +2171,7 @@ int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
     offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(*req, req->areq.win_ptr) = win;
@@ -2266,7 +2266,7 @@ int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDI_CH4I_win_base_at_target(win);
+    base = MPIDIU_win_base_at_target(win);
 
     offset = win->disp_unit * msg_hdr->target_disp;
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;

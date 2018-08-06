@@ -629,12 +629,12 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
   Return zero to let the target side calculate the actual address
   (only offset from window base is given to the target in this case)
 */
-static inline uintptr_t MPIDI_CH4I_win_base_at_origin(const MPIR_Win * win, int target_rank)
+static inline uintptr_t MPIDIU_win_base_at_origin(const MPIR_Win * win, int target_rank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_ORIGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_WIN_BASE_AT_ORIGIN);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_WIN_BASE_AT_ORIGIN);
 
     /* TODO: In future we may want to calculate the full virtual address
      * in the target at the origin side. It can be done by looking at
@@ -644,19 +644,19 @@ static inline uintptr_t MPIDI_CH4I_win_base_at_origin(const MPIR_Win * win, int 
 
 /*
   Calculate base address of the window at the target side
-  If MPIDI_CH4I_win_base_at_origin calculates the full virtual address
+  If MPIDIU_win_base_at_origin calculates the full virtual address
   this function must return zero
 */
-static inline uintptr_t MPIDI_CH4I_win_base_at_target(const MPIR_Win * win)
+static inline uintptr_t MPIDIU_win_base_at_target(const MPIR_Win * win)
 {
     uintptr_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_TARGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_TARGET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_WIN_BASE_AT_TARGET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_WIN_BASE_AT_TARGET);
 
     ret = (uintptr_t) win->base;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_WIN_BASE_AT_TARGET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_WIN_BASE_AT_TARGET);
     return ret;
 }
 
