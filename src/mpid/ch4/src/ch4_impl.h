@@ -416,18 +416,18 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_valid_group_rank
+#define FUNCNAME MPIDI_valid_group_rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
+static inline int MPIDI_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
     int size = grp->size;
     int z;
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_VALID_GROUP_RANK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_VALID_GROUP_RANK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VALID_GROUP_RANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VALID_GROUP_RANK);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         /* Treat PROC_NULL as always valid */
@@ -443,7 +443,7 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
     ret = (z < size);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_VALID_GROUP_RANK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VALID_GROUP_RANK);
     return ret;
 }
 
@@ -476,7 +476,7 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
         MPID_BEGIN_ERROR_CHECKS;                                        \
         MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank); \
         if ((MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_START && \
-             !MPIDI_CH4I_valid_group_rank(win->comm_ptr, target_rank,   \
+             !MPIDI_valid_group_rank(win->comm_ptr, target_rank,   \
                                           MPIDIG_WIN(win, sync).sc.group)) || \
             (target_ptr != NULL &&                                      \
              MPIDIG_WIN(win, sync).access_epoch_type == MPIDIG_EPOTYPE_LOCK && \

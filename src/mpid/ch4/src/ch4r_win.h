@@ -95,20 +95,16 @@ static inline int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
             while (token) {
                 if (!memcmp(token, "rar", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_ACCU_ORDER_RAR);
+                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDI_ACCU_ORDER_RAR);
                 else if (!memcmp(token, "raw", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_ACCU_ORDER_RAW);
+                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDI_ACCU_ORDER_RAW);
                 else if (!memcmp(token, "war", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_ACCU_ORDER_WAR);
+                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDI_ACCU_ORDER_WAR);
                 else if (!memcmp(token, "waw", 3))
                     MPIDIG_WIN(win, info_args).accumulate_ordering =
-                        (MPIDIG_WIN(win, info_args).accumulate_ordering |
-                         MPIDI_ACCU_ORDER_WAW);
+                        (MPIDIG_WIN(win, info_args).accumulate_ordering | MPIDI_ACCU_ORDER_WAW);
                 else
                     MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
 
@@ -156,18 +152,18 @@ static inline int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_fill_ranks_in_win_grp
+#define FUNCNAME MPIDI_fill_ranks_in_win_grp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
-                                                   int *ranks_in_win_grp)
+static inline int MPIDI_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
+                                              int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp = NULL;
     MPIR_Group *win_grp_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_FILL_RANKS_IN_WIN_GRP);
 
     ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int), MPL_MEM_RMA);
     MPIR_Assert(ranks_in_grp);
@@ -190,7 +186,7 @@ static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Grou
   fn_exit:
     MPL_free(ranks_in_grp);
 
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_FILL_RANKS_IN_WIN_GRP);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -263,7 +259,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
     MPIR_Assert(ranks_in_win_grp);
 
-    mpi_errno = MPIDI_CH4I_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
+    mpi_errno = MPIDI_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
@@ -340,7 +336,7 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
     MPIR_Assert(ranks_in_win_grp);
 
-    mpi_errno = MPIDI_CH4I_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
+    mpi_errno = MPIDI_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
