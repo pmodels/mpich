@@ -307,27 +307,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                      const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    int result = MPIDI_POSIX_OK;
-    MPIDI_POSIX_am_header_t msg_hdr;
-    MPIDI_POSIX_am_header_t *msg_hdr_p = &msg_hdr;
-    struct iovec iov_left[1];
-    struct iovec *iov_left_ptr = iov_left;
-    size_t iov_num_left = 1;
-    const int grank = MPIDI_CH4U_rank_to_lpid(rank, comm);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_SEND_HDR);
-
-    iov_left[0].iov_base = (void *) am_hdr;
-    iov_left[0].iov_len = am_hdr_sz;
-
-    msg_hdr.handler_id = handler_id;
-    msg_hdr.am_hdr_sz = am_hdr_sz;
-    msg_hdr.data_sz = 0;
-
-    result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left, 1);
-
-    mpi_errno = (result == MPIDI_POSIX_OK) ? MPI_SUCCESS : MPI_ERR_OTHER;
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_SEND_HDR);
     return mpi_errno;
