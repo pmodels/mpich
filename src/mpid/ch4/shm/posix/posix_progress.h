@@ -83,22 +83,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking, int *comple
 
                 continue_matching = 1;
 
-                if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                    MPIDIG_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
+                if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)) {
+                    MPIDIG_anysource_matched(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req),
                                              MPIDIG_SHM, &continue_matching);
 
                     /* The request might have been freed during
                      * MPIDIG_anysource_matched. Double check that it still
                      * exists. */
-                    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+                    if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)) {
+                        MPIR_Request_free(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
                         /* Decouple requests */
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER
-                                                             (req))
+                        MPIDIU_REQUEST_ANYSOURCE_PARTNER(MPIDIU_REQUEST_ANYSOURCE_PARTNER(req))
                             = NULL;
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                        MPIDIU_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
 #endif
                     }
 

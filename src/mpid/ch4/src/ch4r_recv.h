@@ -28,7 +28,7 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
     ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,

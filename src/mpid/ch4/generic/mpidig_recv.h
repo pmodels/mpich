@@ -145,7 +145,7 @@ static inline int MPIDI_do_irecv(void *buf,
 #ifdef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno = MPIDI_NM_am_recv(unexp_req);
 #else
-            if (MPIDI_CH4I_REQUEST(unexp_req, is_local))
+            if (MPIDIU_REQUEST(unexp_req, is_local))
                 mpi_errno = MPIDI_SHM_am_recv(unexp_req);
             else
                 mpi_errno = MPIDI_NM_am_recv(unexp_req);
@@ -320,7 +320,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 #ifdef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_NM_am_recv(message);
 #else
-        if (MPIDI_CH4I_REQUEST(message, is_local))
+        if (MPIDIU_REQUEST(message, is_local))
             mpi_errno = MPIDI_SHM_am_recv(message);
         else
             mpi_errno = MPIDI_NM_am_recv(message);

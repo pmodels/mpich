@@ -79,7 +79,7 @@ static inline int MPIDIG_anysource_matched(MPIR_Request * rreq, int caller, int 
         if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
             /* If the request is cancelled, copy the status object from the
              * partner request */
-            rreq->status = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
+            rreq->status = MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
         }
 #endif
         *continue_matching = 0;

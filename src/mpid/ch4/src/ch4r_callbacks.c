@@ -294,13 +294,13 @@ int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
             MPIR_ERR_POP(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+    if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
-        MPIDIG_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDIG_NETMOD,
+        MPIDIG_anysource_matched(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDIG_NETMOD,
                                  &continue_matching);
-        if (unlikely(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+        if (unlikely(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq))) {
+            MPIDIU_REQUEST_ANYSOURCE_PARTNER(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
+            MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
         }
     }
 #endif
@@ -488,7 +488,7 @@ int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr,
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_CH4I_REQUEST(rreq, is_local))
+        if (MPIDIU_REQUEST(rreq, is_local))
             mpi_errno = MPIDI_SHM_am_recv(rreq);
         else
 #endif
@@ -617,7 +617,7 @@ int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr,
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(sreq, is_local))
+    if (MPIDIU_REQUEST(sreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
                                      MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,

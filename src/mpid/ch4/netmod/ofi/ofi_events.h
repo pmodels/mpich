@@ -100,18 +100,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 
-    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+    if (MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
 
-        MPIDIG_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDIG_NETMOD,
+        MPIDIG_anysource_matched(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDIG_NETMOD,
                                  &continue_matching);
 
         /* It is always possible to cancel a request on shm side w/o an aux thread */
 
         /* Decouple requests */
-        if (unlikely(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+        if (unlikely(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq))) {
+            MPIDIU_REQUEST_ANYSOURCE_PARTNER(MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
+            MPIDIU_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
         }
         MPIR_Request_free(rreq);
     }

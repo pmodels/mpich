@@ -193,13 +193,13 @@ typedef struct {
     } ch4;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
-#define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
+#define MPIDIU_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-#define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
+#define MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
 #else
-#define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  NULL
+#define MPIDIU_REQUEST_ANYSOURCE_PARTNER(req)  NULL
 #endif
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);

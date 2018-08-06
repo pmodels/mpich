@@ -243,7 +243,7 @@ int MPIDI_ack_put(MPIR_Request * rreq)
 
     ack_msg.preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
@@ -289,7 +289,7 @@ int MPIDI_ack_cswap(MPIR_Request * rreq)
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->creq.creq_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context
                                      (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
@@ -330,7 +330,7 @@ int MPIDI_ack_acc(MPIR_Request * rreq)
 
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
@@ -371,7 +371,7 @@ int MPIDI_ack_get_acc(MPIR_Request * rreq)
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context
                                      (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
@@ -966,7 +966,7 @@ int MPIDI_put_iov_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = (uint64_t) rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
@@ -1008,7 +1008,7 @@ int MPIDI_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = (uint64_t) rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
@@ -1050,7 +1050,7 @@ int MPIDI_get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = (uint64_t) rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+    if (MPIDIU_REQUEST(rreq, is_local))
         mpi_errno =
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
