@@ -856,11 +856,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_create(void **out_map, MPL_memory_class
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_destroy(void *in_map)
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     MPIDIU_map_t *map = in_map;
     HASH_CLEAR(hh, map->head);
     MPL_free(map);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
 }
 
 #undef FUNCNAME
@@ -872,14 +872,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *va
 {
     MPIDIU_map_t *map;
     MPIDIU_map_entry_t *map_entry;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     map = (MPIDIU_map_t *) in_map;
     map_entry = MPL_malloc(sizeof(MPIDIU_map_entry_t), class);
     MPIR_Assert(map_entry != NULL);
     map_entry->key = id;
     map_entry->value = val;
     HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry, class);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
 }
 
 #undef FUNCNAME
@@ -890,13 +890,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_erase(void *in_map, uint64_t id)
 {
     MPIDIU_map_t *map;
     MPIDIU_map_entry_t *map_entry;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     map = (MPIDIU_map_t *) in_map;
     HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     MPIR_Assert(map_entry != NULL);
     HASH_DELETE(hh, map->head, map_entry);
     MPL_free(map_entry);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
 }
 
 #undef FUNCNAME
@@ -909,14 +909,14 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_lookup(void *in_map, uint64_t id)
     MPIDIU_map_t *map;
     MPIDIU_map_entry_t *map_entry;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     map = (MPIDIU_map_t *) in_map;
     HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     if (map_entry == NULL)
         rc = MPIDIU_MAP_NOT_FOUND;
     else
         rc = map_entry->value;
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     return rc;
 }
 

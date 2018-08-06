@@ -196,9 +196,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     }
 #endif
 
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDI_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDI_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDI_THREAD_UTIL_MUTEX, &thr_err);
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
@@ -408,9 +408,9 @@ int MPID_Finalize(void)
     PMI_Finalize();
 #endif
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_THREAD_UTIL_MUTEX, &thr_err);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
