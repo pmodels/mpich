@@ -51,7 +51,7 @@ static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
 
     maxelems = maxbytes / type_size;
 
-    if (maxelems == 0 || maxelems >= count) {   /* disable pipelining */
+    if (maxelems <= 0 || maxelems >= count) {   /* disable pipelining */
         *num_segments = 1;
         *segsize_floor = *segsize_ceil = count;
         goto fn_exit;
