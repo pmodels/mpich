@@ -403,6 +403,81 @@ int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_att
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Netloc_get_hostnode_index_in_tree
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attributes,
+                                           netloc_topology_t topology,
+                                           netloc_node_t * network_endpoint,
+                                           int *index, int *num_leaf_nodes)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int max_level = 0;
+    netloc_node_t **traversal_order;
+    int start_index, end_index, i, j, node_index, num_nodes;
+    MPIR_CHKPMEM_DECL(3);
+
+    MPIR_CHKPMEM_MALLOC(traversal_order, netloc_node_t **,
+                        sizeof(netloc_node_t *) * topology->num_nodes, mpi_errno,
+                        "traversal_order", MPL_MEM_OTHER);
+
+    /* Assign index to nodes via breadth first traversal starting from nodes with maximum level,
+     * corresponding to the top level switches */
+    for (i = 0; i < topology->num_nodes; i++) {
+        if (attributes.u.tree.node_levels[topology->nodes[i]->__uid__] > max_level) {
+            max_level = attributes.u.tree.node_levels[topology->nodes[i]->__uid__];
+        }
+    }
+
+    end_index = 0;
+    for (i = 0; i < topology->num_nodes; i++) {
+        if (attributes.u.tree.node_levels[topology->nodes[i]->__uid__] == max_level) {
+            MPIR_Assert(end_index < topology->num_nodes);
+            traversal_order[end_index++] = topology->nodes[i];
+        }
+    }
+    start_index = 0;
+    node_index = 0;
+    num_nodes = 0;
+    while (start_index < end_index) {
+        int num_edges;
+        netloc_edge_t **edges;
+        netloc_node_t *traversal_node = traversal_order[start_index++];
+        if (traversal_node == network_endpoint) {
+            node_index = num_nodes;
+        }
+        if (traversal_node->node_type == NETLOC_NODE_TYPE_HOST) {
+            num_nodes++;
+        }
+        netloc_get_all_edges(topology, traversal_node, &num_edges, &edges);
+        for (i = 0; i < num_edges; i++) {
+            int node_added_before = 0;
+            for (j = 0; j < end_index; j++) {
+                if (traversal_order[j] == edges[i]->dest_node) {
+                    node_added_before = 1;
+                    break;
+                }
+            }
+            if (!node_added_before) {
+                MPIR_Assert(end_index < topology->num_nodes);
+                traversal_order[end_index++] = edges[i]->dest_node;
+            }
+        }
+    }
+
+    MPIR_CHKPMEM_COMMIT();
+
+  fn_exit:
+    MPIR_CHKPMEM_REAP();
+    *index = node_index;
+    *num_leaf_nodes = num_nodes;
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Netloc_get_switches_at_level
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

@@ -42,4 +42,9 @@ int MPIR_Netloc_get_switches_at_level(netloc_topology_t netloc_topology,
                                       MPIR_Netloc_network_attributes attributes, int level,
                                       netloc_node_t *** switches_at_level, int *switch_count);
 
+int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attributes,
+                                           netloc_topology_t topology,
+                                           netloc_node_t * network_endpoint,
+                                           int *index, int *num_nodes);
+
 #endif /* NETLOC_UTIL_H_INCLUDED */
