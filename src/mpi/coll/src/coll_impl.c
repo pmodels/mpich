@@ -425,6 +425,14 @@ int MPII_Coll_init(void)
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer"))
         MPIR_Iallreduce_intra_algo_choice =
             MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER;
+    else if (0 ==
+             strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_single_buffer_without_dtcopy"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER_WITHOUT_DTCOPY;
+    else if (0 ==
+             strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer_without_dtcopy"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER_WITHOUT_DTCOPY;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_kary"))
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_knomial"))

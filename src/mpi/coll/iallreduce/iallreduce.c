@@ -72,6 +72,8 @@ cvars:
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        recexch_single_buffer_without_dtcopy    - Force generic transport recursive exchange without data copy using single buffer for receives
+        recexch_multiple_buffer_without_dtcopy  - Force generic transport recursive exchange without data copy using multiple buffers for receives
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -301,6 +303,25 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno =
                     MPIR_Iallreduce_intra_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
                                                                   op, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER_WITHOUT_DTCOPY:
+                mpi_errno =
+                    MPIR_Iallreduce_intra_recexch_single_buffer_without_dtcopy(sendbuf, recvbuf,
+                                                                               count, datatype, op,
+                                                                               comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER_WITHOUT_DTCOPY:
+                mpi_errno =
+                    MPIR_Iallreduce_intra_recexch_multiple_buffer_without_dtcopy(sendbuf, recvbuf,
+                                                                                 count, datatype,
+                                                                                 op, comm_ptr,
+                                                                                 request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

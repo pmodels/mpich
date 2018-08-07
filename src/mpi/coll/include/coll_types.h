@@ -37,6 +37,12 @@ enum {
 
 /* enumerator for different recexch types */
 enum {
+    MPIR_IALLREDUCE_RECEXCH_TYPE_WITH_DTCOPY = 0,
+    MPIR_IALLREDUCE_RECEXCH_TYPE_WITHOUT_DTCOPY
+};
+
+/* enumerator for different recexch types */
+enum {
     MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
     MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
 };

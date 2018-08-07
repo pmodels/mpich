@@ -19,6 +19,14 @@
 #define MPIR_TSP_Iallreduce_intra_recexch                      MPIR_TSP_NAMESPACE(Iallreduce_intra_recexch)
 #undef MPIR_TSP_Iallreduce_sched_intra_recexch
 #define MPIR_TSP_Iallreduce_sched_intra_recexch                MPIR_TSP_NAMESPACE(Iallreduce_sched_intra_recexch)
+#undef MPIR_TSP_Iallreduce_sched_intra_recexch_without_dtcopy
+#define MPIR_TSP_Iallreduce_sched_intra_recexch_without_dtcopy                MPIR_TSP_NAMESPACE(Iallreduce_sched_intra_recexch_without_dtcopy)
+
+int MPIR_TSP_Iallreduce_sched_intra_recexch_without_nodtcopy(const void *sendbuf, void *recvbuf,
+                                                             int count, MPI_Datatype datatype,
+                                                             MPI_Op op, int tag, MPIR_Comm * comm,
+                                                             int recexch_type, int k,
+                                                             MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, int tag,
@@ -28,4 +36,4 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op,
                                       MPIR_Comm * comm, MPIR_Request ** req, int recexch_type,
-                                      int k);
+                                      int no_dtcopy, int k);
