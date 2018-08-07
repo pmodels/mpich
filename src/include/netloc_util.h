@@ -26,6 +26,8 @@ typedef struct {
             int *node_levels;
         } tree;
     } u;
+
+    netloc_node_t *network_endpoint;
 } MPIR_Netloc_network_attributes;
 
 int MPIR_Netloc_parse_topology(netloc_topology_t topology,

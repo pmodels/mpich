@@ -385,13 +385,8 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
         traversal_stack =
             (netloc_node_t **) MPL_malloc(sizeof(netloc_node_t *) *
                                           MPIR_Process.netloc_topology->num_nodes, MPL_MEM_OTHER);
-        mpi_errno =
-            MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
-                                              MPIR_Process.netloc_topology,
-                                              MPIR_Process.hwloc_topology, MPIR_Process.bindset,
-                                              &network_node);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
 
         traversal_begin = 0;
         traversal_end = 0;
