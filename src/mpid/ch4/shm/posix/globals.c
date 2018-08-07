@@ -4,19 +4,16 @@
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include <mpidimpl.h>
 #include "posix_impl.h"
+#include "posix_types.h"
 
-MPIDI_POSIX_request_queue_t MPIDI_POSIX_sendq = { NULL, NULL };
-MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_posted = { NULL, NULL };
-MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_unexpected = { NULL, NULL };
-MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region = { {0}
-};
+MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
 
-char *MPIDI_POSIX_asym_base_addr = 0;
-MPID_Thread_mutex_t MPID_shm_mutex;
+MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
+
+MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;

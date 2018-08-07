@@ -35,6 +35,8 @@
 **ch4|pmi_finalize %d:PMI_Finalize failed, error %d
 **ch4|invalid_shm:Invalid shm specified
 **ch4|invalid_shm %s:Invalid shm specified (%s)
+**ch4|invalid_shm_posix_eager:Invalid shm posix eager module specified
+**ch4|invalid_shm_posix_eager %s:Invalid shm posix eager module specified (%s)
 **ch4|invalid_locality:Invalid locality usage
 **ch4|invalid_locality %s:Invalid locality usage (%s)
 #

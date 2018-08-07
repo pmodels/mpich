@@ -567,7 +567,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
 
     mpi_errno =
-        MPIDIG_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDIG_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
     return mpi_errno;
@@ -588,7 +588,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
 
     mpi_errno =
-        MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
     return mpi_errno;
@@ -609,7 +609,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
 
     mpi_errno =
-        MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
     return mpi_errno;
@@ -630,7 +630,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
 
     mpi_errno =
-        MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
     return mpi_errno;
 }
