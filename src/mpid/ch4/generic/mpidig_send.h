@@ -13,7 +13,6 @@
 #define MPIDIG_SEND_H_INCLUDED
 
 #include "ch4_impl.h"
-#include <../mpi/pt2pt/bsendutil.h>
 
 #define MPIDI_NONBLOCKING 0
 #define MPIDI_BLOCKING    1
