@@ -48,7 +48,7 @@ typedef int (*MPIDI_SHM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src
 typedef size_t(*MPIDI_SHM_am_hdr_max_sz_t) (void);
 typedef int (*MPIDI_SHM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx,
-                                          int *lpid_ptr, MPL_bool is_remote);
+                                          int *lpid_ptr, bool is_remote);
 typedef int (*MPIDI_SHM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
                                             char **local_upids);
 typedef int (*MPIDI_SHM_upids_to_lupids_t) (int size, size_t * remote_upid_size,
@@ -625,7 +625,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void) MPL_STATIC_INLINE_
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                      int *lpid_ptr,
-                                                     MPL_bool is_remote) MPL_STATIC_INLINE_SUFFIX;
+                                                     bool is_remote) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
                                                        char **local_upids) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size,

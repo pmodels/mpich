@@ -41,7 +41,7 @@ static inline int MPIDI_NM_get_vni_attr(int vni)
 }
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                         int idx, int *lpid_ptr, MPL_bool is_remote)
+                                         int idx, int *lpid_ptr, bool is_remote)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

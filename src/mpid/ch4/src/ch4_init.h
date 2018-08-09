@@ -611,7 +611,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
-                                                int idx, int *lpid_ptr, MPL_bool is_remote)
+                                                int idx, int *lpid_ptr, bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;

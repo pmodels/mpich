@@ -71,7 +71,7 @@ static inline int MPIDI_STUBSHM_mpi_free_mem(void *ptr)
 }
 
 static inline int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                              int idx, int *lpid_ptr, MPL_bool is_remote)
+                                              int idx, int *lpid_ptr, bool is_remote)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);
