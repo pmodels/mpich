@@ -220,7 +220,7 @@ static inline int MPIDI_NM_get_vni_attr(int vni)
 }
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                         int idx, int *lpid_ptr, MPL_bool is_remote)
+                                         int idx, int *lpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {

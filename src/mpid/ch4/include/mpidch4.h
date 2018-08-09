@@ -31,7 +31,7 @@ MPIDI_CH4I_API(int, Comm_get_all_failed_procs, MPIR_Comm *, MPIR_Group **, int);
 MPIDI_CH4I_API(int, Comm_revoke, MPIR_Comm *, int);
 MPIDI_CH4I_API(int, Comm_failure_ack, MPIR_Comm *);
 MPIDI_CH4I_API(int, Comm_AS_enabled, MPIR_Comm *);
-MPIDI_CH4I_API(int, Comm_get_lpid, MPIR_Comm *, int, int *, MPL_bool);
+MPIDI_CH4I_API(int, Comm_get_lpid, MPIR_Comm *, int, int *, bool);
 MPIDI_CH4I_API(int, Finalize, void);
 MPIDI_CH4I_API(int, Get_universe_size, int *);
 MPIDI_CH4I_API(int, Get_processor_name, char *, int, int *);
