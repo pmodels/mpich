@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
-                                                     int *lpid_ptr, MPL_bool is_remote)
+                                                     int *lpid_ptr, bool is_remote)
 {
     int ret;
 
