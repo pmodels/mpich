@@ -407,6 +407,9 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_BUSY;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_UNEXPECTED;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
         /* MPIDI_CS_ENTER(); */
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);
@@ -477,6 +480,9 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
         /* MPIDI_CS_ENTER(); */
         if (root_comm) {
