@@ -131,6 +131,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
+AC_HEADER_STDBOOL
 
 #######################################################################
 # valgrind support
