@@ -137,4 +137,20 @@
 
 typedef int MPL_bool;
 
+#ifdef MPL_HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+#ifndef MPL_HAVE__BOOL
+#ifdef __cplusplus
+typedef bool _Bool;
+#else
+#define _Bool signed char
+#endif
+#endif
+#define bool _Bool
+#define false 0
+#define true 1
+#define __bool_true_false_are_defined 1
+#endif
+
 #endif /* MPL_BASE_H_INCLUDED */
