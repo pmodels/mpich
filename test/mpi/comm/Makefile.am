@@ -42,5 +42,6 @@ noinst_PROGRAMS =     \
     comm_idup_iallreduce \
     comm_idup_comm    \
     comm_idup_comm2   \
+    comm_dup_with_info \
     comm_create_group_idup \
     comm_info
