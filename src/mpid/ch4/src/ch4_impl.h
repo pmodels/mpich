@@ -912,7 +912,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
-    if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
+    if ((HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN)
+        && ((*MPIR_OP_HDL_TO_DTYPE_FN(acc_op)) (source_dtp) == MPI_SUCCESS)) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(acc_op);
     } else {
