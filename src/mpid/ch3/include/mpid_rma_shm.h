@@ -631,6 +631,9 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
+    if ((*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype) != MPI_SUCCESS)
+        goto fn_exit;
+
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
         MPIR_Assert(local_target_rank >= 0);
