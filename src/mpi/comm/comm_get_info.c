@@ -35,8 +35,13 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Allocate an empty info object */
-    mpi_errno = MPIR_Info_alloc(info_p_p);
+    if (comm_ptr->info) {
+        /* Copy info object */
+        mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, info_p_p);
+    } else {
+        /* Allocate an empty info object in case we have no info in communicator */
+        mpi_errno = MPIR_Info_alloc(info_p_p);
+    }
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
