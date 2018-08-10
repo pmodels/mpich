@@ -339,7 +339,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 /* applies the specified info chain to the specified communicator */
 int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 
-int MPII_Comm_copy(MPIR_Comm *, int, MPIR_Comm **);
+int MPII_Comm_copy(MPIR_Comm *, int, MPIR_Comm **, MPIR_Info *);
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);
 
 int MPII_Setup_intercomm_localcomm(MPIR_Comm *);

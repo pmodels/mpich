@@ -52,7 +52,7 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     /* We must use the local size, because this is compared to the
      * rank of the process in the communicator.  For intercomms,
      * this must be the local size */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, newcomm_ptr);
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, newcomm_ptr, NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

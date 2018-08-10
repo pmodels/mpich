@@ -422,6 +422,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_comm->local_size = num_local;
             comm->node_comm->pof2 = MPL_pof2(comm->node_comm->local_size);
             comm->node_comm->remote_size = num_local;
+            /* For node and node roots communicator just keep a reference to parent's info */
+            comm->node_comm->info = comm->info;
 
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
                                     num_local, MPIR_COMM_MAP_DIR__L2L, NULL);
@@ -459,6 +461,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->local_size = num_external;
             comm->node_roots_comm->pof2 = MPL_pof2(comm->node_roots_comm->local_size);
             comm->node_roots_comm->remote_size = num_external;
+            /* For node and node roots communicator just keep a reference to parent's info */
+            comm->node_roots_comm->info = comm->info;
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
                                     external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
@@ -545,7 +549,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
 #define FUNCNAME MPII_Comm_copy
 #undef FCNAME
 #define FCNAME "MPII_Comm_copy"
-int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
+int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t new_context_id, new_recvcontext_id;
@@ -646,6 +650,13 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
+    /* Copy over the info hints from the original communicator.
+     * Setup comm info before comm_commit: device-hooks may use it for internal needs*/
+    mpi_errno =
+        MPIR_Info_dup_impl((info_ptr != NULL) ? info_ptr : comm_ptr->info, &(newcomm_ptr->info));
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -653,10 +664,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
 
-    /* Copy over the info hints from the original communicator. */
-    mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPII_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -791,10 +798,15 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        /* Free info hints */
-        if (comm_ptr->info != NULL) {
+        /* Free info hints.
+         * Node- and Node-roots- communicators have no its own info-ojects */
+        if ((comm_ptr->info != NULL) && ((comm_ptr->hierarchy_kind ==
+                                          MPIR_COMM_HIERARCHY_KIND__PARENT) ||
+                                         (comm_ptr->hierarchy_kind ==
+                                          MPIR_COMM_HIERARCHY_KIND__FLAT))) {
             MPIR_Info_free(comm_ptr->info);
         }
+        comm_ptr->info = NULL;
 
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)
             MPIR_Comm_release(comm_ptr->local_comm);
