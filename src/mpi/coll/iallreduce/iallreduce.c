@@ -72,6 +72,7 @@ cvars:
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
         recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        recexch_reduce_scatter_recexch_allgatherv  - Force generic transport recursive exchange with reduce scatter and allgatherv
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -278,6 +279,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
+    int is_commutative = MPIR_Op_is_commutative(op);
+    int nranks = comm_ptr->local_size;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
@@ -320,6 +323,24 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
+                break;
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV:
+                if (is_commutative && count >= nranks) {
+                    /*  This algorithm will work for commutative operations and if the count is
+                     * bigger than total number of ranks. If it not commutative or if the count < nranks,
+                     * MPIR_Iallreduce_sched algorithm will be run */
+                    mpi_errno =
+                        MPIR_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(sendbuf,
+                                                                                        recvbuf,
+                                                                                        count,
+                                                                                        datatype,
+                                                                                        op,
+                                                                                        comm_ptr,
+                                                                                        request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
