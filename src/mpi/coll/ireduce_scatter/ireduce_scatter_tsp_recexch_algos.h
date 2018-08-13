@@ -24,8 +24,8 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const int *recvcounts, MPI_Datatype datatype,
-                                                 MPI_Op op, int tag, MPIR_Comm * comm, int k,
-                                                 MPIR_TSP_sched_t * sched)
+                                                 MPI_Op op, MPIR_Comm * comm, int k,
+                                                 int is_dist_halving, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
@@ -36,10 +36,11 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     int in_step2;
     int *step1_recvfrom = NULL;
     int **step2_nbrs = NULL;
-    int nranks, rank, p_of_k, T;
-    int total_count;
-    int dtcopy_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
-    int i, nvtcs, vtcs[2];
+    int nranks, rank, p_of_k, T, dst;
+    int total_count, send_cnt, recv_cnt, current_cnt;
+    int i, j, x, phase, offset, rank_for_offset, send_offset, recv_offset;
+    int dtcopy_id = -1, send_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
+    int nvtcs, vtcs[2];
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int *displs;
 
@@ -130,9 +131,12 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 
     /* Step 2 */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
-    for (phase = step2_nphases - 1; phase >= 0 && step1_sendto == -1; phase--) {
+    for (x = 0, phase = step2_nphases - 1; phase >= 0 && step1_sendto == -1; phase--, x++) {
         for (i = 0; i < k - 1; i++) {
-            dst = step2_nbrs[phase][i];
+            if (is_dist_halving)
+                dst = step2_nbrs[x][i];
+            else
+                dst = step2_nbrs[phase][i];
 
             /* Both send and recv have similar dependencies */
             nvtcs = 1;
@@ -142,7 +146,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
                 vtcs[0] = reduce_id;
             }
 
-            rank_for_offset = dst;
+            rank_for_offset =
+                (is_dist_halving) ? MPII_Recexchalgo_reverse_digits_step2(dst, nranks, k) : dst;
             MPII_Recexchalgo_get_count_and_offset(rank_for_offset, phase, k, nranks, &current_cnt,
                                                   &offset);
             send_offset = displs[offset] * extent;
@@ -157,7 +162,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
                 MPIR_TSP_sched_isend((char *) tmp_results + send_offset, send_cnt,
                                      datatype, dst, tag, comm, sched, nvtcs, vtcs);
 
-            rank_for_offset = rank;
+            rank_for_offset =
+                (is_dist_halving) ? MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k) : rank;
             MPII_Recexchalgo_get_count_and_offset(rank_for_offset, phase, k, nranks, &current_cnt,
                                                   &offset);
             recv_offset = displs[offset] * extent;
@@ -228,7 +234,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
                                            const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
-                                           MPIR_Comm * comm, MPIR_Request ** req, int k)
+                                           MPIR_Comm * comm, MPIR_Request ** req, int k,
+                                           int rs_type)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -252,7 +259,7 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,
-                                                     op, tag, comm, k, sched);
+                                                     op, comm, k, rs_type, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

@@ -29,7 +29,8 @@ int MPIR_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
     mpi_errno = MPII_Gentran_Ireduce_scatter_intra_recexch(sendbuf, recvbuf, recvcounts,
                                                            datatype, op,
                                                            comm, req,
-                                                           MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL);
+                                                           MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
+                                                           IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING);
 
     return mpi_errno;
 }
