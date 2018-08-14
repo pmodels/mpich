@@ -996,15 +996,9 @@ if test "$ac_cv_lib_libunwind" = "yes" ; then
     PAC_PREPEND_FLAG([-lunwind],[LIBS])
 fi
 
+AX_LIB_SOCKET_NSL
 AC_CHECK_HEADERS(ifaddrs.h arpa/inet.h)
-AC_CHECK_FUNCS(inet_ntop)
-AC_TRY_LINK([
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <ifaddrs.h>
-	],
-	[return getifaddrs(NULL);],
-	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
+AC_CHECK_FUNCS(inet_ntop getifaddrs)
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
