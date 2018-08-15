@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     int errors = 0, errs = 0;
     MPI_Comm comm;
     void *base;
-    char invalid_key[] = "invalid_test_key";
+    char key[] = "test_key";
     char buf[MPI_MAX_INFO_VAL];
     int flag;
 
@@ -27,23 +27,18 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Info_create(&info_in);
-    MPI_Info_set(info_in, invalid_key, "true");
+    MPI_Info_set(info_in, key, "true");
 
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
     MPI_Comm_set_info(comm, info_in);
     MPI_Comm_get_info(comm, &info_out);
 
-    MPI_Info_get(info_out, invalid_key, MPI_MAX_INFO_VAL, buf, &flag);
-#ifndef USE_STRICT_MPI
-    /* Check if our invalid key was ignored.  Note, this check's MPICH's
-     * behavior, but this behavior may not be required for a standard
-     * conforming MPI implementation. */
-    if (flag) {
-        printf("%d: %s was not ignored\n", rank, invalid_key);
+    MPI_Info_get(info_out, key, MPI_MAX_INFO_VAL, buf, &flag);
+    if (!flag) {
+        printf("%d: %s was ignored\n", rank, key);
         errors++;
     }
-#endif
 
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
