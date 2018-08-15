@@ -77,7 +77,7 @@ int c2fwin_(int *win)
     MPI_Group_free(&group);
     MPI_Group_free(&wgroup);
 
-    return MTestReturnValue(errs);
+    return 0;
 }
 
 /*
