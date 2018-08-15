@@ -104,6 +104,7 @@ do_subcfg_m4=yes
 do_izem=yes
 do_ofi=yes
 do_ucx=yes
+do_json=yes
 
 export do_build_configure
 
@@ -227,6 +228,10 @@ for arg in "$@" ; do
         do_ucx=no
         ;;
 
+    -without-json|--without-json)
+        do_json=no
+        ;;
+
 	-help|--help|-usage|--usage)
 	    cat <<EOF
    ./autogen.sh [ --with-autotools=dir ] \\
@@ -290,6 +295,10 @@ fi
 
 if [ "yes" = "$do_ofi" ] ; then
     externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
+if [ "yes" = "$do_json" ] ; then
+    externals="${externals} src/util/coll_selection/json-c"
 fi
 
 ########################################################################
@@ -616,6 +625,11 @@ fi
 if [ "yes" = "$do_ofi" ] ; then
     check_submodule_presence src/mpid/ch4/netmod/ofi/libfabric
     externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
+if [ "yes" = "$do_json" ] ; then
+    check_submodule_presence "src/util/coll_selection/json-c"
+    externals="${externals} src/util/coll_selection/json-c"
 fi
 
 ########################################################################
