@@ -438,6 +438,106 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void 
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_intra_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
+                                                                  void *recvbuf, int count,
+                                                                  MPI_Datatype datatype,
+                                                                  MPI_Op op, int root,
+                                                                  MPIR_Comm * comm,
+                                                                  MPIR_Errflag_t * errflag,
+                                                                  const
+                                                                  MPIDI_coll_algo_container_t
+                                                                  * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint true_lb = 0;
+    MPI_Aint true_extent = 0;
+    MPI_Aint extent = 0;
+    const void *reduce_roots_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    const void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
+    const void *inter_sendbuf;
+    void *ori_recvbuf = recvbuf;
+
+    MPIR_CHKLMEM_DECL(1);
+
+    /* Create a temporary buffer on local roots of all nodes,
+     * except for root if it is also a local root */
+    if (comm->node_roots_comm != NULL && comm->rank != root) {
+
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+        MPIR_Datatype_get_extent_macro(datatype, extent);
+
+        MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+
+        MPIR_CHKLMEM_MALLOC(recvbuf, void *, count * (MPL_MAX(extent, true_extent)),
+                            mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+        /* adjust for potential negative lower bound in datatype */
+        recvbuf = (void *) ((char *) recvbuf - true_lb);
+    }
+
+    /* intranode reduce on all nodes */
+    if (comm->node_comm != NULL) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
+                                         errflag, reduce_node_container);
+#else
+        mpi_errno = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
+                                        errflag, reduce_node_container);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+        /* recvbuf becomes the sendbuf for internode reduce */
+        inter_sendbuf = recvbuf;
+    } else {
+        inter_sendbuf = (sendbuf == MPI_IN_PLACE) ? recvbuf : sendbuf;
+    }
+
+    /* internode reduce with rank 0 in node_roots_comm as the root */
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno =
+            MPIDI_NM_mpi_reduce(comm->node_roots_comm->rank == 0 ? MPI_IN_PLACE : inter_sendbuf,
+                                recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag,
+                                reduce_roots_container);
+
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+    }
+
+    /* Send data to root via point-to-point message if root is not rank 0 in comm */
+    if (root != 0) {
+        if (comm->rank == 0) {
+            MPIC_Send(recvbuf, count, datatype, root, MPIR_REDUCE_TAG, comm, errflag);
+        } else if (comm->rank == root) {
+            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm, MPI_STATUS_IGNORE,
+                      errflag);
+        }
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_intra_composition_beta
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
