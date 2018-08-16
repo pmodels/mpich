@@ -118,10 +118,10 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_select(const void *sendbuf,
         nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
-            return &MPIDI_Reduce_intra_composition_alpha_cnt;
+            return &MPIDI_Reduce_intra_composition_beta_cnt;
         }
     }
-    return &MPIDI_Reduce_intra_composition_beta_cnt;
+    return &MPIDI_Reduce_intra_composition_gamma_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const
