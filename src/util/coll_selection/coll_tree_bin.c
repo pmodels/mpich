@@ -10,7 +10,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_TUNING_FILE
+    - name        : MPIR_CVAR_TUNING_JSON_FILE
       category    : COLLECTIVE
       type        : string
       default     : NULL
@@ -18,7 +18,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Defines the name of tuning file
+        Defines the name of json tuning file
+
+    - name        : MPIR_CVAR_TUNING_BIN_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : NULL
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the name of bin tuning file
 
     - name        : MPIR_CVAR_TUNING_JSON_FILE_DUMP
       category    : COLLECTIVE
@@ -328,7 +338,7 @@ int MPIU_COLL_SELECTION_init()
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_CH4_Global.coll_selection = MPIU_COLL_SELECTION_tree_load(MPIR_CVAR_TUNING_FILE);
+    MPIDI_CH4_Global.coll_selection = MPIU_COLL_SELECTION_tree_load(MPIR_CVAR_TUNING_BIN_FILE);
 
     if (MPIDI_CH4_Global.coll_selection == MPIU_COLL_SELECTION_NULL_ENTRY) {
         mpi_errno = MPI_ERR_OTHER;
@@ -463,6 +473,8 @@ MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename
             MPIU_COLL_SELECTION_NULL_ENTRY;
         MPIU_COLL_SELECTION_storage_handler flat_comm_subtree = MPIU_COLL_SELECTION_NULL_ENTRY;
 
+        MPIU_COLL_SELECTION_TREE_NODE compositions = MPIU_COLL_SELECTION_TREE_NULL_TYPE;
+
         /***************************************************************************/
         /*               Build generic part of binary selection tree               */
         /***************************************************************************/
@@ -474,6 +486,7 @@ MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename
         /***************************************************************************/
         /*               Build json to binary trees for topo aware comm            */
         /***************************************************************************/
+        compositions = MPIU_COLL_SELECTION_tree_read(MPIR_CVAR_TUNING_JSON_FILE);
         MPIU_COLL_SELECTION_build_bin_tree_default_topo_aware(topo_aware_comm_subtree);
 
         /***************************************************************************/
