@@ -61,7 +61,7 @@ c2f90multio_SOURCES     = c2f90multio.c
 # A) prevent the makefile-wide "LDADD=mtestf90.o" from affecting this program, or
 # B) link with the fortran compiler, otherwise we'll get link failures from
 # compilers with runtime support libs, such as PGI
-c2f90multio_LDADD =
+c2f90multio_LDADD = $(top_builddir)/util/mtest.o
 
 c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c
 
