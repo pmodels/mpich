@@ -41,12 +41,17 @@ typedef union {
 } MPIDI_Bcast_params_t;
 
 typedef enum {
+    MPIDI_Reduce_intra_composition_alpha_id,
     MPIDI_Reduce_intra_composition_beta_id,
     MPIDI_Reduce_intra_composition_gamma_id,
     MPIDI_Reduce_inter_composition_alpha_id,
 } MPIDI_Reduce_id_t;
 
 typedef union {
+    struct MPIDI_Reduce_alpha {
+        int node_reduce;
+        int roots_reduce;
+    } ch4_reduce_alpha;
     struct MPIDI_Reduce_beta {
         int node_reduce;
         int roots_reduce;

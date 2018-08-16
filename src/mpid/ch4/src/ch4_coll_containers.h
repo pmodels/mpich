@@ -13,6 +13,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_gamma_cnt
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_composition_alpha_cnt;
 
 /* Reduce  CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_alpha_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_beta_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_gamma_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Reduce_inter_composition_alpha_cnt;
