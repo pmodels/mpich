@@ -472,8 +472,8 @@ MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename
         MPIU_COLL_SELECTION_storage_handler topo_aware_comm_subtree =
             MPIU_COLL_SELECTION_NULL_ENTRY;
         MPIU_COLL_SELECTION_storage_handler flat_comm_subtree = MPIU_COLL_SELECTION_NULL_ENTRY;
-
         MPIU_COLL_SELECTION_TREE_NODE compositions = MPIU_COLL_SELECTION_TREE_NULL_TYPE;
+        int coll_id = 0;
 
         /***************************************************************************/
         /*               Build generic part of binary selection tree               */
@@ -486,8 +486,25 @@ MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename
         /***************************************************************************/
         /*               Build json to binary trees for topo aware comm            */
         /***************************************************************************/
-        compositions = MPIU_COLL_SELECTION_tree_read(MPIR_CVAR_TUNING_JSON_FILE);
-        MPIU_COLL_SELECTION_build_bin_tree_default_topo_aware(topo_aware_comm_subtree);
+        compositions = MPIU_COLL_SELECTION_TREE_read(MPIR_CVAR_TUNING_JSON_FILE);
+        for (coll_id = 0; coll_id < MPIU_COLL_SELECTION_COLLECTIVES_NUMBER; coll_id++) {
+            MPIU_COLL_SELECTION_TREE_NODE coll_json = MPIU_COLL_SELECTION_TREE_NULL_TYPE;
+            int is_found = 0;
+
+            MPIU_COLL_SELECTION_TREE_init_json_node(&coll_json);
+            if (coll_json != MPIU_COLL_SELECTION_TREE_NULL_TYPE) {
+                is_found =
+                    MPIU_COLL_SELECTION_TREE_is_coll_in_json(compositions, &coll_json, coll_id);
+                if (is_found) {
+                    MPIU_COLL_SELECTION_TREE_json_to_bin(coll_json, topo_aware_comm_subtree);
+                } else {
+                    coll_topo_aware_compositions[coll_id] (topo_aware_comm_subtree, coll_id);
+                }
+                MPIU_COLL_SELECTION_TREE_free_json_node(coll_json);
+            } else {
+                coll_topo_aware_compositions[coll_id] (topo_aware_comm_subtree, coll_id);
+            }
+        }
 
         /***************************************************************************/
         /*               Build json to binary trees for flat and inter comms       */
@@ -711,10 +728,8 @@ MPIU_COLL_SELECTION_find_entry(MPIU_COLL_SELECTION_storage_handler root_node,
                                                        MPIU_COLL_SELECTION_COLLECTIVES_NUMBER);
                     break;
                 case MPIU_COLL_SELECTION_COMMSIZE:
-                    MPIU_COLL_SELECTION_level_match_condition(root_node, match_node,
-                                                              (match_pattern_key <=
-                                                               MPIU_COLL_SELECTION_NODE_FIELD
-                                                               (match_node, key)));
+                    MPIU_COLL_SELECTION_level_match_complex_condition(root_node, match_node,
+                                                                      match_pattern_key);
                     break;
                 case MPIU_COLL_SELECTION_MSGSIZE:
                     MPIU_COLL_SELECTION_level_match_condition(root_node, match_node,

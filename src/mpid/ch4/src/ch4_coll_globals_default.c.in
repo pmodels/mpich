@@ -6,7 +6,7 @@
 /* e.g. return ((void *) ((char *)container) + sizeof(MPIDIG_coll_algo_generic_container_t)); */
 const void *MPIDI_coll_get_next_container(const void *container)
 {
-    return NULL;
+    return (const void *) (((char *) container) + sizeof(MPIDIG_coll_algo_generic_container_t));
 }
 
 /* Barrier default composition containers initialization*/

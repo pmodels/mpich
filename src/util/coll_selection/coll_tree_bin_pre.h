@@ -16,7 +16,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#ifndef MPIU_COLLi_SELECTION_TREE_PRE_H_INCLUDED
+#ifndef MPIU_COLL_SELECTION_TREE_PRE_H_INCLUDED
 #define MPIU_COLL_SELECTION_TREE_PRE_H_INCLUDED
 
 #include <stddef.h>
@@ -53,6 +53,38 @@ struct MPIU_COLL_SELECTION_tree_node;
         }                                                                                      \
         match_entry_ = MPIU_COLL_SELECTION_NODE_FIELD(root_entry_, offset[i - 1]);             \
     }                                                                                          \
+}
+
+#define MPIU_COLL_SELECTION_level_match_complex_condition(root_entry_, match_entry_, ref_val_)                                     \
+{                                                                                                                                  \
+    int i = 0;                                                                                                                     \
+    int level_width = 0;                                                                                                           \
+    int value_ = 0;                                                                                                                \
+    int is_pow2_ = 0;                                                                                                              \
+    char key_str_[MPIU_COLL_SELECTION_TREE_BUFFER_MAX_SIZE];                                                                       \
+    int key_int_ = 0;                                                                                                              \
+    int ceil_pof2 = 0;                                                                                                             \
+    match_entry_ = MPIU_COLL_SELECTION_NULL_ENTRY;                                                                                 \
+    level_width = MPIU_COLL_SELECTION_NODE_FIELD(root_entry_, children_count);                                                     \
+                                                                                                                                   \
+    for (i = 0; i < level_width; i++) {                                                                                            \
+        match_entry_ = MPIU_COLL_SELECTION_NODE_FIELD(root_entry_, offset[i]);                                                     \
+        value_ = MPIU_COLL_SELECTION_NODE_FIELD(match_entry_, key);                                                                \
+        MPIU_COLL_SELECTION_TREE_convert_key_int(value_, key_str_, &is_pow2_);                                                     \
+        key_int_ = atoi(key_str_);                                                                                                 \
+        if ((is_pow2_ && MPL_is_pof2(ref_val_, &ceil_pof2) && (((key_int_ != 0)  && (ref_val_ < key_int_)) || (key_int_ == 0))) || \
+            (!is_pow2_ && (key_int_ != 0) && (ref_val_ < key_int_))) {                                                             \
+            break;                                                                                                                 \
+        }                                                                                                                          \
+    }                                                                                                                              \
+    if (i == level_width) {                                                                                                        \
+        if (MPIR_CVAR_FAILURE_ON_MATCH_FALLBACK) {                                                                                 \
+            MPIR_Assert_fail_fmt("FAILURE_ON_MATCH_FALLBACK", __FILE__,                                                            \
+                                 __LINE__, "Key was not matched on layer type: %d",                                                \
+                                 MPIU_COLL_SELECTION_NODE_FIELD(match_entry_, type));                                              \
+        }                                                                                                                          \
+        match_entry_ = MPIU_COLL_SELECTION_NODE_FIELD(root_entry_, offset[i - 1]);                                                 \
+    }                                                                                                                              \
 }
 
 #define MPIU_COLL_SELECTION_level_match_id(root_entry_, match_entry_, match_id_, level_width_)  \
@@ -108,4 +140,4 @@ extern char *MPIU_COLL_SELECTION_coll_names[];
 extern char *MPIU_COLL_SELECTION_comm_kind_names[];
 extern char *MPIU_COLL_SELECTION_comm_hierarchy_names[];
 
-#endif /* MPIU_COLL_SELECTION_PRE_TYPES_H_INCLUDED */
+#endif /* MPIU_COLL_SELECTION_PRE_H_INCLUDED */
