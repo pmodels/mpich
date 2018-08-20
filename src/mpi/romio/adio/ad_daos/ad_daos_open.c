@@ -1,10 +1,17 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) 1997 University of Chicago.
+ * See COPYRIGHT notice in top-level directory.
  *
- *   Copyright (C) 2018 Intel Corporation
+ * Copyright (C) 2018 Intel Corporation
+ *
+ * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
+ * The Government's rights to use, modify, reproduce, release, perform, display,
+ * or disclose this software are subject to the terms of the Apache License as
+ * provided in Contract No. 8F-30005.
+ * Any reproduction of computer software, computer software documentation, or
+ * portions thereof marked with this legend must also reproduce the markings.
  */
 
 #include <libgen.h>
@@ -215,6 +222,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_OPEN";
+    int perm, old_mask, amode;
     int rc;
 
     *error_code = MPI_SUCCESS;
@@ -240,96 +248,86 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         goto out;
     }
 
-    /* if RW mode, do an epoch hold, otherwise just query HCE for read */
-    if (cont->amode == DAOS_COO_RW) {
-        daos_epoch_state_t state;
+    if (cont->amode == DAOS_COO_RW)
+        amode = O_RDWR;
+    else
+        amode = O_RDONLY;
 
-        cont->epoch = 0;
-        rc = daos_epoch_hold(cont->coh, &cont->epoch, &state, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "daos_epoch_hold failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Epoch Hold Failed", 0);
-            goto err_cont;
-        }
-    }
-    else {
-        daos_epoch_state_t state;
-
-        rc = daos_epoch_query(cont->coh, &state, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "daos_epoch_query failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Epoch Hold Failed", 0);
-            goto err_cont;
-        }
-        cont->epoch = state.es_hce;
+    /* Mount a flat namespace on the container */
+    rc = dfs_mount(daos_pool_oh, cont->coh, amode, &cont->dfs);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "dfs_mount() Failed", 0);
+        goto out;
     }
 
-    /* check & Fail if object exists for EXCL mode */
-    if (fd->access_mode & ADIO_EXCL) {
-        daos_size_t elem_size, chunk_size;
-
-        rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &chunk_size, &cont->oh, NULL);
-        if (rc == 0) {
-            rc = -DER_EXIST;
-            PRINT_MSG(stderr, "Array exists (EXCL mode) (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "File (DAOS ARRAY) Exists", 0);
-            goto err_array;
-        }
+    rc = dfs_get_epoch(cont->dfs, &cont->epoch);
+    if (rc) {
+        PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "dfs_get_epoch() Failed", 0);
+        goto out;
     }
 
-    /* Create a DAOS byte array for the file */
-    if (fd->access_mode & ADIO_CREATE) {
-        rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
-                               cont->chunk_size, &cont->oh, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Array Create Failed", 0);
-            goto err_cont;
-        }
+    /* Set file access flags */
+    amode = 0;
+    if (fd->access_mode & ADIO_CREATE)
+        amode = amode | O_CREAT;
+    if (fd->access_mode & ADIO_RDONLY)
+        amode = amode | O_RDONLY;
+    if (fd->access_mode & ADIO_WRONLY)
+        amode = amode | O_WRONLY;
+    if (fd->access_mode & ADIO_RDWR)
+        amode = amode | O_RDWR;
+    if (fd->access_mode & ADIO_EXCL)
+        amode = amode | O_EXCL;
+
+    /* Set DFS permission mode + object type */
+    if (fd->perm == ADIO_PERM_NULL) {
+        old_mask = umask(022);
+        umask(old_mask);
+        perm = old_mask ^ 0666;
     } else {
-        daos_size_t elem_size;
+        perm = fd->perm;
+    }
+    perm = S_IFREG | perm;
 
-        rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &cont->chunk_size, &cont->oh, NULL);
-        if (rc != 0) {
-            /* MSC - need to fix the array open return code */
-            rc = -DER_NONEXIST;
-            PRINT_MSG(stderr, "daos_array_open() failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Array Create Failed", 0);
-            goto err_cont;
-        }
+    rc = dfs_open(cont->dfs, NULL, cont->obj_name, perm, amode,
+                  fd->hints->fs_hints.daos.obj_class, NULL, &cont->obj);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to open file %s (%d)\n", cont->obj_name, rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "dfs_open() failed", 0);
+        goto err_dfs;
+    }
 
-        if (elem_size != 1) {
-            PRINT_MSG(stderr, "invalid DAOS array object\n");
-            goto err_array;
-        }
+    rc = dfs_get_file_oh(cont->obj, &cont->oh);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to get DFS object handle (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "dfs_get_file_oh() Failed", 0);
+        goto err_obj;
     }
 
 out:
     return;
-err_array:
-    daos_array_close(cont->oh, NULL);
+err_obj:
+    dfs_remove(cont->dfs, NULL, cont->obj_name, true);
+err_dfs:
+    dfs_umount(cont->dfs, false);
 err_cont:
     daos_cont_close(cont->coh, NULL);
     goto out;
@@ -375,34 +373,26 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     /* Hash container name to create uuid */
     duuid_hash128(cont->cont_name, &cont->uuid, NULL, NULL);
 
-    /* Hash object name to create obj id */
-    cont->oid.hi = 0;
-    cont->oid.lo = d_hash_murmur64(cont->obj_name, strlen(cont->obj_name),
-                                   OID_SEED);
+    cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
+    fd->fs_ptr = cont;
 
-    /* MSC - add hint for object class */
-    daos_obj_id_generate(&cont->oid, 0, fd->hints->fs_hints.daos.obj_class);
-    assert(fd->hints->fs_hints.daos.obj_class == DAOS_OC_LARGE_RW);
 #if 0
     {
         char uuid_str[37];
         uuid_unparse(cont->uuid, uuid_str);
 
         fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
-        fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64"\n",
-                cont->obj_name, cont->oid.hi, cont->oid.lo);
+        fprintf(stderr, "File %s\n", cont->obj_name);
     }
     fprintf(stderr, "chunk_size  = %d\n", fd->hints->fs_hints.daos.chunk_size);
+    fprintf(stderr, "OCLASS  = %d\n", fd->hints->fs_hints.daos.obj_class);
 #endif
-
-    cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
-
-    fd->fs_ptr = cont;
 
     if (rank == 0) {
         (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
         MPI_Error_class(*error_code, &rc);
     }
+
     if (mpi_size > 1) {
         MPI_Bcast(&rc, 1, MPI_INT, 0, comm);
 
@@ -421,28 +411,8 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
 
     if (mpi_size > 1) {
         handle_share(&cont->coh, HANDLE_CO, rank, daos_pool_oh, comm);
+        handle_share(&cont->oh, HANDLE_OBJ, rank, cont->coh, comm);
         MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, comm);
-    }
-
-    /* open array on other ranks */
-    if (rank != 0) {
-        daos_size_t elem_size;
-        daos_size_t chunk_size;
-
-        rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &chunk_size, &cont->oh, NULL);
-        if (rc != 0) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Array Open Failed", 0);
-            goto err_free;
-        }
-        if (elem_size != 1 || chunk_size != cont->chunk_size) {
-            *error_code = MPI_UNDEFINED;
-            goto err_free;
-        }
     }
 
     fd->is_open = 1;
@@ -462,7 +432,7 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 {
     int rank, rc, err;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    static char myname[] = "ADIOI_GEN_FLUSH";
+    static char myname[] = "ADIOI_DAOS_FLUSH";
 
     MPI_Comm_rank(fd->comm, &rank);
 
@@ -477,13 +447,36 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
         cont->epoch = max_epoch;
 
         if (rank == 0) {
-            rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
-            if(rc == 0) {
-                cont->epoch = 0;
-                rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
+            daos_epoch_t epoch;
+
+            rc = dfs_get_epoch(cont->dfs, &epoch);
+            if (rc) {
+                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
+                goto bcast_rc;
+            }
+
+            if (cont->epoch > epoch) {
+                rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
+                if (rc) {
+                    PRINT_MSG(stderr, "daos_epoch_commit() failed (%d)\n", rc);
+                    goto bcast_rc;
+                }
+            }
+
+            rc = dfs_sync(cont->dfs);
+            if (rc) {
+                PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
+                goto bcast_rc;
+            }
+
+            rc = dfs_get_epoch(cont->dfs, &cont->epoch);
+            if (rc) {
+                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
+                goto bcast_rc;
             }
         }
 
+bcast_rc:
         MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
         if (rc != 0) {
@@ -499,10 +492,17 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
         MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
     } else {
         if (rank == 0) {
-            daos_epoch_state_t state;
+            rc = dfs_sync(cont->dfs);
+            if (rc) {
+                PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
+                goto bcast_rc;
+            }
 
-            rc = daos_epoch_query(cont->coh, &state, NULL);
-            cont->epoch = state.es_ghce;
+            rc = dfs_get_epoch(cont->dfs, &cont->epoch);
+            if (rc) {
+                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
+                goto bcast_rc;
+            }
         }
 
         MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
@@ -525,11 +525,11 @@ out:
 
 void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
-    daos_handle_t coh, oh;
+    daos_handle_t coh;
     daos_epoch_t epoch = 0;
     uuid_t uuid;
+    dfs_t *dfs;
     char *obj_name, *cont_name;
-    daos_obj_id_t oid;
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
 
@@ -543,62 +543,34 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
         goto out_free;
     }
 
-    /* Hash object name to create obj id */
-    oid.hi = 0;
-    oid.lo = d_hash_murmur64(obj_name, strlen(obj_name), OID_SEED);
-    daos_obj_id_generate(&oid, 0, DAOS_OC_LARGE_RW);
-
-    rc = daos_epoch_hold(coh, &epoch, NULL, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_epoch_hold failed (%d)\n", rc);
+    /* Mount a flat namespace on the container */
+    rc = dfs_mount(daos_pool_oh, coh, O_RDWR, &dfs);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
-                                           "Epoch Hold Failed", 0);
+                                           "dfs_mount() Failed", 0);
         goto out_cont;
     }
 
-    rc = daos_obj_open(coh, oid, epoch, DAOS_OO_RW, &oh, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_obj_open failed (%d)\n", rc);
+    /* Remove the file from the flat namespace */
+    rc = dfs_remove(dfs, NULL, obj_name, true);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to delete file %s (%d)\n", obj_name, rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
-                                           "Object Open Failed", 0);
-        daos_epoch_discard(coh, epoch, NULL, NULL);
-        goto out_cont;
-    }
-
-    rc = daos_obj_punch(oh, epoch, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_obj_punch failed (%d)\n", rc);
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "Object Punch Failed", 0);
-        daos_epoch_discard(coh, epoch, NULL, NULL);
-        goto out_obj;
-    }
-
-    rc = daos_epoch_commit(coh, epoch, NULL, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_epoch_commit failed (%d)\n", rc);
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "Epoch Commit Failed", 0);
-        daos_epoch_discard(coh, epoch, NULL, NULL);
-        goto out_obj;
+                                           "dfs_remove() Failed", 0);
+        goto out_dfs;
     }
 
     *error_code = MPI_SUCCESS;
 
-out_obj:
-    daos_obj_close(oh, NULL);
+out_dfs:
+    dfs_umount(dfs, rc ? false : true);
 out_cont:
     daos_cont_close(coh, NULL);
 out_free:

@@ -1,10 +1,17 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) 1997 University of Chicago.
+ * See COPYRIGHT notice in top-level directory.
  *
- *   Copyright (C) 2018 Intel Corporation
+ * Copyright (C) 2018 Intel Corporation
+ *
+ * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
+ * The Government's rights to use, modify, reproduce, release, perform, display,
+ * or disclose this software are subject to the terms of the Apache License as
+ * provided in Contract No. 8F-30005.
+ * Any reproduction of computer software, computer software documentation, or
+ * portions thereof marked with this legend must also reproduce the markings.
  */
 
 #ifndef AD_DAOS_INCLUDE
@@ -13,6 +20,7 @@
 #include <daos_types.h>
 #include <daos_api.h>
 #include <daos_addons.h>
+#include <daos_fs.h>
 #include <daos_event.h>
 
 #include "adio.h"
@@ -35,6 +43,10 @@ struct ADIO_DAOS_cont {
     char		*obj_name;
     /** container daos OH */
     daos_handle_t	coh;
+    /** flat namespace mount */
+    dfs_t		*dfs;
+    /** dfs object for file */
+    dfs_obj_t		*obj;
     /** Array Object ID for the MPI file */
     daos_obj_id_t	oid;
     /** Array OH for the MPI file */

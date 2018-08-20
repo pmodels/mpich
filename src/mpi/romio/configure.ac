@@ -800,7 +800,8 @@ AS_IF([test "x$with_daos" != xno],
     AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
     AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
-    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS]))
+    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
+    AC_CHECK_LIB([dfs], [dfs_mount],, [unset DAOS]))
 
 AS_IF([test "x$CART" != xyes], [unset DAOS])
 
