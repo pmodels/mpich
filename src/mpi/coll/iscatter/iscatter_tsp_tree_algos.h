@@ -13,7 +13,6 @@
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
-#include "algo_common.h"
 #include "treealgo.h"
 #include "tsp_namespace_def.h"
 
@@ -34,8 +33,8 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     int size, rank;
     int i, j, is_inplace = false;
     int lrank;
-    size_t sendtype_lb, sendtype_extent, sendtype_size, sendtype_true_extent;
-    size_t recvtype_lb, recvtype_extent, recvtype_size, recvtype_true_extent;
+    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
+    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id[2];
     void *tmp_buf = NULL;
     int recv_id;
@@ -54,7 +53,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     if (rank == root)
         is_inplace = (recvbuf == MPI_IN_PLACE); /* For scatter, MPI_IN_PLACE is significant only at root */
 
-    tree_type = 0;      /* currently only tree_type=0 is supported for scatter */
+    tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for scatter */
     mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -74,12 +73,10 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
         sendcount = recvcount;
     }
 
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
-    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);

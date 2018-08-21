@@ -123,8 +123,6 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
             /* TODO: Validate that window is not already locked */
 
             /* TODO: Validate that window is not already in active mode */
-            if (mpi_errno)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

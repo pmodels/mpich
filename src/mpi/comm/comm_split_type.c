@@ -606,12 +606,8 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
     }
 #endif
-
   fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -696,8 +692,6 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     char hintval[MPI_MAX_INFO_VAL + 1];
     int mpi_errno = MPI_SUCCESS;
     int info_args_are_equal;
-    int hintval_size, hintval_size_max;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     *newcomm_ptr = NULL;
 

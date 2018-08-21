@@ -27,10 +27,21 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-    mpi_errno =
-        MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
-                                MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
-                                sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4I_REQUEST(rreq, is_local))
+        mpi_errno =
+            MPIDI_SHM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
+                                     MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
+                                     sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
+    else
+#endif
+    {
+        mpi_errno =
+            MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
+                                    MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
+                                    sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:

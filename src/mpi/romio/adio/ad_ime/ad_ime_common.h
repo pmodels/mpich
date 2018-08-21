@@ -12,7 +12,7 @@
 
 struct ADIOI_IME_fs_s {
     char *ime_filename;
-} ADIOI_IME_fs_s;
+};
 
 typedef struct ADIOI_IME_fs_s ADIOI_IME_fs;
 

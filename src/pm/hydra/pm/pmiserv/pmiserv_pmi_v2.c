@@ -461,6 +461,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
+    proxy_stash.strlist = NULL;
+
     status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 

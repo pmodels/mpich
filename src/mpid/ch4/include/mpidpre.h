@@ -30,7 +30,9 @@ typedef struct {
 } MPIDI_Devdt_t;
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 
-typedef int MPID_Progress_state;
+typedef struct {
+    int progress_count;
+} MPID_Progress_state;
 
 #define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
@@ -327,6 +329,10 @@ typedef struct MPIDI_CH4U_win_t {
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
+    unsigned shm_allocated;     /* shm optimized flag (0 or 1), set at shmmod win initialization time.
+                                 * Equal to 1 if the window has a shared memory region associated with it
+                                 * and the shmmod supports load/store based RMA operations over the window
+                                 * (e.g., may rely on support of interprocess mutex). */
 
     /* per-target structure for sync and OP completion. */
     MPIDI_CH4U_win_target_t *targets;
@@ -336,6 +342,9 @@ typedef struct {
     MPIDI_CH4U_win_t ch4u;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+    struct {
+        /* multiple shmmods may co-exist. */
+    MPIDI_SHM_WIN_DECL} shm;
 } MPIDI_Devwin_t;
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)

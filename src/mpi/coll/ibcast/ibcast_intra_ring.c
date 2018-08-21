@@ -14,7 +14,7 @@
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_ring_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
@@ -27,8 +27,10 @@ int MPIR_Ibcast_intra_ring(void *buffer, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPII_Gentran_Ibcast_intra_ring(buffer, count, datatype, root,
-                                               comm_ptr, request, MPIR_CVAR_IBCAST_RING_CHUNK_SIZE);
+    /* Ring algorithm is equivalent to kary tree algorithm with k = 1 */
+    mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
+                                               comm_ptr, request, MPIR_TREE_TYPE_KARY,
+                                               1, MPIR_CVAR_IBCAST_RING_CHUNK_SIZE);
 
     return mpi_errno;
 }

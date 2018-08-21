@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, alloc_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
@@ -208,7 +208,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, alloc_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
@@ -264,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, r_size, alloc_iovs, alloc_rma_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
@@ -321,10 +321,10 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    MPIR_Win * win, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t offset, omax, tmax, tout, oout;
     uint64_t flags;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
     unsigned i;
     struct iovec *originv;
@@ -482,10 +482,10 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    MPIR_Win * win, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t offset, omax, tmax, tout, oout;
     uint64_t flags;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
     struct iovec *originv;
     struct fi_rma_iov *targetv;
@@ -725,7 +725,13 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr,
                                                     result_addr, datatype,
                                                     target_rank, target_disp, win);
@@ -878,9 +884,9 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 {
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t origin_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout, oout;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     MPI_Datatype basic_type;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
@@ -1026,9 +1032,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 {
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
-    MPIDI_OFI_win_request_t *req;
+    MPIDI_OFI_win_request_t *req = NULL;
     size_t target_bytes, offset, max_count, max_size, dt_size, omax, rmax, tmax, tout, rout, oout;
-    struct fid_ep *ep;
+    struct fid_ep *ep = NULL;
     MPI_Datatype rt, basic_type, basic_type_res;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
@@ -1218,19 +1224,27 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                                target_rank, target_disp, target_count,
                                                target_datatype, op, win, request);
-    } else {
-        mpi_errno = MPIDI_OFI_do_accumulate((void *) origin_addr,
-                                            origin_count,
-                                            origin_datatype,
-                                            target_rank,
-                                            target_disp,
-                                            target_count, target_datatype, op, win, request);
+        goto fn_exit;
     }
 
+    mpi_errno = MPIDI_OFI_do_accumulate((void *) origin_addr,
+                                        origin_count,
+                                        origin_datatype,
+                                        target_rank,
+                                        target_disp,
+                                        target_count, target_datatype, op, win, request);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     return mpi_errno;
 }
@@ -1256,18 +1270,26 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                    result_addr, result_count, result_datatype,
                                                    target_rank, target_disp, target_count,
                                                    target_datatype, op, win, request);
-    } else {
-        mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                                result_addr, result_count, result_datatype,
-                                                target_rank, target_disp, target_count,
-                                                target_datatype, op, win, request);
+        goto fn_exit;
     }
 
+    mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                            result_addr, result_count, result_datatype,
+                                            target_rank, target_disp, target_count,
+                                            target_datatype, op, win, request);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     return mpi_errno;
 }
@@ -1287,7 +1309,13 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
                                                 target_rank, target_disp, op, win);
         goto fn_exit;
@@ -1394,7 +1422,13 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -1429,7 +1463,13 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_ATOMICS) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    /* We have to disable network-based atomics in auto mode.
+     * Because concurrent atomics may be performed by CPU (e.g., op
+     * over shared memory, or op issues to process-self. */
+    if (!MPIDI_OFI_ENABLE_ATOMICS)
+#endif
+    {
         mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win);

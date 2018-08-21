@@ -8,6 +8,7 @@
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
 #include "mpl.h"
+#include "mpidu_bc.h"
 
 static MPIDU_shm_seg_t memory;
 static MPIDU_shm_barrier_t *barrier;
@@ -47,7 +48,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
                        void **bc_table, size_t ** bc_indices)
 {
     int mpi_errno = MPI_SUCCESS;
-    int local_rank, local_leader;
+    int local_rank = -1, local_leader = -1;
     int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
@@ -146,7 +147,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= 2;
+        bc_len = VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -252,7 +253,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= 2;
+        bc_len = PMI2_MAX_VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -326,7 +327,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int start, end, i;
     int key_max, val_max, name_max, out_len, rem;
     char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
-    int local_rank, local_leader;
+    int local_rank = -1, local_leader = -1;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
@@ -363,7 +364,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
-        bc_len *= 2;
+        bc_len = val_max;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

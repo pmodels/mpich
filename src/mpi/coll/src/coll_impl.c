@@ -79,6 +79,7 @@ MPIR_Ialltoallw_inter_algo_t MPIR_Ialltoallw_inter_algo_choice = MPIR_IALLTOALLW
 MPIR_Ibarrier_intra_algo_t MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_AUTO;
 MPIR_Ibarrier_inter_algo_t MPIR_Ibarrier_inter_algo_choice = MPIR_IBARRIER_INTER_ALGO_AUTO;
 MPIR_Ibcast_intra_algo_t MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_AUTO;
+MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ibcast_inter_algo_t MPIR_Ibcast_inter_algo_choice = MPIR_IBCAST_INTER_ALGO_AUTO;
 MPIR_Iexscan_intra_algo_t MPIR_Iexscan_intra_algo_choice = MPIR_IEXSCAN_INTRA_ALGO_AUTO;
 MPIR_Igather_intra_algo_t MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_AUTO;
@@ -107,6 +108,7 @@ MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice
     MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice =
     MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
+MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ireduce_scatter_inter_algo_t MPIR_Ireduce_scatter_inter_algo_choice =
     MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice =
@@ -375,6 +377,8 @@ int MPII_Coll_init(void)
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_halving"))
         MPIR_Iallgather_intra_algo_choice =
             MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_brucks"))
+        MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS;
     else
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_AUTO;
 
@@ -397,6 +401,8 @@ int MPII_Coll_init(void)
     else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "recexch_distance_halving"))
         MPIR_Iallgatherv_intra_algo_choice =
             MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "gentran_ring"))
+        MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RING;
     else
         MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_AUTO;
 
@@ -419,6 +425,10 @@ int MPII_Coll_init(void)
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer"))
         MPIR_Iallreduce_intra_algo_choice =
             MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_kary"))
+        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_knomial"))
+        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
     else
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 
@@ -477,6 +487,8 @@ int MPII_Coll_init(void)
     /* Ibarrier Intra */
     if (0 == strcmp(MPIR_CVAR_IBARRIER_INTRA_ALGORITHM, "recursive_doubling"))
         MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING;
+    if (0 == strcmp(MPIR_CVAR_IBARRIER_INTRA_ALGORITHM, "recexch"))
+        MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH;
     else
         MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_AUTO;
 
@@ -486,6 +498,16 @@ int MPII_Coll_init(void)
     else
         MPIR_Ibarrier_inter_algo_choice = MPIR_IBARRIER_INTER_ALGO_AUTO;
 
+    /* Ibcast */
+    if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "kary"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_1"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_2"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
+
     /* Ibcast Intra */
     if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "binomial"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_BINOMIAL;
@@ -493,12 +515,8 @@ int MPII_Coll_init(void)
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_ring_allgather"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER;
-    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_knomial"))
-        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_kary"))
-        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_kary"))
-        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_recexch_allgather"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_SCATTER_RECEXCH_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "ring"))
@@ -529,7 +547,7 @@ int MPII_Coll_init(void)
     /* Igather Inter */
     if (0 == strcmp(MPIR_CVAR_IGATHER_INTER_ALGORITHM, "long_inter"))
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_LONG;
-    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "short_inter"))
+    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTER_ALGORITHM, "short_inter"))
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_SHORT;
     else
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_AUTO;
@@ -654,15 +672,23 @@ int MPII_Coll_init(void)
     else
         MPIR_Ireduce_scatter_block_inter_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 
+    /* Ireduce */
+    if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "kary"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_1"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_2"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
+
     /* Ireduce Intra */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "binomial"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_BINOMIAL;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "reduce_scatter_gather"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER;
-    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree_knomial"))
-        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree_kary"))
-        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "ring"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING;
     else
@@ -884,13 +910,23 @@ int MPII_Coll_init(void)
         MPIR_ERR_POP(mpi_errno);
 
     /* initialize transports */
-    MPII_Stubtran_init();
-    MPII_Gentran_init();
+    mpi_errno = MPII_Stubtran_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* initialize algorithms */
-    MPII_Stubalgo_init();
-    MPII_Treealgo_init();
-    MPII_Recexchalgo_init();
+    mpi_errno = MPII_Stubalgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Treealgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Recexchalgo_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -909,10 +945,17 @@ int MPII_Coll_finalize(void)
     /* deregister non blocking collectives progress hook */
     MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
 
-    MPII_Gentran_finalize();
-    MPII_Stubtran_finalize();
+    mpi_errno = MPII_Gentran_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Stubtran_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Function used by CH3 progress engine to decide whether to
@@ -928,15 +971,26 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     /* initialize any stub algo related data structures */
-    MPII_Stubalgo_comm_init(comm);
+    mpi_errno = MPII_Stubalgo_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     /* initialize any tree algo related data structures */
-    MPII_Treealgo_comm_init(comm);
+    mpi_errno = MPII_Treealgo_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* initialize any transport data structures */
-    MPII_Stubtran_comm_init(comm);
-    MPII_Gentran_comm_init(comm);
+    mpi_errno = MPII_Stubtran_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Function to cleanup any communicators for collectives */
@@ -945,12 +999,23 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     /* cleanup all collective communicators */
-    MPII_Stubalgo_comm_cleanup(comm);
-    MPII_Treealgo_comm_cleanup(comm);
+    mpi_errno = MPII_Stubalgo_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Treealgo_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* cleanup transport data */
-    MPII_Stubtran_comm_cleanup(comm);
-    MPII_Gentran_comm_cleanup(comm);
+    mpi_errno = MPII_Stubtran_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPII_Gentran_comm_cleanup(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

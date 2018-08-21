@@ -14,7 +14,7 @@
 
 static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
@@ -87,13 +87,7 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
-    if (status == UCS_ERR_CANCELED) {
-        goto fn_exit;
-    }
-  fn_exit:
     return;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -134,8 +128,6 @@ static inline int MPIDI_NM_progress(int vni, int blocking)
 
   fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* UCX_PROGRESS_H_INCLUDED */

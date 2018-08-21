@@ -34,7 +34,9 @@ enum {
 /* This needs to be kept in sync with the order in globals.c */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 {
-    if (!strcmp("psm", set_name)) {
+    if (set_name == NULL) {
+        return MPIDI_OFI_SET_NUMBER_UNKNOWN;
+    } else if (!strcmp("psm", set_name)) {
         return MPIDI_OFI_SET_NUMBER_PSM;
     } else if (!strcmp("psm2", set_name)) {
         return MPIDI_OFI_SET_NUMBER_PSM2;
@@ -124,6 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_PSM             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_PSM
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_PSM
@@ -186,6 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_PSM2             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM2
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_PSM2
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_PSM2
@@ -248,6 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_GNI             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_GNI
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_GNI
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_GNI
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_GNI
@@ -310,6 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_SOCKETS             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_SOCKETS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_SOCKETS
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS
@@ -372,6 +378,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_BGQ             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_BGQ
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_BGQ
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_BGQ
@@ -434,6 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_VERBS             4
 
 #ifdef MPIDI_CH4_OFI_USE_SET_VERBS
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_VERBS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_VERBS
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_VERBS
@@ -496,6 +504,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_RXM                 5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RXM
+#define MPIDI_OFI_SET_NUMBER                    MPIDI_OFI_SET_NUMBER_RXM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS         MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_DATA                   MPIDI_OFI_ENABLE_DATA_RXM
 #define MPIDI_OFI_ENABLE_AV_TABLE               MPIDI_OFI_ENABLE_AV_TABLE_RXM
@@ -563,6 +572,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_MINIMAL             FI_MINOR_VERSION
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_UNKNOWN
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_Global.settings.enable_data
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_Global.settings.enable_av_table

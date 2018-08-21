@@ -57,7 +57,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
     struct HYD_pmcd_pmi_publish *r, *publish;
     struct HYD_string_stash stash;
     char *ns, *ns_host, *ns_port_str;
-    int ns_port, ns_fd;
+    int ns_port, ns_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -140,6 +140,8 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
     return status;
 
   fn_fail:
+    if (-1 != ns_fd)
+        close(ns_fd);
     goto fn_exit;
 }
 
@@ -148,7 +150,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
     struct HYD_pmcd_pmi_publish *r, *publish;
     struct HYD_string_stash stash;
     char *ns, *ns_host, *ns_port_str;
-    int ns_port, ns_fd;
+    int ns_port, ns_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -236,6 +238,8 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
     return status;
 
   fn_fail:
+    if (-1 != ns_fd)
+        close(ns_fd);
     goto fn_exit;
 }
 
@@ -244,7 +248,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
     struct HYD_pmcd_pmi_publish *publish;
     struct HYD_string_stash stash;
     char *ns, *ns_host, *ns_port_str;
-    int ns_port, ns_fd;
+    int ns_port, ns_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -308,5 +312,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
     return status;
 
   fn_fail:
+    if (-1 != ns_fd)
+        close(ns_fd);
     goto fn_exit;
 }

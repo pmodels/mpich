@@ -23,27 +23,28 @@
 #define MPIR_COLL_FLAG_REDUCE_R 0
 
 /* enumerator for different tree types */
+typedef enum MPIR_Tree_type_t {
+    MPIR_TREE_TYPE_KARY = 0,
+    MPIR_TREE_TYPE_KNOMIAL_1,
+    MPIR_TREE_TYPE_KNOMIAL_2,
+} MPIR_Tree_type_t;
+
+/* enumerator for different recexch types */
 enum {
-    TREE_TYPE_KNOMIAL = 0,
-    TREE_TYPE_KARY
+    MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER = 0,
+    MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
 };
 
 /* enumerator for different recexch types */
 enum {
-    IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER = 0,
-    IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
+    MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
+    MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
 };
 
 /* enumerator for different recexch types */
 enum {
-    IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
-    IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
-};
-
-/* enumerator for different recexch types */
-enum {
-    IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
-    IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING
+    MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
+    MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING
 };
 
 /* Collectives request data structure */

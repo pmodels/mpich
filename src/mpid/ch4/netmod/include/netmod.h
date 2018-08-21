@@ -56,6 +56,17 @@ typedef int (*MPIDI_NM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, 
                                                        const int lpids[]);
 typedef int (*MPIDI_NM_mpi_comm_create_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_NM_mpi_comm_free_hook_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_NM_mpi_win_create_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_mpi_win_allocate_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_mpi_win_allocate_shared_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_mpi_win_create_dynamic_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_mpi_win_attach_hook_t) (MPIR_Win * win, void *base, MPI_Aint size);
+typedef int (*MPIDI_NM_mpi_win_detach_hook_t) (MPIR_Win * win, const void *base);
+typedef int (*MPIDI_NM_mpi_win_free_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_rma_win_cmpl_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_rma_win_local_cmpl_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_NM_rma_target_cmpl_hook_t) (int rank, MPIR_Win * win);
+typedef int (*MPIDI_NM_rma_target_local_cmpl_hook_t) (int rank, MPIR_Win * win);
 typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_mpi_send_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -477,6 +488,19 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
     MPIDI_NM_mpi_comm_create_hook_t mpi_comm_create_hook;
     MPIDI_NM_mpi_comm_free_hook_t mpi_comm_free_hook;
+    /* Window initialization/cleanup routines */
+    MPIDI_NM_mpi_win_create_hook_t mpi_win_create_hook;
+    MPIDI_NM_mpi_win_allocate_hook_t mpi_win_allocate_hook;
+    MPIDI_NM_mpi_win_allocate_shared_hook_t mpi_win_allocate_shared_hook;
+    MPIDI_NM_mpi_win_create_dynamic_hook_t mpi_win_create_dynamic_hook;
+    MPIDI_NM_mpi_win_attach_hook_t mpi_win_attach_hook;
+    MPIDI_NM_mpi_win_detach_hook_t mpi_win_detach_hook;
+    MPIDI_NM_mpi_win_free_hook_t mpi_win_free_hook;
+    /* RMA synchronization routines */
+    MPIDI_NM_rma_win_cmpl_hook_t rma_win_cmpl_hook;
+    MPIDI_NM_rma_win_local_cmpl_hook_t rma_win_local_cmpl_hook;
+    MPIDI_NM_rma_target_cmpl_hook_t rma_target_cmpl_hook;
+    MPIDI_NM_rma_target_local_cmpl_hook_t rma_target_local_cmpl_hook;
     /* Request allocation routines */
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
@@ -688,6 +712,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * ne
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm *
                                                            comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win *
+                                                            win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared_hook(MPIR_Win *
+                                                                   win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_dynamic_hook(MPIR_Win *
+                                                                  win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_attach_hook(MPIR_Win * win, void *base,
+                                                          MPI_Aint size) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win,
+                                                          const void *base)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win *
+                                                              win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank,
+                                                           MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank,
+                                                                 MPIR_Win *
+                                                                 win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request *
                                                            req) MPL_STATIC_INLINE_SUFFIX;

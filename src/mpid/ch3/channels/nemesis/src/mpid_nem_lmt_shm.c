@@ -881,7 +881,7 @@ static int MPID_nem_allocate_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd
         goto fn_exit;
     }
 
-    mpi_errno = MPL_shm_seg_create_and_attach(handle, sizeof(MPID_nem_copy_buf_t), (char **)buf_p, 0);
+    mpi_errno = MPL_shm_seg_create_and_attach(handle, sizeof(MPID_nem_copy_buf_t), (void **)buf_p, 0);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
@@ -908,7 +908,7 @@ static int MPID_nem_attach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t
         goto fn_exit;
     }
 
-    mpi_errno = MPL_shm_seg_attach(handle, sizeof(MPID_nem_copy_buf_t), (char **)buf_p, 0);
+    mpi_errno = MPL_shm_seg_attach(handle, sizeof(MPID_nem_copy_buf_t), (void **)buf_p, 0);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPL_shm_seg_remove(handle);
@@ -932,7 +932,7 @@ static int MPID_nem_detach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_DETACH_SHM_REGION);
 
-    mpi_errno = MPL_shm_seg_detach(handle, (char **)buf_p, sizeof(MPID_nem_copy_buf_t));
+    mpi_errno = MPL_shm_seg_detach(handle, (void **)buf_p, sizeof(MPID_nem_copy_buf_t));
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:

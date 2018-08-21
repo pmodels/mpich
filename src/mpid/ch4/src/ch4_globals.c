@@ -140,7 +140,7 @@ int MPIDI_check_for_failed_procs(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     int len;
-    char *kvsname;
+    char *kvsname = MPIDI_CH4_Global.jobid;
     char *failed_procs_string = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
@@ -152,21 +152,25 @@ int MPIDI_check_for_failed_procs(void)
 #ifdef USE_PMIX_API
     MPIR_Assert(0);
 #elif defined(USE_PMI2_API)
-    len = PMI2_MAX_VALLEN;
     {
         int vallen = 0;
+        len = PMI2_MAX_VALLEN;
+        failed_procs_string = MPL_malloc(len, MPL_MEM_OTHER);
+        MPIR_Assert(failed_procs_string);
         pmi_errno =
             PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", failed_procs_string,
                          len, &vallen);
         MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+        MPL_free(failed_procs_string);
     }
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    pmi_errno = PMI_KVS_Get_my_name(kvsname, len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
+    failed_procs_string = MPL_malloc(len, MPL_MEM_OTHER);
+    MPIR_Assert(failed_procs_string);
     pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", failed_procs_string, len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+    MPL_free(failed_procs_string);
 #endif
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -178,6 +182,7 @@ int MPIDI_check_for_failed_procs(void)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
   fn_fail:
+    MPL_free(failed_procs_string);
     goto fn_exit;
 }
 

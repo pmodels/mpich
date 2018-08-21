@@ -209,9 +209,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         }
     }
 
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 

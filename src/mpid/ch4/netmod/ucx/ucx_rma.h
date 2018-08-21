@@ -125,7 +125,14 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_PUT);
-    int target_contig, origin_contig, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPICH_UCX_AM_ONLY
+    mpi_errno = MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
+                                   target_rank, target_disp, target_count, target_datatype, win);
+#else
+
+    int target_contig, origin_contig;
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
@@ -166,6 +173,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
 
     mpi_errno = MPIDI_UCX_contig_put((char *) origin_addr + origin_true_lb, origin_bytes,
                                      target_rank, target_disp, target_true_lb, win, addr);
+#endif
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -181,9 +190,14 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    int target_count, MPI_Datatype target_datatype,
                                    MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
+    int mpi_errno = MPI_SUCCESS;
 
+#ifdef MPICH_UCX_AM_ONLY
+    mpi_errno = MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
+                                   target_rank, target_disp, target_count, target_datatype, win);
+#else
+    int origin_contig, target_contig;
 
-    int origin_contig, target_contig, mpi_errno = MPI_SUCCESS;
     size_t origin_bytes, target_bytes;
     size_t offset;
 
@@ -226,6 +240,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
 
     return MPIDI_UCX_contig_get((char *) origin_addr + origin_true_lb, origin_bytes,
                                 target_rank, target_disp, target_true_lb, win, addr);
+#endif
+
   fn_exit:
     return mpi_errno;
   fn_fail:

@@ -13,7 +13,6 @@
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
-#include "algo_common.h"
 #include "recexchalgo.h"
 #include "tsp_namespace_def.h"
 
@@ -24,8 +23,9 @@
 int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
                                                            int log_pofk, int T, void *recvbuf,
                                                            MPI_Datatype recvtype,
-                                                           size_t recv_extent, int *recvcounts,
-                                                           int *displs, int tag, MPIR_Comm * comm,
+                                                           size_t recv_extent,
+                                                           const int *recvcounts, const int *displs,
+                                                           int tag, MPIR_Comm * comm,
                                                            MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -80,9 +80,10 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks,
 int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                    int step1_nrecvs, int is_inplace, int rank,
                                                    int tag, const void *sendbuf, void *recvbuf,
-                                                   size_t recv_extent, int *recvcounts, int *displs,
-                                                   MPI_Datatype recvtype, int n_invtcs, int *invtx,
-                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                                   size_t recv_extent, const int *recvcounts,
+                                                   const int *displs, MPI_Datatype recvtype,
+                                                   int n_invtcs, int *invtx, MPIR_Comm * comm,
+                                                   MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
@@ -122,9 +123,10 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    int **step2_nbrs, int rank, int nranks, int k,
                                                    int p_of_k, int log_pofk, int T, int *nrecvs_,
                                                    int **recv_id_, int tag, void *recvbuf,
-                                                   size_t recv_extent, int *recvcounts, int *displs,
-                                                   MPI_Datatype recvtype, int is_dist_halving,
-                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                                   size_t recv_extent, const int *recvcounts,
+                                                   const int *displs, MPI_Datatype recvtype,
+                                                   int is_dist_halving, MPIR_Comm * comm,
+                                                   MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int phase, i, j, count, nbr, send_offset, recv_offset, offset, rank_for_offset;
@@ -203,7 +205,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
                                                    int step1_nrecvs, int step2_nphases,
-                                                   void *recvbuf, int *recvcounts, int nranks,
+                                                   void *recvbuf, const int *recvcounts, int nranks,
                                                    int k, int nrecvs, int *recv_id, int tag,
                                                    MPI_Datatype recvtype, MPIR_Comm * comm,
                                                    MPIR_TSP_sched_t * sched)
@@ -239,15 +241,15 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
-                                             MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
-                                             int *displs, MPI_Datatype recvtype, int tag,
-                                             MPIR_Comm * comm, int is_dist_halving, int k,
-                                             MPIR_TSP_sched_t * sched)
+                                             MPI_Datatype sendtype, void *recvbuf,
+                                             const int *recvcounts, const int *displs,
+                                             MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
+                                             int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_inplace, is_contig, i;
+    int is_inplace, i;
     int nranks, rank;
-    size_t recv_type_size, recv_extent;
+    size_t recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases, step1_nrecvs, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
@@ -264,7 +266,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
-    MPIR_Datatype_get_size_macro(recvtype, recv_type_size);
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
     recv_extent = MPL_MAX(recv_extent, true_extent);
@@ -291,11 +292,14 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
             MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype,
                                      (char *) recvbuf + displs[rank] * recv_extent,
                                      recvcounts[rank], recvtype, sched, 0, NULL);
+
+        invtx = dtcopy_id;
+        n_invtcs = 1;
+    } else {
+        n_invtcs = 0;
     }
 
     /* Step 1 */
-    n_invtcs = (is_inplace) ? 0 : 1;
-    invtx = dtcopy_id;
     MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(step1_sendto, step1_recvfrom, step1_nrecvs,
                                                    is_inplace, rank, tag, sendbuf, recvbuf,
                                                    recv_extent, recvcounts, displs, recvtype,
@@ -326,7 +330,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
                                                    step2_nphases, recvbuf, recvcounts, nranks, k,
                                                    nrecvs, recv_id, tag, recvtype, comm, sched);
 
-  fn_exit:
     /* free the memory */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
@@ -337,8 +340,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -348,7 +349,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                       void *recvbuf, int *recvcounts, int *displs,
+                                       void *recvbuf, const int *recvcounts, const int *displs,
                                        MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req,
                                        int algo_type, int k)
 {
@@ -366,7 +367,9 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
