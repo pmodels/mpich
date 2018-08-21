@@ -4,7 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 AM_CPPFLAGS = $(MPI_H_INCLUDE)
-AM_CPPFLAGS += -fvisibility=default
 AM_CPPFLAGS += -DDTP_MPI_DATATYPE=@DTP_DATATYPES@   # Coma separated list of MPI datatypes
 
 pkglib_LTLIBRARIES = libdtpools.la
