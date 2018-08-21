@@ -23,6 +23,7 @@ char *MPL_strdup(const char *str);
 extern void *aligned_alloc(size_t alignment, size_t size);
 #endif
 
+/* This list should match the array in mpl_trmem.c */
 typedef enum {
     MPL_MEM_ADDRESS,            /* Address information */
     MPL_MEM_OBJECT,             /* General MPI Objects */

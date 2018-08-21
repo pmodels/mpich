@@ -18,6 +18,8 @@
 #define FUNCNAME MPII_Algo_compare_int
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* Avoid unused function warning in certain configurations */
+static int MPII_Algo_compare_int(const void *a, const void *b) ATTRIBUTE((unused));
 static int MPII_Algo_compare_int(const void *a, const void *b)
 {
     return (*(int *) a - *(int *) b);
@@ -27,6 +29,10 @@ static int MPII_Algo_compare_int(const void *a, const void *b)
 #define FUNCNAME MPII_Algo_calculate_pipeline_chunk_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* Avoid unused function warning in certain configurations */
+static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes, int type_size, int count,
+                                                   int *num_segments, int *segsize_floor,
+                                                   int *segsize_ceil) ATTRIBUTE((unused));
 static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
                                                    int type_size, int count,
                                                    int *num_segments,

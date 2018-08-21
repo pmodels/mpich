@@ -112,6 +112,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 
 static MPL_memory_allocation_t allocation_classes[MPL_MAX_MEMORY_CLASS];
 
+/* This list should match the enum in mpl_trmem.h */
 static const char *allocation_class_strings[] = {
     "MPL_MEM_ADDRESS",
     "MPL_MEM_OBJECT",
@@ -130,6 +131,7 @@ static const char *allocation_class_strings[] = {
     "MPL_MEM_DEBUG",
     "MPL_MEM_PM",
     "MPL_MEM_COLL",
+    "MPL_MEM_USER",
     "MPL_MEM_OTHER"
 };
 

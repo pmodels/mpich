@@ -520,8 +520,7 @@ int MPIR_Err_combine_codes(int error1, int error2)
         return error2_code;
 
     error2_class = MPIR_ERR_GET_CLASS(error2_code);
-    if (MPIR_ERR_GET_CLASS(error2_class) < MPI_SUCCESS ||
-        MPIR_ERR_GET_CLASS(error2_class) > MPICH_ERR_LAST_MPIX) {
+    if (error2_class < MPI_SUCCESS || error2_class > MPICH_ERR_LAST_MPIX) {
         error2_class = MPI_ERR_OTHER;
     }
 
@@ -720,6 +719,9 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
     rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
                                      specific_msg, Argp);
     va_end(Argp);
+    /* Looks like Coverity has a hard time understanding that logic that
+     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
+    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
     return rc;
 }
 
@@ -856,6 +858,9 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
     rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
                                      specific_msg, Argp);
     va_end(Argp);
+    /* Looks like Coverity has a hard time understanding that logic that
+     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
+    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
     return rc;
 }
 

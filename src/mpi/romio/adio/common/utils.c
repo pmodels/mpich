@@ -94,12 +94,12 @@ int ADIOI_Type_create_hindexed_x(int count,
 
     if (is_big) {
         ret = MPI_Type_create_struct(count, blocklens, array_of_displacements, types, newtype);
+        for (i = 0; i < count; i++)
+            if (types[i] != oldtype)
+                MPI_Type_free(&(types[i]));
     } else {
         ret = MPI_Type_create_hindexed(count, blocklens, array_of_displacements, oldtype, newtype);
     }
-    for (i = 0; i < count; i++)
-        if (types[i] != oldtype)
-            MPI_Type_free(&(types[i]));
     ADIOI_Free(types);
     ADIOI_Free(blocklens);
 

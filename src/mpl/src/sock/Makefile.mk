@@ -4,4 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-lib@MPLLIBNAME@_la_SOURCES += src/sock/mpl_sock.c
+lib@MPLLIBNAME@_la_SOURCES += src/sock/mpl_sock.c \
+			src/sock/mpl_host.c

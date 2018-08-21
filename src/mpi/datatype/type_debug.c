@@ -626,7 +626,6 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
         case MPI_COMBINER_NAMED:
         case MPI_COMBINER_DUP:
             MPII_DATATYPE_FREE_AND_RETURN;
-        case MPI_COMBINER_RESIZED:
             /* not done */
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_CONTIGUOUS:
@@ -699,6 +698,14 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
             MPII_Datatype_contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
 
+        case MPI_COMBINER_RESIZED:
+            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
+                            (MPL_DBG_FDEST,
+                             "# %sresized lb = " MPI_AINT_FMT_DEC_SPEC " extent = "
+                             MPI_AINT_FMT_DEC_SPEC "\n", MPII_Datatype_depth_spacing(depth),
+                             aints[0], aints[1]));
+            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+            MPII_DATATYPE_FREE_AND_RETURN;
         default:
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sunhandled combiner",
                                                 MPII_Datatype_depth_spacing(depth)));

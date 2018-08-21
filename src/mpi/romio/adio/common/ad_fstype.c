@@ -34,10 +34,6 @@
 #include "gpfs.h"
 #endif
 
-#ifdef HAVE_IM_CLIENT_NATIVE2_H
-#include "im_client_native2.h"
-#endif
-
 /* Notes on detection process:
  *
  * There are three more "general" mechanisms that we use for detecting
@@ -77,6 +73,11 @@
 #if defined(ROMIO_XFS) && !defined(XFS_SUPER_MAGIC)
 #define XFS_SUPER_MAGIC 0x58465342
 #endif
+
+#if defined(ROMIO_XFS) && !defined(EXFS_SUPER_MAGIC)
+#define EXFS_SUPER_MAGIC 0x45584653
+#endif
+
 
 #if !defined(PVFS2_SUPER_MAGIC)
 #define PVFS2_SUPER_MAGIC (0x20030528)
@@ -411,7 +412,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif
 
 #ifdef XFS_SUPER_MAGIC
-    if (fsbuf.f_type == XFS_SUPER_MAGIC) {
+    if (fsbuf.f_type == XFS_SUPER_MAGIC || fsbuf.f_type == EXFS_SUPER_MAGIC) {
         *fstype = ADIO_XFS;
         return;
     }

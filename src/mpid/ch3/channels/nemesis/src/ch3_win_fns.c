@@ -386,7 +386,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         /* create shared memory region for all processes in win and map. */
         mpi_errno = MPL_shm_seg_create_and_attach((*win_ptr)->info_shm_segment_handle,
                                                     (*win_ptr)->info_shm_segment_len,
-                                                    (char **) &(*win_ptr)->info_shm_base_addr, 0);
+                                                    &(*win_ptr)->info_shm_base_addr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -435,7 +435,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         mpi_errno =
             MPL_shm_seg_attach((*win_ptr)->info_shm_segment_handle,
                                  (*win_ptr)->info_shm_segment_len,
-                                 (char **) &(*win_ptr)->info_shm_base_addr, 0);
+                                 &(*win_ptr)->info_shm_base_addr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -573,7 +573,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             mpi_errno =
                 MPL_shm_seg_create_and_attach((*win_ptr)->shm_segment_handle,
                                                 (*win_ptr)->shm_segment_len,
-                                                (char **) &(*win_ptr)->shm_base_addr, 0);
+                                                &(*win_ptr)->shm_base_addr, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -623,7 +623,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             /* attach to shared memory region created by rank 0 */
             mpi_errno =
                 MPL_shm_seg_attach((*win_ptr)->shm_segment_handle, (*win_ptr)->shm_segment_len,
-                                     (char **) &(*win_ptr)->shm_base_addr, 0);
+                                     &(*win_ptr)->shm_base_addr, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -645,7 +645,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             mpi_errno =
                 MPL_shm_seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle,
                                                 sizeof(MPIDI_CH3I_SHM_MUTEX),
-                                                (char **) &(*win_ptr)->shm_mutex, 0);
+                                                (void **) &(*win_ptr)->shm_mutex, 0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -696,7 +696,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             /* attach to shared memory region created by rank 0 */
             mpi_errno =
                 MPL_shm_seg_attach((*win_ptr)->shm_mutex_segment_handle,
-                                     sizeof(MPIDI_CH3I_SHM_MUTEX), (char **) &(*win_ptr)->shm_mutex,
+                                     sizeof(MPIDI_CH3I_SHM_MUTEX), (void **) &(*win_ptr)->shm_mutex,
                                      0);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);

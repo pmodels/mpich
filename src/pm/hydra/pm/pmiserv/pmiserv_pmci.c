@@ -98,6 +98,8 @@ HYD_status HYD_pmci_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
+    proxy_stash.strlist = NULL;
+
     status = HYDT_dmx_register_fd(1, &HYD_server_info.cmd_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -176,7 +178,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
             time_left = timeout;
             if (timeout > 0) {
                 if (time_elapsed > timeout) {
-                    HYDU_dump(stdout, "APPLICATION TIMED OUT\n");
+                    HYDU_dump(stdout, "APPLICATION TIMED OUT, TIMEOUT = %ds\n", timeout);
 
                     status = HYD_pmcd_pmiserv_cleanup_all_pgs();
                     HYDU_ERR_POP(status, "cleanup of processes failed\n");

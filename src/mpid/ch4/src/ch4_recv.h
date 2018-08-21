@@ -190,6 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
 
     int active_flag;
     MPIR_Request *rreq = NULL;
+    MPID_Progress_state state;
 
     if (message == NULL) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
@@ -208,11 +209,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
+
+    MPID_Progress_start(&state);
+
     while (!MPIR_Request_is_complete(rreq)) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_wait(&state);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    MPID_Progress_end(&state);
 
     /* This should probably be moved to MPICH (above device) level */
     /* Someone neglected to put the blocking at the MPICH level    */

@@ -2,6 +2,7 @@
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sched
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/bc
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
@@ -343,9 +344,9 @@ AC_ARG_ENABLE(ch4-netmod-direct,
        level:
          yes       - Enabled (default)
          no        - Disabled (may improve build times and code size)
-    ],,enable_ch4_netmod_direct=yes)
+    ],,)
 
-if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_inline" = "yes" && test "$enable_ch4_netmod_direct" = "yes" ;  then
+if test "$ch4_nets_array_sz" = "1" && (test "$enable_ch4_netmod_inline" = "yes" || test "$enable_ch4_netmod_direct" = "yes") ;  then
    PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
@@ -373,7 +374,11 @@ AC_ARG_ENABLE(ch4-shm-direct,
        level:
          yes       - Enabled (default)
          no        - Disabled (may improve build times and code size)
-    ],,enable_ch4_shm_direct=yes)
+    ],,)
+
+if test "$enable_ch4_shm_inline" = "yes" || test "$enable_ch4_shm_direct" = "yes" ;  then
+   PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
+fi
 
 # setup shared memory defaults
 # TODO: shm submodules should be chosen with similar configure option as that used for netmod.
@@ -402,10 +407,6 @@ if test "$enable_ch4_direct" = "auto" ; then
     AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 elif test "$enable_ch4_direct" = "netmod" ; then
     AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
-fi
-
-if test "$enable_ch4_shm_inline" = "yes" && test "$enable_ch4_shm_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)

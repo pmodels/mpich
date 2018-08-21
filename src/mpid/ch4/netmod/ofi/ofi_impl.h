@@ -40,6 +40,7 @@
     do {                                                          \
         mpi_errno = MPID_Progress_test();                        \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
 #define MPIDI_OFI_PROGRESS_WHILE(cond)                 \

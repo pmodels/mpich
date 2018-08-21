@@ -160,5 +160,59 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
     return MPIDI_CH4R_mpi_win_lock_all(assert, win);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_dynamic_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win, const void *base)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_Win * win)
+{
+    return MPI_SUCCESS;
+}
 
 #endif /* PTL_WIN_H_INCLUDED */

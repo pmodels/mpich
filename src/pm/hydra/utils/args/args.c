@@ -255,7 +255,7 @@ char *HYDU_getcwd(void)
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
-    char *hostname, *procs, *binding, *tmp, *user, *saveptr;
+    char *hostname, *procs, *binding, *tmp, *user, *saveptr = NULL;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
@@ -303,7 +303,7 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
                                                            struct HYD_node ** node_list))
 {
     char line[HYD_TMP_STRLEN], **tokens;
-    FILE *fp;
+    FILE *fp = NULL;
     int i;
     HYD_status status = HYD_SUCCESS;
 
@@ -349,6 +349,8 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
     return status;
 
   fn_fail:
+    if (NULL != fp)
+        fclose(fp);
     goto fn_exit;
 }
 

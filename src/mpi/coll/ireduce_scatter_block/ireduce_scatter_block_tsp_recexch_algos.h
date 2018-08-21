@@ -28,8 +28,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
                                                        MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_inplace, is_contig;
-    size_t type_size, extent;
+    int is_inplace;
+    size_t extent;
     MPI_Aint lb, true_extent;
     int is_commutative;
     int step1_sendto = -1, step2_nphases, step1_nrecvs;
@@ -54,7 +54,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
@@ -204,8 +203,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -233,7 +230,9 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(sendbuf, recvbuf, recvcount, datatype,

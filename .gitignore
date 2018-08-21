@@ -119,10 +119,15 @@ apply-xfail.sh
 /src/pm/hydra/mpl
 /src/pm/hydra/mpl/confdb
 /src/pm/hydra/tools/topo/hwloc/hwloc
+/src/pm/hydra2/confdb
+/src/pm/hydra2/mpl
+/src/pm/hydra2/mpl/confdb
+/src/pm/hydra2/libhydra/topo/hwloc/hwloc
 /src/mpi/romio/mpl
 /src/mpi/romio/mpl/confdb
 /src/mpi/romio/version.m4
 /src/pm/hydra/version.m4
+/src/pm/hydra2/version.m4
 /test/mpi/version.m4
 
 # created by the build process in the test dirs

@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(newcomm, &rank);
 
     /* Set errors return on COMM_WORLD and the new comm */
-    MPI_Comm_set_errhandler(MPI_ERRORS_RETURN, MPI_COMM_WORLD);
-    MPI_Comm_set_errhandler(MPI_ERRORS_RETURN, newcomm);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(newcomm, MPI_ERRORS_RETURN);
 
     MPI_Barrier(MPI_COMM_WORLD);
     if (color) {

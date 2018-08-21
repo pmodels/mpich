@@ -128,7 +128,8 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
 
     HYDU_FUNC_ENTER();
 
-    gethostname(hostname, MAX_HOSTNAME_LEN);
+    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
     MPL_wtime(&tv);
     MPL_wtime_todouble(&tv, &secs);

@@ -33,10 +33,11 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
-    size_t sendtype_lb, sendtype_extent, sendtype_size, sendtype_true_extent;
-    size_t recvtype_lb, recvtype_extent, recvtype_size, recvtype_true_extent;
+    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
+    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id, *recv_id = NULL;
-    void *tmp_buf = NULL, *data_buf = NULL;
+    void *tmp_buf = NULL;
+    const void *data_buf = NULL;
     int tree_type;
     MPII_Treealgo_tree_t my_tree, parents_tree;
     int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
@@ -49,7 +50,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     if (rank == root)
         is_inplace = (sendbuf == MPI_IN_PLACE); /* For gather, MPI_IN_PLACE is significant only at root */
 
-    tree_type = 0;      /* currently only tree_type=0 is supported for gather */
+    tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for gather */
     mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -69,12 +70,10 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
         recvcount = sendcount;
     }
 
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
-    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
@@ -138,7 +137,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     } else if (num_children > 0 && lrank != 0) {        /* intermediate ranks in the tree */
         tmp_buf = MPIR_TSP_sched_malloc(recv_size * sendtype_extent, sched);
     } else {    /* leaf ranks in the tree */
-        tmp_buf = sendbuf;
+        tmp_buf = (void *) sendbuf;
     }
 
     recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
@@ -154,7 +153,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
             if (lrank == 0 && root != 0 && is_inplace)
                 data_buf = (char *) recvbuf + root * recvcount * recvtype_extent;
             else
-                data_buf = sendbuf;
+                data_buf = (void *) sendbuf;
 
             dtcopy_id =
                 MPIR_TSP_sched_localcopy(data_buf, sendcount, sendtype,

@@ -23,13 +23,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
-                                                 int *recvcounts, MPI_Datatype datatype,
+                                                 const int *recvcounts, MPI_Datatype datatype,
                                                  MPI_Op op, int tag, MPIR_Comm * comm, int k,
                                                  MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_inplace, is_contig;
-    size_t type_size, extent;
+    int is_inplace;
+    size_t extent;
     MPI_Aint lb, true_extent;
     int is_commutative;
     int step1_sendto = -1, step2_nphases, step1_nrecvs;
@@ -51,7 +51,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
@@ -220,8 +219,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -230,9 +227,9 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf, int *recvcounts,
-                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                           MPIR_Request ** req, int k)
+int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
+                                           const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
+                                           MPIR_Comm * comm, MPIR_Request ** req, int k)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;

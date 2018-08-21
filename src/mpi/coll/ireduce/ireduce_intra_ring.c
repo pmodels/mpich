@@ -13,7 +13,7 @@
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ireduce_tsp_ring_algos_prototypes.h"
+#include "ireduce_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
@@ -26,9 +26,10 @@ int MPIR_Ireduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPII_Gentran_Ireduce_intra_ring(sendbuf, recvbuf, count, datatype, op, root,
-                                                comm_ptr, request,
-                                                MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE);
+    /* Ring algorithm is equivalent to kary tree with k = 1 */
+    mpi_errno = MPII_Gentran_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
+                                                comm_ptr, request, MPIR_TREE_TYPE_KARY,
+                                                1, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE);
 
     return mpi_errno;
 }

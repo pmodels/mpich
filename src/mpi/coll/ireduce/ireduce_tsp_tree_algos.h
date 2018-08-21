@@ -45,7 +45,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int is_tree_root, is_tree_leaf, is_tree_intermediate;       /* Variables to store location of this rank in the tree */
     int is_root;
     MPII_Treealgo_tree_t my_tree;
-    void **child_buffer;        /* Buffer array in which data from children is received */
+    void **child_buffer = NULL; /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which reduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int nvtcs;
@@ -79,8 +79,9 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
                                              chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
-        tree_type = TREE_TYPE_KNOMIAL;  /* Force tree_type to be knomial because kary trees cannot
-                                         * handle non-commutative operations correctly */
+        if (k > 1)
+            tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* Force tree_type to be knomial_1 because kary trees cannot
+                                                         * handle non-commutative operations correctly */
         tree_root = 0;  /* Force the tree root to be rank 0 */
     } else {
         tree_root = root;
@@ -142,7 +143,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
             reduce_buffer = recvbuf;
         else
             reduce_buffer = (void *) sendbuf;
-    } else if (is_tree_leaf && !is_root) {
+    } else {    /* is_tree_leaf && !is_root */
         reduce_buffer = (void *) sendbuf;
     }
 
@@ -266,7 +267,6 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                 MPIR_Request ** req, int tree_type, int k, int maxbytes)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
