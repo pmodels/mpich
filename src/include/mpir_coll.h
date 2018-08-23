@@ -929,6 +929,11 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datat
                                    void *recvbuf, const int recvcounts[], const int displs[],
                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                    MPIR_Request ** request);
+int MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(const void *sendbuf, int sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     const int recvcounts[], const int displs[],
+                                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                                     MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
