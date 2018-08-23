@@ -33,6 +33,8 @@ int main(int argc, char **argv)
     for (i = 0; i < count; i++)
         displs[i] = i * 2;
 
+    req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* test isends */
@@ -40,7 +42,6 @@ int main(int argc, char **argv)
     MPI_Type_commit(&newtype);
 
     if (rank == 0) {
-        req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Isend(snd_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
     } else {
@@ -58,7 +59,6 @@ int main(int argc, char **argv)
     MPI_Type_commit(&newtype);
 
     if (rank == 0) {
-        req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Issend(snd_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
     } else {
@@ -75,7 +75,6 @@ int main(int argc, char **argv)
     MPI_Type_create_indexed_block(count, 1, displs, MPI_INT, &newtype);
     MPI_Type_commit(&newtype);
 
-    req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
     if (rank == 0) {
         MPI_Barrier(MPI_COMM_WORLD);
         for (i = 0; i < NUM_LOOPS; i++)
@@ -91,6 +90,9 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     MTest_Finalize(0);
+
+    free(displs);
+    free(req);
 
     return 0;
 }
