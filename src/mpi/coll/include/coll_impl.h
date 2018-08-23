@@ -370,6 +370,7 @@ extern MPIR_Ineighbor_allgatherv_inter_algo_t MPIR_Ineighbor_allgatherv_inter_al
 typedef enum MPIR_Ineighbor_alltoall_intra_algo_t {
     MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoall_intra_algo_t;
 extern MPIR_Ineighbor_alltoall_intra_algo_t MPIR_Ineighbor_alltoall_intra_algo_choice;
 
