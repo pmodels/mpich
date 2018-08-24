@@ -343,6 +343,22 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_ISCAN_INTRA_ALGORITHM=${algo_name} "
 
     coll_algo_tests+="scantst 4"
+
+######### Add tests for ineighbor_alltoallw algorithms ###########
+
+#disable device collectives for neighbor_alltoallw to test mpir algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_alltoallw 4 mpiversion=3.0 ${env}${nl}"
 done
 
 ######### Add tests for Alltoallv algorithms ###########
