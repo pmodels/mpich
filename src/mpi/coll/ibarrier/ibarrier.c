@@ -31,6 +31,7 @@ cvars:
         Variable to select ibarrier algorithm
         auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
+        recexch            - Force generic transport based recursive exchange algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
