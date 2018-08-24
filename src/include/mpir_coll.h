@@ -1066,6 +1066,13 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                                   void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[],
                                   const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
                                   MPIR_Request ** request);
+int MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(const void *sendbuf, const int sendcounts[],
+                                                    const MPI_Aint sdispls[],
+                                                    const MPI_Datatype sendtypes[], void *recvbuf,
+                                                    const int recvcounts[],
+                                                    const MPI_Aint rdispls[],
+                                                    const MPI_Datatype recvtypes[],
+                                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
