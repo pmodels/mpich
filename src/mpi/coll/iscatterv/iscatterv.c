@@ -19,8 +19,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto   - Internal algorithm selection
-        linear - Force linear algorithm
+        auto            - Internal algorithm selection
+        linear          - Force linear algorithm
+        gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -189,7 +190,31 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_gentran_linear:
+                mpi_errno =
+                    MPIR_Iscatterv_allcomm_gentran_linear(sendbuf, sendcounts, displs, sendtype,
+                                                          recvbuf, recvcount, recvtype, root,
+                                                          comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
