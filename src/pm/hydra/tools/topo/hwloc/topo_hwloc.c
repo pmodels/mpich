@@ -281,9 +281,26 @@ static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_
         if (obj_type != HWLOC_OBJ_TYPE_MAX) {
             hwloc_obj_t obj = NULL;
             while ((obj = hwloc_get_next_obj_by_type(topology, obj_type, obj))) {
-                HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *, (count + 1) * sizeof(hwloc_obj_t),
-                                     status);
-                resource_obj[count++] = obj;
+                int cpuset_covered = 0;
+                /* MCDRAM and NUMA have the same cpuset, hence skipping objects
+                 * with the same cpuset
+                 */
+                for (i = 0; i < count; i++) {
+                    if ((resource_obj[i]->complete_cpuset && obj->complete_cpuset) &&
+                        !hwloc_bitmap_compare(resource_obj[i]->complete_cpuset,
+                                              obj->complete_cpuset)) {
+                        cpuset_covered = 1;
+                        break;
+                    } else if (!hwloc_bitmap_compare(resource_obj[i]->cpuset, obj->cpuset)) {
+                        cpuset_covered = 1;
+                        break;
+                    }
+                }
+                if (!cpuset_covered) {
+                    HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *,
+                                         (count + 1) * sizeof(hwloc_obj_t), status);
+                    resource_obj[count++] = obj;
+                }
             }
             *resource_list_length = count;
         }
