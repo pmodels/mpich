@@ -9,7 +9,7 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-/* Header protection (i.e., IREDUCE_SCATTER_TSP_ALGOS_PROTOTYPES_H_INCLUDED) is
+/* Header protection (i.e., IREDUCE_SCATTER_TSP_RECEXCH_ALGOS_PROTOTYPES_H_INCLUDED) is
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
