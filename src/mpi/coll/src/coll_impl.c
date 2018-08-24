@@ -555,6 +555,8 @@ int MPII_Coll_init(void)
     /* Igatherv Intra */
     if (0 == strcmp(MPIR_CVAR_IGATHERV_INTRA_ALGORITHM, "linear"))
         MPIR_Igatherv_intra_algo_choice = MPIR_IGATHERV_INTRA_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_IGATHERV_INTRA_ALGORITHM, "gentran_linear"))
+        MPIR_Igatherv_intra_algo_choice = MPIR_IGATHERV_INTRA_ALGO_GENTRAN_LINEAR;
     else
         MPIR_Igatherv_intra_algo_choice = MPIR_IGATHERV_INTRA_ALGO_AUTO;
 
