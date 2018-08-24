@@ -262,4 +262,23 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Scatterv algorithms ###########
+
+#disable device collectives for gather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_SCATTERV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_SCATTERV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_ISCATTERV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM=${algo_name} "
+
+        coll_algo_tests+="scatterv 4 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
