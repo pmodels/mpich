@@ -33,6 +33,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
         path = HYDU_find_full_path("poe");
     if (!path)
         path = MPL_strdup("/usr/bin/poe");
+    HYDU_ERR_CHKANDJUMP(status, NULL == path, HYD_INTERNAL_ERROR, "strdup failed\n");
 
     idx = 0;
     targs[idx++] = MPL_strdup(path);

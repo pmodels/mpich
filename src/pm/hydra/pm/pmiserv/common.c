@@ -31,6 +31,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
 
     /* Make a copy of the original buffer */
     buf = MPL_strdup(obuf);
+    HYDU_ERR_CHKANDJUMP(status, NULL == buf, HYD_INTERNAL_ERROR, "%s", "");
     if (buf[strlen(obuf) - 1] == '\n')
         buf[strlen(obuf) - 1] = '\0';
 
@@ -54,6 +55,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
     /* Search for the PMI command in our table */
     status = HYDU_strsplit(cmd, &str1, pmi_cmd, '=');
     HYDU_ERR_POP(status, "string split returned error\n");
+    HYDU_ERR_CHKANDJUMP(status, NULL == *pmi_cmd, HYD_INTERNAL_ERROR, "%s", "");
 
   fn_exit:
     MPL_free(buf);
@@ -79,6 +81,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
 
     for (i = 0; args[i]; i++) {
         arg = MPL_strdup(args[i]);
+        HYDU_ERR_CHKANDJUMP(status, NULL == arg, HYD_INTERNAL_ERROR, "strdup failed\n");
         (*tokens)[i].key = arg;
         for (j = 0; arg[j] && arg[j] != '='; j++);
         if (!arg[j]) {

@@ -358,6 +358,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 /* Search to see if this process is already in the list */
                 included = 0;
                 segment = strtok(current_list, ",");
+                HYDU_ASSERT(segment != NULL, status);
                 do {
                     value = strtol(segment, NULL, 10);
                     if (value == hdr.pid) {

@@ -1725,6 +1725,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
         /* Check if there's a config file in the hard-coded location */
         conf_file = MPL_strdup(HYDRA_CONF_FILE);
+        HYDU_ERR_CHKANDJUMP(status, NULL == conf_file, HYD_INTERNAL_ERROR, "strdup failed\n");
         ret = open(conf_file, O_RDONLY);
         if (ret < 0) {
             MPL_free(conf_file);
@@ -1754,6 +1755,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     /* Get the base path */
     /* Find the last '/' in the executable name */
     post = MPL_strdup(progname);
+    HYDU_ERR_CHKANDJUMP(status, NULL == post, HYD_INTERNAL_ERROR, "strdup failed\n");
     loc = strrchr(post, '/');
     if (!loc) { /* If there is no path */
         HYD_server_info.base_path = NULL;

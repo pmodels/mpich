@@ -42,6 +42,7 @@ static HYD_status control_port_fn(char *arg, char ***argv)
                         "duplicate control port setting\n");
 
     port = MPL_strdup(**argv);
+    HYDU_ERR_CHKANDJUMP(status, NULL == port, HYD_INTERNAL_ERROR, "port not provided\n");
     name = strtok(port, ":");
     HYD_pmcd_pmip.upstream.server_name = name ? MPL_strdup(name) : NULL;
     HYD_pmcd_pmip.upstream.server_port = strtol(strtok(NULL, ":"), NULL, 10);
