@@ -7,5 +7,5 @@
 
 int main(int argc, char *argv[])
 {
-    return MTestReturnValue(errs);
+    return 0;
 }
