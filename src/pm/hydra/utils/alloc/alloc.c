@@ -391,7 +391,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
 
         if (pg->proxy_list == NULL)
             pg->proxy_list = proxy;
-        else
+        else if (last_proxy != NULL)
             last_proxy->next = proxy;
         last_proxy = proxy;
 

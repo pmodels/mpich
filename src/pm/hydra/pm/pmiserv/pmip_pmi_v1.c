@@ -458,6 +458,7 @@ static HYD_status fn_put(int fd, char *args[])
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     if (val == NULL)
         val = MPL_strdup("");
+    HYDU_ERR_CHKANDJUMP(status, NULL == val, HYD_INTERNAL_ERROR, "strdup failed\n");
 
     /* add to the cache */
     HYD_STRING_STASH_INIT(stash);
@@ -508,7 +509,9 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
     for (; i < num_elems + token_count; i++) {
         struct cache_elem *elem = cache_get + i;
         elem->key = MPL_strdup(tokens[i - num_elems].key);
+        HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
         elem->val = MPL_strdup(tokens[i - num_elems].val);
+        HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
         HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
     num_elems += token_count;

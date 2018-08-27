@@ -34,11 +34,17 @@ static HYD_status get_abs_wd(const char *wd, char **abs_wd)
     }
 
     cwd = HYDU_getcwd();
+    if (NULL == cwd)
+        HYDU_ERR_POP(status, "error calling getcwd\n");
+
     ret = chdir(wd);
     if (ret < 0)
         HYDU_ERR_POP(status, "error calling chdir\n");
 
     *abs_wd = HYDU_getcwd();
+    if (NULL == *abs_wd)
+        HYDU_ERR_POP(status, "error calling getcwd\n");
+
     ret = chdir(cwd);
     if (ret < 0)
         HYDU_ERR_POP(status, "error calling chdir\n");
@@ -64,7 +70,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
     if (user_path) {    /* If the PATH environment exists */
         status = get_abs_wd(strtok(user_path, ";:"), &test_loc);
         HYDU_ERR_POP(status, "error getting absolute working dir\n");
-        do {
+        while (test_loc) {
             tmp[0] = MPL_strdup(test_loc);
             tmp[1] = MPL_strdup("/");
             tmp[2] = MPL_strdup(execname);
@@ -91,7 +97,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
             status = get_abs_wd(strtok(NULL, ";:"), &test_loc);
             HYDU_ERR_POP(status, "error getting absolute working dir\n");
-        } while (test_loc);
+        }
     }
 
     /* There is either no PATH environment or we could not find the

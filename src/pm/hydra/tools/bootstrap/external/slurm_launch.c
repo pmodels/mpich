@@ -80,6 +80,8 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
         path = HYDU_find_full_path("srun");
     if (!path)
         path = MPL_strdup("/usr/bin/srun");
+    if (!path)
+        HYDU_ERR_POP(status, "error allocating memory for strdup\n");
 
     idx = 0;
     targs[idx++] = MPL_strdup(path);

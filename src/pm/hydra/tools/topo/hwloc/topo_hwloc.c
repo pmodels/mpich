@@ -549,7 +549,8 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     }
 
     status = handle_bitmap_binding(binding, mapping ? mapping : binding);
-    HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding, mapping);
+    HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding,
+                 mapping ? mapping : "NULL");
 
 
     /* Memory binding options */
