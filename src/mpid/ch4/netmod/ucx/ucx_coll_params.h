@@ -215,8 +215,10 @@ typedef enum {
     MPIDI_UCX_Ibcast_intra_binomial_id,
     MPIDI_UCX_Ibcast_intra_scatter_recursive_doubling_allgather_id,
     MPIDI_UCX_Ibcast_intra_scatter_ring_allgather_id,
-    MPIDI_UCX_Ibcast_intra_tree_knomial_id,
-    MPIDI_UCX_Ibcast_intra_tree_kary_id,
+    MPIDI_UCX_Ibcast_intra_smp_id,
+    MPIDI_UCX_Ibcast_intra_tree_id,
+    MPIDI_UCX_Ibcast_intra_ring_id,
+    MPIDI_UCX_Ibcast_intra_scatter_recexch_allgather_id,
 } MPIDI_UCX_Ibcast_id_t;
 
 typedef union {

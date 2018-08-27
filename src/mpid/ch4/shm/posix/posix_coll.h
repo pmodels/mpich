@@ -1105,13 +1105,19 @@ static inline int MPIDI_POSIX_mpi_ibcast(void *buffer, int count, MPI_Datatype d
                 MPIR_Ibcast_intra_nbc_scatter_ring_allgather(buffer, count, datatype, root,
                                                              comm_ptr, request);
             break;
-        case MPIDI_POSIX_Ibcast_intra_tree_knomial_id:
-            mpi_errno =
-                MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr, request);
+        case MPIDI_OFI_Ibcast_intra_nbc_smp_id:
+            mpi_errno = MPIR_Ibcast_intra_nbc_smp(buffer, count, datatype, root, comm_ptr, request);
             break;
-        case MPIDI_POSIX_Ibcast_intra_tree_kary_id:
+        case MPIDI_POSIX_Ibcast_intra_tree_id:
+            mpi_errno = MPIR_Ibcast_intra_tree(buffer, count, datatype, root, comm_ptr, request);
+            break;
+        case MPIDI_POSIX_Ibcast_intra_ring_id:
+            mpi_errno = MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
+            break;
+        case MPIDI_POSIX_Ibcast_intra_scatter_recexch_allgather_id:
             mpi_errno =
-                MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
+                MPIR_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root, comm_ptr,
+                                                            request);
             break;
         default:
             mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, request);

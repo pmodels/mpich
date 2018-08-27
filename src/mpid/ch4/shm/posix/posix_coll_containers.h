@@ -87,7 +87,10 @@ extern const MPIDI_POSIX_coll_algo_container_t
     MPIDI_POSIX_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t
     MPIDI_POSIX_Ibcast_intra_nbc_scatter_ring_allgather_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_tree_knomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_tree_kary_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_nbc_smp_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_tree_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_ring_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    MPIDI_POSIX_Ibcast_intra_scatter_recexch_allgather_cnt;
 
 #endif /* POSIX_COLL_CONTAINERS_H_INCLUDED */

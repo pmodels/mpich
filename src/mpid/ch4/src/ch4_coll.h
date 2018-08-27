@@ -881,11 +881,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, int count, MPI_Datatype d
                 MPIDI_Ibcast_intra_composition_alpha(buffer, count, datatype, root, comm, req,
                                                      ch4_algo_parameters_container);
             break;
-        case MPIDI_Ibcast_intra_composition_beta_id:
-            mpi_errno =
-                MPIDI_Ibcast_intra_composition_beta(buffer, count, datatype, root, comm, req,
-                                                    ch4_algo_parameters_container);
-            break;
         case MPIDI_Ibcast_inter_composition_alpha_id:
             mpi_errno =
                 MPIDI_Ibcast_inter_composition_alpha(buffer, count, datatype, root, comm, req,

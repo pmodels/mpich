@@ -1616,33 +1616,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_intra_composition_alpha(void *buffer,
                                                                   MPIR_Request ** request,
                                                                   const
                                                                   MPIDI_coll_algo_container_t *
-                                                                  ch4_algo_parameters_container
-                                                                  ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_SCHED_CREATE_START(MPIR_Ibcast_sched_intra_smp
-                            (buffer, count, datatype, root, comm_ptr, s), mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Ibcast_intra_composition_beta
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Ibcast_intra_composition_beta(void *buffer,
-                                                                 int count,
-                                                                 MPI_Datatype datatype,
-                                                                 int root,
-                                                                 MPIR_Comm * comm_ptr,
-                                                                 MPIR_Request ** request,
-                                                                 const
-                                                                 MPIDI_coll_algo_container_t *
-                                                                 ch4_algo_parameters_container)
+                                                                  ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
     const void *ibcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);

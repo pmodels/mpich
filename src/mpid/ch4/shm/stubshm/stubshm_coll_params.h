@@ -215,8 +215,10 @@ typedef enum {
     MPIDI_STUBSHM_Ibcast_intra_nbc_binomial_id,
     MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_id,
     MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_ring_allgather_id,
-    MPIDI_STUBSHM_Ibcast_intra_tree_knomial_id,
-    MPIDI_STUBSHM_Ibcast_intra_tree_kary_id,
+    MPIDI_STUBSHM_Ibcast_intra_nbc_smp_id,
+    MPIDI_STUBSHM_Ibcast_intra_tree_id,
+    MPIDI_STUBSHM_Ibcast_intra_ring_id,
+    MPIDI_STUBSHM_Ibcast_intra_scatter_recexch_allgather_id,
 } MPIDI_STUBSHM_Ibcast_id_t;
 
 typedef union {

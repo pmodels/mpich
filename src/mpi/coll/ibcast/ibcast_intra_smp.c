@@ -27,6 +27,24 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ibcast_intra_nbc_smp
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibcast_intra_nbc_smp(void *buffer, int count, MPI_Datatype datatype,
+                              int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_SCHED_CREATE_START(MPIR_Ibcast_sched_intra_smp
+                            (buffer, count, datatype, root, comm_ptr, s), mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* This routine purely handles the hierarchical version of bcast, and does not
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */

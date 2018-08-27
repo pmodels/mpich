@@ -222,7 +222,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Ibcast_intra_composition_alpha_id,
-    MPIDI_Ibcast_intra_composition_beta_id,
     MPIDI_Ibcast_inter_composition_alpha_id
 } MPIDI_Ibcast_id_t;
 
@@ -230,9 +229,6 @@ typedef union {
     struct MPIDI_Ibcast_alpha {
         int ibcast;
     } ch4_ibcast_alpha;
-    struct MPIDI_Ibcast_beta {
-        int ibcast;
-    } ch4_ibcast_beta;
 } MPIDI_Ibcast_params_t;
 
 #define MPIDI_BARRIER_PARAMS_DECL MPIDI_Barrier_params_t ch4_barrier_params;

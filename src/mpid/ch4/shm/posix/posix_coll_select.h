@@ -486,6 +486,11 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Ibcast_select(void *buffer,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
+    if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+        MPIR_CVAR_ENABLE_SMP_COLLECTIVES && !MPIR_CVAR_ENABLE_SMP_BCAST) {
+        return &MPIDI_POSIX_Ibcast_intra_nbc_smp_cnt;
+    }
+
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         return &MPIDI_POSIX_Ibcast_intra_nbc_binomial_cnt;
     } else {

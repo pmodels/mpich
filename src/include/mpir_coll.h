@@ -10,6 +10,25 @@
 
 #include "coll_impl.h"
 
+#define MPIR_SCHED_CREATE_START(SCHED_FUNC, mpi_err_)            \
+    do {                                                         \
+        int tag = -1;                                            \
+        MPIR_Sched_t s = MPIR_SCHED_NULL;                        \
+        *request = NULL;                                         \
+        mpi_err_ = MPIR_Sched_next_tag(comm_ptr, &tag);          \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = MPIR_Sched_create(&s);                        \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = SCHED_FUNC;                                   \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = MPIR_Sched_start(&s, comm_ptr, tag, request); \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+    } while (0)
+
 /* Internal point-to-point communication for collectives */
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv
@@ -770,6 +789,8 @@ int MPIR_Ibcast_intra_nbc_scatter_recursive_doubling_allgather(void *buffer, int
 int MPIR_Ibcast_intra_nbc_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
                                                  int root, MPIR_Comm * comm_ptr,
                                                  MPIR_Request ** request);
+int MPIR_Ibcast_intra_nbc_smp(void *buffer, int count, MPI_Datatype datatype,
+                              int root, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 /* sched-based intracomm-only functions */
 int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);

@@ -174,10 +174,18 @@ const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_nbc_scatter_ring_al
     .id = MPIDI_OFI_Ibcast_intra_nbc_scatter_ring_allgather_id
 };
 
-const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_tree_knomial_cnt = {
-    .id = MPIDI_OFI_Ibcast_intra_tree_knomial_id
+const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_nbc_smp_cnt = {
+    .id = MPIDI_OFI_Ibcast_intra_nbc_smp_id
 };
 
-const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_tree_kary_cnt = {
-    .id = MPIDI_OFI_Ibcast_intra_tree_kary_id
+const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_tree_cnt = {
+    .id = MPIDI_OFI_Ibcast_intra_tree_id
+};
+
+const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_ring_cnt = {
+    .id = MPIDI_OFI_Ibcast_intra_ring_id
+};
+
+const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_scatter_recexch_allgather_cnt = {
+    .id = MPIDI_OFI_Ibcast_intra_scatter_recexch_allgather_id
 };

@@ -76,7 +76,6 @@ extern const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cn
 
 /* Ibcast  CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_intra_composition_alpha_cnt;
-extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_intra_composition_beta_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_inter_composition_alpha_cnt;
 
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */
