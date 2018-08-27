@@ -114,7 +114,7 @@ static HYD_status poke_progress(char *key)
             req->next = NULL;
         }
 
-        if (key && strcmp(key, req->key)) {
+        if (key && req && strcmp(key, req->key)) {
             /* If the key doesn't match the request, just queue it back */
             if (list_head == NULL) {
                 list_head = req;

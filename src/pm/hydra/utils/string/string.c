@@ -92,6 +92,7 @@ HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "%s", "");
 
     *str1 = MPL_strdup(str);
+    HYDU_ERR_CHKANDJUMP(status, NULL == *str1, HYD_INTERNAL_ERROR, "%s", "");
     for (i = 0; (*str1)[i] && ((*str1)[i] != sep); i++);
 
     if ((*str1)[i] == 0)        /* End of the string */

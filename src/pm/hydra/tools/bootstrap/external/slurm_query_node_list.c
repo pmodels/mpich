@@ -375,6 +375,7 @@ static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
     HYDU_MALLOC_OR_JUMP(tmp_core_list, char **, nnodes * sizeof(char *), status);
 
     task_set = strtok(task_list, ",");
+    HYDU_ASSERT(task_set, status);
     i = 0;
     do {
         HYDU_MALLOC_OR_JUMP(tmp_core_list[i], char *, strlen(task_set) + 1, status);
