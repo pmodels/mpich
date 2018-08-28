@@ -26,7 +26,7 @@ UT_icd vtx_t_icd = {
 #define FUNCNAME MPII_Genutil_sched_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
+int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int is_persistent)
 {
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
@@ -39,6 +39,8 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
+
+    sched->is_persistent = is_persistent;
 
     return MPI_SUCCESS;
 }

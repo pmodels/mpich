@@ -125,7 +125,7 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, 0);
 
     /* schedule scatter followed by recursive exchange allgather algo */
     mpi_errno =

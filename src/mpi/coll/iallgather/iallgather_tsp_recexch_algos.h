@@ -345,7 +345,7 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, 0);
 
     mpi_errno =
         MPIR_TSP_Iallgather_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcount,

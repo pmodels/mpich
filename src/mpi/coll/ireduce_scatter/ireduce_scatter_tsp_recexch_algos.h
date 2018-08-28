@@ -242,7 +242,7 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, 0);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */

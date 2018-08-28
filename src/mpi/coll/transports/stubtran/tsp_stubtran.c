@@ -12,7 +12,7 @@
 #include "mpiimpl.h"
 #include "tsp_stubtran.h"
 
-int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched)
+int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int is_persistent)
 {
     return MPI_SUCCESS;
 }

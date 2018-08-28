@@ -212,7 +212,7 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, 0);
 
     /* schedule tree algo */
     mpi_errno = MPIR_TSP_Iscatter_sched_intra_tree(sendbuf, sendcount, sendtype,
