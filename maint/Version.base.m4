@@ -23,5 +23,14 @@ dnl $MPICH_VERSION as before
 MPICH_VERSION=MPICH_VERSION_m4
 export MPICH_VERSION
 
+if [[ -f src/mpid/ch4/netmod/ofi/libfabric/autogen.sh ]]; then
+    cd src/mpid/ch4/netmod/ofi/libfabric
+    LIBFABRIC_VERSION=`git describe --tags`
+    export LIBFABRIC_VERSION
+    cd -
+else
+    error "Submodule libfabric not checked out. Perhaps you need to run 'git submodule update --init' from the top of the MPICH source tree?"
+fi
+
 dnl balance our pushed diversion
 m4_divert_pop([])dnl

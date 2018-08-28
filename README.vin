@@ -543,7 +543,13 @@ the following option:
 
 If specifying the provider, the MPICH library will be optimized specifically
 for the requested provider by removing runtime branches to determine
-provider capabilities.
+provider capabilities. Note that using this feature with a version of the
+libfabric library older than that recommended with this version of MPICH is
+unsupported and may result in unexpected behavior. This is also true when
+using the environment variable MPIR_CVAR_OFI_USE_PROVIDER, which will also
+do some optimization for the requested provider.
+
+The currently expected version of libfabric is: %LIBFABRIC_VERSION%.
 
 ucx network module
 ``````````````````
