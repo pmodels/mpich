@@ -529,7 +529,7 @@ ofi network module
 The ofi netmod provides support for the OFI network programming interface.
 To enable, configure with the following option:
 
-  --with-device=ch4:ofi
+  --with-device=ch4:ofi[:provider]
 
 If the OFI include files and libraries are not in the normal search paths,
 you can specify them with the following options:
@@ -540,6 +540,10 @@ you can specify them with the following options:
 the following option:
 
   --with-libfabric=
+
+If specifying the provider, the MPICH library will be optimized specifically
+for the requested provider by removing runtime branches to determine
+provider capabilities.
 
 ucx network module
 ``````````````````
