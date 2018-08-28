@@ -147,6 +147,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int *displs;
     int tag;
+    MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
@@ -173,7 +174,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         return mpi_errno;
     }
 
-    displs = (int *) MPL_malloc(nranks * sizeof(int), MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(displs, int *, nranks * sizeof(int),
+                        mpi_errno, "displs buffer", MPL_MEM_COLL);
     displs[0] = 0;
     for (i = 1; i < nranks; i++) {
         displs[i] = displs[i - 1] + recvcounts[i - 1];
@@ -275,11 +277,13 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         MPL_free(step2_nbrs[i]);
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
-    MPL_free(displs);
+    MPIR_CHKLMEM_FREEALL();
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
