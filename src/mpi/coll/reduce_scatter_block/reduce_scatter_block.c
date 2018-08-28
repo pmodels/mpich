@@ -407,8 +407,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 
             MPIR_ERRTEST_OP(op, mpi_errno);
 
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
