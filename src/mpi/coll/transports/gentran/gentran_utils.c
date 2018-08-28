@@ -510,24 +510,26 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         if (made_progress)
             *made_progress = TRUE;
 
-        /* free up the sched resources */
-        for (i = 0; i < sched->total_vtcs; i++) {
-            vtx_t *vtx = (vtx_t *) utarray_eltptr(sched->vtcs, i);
+        if (sched->is_persistent == false) {
+            /* free up the sched resources */
+            for (i = 0; i < sched->total_vtcs; i++) {
+                vtx_t *vtx = (vtx_t *) utarray_eltptr(sched->vtcs, i);
 
-            if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
-                MPL_free(vtx->u.imcast.req);
-                utarray_free(vtx->u.imcast.dests);
+                if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
+                    MPL_free(vtx->u.imcast.req);
+                    utarray_free(vtx->u.imcast.dests);
+                }
             }
+
+            /* free up the allocated buffers */
+            p = NULL;
+            while ((p = (void **) utarray_next(sched->buffers, p)))
+                MPL_free(*p);
+
+            utarray_free(sched->vtcs);
+            utarray_free(sched->buffers);
+            MPL_free(sched);
         }
-
-        /* free up the allocated buffers */
-        p = NULL;
-        while ((p = (void **) utarray_next(sched->buffers, p)))
-            MPL_free(*p);
-
-        utarray_free(sched->vtcs);
-        utarray_free(sched->buffers);
-        MPL_free(sched);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
