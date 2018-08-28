@@ -35,7 +35,7 @@ noinst_PROGRAMS =      \
     bcasttest          \
     bcastzerotype      \
     coll2              \
-    coll3              \
+    gatherv            \
     coll4              \
     coll5              \
     coll6              \
