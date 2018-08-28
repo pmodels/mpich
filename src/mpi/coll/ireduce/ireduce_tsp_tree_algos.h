@@ -268,10 +268,11 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
+
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);

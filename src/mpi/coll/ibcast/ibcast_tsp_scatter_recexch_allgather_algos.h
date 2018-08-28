@@ -118,10 +118,11 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
+
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);

@@ -338,10 +338,11 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RECEXCH);
+
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
