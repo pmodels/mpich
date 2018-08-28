@@ -25,10 +25,8 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If non-null, choose an OFI provider by name. If using with the CH4
-        device and using a provider that supports an older version of the
-        libfabric API then the default version of the installed library,
-        specifying the OFI version via the appropriate CVARs is also
-        recommended.
+        device and using an older libfabric installation than the recommended
+        version to accompany this MPICH version, unexpected results may occur.
 
     - name        : MPIR_CVAR_OFI_DUMP_PROVIDERS
       category    : DEVELOPER
