@@ -111,7 +111,7 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,

@@ -84,7 +84,7 @@ int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int s
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno =

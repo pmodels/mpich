@@ -56,7 +56,7 @@ extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* Transport function to initialize a new schedule */
-int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched);
+int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, bool is_persistent);
 
 /* Transport function to free a schedule */
 void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched);

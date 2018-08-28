@@ -188,7 +188,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Dat
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno = MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcount, recvtype, comm_ptr, sched, k);

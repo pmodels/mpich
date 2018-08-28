@@ -170,7 +170,7 @@ int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ialltoall_sched_intra_scattered(sendbuf, sendcount, sendtype,

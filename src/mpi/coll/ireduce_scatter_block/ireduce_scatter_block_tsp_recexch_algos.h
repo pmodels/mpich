@@ -215,7 +215,7 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     mpi_errno =
         MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(sendbuf, recvbuf, recvcount, datatype,

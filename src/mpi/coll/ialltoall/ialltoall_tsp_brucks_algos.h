@@ -393,7 +393,7 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,

@@ -89,7 +89,7 @@ int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int s
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
     MPIR_Assert(sched != NULL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, false);
 
     /* schedule linear algo */
     mpi_errno =
