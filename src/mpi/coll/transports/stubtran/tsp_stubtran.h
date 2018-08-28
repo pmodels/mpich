@@ -49,7 +49,7 @@
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 #define MPIR_TSP_sched_free                 MPII_Stubutil_sched_free
 
-int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched);
+int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, bool is_persistent);
 void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_new_type(MPII_Stubutil_sched_t * sched,
                                  MPII_Stubutil_sched_issue_fn issue_fn,
