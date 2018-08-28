@@ -413,10 +413,12 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPIR_Request_add_ref(reqp);
 
     if (unlikely(sched->total_vtcs == 0)) {
-        MPII_Genutil_sched_free(sched);
+        if (!sched->is_persistent)
+            MPII_Genutil_sched_free(sched);
         MPIR_Request_complete(reqp);
         goto fn_exit;
     }
+    MPIR_Assert(sched->completed_vtcs == 0);
     /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {
