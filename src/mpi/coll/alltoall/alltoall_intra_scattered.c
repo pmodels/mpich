@@ -45,7 +45,6 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Datatype newtype = MPI_DATATYPE_NULL;
     MPIR_Request **reqarray;
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(6);
@@ -131,7 +130,5 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
 
     return mpi_errno;
   fn_fail:
-    if (newtype != MPI_DATATYPE_NULL)
-        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
