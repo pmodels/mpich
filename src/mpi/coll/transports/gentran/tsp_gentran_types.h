@@ -114,6 +114,8 @@ typedef struct {
 
     /* list of new type */
     UT_array generic_types;
+
+    bool is_persistent;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;
