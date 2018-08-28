@@ -254,8 +254,6 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

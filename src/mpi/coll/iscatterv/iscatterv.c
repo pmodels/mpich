@@ -427,9 +427,6 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
                     MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, recvtype, mpi_errno);
                 }
             }
-
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
