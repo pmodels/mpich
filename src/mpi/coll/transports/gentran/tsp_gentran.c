@@ -45,6 +45,34 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int is_persistent)
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
+{
+    int i;
+    void **p;
+
+    /* free up the sched resources */
+    for (i = 0; i < sched->total_vtcs; i++) {
+        vtx_t *vtx = (vtx_t *) utarray_eltptr(sched->vtcs, i);
+
+        if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
+            MPL_free(vtx->u.imcast.req);
+            utarray_free(vtx->u.imcast.dests);
+        }
+    }
+
+    /* free up the allocated buffers */
+    p = NULL;
+    while ((p = (void **) utarray_next(sched->buffers, p)))
+        MPL_free(*p);
+
+    utarray_free(sched->vtcs);
+    utarray_free(sched->buffers);
+    MPL_free(sched);
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_isend

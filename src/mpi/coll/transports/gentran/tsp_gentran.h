@@ -38,6 +38,9 @@ extern int MPII_Genutil_progress_hook_id;
 /* Transport function to initialize a new schedule */
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int is_persistent);
 
+/* Transport function to free a schedule */
+void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched);
+
 /* Transport function to schedule a isend vertex */
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,
