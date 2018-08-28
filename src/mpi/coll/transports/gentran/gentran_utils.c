@@ -550,7 +550,8 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         if (made_progress)
             *made_progress = TRUE;
 
-        MPII_Genutil_sched_free(sched);
+        if (sched->is_persistent == false)
+            MPII_Genutil_sched_free(sched);
     }
 
   fn_exit:
