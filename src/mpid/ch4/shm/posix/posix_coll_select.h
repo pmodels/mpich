@@ -24,8 +24,8 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
                                                             *ch4_algo_parameters_container_in
                                                             ATTRIBUTE((unused)))
 {
-    MPIU_COLL_SELECTON_coll_signature_t coll_sig = {
-        .coll_id = MPIU_COLL_SELECTION_BCAST,
+    MPIU_SELECTON_coll_signature_t coll_sig = {
+        .coll_id = MPIU_SELECTION_BCAST,
         .comm = comm,
         .coll.bcast = {
                        .buffer = buffer,

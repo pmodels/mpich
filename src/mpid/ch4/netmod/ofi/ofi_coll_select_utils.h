@@ -4,7 +4,7 @@
 #include "coll_tree_bin_types.h"
 
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_OFI_check_container(MPIU_COLL_SELECTON_coll_signature_t * coll_sig, const void *container)
+MPIDI_OFI_check_container(MPIU_SELECTON_coll_signature_t * coll_sig, const void *container)
 {
     if (container != NULL) {
         return 1;
@@ -13,13 +13,13 @@ MPIDI_OFI_check_container(MPIU_COLL_SELECTON_coll_signature_t * coll_sig, const 
 }
 
 MPL_STATIC_INLINE_PREFIX const MPIDI_OFI_coll_algo_container_t
-    * MPIDI_OFI_get_container_default_value(MPIU_COLL_SELECTON_coll_signature_t * coll_sig)
+    * MPIDI_OFI_get_container_default_value(MPIU_SELECTON_coll_signature_t * coll_sig)
 {
     return MPIDI_OFI_Coll_default_cnt[coll_sig->coll_id];
 }
 
 MPL_STATIC_INLINE_PREFIX const MPIDI_OFI_coll_algo_container_t
-    * MPIDI_OFI_coll_select(MPIU_COLL_SELECTON_coll_signature_t *
+    * MPIDI_OFI_coll_select(MPIU_SELECTON_coll_signature_t *
                             coll_sig, const void *ch4_algo_parameters_container_in)
 {
     const void *container = NULL;

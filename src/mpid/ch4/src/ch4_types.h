@@ -297,7 +297,7 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     OPA_int_t progress_count;
 
-    MPIU_COLL_SELECTION_storage_handler coll_selection;
+    MPIU_SELECTION_storage_handler coll_selection;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

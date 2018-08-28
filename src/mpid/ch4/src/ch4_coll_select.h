@@ -42,8 +42,8 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
                                                 int root,
                                                 MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    MPIU_COLL_SELECTON_coll_signature_t coll_sig = {
-        .coll_id = MPIU_COLL_SELECTION_BCAST,
+    MPIU_SELECTON_coll_signature_t coll_sig = {
+        .coll_id = MPIU_SELECTION_BCAST,
         .comm = comm,
         .coll.bcast = {
                        .buffer = buffer,

@@ -247,7 +247,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
 
-    mpi_errno = MPIU_COLL_SELECTION_init();
+    mpi_errno = MPIU_SELECTION_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -382,7 +382,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIU_COLL_SELECTION_dump();
+    mpi_errno = MPIU_SELECTION_dump();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

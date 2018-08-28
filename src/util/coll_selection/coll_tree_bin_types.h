@@ -1,48 +1,48 @@
-#ifndef MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED
-#define MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED
+#ifndef MPIU_SELECTION_TYPES_H_INCLUDED
+#define MPIU_SELECTION_TYPES_H_INCLUDED
 
 #include "coll_tree_json.h"
 
 typedef enum {
-    MPIU_COLL_SELECTION_INTRA_COMM,
-    MPIU_COLL_SELECTION_INTER_COMM,
-    MPIU_COLL_SELECTION_COMM_KIND_NUM
-} MPIU_COLL_SELECTION_comm_kind_t;
+    MPIU_SELECTION_INTRA_COMM,
+    MPIU_SELECTION_INTER_COMM,
+    MPIU_SELECTION_COMM_KIND_NUM
+} MPIU_SELECTION_comm_kind_t;
 
 typedef enum {
-    MPIU_COLL_SELECTION_FLAT_COMM,
-    MPIU_COLL_SELECTION_TOPO_COMM,
-    MPIU_COLL_SELECTION_COMM_HIERARCHY_NUM
-} MPIU_COLL_SELECTION_comm_hierarchy_kind_t;
+    MPIU_SELECTION_FLAT_COMM,
+    MPIU_SELECTION_TOPO_COMM,
+    MPIU_SELECTION_COMM_HIERARCHY_NUM
+} MPIU_SELECTION_comm_hierarchy_kind_t;
 
 typedef enum {
-    MPIU_COLL_SELECTION_STORAGE,
-    MPIU_COLL_SELECTION_COMM_KIND,
-    MPIU_COLL_SELECTION_COMM_HIERARCHY,
-    MPIU_COLL_SELECTION_COLLECTIVE,
-    MPIU_COLL_SELECTION_COMMSIZE,
-    MPIU_COLL_SELECTION_MSGSIZE,
-    MPIU_COLL_SELECTION_CONTAINER,
-    MPIU_COLL_SELECTION_TYPES_NUM,
-    MPIU_COLL_SELECTION_DEFAULT_TERMINAL_NODE_TYPE = MPIU_COLL_SELECTION_CONTAINER,
-    MPIU_COLL_SELECTION_DEFAULT_NODE_TYPE = -1
-} MPIU_COLL_SELECTION_node_type_t;
+    MPIU_SELECTION_STORAGE,
+    MPIU_SELECTION_COMM_KIND,
+    MPIU_SELECTION_COMM_HIERARCHY,
+    MPIU_SELECTION_COLLECTIVE,
+    MPIU_SELECTION_COMMSIZE,
+    MPIU_SELECTION_MSGSIZE,
+    MPIU_SELECTION_CONTAINER,
+    MPIU_SELECTION_TYPES_NUM,
+    MPIU_SELECTION_DEFAULT_TERMINAL_NODE_TYPE = MPIU_SELECTION_CONTAINER,
+    MPIU_SELECTION_DEFAULT_NODE_TYPE = -1
+} MPIU_SELECTION_node_type_t;
 
-typedef struct MPIU_COLL_SELECTION_tree_node {
-    MPIU_COLL_SELECTION_storage_handler parent;
-    MPIU_COLL_SELECTION_node_type_t type;
-    MPIU_COLL_SELECTION_node_type_t next_layer_type;
+typedef struct MPIU_SELECTION_tree_node {
+    MPIU_SELECTION_storage_handler parent;
+    MPIU_SELECTION_node_type_t type;
+    MPIU_SELECTION_node_type_t next_layer_type;
     int key;
     int children_count;
     int cur_child_idx;
     union {
-        MPIU_COLL_SELECTION_storage_handler offset[0];
+        MPIU_SELECTION_storage_handler offset[0];
         MPIDIG_coll_algo_generic_container_t containers[0];
     };
-} MPIU_COLL_SELECTION_tree_node_t;
+} MPIU_SELECTION_node_t;
 
-typedef struct MPIU_COLL_SELECTION_match_pattern {
-    MPIU_COLL_SELECTION_node_type_t terminal_node_type;
+typedef struct MPIU_SELECTION_match_pattern {
+    MPIU_SELECTION_node_type_t terminal_node_type;
 
     int storage;
     int comm_kind;
@@ -50,9 +50,9 @@ typedef struct MPIU_COLL_SELECTION_match_pattern {
     int coll_id;
     int comm_size;
     int msg_size;
-} MPIU_COLL_SELECTION_match_pattern_t;
+} MPIU_SELECTION_match_pattern_t;
 
-typedef struct MPIU_COLL_SELECTON_coll_signature {
+typedef struct MPIU_SELECTON_coll_signature {
     int coll_id;
     MPIR_Comm *comm;
     union {
@@ -207,76 +207,73 @@ typedef struct MPIU_COLL_SELECTON_coll_signature {
             MPIR_Errflag_t *errflag;
         } scatterv;
     } coll;
-} MPIU_COLL_SELECTON_coll_signature_t;
+} MPIU_SELECTON_coll_signature_t;
 
-extern MPIU_COLL_SELECTON_coll_signature_t MPIU_COLL_SELECTON_coll_sig;
+extern MPIU_SELECTON_coll_signature_t MPIU_COLL_SELECTON_coll_sig;
 
-MPIU_COLL_SELECTION_storage_handler
-MPIU_COLL_SELECTION_create_node(MPIU_COLL_SELECTION_storage_handler parent,
-                                MPIU_COLL_SELECTION_node_type_t node_type,
-                                MPIU_COLL_SELECTION_node_type_t next_layer_type,
-                                int node_key, int children_count);
+MPIU_SELECTION_storage_handler
+MPIU_SELECTION_create_node(MPIU_SELECTION_storage_handler parent,
+                           MPIU_SELECTION_node_type_t node_type,
+                           MPIU_SELECTION_node_type_t next_layer_type,
+                           int node_key, int children_count);
 
-MPIU_COLL_SELECTION_storage_handler
-MPIU_COLL_SELECTION_create_leaf(MPIU_COLL_SELECTION_storage_handler parent,
-                                int node_type, int containers_count, void *containers);
+MPIU_SELECTION_storage_handler
+MPIU_SELECTION_create_leaf(MPIU_SELECTION_storage_handler parent,
+                           int node_type, int containers_count, void *containers);
 
-void *MPIU_COLL_SELECTION_get_container(MPIU_COLL_SELECTION_storage_handler node);
+void *MPIU_SELECTION_get_container(MPIU_SELECTION_storage_handler node);
 
-extern MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename);
+MPIU_SELECTION_storage_handler MPIU_SELECTION_get_node_parent(MPIU_SELECTION_storage_handler node);
 
-extern int MPIU_COLL_SELECTION_init(void);
+extern MPIU_SELECTION_storage_handler MPIU_SELECTION_tree_load(char *filename);
 
-extern int MPIU_COLL_SELECTION_dump(void);
+extern int MPIU_SELECTION_init(void);
 
-void
-MPIU_COLL_SELECTION_build_bin_tree_generic_part(MPIU_COLL_SELECTION_storage_handler *
-                                                root,
-                                                MPIU_COLL_SELECTION_storage_handler *
-                                                inter_comm_subtree,
-                                                MPIU_COLL_SELECTION_storage_handler *
-                                                topo_aware_comm_subtree,
-                                                MPIU_COLL_SELECTION_storage_handler *
-                                                flat_comm_subtree);
-
-void MPIU_COLL_SELECTION_build_bin_tree_default_inter(MPIU_COLL_SELECTION_storage_handler
-                                                      inter_comm_subtree);
+extern int MPIU_SELECTION_dump(void);
 
 void
-MPIU_COLL_SELECTION_build_bin_tree_default_topo_aware(MPIU_COLL_SELECTION_storage_handler
-                                                      topo_aware_comm_subtree);
+MPIU_SELECTION_build_bin_tree_generic_part(MPIU_SELECTION_storage_handler *
+                                           root,
+                                           MPIU_SELECTION_storage_handler *
+                                           inter_comm_subtree,
+                                           MPIU_SELECTION_storage_handler *
+                                           topo_aware_comm_subtree,
+                                           MPIU_SELECTION_storage_handler * flat_comm_subtree);
 
-void MPIU_COLL_SELECTION_build_bin_tree_default_flat(MPIU_COLL_SELECTION_storage_handler
-                                                     flat_comm_subtree);
-void MPIU_COLL_SELECTION_init_match_pattern(MPIU_COLL_SELECTION_match_pattern_t * match_pattern);
-
-MPIU_COLL_SELECTION_storage_handler
-MPIU_COLL_SELECTION_find_entry(MPIU_COLL_SELECTION_storage_handler entry,
-                               MPIU_COLL_SELECTION_match_pattern_t * match_pattern);
-
-void
-MPIU_COLL_SELECTION_init_comm_match_pattern(MPIR_Comm * comm,
-                                            MPIU_COLL_SELECTION_match_pattern_t *
-                                            match_pattern,
-                                            MPIU_COLL_SELECTION_node_type_t terminal_layer_type);
+void MPIU_SELECTION_build_bin_tree_default_inter(MPIU_SELECTION_storage_handler inter_comm_subtree);
 
 void
-MPIU_COLL_SELECTION_init_coll_match_pattern(MPIU_COLL_SELECTON_coll_signature_t * coll_sig,
-                                            MPIU_COLL_SELECTION_match_pattern_t *
-                                            match_pattern,
-                                            MPIU_COLL_SELECTION_node_type_t terminal_layer_type);
+MPIU_SELECTION_build_bin_tree_default_topo_aware(MPIU_SELECTION_storage_handler
+                                                 topo_aware_comm_subtree);
+
+void MPIU_SELECTION_build_bin_tree_default_flat(MPIU_SELECTION_storage_handler flat_comm_subtree);
+void MPIU_SELECTION_init_match_pattern(MPIU_SELECTION_match_pattern_t * match_pattern);
+
+MPIU_SELECTION_storage_handler
+MPIU_SELECTION_find_entry(MPIU_SELECTION_storage_handler entry,
+                          MPIU_SELECTION_match_pattern_t * match_pattern);
+
 void
-MPIU_COLL_SELECTION_set_match_pattern_key(MPIU_COLL_SELECTION_match_pattern_t *
-                                          match_pattern,
-                                          MPIU_COLL_SELECTION_node_type_t layer_type, int key);
+MPIU_SELECTION_init_comm_match_pattern(MPIR_Comm * comm,
+                                       MPIU_SELECTION_match_pattern_t *
+                                       match_pattern,
+                                       MPIU_SELECTION_node_type_t terminal_layer_type);
+
+void
+MPIU_SELECTION_init_coll_match_pattern(MPIU_SELECTON_coll_signature_t * coll_sig,
+                                       MPIU_SELECTION_match_pattern_t *
+                                       match_pattern,
+                                       MPIU_SELECTION_node_type_t terminal_layer_type);
+void
+MPIU_SELECTION_set_match_pattern_key(MPIU_SELECTION_match_pattern_t *
+                                     match_pattern, MPIU_SELECTION_node_type_t layer_type, int key);
 int
-MPIU_COLL_SELECTION_get_match_pattern_key(MPIU_COLL_SELECTION_match_pattern_t *
-                                          match_pattern,
-                                          MPIU_COLL_SELECTION_node_type_t layer_type);
+MPIU_SELECTION_get_match_pattern_key(MPIU_SELECTION_match_pattern_t *
+                                     match_pattern, MPIU_SELECTION_node_type_t layer_type);
 #if defined (MPL_USE_DBG_LOGGING)
 void
-MPIU_COLL_SELECTION_match_layer_and_key_to_str(char *layer, char *key_str,
-                                               MPIU_COLL_SELECTION_storage_handler match_node);
+MPIU_SELECTION_match_layer_and_key_to_str(char *layer, char *key_str,
+                                          MPIU_SELECTION_storage_handler match_node);
 #endif /* MPL_USE_DBG_LOGGING */
 
-#endif /* MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED */
+#endif /* MPIU_SELECTION_TYPES_H_INCLUDED */
