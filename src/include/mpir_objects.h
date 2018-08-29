@@ -442,6 +442,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
     {                                                                   \
         switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_BUILTIN:                                       \
+            MPIR_Assert(((a)&(bmsk)) < MPIR_##KIND##_N_BUILTIN);        \
             ptr=MPIR_##kind##_builtin+((a)&(bmsk));                     \
             break;                                                      \
         case HANDLE_KIND_DIRECT:                                        \
