@@ -208,7 +208,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         basic_type_ = MPI_DATATYPE_NULL;                            \
  } while (0)
 
-#define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,a,0x000000ff,ptr)
+#define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,DATATYPE,a,0x000000ff,ptr)
 
 /* Note: Probably there is some clever way to build all of these from a macro.
  */
