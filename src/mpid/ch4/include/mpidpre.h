@@ -438,7 +438,7 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
 
-        MPIU_SELECTION_storage_handler *coll_tuning;
+        MPIU_SELECTION_storage_entry *coll_tuning;
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field

@@ -4,15 +4,31 @@
 #include "coll_tree_bin_types.h"
 
 MPL_STATIC_INLINE_PREFIX MPIU_SELECTION_storage_handler
-MPIDI_get_container_storage(MPIU_SELECTON_coll_signature_t * coll_sig)
+    * MPIDI_get_container_storage(MPIU_SELECTON_coll_signature_t * coll_sig ATTRIBUTE((unused)))
 {
-    return (MPIDI_CH4_COMM(coll_sig->comm).coll_tuning)[coll_sig->coll_id];
+    return &MPIU_SELECTION_tree_global_storage;
+}
+
+MPL_STATIC_INLINE_PREFIX MPIU_SELECTION_storage_entry
+MPIDI_get_root_entry(MPIU_SELECTION_storage_handler * storage ATTRIBUTE((unused)),
+                     MPIU_SELECTON_coll_signature_t * coll_sig)
+{
+    return MPIDI_CH4_COMM(coll_sig->comm).coll_tuning[coll_sig->coll_id];
 }
 
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_check_container(MPIU_SELECTON_coll_signature_t * coll_sig, void *container)
+MPIDI_check_container(MPIU_SELECTON_coll_signature_t * coll_sig ATTRIBUTE((unused)),
+                      void *container)
 {
     if (container != NULL) {
+        return 1;
+    }
+    return 0;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_check_storage(MPIU_SELECTION_storage_handler storage)
+{
+    if (storage.base_addr != NULL) {
         return 1;
     }
     return 0;
@@ -31,19 +47,21 @@ MPL_STATIC_INLINE_PREFIX const MPIDI_coll_algo_container_t
 {
     void *container = NULL;
     int is_valid = 0;
-    MPIU_SELECTION_storage_handler storage = MPIU_SELECTION_NULL_ENTRY;
-    MPIU_SELECTION_storage_handler entry = MPIU_SELECTION_NULL_ENTRY;
+    MPIU_SELECTION_storage_handler *storage = NULL;
+    MPIU_SELECTION_storage_entry entry = MPIU_SELECTION_NULL_ENTRY;
+    MPIU_SELECTION_storage_entry root_entry = MPIU_SELECTION_NULL_ENTRY;
     MPIU_SELECTION_match_pattern_t match_pattern;
 
     storage = MPIDI_get_container_storage(coll_sig);
 
-    if (storage != MPIU_SELECTION_NULL_ENTRY) {
+    if (storage != NULL) {
         MPIU_SELECTION_init_coll_match_pattern(coll_sig, &match_pattern, MPIU_SELECTION_CONTAINER);
 
-        entry = MPIU_SELECTION_find_entry(storage, &match_pattern);
+        root_entry = MPIDI_get_root_entry(storage, coll_sig);
+        entry = MPIU_SELECTION_find_entry(storage, root_entry, &match_pattern);
 
         if (entry != MPIU_SELECTION_NULL_ENTRY) {
-            container = MPIU_SELECTION_get_container(entry);
+            container = MPIU_SELECTION_get_container(storage, entry);
 
             if (container != NULL) {
                 is_valid = MPIDI_check_container(coll_sig, container);

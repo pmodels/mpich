@@ -96,14 +96,15 @@ MPIU_SELECTION_tree_get_node_json_next(MPIU_SELECTION_NODE json_node, int index)
 static inline int MPIU_SELECTION_tree_get_node_json_type(MPIU_SELECTION_NODE json_node);
 static inline int MPIU_SELECTION_tree_get_node_json_peer_count(MPIU_SELECTION_NODE json_node);
 MPIU_SELECTION_NODE MPIU_SELECTION_tree_read(char *file);
-void MPIU_SELECTION_tree_json_to_bin(MPIU_SELECTION_NODE json_node,
-                                     MPIU_SELECTION_storage_handler bin_node);
+void MPIU_SELECTION_tree_json_to_bin(MPIU_SELECTION_storage_handler * storage,
+                                     MPIU_SELECTION_NODE json_node,
+                                     MPIU_SELECTION_storage_entry bin_node);
 int MPIU_SELECTION_tree_get_node_type(MPIU_SELECTION_NODE json_node, int ind);
 void MPIU_SELECTION_tree_get_node_key(MPIU_SELECTION_NODE json_node, int ind, char *key);
-void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_NODE json_node,
-                                       MPIU_SELECTION_storage_handler node);
-void MPIU_SELECTION_tree_create_containers(MPIU_SELECTION_NODE
-                                           json_node, int *cnt_num,
+void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_storage_handler * storage,
+                                       MPIU_SELECTION_NODE json_node,
+                                       MPIU_SELECTION_storage_entry node);
+void MPIU_SELECTION_tree_create_containers(MPIU_SELECTION_NODE json_node, int *cnt_num,
                                            MPIDIG_coll_algo_generic_container_t * cnt, int coll_id);
 int MPIU_SELECTION_tree_get_algorithm_type(char *str);
 void MPIU_SELECTION_tree_convert_key_int(int key_int, char *key_str, int *is_pow2);

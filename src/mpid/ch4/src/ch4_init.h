@@ -382,7 +382,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIU_SELECTION_dump();
+    mpi_errno = MPIU_SELECTION_dump(&MPIU_SELECTION_tree_global_storage);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

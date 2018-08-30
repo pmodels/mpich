@@ -292,15 +292,16 @@ MPIU_SELECTION_NODE MPIU_SELECTION_tree_read(char *file)
     return root;
 }
 
-void MPIU_SELECTION_tree_json_to_bin(MPIU_SELECTION_NODE json_node,
-                                     MPIU_SELECTION_storage_handler node)
+void MPIU_SELECTION_tree_json_to_bin(MPIU_SELECTION_storage_handler * storage,
+                                     MPIU_SELECTION_NODE json_node, MPIU_SELECTION_storage_entry
+                                     node)
 {
     if (json_node == MPIU_SELECTION_NULL_TYPE) {
         return;
     }
     switch (MPIU_SELECTION_tree_get_node_json_type(json_node)) {
         case MPIU_SELECTION_OBJECT_TYPE:
-            MPIU_SELECTION_tree_handle_object(json_node, node);
+            MPIU_SELECTION_tree_handle_object(storage, json_node, node);
             break;
         case MPIU_SELECTION_NULL_TYPE:
             MPL_FALLTHROUGH;
@@ -418,13 +419,14 @@ void MPIU_SELECTION_tree_convert_key_int(int key_int, char *key_str, int *is_pow
 
 }
 
-void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_NODE json_node,
-                                       MPIU_SELECTION_storage_handler node)
+void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_storage_handler * storage,
+                                       MPIU_SELECTION_NODE json_node,
+                                       MPIU_SELECTION_storage_entry node)
 {
     int length = 0;
     int i = 0;
     char key_str[MPIU_SELECTION_BUFFER_MAX_SIZE];
-    MPIU_SELECTION_storage_handler new_node = MPIU_SELECTION_NULL_ENTRY;
+    MPIU_SELECTION_storage_entry new_node = MPIU_SELECTION_NULL_ENTRY;
 
     if (json_node == MPIU_SELECTION_NULL_TYPE) {
         return;
@@ -454,7 +456,7 @@ void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_NODE json_node,
                         (MPIU_SELECTION_tree_get_node_json_next(json_node, i), 0));
 
             new_node =
-                MPIU_SELECTION_create_node(node,
+                MPIU_SELECTION_create_node(storage, node,
                                            MPIU_SELECTION_tree_get_node_type
                                            (json_node, 0),
                                            MPIU_SELECTION_tree_get_node_type
@@ -464,7 +466,7 @@ void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_NODE json_node,
                                            MPIU_SELECTION_tree_get_node_json_peer_count
                                            (MPIU_SELECTION_tree_get_node_json_next(json_node, i)));
 
-            MPIU_SELECTION_tree_json_to_bin(MPIU_SELECTION_tree_get_node_json_next
+            MPIU_SELECTION_tree_json_to_bin(storage, MPIU_SELECTION_tree_get_node_json_next
                                             (json_node, i), new_node);
 
         } else {
@@ -474,7 +476,8 @@ void MPIU_SELECTION_tree_handle_object(MPIU_SELECTION_NODE json_node,
 
             MPIU_SELECTION_tree_create_containers(json_node, &cnt_num, cnt,
                                                   MPIU_SELECTION_tree_current_collective_id);
-            new_node = MPIU_SELECTION_create_leaf(node, MPIU_SELECTION_CONTAINER, cnt_num, cnt);
+            new_node =
+                MPIU_SELECTION_create_leaf(storage, node, MPIU_SELECTION_CONTAINER, cnt_num, cnt);
         }
     }
 }
