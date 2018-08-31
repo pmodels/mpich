@@ -12,6 +12,10 @@
 
 if BUILD_SHM_POSIX
 
+if ENABLE_IZEM_ATOMIC
+include $(top_srcdir)/src/mpid/ch4/shm/posix/release_gather/Makefile.mk
+endif
+
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
                   src/mpid/ch4/shm/posix/shm_inline.h      \

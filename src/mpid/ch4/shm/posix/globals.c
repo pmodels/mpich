@@ -17,3 +17,6 @@ MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
 MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
 
 MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#ifdef ENABLE_IZEM_ATOMIC
+zm_atomic_uint_t *MPIDI_POSIX_shm_limit_counter = NULL;
+#endif
