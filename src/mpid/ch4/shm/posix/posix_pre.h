@@ -13,6 +13,9 @@
 #define POSIX_PRE_H_INCLUDED
 
 #include <mpi.h>
+#ifdef ENABLE_IZEM_ATOMIC
+#include "release_gather_types.h"
+#endif
 
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     (32)
 
@@ -35,7 +38,11 @@ struct MPIR_Segment;
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
+#ifdef ENABLE_IZEM_ATOMIC
+    MPIDI_POSIX_release_gather_comm_t *release_gather;
+#else
     int dummy;
+#endif
 } MPIDI_POSIX_comm_t;
 
 typedef struct {
