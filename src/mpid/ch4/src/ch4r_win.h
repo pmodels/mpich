@@ -1102,7 +1102,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     mapsize = MPIDI_CH4R_get_mapsize(total_size, &page_sz);
     MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
-    mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
+    mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize,
                                                 &MPIDI_CH4U_WIN(win, shm_segment_handle),
                                                 &MPIDI_CH4U_WIN(win, mmap_addr));
     if (mpi_errno != MPI_SUCCESS)
