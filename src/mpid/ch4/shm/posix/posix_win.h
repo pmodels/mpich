@@ -436,7 +436,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win *
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
     mpi_errno = MPIDI_CH4U_allocate_shm_segment(win->comm_ptr, sizeof(MPL_proc_mutex_t),
-                                                0 /* symmetric_flag */ ,
                                                 &posix_win->shm_mutex_segment_handle,
                                                 (void **) &posix_win->shm_mutex_ptr);
 
