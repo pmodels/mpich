@@ -948,16 +948,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_r
 }
 
 /* Collectively allocate shared memory region.
- * MPL_shm routines and MPI collectives are internally used.
- *
- * TODO: If symmetric_flag is true, then the routine will try to get
- * a symmetric address and give up after tried predefined times. */
+ * MPL_shm routines and MPI collectives are internally used. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_allocate_shm_segment
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
-                                                  MPI_Aint shm_segment_len, int symmetric_flag,
+                                                  MPI_Aint shm_segment_len,
                                                   MPL_shm_hnd_t * shm_segment_hdl_ptr,
                                                   void **base_ptr)
 {
