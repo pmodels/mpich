@@ -25,7 +25,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                                   void **shm_addr_ptr, int offset, int flag)
 {
-    int rc = -1;
+    int rc = MPL_SHM_SUCCESS;
     int lhnd = -1;
 
     if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
@@ -36,7 +36,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
             goto fn_exit;
         }
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
-        if (rc < 0) {
+        if (rc != MPL_SHM_SUCCESS) {
             goto fn_exit;
         }
     } else {
@@ -60,7 +60,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         /* Attach to shared mem seg */
         *shm_addr_ptr = shmat(MPLI_shm_lhnd_get(hnd), start_addr, 0x0);
         if (*shm_addr_ptr == (void *) -1) {
-            rc = -1;
+            rc = MPL_SHM_EINVAL;
         }
     }
 
@@ -158,7 +158,7 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
     rc = shmdt(*shm_addr_ptr);
     *shm_addr_ptr = NULL;
 
-    return rc;
+    return (rc == 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN;
 }
 
 /* Remove a shared memory segment
@@ -171,8 +171,11 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
     struct shmid_ds ds;
+    int rc = -1;
 
-    return shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
+    rc = shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
+
+    return (rc == 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN;
 }
 
 #endif /* MPL_USE_SYSV_SHM */

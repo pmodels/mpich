@@ -14,6 +14,11 @@
 
 #include "mplconfig.h"
 
+#define MPL_SHM_SUCCESS 0
+#define MPL_SHM_EINTERN -1
+#define MPL_SHM_EINVAL -2
+#define MPL_SHM_ENOMEM -3
+
 #ifdef MPL_USE_SYSV_SHM
 #include "mpl_shm_sysv.h"
 #elif defined MPL_USE_MMAP_SHM
@@ -56,10 +61,10 @@
 #define MPLI_shm_lhnd_is_init(hnd)  1
 
 /* Allocate mem for references within the handle */
-/* Returns 0 on success, -1 on error */
+/* Returns MPL_SHM_SUCCESS on success, MPL_SHM_ENOMEM on error */
 #define MPL_shm_hnd_ref_alloc(hnd)(\
     ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
-                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? 0 : -1 \
+                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? MPL_SHM_SUCCESS : MPL_SHM_ENOMEM \
 )
 
 
@@ -68,15 +73,15 @@
 
 /* Returns -1 on error, 0 on success */
 #define MPLI_shm_ghnd_get_by_val(hnd, str, strlen)  (\
-    (MPL_snprintf(str, strlen, "%s",                               \
-        MPLI_shm_ghnd_get_by_ref(hnd))) ? 0 : -1                   \
+    (MPL_snprintf(str, strlen, "%s",                                       \
+        MPLI_shm_ghnd_get_by_ref(hnd))) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN \
 )
 #define MPLI_shm_ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
 /* FIXME: What if val is a non-null terminated string ? */
 #define MPLI_shm_ghnd_set_by_val(hnd, fmt, val) (\
-    (MPL_snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                  \
-        MPLI_SHM_GHND_SZ, fmt, val)) ? 0 : -1                      \
+    (MPL_snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                         \
+        MPLI_SHM_GHND_SZ, fmt, val)) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN  \
 )
 
 #define MPLI_shm_ghnd_is_valid(hnd) (\
@@ -97,12 +102,12 @@ static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd, MPL_memory_class class)
     if (!(hnd->ghnd)) {
         hnd->ghnd = (MPLI_shm_ghnd_t) MPL_malloc(MPLI_SHM_GHND_SZ, class);
         if (!(hnd->ghnd)) {
-            return -1;
+            return MPL_SHM_ENOMEM;
         }
     }
     /* Global handle is no longer static */
     hnd->flag &= ~MPLI_SHM_FLAG_GHND_STATIC;
-    return 0;
+    return MPL_SHM_SUCCESS;
 }
 
 
@@ -114,9 +119,9 @@ static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t * hnd_ptr, MPL_memory_class c
     if (*hnd_ptr) {
         (*hnd_ptr)->flag = MPLI_SHM_FLAG_GHND_STATIC;
     } else {
-        return -1;
+        return MPL_SHM_ENOMEM;
     }
-    return 0;
+    return MPL_SHM_SUCCESS;
 }
 
 /* Close Handle */
