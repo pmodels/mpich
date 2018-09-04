@@ -6,23 +6,21 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef UCX_COMM_H_INCLUDED
-#define UCX_COMM_H_INCLUDED
 
-#include "ucx_impl.h"
+#include "ucx_noinline.h"
 #ifdef HAVE_LIBHCOLL
 #include "../../common/hcoll/hcoll.h"
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_comm_create_hook
+#define FUNCNAME MPIDI_UCX_mpi_comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
+int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
 
     mpi_errno = MPIDIG_init_comm(comm);
 
@@ -60,29 +58,27 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_comm_free_hook
+#define FUNCNAME MPIDI_UCX_mpi_comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
+int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
 
     mpi_errno = MPIDIG_destroy_comm(comm);
 #ifdef HAVE_LIBHCOLL
     hcoll_comm_destroy(comm, NULL);
 #endif
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
     return mpi_errno;
 }
-
-#endif /* UCX_COMM_H_INCLUDED */

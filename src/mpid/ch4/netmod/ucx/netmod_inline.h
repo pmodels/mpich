@@ -26,10 +26,8 @@
 #include "ucx_win.h"
 #include "ucx_rma.h"
 #include "ucx_am.h"
-#include "ucx_spawn.h"
-#include "ucx_comm.h"
-#include "ucx_datatype.h"
-#include "ucx_op.h"
 #include "ucx_proc.h"
 #include "ucx_coll.h"
+/* Not-inlined UCX netmod functions */
+#include "ucx_noinline.h"
 #endif /* NETMOD_INLINE_H_INCLUDED */
