@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win,
-                                     NULL);
+                                     av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win,
-                                     NULL);
+                                     av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -230,7 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                             target_rank, target_disp, target_count,
-                                            target_datatype, op, win, NULL);
+                                            target_datatype, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -275,7 +275,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
                                                    datatype, target_rank, target_disp, win);
     else
         mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                                  datatype, target_rank, target_disp, win, NULL);
+                                                  datatype, target_rank, target_disp, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -331,7 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
-                                             target_datatype, op, win, NULL, request);
+                                             target_datatype, op, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -436,7 +436,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
                                                datatype, target_rank, target_disp, op, win);
     else
         mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
-                                              datatype, target_rank, target_disp, op, win, NULL);
+                                              datatype, target_rank, target_disp, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -493,7 +493,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, win, NULL, request);
+                                      target_datatype, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -548,7 +548,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, win, NULL, request);
+                                      target_datatype, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -604,7 +604,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
         mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                 result_addr, result_count, result_datatype,
                                                 target_rank, target_disp, target_count,
-                                                target_datatype, op, win, NULL);
+                                                target_datatype, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
