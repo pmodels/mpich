@@ -31,6 +31,7 @@ for algo_name in ${algo_names}; do
                 env+="env=MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096 "
 
                 coll_algo_tests+="bcasttest 10 ${env}${nl}"
+                coll_algo_tests+="bcast_intoverflow 2 ${env}${nl}"
                 coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
             done
         else

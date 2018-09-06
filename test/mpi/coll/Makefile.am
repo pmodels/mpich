@@ -33,6 +33,7 @@ noinst_PROGRAMS =      \
     alltoallw2         \
     alltoallw_zeros    \
     bcasttest          \
+    bcast_intoverflow  \
     bcastzerotype      \
     coll2              \
     coll3              \

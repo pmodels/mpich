@@ -62,6 +62,7 @@
 /coll/bcast_full
 /coll/bcast_min_datatypes
 /coll/bcasttest
+/coll/bcast_intoverflow
 /coll/bcastzerotype
 /coll/coll10
 /coll/coll11

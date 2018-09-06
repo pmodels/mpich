@@ -33,6 +33,7 @@ allgather_struct 10
 bcasttest 4
 bcasttest 8
 bcasttest 10
+@largetest@bcast_intoverflow 2
 bcastzerotype 1
 bcastzerotype 4
 bcastzerotype 5
