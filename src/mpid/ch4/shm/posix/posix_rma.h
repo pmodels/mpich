@@ -125,8 +125,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
@@ -173,8 +174,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
@@ -226,8 +228,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     if (MPIDI_CH4U_WIN(win, shm_allocated)) {
@@ -294,8 +297,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     if (MPIDI_CH4U_WIN(win, shm_allocated))
@@ -472,8 +476,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     target_addr = (char *) base + disp_unit * target_disp;
@@ -641,8 +646,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
         disp_unit = win->disp_unit;
     } else {
         MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
-        disp_unit = shared_table[target_rank].disp_unit;
-        base = shared_table[target_rank].shm_base_addr;
+        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        disp_unit = shared_table[local_target_rank].disp_unit;
+        base = shared_table[local_target_rank].shm_base_addr;
     }
 
     target_addr = (char *) base + disp_unit * target_disp;
