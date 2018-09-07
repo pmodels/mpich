@@ -9,4 +9,4 @@ AM_CPPFLAGS += -I$(top_srcdir)/libhydra/fs
 noinst_HEADERS += libhydra/fs/hydra_fs.h
 
 libhydra_la_SOURCES += \
-	libhydra/fs/hydra_fs.c
+	libhydra/fs/posix/hydra_fs.c

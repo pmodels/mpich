@@ -9,4 +9,4 @@ AM_CPPFLAGS += -I$(top_srcdir)/libhydra/sock
 noinst_HEADERS += libhydra/sock/hydra_sock.h
 
 libhydra_la_SOURCES += \
-	libhydra/sock/hydra_sock.c
+	libhydra/sock/posix/hydra_sock.c
