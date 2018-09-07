@@ -461,6 +461,8 @@ int MPII_Coll_init(void)
         MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_BLOCKED;
     else if (0 == strcmp(MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM, "inplace"))
         MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_INPLACE;
+    else if (0 == strcmp(MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM, "gentran_scattered"))
+        MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_GENTRAN_SCATTERED;
     else
         MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_AUTO;
 
