@@ -443,4 +443,62 @@ for algo_name in ${algo_names}; do
     coll_algo_tests+="neighb_alltoallv 4 mpiversion=3.0 ${env}${nl}"
 done
 
+########## Add tests for intra-node bcast algorithms ############
+
+#use release gather based intra-node bcast
+testing_env="env=MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384 32768"
+num_cells="2 4"
+tree_types="knomial_1 knomial_2"
+kvalues="8 64"
+
+for buf_size in ${buffer_sizes}; do
+    for num_cell in ${num_cells}; do
+        for kval in ${kvalues}; do
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS=${num_cell} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL=${kval} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE=${tree_type} "
+
+                coll_algo_tests+="bcasttest 10 ${env}${nl}"
+                coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+            done
+        done
+    done
+done
+
+########## Add tests for intra-node reduce algorithms ############
+
+#use release gather based intra-node reduce
+testing_env="env=MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384 32768"
+num_cells="2 4"
+tree_types="knomial_1 knomial_2"
+kvalues="4 8"
+
+for buf_size in ${buffer_sizes}; do
+    for num_cell in ${num_cells}; do
+        for kval in ${kvalues}; do
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS=${num_cell} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=${kval} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE=${tree_type} "
+
+                coll_algo_tests+="reduce 5 ${env}${nl}"
+                coll_algo_tests+="reduce 10 ${env}${nl}"
+                coll_algo_tests+="red3 10 ${env}${nl}"
+                coll_algo_tests+="red4 10 ${env}${nl}"
+            done
+        done
+    done
+done
+
 export coll_algo_tests
