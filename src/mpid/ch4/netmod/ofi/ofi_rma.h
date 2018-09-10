@@ -541,6 +541,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count, target_contig,
                                         target_bytes, target_true_lb);
 
+    MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
+
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
 
@@ -554,7 +556,6 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-        MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
         MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
         if (!sigreq)
             flags = 0;
