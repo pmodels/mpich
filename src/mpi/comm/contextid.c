@@ -132,7 +132,7 @@ static void context_mask_stats(int *free_ids, int *total_ids)
          * that count stored in a variable) */
         for (i = 0; i < MPIR_MAX_CONTEXT_MASK; ++i) {
             for (j = 0; j < sizeof(context_mask[0]) * 8; ++j) {
-                *free_ids += (context_mask[i] & (0x1 << j)) >> j;
+                *free_ids += (context_mask[i] & (0x1U << j)) >> j;
             }
         }
     }
@@ -240,10 +240,10 @@ static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
     bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
 
     /* the bit should not already be cleared (allocated) */
-    MPIR_Assert(mask[idx] & (1 << bitpos));
+    MPIR_Assert(mask[idx] & (1U << bitpos));
 
     /* clear the bit */
-    mask[idx] &= ~(1 << bitpos);
+    mask[idx] &= ~(1U << bitpos);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
                                              "allocating contextid = %d, (mask=%p, mask[%d], bit %d)",
@@ -1209,7 +1209,7 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
 
     /* --BEGIN ERROR HANDLING-- */
     /* Check that this context id has been allocated */
-    if ((context_mask[idx] & (0x1 << bitpos)) != 0) {
+    if ((context_mask[idx] & (0x1U << bitpos)) != 0) {
 #ifdef MPL_USE_DBG_LOGGING
         char dump_str[1024];
         dump_context_id(context_id, dump_str, sizeof(dump_str));
@@ -1224,7 +1224,7 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
     /* MT: Note that this update must be done atomically in the multithreaedd
      * case.  In the "one, single lock" implementation, that lock is indeed
      * held when this operation is called. */
-    context_mask[idx] |= (0x1 << bitpos);
+    context_mask[idx] |= (0x1U << bitpos);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
