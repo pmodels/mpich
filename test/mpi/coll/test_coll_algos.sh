@@ -310,4 +310,30 @@ for algo_name in ${algo_names}; do
     coll_algo_tests+="scantst 4"
 done
 
+######### Add tests for Alltoallv algorithms ###########
+
+#disable device collectives for alltoallv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_scattered"
+batchsizes="1 2 4"
+outstandingtasks="4 8"
+for algo_name in ${algo_names}; do
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+    if [ ${algo_name} -eq "gentran_scattered"]; then
+        for task in ${outstandingtasks}; do
+            for batchsize in ${batchsizes}; do
+                env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE=${batchsize} "
+                env+="env=MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=${task} "
+                 coll_algo_tests+="alltoallv 8 ${env}${nl}"
+                 coll_algo_tests+="alltoallv0 10 ${env}${nl}"
+            done
+        done
+    fi
+done
+
 export coll_algo_tests
