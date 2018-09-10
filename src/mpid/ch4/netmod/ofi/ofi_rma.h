@@ -339,6 +339,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
 
+    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
@@ -475,30 +476,24 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win,
                                    MPIDI_av_entry_t * addr)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PUT);
-    int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_put(origin_addr,
+                                     origin_count,
+                                     origin_datatype,
+                                     target_rank,
+                                     target_disp, target_count, target_datatype, win, NULL);
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-
-    mpi_errno = MPIDI_OFI_do_put(origin_addr,
-                                 origin_count,
-                                 origin_datatype,
-                                 target_rank,
-                                 target_disp, target_count, target_datatype, win, NULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -533,6 +528,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
 
+    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
     if (target_rank == MPI_PROC_NULL)
         goto null_op_exit;
 
@@ -657,7 +653,6 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
@@ -665,22 +660,16 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         mpi_errno = MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_get(origin_addr,
+                                     origin_count,
+                                     origin_datatype,
+                                     target_rank,
+                                     target_disp, target_count, target_datatype, win, NULL);
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-
-    mpi_errno = MPIDI_OFI_do_get(origin_addr,
-                                 origin_count,
-                                 origin_datatype,
-                                 target_rank,
-                                 target_disp, target_count, target_datatype, win, NULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -697,30 +686,24 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     MPIR_Win * win, MPIDI_av_entry_t * addr,
                                     MPIR_Request ** request)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
-    int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count,
                                         target_datatype, win, request);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_put((void *) origin_addr,
+                                     origin_count,
+                                     origin_datatype,
+                                     target_rank,
+                                     target_disp, target_count, target_datatype, win, request);
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-
-    mpi_errno = MPIDI_OFI_do_put((void *) origin_addr,
-                                 origin_count,
-                                 origin_datatype,
-                                 target_rank,
-                                 target_disp, target_count, target_datatype, win, request);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1342,30 +1325,24 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     MPIR_Win * win, MPIDI_av_entry_t * addr,
                                     MPIR_Request ** request)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
-    int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count, target_datatype,
                                         win, request);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_get(origin_addr,
+                                     origin_count,
+                                     origin_datatype,
+                                     target_rank,
+                                     target_disp, target_count, target_datatype, win, request);
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-
-    mpi_errno = MPIDI_OFI_do_get(origin_addr,
-                                 origin_count,
-                                 origin_datatype,
-                                 target_rank,
-                                 target_disp, target_count, target_datatype, win, request);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1394,15 +1371,13 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
                                                   target_datatype, op, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                                result_addr, result_count, result_datatype,
+                                                target_rank, target_disp, target_count,
+                                                target_datatype, op, win, NULL);
     }
 
-    mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                            result_addr, result_count, result_datatype,
-                                            target_rank, target_disp, target_count,
-                                            target_datatype, op, win, NULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     return mpi_errno;
 }
@@ -1428,16 +1403,15 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
         mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_OFI_do_accumulate(origin_addr,
+                                            origin_count,
+                                            origin_datatype,
+                                            target_rank,
+                                            target_disp, target_count, target_datatype, op, win,
+                                            NULL);
     }
 
-    mpi_errno = MPIDI_OFI_do_accumulate(origin_addr,
-                                        origin_count,
-                                        origin_datatype,
-                                        target_rank,
-                                        target_disp, target_count, target_datatype, op, win, NULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     return mpi_errno;
 }
