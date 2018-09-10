@@ -25,18 +25,18 @@
     pgid = NO_PGID;                                                     \
   }                                                                     \
   if (gl_data.api_set == API_SET_1){                                    \
-      match_bits = ((uint64_t)pgid << MPID_PGID_SHIFT);                 \
+      match_bits = ((uint64_t)pgid << MPID_OFI_PGID_SHIFT);                 \
   }else{                                                                \
       match_bits = 0;                                                   \
   }                                                                     \
   if (NO_PGID == pgid) {                                                \
     match_bits |= (uint64_t)vc->port_name_tag<<                         \
-        (MPID_PORT_SHIFT);                                              \
+        (MPID_OFI_PORT_SHIFT);                                              \
   }else{                                                                \
       match_bits |= (uint64_t)MPIR_Process.comm_world->rank <<          \
-          (MPID_PSOURCE_SHIFT);                                         \
+          (MPID_OFI_PSOURCE_SHIFT);                                         \
   }                                                                     \
-  match_bits |= MPID_MSG_RTS;                                           \
+  match_bits |= MPID_OFI_MSG_RTS;                                           \
 })
 
 /* ------------------------------------------------------------------------ */
@@ -84,7 +84,7 @@
                        0,                                               \
                        gl_data.mr,                                      \
                        VC_OFI(vc)->direct_addr,                         \
-                       match_bits | MPID_MSG_CTS,                       \
+                       match_bits | MPID_OFI_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
                        &(REQ_OFI(cts_req)->ofi_context)),trecv);        \
         if (gl_data.api_set == API_SET_1){                              \
@@ -124,8 +124,8 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
     req_fn reqFn;
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
-    switch (REQ_OFI(sreq)->tag & MPID_PROTOCOL_MASK) {
-    case MPID_MSG_CTS | MPID_MSG_RTS | MPID_MSG_DATA:
+    switch (REQ_OFI(sreq)->tag & MPID_OFI_PROTOCOL_MASK) {
+    case MPID_OFI_MSG_CTS | MPID_OFI_MSG_RTS | MPID_OFI_MSG_DATA:
         /* Verify request is complete prior to freeing buffers.
          * Multiple DATA events may arrive because we need
          * to store updated TAG values in the sreq.
@@ -151,7 +151,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
             MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
         }
         break;
-    case MPID_MSG_RTS:
+    case MPID_OFI_MSG_RTS:
         MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
         break;
     }
@@ -173,11 +173,11 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request *
     MPIDI_VC_t *vc;
     BEGIN_FUNC(FCNAME);
     preq = REQ_OFI(rreq)->parent;
-    switch (wc->tag & MPID_PROTOCOL_MASK) {
-    case MPID_MSG_CTS | MPID_MSG_RTS:
+    switch (wc->tag & MPID_OFI_PROTOCOL_MASK) {
+    case MPID_OFI_MSG_CTS | MPID_OFI_MSG_RTS:
         vc = REQ_OFI(preq)->vc;
         /* store tag in the request for SEND-side event processing */
-        REQ_OFI(preq)->tag = wc->tag | MPID_MSG_DATA;
+        REQ_OFI(preq)->tag = wc->tag | MPID_OFI_MSG_DATA;
         if(REQ_OFI(preq)->pack_buffer) {
           FI_RC_RETRY(fi_tsend(gl_data.endpoint,
                                REQ_OFI(preq)->pack_buffer,

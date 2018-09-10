@@ -89,7 +89,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->rx_attr->msg_order = FI_ORDER_SAS;
 
     hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
-    MPIR_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
+    MPIR_Assert(pg_p->size < ((1 << MPID_OFI_RANK_BITS) - 1));
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -236,7 +236,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* -------------------------------- */
     /* Set the MPI maximum tag value    */
     /* -------------------------------- */
-    MPIR_Process.attrs.tag_ub = (1 << MPID_TAG_BITS) - 1;
+    MPIR_Process.attrs.tag_ub = (1 << MPID_OFI_TAG_BITS) - 1;
 
     /* --------------------------------- */
     /* Wait for all the ranks to publish */
