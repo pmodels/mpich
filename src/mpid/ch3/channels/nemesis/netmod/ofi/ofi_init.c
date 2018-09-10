@@ -51,7 +51,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     info_t *hints, *prov_tagged, *prov_use;
     cq_attr_t cq_attr;
     av_attr_t av_attr;
-    char kvsname[OFI_KVSAPPSTRLEN], key[OFI_KVSAPPSTRLEN], bc[OFI_KVSAPPSTRLEN];
+    char kvsname[MPIDI_OFI_KVSAPPSTRLEN], key[MPIDI_OFI_KVSAPPSTRLEN], bc[MPIDI_OFI_KVSAPPSTRLEN];
     char *my_bc, *addrs, *null_addr;
     fi_addr_t *fi_addrs = NULL;
     MPIDI_VC_t *vc;
@@ -89,7 +89,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->rx_attr->msg_order = FI_ORDER_SAS;
 
     hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
-    MPIR_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
+    MPIR_Assert(pg_p->size < ((1 << MPIDI_OFI_RANK_BITS) - 1));
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -227,7 +227,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Publish the business card        */
     /* to the KVS                       */
     /* -------------------------------- */
-    PMI_RC(PMI_KVS_Get_my_name(kvsname, OFI_KVSAPPSTRLEN), pmi);
+    PMI_RC(PMI_KVS_Get_my_name(kvsname, MPIDI_OFI_KVSAPPSTRLEN), pmi);
     MPL_snprintf(key, sizeof(key), "OFI-%d", pg_rank);
 
     PMI_RC(PMI_KVS_Put(kvsname, key, my_bc), pmi);
@@ -236,7 +236,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* -------------------------------- */
     /* Set the MPI maximum tag value    */
     /* -------------------------------- */
-    MPIR_Process.attrs.tag_ub = (1 << MPID_TAG_BITS) - 1;
+    MPIR_Process.attrs.tag_ub = (1 << MPIDI_OFI_TAG_BITS) - 1;
 
     /* --------------------------------- */
     /* Wait for all the ranks to publish */
@@ -255,7 +255,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     for (i = 0; i < pg_p->size; ++i) {
         MPL_snprintf(key, sizeof(key), "OFI-%d", i);
 
-        PMI_RC(PMI_KVS_Get(kvsname, key, bc, OFI_KVSAPPSTRLEN), pmi);
+        PMI_RC(PMI_KVS_Get(kvsname, key, bc, MPIDI_OFI_KVSAPPSTRLEN), pmi);
         ret = MPL_str_get_binary_arg(bc, "OFI",
                                       (char *) &addrs[i * gl_data.bound_addrlen],
                                       gl_data.bound_addrlen, &len);
