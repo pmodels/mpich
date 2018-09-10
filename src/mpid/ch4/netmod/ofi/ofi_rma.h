@@ -333,6 +333,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     int target_contig, origin_contig;
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
+    struct iovec iov;
+    struct fi_rma_iov riov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -371,6 +373,25 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                                        target_rank)),
                               rdma_inject_write);
         goto null_op_exit;
+    } else if (origin_contig && target_contig) {
+        MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+        offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        msg.desc = NULL;
+        msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank);
+        msg.context = NULL;
+        msg.data = 0;
+        msg.msg_iov = &iov;
+        msg.iov_count = 1;
+        msg.rma_iov = &riov;
+        msg.rma_iov_count = 1;
+        iov.iov_base = (char *) origin_addr + origin_true_lb;
+        iov.iov_len = target_bytes;
+        riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
+        riov.len = target_bytes;
+        riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
+        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
+                              fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write);
+        goto fn_exit;
     }
 
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win,
