@@ -636,3 +636,12 @@ include $(top_srcdir)/doc/Makefile.mk
 # use the _TARGETS var as a workaround for being unable to define multiple
 # -local targets
 install-data-local: $(INSTALL_DATA_LOCAL_TARGETS)
+
+
+# sometimes helpful when debugging macros to see the preprocessed output.
+# Also using '-CC' because comments provide useful landmarks
+
+SUFFIXES += .i
+
+.c.i:
+	$(COMPILE) -CC -E -o $@ $<
