@@ -182,3 +182,11 @@ htmldoc-local: $(romio_mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-ph
 
 # --------------------------------------------------------------------------
 
+# sometimes helpful when debugging macros to see the preprocessed output.
+# Also using '-CC' because comments provide useful landmarks
+
+SUFFIXES += .i
+
+.c.i:
+	$(COMPILE) -CC -E -o $@ $<
+
