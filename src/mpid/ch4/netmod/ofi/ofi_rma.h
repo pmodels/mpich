@@ -533,7 +533,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
 
     MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
+    if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count, origin_contig,
@@ -921,7 +921,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         goto am_fallback;
 
     MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
+    if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
@@ -1069,7 +1069,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
 
     MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
+    if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
     MPIDI_Datatype_check_size(target_datatype, target_count, target_bytes);
