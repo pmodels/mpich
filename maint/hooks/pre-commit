@@ -88,7 +88,3 @@ if [ $ret != 0 ] ; then
 fi
 
 popd > /dev/null
-
-# If there are whitespace errors, print the offending file names and fail.
-# This will catch adding extra newlines where the above script will not catch that
-exec git diff-index --check --cached $against --
