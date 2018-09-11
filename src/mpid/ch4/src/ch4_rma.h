@@ -192,6 +192,48 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_accumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate(int transport,
+                                              const void *origin_addr,
+                                              int origin_count,
+                                              MPI_Datatype origin_datatype,
+                                              int target_rank,
+                                              MPI_Aint target_disp,
+                                              int target_count,
+                                              MPI_Datatype target_datatype, MPI_Op op,
+                                              MPIR_Win * win, MPIDI_av_entry_t * av)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
+
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+            MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
+                                    ACC, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
+                                    MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
+                                    target_datatype, op, NULL, 0, 0, win, av, NULL, NULL);
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
+                                                target_rank, target_disp, target_count,
+                                                target_datatype, op, win, av);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -215,9 +257,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
     }
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
-                                        target_rank, target_disp, target_count,
-                                        target_datatype, op, win, av);
+    mpi_errno = MPIDI_accumulate(MPIDI_CH4R_NETMOD, origin_addr, origin_count, origin_datatype,
+                                 target_rank, target_disp, target_count,
+                                 target_datatype, op, win, av);
 #else
     int r;
 
@@ -238,6 +280,45 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_compare_and_swap
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap(int transport,
+                                                    const void *origin_addr,
+                                                    const void *compare_addr,
+                                                    void *result_addr,
+                                                    MPI_Datatype datatype,
+                                                    int target_rank, MPI_Aint target_disp,
+                                                    MPIR_Win * win, MPIDI_av_entry_t * av)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
+                                    CAS, origin_addr, 0, datatype, compare_addr, result_addr, 0,
+                                    MPI_DATATYPE_NULL, target_rank, target_disp, 0,
+                                    MPI_DATATYPE_NULL, MPI_OP_NULL, NULL, 0, 0, win, av,
+                                    NULL, NULL);
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno =
+                MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
+                                              target_rank, target_disp, win, av);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -262,8 +343,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
     }
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                              datatype, target_rank, target_disp, win, av);
+    mpi_errno = MPIDI_compare_and_swap(MPIDI_CH4R_NETMOD, origin_addr, compare_addr, result_addr,
+                                       datatype, target_rank, target_disp, win, av);
 #else
     int r;
 
@@ -404,6 +485,42 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_fetch_and_op
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op(int transport,
+                                                const void *origin_addr,
+                                                void *result_addr,
+                                                MPI_Datatype datatype,
+                                                int target_rank, MPI_Aint target_disp,
+                                                MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t * av)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);
+
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
+                                    FOP, origin_addr, 0, datatype, NULL, result_addr, 0,
+                                    MPI_DATATYPE_NULL, target_rank, target_disp, 0,
+                                    MPI_DATATYPE_NULL, op, NULL, 0, 0, win, av, NULL, NULL);
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr, datatype,
+                                                  target_rank, target_disp, op, win, av);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Fetch_and_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -418,15 +535,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FETCH_AND_OP);
 
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
-                                          datatype, target_rank, target_disp, op, win, av);
+    mpi_errno = MPIDI_fetch_and_op(MPIDI_CH4R_NETMOD, origin_addr, result_addr,
+                                   datatype, target_rank, target_disp, op, win, av);
 #else
     int r;
 
@@ -561,6 +673,54 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_get_accumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate(int transport,
+                                                  const void *origin_addr,
+                                                  int origin_count,
+                                                  MPI_Datatype origin_datatype,
+                                                  void *result_addr,
+                                                  int result_count,
+                                                  MPI_Datatype result_datatype,
+                                                  int target_rank,
+                                                  MPI_Aint target_disp,
+                                                  int target_count,
+                                                  MPI_Datatype target_datatype, MPI_Op op,
+                                                  MPIR_Win * win, MPIDI_av_entry_t * av)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
+
+    if (transport == MPIDI_CH4R_NETMOD) {
+        int vni_idx ATTRIBUTE((unused)) = 0, cs_acq = 0;
+        MPID_THREAD_SAFE_BEGIN(VNI, MPIDI_CH4_Global.vni_locks[vni_idx], cs_acq);
+        if (!cs_acq) {
+            MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+            MPIR_Datatype_add_ref_if_not_builtin(result_datatype);
+            MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+            /* Increase enq_cnts for RMA communication operations. */
+            OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
+            MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
+                                    GET_ACC, origin_addr, origin_count, origin_datatype,
+                                    NULL, result_addr, result_count, result_datatype,
+                                    target_rank, target_disp, target_count, target_datatype,
+                                    op, NULL, 0, 0, win, av, NULL, NULL);
+            mpi_errno = MPI_SUCCESS;
+        } else {
+            mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                                    result_addr, result_count, result_datatype,
+                                                    target_rank, target_disp, target_count,
+                                                    target_datatype, op, win, av);
+            MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        }
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Get_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -587,10 +747,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
     }
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                            result_addr, result_count, result_datatype,
-                                            target_rank, target_disp, target_count, target_datatype,
-                                            op, win, av);
+    mpi_errno = MPIDI_get_accumulate(MPIDI_CH4R_NETMOD, origin_addr, origin_count, origin_datatype,
+                                     result_addr, result_count, result_datatype,
+                                     target_rank, target_disp, target_count, target_datatype,
+                                     op, win, av);
 #else
     int r;
 
