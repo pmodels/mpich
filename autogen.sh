@@ -274,25 +274,6 @@ EOF
 done
 
 ########################################################################
-## Set up external packages
-########################################################################
-
-# external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
-
-if [ "yes" = "$do_izem" ] ; then
-    externals="${externals} src/izem"
-fi
-
-if [ "yes" = "$do_ucx" ] ; then
-    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
-fi
-
-if [ "yes" = "$do_ofi" ] ; then
-    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
-fi
-
-########################################################################
 ## Check for the location of autotools
 ########################################################################
 
@@ -588,7 +569,7 @@ else
 fi
 
 ########################################################################
-## Set up submodules
+## Setup external packages
 ########################################################################
 
 echo
