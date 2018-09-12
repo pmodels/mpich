@@ -637,6 +637,9 @@ done
 # Copying hwloc to hydra
 sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
 sync_external src/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+# remove .git directories to avoid confusing git clean
+rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
+rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
 
 # a couple of other random files
 if [ -f maint/version.m4 ] ; then
