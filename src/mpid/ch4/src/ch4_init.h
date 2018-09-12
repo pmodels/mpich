@@ -160,9 +160,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIDI_CH4_Global.prev_sighandler = NULL;
 #endif
 
-    /* Setup default tag size. Will be redefined by netmod if necessary. */
-    MPIR_Process.attrs.tag_bits = MPIR_TAG_BITS_DEFAULT;
-
     MPIDI_choose_netmod();
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
@@ -346,24 +343,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #endif
 
     {
-        int shm_tag_ub = MPIR_Process.attrs.tag_ub, nm_tag_ub = MPIR_Process.attrs.tag_ub;
+        int shm_tag_bits = MPIR_Process.attrs.tag_bits, nm_tag_bits = MPIR_Process.attrs.tag_bits;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_ub);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_ub,
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
                                            MPIR_Process.comm_world,
                                            MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 
-        /* Use the minimum tag_ub from the netmod and shmod */
-        MPIR_Process.attrs.tag_ub = MPL_MIN(shm_tag_ub, nm_tag_ub);
+        /* Use the minimum tag_bits from the netmod and shmod */
+        MPIR_Process.attrs.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
     /* Override split_type */

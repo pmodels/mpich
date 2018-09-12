@@ -16,7 +16,7 @@
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,
-                                         int *tag_ub,
+                                         int *tag_bits,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
