@@ -1316,8 +1316,8 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    void *baseP;
     MPIR_Win *win;
+    void **base_ptr = (void **) baseptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE);
@@ -1328,12 +1328,12 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPIDI_CH4I_win_shm_alloc_impl(size, disp_unit, comm, &baseP, win_ptr);
+    mpi_errno = MPIDI_CH4I_win_shm_alloc_impl(size, disp_unit, comm, base_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
     win = *win_ptr;
-    win->base = baseP;
+    win->base = *(void **) baseptr;
     win->size = size;
 
     mpi_errno = MPIDI_NM_mpi_win_allocate_hook(win);
@@ -1346,7 +1346,6 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
         MPIR_ERR_POP(mpi_errno);
 #endif
 
-    *(void **) baseptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
