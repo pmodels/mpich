@@ -867,12 +867,13 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     } else {
 /* allocate memory for recv_buf and post receives */
         recv_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
-        for (i = 0; i < nprocs; i++)
+        for (i = 0; i < nprocs; i++) {
             if (recv_size[i])
                 recv_buf[i] = (char *) ADIOI_Malloc(recv_size[i]);
+        }
 
         j = 0;
-        for (i = 0; i < nprocs; i++)
+        for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
                 MPI_Irecv(recv_buf[i], recv_size[i], MPI_BYTE, i,
                           myrank + i + 100 * iter, fd->comm, requests + j);
@@ -882,6 +883,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             myrank, recv_size[i], myrank + i + 100 * iter);
 #endif
             }
+        }
     }
 
 /* create derived datatypes and send data */
