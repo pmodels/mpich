@@ -855,25 +855,25 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
     MPIDI_CH4U_win_target_cleanall(win);
     MPIDI_CH4U_win_hash_clear(win);
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE && win->base) {
-        if (MPIDI_CH4U_WIN(win, mmap_sz) > 0)
+    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
+        win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* if more than one process on a node, we always use shared memory */
+        if (win->comm_ptr->node_comm != NULL) {
+            if (MPIDI_CH4U_WIN(win, mmap_sz) > 0) {
+                /* destroy shared window memory */
+                mpi_errno = MPIDI_CH4U_destroy_shm_segment(MPIDI_CH4U_WIN(win, mmap_sz),
+                                                           &MPIDI_CH4U_WIN(win, shm_segment_handle),
+                                                           &MPIDI_CH4U_WIN(win, mmap_addr));
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+
+            MPL_free(MPIDI_CH4U_WIN(win, shared_table));
+        } else if (MPIDI_CH4U_WIN(win, mmap_sz) > 0) {
+            /* if single process on the node, we use mmap with symm heap */
             MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz), MPL_MEM_RMA);
-        else if (MPIDI_CH4U_WIN(win, mmap_sz) == -1)
+        } else
             MPL_free(win->base);
-    }
-
-    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        if (MPIDI_CH4U_WIN(win, mmap_sz) > 0) {
-            /* destroy shared window memory */
-            mpi_errno = MPIDI_CH4U_destroy_shm_segment(MPIDI_CH4U_WIN(win, mmap_sz),
-                                                       &MPIDI_CH4U_WIN(win, shm_segment_handle),
-                                                       &MPIDI_CH4U_WIN(win, mmap_addr));
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-        }
-
-
-        MPL_free(MPIDI_CH4U_WIN(win, shared_table));
     }
 
     MPIDI_CH4U_map_erase(MPIDI_CH4_Global.win_map, MPIDI_CH4U_WIN(win, win_id));
@@ -1046,6 +1046,135 @@ static inline int MPIDI_CH4R_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint
     goto fn_exit;
 }
 
+/* Allocate RMA window over shared memory region. Used by both win_allocate
+ * and win_allocate_shared.
+ *
+ * This routine allocates window memory region on each node from shared
+ * memory, and initializes the shared_table structure that stores each
+ * node process's size, disp_unit, and start address for shm RMA operations
+ * and query routine.*/
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4I_win_shm_alloc_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
+                                                int disp_unit,
+                                                MPIR_Comm * comm_ptr,
+                                                void **base_ptr, MPIR_Win ** win_ptr)
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Win *win = NULL;
+    size_t total_shm_size = 0LL;
+    MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
+    MPI_Aint *shm_offsets = NULL;
+    MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
+    size_t page_sz, mapsize;
+    int mapfail_flag = 0;
+
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
+
+    win = *win_ptr;
+    *base_ptr = NULL;
+
+    /* Check whether multiple processes exist on the local node. If so,
+     * we need to count the total size on a node for shared memory allocation. */
+    if (shm_comm_ptr != NULL) {
+        MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
+        MPIDI_CH4U_WIN(win, shared_table) =
+            (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
+                                                        shm_comm_ptr->local_size, MPL_MEM_RMA);
+        shared_table = MPIDI_CH4U_WIN(win, shared_table);
+        shared_table[shm_comm_ptr->rank].size = size;
+        shared_table[shm_comm_ptr->rank].disp_unit = disp_unit;
+        shared_table[shm_comm_ptr->rank].shm_base_addr = NULL;
+
+        mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
+                                   0,
+                                   MPI_DATATYPE_NULL,
+                                   shared_table,
+                                   sizeof(MPIDI_CH4U_win_shared_info_t), MPI_BYTE, shm_comm_ptr,
+                                   &errflag);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+
+        MPIR_CHKLMEM_MALLOC(shm_offsets, MPI_Aint *, shm_comm_ptr->local_size * sizeof(MPI_Aint),
+                            mpi_errno, "shm offset", MPL_MEM_RMA);
+
+        /* No allreduce here because this is a shared memory domain
+         * and should be a relatively small number of processes
+         * and a non performance sensitive API.
+         */
+        for (i = 0; i < shm_comm_ptr->local_size; i++) {
+            shm_offsets[i] = (MPI_Aint) total_shm_size;
+            total_shm_size += shared_table[i].size;
+        }
+
+        /* if all processes give zero size on a single node window, simply return. */
+        if (total_shm_size == 0 && shm_comm_ptr->local_size == comm_ptr->local_size)
+            goto fn_exit;
+    } else
+        total_shm_size = size;
+
+    /* because MPI_shm follows a create & attach mode, we need to set the
+     * size of entire shared memory segment on each node as the size of
+     * each process. */
+    mapsize = MPIDI_CH4R_get_mapsize(total_shm_size, &page_sz);
+    MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
+
+    /* first try global symmetric heap segment allocation */
+    mpi_errno = MPIDI_CH4R_get_shm_symheap(mapsize, shm_offsets, comm_ptr, win, &mapfail_flag);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    /* if fails, try normal shm segment allocation or malloc */
+    if (mapfail_flag) {
+        if (shm_comm_ptr != NULL && mapsize) {
+            mpi_errno = MPIDI_CH4U_allocate_shm_segment(shm_comm_ptr, mapsize,
+                                                        &MPIDI_CH4U_WIN(win, shm_segment_handle),
+                                                        &MPIDI_CH4U_WIN(win, mmap_addr));
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        } else if (size > 0) {
+            MPIR_CHKPMEM_MALLOC(*base_ptr, void *, size, mpi_errno, "(*win_ptr)->base",
+                                MPL_MEM_RMA);
+            MPL_VG_MEM_INIT(*base_ptr, size);
+            MPIDI_CH4U_WIN(win, mmap_sz) = 0;   /* reset mmap_sz if use malloc */
+        }
+    }
+
+    /* compute the base addresses of each process within the shared memory segment */
+    if (shm_comm_ptr != NULL) {
+        char *cur_base = (char *) MPIDI_CH4U_WIN(win, mmap_addr);
+        for (i = 0; i < shm_comm_ptr->local_size; i++) {
+            if (shared_table[i].size)
+                shared_table[i].shm_base_addr = cur_base;
+            else
+                shared_table[i].shm_base_addr = NULL;
+
+            cur_base += shared_table[i].size;
+        }
+
+        *base_ptr = shared_table[shm_comm_ptr->rank].shm_base_addr;
+    } else if (MPIDI_CH4U_WIN(win, mmap_sz) > 0) {
+        /* if symm heap is allocated without shared memory, use the mapping address */
+        *base_ptr = MPIDI_CH4U_WIN(win, mmap_addr);
+    }
+    /* otherwise, it has already be assigned with a local memory region or NULL (zero size). */
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_mpi_win_allocate_shared
 #undef FCNAME
@@ -1056,73 +1185,23 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
                                                      MPIR_Comm * comm_ptr,
                                                      void **base_ptr, MPIR_Win ** win_ptr)
 {
-    int i, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
-    ssize_t total_size = 0LL;
-    MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE_SHARED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE_SHARED);
 
     mpi_errno = MPIDI_CH4R_win_init(size, disp_unit, win_ptr, info_ptr, comm_ptr,
                                     MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_CH4I_win_shm_alloc_impl(size, disp_unit, comm_ptr, base_ptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
     win = *win_ptr;
-    MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
-    MPIDI_CH4U_WIN(win, shared_table) =
-        (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
-                                                    comm_ptr->local_size, MPL_MEM_RMA);
-    shared_table = MPIDI_CH4U_WIN(win, shared_table);
-    shared_table[comm_ptr->rank].size = size;
-    shared_table[comm_ptr->rank].disp_unit = disp_unit;
-    shared_table[comm_ptr->rank].shm_base_addr = NULL;
-
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
-                               0,
-                               MPI_DATATYPE_NULL,
-                               shared_table,
-                               sizeof(MPIDI_CH4U_win_shared_info_t), MPI_BYTE, comm_ptr, &errflag);
-    MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    /* No allreduce here because this is a shared memory domain
-     * and should be a relatively small number of processes
-     * and a non performance sensitive API.
-     */
-    for (i = 0; i < comm_ptr->local_size; i++)
-        total_size += shared_table[i].size;
-
-    if (total_size == 0)
-        goto fn_zero;
-
-    /* allocate symmetric shared window memory */
-    size_t page_sz, mapsize;
-
-    mapsize = MPIDI_CH4R_get_mapsize(total_size, &page_sz);
-    MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
-
-    mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize,
-                                                &MPIDI_CH4U_WIN(win, shm_segment_handle),
-                                                &MPIDI_CH4U_WIN(win, mmap_addr));
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    /* compute the base addresses of each process within the shared memory segment */
-    {
-        char *cur_base = (char *) MPIDI_CH4U_WIN(win, mmap_addr);
-        for (i = 0; i < comm_ptr->local_size; i++) {
-            if (shared_table[i].size)
-                shared_table[i].shm_base_addr = cur_base;
-            else
-                shared_table[i].shm_base_addr = NULL;
-
-            cur_base += shared_table[i].size;
-        }
-    }
-
-  fn_zero:
-    win->base = shared_table[comm_ptr->rank].shm_base_addr;
+    win->base = *base_ptr;
     win->size = size;
 
     mpi_errno = MPIDI_NM_mpi_win_allocate_shared_hook(win);
@@ -1135,7 +1214,6 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
         MPIR_ERR_POP(mpi_errno);
 #endif
 
-    *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
 
   fn_exit:
@@ -1191,6 +1269,15 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
 
+    /* When only single process exists on the node, should only query
+     * MPI_PROC_NULL or local process. Thus, return local window's info. */
+    if (win->comm_ptr->node_comm == NULL) {
+        *size = win->size;
+        *disp_unit = win->disp_unit;
+        *((void **) baseptr) = win->base;
+        goto fn_exit;
+    }
+
     /* When rank is MPI_PROC_NULL, return the memory region belonging the lowest
      * rank that specified size > 0*/
     if (rank == MPI_PROC_NULL) {
@@ -1213,6 +1300,7 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
         *(void **) baseptr = shared_table[offset].shm_base_addr;
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
     return mpi_errno;
 }
@@ -1240,13 +1328,13 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPIDI_CH4R_get_symmetric_heap(size, comm, &baseP, *win_ptr);
-
+    mpi_errno = MPIDI_CH4I_win_shm_alloc_impl(size, disp_unit, comm, &baseP, win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
     win = *win_ptr;
     win->base = baseP;
+    win->size = size;
 
     mpi_errno = MPIDI_NM_mpi_win_allocate_hook(win);
     if (mpi_errno != MPI_SUCCESS)
@@ -1268,6 +1356,8 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE);
     return mpi_errno;
   fn_fail:
+    if (win_ptr)
+        MPIDI_CH4R_win_finalize(win_ptr);
     goto fn_exit;
 }
 
