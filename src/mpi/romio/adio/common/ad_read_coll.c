@@ -821,13 +821,14 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 
     if (buftype_is_contig) {
         j = 0;
-        for (i = 0; i < nprocs; i++)
+        for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
                 MPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
                           MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
                 j++;
                 buf_idx[i] += recv_size[i];
             }
+        }
     } else {
 /* allocate memory for recv_buf and post receives */
         recv_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
