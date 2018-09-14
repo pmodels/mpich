@@ -1112,15 +1112,19 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
          */
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;
-            total_shm_size += shared_table[i].size;
+            if (MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
+                total_shm_size += MPIDI_CH4R_get_mapsize(shared_table[i].size, &page_sz);
+            else
+                total_shm_size += shared_table[i].size;
         }
 
         /* if all processes give zero size on a single node window, simply return. */
         if (total_shm_size == 0 && shm_comm_ptr->local_size == comm_ptr->local_size)
             goto fn_exit;
 
-        /* if my size is not page aligned, skip global symheap. */
-        if (size != MPIDI_CH4R_get_mapsize(size, &page_sz))
+        /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
+        if (size != MPIDI_CH4R_get_mapsize(size, &page_sz) &&
+            !MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
             symheap_flag = 0;
     } else
         total_shm_size = size;
@@ -1133,7 +1137,7 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
          * - size of each process on the shared memory node is page aligned,
          *   thus all process can be assigned to a page aligned start address.
          * - user sets alloc_shared_noncontig=true, thus we can internally make
-         *   the size aligned on each process (TODO) */
+         *   the size aligned on each process. */
         mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_UNSIGNED,
                                    MPI_BAND, comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -1178,7 +1182,10 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
             else
                 shared_table[i].shm_base_addr = NULL;
 
-            cur_base += shared_table[i].size;
+            if (MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
+                cur_base += MPIDI_CH4R_get_mapsize(shared_table[i].size, &page_sz);
+            else
+                cur_base += shared_table[i].size;
         }
 
         *base_ptr = shared_table[shm_comm_ptr->rank].shm_base_addr;
