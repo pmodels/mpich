@@ -70,7 +70,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  *                                     If using runtime mode, this will be set to FI_MR_UNSPEC
  * MPIDI_OFI_ENABLE_TAGGED             Use FI_TAGGED interface instead of FI_MSG
  * MPIDI_OFI_ENABLE_AM                 Use FI_MSG and FI_MULTI_RECV for active messages
- * MPIDI_OFI_ENABLE_RMA                Use FI_RMA interfaces
+ * MPIDI_OFI_ENABLE_RMA                Require FI_DELIVERY_COMPLETE and use the OFI RMA code path
+ *                                     for all RMA operations. With this turned off, we only use
+ *                                     FI_READ in the active message code path (so we still require
+ *                                     FI_RMA either way).
  * MPIDI_OFI_ENABLE_ATOMICS            Use FI_ATOMICS interfaces
  * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
  * MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS Use a progress thread for normal data messages
