@@ -59,17 +59,25 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Returns aligned size and the page size. The page size parameter must
+ * be always initialized to 0 or a previously returned value. If page size
+ * is set, we can reuse the value and skip sysconf. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_get_mapsize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
 {
+    size_t page_sz, mapsize;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
 
-    long page_sz = sysconf(_SC_PAGESIZE);
-    size_t mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
+    if (*psz == 0)
+        page_sz = (size_t) sysconf(_SC_PAGESIZE);
+    else
+        page_sz = *psz;
+
+    mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
     *psz = page_sz;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
@@ -93,7 +101,7 @@ static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
 {
     int rc = 0;
     int ret = 0;
-    size_t page_sz;
+    size_t page_sz = 0;
     size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
     size_t i, num_pages = mapsize / page_sz;
     char *ptr = (char *) start;
@@ -133,7 +141,7 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
     uintptr_t map_pointer;
 #ifdef USE_SYM_HEAP
     char random_state[256];
-    size_t page_sz;
+    size_t page_sz = 0;
     uint64_t random_unsigned;
     size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
     struct timeval ts;
