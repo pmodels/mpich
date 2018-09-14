@@ -280,6 +280,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 static inline int MPIDI_OFI_application_hints(int rank);
 static inline int MPIDI_OFI_init_global_settings(const char *prov_name);
 static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
+static inline struct fi_info *MPIDI_OFI_pick_provider(struct fi_info *hints, const char *provname,
+                                                      struct fi_info *prov_list);
 
 static inline int MPIDI_OFI_set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
 {
@@ -417,8 +419,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0;
-    void *table = NULL, *provname = NULL;
-    struct fi_info *hints, *prov = NULL, *prov_use, *prov_first;
+    void *table = NULL;
+    const char *provname = NULL;
+    struct fi_info *hints, *prov = NULL, *prov_use;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
@@ -431,14 +434,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
     } else {
-        /* when runtime checks are enabled, and no provider name is set, then
-         * try to select the fastest provider which fit minimal requirements.
-         * to do this use "unknown" fake provider name to force initialization
-         * of global settings by default minimal values. We are assuming
-         * that libfabric returns available provider list sorted by performance
-         * (faster - first) */
+        /* When runtime checks are enabled, and no provider name is set, then try to select the
+         * fastest provider which fits the default requirements.  To do this use "default" provider
+         * name to force initialization of global settings by default values. We are assuming that
+         * libfabric returns available provider list sorted by performance (faster - first) */
         MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
-                                       "unknown");
+                                       MPIDI_OFI_SET_NAME_DEFAULT);
     }
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
@@ -481,15 +482,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     else
         fi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
 
-    MPIDI_OFI_init_hints(hints);
-
     /* ------------------------------------------------------------------------ */
     /* fi_getinfo:  returns information about fabric  services for reaching a   */
     /* remote node or service.  this does not necessarily allocate resources.   */
     /* Pass NULL for name/service because we want a list of providers supported */
     /* ------------------------------------------------------------------------ */
-    provname = MPIR_CVAR_OFI_USE_PROVIDER ? (char *) MPL_strdup(MPIR_CVAR_OFI_USE_PROVIDER) : NULL;
-    hints->fabric_attr->prov_name = provname;
+    provname = MPIR_CVAR_OFI_USE_PROVIDER ? MPL_strdup(MPIR_CVAR_OFI_USE_PROVIDER) : NULL;
+    hints->fabric_attr->prov_name = (char *) provname;
 
     /* If the user picked a particular provider, ignore the checks */
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
@@ -498,125 +497,39 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
 
         MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
-        prov_first = prov;
-        while (NULL != prov) {
-            prov_use = prov;
 
-            /* If we picked the provider already, make sure we grab the right provider */
-            if ((NULL != provname) && (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Skipping provider because not selected one"));
-                prov = prov_use->next;
-                continue;
+        /* We'll try to pick the best provider three times.
+         * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
+         * 2 - Check to see if any provider meets the default capability set
+         * 3 - Check to see if any provider meets the minimal capability set
+         *
+         * If we get 1, we'll use that capability set as is. If we get 2, we'll use the default
+         * capability set with the first provider that satisfies it (first should be best) and
+         * supply the default capability set as the hints. If we get 3, we'll use the first provider
+         * that satisfies it and supply the minimal capability set as the hints.
+         */
+        prov_use = MPIDI_OFI_pick_provider(hints, (char *) provname, prov);
+
+        if (NULL == prov_use) {
+            MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
+            prov_use = MPIDI_OFI_pick_provider(hints, MPIDI_OFI_SET_NAME_DEFAULT, prov);
+
+            if (NULL == prov_use) {
+                MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
+                prov_use = MPIDI_OFI_pick_provider(hints, MPIDI_OFI_SET_NAME_MINIMAL, prov);
             }
-
-            /* set global settings according to evaluated provider */
-            if (!MPIR_CVAR_OFI_USE_PROVIDER)
-                MPIDI_OFI_init_global_settings(prov_use->fabric_attr->prov_name);
-
-            /* Check that this provider meets the minimum requirements for the user */
-            if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED) &&
-                       (!(prov_use->caps & FI_DIRECTED_RECV) ||
-                        prov_use->domain_attr->cq_data_size < 4)) {
-                /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
-                 * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
-                 * and FI_RECV are mutually exclusive, so they should never be set both at the same
-                 * time. */
-                /* This capability set also requires the ability to receive data in the completion
-                 * queue object (at least 32 bits). Previously, this was a separate capability set,
-                 * but as more and more providers supported this feature, the decision was made to
-                 * require it. */
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_AM &&
-                       ((prov_use->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support active messages"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_RMA && !(prov_use->caps & FI_RMA)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support RMA"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_ATOMICS && !(prov_use->caps & FI_ATOMICS)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support atomics"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
-                       !(hints->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                       !(hints->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
-                prov = prov_use->next;
-                continue;
-
-                /* Check that the provider has all of the requirements of MPICH */
-            } else if (prov_use->ep_attr->type != FI_EP_RDM) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support RDM"));
-                prov = prov_use->next;
-                continue;
-            }
-
-            /* If the provider passed the above tests, then run the selection
-             * logic again and make sure to pick this provider again with the
-             * hints included this time. */
-            hints->caps = prov_use->caps;
-            if (!MPIR_CVAR_OFI_USE_PROVIDER) {
-                /* as soon as we updates globals for the provider, let's update
-                 * hints that corresponds to the current globals */
-                MPIDI_OFI_init_hints(hints);
-                /* set provider name to hints to make more accurate selection */
-                provname = MPL_strdup(prov_use->fabric_attr->prov_name);
-                hints->fabric_attr->prov_name = provname;
-            }
-            break;
-        }
-
-        if (prov_first && !prov && !MPIR_CVAR_OFI_USE_PROVIDER) {
-            /* could not find suitable provider. ok, let's try fallback mode */
-            MPIDI_OFI_init_global_settings(prov_first->fabric_attr->prov_name);
-            MPIDI_OFI_init_hints(hints);
-            MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
-            MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
-            prov_use = prov;
-
-            if (prov_use) {
-                /* If the provider passed the above tests, then run the selection
-                 * logic again and make sure to pick this provider again with the
-                 * hints included this time. */
-                hints->caps = prov_use->caps;
-                if (!MPIR_CVAR_OFI_USE_PROVIDER) {
-                    /* set provider name to hints to make more accurate selection */
-                    provname = MPL_strdup(prov_use->fabric_attr->prov_name);
-                    hints->fabric_attr->prov_name = provname;
-                }
-            }
-            if (prov)
-                fi_freeinfo(prov);
         }
 
         /* If we did not find a provider, return an error */
-        MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
 
-        fi_freeinfo(prov_first);
+        fi_freeinfo(prov);
     } else {
-        /* If runtime checks are disabled, make sure that the user-specified
-         * provider matches the configure-specified provider. */
+        /* If runtime checks are disabled, make sure that the hints are initialized to the
+         * compile-time capability set chosen by the user. */
+        MPIDI_OFI_init_hints(hints);
+
+        /* Make sure that the user-specified provider matches the configure-specified provider. */
         MPIR_ERR_CHKANDJUMP(provname != NULL &&
                             MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
@@ -1033,7 +946,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* Free temporary resources         */
     /* -------------------------------- */
     if (provname) {
-        MPL_free(provname);
+        MPL_free((char *) provname);
         hints->fabric_attr->prov_name = NULL;
     }
 
@@ -1740,6 +1653,118 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
         MPIDI_OFI_PROTOCOL_MASK | 0 | 0 | MPIDI_OFI_TAG_MASK /* No source bits */ ;
 
     return MPI_SUCCESS;
+}
+
+/* If name is not NULL, we'll use the specified capability set as the selection basis */
+static inline struct fi_info *MPIDI_OFI_pick_provider(struct fi_info *hints, const char *provname,
+                                                      struct fi_info *prov_list)
+{
+    struct fi_info *prov, *prov_use = NULL;
+
+    prov = prov_list;
+    while (NULL != prov) {
+        prov_use = prov;
+
+        /* If we picked the provider already, make sure we grab the right provider */
+        if ((NULL != provname) &&
+            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT)) &&
+            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL)) &&
+            (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Skipping provider because not selected one"));
+            prov = prov_use->next;
+            continue;
+        }
+
+        /* Set global settings according to evaluated provider if not already picked */
+        if (!provname)
+            MPIDI_OFI_init_global_settings(prov_use->fabric_attr->prov_name);
+
+        /* Update hints according to global settings just picked */
+        MPIDI_OFI_init_hints(hints);
+
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
+                                                         prov_use->fabric_attr->prov_name));
+
+        /* Check that this provider meets the minimum requirements for the user */
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED) &&
+                   (!(prov_use->caps & FI_DIRECTED_RECV) ||
+                    prov_use->domain_attr->cq_data_size < 4)) {
+            /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
+             * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
+             * and FI_RECV are mutually exclusive, so they should never be set both at the same
+             * time. */
+            /* This capability set also requires the ability to receive data in the completion
+             * queue object (at least 32 bits). Previously, this was a separate capability set,
+             * but as more and more providers supported this feature, the decision was made to
+             * require it. */
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_AM &&
+                   ((prov_use->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support active messages"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_RMA && !(prov_use->caps & FI_RMA)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support RMA"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_ATOMICS && !(prov_use->caps & FI_ATOMICS)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support atomics"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
+                   !(hints->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
+            prov = prov_use->next;
+            continue;
+        } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
+                   !(hints->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
+            prov = prov_use->next;
+            continue;
+
+            /* Check that the provider has all of the requirements of MPICH */
+        } else if (prov_use->ep_attr->type != FI_EP_RDM) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Provider doesn't support RDM"));
+            prov = prov_use->next;
+            continue;
+        }
+
+        /* Update hints that correspond to the current globals */
+        hints->caps = prov_use->caps;
+
+        /* If the user picked a provider, we want to reset all of the hints to be whatever that
+         * provider actually provides (we might get multiple version of that provider back from
+         * fi_init and we want the best version). */
+        if ((NULL != provname) &&
+            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT)) &&
+            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL)) &&
+            (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
+
+            /* set provider name to hints to make more accurate selection */
+            MPIDI_OFI_init_hints(hints);
+
+            hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
+        }
+
+        break;
+    }
+
+    return prov_use;
 }
 
 #endif /* OFI_INIT_H_INCLUDED */
