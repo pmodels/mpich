@@ -1117,6 +1117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
+        MPIR_Assert(dtp != NULL);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
