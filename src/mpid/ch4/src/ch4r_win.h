@@ -1071,6 +1071,7 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
     size_t page_sz, mapsize;
     int mapfail_flag = 0;
+    unsigned symheap_flag = 1, global_symheap_flag = 0;
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
@@ -1117,8 +1118,27 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
         /* if all processes give zero size on a single node window, simply return. */
         if (total_shm_size == 0 && shm_comm_ptr->local_size == comm_ptr->local_size)
             goto fn_exit;
+
+        /* if my size is not page aligned, skip global symheap. */
+        if (size != MPIDI_CH4R_get_mapsize(size, &page_sz))
+            symheap_flag = 0;
     } else
         total_shm_size = size;
+
+    /* try global symm heap only when multiple processes exist */
+    if (comm_ptr->local_size > 1) {
+        /* global symm heap can be successful only when any of the following conditions meet.
+         * Thus, we can skip unnecessary global symm heap retry based on condition check.
+         * - no shared memory node (i.e., single process per node)
+         * - size of each process on the shared memory node is page aligned,
+         *   thus all process can be assigned to a page aligned start address.
+         * - user sets alloc_shared_noncontig=true, thus we can internally make
+         *   the size aligned on each process (TODO) */
+        mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_UNSIGNED,
+                                   MPI_BAND, comm_ptr, &errflag);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    } else
+        global_symheap_flag = 0;
 
     /* because MPI_shm follows a create & attach mode, we need to set the
      * size of entire shared memory segment on each node as the size of
@@ -1127,12 +1147,14 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
     MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
     /* first try global symmetric heap segment allocation */
-    mpi_errno = MPIDI_CH4R_get_shm_symheap(mapsize, shm_offsets, comm_ptr, win, &mapfail_flag);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
+    if (global_symheap_flag) {
+        mpi_errno = MPIDI_CH4R_get_shm_symheap(mapsize, shm_offsets, comm_ptr, win, &mapfail_flag);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+    }
 
     /* if fails, try normal shm segment allocation or malloc */
-    if (mapfail_flag) {
+    if (!global_symheap_flag || mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
             mpi_errno = MPIDI_CH4U_allocate_shm_segment(shm_comm_ptr, mapsize,
                                                         &MPIDI_CH4U_WIN(win, shm_segment_handle),
