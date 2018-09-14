@@ -36,22 +36,26 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
-    MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,       /* In:  Domain Object       */
-                             base,      /* In:  Lower memory address */
-                             win->size, /* In:  Length              */
-                             FI_REMOTE_READ | FI_REMOTE_WRITE,  /* In:  Expose MR for read  */
-                             0ULL,      /* In:  offset(not used)    */
-                             MPIDI_OFI_WIN(win).mr_key, /* In:  requested key       */
-                             0ULL,      /* In:  flags               */
-                             &MPIDI_OFI_WIN(win).mr,    /* Out: memregion object    */
-                             NULL), mr_reg);    /* In:  context             */
-
+    /* Don't register MR for NULL buffer, because FI_MR_BASIC mode requires
+     * that all registered memory regions must be backed by physical memory
+     * pages at the time the registration call is made. */
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE || base) {
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,   /* In:  Domain Object       */
+                                 base,  /* In:  Lower memory address */
+                                 win->size,     /* In:  Length              */
+                                 FI_REMOTE_READ | FI_REMOTE_WRITE,      /* In:  Expose MR for read  */
+                                 0ULL,  /* In:  offset(not used)    */
+                                 MPIDI_OFI_WIN(win).mr_key,     /* In:  requested key       */
+                                 0ULL,  /* In:  flags               */
+                                 &MPIDI_OFI_WIN(win).mr,        /* Out: memregion object    */
+                                 NULL), mr_reg);        /* In:  context             */
+    }
     MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
 
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
 
-    if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_SCALABLE && MPIDI_OFI_WIN(win).mr) {
         /* MR_BASIC */
         MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
         winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
@@ -1148,7 +1152,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
         if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
+        if (MPIDI_OFI_WIN(win).mr)
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
         if (MPIDI_OFI_WIN(win).winfo) {
             MPL_free(MPIDI_OFI_WIN(win).winfo);
             MPIDI_OFI_WIN(win).winfo = NULL;
