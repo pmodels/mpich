@@ -391,7 +391,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
         mpi_errno = MPIDI_NM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
                                                  target_rank, target_disp, target_count,
-                                                 target_datatype, op, win, NULL, request);
+                                                 target_datatype, op, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
