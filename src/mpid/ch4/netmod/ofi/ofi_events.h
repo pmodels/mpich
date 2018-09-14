@@ -22,10 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc)
 {
-    if (MPIDI_OFI_ENABLE_DATA)
-        return wc->data;
-    else
-        return MPIDI_OFI_init_get_source(wc->tag);
+    return wc->data;
 }
 
 #undef FUNCNAME

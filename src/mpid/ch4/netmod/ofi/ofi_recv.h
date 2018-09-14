@@ -61,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     }
 
     if (!flags) {
-        flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
+        flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
     }
 
     map_size = dt_ptr->max_contig_blocks * count + 1;

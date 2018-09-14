@@ -63,9 +63,8 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.data = 0;
 
     MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg,
-                                      peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA
-                                                                              ? FI_REMOTE_CQ_DATA :
-                                                                              0)), ofi_err);
+                                      peek_flags | FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA),
+                          ofi_err);
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
