@@ -33,16 +33,6 @@ cvars:
       description : >-
         Prints out the configuration of each capability selected via the capability sets interface.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_DATA
-      category    : CH4_OFI
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Enable immediate data fields in OFI to transmit source rank outside of the match bits
-
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
       type        : int
@@ -525,25 +515,22 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 MPIDI_OFI_init_global_settings(prov_use->fabric_attr->prov_name);
 
             /* Check that this provider meets the minimum requirements for the user */
-            if (MPIDI_OFI_ENABLE_DATA && (!(prov_use->caps & FI_DIRECTED_RECV) ||
-                                          prov_use->domain_attr->cq_data_size < 4)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support immediate data"));
-                prov = prov_use->next;
-                continue;
-            } else if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS &&
-                       (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
+            if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED)) {
-                /* From the fi_getinfo manpage: "FI_TAGGED implies the
-                 * ability to send and receive tagged messages."
-                 * Therefore no need to specify FI_SEND|FI_RECV.
-                 * Moreover FI_SEND and FI_RECV are mutually
-                 * exclusive, so they should never be set both at the
-                 * same time. */
+            } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED) &&
+                       (!(prov_use->caps & FI_DIRECTED_RECV) ||
+                        prov_use->domain_attr->cq_data_size < 4)) {
+                /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
+                 * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
+                 * and FI_RECV are mutually exclusive, so they should never be set both at the same
+                 * time. */
+                /* This capability set also requires the ability to receive data in the completion
+                 * queue object (at least 32 bits). Previously, this was a separate capability set,
+                 * but as more and more providers supported this feature, the decision was made to
+                 * require it. */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
                 prov = prov_use->next;
@@ -653,8 +640,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* ------------------------------------------------------------------------ */
         /* Set global attributes attributes based on the provider choice            */
         /* ------------------------------------------------------------------------ */
-        MPIDI_Global.settings.enable_data = MPIDI_Global.settings.enable_data &&
-            (prov_use->caps & FI_DIRECTED_RECV) && prov_use->domain_attr->cq_data_size >= 4;
         MPIDI_Global.settings.enable_av_table = MPIDI_Global.settings.enable_av_table &&
             prov_use->domain_attr->av_type == FI_AV_TABLE;
         MPIDI_Global.settings.enable_scalable_endpoints =
@@ -664,7 +649,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_Global.settings.enable_mr_scalable &&
             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
         MPIDI_Global.settings.enable_tagged = MPIDI_Global.settings.enable_tagged &&
-            prov_use->caps & FI_TAGGED;
+            (prov_use->caps & FI_TAGGED) && (prov_use->caps & FI_DIRECTED_RECV) &&
+            (prov_use->domain_attr->cq_data_size >= 4);
         MPIDI_Global.settings.enable_am = MPIDI_Global.settings.enable_am &&
             (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
             (FI_MSG | FI_MULTI_RECV | FI_READ);
@@ -1380,10 +1366,10 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
 
-        if (MPIDI_OFI_ENABLE_TAGGED)
+        if (MPIDI_OFI_ENABLE_TAGGED) {
             rx_attr.caps |= FI_TAGGED;
-        if (MPIDI_OFI_ENABLE_DATA)
             rx_attr.caps |= FI_DIRECTED_RECV;
+        }
 
         if (MPIDI_OFI_ENABLE_RMA)
             rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
@@ -1440,8 +1426,6 @@ static inline int MPIDI_OFI_application_hints(int rank)
     int mpi_errno = MPI_SUCCESS;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d",
@@ -1483,7 +1467,6 @@ static inline int MPIDI_OFI_application_hints(int rank)
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
         fprintf(stdout, "==== Capability set configuration ====\n");
-        fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
         fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
         fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
                 MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
@@ -1529,11 +1512,6 @@ static inline int MPIDI_OFI_application_hints(int rank)
 static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
 {
     /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_Global.settings.enable_data =
-        MPIR_CVAR_CH4_OFI_ENABLE_DATA !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA : prov_name ?
-        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_data :
-        MPIR_CVAR_CH4_OFI_ENABLE_DATA;
     MPIDI_Global.settings.enable_av_table =
         MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE : prov_name ?
@@ -1697,16 +1675,13 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
 
     if (MPIDI_OFI_ENABLE_TAGGED) {
         hints->caps |= FI_TAGGED;       /* Tag matching interface  */
+        hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
+        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
         hints->caps |= FI_MSG;  /* Message Queue apis      */
         hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
-    }
-
-    if (MPIDI_OFI_ENABLE_DATA) {
-        hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
-        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
     }
 
     /* ------------------------------------------------------------------------ */

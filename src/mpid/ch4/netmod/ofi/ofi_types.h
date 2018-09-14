@@ -300,7 +300,6 @@ typedef struct {
 } MPIDI_OFI_cq_buff_entry_t;
 
 typedef struct {
-    unsigned enable_data:1;
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;

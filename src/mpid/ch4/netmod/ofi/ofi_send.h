@@ -124,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
         goto pack;
     }
 
-    flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
+    flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
 
     map_size = dt_ptr->max_contig_blocks * count + 1;
@@ -212,7 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.tag = match_bits;
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
-    msg.data = MPIDI_OFI_ENABLE_DATA ? comm->rank : 0;
+    msg.data = comm->rank;
     msg.addr = MPIDI_OFI_comm_to_phys(comm, rank);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg, flags), tsendv,
