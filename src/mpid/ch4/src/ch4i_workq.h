@@ -340,6 +340,59 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
             OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
             MPIDI_workq_elemt_free(workq_elemt);
             break;
+        case RPUT:
+            MPIDI_NM_mpi_rput(workq_elemt->rma.origin_addr, workq_elemt->rma.origin_count,
+                              workq_elemt->rma.origin_datatype, workq_elemt->rma.target_rank,
+                              workq_elemt->rma.target_disp, workq_elemt->rma.target_count,
+                              workq_elemt->rma.target_datatype, workq_elemt->rma.win_ptr,
+                              workq_elemt->rma.addr, &workq_elemt->rma.request);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.origin_datatype);
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case RGET:
+            MPIDI_NM_mpi_rget(workq_elemt->rma.result_addr, workq_elemt->rma.result_count,
+                              workq_elemt->rma.result_datatype, workq_elemt->rma.target_rank,
+                              workq_elemt->rma.target_disp, workq_elemt->rma.target_count,
+                              workq_elemt->rma.target_datatype, workq_elemt->rma.win_ptr,
+                              workq_elemt->rma.addr, &workq_elemt->rma.request);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
+            /* Get handoff uses result_datatype instead of origin_datatype */
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.result_datatype);
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case RACC:
+            MPIDI_NM_mpi_raccumulate(workq_elemt->rma.origin_addr, workq_elemt->rma.origin_count,
+                                     workq_elemt->rma.origin_datatype, workq_elemt->rma.target_rank,
+                                     workq_elemt->rma.target_disp, workq_elemt->rma.target_count,
+                                     workq_elemt->rma.target_datatype, workq_elemt->rma.acc_op,
+                                     workq_elemt->rma.win_ptr, workq_elemt->rma.addr,
+                                     &workq_elemt->rma.request);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.origin_datatype);
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
+        case RGET_ACC:
+            MPIDI_NM_mpi_rget_accumulate(workq_elemt->rma.origin_addr,
+                                         workq_elemt->rma.origin_count,
+                                         workq_elemt->rma.origin_datatype,
+                                         workq_elemt->rma.result_addr,
+                                         workq_elemt->rma.result_count,
+                                         workq_elemt->rma.result_datatype,
+                                         workq_elemt->rma.target_rank, workq_elemt->rma.target_disp,
+                                         workq_elemt->rma.target_count,
+                                         workq_elemt->rma.target_datatype, workq_elemt->rma.acc_op,
+                                         workq_elemt->rma.win_ptr, workq_elemt->rma.addr,
+                                         &workq_elemt->rma.request);
+            OPA_decr_int(&MPIDI_CH4U_WIN(workq_elemt->rma.win_ptr, local_enq_cnts));
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.origin_datatype);
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.result_datatype);
+            MPIR_Datatype_release_if_not_builtin(workq_elemt->rma.target_datatype);
+            MPIDI_workq_elemt_free(workq_elemt);
+            break;
         default:
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
