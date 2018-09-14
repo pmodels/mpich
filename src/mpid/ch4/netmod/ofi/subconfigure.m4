@@ -160,7 +160,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     else
         case "$netmod_args" in
             "psm")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM], [1], [Define to use PSM capability set])
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_psm="yes"
                 ;;
             "psm2" | "opa")
@@ -172,7 +172,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_sockets="yes"
                 ;;
             "gni")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_gni="yes"
                 ;;
             "bgq")
