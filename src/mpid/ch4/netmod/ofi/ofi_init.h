@@ -346,6 +346,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
     uint64_t match_bits = 0;
     uint64_t mask_bits = 0;
     MPIR_Context_id_t context_id = 0xF000;
+    MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
@@ -355,10 +356,13 @@ static inline int MPIDI_OFI_conn_manager_destroy()
 
     if (max_n_conn > 0) {
         /* try wait/close connections */
-        req = (MPIDI_OFI_dynamic_process_request_t *)
-            MPL_malloc(max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t), MPL_MEM_BUFFER);
-        conn = (fi_addr_t *) MPL_malloc(max_n_conn * sizeof(fi_addr_t), MPL_MEM_BUFFER);
-        close_msg = (int *) MPL_malloc(max_n_conn * sizeof(int), MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(req, MPIDI_OFI_dynamic_process_request_t *,
+                            max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t), mpi_errno,
+                            "req", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(conn, fi_addr_t *, max_n_conn * sizeof(fi_addr_t), mpi_errno, "conn",
+                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(close_msg, int *, max_n_conn * sizeof(int), mpi_errno, "int",
+                            MPL_MEM_BUFFER);
 
         j = 0;
         for (i = 0; i < max_n_conn; ++i) {
@@ -395,9 +399,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
                             (MPL_DBG_FDEST, "conn_id=%d closed", i));
         }
 
-        MPL_free(req);
-        MPL_free(conn);
-        MPL_free(close_msg);
+        MPIR_CHKLMEM_FREEALL();
     }
 
     MPL_munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size,

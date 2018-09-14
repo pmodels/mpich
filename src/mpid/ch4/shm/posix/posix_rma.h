@@ -60,6 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
 
     basic_type = origin_dtp_ptr->basic_type;
     MPIR_Datatype_get_size_macro(basic_type, predefined_dtp_size);
+    MPIR_Assert(predefined_dtp_size > 0);
     predefined_dtp_count = total_len / predefined_dtp_size;
 
 #if defined(HAVE_ERROR_CHECKING)
@@ -660,6 +661,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     MPIR_Memcpy(result_addr, target_addr, dtype_sz);
 
     if (op != MPI_NO_OP) {
+        /* We need to make sure op is valid here.
+         * 0xf is the mask for op index in MPIR_Op_table,
+         * and op should start from 1. */
+        MPIR_Assert(((op) & 0xf) > 0);
         MPI_User_function *uop = MPIR_OP_HDL_TO_FN(op);
         int one = 1;
 
