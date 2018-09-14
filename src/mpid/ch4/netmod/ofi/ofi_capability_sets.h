@@ -55,8 +55,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 /*
  * The definitions map to these capability sets:
  *
- * MPIDI_OFI_ENABLE_DATA               fi_tsenddata (and other functions with immediate data)
- *                                     Uses FI_REMOTE_CQ_DATA, FI_DIRECTED_RECV
  * MPIDI_OFI_ENABLE_AV_TABLE           Use FI_AV_TABLE instead of FI_AV_MAP
  * MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS fi_scalable_ep instead of fi_ep
  *                                     domain_attr.max_ep_tx_ctx > 1
@@ -98,7 +96,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 
-#define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AV_TABLE_PSM2           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2 MPIDI_OFI_ON
 #define MPIDI_OFI_MAX_ENDPOINTS_PSM2             MPIDI_OFI_MAX_ENDPOINTS_SCALABLE
@@ -128,7 +125,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM2
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
-#define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_PSM2
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_PSM2
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_PSM2
@@ -161,7 +157,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
 #endif
 
-#define MPIDI_OFI_ENABLE_DATA_SOCKETS               MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS MPIDI_OFI_ON
 #define MPIDI_OFI_MAX_ENDPOINTS_SOCKETS             MPIDI_OFI_MAX_ENDPOINTS_SCALABLE
@@ -191,7 +186,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_SOCKETS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
-#define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_SOCKETS
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_SOCKETS
@@ -224,7 +218,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
 #endif
 
-#define MPIDI_OFI_ENABLE_DATA_BGQ               MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AV_TABLE_BGQ           MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ MPIDI_OFI_OFF
 #define MPIDI_OFI_MAX_ENDPOINTS_BGQ             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
@@ -254,7 +247,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_BGQ
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
-#define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_BGQ
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_BGQ
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_BGQ
@@ -317,7 +309,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_RXM
 #define MPIDI_OFI_SET_NUMBER                    MPIDI_OFI_SET_NUMBER_RXM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS         MPIDI_OFI_OFF
-#define MPIDI_OFI_ENABLE_DATA                   MPIDI_OFI_ENABLE_DATA_RXM
 #define MPIDI_OFI_ENABLE_AV_TABLE               MPIDI_OFI_ENABLE_AV_TABLE_RXM
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS     MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_RXM
 #define MPIDI_OFI_MAX_ENDPOINTS                 MPIDI_OFI_MAX_ENDPOINTS_RXM
@@ -352,7 +343,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 
 /* capability set to request the default supported capabilities (reasonable performance with a
  * reasonable set of requirements) */
-#define MPIDI_OFI_ENABLE_DATA_DEFAULT               MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AV_TABLE_DEFAULT           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_DEFAULT MPIDI_OFI_OFF
 #define MPIDI_OFI_MAX_ENDPOINTS_DEFAULT             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
@@ -384,7 +374,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_DEFAULT             FI_MINOR_VERSION
 
 /* capability set to request the minimal supported capabilities */
-#define MPIDI_OFI_ENABLE_DATA_MINIMAL               MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL MPIDI_OFI_OFF
 #define MPIDI_OFI_MAX_ENDPOINTS_MINIMAL             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
@@ -418,7 +407,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_DEFAULT
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
-#define MPIDI_OFI_ENABLE_DATA               MPIDI_Global.settings.enable_data
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_Global.settings.enable_av_table
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_Global.settings.enable_scalable_endpoints
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_Global.settings.max_endpoints

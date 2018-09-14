@@ -249,8 +249,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
             req.done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
                            (MPIDI_Global.ctx[0].rx, &msg,
-                            FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA :
-                                                       0)), trecv);
+                            FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), trecv);
             do {
                 mpi_errno = MPID_Progress_test();
                 if (mpi_errno != MPI_SUCCESS)
@@ -380,8 +379,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
             req[0].done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
                            (MPIDI_Global.ctx[0].rx, &msg,
-                            FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA :
-                                                       0)), trecv);
+                            FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), trecv);
             MPIDI_OFI_PROGRESS_WHILE(req[0].done == MPIDI_OFI_PEEK_START);
         }
 

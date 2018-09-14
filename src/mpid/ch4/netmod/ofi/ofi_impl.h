@@ -448,11 +448,6 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
     uint64_t match_bits;
     match_bits = contextid;
 
-    if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
-        match_bits |= source;
-    }
-
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
     return match_bits;
@@ -467,19 +462,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
     match_bits = contextid;
 
-    if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
-
-        if (MPI_ANY_SOURCE == source) {
-            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-            *mask_bits |= MPIDI_OFI_SOURCE_MASK;
-        } else {
-            match_bits |= source;
-            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-        }
-    } else {
-        match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-    }
+    match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
 
     if (MPI_ANY_TAG == tag)
         *mask_bits |= MPIDI_OFI_TAG_MASK;
@@ -517,19 +500,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
-        if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                                 do_lock, do_eagain);
-        else
-            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock,
-                                 do_eagain);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
+                             do_lock, do_eagain);
     } else {
-        if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                                 tsenddata, do_lock, do_eagain);
-        else
-            MPIDI_OFI_CALL_RETRY(fi_tsend(ep, buf, len, desc, dest_addr, tag, context), tsend,
-                                 do_lock, do_eagain);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
+                             tsenddata, do_lock, do_eagain);
     }
 
   fn_exit:
@@ -632,9 +607,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.context = (void *) &req.context;
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
-                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE |
-                                         (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), tsendmsg,
-                             MPIDI_OFI_CALL_LOCK, FALSE);
+                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
+                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
