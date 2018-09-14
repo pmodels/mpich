@@ -168,6 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     if (countp_huge >= 1 && huge) {
         originv_huge =
             MPL_aligned_alloc(iov_align, sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
+        MPIR_Assert(originv_huge != NULL);
 
         for (j = 0; j < num_contig; j++) {
             l = 0;

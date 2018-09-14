@@ -330,6 +330,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_select(const void *sen
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
+        MPIR_Assert(op_ptr != NULL);
         if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) {
             is_commutative = 0;
         } else {
@@ -401,6 +402,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_block_select(const voi
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
+        MPIR_Assert(op_ptr != NULL);
         if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) {
             is_commutative = 0;
         } else {
