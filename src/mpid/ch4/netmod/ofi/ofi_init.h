@@ -116,7 +116,8 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, enable OFI RMA support.
+        If true, enable OFI RMA support for MPI RMA operations. OFI support for basic RMA is always
+        required to implement large messgage transfers in the active message code path.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS
       category    : CH4_OFI
