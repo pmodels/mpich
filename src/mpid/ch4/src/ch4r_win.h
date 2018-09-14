@@ -1069,7 +1069,7 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
     MPI_Aint *shm_offsets = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
-    size_t page_sz, mapsize;
+    size_t page_sz = 0, mapsize;
     int mapfail_flag = 0;
     unsigned symheap_flag = 1, global_symheap_flag = 0;
 
