@@ -22,6 +22,29 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
  * ofi_capability_sets.h so we can refer to it if we want to preload a
  * capability set at runtime */
 {
+    {   /* default required capability */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_DEFAULT,
+     .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_DEFAULT,
+     .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_DEFAULT,
+     .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_DEFAULT,
+     .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_DEFAULT,
+     .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_DEFAULT,
+     .enable_am = MPIDI_OFI_ENABLE_AM_DEFAULT,
+     .enable_rma = MPIDI_OFI_ENABLE_RMA_DEFAULT,
+     .enable_atomics = MPIDI_OFI_ENABLE_ATOMICS_DEFAULT,
+     .enable_data_auto_progress = MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_DEFAULT,
+     .enable_control_auto_progress = MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_DEFAULT,
+     .enable_pt2pt_nopack = MPIDI_OFI_ENABLE_PT2PT_NOPACK_DEFAULT,
+     .num_am_buffers = MPIDI_OFI_NUM_AM_BUFFERS_DEFAULT,
+     .max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_DEFAULT,
+     .max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_DEFAULT,
+     .fetch_atomic_iovecs = MPIDI_OFI_FETCH_ATOMIC_IOVECS_DEFAULT,
+     .context_bits = MPIDI_OFI_CONTEXT_BITS_DEFAULT,
+     .source_bits = MPIDI_OFI_SOURCE_BITS_DEFAULT,
+     .tag_bits = MPIDI_OFI_TAG_BITS_DEFAULT,
+     .major_version = MPIDI_OFI_MAJOR_VERSION_DEFAULT,
+     .minor_version = MPIDI_OFI_MINOR_VERSION_DEFAULT}
+    ,
     {   /* minimal required capability */
      .enable_data = MPIDI_OFI_ENABLE_DATA_MINIMAL,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL,

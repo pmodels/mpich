@@ -15,7 +15,8 @@
 #define MPIDI_OFI_ON      1
 
 enum {
-    MPIDI_OFI_SET_NUMBER_UNKNOWN = 0,
+    MPIDI_OFI_SET_NUMBER_DEFAULT = 0,
+    MPIDI_OFI_SET_NUMBER_MINIMAL,
     MPIDI_OFI_SET_NUMBER_PSM,
     MPIDI_OFI_SET_NUMBER_PSM2,
     MPIDI_OFI_SET_NUMBER_GNI,
@@ -26,6 +27,9 @@ enum {
     MPIDI_OFI_NUM_SETS
 };
 
+#define MPIDI_OFI_SET_NAME_DEFAULT "default"
+#define MPIDI_OFI_SET_NAME_MINIMAL "minimal"
+
 #define MPIDI_OFI_MAX_ENDPOINTS_SCALABLE        256
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE   8
 #define MPIDI_OFI_MAX_ENDPOINTS_REGULAR         1
@@ -35,7 +39,7 @@ enum {
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 {
     if (set_name == NULL) {
-        return MPIDI_OFI_SET_NUMBER_UNKNOWN;
+        return MPIDI_OFI_SET_NUMBER_DEFAULT;
     } else if (!strcmp("psm", set_name)) {
         return MPIDI_OFI_SET_NUMBER_PSM;
     } else if (!strcmp("psm2", set_name)) {
@@ -50,8 +54,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
         return MPIDI_OFI_SET_NUMBER_VERBS;
     } else if (strstr(set_name, "ofi_rxm")) {
         return MPIDI_OFI_SET_NUMBER_RXM;
+    } else if (!strcmp(MPIDI_OFI_SET_NAME_MINIMAL, set_name)) {
+        return MPIDI_OFI_SET_NUMBER_MINIMAL;
     } else {
-        return MPIDI_OFI_SET_NUMBER_UNKNOWN;
+        return MPIDI_OFI_SET_NUMBER_DEFAULT;
     }
 }
 
@@ -542,7 +548,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_STRUCTS                1
 #endif
 
-/* capability set for default provider (to request the minimal supported capability) */
+/* capability set to request the default supported capabilities (reasonable performance with a
+ * reasonable set of requirements) */
+#define MPIDI_OFI_ENABLE_DATA_DEFAULT               MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_AV_TABLE_DEFAULT           MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_DEFAULT MPIDI_OFI_OFF
+#define MPIDI_OFI_MAX_ENDPOINTS_DEFAULT             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
+#define MPIDI_OFI_MAX_ENDPOINTS_BITS_DEFAULT        MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS_DEFAULT    MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_MR_SCALABLE_DEFAULT        MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_TAGGED_DEFAULT             MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_RMA_DEFAULT                MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_AM_DEFAULT                 MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_ATOMICS_DEFAULT            MPIDI_OFI_ENABLE_RMA_DEFAULT
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_DEFAULT       1
+#define MPIDI_OFI_IOVEC_ALIGN_DEFAULT               (1)
+#define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_DEFAULT MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_DEFAULT  MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_PT2PT_NOPACK_DEFAULT       MPIDI_OFI_ON
+#define MPIDI_OFI_NUM_AM_BUFFERS_DEFAULT            MPIDI_OFI_MAX_NUM_AM_BUFFERS
+#define MPIDI_OFI_PROTOCOL_MASK_DEFAULT             (0x0006000000000000ULL)
+#define MPIDI_OFI_CONTEXT_MASK_DEFAULT              (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
+                                                                                 * so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK_DEFAULT                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_DEFAULT              (16)
+#define MPIDI_OFI_SOURCE_BITS_DEFAULT               (0)
+#define MPIDI_OFI_TAG_BITS_DEFAULT                  (31)
+#define MPIDI_OFI_SYNC_SEND_ACK_DEFAULT             (0x0001000000000000ULL)
+#define MPIDI_OFI_SYNC_SEND_DEFAULT                 (0x0002000000000000ULL)
+#define MPIDI_OFI_DYNPROC_SEND_DEFAULT              (0x0004000000000000ULL)
+#define MPIDI_OFI_MAJOR_VERSION_DEFAULT             FI_MAJOR_VERSION
+#define MPIDI_OFI_MINOR_VERSION_DEFAULT             FI_MINOR_VERSION
+
+/* capability set to request the minimal supported capabilities */
 #define MPIDI_OFI_ENABLE_DATA_MINIMAL               MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL MPIDI_OFI_OFF
@@ -575,7 +614,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_MINIMAL             FI_MINOR_VERSION
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
-#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_UNKNOWN
+#define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_DEFAULT
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_Global.settings.enable_data
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_Global.settings.enable_av_table
