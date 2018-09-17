@@ -460,10 +460,15 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
     return ret;
 }
 
-#define MPIDI_CH4R_PROGRESS()                                   \
-    do {                                                        \
-        mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL & ~MPIDI_PROGRESS_NM_VNI_LOCK); \
-        if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);  \
+static inline int MPIDI_have_progress_thread(void);
+
+#define MPIDI_CH4R_PROGRESS()                                           \
+    do {                                                                \
+        int flags_ = MPIDI_PROGRESS_ALL & ~MPIDI_PROGRESS_NM_VNI_LOCK;  \
+        if (MPIDI_have_progress_thread())                               \
+            flags_ &= ~(MPIDI_PROGRESS_NM);                             \
+        mpi_errno = MPIDI_Progress_test(flags_);                        \
+        if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);          \
     } while (0)
 
 #define MPIDI_CH4R_PROGRESS_WHILE(cond)         \
