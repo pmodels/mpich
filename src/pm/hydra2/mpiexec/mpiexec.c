@@ -94,8 +94,7 @@ static void signal_cb(int signum)
         /* First Ctrl-C */
         HYD_PRINT(stdout, "Sending Ctrl-C to processes as requested\n");
         HYD_PRINT(stdout, "Press Ctrl-C again to force abort\n");
-    }
-    else if (signum == SIGALRM) {
+    } else if (signum == SIGALRM) {
         if (mpiexec_params.timeout_signal > 0)
             cmd.signum = mpiexec_params.timeout_signal;
         else
