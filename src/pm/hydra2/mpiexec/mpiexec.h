@@ -55,6 +55,7 @@ struct mpiexec_params_s {
     int print_all_exitcodes;
 
     int timeout;
+    int timeout_signal;
 
     enum {
         MPIEXEC_ENVPROP__UNSET = 0,

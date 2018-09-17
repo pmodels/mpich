@@ -38,6 +38,7 @@ static struct HYD_int_hash *downstream_control_hash = NULL;
 static int *downstream_proxy_id = NULL;
 static int *downstream_pid = NULL;
 static int debug = 0;
+static int timeout = -1;
 
 static const char *localhost = NULL;
 
@@ -96,6 +97,10 @@ static HYD_status get_params(int argc, char **argv)
             tree_width = atoi(*argv);
         } else if (!strcmp(*argv, "--debug")) {
             debug = 1;
+        } else if (!strcmp(*argv, "--timeout")) {
+            ++argv;
+            --argc;
+            timeout = atoi(*argv);
         } else {
             int i = 0;
             HYD_MALLOC(proxy_args, char **, (argc + 1) * sizeof(char *), status);
@@ -211,7 +216,7 @@ static HYD_status upstream_cb(int fd, HYD_dmx_event_t events, void *userp)
                                  &num_downstream_proxies, &downstream_stdin,
                                  &downstream_stdout_hash, &downstream_stderr_hash,
                                  &downstream_control_hash, &downstream_proxy_id, &downstream_pid,
-                                 debug, tree_width);
+                                 debug, tree_width, timeout);
             HYD_ERR_POP(status, "error setting up the bstrap proxies\n");
 
             HYD_MALLOC(downstream_control, int *, num_downstream_proxies * sizeof(int), status);
