@@ -622,7 +622,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
                 MPIR_Request *message, MPIR_Request **rreqp);
 
 int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
-               MPIR_Request *message, MPI_Status *status);
+               MPIR_Request *message, MPI_Status *status, MPIR_Request **rreq);
 
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
