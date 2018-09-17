@@ -923,6 +923,19 @@ HYD_status mpiexec_get_parameters(char **t_argv)
             mpiexec_params.ppn = atoi(tstr);
     }
 
+    /* check if there's a an environment set for timeout */
+    MPL_env2int("MPIEXEC_TIMEOUT", &mpiexec_params.timeout);
+    MPL_env2int("MPIEXEC_TIMEOUT_SIGNAL", &mpiexec_params.timeout_signal);
+
+    /* check if there's a an environment set for port range */
+    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &mpiexec_params.port_range) ||
+        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &mpiexec_params.port_range))
+        mpiexec_params.port_range = MPL_strdup(mpiexec_params.port_range);
+
+    /* check if there's a an environment set for debug */
+    if (mpiexec_params.debug == -1 && MPL_env2bool("HYDRA_DEBUG", &mpiexec_params.debug) == 0)
+        mpiexec_params.debug = 0;
+
 
     /***** AUTO-DETECT/COMPUTE PARAMETERS ****/
 
