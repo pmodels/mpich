@@ -56,8 +56,8 @@ Output Parameters:
 int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message,
               MPI_Status * status)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *msgp = NULL;
+    int mpi_errno = MPI_SUCCESS, active_flag;   /* dummy for MPIR_Request_completion_processing */
+    MPIR_Request *msgp = NULL, *rreq = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_MRECV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -112,9 +112,22 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Mrecv(buf, count, datatype, msgp, status);
+
+    mpi_errno = MPID_Mrecv(buf, count, datatype, msgp, status, &rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+    /* rreq == NULL implies message = MPI_MESSAGE_NO_PROC.
+     * I.e, status was set and no need to wait on rreq */
+    if (rreq != NULL) {
+        mpi_errno = MPID_Wait(rreq, status);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
+        MPIR_Request_free(rreq);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
 
     *message = MPI_MESSAGE_NULL;
 
