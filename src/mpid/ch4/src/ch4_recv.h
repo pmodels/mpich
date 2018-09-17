@@ -182,15 +182,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype, MPIR_Request * message,
-                                        MPI_Status * status)
+                                        MPI_Status * status, MPIR_Request ** rreq)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MRECV);
 
-    int active_flag;
-    MPIR_Request *rreq = NULL;
-    MPID_Progress_state state;
+    *rreq = NULL;
 
     if (message == NULL) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
@@ -199,33 +197,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         goto fn_exit;
     }
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
+    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreq);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
-        mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, &rreq);
+        mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreq);
     else
-        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
+        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreq);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-
-    MPID_Progress_start(&state);
-
-    while (!MPIR_Request_is_complete(rreq)) {
-        mpi_errno = MPID_Progress_wait(&state);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPID_Progress_end(&state);
-
-    /* This should probably be moved to MPICH (above device) level */
-    /* Someone neglected to put the blocking at the MPICH level    */
-    mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
-    MPIR_Request_free(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MRECV);
