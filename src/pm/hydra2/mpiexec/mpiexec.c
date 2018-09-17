@@ -39,6 +39,7 @@ struct mpiexec_params_s mpiexec_params = {
     .ppn = -1,
     .print_all_exitcodes = -1,
     .timeout = -1,
+    .timeout_signal = -1,
 
     .envprop = MPIEXEC_ENVPROP__UNSET,
     .envlist_count = 0,
@@ -93,6 +94,11 @@ static void signal_cb(int signum)
         /* First Ctrl-C */
         HYD_PRINT(stdout, "Sending Ctrl-C to processes as requested\n");
         HYD_PRINT(stdout, "Press Ctrl-C again to force abort\n");
+    } else if (signum == SIGALRM) {
+        if (mpiexec_params.timeout_signal > 0)
+            cmd.signum = mpiexec_params.timeout_signal;
+        else
+            cmd.signum = SIGKILL;
     }
 
     HYD_sock_write(mpiexec_params.signal_pipe[0], &cmd, sizeof(cmd), &sent, &closed,
@@ -744,14 +750,11 @@ int main(int argc, char **argv)
     status = mpiexec_get_parameters(argv);
     HYD_ERR_POP(status, "error parsing parameters\n");
 
-    MPL_env2int("MPIEXEC_TIMEOUT", &mpiexec_params.timeout);
-
-    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &mpiexec_params.port_range) ||
-        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &mpiexec_params.port_range))
-        mpiexec_params.port_range = MPL_strdup(mpiexec_params.port_range);
-
-    if (mpiexec_params.debug == -1 && MPL_env2bool("HYDRA_DEBUG", &mpiexec_params.debug) == 0)
-        mpiexec_params.debug = 0;
+    if (mpiexec_params.timeout > 0) {
+#ifdef HAVE_ALARM
+        alarm(mpiexec_params.timeout);
+#endif /* HAVE_ALARM */
+    }
 
     status = get_node_list();
     HYD_ERR_POP(status, "unable to find an RMK and the node list\n");
@@ -842,7 +845,7 @@ int main(int argc, char **argv)
                          &pg->downstream.fd_stdin, &pg->downstream.fd_stdout_hash,
                          &pg->downstream.fd_stderr_hash, &pg->downstream.fd_control_hash,
                          &pg->downstream.proxy_id, &pg->downstream.pid, mpiexec_params.debug,
-                         mpiexec_params.tree_width);
+                         mpiexec_params.tree_width, mpiexec_params.timeout);
     HYD_ERR_POP(status, "error setting up the boostrap proxies\n");
 
     HYD_str_free_list(args);

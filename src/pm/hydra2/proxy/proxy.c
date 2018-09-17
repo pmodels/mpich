@@ -739,7 +739,12 @@ int main(int argc, char **argv)
     /* step 2: wait for MPI process to terminate */
     HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
         waitpid(hash->key, &tmp_ret, 0);
-        exitcodes[0][hash->val] = WEXITSTATUS(tmp_ret);
+        if (WIFEXITED(tmp_ret))
+            exitcodes[0][hash->val] = WEXITSTATUS(tmp_ret);
+        else if (WIFSIGNALED(tmp_ret))
+            exitcodes[0][hash->val] = HYD_ERR_TIMED_OUT;
+        else
+            exitcodes[0][hash->val] = HYD_ERR_INTERNAL;
         exitcode_node_ids[0][hash->val] = proxy_params.root.node_id;
         HASH_DEL(proxy_params.immediate.process.pid_hash, hash);
         MPL_free(hash);
