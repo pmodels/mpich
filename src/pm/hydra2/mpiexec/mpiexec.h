@@ -43,6 +43,9 @@ struct mpiexec_params_s {
     char *nameserver;
     char *localhost;
 
+    int singleton_port;
+    int singleton_pid;
+
     struct HYD_node *global_node_list;
     int global_node_count;
     int global_core_count;

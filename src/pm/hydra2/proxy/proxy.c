@@ -13,6 +13,9 @@ struct proxy_params proxy_params = {
     .debug = 0,
     .tree_width = -1,
 
+    .singleton_port = 0,
+    .singleton_pid = 0,
+
     .root = {
         .proxy_id = -1,
         .node_id = -1,
@@ -124,6 +127,14 @@ static HYD_status get_params(int argc, char **argv)
             ++argv;
             --argc;
             proxy_params.usize = atoi(*argv);
+        } else if (!strcmp(*argv, "--singleton-port")) {
+            ++argv;
+            --argc;
+            proxy_params.singleton_port = atoi(*argv);
+        } else if (!strcmp(*argv, "--singleton-pid")) {
+            ++argv;
+            --argc;
+            proxy_params.singleton_pid = atoi(*argv);
         }
     }
 
@@ -636,6 +647,28 @@ int main(int argc, char **argv)
         HYD_ERR_POP(status, "unable to splice stderr\n");
     }
 
+    if (proxy_params.singleton_port) {
+        char buf[] = "cmd=singinit authtype=none\n";
+        int fd = -1;
+        struct HYD_int_hash *hash;
+
+        status = HYD_sock_connect("localhost", proxy_params.singleton_port, &fd, 0, 0);
+        HYD_ERR_POP(status, "error connecting to singleton port\n");
+
+        proxy_params.immediate.process.num_children = 1;
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
+        hash->key = fd;
+        hash->val = 0;
+        HASH_ADD_INT(proxy_params.immediate.process.fd_pmi_hash, key, hash, MPL_MEM_PM);
+        status = HYD_dmx_register_fd(fd, HYD_DMX_POLLIN, NULL, proxy_process_pmi_cb);
+        HYD_ERR_POP(status, "error registering callback\n");
+
+        status = proxy_pmi_response(fd, buf);
+        HYD_ERR_POP(status, "error sending PMI response\n");
+
+        goto singleton_path;
+    }
+
     /* step 1(b): get the upstream part of the parameters */
     while (!proxy_ready_to_launch) {
         status = HYD_dmx_wait_for_event(-1);
@@ -688,6 +721,7 @@ int main(int argc, char **argv)
     }
     proxy_send_pids_upstream();
 
+  singleton_path:
     HYD_MALLOC(n_proxy_exitcodes, int *,
                (1 + proxy_params.immediate.proxy.num_children) * sizeof(int), status);
     n_proxy_exitcodes[0] = proxy_params.immediate.process.num_children;

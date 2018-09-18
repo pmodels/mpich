@@ -847,6 +847,25 @@ static HYD_status tree_width_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+/* --pmi-args is an internal option used for singleton mode implementation (MPI-2)
+ * format of option is:
+ *   mpiexec --pmi-args <singleton_port> default_interface default_key <singleton_pid>
+ */
+static HYD_status pmi_args_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    mpiexec_params.singleton_port = atoi(**argv);
+
+    /* skip insignificant params */
+    (*argv) += 3;
+
+    mpiexec_params.singleton_pid = atoi(**argv);
+
+    (*argv)++;
+    return status;
+}
+
 HYD_status mpiexec_get_parameters(char **t_argv)
 {
     char **argv = t_argv;
@@ -1046,6 +1065,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"localhost", localhost_fn, localhost_help_fn},
     {"usize", usize_fn, usize_help_fn},
     {"tree-width", tree_width_fn, tree_width_help_fn},
+    {"pmi_args", pmi_args_fn, NULL},
 
     {"\0", NULL}
 };

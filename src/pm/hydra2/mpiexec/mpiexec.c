@@ -31,6 +31,9 @@ struct mpiexec_params_s mpiexec_params = {
     .nameserver = NULL,
     .localhost = NULL,
 
+    .singleton_port = 0,
+    .singleton_pid = 0,
+
     .global_node_list = NULL,
     .global_node_count = 0,
     .global_core_count = -1,
@@ -761,6 +764,12 @@ int main(int argc, char **argv)
 
     HASH_FIND_INT(mpiexec_pg_hash, &pgid, pg);
 
+    if (mpiexec_params.singleton_port) {
+        HYD_ASSERT(!pg->exec_list, status);
+        status = HYD_exec_alloc(&pg->exec_list);
+        HYD_ERR_POP(status, "unable to allocate exec\n");
+    }
+
     pg->total_proc_count = 0;
     for (exec = pg->exec_list; exec; exec = exec->next) {
         if (exec->proc_count == -1)
@@ -833,6 +842,12 @@ int main(int argc, char **argv)
     }
     args[i++] = MPL_strdup("--usize");
     args[i++] = HYD_str_from_int(mpiexec_params.usize);
+    if (mpiexec_params.singleton_port) {
+        args[i++] = MPL_strdup("--singleton-port");
+        args[i++] = HYD_str_from_int(mpiexec_params.singleton_port);
+        args[i++] = MPL_strdup("--singleton-pid");
+        args[i++] = HYD_str_from_int(mpiexec_params.singleton_pid);
+    }
     args[i++] = NULL;
 
     status =

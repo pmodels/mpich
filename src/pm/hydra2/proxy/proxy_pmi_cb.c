@@ -190,6 +190,23 @@ HYD_status proxy_pmi_kvcache_out(int num_blocks, int *kvlen, char *kvcache, int 
     goto fn_exit;
 }
 
+HYD_status proxy_pmi_response(int fd, char *response)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_FUNC_ENTER();
+
+    status = send_cmd_downstream(fd, response);
+    HYD_ERR_POP(status, "unable to send pmi response downstream\n");
+
+  fn_exit:
+    HYD_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status fn_init(int fd, struct proxy_kv_hash *pmi_args)
 {
     int pmi_version, pmi_subversion;
