@@ -516,8 +516,8 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!MPIR_Comm_is_node_aware(comm))
-        return 0;
+    /* if (!MPIR_Comm_is_node_aware(comm)) */
+    /*     return 0; */
 
     for (; i < comm->local_size; i++) {
         if (internode_table[i] == curr_nodeidx + 1)
