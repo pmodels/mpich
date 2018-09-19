@@ -882,9 +882,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                   &MPIDI_Global.addrnamelen), getname);
         MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
 
+        size_t *indices;
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
-                                          &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, TRUE,
-                                          MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
+                                          &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, FALSE,
+                                          MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &indices);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

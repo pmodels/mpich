@@ -44,11 +44,12 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         fi_addr_t *mapped_table;
         size_t rem_bcs, num_nodes = MPIDI_CH4_Global.max_node_id + 1;
         int i, curr, node;
+        size_t *indices;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
         rem_bcs = MPIR_Comm_size(comm) - num_nodes;
         MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], &MPIDI_Global.addrname,
-                           MPIDI_Global.addrnamelen, TRUE, &table, NULL);
+                           MPIDI_Global.addrnamelen, FALSE, &table, &indices);
         mapped_table = (fi_addr_t *) MPL_malloc(rem_bcs * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, rem_bcs, mapped_table, 0ULL, NULL),
                        avmap);
