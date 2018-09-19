@@ -9,12 +9,15 @@
 #include "mpidu_shm.h"
 #include "mpl.h"
 #include "mpidu_bc.h"
+#include <time.h>
 
 static MPIDU_shm_seg_t memory;
 static MPIDU_shm_barrier_t *barrier;
 static size_t *indices;
 static int local_size;
 static char *segment;
+static double shm_start, shm_end, max_start, max_end, bc_start, bc_end, ag_start, ag_end;
+static int max_bc_len;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_bc_table_destroy
@@ -23,6 +26,8 @@ static char *segment;
 int MPIDU_bc_table_destroy(void *bc_table)
 {
     int mpi_errno = MPI_SUCCESS;
+    double phases[4] = { shm_end - shm_start, max_end - max_start, bc_end - bc_start, ag_end - ag_start };
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     if (mpi_errno)
@@ -30,6 +35,16 @@ int MPIDU_bc_table_destroy(void *bc_table)
     mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (MPIR_Comm_rank(MPIR_Process.comm_world) != 0) {
+        MPIR_Reduce(phases, NULL, 4, MPI_DOUBLE, MPI_SUM, 0, MPIR_Process.comm_world, &errflag);
+    } else {
+        MPIR_Reduce(MPI_IN_PLACE, phases, 4, MPI_DOUBLE, MPI_SUM, 0, MPIR_Process.comm_world, &errflag);
+        printf("shm phase avg = %f\n", phases[0] / MPIR_Comm_size(MPIR_Process.comm_world));
+        printf("max phase avg = %f\n", phases[1] / MPIR_Comm_size(MPIR_Process.comm_world));
+        printf("bc phase avg = %f\n", phases[2] / MPIR_Comm_size(MPIR_Process.comm_world));
+        printf("allgather phase avg = %f\n", phases[3] / MPIR_Comm_size(MPIR_Process.comm_world));
+    }
 
   fn_exit:
     MPL_free(indices);
@@ -51,12 +66,13 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     int local_rank = -1, local_leader = -1;
     int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
 
+    ag_start = MPI_Wtime();
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     if (!same_len) {
-        bc_len *= 2;
+        bc_len = max_bc_len;
         *bc_indices = indices;
     }
 
@@ -86,6 +102,8 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     *bc_table = segment;
 
   fn_exit:
+    ag_end = MPI_Wtime();
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -295,6 +313,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
                     MPIR_ERR_POP(mpi_errno);
                 bc_len = tmp[0];
             }
+            max_bc_len = bc_len;
             //printf("global max = %d\n", bc_len);
         }
     }
@@ -405,6 +424,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_Assert(val);
     memset(val, 0, val_max);
 
+    /* shm setup */
+    shm_start = MPI_Wtime();
+
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     mpi_errno = MPIDU_shm_seg_alloc(val_max * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
@@ -430,7 +452,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
                 bc_len = MPL_MAX(bc_len, tmp[i]);
             //printf("local max = %d\n", bc_len);
         }
+        shm_end = MPI_Wtime();
 
+        max_start = MPI_Wtime();
         /* calculate global maximum */
         if (size > local_size) {
             if (rank == local_leader) {
@@ -464,7 +488,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             }
             //printf("global max = %d\n", bc_len);
         }
+        max_end = MPI_Wtime();
+    } else {
+        shm_end = MPI_Wtime();
     }
+
+    bc_start = MPI_Wtime();
 
     if (bc_len > val_max && rank == 0)
         PMI_Abort(1, "failure during business card exchange");
@@ -531,6 +560,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPL_free(val);
     MPL_free(node_roots);
     *bc_table = segment;
+
+    bc_end = MPI_Wtime();
 
     return mpi_errno;
   fn_fail:

@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Get_processor_name(processor_name, &namelen);
 
-    fprintf(stdout, "Process %d of %d is on %s\n", myid, numprocs, processor_name);
-    fflush(stdout);
+    /* fprintf(stdout, "Process %d of %d is on %s\n", myid, numprocs, processor_name); */
+    /* fflush(stdout); */
 
     n = 10000;  /* default # of rectangles */
     if (myid == 0)
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 
     if (myid == 0) {
         endwtime = MPI_Wtime();
+        printf("Process %d of %d is on %s\n", myid, numprocs, processor_name);
         printf("pi is approximately %.16f, Error is %.16f\n", pi, fabs(pi - PI25DT));
         printf("wall clock time = %f\n", endwtime - startwtime);
         fflush(stdout);
