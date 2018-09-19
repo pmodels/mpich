@@ -54,6 +54,8 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
 
+    /* Calculate the size of the data from the active message information and update the request
+     * object. */
     in_data_sz = MPIDI_CH4U_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
 
@@ -69,6 +71,8 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPIDI_CH4U_REQUEST(rreq, count) = nbytes;
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, dt_sz, dt_ptr, dt_true_lb);
+
+    /* Copy the data from the message. */
 
     if (!dt_contig) {
         segment_ptr = MPIR_Segment_alloc();
@@ -95,11 +99,16 @@ static inline int MPIDI_handle_unexpected(void *buf,
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
 
+    /* If this is a synchronous send, send back the reply indicating that the message has been
+     * matched. */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    /* Decrement the refrence counter for the request object (for the reference held by the sending
+     * process). */
     MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
@@ -137,7 +146,7 @@ static inline int MPIDI_do_irecv(void *buf,
         if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_BUSY) {
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
         } else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
-            /* Matching receive is now posted, tell the netmod */
+            /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDI_CH4U_REQUEST(unexp_req, datatype) = datatype;
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;

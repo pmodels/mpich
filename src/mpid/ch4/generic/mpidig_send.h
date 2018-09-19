@@ -34,6 +34,8 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ISEND);
 
+    /* If the message is going to MPI_PROC_NULL, we still need to create and complete the request so
+     * we have something we can pass back up the call stack to track the request status. */
     if (unlikely(rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
@@ -54,9 +56,15 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
+
+    /* Synchronous send requires a special kind of AM header to track the return message so check
+     * for that and fill in the appropriate struct if necessary. */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
+
+        /* Increment the completion counter once to account for the extra message that needs to come
+         * back from the receiver to indicate completion. */
         ssend_req.sreq_ptr = (uint64_t) sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
@@ -70,7 +78,11 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = (uint64_t) sreq;
+
+        /* Increment the completion counter once to account for the extra message that needs to come
+         * back from the receiver to indicate completion. */
         MPIR_cc_incr(sreq->cc_ptr, &c);
+
         if (MPIDI_av_is_local(addr)) {
             mpi_errno = MPIDI_SHM_am_isend(rank, comm, type,
                                            &ssend_req, sizeof(ssend_req), buf,
