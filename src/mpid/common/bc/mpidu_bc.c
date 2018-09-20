@@ -40,10 +40,7 @@ int MPIDU_bc_table_destroy(void *bc_table)
         MPIR_Reduce(phases, NULL, 4, MPI_DOUBLE, MPI_SUM, 0, MPIR_Process.comm_world, &errflag);
     } else {
         MPIR_Reduce(MPI_IN_PLACE, phases, 4, MPI_DOUBLE, MPI_SUM, 0, MPIR_Process.comm_world, &errflag);
-        printf("shm phase avg = %f\n", phases[0] / MPIR_Comm_size(MPIR_Process.comm_world));
-        printf("max phase avg = %f\n", phases[1] / MPIR_Comm_size(MPIR_Process.comm_world));
-        printf("bc phase avg = %f\n", phases[2] / MPIR_Comm_size(MPIR_Process.comm_world));
-        printf("allgather phase avg = %f\n", phases[3] / MPIR_Comm_size(MPIR_Process.comm_world));
+        printf("phases = %f,%f,%f,%f\n", phases[0] / MPIR_Comm_size(MPIR_Process.comm_world), phases[1] / MPIR_Comm_size(MPIR_Process.comm_world), phases[2] / MPIR_Comm_size(MPIR_Process.comm_world), phases[3] / MPIR_Comm_size(MPIR_Process.comm_world));
     }
 
   fn_exit:
@@ -256,6 +253,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_Assert(val);
     memset(val, 0, PMI2_MAX_VALLEN);
 
+    shm_start = MPI_Wtime();
+
     /* allocate shm for bcs */
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     mpi_errno = MPIDU_shm_seg_alloc(PMI2_MAX_VALLEN * size, (void **) &segment, MPL_MEM_ADDRESS);
@@ -267,9 +266,13 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    shm_end = MPI_Wtime();
+
     /* determine the maximum bc size */
     if (!same_len) {
         int *tmp = (int *) segment;
+
+        max_start = MPI_Wtime();
 
         /* calculate local maximum */
         if (local_size > 1) {
@@ -316,11 +319,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             max_bc_len = bc_len;
             //printf("global max = %d\n", bc_len);
         }
+        max_end = MPI_Wtime();
     }
 
     /* if we cannot support the max bc size in a single KVS operation, just abort for now */
     if (bc_len > PMI2_MAX_VALLEN && rank == 0)
         PMI2_Abort(TRUE, "failure during business card exchange");
+
+    bc_start = MPI_Wtime();
 
     /* put bc in kvs */
     if (!roots_only || rank == local_leader) {
@@ -384,6 +390,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPL_free(node_roots);
     *bc_table = segment;
 
+    bc_end = MPI_Wtime();
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -437,8 +445,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    shm_end = MPI_Wtime();
+
     if (!same_len) {
         int *tmp = (int *) segment;
+
+        max_start = MPI_Wtime();
 
         /* calculate local maximum */
         if (local_size > 1) {
@@ -450,11 +462,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
             for (i = 0; i < local_size; i++)
                 bc_len = MPL_MAX(bc_len, tmp[i]);
-            //printf("local max = %d\n", bc_len);
         }
-        shm_end = MPI_Wtime();
 
-        max_start = MPI_Wtime();
         /* calculate global maximum */
         if (size > local_size) {
             if (rank == local_leader) {
@@ -486,11 +495,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
                     MPIR_ERR_POP(mpi_errno);
                 bc_len = tmp[0];
             }
-            //printf("global max = %d\n", bc_len);
         }
         max_end = MPI_Wtime();
-    } else {
-        shm_end = MPI_Wtime();
     }
 
     bc_start = MPI_Wtime();
