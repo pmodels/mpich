@@ -57,6 +57,7 @@ noinst_PROGRAMS =  \
     huge_anysrc    \
     huge_dupcomm   \
     huge_ssend     \
+    multi_psend_derived  \
     dtype_send		 \
     recv_any		\
     irecv_any   \

@@ -1122,6 +1122,7 @@
 /pt2pt/many_isend
 /pt2pt/manylmt
 /pt2pt/mprobe
+/pt2pt/multi_psend_derived
 /pt2pt/pingping
 /pt2pt/probe_unexp
 /pt2pt/probenull
