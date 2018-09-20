@@ -24,8 +24,39 @@
 #define OPS_NUM 10000
 #define GACC_SZ 10
 
+#if defined(TEST_SHORT_INT)
+#define MTEST_PAIRTYPE_A short
+#define MTEST_MPI_PAIRTYPE MPI_SHORT_INT
+#define MTEST_PAIRTYPE_A_STRFMT "%hd"
+
+#elif defined(TEST_2INT)
+#define MTEST_PAIRTYPE_A int
+#define MTEST_MPI_PAIRTYPE MPI_2INT
+#define MTEST_PAIRTYPE_A_STRFMT "%d"
+
+#elif defined(TEST_LONG_INT)
+#define MTEST_PAIRTYPE_A long
+#define MTEST_MPI_PAIRTYPE MPI_LONG_INT
+#define MTEST_PAIRTYPE_A_STRFMT "%ld"
+
+#elif defined(TEST_FLOAT_INT)
+#define MTEST_PAIRTYPE_A float
+#define MTEST_MPI_PAIRTYPE MPI_FLOAT_INT
+#define MTEST_PAIRTYPE_A_STRFMT "%f"
+
+#elif defined(TEST_DOUBLE_INT)
+#define MTEST_PAIRTYPE_A double
+#define MTEST_MPI_PAIRTYPE MPI_DOUBLE_INT
+#define MTEST_PAIRTYPE_A_STRFMT "%lf"
+
+#else
+#define MTEST_PAIRTYPE_A long double
+#define MTEST_MPI_PAIRTYPE MPI_LONG_DOUBLE_INT
+#define MTEST_PAIRTYPE_A_STRFMT "%Lf"
+#endif
+
 typedef struct pair_struct {
-    long double a;
+    MTEST_PAIRTYPE_A a;
     int b;
 } pair_struct_t;
 
@@ -58,9 +89,9 @@ int main(int argc, char *argv[])
 
         /* initialize data */
         for (i = 0; i < DATA_SIZE; i++) {
-            tar_buf[i].a = 0.0;
+            tar_buf[i].a = (MTEST_PAIRTYPE_A) 0;
             tar_buf[i].b = 0;
-            result_buf[i].a = 0.0;
+            result_buf[i].a = (MTEST_PAIRTYPE_A) 0;
             result_buf[i].b = 0;
         }
 
@@ -76,11 +107,11 @@ int main(int argc, char *argv[])
                 for (i = 0; i < OPS_NUM; i++) {
 
                     int curr_val = j * OPS_NUM + i;
-                    orig_buf[0].a = (long double) (curr_val);
+                    orig_buf[0].a = (MTEST_PAIRTYPE_A) (curr_val);
                     orig_buf[0].b = curr_val;
 
-                    MPI_Accumulate(orig_buf, 1, MPI_LONG_DOUBLE_INT,
-                                   0, 0, 1, MPI_LONG_DOUBLE_INT, MPI_REPLACE, win);
+                    MPI_Accumulate(orig_buf, 1, MTEST_MPI_PAIRTYPE,
+                                   0, 0, 1, MTEST_MPI_PAIRTYPE, MPI_REPLACE, win);
                 }
             } else {
                 /* Work with GACC test (Test #3 to Test #6) */
@@ -88,12 +119,12 @@ int main(int argc, char *argv[])
 
                     for (k = 0; k < GACC_SZ; k++) {
                         int curr_val = j * OPS_NUM + i * GACC_SZ + k;
-                        orig_buf[k].a = (long double) (curr_val);
+                        orig_buf[k].a = (MTEST_PAIRTYPE_A) (curr_val);
                         orig_buf[k].b = curr_val;
                     }
 
-                    MPI_Accumulate(orig_buf, GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                   0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_REPLACE, win);
+                    MPI_Accumulate(orig_buf, GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                   0, 0, GACC_SZ, MTEST_MPI_PAIRTYPE, MPI_REPLACE, win);
                 }
             }
         } else if (rank == 1) {
@@ -101,42 +132,42 @@ int main(int argc, char *argv[])
             if (j < LOOP) {
                 for (i = 0; i < DATA_SIZE; i++) {
                     /* Test #1: FOP + MPI_NO_OP */
-                    MPI_Fetch_and_op(orig_buf, &(result_buf[i]), MPI_LONG_DOUBLE_INT,
+                    MPI_Fetch_and_op(orig_buf, &(result_buf[i]), MTEST_MPI_PAIRTYPE,
                                      0, 0, MPI_NO_OP, win);
                 }
             } else if (j < 2 * LOOP) {
                 for (i = 0; i < DATA_SIZE; i++) {
                     /* Test #2: FOP + MPI_NO_OP + NULL origin buffer address */
-                    MPI_Fetch_and_op(NULL, &(result_buf[i]), MPI_LONG_DOUBLE_INT,
+                    MPI_Fetch_and_op(NULL, &(result_buf[i]), MTEST_MPI_PAIRTYPE,
                                      0, 0, MPI_NO_OP, win);
                 }
             } else if (j < 3 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #3: GACC + MPI_NO_OP */
-                    MPI_Get_accumulate(orig_buf, GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
+                    MPI_Get_accumulate(orig_buf, GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       0, 0, GACC_SZ, MTEST_MPI_PAIRTYPE, MPI_NO_OP, win);
                 }
             } else if (j < 4 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #4: GACC + MPI_NO_OP + NULL origin buffer address */
-                    MPI_Get_accumulate(NULL, GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
+                    MPI_Get_accumulate(NULL, GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       0, 0, GACC_SZ, MTEST_MPI_PAIRTYPE, MPI_NO_OP, win);
                 }
             } else if (j < 5 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #5: GACC + MPI_NO_OP + zero origin count */
-                    MPI_Get_accumulate(orig_buf, 0, MPI_LONG_DOUBLE_INT,
-                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
+                    MPI_Get_accumulate(orig_buf, 0, MTEST_MPI_PAIRTYPE,
+                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       0, 0, GACC_SZ, MTEST_MPI_PAIRTYPE, MPI_NO_OP, win);
                 }
             } else if (j < 6 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #5: GACC + MPI_NO_OP + NULL origin datatype */
                     MPI_Get_accumulate(orig_buf, GACC_SZ, MPI_DATATYPE_NULL,
-                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
-                                       0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
+                                       &(result_buf[i * GACC_SZ]), GACC_SZ, MTEST_MPI_PAIRTYPE,
+                                       0, 0, GACC_SZ, MTEST_MPI_PAIRTYPE, MPI_NO_OP, win);
                 }
             }
         }
@@ -146,9 +177,10 @@ int main(int argc, char *argv[])
         /* check results */
         if (rank == 1) {
             for (i = 0; i < DATA_SIZE; i++) {
-                if (result_buf[i].a != (long double) (result_buf[i].b)) {
+                if (result_buf[i].a != (MTEST_PAIRTYPE_A) (result_buf[i].b)) {
                     if (curr_errors < 10) {
-                        printf("LOOP %d: result_buf[%d].a = %Lf, result_buf[%d].b = %d\n",
+                        printf("LOOP %d: result_buf[%d].a = " MTEST_PAIRTYPE_A_STRFMT
+                               ", result_buf[%d].b = %d\n",
                                j, i, result_buf[i].a, i, result_buf[i].b);
                     }
                     curr_errors++;
