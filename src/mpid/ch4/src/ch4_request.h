@@ -122,6 +122,28 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
 
+    /* If a user passed a derived datatype for this persistent communication,
+     * free it.
+     * We could have done this cleanup in more general request cleanup functions,
+     * like MPID_Request_destroy_hook. However, that would always add a few
+     * instructions for any kind of request object, even if it's no a request
+     * from persistent communications. */
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_NM_prequest_free_hook(req);
+#else
+    if (unlikely(NULL != MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))) {
+        /* `req` is created by Recv_init(MPI_ANY_SOURCE).
+         * Need to clean up both shmmod and netmod. */
+        MPIDI_SHM_prequest_free_hook(req);
+        MPIDI_NM_prequest_free_hook(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+    } else {
+        if (MPIDI_CH4I_REQUEST(req, is_local))
+            MPIDI_SHM_prequest_free_hook(req);
+        else
+            MPIDI_NM_prequest_free_hook(req);
+    }
+#endif
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
 }
 
