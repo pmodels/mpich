@@ -45,6 +45,107 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
+MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_CH4I_parse_info_accu_ops_str(const char *str)
+{
+    uint32_t ops = 0;
+    char *value, *token, *savePtr = NULL;
+
+    value = (char *) str;
+    token = (char *) strtok_r(value, ",", &savePtr);
+    while (token != NULL) {
+        MPIDI_CH4U_win_info_accu_op_shift_t op_shift;
+        /* if special value is set, skip others. */
+        if (!strncmp(token, "none", strlen("none"))) {
+            ops = 0;
+            break;
+        } else if (!strncmp(token, "any_op", strlen("any_op"))) {
+            /* add all ops */
+            for (op_shift = 0; op_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST; op_shift++)
+                ops |= (1 << op_shift);
+            break;
+        }
+
+        /* traverse op list (exclude null and last) and add the op if set */
+        if (!strncmp(token, "max", strlen("max")))
+            ops |= (1 << MPIDI_CH4I_ACCU_MAX_SHIFT);
+        else if (!strncmp(token, "min", strlen("min")))
+            ops |= (1 << MPIDI_CH4I_ACCU_MIN_SHIFT);
+        else if (!strncmp(token, "sum", strlen("sum")))
+            ops |= (1 << MPIDI_CH4I_ACCU_SUM_SHIFT);
+        else if (!strncmp(token, "prod", strlen("prod")))
+            ops |= (1 << MPIDI_CH4I_ACCU_PROD_SHIFT);
+        else if (!strncmp(token, "maxloc", strlen("maxloc")))
+            ops |= (1 << MPIDI_CH4I_ACCU_MAXLOC_SHIFT);
+        else if (!strncmp(token, "minloc", strlen("minloc")))
+            ops |= (1 << MPIDI_CH4I_ACCU_MINLOC_SHIFT);
+        else if (!strncmp(token, "band", strlen("band")))
+            ops |= (1 << MPIDI_CH4I_ACCU_BAND_SHIFT);
+        else if (!strncmp(token, "bor", strlen("bor")))
+            ops |= (1 << MPIDI_CH4I_ACCU_BOR_SHIFT);
+        else if (!strncmp(token, "bxor", strlen("bxor")))
+            ops |= (1 << MPIDI_CH4I_ACCU_BXOR_SHIFT);
+        else if (!strncmp(token, "land", strlen("land")))
+            ops |= (1 << MPIDI_CH4I_ACCU_LAND_SHIFT);
+        else if (!strncmp(token, "lor", strlen("lor")))
+            ops |= (1 << MPIDI_CH4I_ACCU_LOR_SHIFT);
+        else if (!strncmp(token, "lxor", strlen("lxor")))
+            ops |= (1 << MPIDI_CH4I_ACCU_LXOR_SHIFT);
+        else if (!strncmp(token, "replace", strlen("replace")))
+            ops |= (1 << MPIDI_CH4I_ACCU_REPLACE_SHIFT);
+        else if (!strncmp(token, "no_op", strlen("no_op")))
+            ops |= (1 << MPIDI_CH4I_ACCU_NO_OP_SHIFT);
+        else if (!strncmp(token, "cswap", strlen("cswap")) ||
+                 !strncmp(token, "compare_and_swap", strlen("compare_and_swap")))
+            ops |= (1 << MPIDI_CH4I_ACCU_CSWAP_SHIFT);
+
+        token = (char *) strtok_r(NULL, ",", &savePtr);
+    }
+    return ops;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_get_info_accu_ops_str(uint32_t val, char *buf,
+                                                               size_t maxlen)
+{
+    int c = 0;
+
+    MPIR_Assert(maxlen >= strlen("max,min,sum,prod,maxloc,minloc,band,bor,"
+                                 "bxor,land,lor,lxor,replace,no_op,cswap") + 1);
+
+    if (val & (1 << MPIDI_CH4I_ACCU_MAX_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%smax", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_MIN_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%smin", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_SUM_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%ssum", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_PROD_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sprod", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_MAXLOC_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%smaxloc", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_MINLOC_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sminloc", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_BAND_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sband", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_BOR_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sbor", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_BXOR_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sbxor", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_LAND_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sland", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_LOR_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%slor", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_LXOR_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%slxor", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_REPLACE_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sreplace", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_NO_OP_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%sno_op", (c > 0) ? "," : "");
+    if (val & (1 << MPIDI_CH4I_ACCU_CSWAP_SHIFT))
+        c += snprintf(buf + c, maxlen - c, "%scswap", (c > 0) ? "," : "");
+
+    if (c == 0)
+        strncpy(buf, "none", maxlen);
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4_RMA_Init_sync_pvars
 #undef FCNAME
@@ -166,6 +267,27 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
         }
+        /* We allow the user to set the following atomics hint only at window init time,
+         * all future updates by win_set_info are ignored. This is because we do not
+         * have a good way to ensure all outstanding atomic ops have been completed
+         * on all processes especially in passive-target epochs. */
+        else if (is_init && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
+            MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops =
+                MPIDI_CH4I_parse_info_accu_ops_str(curr_ptr->value);
+        } else if (is_init && !strcmp(curr_ptr->key, "accumulate_noncontig_dtype")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype = true;
+            else if (!strcmp(curr_ptr->value, "false"))
+                MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "accumulate_max_bytes")) {
+            if (!strcmp(curr_ptr->value, "unlimited") || !strcmp(curr_ptr->value, "-1"))
+                MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = -1;
+            else {
+                long max_bytes = atol(curr_ptr->value);
+                if (max_bytes >= 0)
+                    MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = max_bytes;
+            }
+        }
       next:
         curr_ptr = curr_ptr->next;
     }
@@ -192,6 +314,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIR_Win *win = (MPIR_Win *) MPIR_Handle_obj_alloc(&MPIR_Win_mem);
     MPIDI_CH4U_win_target_t *targets = NULL;
     MPIR_Comm *win_comm_ptr;
+    MPIDI_CH4U_win_info_accu_op_shift_t op_shift;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_INIT);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4R_WIN_INIT);
@@ -241,6 +364,13 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     } else {
         MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
     }
+
+    /* default any op */
+    MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops = 0;
+    for (op_shift = 0; op_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST; op_shift++)
+        MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops |= (1 << op_shift);
+    MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype = true;
+    MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = -1;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
@@ -795,6 +925,32 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "false");
 
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    {   /* Keep buf as a local variable for which_accumulate_ops key. */
+        char buf[128];
+        MPIDI_CH4I_get_info_accu_ops_str(MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops,
+                                         &buf[0], sizeof(buf));
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "which_accumulate_ops", buf);
+        if (MPI_SUCCESS != mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_noncontig_dtype", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_noncontig_dtype", "false");
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes >= 0) {
+        char buf[32];           /* make sure 64-bit integer can fit */
+        snprintf(buf, sizeof(buf), "%ld",
+                 (long) MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes);
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_max_bytes", buf);
+    } else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_max_bytes", "unlimited");
     if (MPI_SUCCESS != mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
