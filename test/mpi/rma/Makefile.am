@@ -139,7 +139,12 @@ noinst_PROGRAMS =          \
     atomic_rmw_fop         \
     atomic_rmw_cas         \
     atomic_rmw_gacc	   \
-    atomic_get             \
+    atomic_get_short_int           \
+    atomic_get_2int                \
+    atomic_get_long_int            \
+    atomic_get_float_int           \
+    atomic_get_double_int          \
+    atomic_get_long_double_int     \
     acc_pairtype           \
     manyget                \
     derived_acc_flush_local\
@@ -168,6 +173,20 @@ noinst_PROGRAMS =          \
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
 endif
+
+atomic_get_short_int_SOURCES      = atomic_get.c
+atomic_get_2int_SOURCES           = atomic_get.c
+atomic_get_long_int_SOURCES       = atomic_get.c
+atomic_get_float_int_SOURCES      = atomic_get.c
+atomic_get_double_int_SOURCES     = atomic_get.c
+atomic_get_long_double_int_SOURCES= atomic_get.c
+
+atomic_get_short_int_CPPFLAGS       = -DTEST_SHORT_INT $(AM_CPPFLAGS)
+atomic_get_2int_CPPFLAGS            = -DTEST_2INT $(AM_CPPFLAGS)
+atomic_get_long_int_CPPFLAGS        = -DTEST_LONG_INT $(AM_CPPFLAGS)
+atomic_get_float_int_CPPFLAGS       = -DTEST_FLOAT_INT $(AM_CPPFLAGS)
+atomic_get_double_int_CPPFLAGS      = -DTEST_DOUBLE_INT $(AM_CPPFLAGS)
+atomic_get_long_double_int_CPPFLAGS = -DTEST_LONG_DOUBLE_INT $(AM_CPPFLAGS)
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
