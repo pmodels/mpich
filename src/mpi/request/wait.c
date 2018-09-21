@@ -76,6 +76,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     }
 
     MPIR_Request_get_ptr(*request, request_ptr);
+    MPIR_Assert(request_ptr != NULL);
 
     if (!MPIR_Request_is_complete(request_ptr)) {
         /* If this is an anysource request including a communicator with

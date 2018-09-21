@@ -163,6 +163,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Assert(op_ptr != NULL);                 \
             MPIR_Op_ptr_add_ref(op_ptr);                 \
         }                                                \
     } while (0)                                          \
@@ -173,6 +174,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Assert(op_ptr != NULL);                 \
             MPIR_Op_ptr_release(op_ptr);                 \
         }                                                \
     } while (0)                                          \

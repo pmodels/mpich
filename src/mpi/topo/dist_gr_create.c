@@ -319,12 +319,16 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     /* can't use CHKPMEM macros for this b/c we need to realloc */
     in_capacity = 10;   /* arbitrary */
     dist_graph_ptr->in = MPL_malloc(in_capacity * sizeof(int), MPL_MEM_COMM);
-    if (dist_graph_ptr->is_weighted)
+    if (dist_graph_ptr->is_weighted) {
         dist_graph_ptr->in_weights = MPL_malloc(in_capacity * sizeof(int), MPL_MEM_COMM);
+        MPIR_Assert(dist_graph_ptr->in_weights != NULL);
+    }
     out_capacity = 10;  /* arbitrary */
     dist_graph_ptr->out = MPL_malloc(out_capacity * sizeof(int), MPL_MEM_COMM);
-    if (dist_graph_ptr->is_weighted)
+    if (dist_graph_ptr->is_weighted) {
         dist_graph_ptr->out_weights = MPL_malloc(out_capacity * sizeof(int), MPL_MEM_COMM);
+        MPIR_Assert(dist_graph_ptr->out_weights);
+    }
 
     for (i = 0; i < in_out_peers[0]; ++i) {
         MPI_Status status;
