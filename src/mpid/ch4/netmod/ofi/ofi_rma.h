@@ -114,14 +114,8 @@ static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
 
     MPIR_Datatype_get_ptr(dt, dt_ptr);
 
-    /* OP_NULL is the oddball                          */
-    /* todo...change configure to table this correctly */
     dt_index = MPIDI_OFI_DATATYPE(dt_ptr).index;
-
-    if (op == MPI_OP_NULL)
-        op_index = 14;
-    else
-        op_index = (0x000000FFU & op) - 1;
+    MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index);
 
     *fi_dt = (enum fi_datatype) MPIDI_Global.win_op_table[dt_index][op_index].dt;
     *fi_op = (enum fi_op) MPIDI_Global.win_op_table[dt_index][op_index].op;

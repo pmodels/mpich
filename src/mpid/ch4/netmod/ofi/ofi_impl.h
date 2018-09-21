@@ -33,6 +33,14 @@
     MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
+
+/* Get op index.
+ * TODO: OP_NULL is the oddball. Change configure to table this correctly */
+#define MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index) do {   \
+    if (op == MPI_OP_NULL) op_index = 14;                \
+    else op_index = (0x000000FFU & op) - 1;              \
+} while (0);
+
 /*
  * Helper routines and macros for request completion
  */
