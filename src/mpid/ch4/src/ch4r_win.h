@@ -1067,6 +1067,9 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     mpi_errno = MPIDI_CH4R_win_init(size, disp_unit, win_ptr, info_ptr, comm_ptr,
                                     MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
 
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
     win = *win_ptr;
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     MPIDI_CH4U_WIN(win, shared_table) =
