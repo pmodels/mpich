@@ -228,6 +228,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));       \
+            MPIR_Assert(ptr != NULL);                                   \
             size_ = ((MPIR_Datatype *) ptr)->size;                      \
             break;                                                      \
         case HANDLE_KIND_BUILTIN:                                       \
@@ -252,6 +253,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));       \
+            MPIR_Assert(ptr != NULL);                                   \
             extent_ = ((MPIR_Datatype *) ptr)->extent;                  \
             break;                                                      \
         case HANDLE_KIND_INVALID:                                       \
@@ -272,6 +274,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         else {                                                                 \
             MPIR_Datatype *dtp_ = NULL;                                        \
             MPIR_Datatype_get_ptr((dtype_), dtp_);                             \
+            MPIR_Assert(dtp_ != NULL);                                         \
             *(is_contig_) = dtp_->is_contig;                                   \
         }                                                                      \
     } while (0)
@@ -467,6 +470,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Assert(dtp_ != NULL);                                  \
         MPIR_Datatype_ptr_release(dtp_);                            \
     }                                                               \
     } while (0)
@@ -727,6 +731,7 @@ static inline MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
         MPIR_Dataloop *dlp = NULL;
 
         MPIR_Datatype_get_loopptr_macro(type, dlp);
+        MPIR_Assert(dlp != NULL);
 
         return MPIR_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
     }

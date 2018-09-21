@@ -74,6 +74,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
     }
 
     MPIR_Request_get_ptr(*request, request_ptr);
+    MPIR_Assert(request_ptr != NULL);
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
     if (mpi_errno)

@@ -213,6 +213,7 @@ int MPIR_Type_indexed(int count,
     new_dtp->is_contig = 0;
     if (old_is_contig) {
         MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+        MPIR_Assert(blklens != NULL);
         for (i = 0; i < count; i++)
             blklens[i] = blocklength_array[i];
         contig_count = MPIR_Type_indexed_count_contig(count,
