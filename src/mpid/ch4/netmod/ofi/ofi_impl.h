@@ -297,28 +297,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct f
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_request_alloc_and_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
-           sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
-    req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)),
-                                                 MPL_MEM_BUFFER);
-  fn_exit:
-    return req;
-  fn_fail:
-    req = NULL;
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
     int in_use;
