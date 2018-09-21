@@ -1282,6 +1282,9 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
 
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
     win = *win_ptr;
     *base_ptr = NULL;
 
