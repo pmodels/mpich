@@ -98,19 +98,21 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_query_datatype
+#define FUNCNAME MPIDI_OFI_query_acc_atomic_support
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
-                                           enum fi_datatype *fi_dt,
-                                           MPI_Op op,
-                                           enum fi_op *fi_op, size_t * count, size_t * dtsize)
+static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query_type,
+                                                      MPI_Op op,
+                                                      MPIR_Win * win,
+                                                      enum fi_datatype *fi_dt,
+                                                      enum fi_op *fi_op, size_t * count,
+                                                      size_t * dtsize)
 {
     MPIR_Datatype *dt_ptr;
-    int op_index, dt_index, rc;
+    int op_index, dt_index;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 
     MPIR_Datatype_get_ptr(dt, dt_ptr);
 
@@ -121,22 +123,47 @@ static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
     *fi_op = (enum fi_op) MPIDI_Global.win_op_table[dt_index][op_index].op;
     *dtsize = MPIDI_Global.win_op_table[dt_index][op_index].dtsize;
 
-    if (*count == MPIDI_OFI_QUERY_ATOMIC_COUNT)
-        *count = MPIDI_Global.win_op_table[dt_index][op_index].max_atomic_count;
+    switch (query_type) {
+        case MPIDI_OFI_QUERY_ATOMIC_COUNT:
+            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_atomic_count;
+            break;
+        case MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT:
+            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_fetch_atomic_count;
+            break;
+        case MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT:
+            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_compare_atomic_count;
+            break;
+        default:
+            MPIR_Assert(*count == MPIDI_OFI_QUERY_ATOMIC_COUNT ||
+                        *count == MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT ||
+                        *count == MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT);
+            break;
+    }
 
-    if (*count == MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT)
-        *count = MPIDI_Global.win_op_table[dt_index][op_index].max_fetch_atomic_count;
+    /* If same_op_no_op is set, we also check other processes' atomic status.
+     * We have to always fallback to AM unless all possible reduce and cswap
+     * operations are supported by provider. This is because the noop process
+     * does not know what the same_op is on the other processes, which might be
+     * unsupported (e.g., maxloc). Thus, the noop process has to always use AM, and
+     * other processes have to also only use AM in order to ensure atomicity with
+     * atomic get. The user can use which_accumulate_ops hint to specify used reduce
+     * and cswap operations.
+     * We calculate the max count of all specified ops for each datatype at window
+     * creation or info set. dtypes_max_count[dt_index] is the provider allowed
+     * count for all possible ops. It is 0 if any of the op is not supported and
+     * is a positive value if all ops are supported.
+     * Current <datatype, op> can become hw atomic only when both local op and all
+     * possible remote op are atomic. */
 
-    if (*count == MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT)
-        *count = MPIDI_Global.win_op_table[dt_index][op_index].max_compare_atomic_count;
+    /* We use the minimal max_count of local op and any possible remote op as the limit
+     * to validate dt_size in later check. We assume the limit should be symmetric on
+     * all processes as long as the hint correctly contains the local op.*/
+    MPIR_Assert(*count >= (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index]);
 
-    if (((int) *fi_dt) == -1 || ((int) *fi_op) == -1)
-        rc = -1;
-    else
-        rc = MPI_SUCCESS;
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ops == MPIDI_CH4I_ACCU_SAME_OP_NO_OP)
+        *count = (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index];
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
-    return rc;
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
@@ -792,10 +819,14 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     rbuffer = (char *) result_addr + true_lb;
     tbuffer = (void *) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
 
-    max_count = MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT;
-    MPIDI_OFI_query_datatype(datatype, &fi_dt, MPI_OP_NULL, &fi_op, &max_count, &dt_size);
+    MPIDI_OFI_query_acc_atomic_support(datatype, MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT, MPI_OP_NULL,
+                                       win, &fi_dt, &fi_op, &max_count, &dt_size);
+    if (max_count == 0)
+        goto am_fallback;
+
     max_size = MPIDI_OFI_check_acc_order_size(win, dt_size);
-    /* It's impossible to transfer data if buffer size is smaller than basic datatype size. */
+    /* It's impossible to transfer data if buffer size is smaller than basic datatype size.
+     *  TODO: we assume all processes should use the same max_size and dt_size, true ? */
     if (max_size < dt_size)
         goto am_fallback;
     /* Compare_and_swap is READ and WRITE. */
@@ -889,16 +920,16 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
     MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
-    max_count = MPIDI_OFI_QUERY_ATOMIC_COUNT;
-
-    MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
+    MPIDI_OFI_query_acc_atomic_support(basic_type, MPIDI_OFI_QUERY_ATOMIC_COUNT, op,
+                                       win, &fi_dt, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
     max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
     max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size. */
+    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
+     * TODO: we assume all processes should use the same max_size and dt_size, true ? */
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
@@ -1034,8 +1065,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
     MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
-    max_count = MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT;
-    MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
+    MPIDI_OFI_query_acc_atomic_support(basic_type, MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT,
+                                       op, win, &fi_dt, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
 
@@ -1043,7 +1074,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size. */
+    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
+     * TODO: we assume all processes should use the same max_size and dt_size, true ?*/
     if (max_size < dt_size)
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {

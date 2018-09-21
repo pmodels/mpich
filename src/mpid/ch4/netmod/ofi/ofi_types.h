@@ -483,6 +483,15 @@ typedef enum MPIDI_OFI_segment_side {
     MPIDI_OFI_SEGMENT_RESULT,
 } MPIDI_OFI_segment_side_t;
 
+typedef struct MPIDI_OFI_win_acc_hint {
+    uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
+                                                         * atomicity support of all OFI datatypes. A datatype
+                                                         * is supported only when all enabled ops are valid atomic
+                                                         * provided by the OFI provider (recored in MPIDI_Global.win_op_table).
+                                                         * Invalid <dtype, op> defined in MPI standard are excluded.
+                                                         * This structure is prepared at window creation time. */
+} MPIDI_OFI_win_acc_hint_t;
+
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
