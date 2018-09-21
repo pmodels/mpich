@@ -174,8 +174,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
         + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->noncontig =
+        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
+                                                 MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+                        "**nomem");
     *winreq = req;
 
     req->noncontig->iov.put_get.originv =
@@ -191,6 +196,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     return mpi_errno;
   fn_fail:
+    if (req)
+        MPL_free(req);
+    req = NULL;
     goto fn_exit;
 }
 
@@ -223,8 +231,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
         + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->noncontig =
+        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
+                                                 MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+                        "**nomem");
     *winreq = req;
 
     req->noncontig->iov.accumulate.originv =
@@ -240,6 +253,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     return mpi_errno;
   fn_fail:
+    if (req)
+        MPL_free(req);
+    req = NULL;
     goto fn_exit;
 }
 
@@ -283,8 +299,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
         + MPIDI_OFI_align_iov_len(alloc_iovs * r_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    req->noncontig =
+        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
+                                                 MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+                        "**nomem");
     *winreq = req;
 
     req->noncontig->iov.get_accumulate.originv =
@@ -303,6 +324,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
+    if (req)
+        MPL_free(req);
+    req = NULL;
     goto fn_exit;
 }
 
