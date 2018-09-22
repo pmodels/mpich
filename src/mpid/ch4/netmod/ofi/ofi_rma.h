@@ -846,66 +846,6 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_accumulate_get_basic_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPI_Datatype MPIDI_OFI_accumulate_get_basic_type(MPI_Datatype target_datatype,
-                                                               int *acc_check)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_BASIC_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_BASIC_TYPE);
-    MPI_Datatype basic_type;
-    *acc_check = 0;
-    MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
-
-    switch (basic_type) {
-            /* 8 byte types */
-        case MPI_FLOAT_INT:
-        case MPI_2INT:
-        case MPI_LONG_INT:
-#ifdef HAVE_FORTRAN_BINDING
-        case MPI_2REAL:
-        case MPI_2INTEGER:
-#endif
-            {
-                basic_type = MPI_LONG_LONG;
-                *acc_check = 1;
-                break;
-            }
-
-            /* 16-byte types */
-#ifdef HAVE_FORTRAN_BINDING
-
-        case MPI_2DOUBLE_PRECISION:
-#endif
-#ifdef MPICH_DEFINE_2COMPLEX
-        case MPI_2COMPLEX:
-#endif
-            {
-                basic_type = MPI_DOUBLE_COMPLEX;
-                *acc_check = 1;
-                break;
-            }
-
-            /* Types with pads or too large to handle */
-        case MPI_DATATYPE_NULL:
-        case MPI_SHORT_INT:
-        case MPI_DOUBLE_INT:
-        case MPI_LONG_DOUBLE_INT:
-#ifdef MPICH_DEFINE_2COMPLEX
-        case MPI_2DOUBLE_COMPLEX:
-#endif
-            goto unsupported;
-    }
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_BASIC_TYPE);
-    return basic_type;
-  unsupported:
-    basic_type = MPI_DATATYPE_NULL;
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_do_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -918,7 +858,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                           MPI_Datatype target_datatype,
                                           MPI_Op op, MPIR_Win * win, MPIR_Request ** sigreq)
 {
-    int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
+    int rc, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req = NULL;
     size_t origin_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout, oout;
@@ -945,9 +885,9 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
-    basic_type = MPIDI_OFI_accumulate_get_basic_type(target_datatype, &acc_check);
-    if (basic_type == MPI_DATATYPE_NULL || (acc_check && op != MPI_REPLACE))
-        goto am_fallback;
+    /* accept only same predefined basic datatype */
+    MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
+    MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
     max_count = MPIDI_OFI_QUERY_ATOMIC_COUNT;
 
@@ -1063,12 +1003,12 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                               MPI_Datatype target_datatype,
                                               MPI_Op op, MPIR_Win * win, MPIR_Request ** sigreq)
 {
-    int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
+    int rc, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req = NULL;
     size_t target_bytes, offset, max_count, max_size, dt_size, omax, rmax, tmax, tout, rout, oout;
     struct fid_ep *ep = NULL;
-    MPI_Datatype rt, basic_type, basic_type_res;
+    MPI_Datatype basic_type;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
     struct fi_msg_atomic msg;
@@ -1089,18 +1029,13 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto null_op_exit;
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-    rt = result_datatype;
-    basic_type = MPIDI_OFI_accumulate_get_basic_type(target_datatype, &acc_check);
-    if (basic_type == MPI_DATATYPE_NULL || (acc_check && op != MPI_REPLACE && op != MPI_NO_OP))
-        goto am_fallback;
 
-    if (acc_check)
-        rt = basic_type;
-    MPIDI_OFI_GET_BASIC_TYPE(rt, basic_type_res);
-    MPIR_Assert(basic_type_res != MPI_DATATYPE_NULL);
+    /* accept only same predefined basic datatype */
+    MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
+    MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
     max_count = MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT;
-    MPIDI_OFI_query_datatype(basic_type_res, &fi_dt, op, &fi_op, &max_count, &dt_size);
+    MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
 
