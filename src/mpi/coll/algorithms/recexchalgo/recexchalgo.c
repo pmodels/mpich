@@ -79,6 +79,9 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
                     (MPL_DBG_FDEST, "allocate memory for storing communication pattern"));
     step1_recvfrom = *step1_recvfrom_ = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
     step2_nbrs = *step2_nbrs_ = (int **) MPL_malloc(sizeof(int *) * log_p_of_k, MPL_MEM_COLL);
+    MPIR_Assert(step1_recvfrom != NULL && *step1_recvfrom_ != NULL && step2_nbrs != NULL &&
+                *step2_nbrs_ != NULL);
+
     for (i = 0; i < log_p_of_k; i++) {
         (*step2_nbrs_)[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
     }
@@ -138,6 +141,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     /* Step 2 */
     if (*step1_sendto == -1) {  /* calulate step2_nbrs only for participating ranks */
         int *digit = (int *) MPL_malloc(sizeof(int) * log_p_of_k, MPL_MEM_COLL);
+        MPIR_Assert(digit != NULL);
         int temprank = newrank, index = 0, remainder;
         int mask = 0x1;
         int phase = 0, cbit, cnt, nbr, power;

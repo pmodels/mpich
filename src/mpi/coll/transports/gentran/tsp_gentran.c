@@ -242,6 +242,7 @@ int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
     /* record incoming vertices */
     for (i = vtx_id - 1; i >= 0; i--) {
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, i);
+        MPIR_Assert(sched_fence != NULL);
         if (sched_fence->vtx_kind == MPII_GENUTIL_VTX_KIND__FENCE)
             /* no need to record this and any vertex before fence.
              * Dependency on the last fence call will be added by
@@ -271,6 +272,7 @@ void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
     fence_id = MPII_Genutil_sched_sink(sched);
     /* change the vertex kind from SINK to FENCE */
     vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, fence_id);
+    MPIR_Assert(sched_fence != NULL);
     sched_fence->vtx_kind = MPII_GENUTIL_VTX_KIND__FENCE;
     sched->last_fence = fence_id;
 }

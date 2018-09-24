@@ -219,6 +219,7 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+    MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
     /* schedule tree algo */

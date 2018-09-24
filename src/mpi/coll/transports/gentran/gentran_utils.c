@@ -310,6 +310,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     UT_array *in;
 
     vtx = (vtx_t *) utarray_eltptr(sched->vtcs, vtx_id);
+    MPIR_Assert(vtx != NULL);
     in = vtx->in_vtcs;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -325,6 +326,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     for (i = 0; i < n_in_vtcs; i++) {
         int in_vtx_id = *(int *) utarray_eltptr(in, i);
         vtx_t *in_vtx = (vtx_t *) utarray_eltptr(sched->vtcs, in_vtx_id);
+        MPIR_Assert(in_vtx != NULL);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtx_id));
         out_vtcs = in_vtx->out_vtcs;
         vtx_extend_utarray(out_vtcs, 1, &vtx_id);
@@ -344,6 +346,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 
         /* add vtx as outgoing vtx of last_fence */
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, sched->last_fence);
+        MPIR_Assert(sched_fence != NULL);
         out_vtcs = sched_fence->out_vtcs;
         vtx_extend_utarray(out_vtcs, 1, &vtx_id);
 
@@ -512,6 +515,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         /* free up the sched resources */
         for (i = 0; i < sched->total_vtcs; i++) {
             vtx_t *vtx = (vtx_t *) utarray_eltptr(sched->vtcs, i);
+            MPIR_Assert(vtx != NULL);
 
             if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
                 MPL_free(vtx->u.imcast.req);
