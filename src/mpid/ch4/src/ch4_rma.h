@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win);
@@ -187,7 +187,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                    datatype, target_rank, target_disp, win);
     else
@@ -238,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win, request);
@@ -295,7 +295,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -342,7 +342,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_fetch_and_op(origin_addr, result_addr,
                                                datatype, target_rank, target_disp, op, win);
     else
@@ -500,7 +500,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
     }
 
     av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
-    if ((r = MPIDI_av_is_local(av)))
+    if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
         mpi_errno = MPIDI_SHM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
                                                  target_rank, target_disp, target_count,
