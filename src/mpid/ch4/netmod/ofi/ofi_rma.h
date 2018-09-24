@@ -788,13 +788,16 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr,
                                                     result_addr, datatype,
                                                     target_rank, target_disp, win);
@@ -1221,13 +1224,16 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                                target_rank, target_disp, target_count,
                                                target_datatype, op, win, request);
@@ -1267,13 +1273,16 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                    result_addr, result_count, result_datatype,
                                                    target_rank, target_disp, target_count,
@@ -1306,13 +1315,16 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
                                                 target_rank, target_disp, op, win);
         goto fn_exit;
@@ -1390,13 +1402,16 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -1431,13 +1446,16 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    /* We have to disable network-based atomics in auto mode.
-     * Because concurrent atomics may be performed by CPU (e.g., op
-     * over shared memory, or op issues to process-self. */
-    if (!MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS)
+    if (
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+           /* We have to disable network-based atomics in auto mode.
+            * Because concurrent atomics may be performed by CPU (e.g., op
+            * over shared memory, or op issues to process-self.
+            * If use_hw_accumulate == TRUE is set, then all above ops are issued
+            * via network thus we can safely use network-based atomics. */
+           !MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate ||
 #endif
-    {
+           !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win);
