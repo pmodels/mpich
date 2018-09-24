@@ -156,9 +156,9 @@ static HYD_status fn_init(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     strtok(args[0], "=");
-    pmi_version = atoi(strtok(NULL, "="));
+    pmi_version = strtol(strtok(NULL, "="), NULL, 10);
     strtok(args[1], "=");
-    pmi_subversion = atoi(strtok(NULL, "="));
+    pmi_subversion = strtol(strtok(NULL, "="), NULL, 10);
 
     if (pmi_version == 1 && pmi_subversion <= 1)
         tmp = MPL_strdup("cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n");
