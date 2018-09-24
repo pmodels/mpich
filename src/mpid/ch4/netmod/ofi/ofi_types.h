@@ -275,6 +275,7 @@ typedef struct {
     uint64_t max_atomic_count;
     uint64_t max_compare_atomic_count;
     uint64_t max_fetch_atomic_count;
+    bool mpi_acc_valid;
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
