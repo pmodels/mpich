@@ -774,7 +774,7 @@ static HYD_status fn_abort(int fd, int pid, int pgid, char *args[])
     if (HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "exitcode") == NULL)
         HYDU_ERR_POP(status, "cannot find token: exitcode\n");
 
-    exitcode = atoi(HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "exitcode"));
+    exitcode = strtol(HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "exitcode"), NULL, 10);
 
   fn_exit:
     /* clean everything up and exit */
