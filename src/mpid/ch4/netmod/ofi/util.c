@@ -260,6 +260,32 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
 
+#undef FUNCNAME
+#define FUNCNAME check_mpi_acc_valid
+#undef FCNAME
+#define FCNAME MPL_QUOTE(check_mpi_acc_valid)
+MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
+{
+    bool valid_flag = false;
+
+    /* Check if the <datatype, op> is supported by MPICH. Note that MPICH
+     * supports more combinations than that specified in standard (see definition
+     * of these checking routines for extended support). */
+
+    /* Predefined reduce operation, NO_OP, REPLACE */
+    if (op != MPI_OP_NULL) {
+        int mpi_errno;
+        mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (dtype);
+        if (mpi_errno == MPI_SUCCESS)
+            valid_flag = TRUE;
+    } else {
+        /* Compare and swap */
+        if (MPIR_Type_is_rma_atomic(dtype))
+            valid_flag = true;
+    }
+
+    return valid_flag;
+}
 
 #undef FUNCNAME
 #define FUNCNAME mpi_to_ofi
@@ -476,6 +502,7 @@ static inline void create_dt_map()
             _TBL.max_atomic_count = 0;
             _TBL.max_fetch_atomic_count = 0;
             _TBL.max_compare_atomic_count = 0;
+            _TBL.mpi_acc_valid = check_mpi_acc_valid(mpi_dtypes[i], mpi_ops[j]);
             ssize_t ret;
             size_t atomic_count;
 
