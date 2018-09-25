@@ -85,9 +85,15 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "use_hw_accumulate", "true");
 #endif
 
+#ifdef TEST_ACCOPS_INFO
+    if (info == MPI_INFO_NULL)
+        MPI_Info_create(&info);
+    MPI_Info_set(info, "which_accumulate_ops", "sum,no_op");
+#endif
+
     MPI_Win_create(val_ptr, sizeof(TYPE_C) * nproc, sizeof(TYPE_C), info, MPI_COMM_WORLD, &win);
 
-#ifdef TEST_HWACC_INFO
+#if defined(TEST_HWACC_INFO) || defined(TEST_ACCOPS_INFO)
     MPI_Info_free(&info);
 #endif
 
