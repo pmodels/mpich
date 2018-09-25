@@ -9,7 +9,6 @@
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
-#include <assert.h>
 
 /* #define ALLTOALL */
 
@@ -446,7 +445,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #endif
 
                 if (fd->is_agg && buffered_io_size) {
-                    assert(aggs_client_count != 0);
+                    ADIOI_Assert(aggs_client_count != 0);
                     /* make sure we actually have the data to write out */
                     agg_comm_statuses = (MPI_Status *)
                         ADIOI_Malloc(aggs_client_count * sizeof(MPI_Status));
@@ -724,7 +723,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
                     if (flat_file->blocklens[i])
                         break;
                 }
-                assert(i > -1);
+                ADIOI_Assert(i > -1);
                 end_byte_off += flat_file->indices[i] + flat_file->blocklens[i] - 1;
                 end_byte_off -= flat_file->indices[0];
             } else {
@@ -772,7 +771,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
                     if (flat_file->blocklens[i])
                         break;
                 }
-                assert(i >= 0);
+                ADIOI_Assert(i >= 0);
                 /* back up a whole filetype, and put back up to the
                  * last byte of the last non-zero offlen pair */
                 /* end_byte_off = (end_byte_off - filetype_extent) +
