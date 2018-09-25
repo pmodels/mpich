@@ -288,26 +288,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               MPIR_Request * message, MPIR_Request ** rreqp)
+                                               MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
 
-    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_count) = count;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
-    *rreqp = message;
 
     /* MPIDI_CS_ENTER(); */
     if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_BUSY) {
         MPIDI_CH4U_REQUEST(message, req->status) |= MPIDI_CH4U_REQ_UNEXP_CLAIMED;
     } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
-        message->kind = MPIR_REQUEST_KIND__RECV;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;

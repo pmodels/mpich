@@ -205,7 +205,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
     } else if (mode == MPIDI_OFI_USE_EXISTING) {
         rreq = *request;
-        rreq->kind = MPIR_REQUEST_KIND__RECV;
     } else {
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
         goto fn_fail;
@@ -356,8 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
-                                                 MPI_Datatype datatype,
-                                                 MPIR_Request * message, MPIR_Request ** rreqp)
+                                                 MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -366,13 +364,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message, rreqp);
+        mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
         goto fn_exit;
     }
 
-    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
-
-    *rreqp = rreq = message;
+    rreq = message;
 
     av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
     mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
