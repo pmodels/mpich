@@ -124,7 +124,7 @@ extern "C" {
 
     /* CHKPMEM_REGISTER is used for memory allocated within another routine */
 
-/* Memory used and freed within the current scopy (alloca if feasible) */
+/* Memory used and freed within the current scope (alloca if feasible) */
 /* Configure with --enable-alloca to set USE_ALLOCA */
 #if defined(HAVE_ALLOCA) && defined(USE_ALLOCA)
 #ifdef HAVE_ALLOCA_H
