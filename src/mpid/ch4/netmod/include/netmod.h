@@ -106,7 +106,7 @@ typedef int (*MPIDI_NM_mpi_irecv_t) (void *buf, MPI_Aint count, MPI_Datatype dat
                                      int tag, MPIR_Comm * comm, int context_offset,
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_imrecv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                      MPIR_Request * message, MPIR_Request ** rreqp);
+                                      MPIR_Request * message);
 typedef int (*MPIDI_NM_mpi_cancel_recv_t) (MPIR_Request * rreq);
 typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (size_t size, MPIR_Info * info_ptr);
 typedef int (*MPIDI_NM_mpi_free_mem_t) (void *ptr);
@@ -799,8 +799,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, MPI_Aint count, MPI_D
                                                 int context_offset, MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                 MPIR_Request * message,
-                                                 MPIR_Request ** rreqp) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPIR_Request * message) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
     MPL_STATIC_INLINE_SUFFIX;

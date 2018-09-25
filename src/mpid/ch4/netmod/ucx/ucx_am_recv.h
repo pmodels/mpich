@@ -53,16 +53,14 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
-                                      MPI_Aint count,
-                                      MPI_Datatype datatype,
-                                      MPIR_Request * message, MPIR_Request ** rreqp)
+                                      MPI_Aint count, MPI_Datatype datatype, MPIR_Request * message)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
 
-    ret = MPIDIG_mpi_imrecv(buf, count, datatype, message, rreqp);
+    ret = MPIDIG_mpi_imrecv(buf, count, datatype, message);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
     return ret;

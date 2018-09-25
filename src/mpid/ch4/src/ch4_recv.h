@@ -196,13 +196,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
+
+    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
+    message->kind = MPIR_REQUEST_KIND__RECV;
+    *rreq = message;    /* SHM will override this pointer */
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreq);
+    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
         mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreq);
     else
-        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreq);
+        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -225,6 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
                                          MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMRECV);
 
@@ -232,13 +238,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
         MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
         goto fn_exit;
     }
+
+    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
+    message->kind = MPIR_REQUEST_KIND__RECV;
+    *rreqp = message;   /* SHM will override this pointer */
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
+    mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
         mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreqp);
     else
-        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
+        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
