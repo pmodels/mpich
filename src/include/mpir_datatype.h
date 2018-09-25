@@ -16,7 +16,7 @@
  * automatic and less error prone */
 /* FIXME: Given that this is relatively static, an adequate alternative is
    to provide a check that this value is valid. */
-#define MPIR_DATATYPE_N_BUILTIN 69
+#define MPIR_DATATYPE_N_BUILTIN 70
 #define MPIR_DTYPE_BEGINNING  0
 #define MPIR_DTYPE_END       -1
 
@@ -154,7 +154,7 @@ struct MPIR_Datatype {
 #endif
 };
 
-extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN + 1];
+extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
