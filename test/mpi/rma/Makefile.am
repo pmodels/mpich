@@ -112,6 +112,12 @@ noinst_PROGRAMS =          \
     fetch_and_op_long_hwacc        \
     fetch_and_op_double_hwacc      \
     fetch_and_op_long_double_hwacc \
+    fetch_and_op_char_accop_hwacc        \
+    fetch_and_op_short_accop_hwacc       \
+    fetch_and_op_int_accop_hwacc         \
+    fetch_and_op_long_accop_hwacc        \
+    fetch_and_op_double_accop_hwacc      \
+    fetch_and_op_long_double_accop_hwacc \
     get_accumulate_short   \
     get_accumulate_long    \
     get_accumulate_double  \
@@ -230,6 +236,20 @@ fetch_and_op_int_hwacc_SOURCES         = fetch_and_op.c
 fetch_and_op_long_hwacc_SOURCES        = fetch_and_op.c
 fetch_and_op_double_hwacc_SOURCES      = fetch_and_op.c
 fetch_and_op_long_double_hwacc_SOURCES = fetch_and_op.c
+
+fetch_and_op_char_accop_hwacc_CPPFLAGS       = -DFOP_TYPE_CHAR -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+fetch_and_op_short_accop_hwacc_CPPFLAGS      = -DFOP_TYPE_SHORT -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+fetch_and_op_int_accop_hwacc_CPPFLAGS        = -DFOP_TYPE_INT -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+fetch_and_op_long_accop_hwacc_CPPFLAGS       = -DFOP_TYPE_LONG -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+fetch_and_op_double_accop_hwacc_CPPFLAGS     = -DFOP_TYPE_DOUBLE -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+fetch_and_op_long_double_accop_hwacc_CPPFLAGS= -DFOP_TYPE_LONG_DOUBLE -DTEST_HWACC_INFO -DTEST_ACCOPS_INFO $(AM_CPPFLAGS)
+
+fetch_and_op_char_accop_hwacc_SOURCES        = fetch_and_op.c
+fetch_and_op_short_accop_hwacc_SOURCES       = fetch_and_op.c
+fetch_and_op_int_accop_hwacc_SOURCES         = fetch_and_op.c
+fetch_and_op_long_accop_hwacc_SOURCES        = fetch_and_op.c
+fetch_and_op_double_accop_hwacc_SOURCES      = fetch_and_op.c
+fetch_and_op_long_double_accop_hwacc_SOURCES = fetch_and_op.c
 
 get_accumulate_short_CPPFLAGS    = -DGACC_TYPE_SHORT $(AM_CPPFLAGS)
 get_accumulate_long_CPPFLAGS     = -DGACC_TYPE_LONG $(AM_CPPFLAGS)
