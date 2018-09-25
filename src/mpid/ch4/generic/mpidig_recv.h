@@ -335,48 +335,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIG_mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
-                                          MPI_Aint count,
-                                          MPI_Datatype datatype,
-                                          MPIR_Request * message, MPI_Status * status)
-{
-    int mpi_errno = MPI_SUCCESS, active_flag;
-    MPID_Progress_state state;
-    MPIR_Request *rreq = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MRECV);
-
-    mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    MPID_Progress_start(&state);
-
-    while (!MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_wait(&state);
-    }
-
-    MPID_Progress_end(&state);
-
-    MPIR_Request_extract_status(rreq, status);
-
-    mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
-    MPIR_Request_free(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MRECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDIG_mpi_irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
