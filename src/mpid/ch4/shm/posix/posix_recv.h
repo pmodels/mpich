@@ -173,12 +173,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_IMRECV);
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
-    if (message == NULL) {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
-        *rreqp = rreq;
-        goto fn_exit;
-    }
-
     MPIR_Assert(message != NULL);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
