@@ -292,15 +292,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
-
-    if (message == NULL) {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
-        *rreqp = rreq;
-        goto fn_exit;
-    }
 
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_buffer) = buf;
