@@ -202,7 +202,8 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                 newcnts[i] = recvcount;
         }
 
-        newdisps[0] = 0;
+        if (pof2)
+            newdisps[0] = 0;
         for (i = 1; i < pof2; i++)
             newdisps[i] = newdisps[i - 1] + newcnts[i - 1];
 
