@@ -1312,6 +1312,15 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum fi_op fi_op;
+    enum fi_datatype fi_dt;
+    size_t offset, max_count, max_size, dt_size, bytes;
+    MPI_Aint true_lb ATTRIBUTE((unused));
+    void *buffer, *tbuffer, *rbuffer;
+    struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_rma_ioc targetv;
+    struct fi_msg_atomic msg;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
 
@@ -1330,17 +1339,84 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
         goto fn_exit;
     }
 
-    /*  This can be optimized by directly calling the fi directly
-     *  and avoiding all the datatype processing of the full
-     *  MPID_Get_accumulate
-     */
-    mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, 1, datatype,
-                                            result_addr, 1, datatype,
-                                            target_rank, target_disp, 1, datatype, op, win, NULL);
+    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    if (unlikely(target_rank == MPI_PROC_NULL))
+        goto fn_exit;
+
+    offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+
+    MPIDI_Datatype_check_size_lb(datatype, 1, bytes, true_lb);
+    if (bytes == 0)
+        goto fn_exit;
+
+    buffer = (char *) origin_addr;      /* ignore true_lb, which should be always zero */
+    rbuffer = (char *) result_addr;
+    tbuffer = (void *) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
+
+    MPIDI_OFI_query_acc_atomic_support(datatype, MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT,
+                                       op, win, &fi_dt, &fi_op, &max_count, &dt_size);
+    if (max_count == 0)
+        goto am_fallback;
+
+    max_size = MPIDI_OFI_check_acc_order_size(win, dt_size);
+    /* It's impossible to transfer data if buffer size is smaller than basic datatype size.
+     *  TODO: we assume all processes should use the same max_size and dt_size, true ? */
+    if (max_size < dt_size)
+        goto am_fallback;
+
+    if (unlikely(op == MPI_NO_OP)) {
+        /* Fetch_and_op is READ and WRITE, except NO_OP (it is READ only). */
+        MPIDI_CH4U_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+    } else {
+        MPIDI_CH4U_wait_am_acc(win, target_rank,
+                               (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
+                                MPIDI_CH4I_ACCU_ORDER_WAW));
+    }
+
+    originv.addr = (void *) buffer;
+    originv.count = 1;
+    resultv.addr = (void *) rbuffer;
+    resultv.count = 1;
+    targetv.addr = (uint64_t) tbuffer;
+    targetv.count = 1;
+    targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
+
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&originv);
+    msg.msg_iov = &originv;
+    msg.desc = NULL;
+    msg.iov_count = 1;
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank);
+    msg.rma_iov = &targetv;
+    msg.rma_iov_count = 1;
+    msg.datatype = fi_dt;
+    msg.op = fi_op;
+    msg.context = NULL;
+    msg.data = 0;
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&resultv);
+    MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
+                          fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
+                                             NULL, 1, 0), rdma_readfrom);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+  am_fallback:
+    if (unlikely(op == MPI_NO_OP)) {
+        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+            /* Wait for OFI fetch_and_op to complete.
+             * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+            MPIDI_OFI_win_progress_fence(win);
+        }
+    } else {
+        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+            MPIDI_OFI_win_progress_fence(win);
+        }
+    }
+    return MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
+                                       target_rank, target_disp, op, win);
 }
 
 #undef FUNCNAME
