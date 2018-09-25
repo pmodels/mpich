@@ -41,9 +41,7 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
-                                      MPI_Aint count,
-                                      MPI_Datatype datatype,
-                                      MPIR_Request * message, MPIR_Request ** rreqp)
+                                      MPI_Aint count, MPI_Datatype datatype, MPIR_Request * message)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
