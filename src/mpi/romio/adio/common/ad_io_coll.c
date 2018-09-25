@@ -671,6 +671,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
     MPI_Type_size_x(fd->filetype, &filetype_size);
+    ADIOI_Assert(filetype_size != 0);
     MPI_Type_extent(fd->filetype, &filetype_extent);
     MPI_Type_size_x(fd->etype, &etype_size);
     MPI_Type_size_x(buftype, &buftype_size);
