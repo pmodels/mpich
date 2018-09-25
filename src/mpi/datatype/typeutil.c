@@ -16,7 +16,7 @@
 #endif
 
 /* Preallocated datatype objects */
-MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN + 1] = { {0}
+MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN] = { {0}
 };
 MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC] = { {0}
 };
