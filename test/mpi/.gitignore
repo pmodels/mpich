@@ -189,6 +189,7 @@
 /comm/icm
 /comm/icsplit
 /comm/probe_intercomm
+/comm/testlist
 /confdb
 /cxx/attr/attricx
 /cxx/attr/attrtx
