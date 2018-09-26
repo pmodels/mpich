@@ -113,7 +113,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 #endif
 
     /* we reserve one bit to differentiate AMs from native messages */
-    *tag_ub = MPIDI_UCX_TAG_USABLE_BITS;
+    *tag_ub = MPIR_TAG_USABLE_BITS;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);

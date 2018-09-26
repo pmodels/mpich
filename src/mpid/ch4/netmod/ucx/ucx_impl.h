@@ -33,7 +33,7 @@ static inline uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int sourc
     ucp_tag = (ucp_tag << MPIDI_UCX_SOURCE_SHIFT);
     ucp_tag |= source;
     ucp_tag = (ucp_tag << MPIDI_UCX_TAG_SHIFT);
-    ucp_tag |= (MPIDI_UCX_TAG_MASK & tag);
+    ucp_tag |= tag;
     return ucp_tag;
 }
 
@@ -42,7 +42,7 @@ static inline uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
     uint64_t tag_mask = 0xffffffffffffffff;
     MPIR_TAG_CLEAR_ERROR_BITS(tag_mask);
     if (mpi_tag == MPI_ANY_TAG)
-        tag_mask &= ~MPIDI_UCX_TAG_USABLE_BITS;
+        tag_mask &= ~MPIR_TAG_USABLE_BITS;
 
     if (src == MPI_ANY_SOURCE)
         tag_mask &= ~(MPIDI_UCX_SOURCE_MASK);
