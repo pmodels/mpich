@@ -116,14 +116,34 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
                 goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);
+
+            /* NOTE: skipping the validation MPIR_Info_valid_ptr(info_ptr, ..)
+             * because info_ptr is allowed to be NULL, e.g., with MPI_INFO_NULL
+             * as an argumement to MPI_Comm_dup_with_info. */
         }
         MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Comm_dup_with_info_impl(comm_ptr, info_ptr, &newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Assert(comm_ptr != NULL);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* Copy infohints from comm to newcomm */
+    mpi_errno = MPII_Comm_copy_info(comm_ptr, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* Apply the provided info hints */
+    mpi_errno = MPID_Comm_set_info_mutable(newcomm_ptr, info_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    mpi_errno = MPID_Comm_set_info_immutable(newcomm_ptr, info_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */

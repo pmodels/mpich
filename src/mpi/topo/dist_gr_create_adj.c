@@ -74,6 +74,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *comm_dist_graph_ptr = NULL;
     MPIR_Topology *topo_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPII_Dist_graph_topology *dist_graph_ptr = NULL;
     MPIR_CHKPMEM_DECL(5);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
@@ -98,6 +99,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm_old, comm_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -112,6 +114,11 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
             if (comm_ptr) {
                 MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             }
+
+            /* NOTE: probably no need to validate info_ptr, because
+             * info_ptr can be NULL when the arg info = MPI_INFO_NULL.
+             * MPI_INFO_NULL seems to be a valid argument for
+             * MPI_Dist_graph_create_adjacent */
 
             MPIR_ERRTEST_ARGNEG(indegree, "indegree", mpi_errno);
             MPIR_ERRTEST_ARGNEG(outdegree, "outdegree", mpi_errno);
@@ -147,6 +154,10 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
     mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+    /* Copy infohints from comm to newcomm */
+    mpi_errno = MPII_Comm_copy_info(comm_ptr, comm_dist_graph_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Create the topology structure */
     MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
@@ -179,6 +190,14 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Apply the provided info hints */
+    mpi_errno = MPID_Comm_set_info_mutable(comm_dist_graph_ptr, info_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    mpi_errno = MPID_Comm_set_info_immutable(comm_dist_graph_ptr, info_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
     MPIR_CHKPMEM_COMMIT();

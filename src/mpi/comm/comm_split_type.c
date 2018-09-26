@@ -33,6 +33,7 @@ static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                       MPIR_Comm ** newcomm_ptr);
 static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal);
 
+
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -363,9 +364,16 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 
     mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, split_type, key, info_ptr, &newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-    if (newcomm_ptr)
+    if (newcomm_ptr) {
+        mpi_errno = MPID_Comm_set_info_mutable(newcomm_ptr, info_ptr);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+        mpi_errno = MPID_Comm_set_info_immutable(newcomm_ptr, info_ptr);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+
         MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
-    else
+    } else
         *newcomm = MPI_COMM_NULL;
 
     /* ... end of body of routine ... */

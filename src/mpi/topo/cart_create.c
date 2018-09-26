@@ -110,6 +110,12 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         } else {
             mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, newsize, &newcomm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
+            /* Copy infohints from comm to newcomm only if MPII_Comm_copy created a new comm */
+            if (newcomm_ptr) {
+                mpi_errno = MPII_Comm_copy_info(comm_ptr, newcomm_ptr);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
             rank = comm_ptr->rank;
         }
 

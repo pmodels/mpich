@@ -166,6 +166,10 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     mpi_errno = MPII_Comm_copy(comm_ptr, comm_size, &comm_dist_graph_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(comm_dist_graph_ptr != NULL);
+    /* Copy infohints from comm to newcomm */
+    mpi_errno = MPII_Comm_copy_info(comm_ptr, comm_dist_graph_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* rin is an array of size comm_size containing pointers to arrays of
      * rin_sizes[x].  rin[x] is locally known number of edges into this process

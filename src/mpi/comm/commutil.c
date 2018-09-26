@@ -616,11 +616,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
 
-    /* Copy over the info hints from the original communicator. */
-    mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* Skip copying Info hints - they are copied at device level, if needed. */
 
     *outcomm_ptr = newcomm_ptr;
 

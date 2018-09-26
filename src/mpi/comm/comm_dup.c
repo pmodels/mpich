@@ -179,8 +179,14 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
 
     /* ... body of routine ...  */
 
+    MPIR_Assert(comm_ptr != NULL);
     mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Copy infohints from comm to newcomm */
+    mpi_errno = MPII_Comm_copy_info(comm_ptr, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */

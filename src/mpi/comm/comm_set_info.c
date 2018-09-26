@@ -132,7 +132,11 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Comm_set_info_impl(comm_ptr, info_ptr);
+
+    MPIR_Assert(comm_ptr != NULL);
+    /* Set mutable hints only. Immutable hints are not be set here
+     * because they can be set only from the comm creation routines */
+    mpi_errno = MPID_Comm_set_info_mutable(comm_ptr, info_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
     /* ... end of body of routine ... */

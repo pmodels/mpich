@@ -112,7 +112,8 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_get_info_impl(comm_ptr, &info_used_ptr);
+    MPIR_Assert(comm_ptr != NULL);
+    mpi_errno = MPID_Comm_get_info(comm_ptr, &info_used_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
