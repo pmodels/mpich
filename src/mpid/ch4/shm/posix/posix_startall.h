@@ -23,6 +23,7 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_prequest_free_hook(MPIR_Request * req)
 {
+    MPIDIG_prequest_free_hook(req);
 }
 
 #endif /* POSIX_STARTALL_H_INCLUDED */
