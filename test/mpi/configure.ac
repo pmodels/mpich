@@ -1587,6 +1587,7 @@ AC_OUTPUT(maint/testmerge \
           coll/Makefile \
 	  coll/testlist \
           comm/Makefile \
+          comm/testlist \
           datatype/Makefile \
           datatype/testlist \
           errhan/Makefile \
