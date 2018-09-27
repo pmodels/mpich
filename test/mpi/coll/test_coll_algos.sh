@@ -90,7 +90,7 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_single_buffer recexch_multiple_buffer tree_kary tree_knomial"
+algo_names="recexch_single_buffer recexch_multiple_buffer recexch_single_buffer_without_dtcopy recexch_multiple_buffer_without_dtcopy tree_kary tree_knomial"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
