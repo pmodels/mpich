@@ -129,16 +129,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
     state->progress_count = OPA_load_int(&MPIDI_CH4_Global.progress_count);
-    ret = MPID_Progress_test();
-    if (unlikely(ret))
-        MPIR_ERR_POP(ret);
-
-    while (state->progress_count == OPA_load_int(&MPIDI_CH4_Global.progress_count)) {
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    do {
         ret = MPID_Progress_test();
         if (unlikely(ret))
             MPIR_ERR_POP(ret);
-    }
+        if (state->progress_count != OPA_load_int(&MPIDI_CH4_Global.progress_count))
+            break;
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    } while (1);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
