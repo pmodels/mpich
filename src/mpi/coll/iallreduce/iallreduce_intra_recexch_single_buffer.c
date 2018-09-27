@@ -30,6 +30,7 @@ int MPIR_Iallreduce_intra_recexch_single_buffer(const void *sendbuf, void *recvb
                                                       datatype, op,
                                                       comm, req,
                                                       MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
+                                                      MPIR_IALLREDUCE_RECEXCH_TYPE_WITH_DTCOPY,
                                                       MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL);
 
     return mpi_errno;
