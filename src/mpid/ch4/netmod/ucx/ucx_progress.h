@@ -103,7 +103,7 @@ static inline int MPIDI_NM_progress(int vni, int blocking)
     ucp_tag_message_h message_handle;
     /* check for active messages */
     message_handle =
-        ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
+        ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_MASK, MPIDI_UCX_AM_MASK, 1, &info);
     while (message_handle) {
         am_buf = MPL_malloc(info.length, MPL_MEM_BUFFER);
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
@@ -120,7 +120,8 @@ static inline int MPIDI_NM_progress(int vni, int blocking)
         MPIDI_UCX_am_handler(am_buf, info.length);
         MPL_free(am_buf);
         message_handle =
-            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
+            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_MASK, MPIDI_UCX_AM_MASK, 1,
+                             &info);
 
     }
 

@@ -74,6 +74,7 @@ typedef int16_t MPIDI_Rank_t;
 #elif CH3_RANK_BITS == 32
 typedef int32_t MPIDI_Rank_t;
 #endif /* CH3_RANK_BITS */
+#define MPID_TAG_BITS (MPIR_Process.attrs.tag_bits)
 
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16

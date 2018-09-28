@@ -23,8 +23,6 @@
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_TAG_USABLE_BITS      (MPIR_TAG_USABLE_BITS >> 1)
-#define MPIDI_UCX_AM_TAG               (MPIDI_UCX_TAG_USABLE_BITS + 1)
 
 typedef struct {
     int avtid;
@@ -48,16 +46,17 @@ extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 /* UCX TAG Layout */
 
 /* 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567
- *  context_id (16) |source rank (16) | Message Tag (32)+ERROR BITS
+ *  Active Message (1) | context_id (16) |source rank (16) | Message Tag (31)+ERROR BITS
  */
 
 #define MPIDI_UCX_CONTEXT_TAG_BITS 16
 #define MPIDI_UCX_CONTEXT_RANK_BITS 16
-#define UCX_TAG_BITS 32
+#define UCX_TAG_BITS 31
 
-#define MPIDI_UCX_TAG_MASK      (0x00000000FFFFFFFFULL)
-#define MPIDI_UCX_SOURCE_MASK   (0x0000FFFF00000000ULL)
-#define MPIDI_UCX_TAG_SHIFT     (32)
+#define MPIDI_UCX_TAG_MASK      (0x000000007FFFFFFFULL)
+#define MPIDI_UCX_SOURCE_MASK   (0x00007FFF80000000ULL)
+#define MPIDI_UCX_AM_MASK       (0x8000000000000000ULL)
+#define MPIDI_UCX_TAG_SHIFT     (31)
 #define MPIDI_UCX_SOURCE_SHIFT  (16)
 
 #endif /* UCX_TYPES_H_INCLUDED */

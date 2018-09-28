@@ -26,6 +26,7 @@ typedef struct PreDefined_attrs {
     int host;                   /* host */
     int io;                     /* standard io allowed */
     int lastusedcode;           /* last used error code (MPI-2) */
+    int tag_bits;               /* number of tag bits */
     int tag_ub;                 /* Maximum message tag */
     int universe;               /* Universe size from mpiexec (MPI-2) */
     int wtime_is_global;        /* Wtime is global over processes in COMM_WORLD */

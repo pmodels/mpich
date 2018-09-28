@@ -54,11 +54,11 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
         }
     }
 
-    if ((wc->tag & MPID_PROTOCOL_MASK) == MPID_SYNC_SEND) {
+    if ((wc->tag & MPID_OFI_PROTOCOL_MASK) == MPID_OFI_SYNC_SEND) {
         /* ---------------------------------------------------- */
         /* Ack the sync send and wait for the send request      */
         /* completion(when callback executed.  A protocol bit   */
-        /* MPID_SYNC_SEND_ACK is set in the tag bits to provide */
+        /* MPID_OFI_SYNC_SEND_ACK is set in the tag bits to provide */
         /* separation of MPI messages and protocol messages     */
         /* ---------------------------------------------------- */
         vc = REQ_OFI(rreq)->vc;
@@ -68,10 +68,10 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
         }
 #if API_SET == API_SET_1
         ssend_bits = init_sendtag(rreq->dev.match.parts.context_id,
-                                  rreq->comm->rank, rreq->status.MPI_TAG, MPID_SYNC_SEND_ACK);
+                                  rreq->comm->rank, rreq->status.MPI_TAG, MPID_OFI_SYNC_SEND_ACK);
 #elif API_SET == API_SET_2
         ssend_bits = init_sendtag_2(rreq->dev.match.parts.context_id,
-                                    rreq->status.MPI_TAG, MPID_SYNC_SEND_ACK);
+                                    rreq->status.MPI_TAG, MPID_OFI_SYNC_SEND_ACK);
 #endif
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
@@ -150,7 +150,7 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
         REQ_OFI(sreq)->pack_buffer = send_buffer;
     }
 
-    if (send_type == MPID_SYNC_SEND) {
+    if (send_type == MPID_OFI_SYNC_SEND) {
         /* ---------------------------------------------------- */
         /* For syncronous send, we post a receive to catch the  */
         /* match ack, but use the tag protocol bits to avoid    */
@@ -168,7 +168,7 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
 #elif API_SET == API_SET_2
         ssend_match = init_recvtag_2(&ssend_mask, comm->context_id + context_offset, tag);
 #endif
-        ssend_match |= MPID_SYNC_SEND_ACK;
+        ssend_match |= MPID_OFI_SYNC_SEND_ACK;
         FI_RC_RETRY(fi_trecv(gl_data.endpoint,      /* endpoint    */
                            NULL,                    /* recvbuf     */
                            0,                       /* data sz     */
@@ -284,7 +284,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    if (likely((send_type != MPID_SYNC_SEND) &&
+    if (likely((send_type != MPID_OFI_SYNC_SEND) &&
                 dt_contig &&
                 (data_sz <= gl_data.max_buffered_send)))
     {
@@ -349,7 +349,7 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
-                         tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_SYNC_SEND);
+                         tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_OFI_SYNC_SEND);
     END_FUNC(FCNAME);
     return mpi_errno;
 }
@@ -367,7 +367,7 @@ int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
-                         tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_SYNC_SEND);
+                         tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_OFI_SYNC_SEND);
     END_FUNC(FCNAME);
     return mpi_errno;
 }
