@@ -11,15 +11,15 @@ include $(top_srcdir)/Makefile.mtest
 ACLOCAL_AMFLAGS = -I confdb
 
 static_subdirs = util attr basic datatype coll comm errhan group info init \
-                 pt2pt rma topo errors manual perf mpi_t impls ckpoint ft dtpools
+                 pt2pt rma topo errors manual perf mpi_t impls ckpoint dtpools
 all_lang_subdirs = f77 cxx f90 f08
 
 # DIST_SUBDIRS must be a superset of SUBDIRS, and automake must be able to
 # *statically* compute its contents.  The good news is that we can mostly avoid
 # duplication because automake is able to "see" into simple variable
 # assignments that are not driven by a configure @-substitution variable.
-DIST_SUBDIRS = $(static_subdirs) io $(all_lang_subdirs) threads spawn .
-SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) $(ckpointdir) $(ftdir) .
+DIST_SUBDIRS = $(static_subdirs) io $(all_lang_subdirs) threads spawn ft .
+SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) $(ckpointdir) ft .
 
 EXTRA_DIST = maint/common.defn maint/f77tof90 maint/testmerge.in maint/updatefiles testlist.in
 

@@ -385,6 +385,7 @@ ftdir="#ft"
 if test "$first_pm" = "hydra" -a  "$enable_strictmpi" = "no" -a "$enable_ft_tests" = "yes" ; then
     ftdir="ft"
 fi
+AM_CONDITIONAL(BUILD_FT, [test "$enable_ft_tests" = "yes"])
 AC_SUBST(ftdir)
 
 # Setup "comm_overlap" variable based on whether comm_overlap tests
