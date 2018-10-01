@@ -945,6 +945,7 @@
 /f90/rma/Makefile.sm
 /f90/rma/aintf90.f90
 /f90/rma/baseattrwinf90
+/f90/rma/baseattrwinf90.f90
 /f90/rma/c2f2cwinf90
 /f90/rma/c2f2cwinf90.f90
 /f90/rma/c2f902cwin.c
@@ -953,7 +954,9 @@
 /f90/rma/winaccf90
 /f90/rma/winaccf90.f90
 /f90/rma/winattr2f90
+/f90/rma/winattr2f90.f90
 /f90/rma/winattrf90
+/f90/rma/winattrf90.f90
 /f90/rma/winerrf90
 /f90/rma/winerrf90.f90
 /f90/rma/winfencef90
