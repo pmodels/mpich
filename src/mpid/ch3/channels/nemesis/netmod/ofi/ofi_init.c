@@ -234,9 +234,9 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     PMI_RC(PMI_KVS_Commit(kvsname), pmi);
 
     /* -------------------------------- */
-    /* Set the MPI maximum tag value    */
+    /* Set the number of tag bits       */
     /* -------------------------------- */
-    MPIR_Process.attrs.tag_ub = (1 << MPIDI_OFI_TAG_BITS) - 1;
+    MPIR_Process.tag_bits = MPIDI_OFI_TAG_BITS;
 
     /* --------------------------------- */
     /* Wait for all the ranks to publish */
