@@ -43,6 +43,7 @@ typedef struct MPIR_Process_t {
                                          * that is separate from user's
                                          * versions */
     PreDefined_attrs attrs;     /* Predefined attribute values */
+    int tag_bits;               /* number of tag bits supported */
 
 #ifdef HAVE_HWLOC
     hwloc_topology_t hwloc_topology;    /* HWLOC topology */
