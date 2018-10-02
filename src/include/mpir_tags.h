@@ -44,35 +44,30 @@
 #define MPIR_LAST_HCOLL_TAG           (MPIR_FIRST_HCOLL_TAG + 255)
 #define MPIR_FIRST_NBC_TAG            (MPIR_LAST_HCOLL_TAG + 1)
 
+#define MPIR_TAG_BITS_DEFAULT (31)
+
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
  * only negative tag in MPICH is MPI_ANY_TAG which is checked seperately, but
  * if there is a time where negative tags become more common, this setup won't
  * work anymore. */
 
+/* MPID_TAG_BITS should be declared by device later */
+#ifdef HAVE_TAG_ERROR_BITS
 /* This bitmask can be used to manually mask the tag space wherever it might
  * be necessary to do so (for instance in the receive queue */
-#ifdef HAVE_TAG_ERROR_BITS
-#define MPIR_TAG_ERROR_BIT (1 << 30)
-#else
-#define MPIR_TAG_ERROR_BIT
-#endif
-
+#define MPIR_TAG_ERROR_BIT (1 << (MPIR_Process.tag_bits - 1))
 /* This bitmask is used to differentiate between a process failure
  * (MPIX_ERR_PROC_FAILED) and any other kind of failure (MPI_ERR_OTHER). */
-#ifdef HAVE_TAG_ERROR_BITS
-#define MPIR_TAG_PROC_FAILURE_BIT (1 << 29)
+#define MPIR_TAG_PROC_FAILURE_BIT (1 << (MPIR_Process.tag_bits - 2))
+#define MPIR_TAG_ERROR_BITS (2)
 #else
-#define MPIR_TAG_PROC_FAILURE_BIT
+#define MPIR_TAG_ERROR_BITS (0)
 #endif
 
 /* This bitmask is used to differentiate between collective operations
    with user-supplied tags and internally-defined tags. */
-#ifdef HAVE_TAG_ERROR_BITS
-#define MPIR_TAG_COLL_BIT (1 << 28)
-#else
-#define MPIR_TAG_COLL_BIT (1 << 30)
-#endif
+#define MPIR_TAG_COLL_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1))
 
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
@@ -118,11 +113,7 @@
 #define MPIR_TAG_MASK_ERROR_BITS(tag) (tag)
 #endif
 
-/* This macro defines tags bits which are reserved by the MPI layer */
-#ifdef HAVE_TAG_ERROR_BITS
-#define MPIR_TAG_USABLE_BITS (INT_MAX & ~(MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_COLL_BIT))
-#else
-#define MPIR_TAG_USABLE_BITS (INT_MAX & ~MPIR_TAG_COLL_BIT)
-#endif
+/* This macro defines tag bits available for user tags */
+#define MPIR_TAG_USABLE_BITS ((1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1)) - 1)
 
 #endif /* MPIR_TAGS_H_INCLUDED */
