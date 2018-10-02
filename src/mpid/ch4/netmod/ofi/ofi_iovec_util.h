@@ -167,6 +167,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
                                                        MPI_Datatype origin_type,
                                                        MPI_Datatype target_type)
 {
+    /* `seg_state->buflimit` is `DLOOP_Count` == `MPI_Aint` (typically, long or other signed types)
+     * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
+     * So round down to the maximum of MPI_Aint if necessary.
+     * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
+    CH4_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    if (likely(buf_limit > MPIR_AINT_MAX))
+        buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;
     seg_state->buf_limit_left = buf_limit;
 
@@ -194,6 +201,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
                                                         MPI_Datatype result_type,
                                                         MPI_Datatype target_type)
 {
+    /* `seg_state->buflimit` is `DLOOP_Count` == `MPI_Aint` (typically, long or other signed types)
+     * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
+     * So round down to the maximum of MPI_Aint if necessary.
+     * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
+    CH4_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    if (likely(buf_limit > MPIR_AINT_MAX))
+        buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;
     seg_state->buf_limit_left = buf_limit;
 
