@@ -430,7 +430,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Process.attrs.host = MPI_PROC_NULL;
     MPIR_Process.attrs.io = MPI_PROC_NULL;
     MPIR_Process.attrs.lastusedcode = MPI_ERR_LASTCODE;
-    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
     MPIR_Process.attrs.universe = MPIR_UNIVERSE_SIZE_NOT_SET;
     MPIR_Process.attrs.wtime_is_global = 0;
 
@@ -540,6 +539,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPL_trinit();
 #endif
 
+    /* Set the number of tag bits. The device may override this value. */
+    MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
+
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -548,6 +550,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_Coll_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    /* Set tag_ub as function of tag_bits set by the device */
+    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
 
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned) MPIR_Process.
