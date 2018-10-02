@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /*test comm_split_type for NULL variable */
+    newinfo = MPI_INFO_NULL;
     mpi_errno = MPI_Comm_split_type(scomm, 2, 4, newinfo, NULL);
     MPI_Error_class(mpi_errno, &errclass);
     if (errclass != MPI_ERR_ARG)
