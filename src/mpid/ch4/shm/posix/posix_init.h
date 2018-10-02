@@ -23,7 +23,7 @@ extern char *MPIDI_POSIX_asym_base_addr;
 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_init_hook)
-static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided, int *tag_ub)
+static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_local = 0;
@@ -223,8 +223,8 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
 #undef MPIDI_POSIX_MAILBOX_INDEX
 
-    /* There is no restriction on the tag_ub from the posix shmod side */
-    *tag_ub = INT_MAX;
+    /* There is no restriction on the tag_bits from the posix shmod side */
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
