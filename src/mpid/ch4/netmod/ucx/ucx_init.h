@@ -112,7 +112,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
 #endif
 
-    *tag_bits = UCX_TAG_BITS;
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
