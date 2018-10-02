@@ -16,7 +16,7 @@
 
 #define MPIDI_MAX_SHM_STRING_LEN 64
 
-typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vnis_provided, int *tag_ub);
+typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vnis_provided, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
 typedef int (*MPIDI_SHM_get_vni_attr_t) (int vni);
 typedef int (*MPIDI_SHM_progress_t) (int vni, int blocking);
@@ -582,7 +582,7 @@ extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size,
                                                      int *n_vnis_provided,
-                                                     int *tag_ub) MPL_STATIC_INLINE_SUFFIX;
+                                                     int *tag_bits) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_vni_attr(int vni) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vni, int blocking) MPL_STATIC_INLINE_SUFFIX;

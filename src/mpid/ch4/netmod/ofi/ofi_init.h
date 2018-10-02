@@ -418,7 +418,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,
-                                         int *tag_ub,
+                                         int *tag_bits,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
@@ -644,7 +644,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
         MPIDI_OFI_dump_providers(prov);
 
-    *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
+    *tag_bits = MPIDI_OFI_TAG_BITS;
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* ------------------------------------------------------------------------ */
