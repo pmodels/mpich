@@ -188,6 +188,34 @@ static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
     /* --END ERROR HANDLING-- */
 }
 
+static int free_nbh_mat(Common_nbrhood_matrix * cmn_nbh_mat)
+{
+    if (!cmn_nbh_mat)
+        return 1;
+    int outdegree = cmn_nbh_mat->num_rows;
+    for (int i = 0; i < outdegree; i++) {
+        MPL_free(cmn_nbh_mat->matrix[i]);
+        MPL_free(cmn_nbh_mat->outnbrs_innbrs_bitmap[i]);
+        MPL_free(cmn_nbh_mat->comb_matrix[i]);
+    }
+    for (int i = 0; i < cmn_nbh_mat->t; i++) {
+        if (cmn_nbh_mat->sorted_cmn_nbrs[i].num_cmn_nbrs > 0)
+            if (cmn_nbh_mat->sorted_cmn_nbrs[i].cmn_nbrs)
+                MPL_free(cmn_nbh_mat->sorted_cmn_nbrs[i].cmn_nbrs);
+    }
+    MPL_free(cmn_nbh_mat->matrix);
+    MPL_free(cmn_nbh_mat->outnbrs_innbrs_bitmap);
+    MPL_free(cmn_nbh_mat->comb_matrix);
+    MPL_free(cmn_nbh_mat->row_sizes);
+    MPL_free(cmn_nbh_mat->ignore_row);
+    MPL_free(cmn_nbh_mat->is_row_offloaded);
+    MPL_free(cmn_nbh_mat->my_innbrs_bitmap);
+    MPL_free(cmn_nbh_mat->comb_matrix_num_entries_in_row);
+
+    MPL_free(cmn_nbh_mat);
+    return 0;
+}
+
 static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
                                    int keyval ATTRIBUTE((unused)),
                                    void *attr_val, void *extra_data ATTRIBUTE((unused)))
@@ -214,6 +242,19 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
         MPL_free(topology->topo.dist_graph.out);
         MPL_free(topology->topo.dist_graph.in_weights);
         MPL_free(topology->topo.dist_graph.out_weights);
+        if (topology->topo.dist_graph.nbh_coll_patt) {
+            if (topology->topo.dist_graph.nbh_coll_patt->cmn_nbh_mat) {
+                free_nbh_mat(topology->topo.dist_graph.nbh_coll_patt->cmn_nbh_mat);
+            }
+            if (topology->topo.dist_graph.nbh_coll_patt->incom_sched_mat) {
+                int i;
+                for (i = 0; i < topology->topo.dist_graph.indegree; i++) {
+                    MPL_free(topology->topo.dist_graph.nbh_coll_patt->incom_sched_mat[i]);
+                }
+                MPL_free(topology->topo.dist_graph.nbh_coll_patt->incom_sched_mat);
+            }
+            MPL_free(topology->topo.dist_graph.nbh_coll_patt);
+        }
         MPL_free(topology);
     }
     /* --BEGIN ERROR HANDLING-- */

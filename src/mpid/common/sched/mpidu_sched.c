@@ -383,10 +383,13 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 
         /* watch the indexing, s->idx might have been incremented above, so
          * ||-short-circuit matters here */
-        if (e->is_barrier && (e->status < MPIDU_SCHED_ENTRY_STATUS_COMPLETE || (s->idx != i + 1))) {
-            /* we've hit a barrier but outstanding operations before this
-             * barrier remain, so we cannot proceed past the barrier */
-            break;
+        if (s->idx != i + 1) {
+            if (e->is_barrier &&
+                (e->status < MPIDU_SCHED_ENTRY_STATUS_COMPLETE || (s->idx != i + 1))) {
+                /* we've hit a barrier but outstanding operations before this
+                 * barrier remain, so we cannot proceed past the barrier */
+                break;
+            }
         }
     }
   fn_exit:

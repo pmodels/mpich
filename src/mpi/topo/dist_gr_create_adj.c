@@ -160,6 +160,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     dist_graph_ptr->out = NULL;
     dist_graph_ptr->out_weights = NULL;
     dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
+    dist_graph_ptr->nbh_coll_patt = NULL;
 
     MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree * sizeof(int), mpi_errno,
                         "dist_graph_ptr->in", MPL_MEM_COMM);
@@ -182,6 +183,12 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
     MPIR_CHKPMEM_COMMIT();
+
+    if (MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM ==
+        MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM_sched_comb) {
+        MPIR_Build_neighb_coll_patt(comm_dist_graph_ptr);
+    }
+
     /* ... end of body of routine ... */
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);

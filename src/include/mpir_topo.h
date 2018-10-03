@@ -5,6 +5,95 @@
  *
  */
 
+/*---------------------------------------------------------------------*/
+/*     (C) Copyright 2017 Parallel Processing Research Laboratory      */
+/*                   Queen's University at Kingston                    */
+/*                Neighborhood Collective Communication                */
+/*                    Seyed Hessamedin Mirsadeghi                      */
+/*---------------------------------------------------------------------*/
+#ifdef SCHED_DEBUG
+#define MAX_DEBUG_SCHED_REQS 500
+#endif
+
+#define MAX_COMB_DEGREE 50      /* Fix this later by finding the value for combining degree at runtime */
+#define MAX_LOOP_COUNT 50
+#define SCHED_MEM_TO_FREE_MAX_SIZE 3*MAX_COMB_DEGREE+1  /* +1 for incom_tmp_buf,
+                                                         * one t for make_all_combined,
+                                                         * one t for send_own_data,
+                                                         * one t for get_friend_data */
+#define COMB_LIST_START_IDX 3
+
+typedef struct Scheduling_msg {
+    int is_off;
+    int *comb_list;
+    int comb_list_size;
+    int t;
+} Scheduling_msg;
+
+typedef struct Common_neighbor {
+    int rank;
+    int index;
+} Common_neighbor;
+
+typedef struct Sorted_cmn_nbrs {
+    /* an array of this struct (one per t) plus
+     * some other struct (for ordinary neighbors)
+     * is all we need to save for building the
+     * schedule later on. We need to clean things up!
+     */
+    Common_neighbor *cmn_nbrs;
+    int num_cmn_nbrs;
+    int offload_start;
+    int offload_end;
+    int onload_start;
+    int onload_end;
+} Sorted_cmn_nbrs;
+
+typedef enum Operation {
+    COMB_SEND,                  /* offloaded */
+    COMB_RECV,                  /* onloaded */
+    COMB_IDLE
+} Comb_Operation;
+
+typedef struct Comb_element {
+    int paired_frnd;
+    Comb_Operation opt;
+} Comb_element;
+
+typedef struct Common_nbrhood_matrix {
+    int **matrix;
+    int **outnbrs_innbrs_bitmap;        /* Not currently an actual bitmap */
+    int *row_sizes;             /* indegree of each outgoing neighbor */
+    int *ignore_row;            /* Determines whether the neighbor is considered in
+                                 * the process of finding friends. */
+    int *is_row_offloaded;      /* Determines whether a neighbor should be
+                                 * communicated with at the end. I.e., whether
+                                 * it has been offloaded or not. */
+    int *my_innbrs_bitmap;      /* Not currently an actual bitmap */
+    int indegree;
+    int num_rows;               /* outdegree */
+    int num_elements;           /* sum of all row_sizes */
+    int t;
+    int num_onloaded[MAX_COMB_DEGREE];
+    int num_offloaded[MAX_COMB_DEGREE];
+    Sorted_cmn_nbrs sorted_cmn_nbrs[MAX_COMB_DEGREE];
+    Comb_element **comb_matrix; /* For each outgoing neighbor represents the
+                                 * list of ranks with which this rank should
+                                 * combine message before sending it out. */
+    int *comb_matrix_num_entries_in_row;
+} Common_nbrhood_matrix;
+
+typedef struct nbh_coll_patt {
+    Common_nbrhood_matrix *cmn_nbh_mat;
+    int **incom_sched_mat;
+
+} nbh_coll_patt;
+
+int MPIR_Build_neighb_coll_patt(MPIR_Comm * comm_ptr);
+int find_in_arr(const int *array, int size, int value);
+int print_in_file(int rank, char *name);
+int print_vec(int rank, int size, const int *vec, char *name);
+
 #ifndef MPIR_TOPO_H_INCLUDED
 #define MPIR_TOPO_H_INCLUDED
 
@@ -47,6 +136,7 @@ typedef struct MPII_Dist_graph_topology {
     int *out;
     int *out_weights;
     int is_weighted;
+    nbh_coll_patt *nbh_coll_patt;
 } MPII_Dist_graph_topology;
 
 struct MPIR_Topology {

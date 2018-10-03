@@ -18,4 +18,5 @@ mpi_sources += \
 mpi_core_sources += \
     src/mpi/coll/ineighbor_allgather/ineighbor_allgather_allcomm_sched_linear.c			\
     src/mpi/coll/ineighbor_allgather/ineighbor_allgather_gentran_algos.c			\
-    src/mpi/coll/ineighbor_allgather/ineighbor_allgather_allcomm_gentran_linear.c
+    src/mpi/coll/ineighbor_allgather/ineighbor_allgather_allcomm_gentran_linear.c \
+    src/mpi/coll/ineighbor_allgather/ineighbor_allgather_intra_comb.c

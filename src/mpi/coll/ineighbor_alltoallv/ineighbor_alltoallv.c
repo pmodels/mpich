@@ -22,6 +22,7 @@ cvars:
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
+        sched_comb      - Force message combining algorithm
         gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
@@ -232,6 +233,12 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
 
             case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_allcomm_sched_linear, comm_ptr, request,
+                                   sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype);
+                break;
+
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_sched_comb:
+                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_intra_sched_comb, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
