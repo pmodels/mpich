@@ -24,7 +24,9 @@ mpi_sources +=                          \
     src/mpi/topo/dist_gr_create_adj.c   \
     src/mpi/topo/dist_gr_create.c       \
     src/mpi/topo/dist_gr_neighb_count.c \
-    src/mpi/topo/dist_gr_neighb.c
+    src/mpi/topo/dist_gr_neighb.c       \
+    src/mpi/topo/heap.c                 \
+    src/mpi/topo/build_neighb_coll_patt.c
 
 mpi_core_sources +=       \
     src/mpi/topo/topoutil.c

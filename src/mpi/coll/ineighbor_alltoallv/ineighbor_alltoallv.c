@@ -145,6 +145,12 @@ int MPIR_Ineighbor_alltoallv_sched_impl(const void *sendbuf, const int sendcount
                                                                   sendtype, recvbuf, recvcounts,
                                                                   rdispls, recvtype, comm_ptr, s);
                 break;
+            case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_COMB:
+                mpi_errno =
+                    MPIR_Ineighbor_alltoallv_sched_intra_comb(sendbuf, sendcounts, sdispls,
+                                                              sendtype, recvbuf, recvcounts,
+                                                              rdispls, recvtype, comm_ptr, s);
+                break;
             case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:

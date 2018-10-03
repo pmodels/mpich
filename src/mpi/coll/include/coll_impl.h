@@ -344,6 +344,7 @@ extern MPIR_Igatherv_inter_algo_t MPIR_Igatherv_inter_algo_choice;
 typedef enum MPIR_Ineighbor_allgather_intra_algo_t {
     MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_COMB,
 } MPIR_Ineighbor_allgather_intra_algo_t;
 extern MPIR_Ineighbor_allgather_intra_algo_t MPIR_Ineighbor_allgather_intra_algo_choice;
 
@@ -380,6 +381,7 @@ extern MPIR_Ineighbor_alltoall_inter_algo_t MPIR_Ineighbor_alltoall_inter_algo_c
 typedef enum MPIR_Ineighbor_alltoallv_intra_algo_t {
     MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_COMB,
 } MPIR_Ineighbor_alltoallv_intra_algo_t;
 extern MPIR_Ineighbor_alltoallv_intra_algo_t MPIR_Ineighbor_alltoallv_intra_algo_choice;
 
