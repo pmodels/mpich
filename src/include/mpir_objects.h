@@ -438,10 +438,11 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 /* TODO examine generated assembly for this construct, it's probably suboptimal
  * on Blue Gene.  An if/else if/else might help the compiler out.  It also lets
  * us hint that one case is likely(), usually the BUILTIN case. */
-#define MPIR_Getb_ptr(kind,a,bmsk,ptr)                                  \
+#define MPIR_Getb_ptr(kind,KIND,a,bmsk,ptr)                             \
     {                                                                   \
         switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_BUILTIN:                                       \
+            MPIR_Assert(((a)&(bmsk)) < MPIR_##KIND##_N_BUILTIN);        \
             ptr=MPIR_##kind##_builtin+((a)&(bmsk));                     \
             break;                                                      \
         case HANDLE_KIND_DIRECT:                                        \
@@ -480,11 +481,11 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
 /* FIXME: the masks should be defined with the handle definitions instead
    of inserted here as literals */
-#define MPIR_Comm_get_ptr(a,ptr)       MPIR_Getb_ptr(Comm,a,0x03ffffff,ptr)
-#define MPIR_Group_get_ptr(a,ptr)      MPIR_Getb_ptr(Group,a,0x03ffffff,ptr)
-#define MPIR_Errhandler_get_ptr(a,ptr) MPIR_Getb_ptr(Errhandler,a,0x3,ptr)
-#define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,a,0x000000ff,ptr)
-#define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,a,0x03ffffff,ptr)
+#define MPIR_Comm_get_ptr(a,ptr)       MPIR_Getb_ptr(Comm,COMM,a,0x03ffffff,ptr)
+#define MPIR_Group_get_ptr(a,ptr)      MPIR_Getb_ptr(Group,GROUP,a,0x03ffffff,ptr)
+#define MPIR_Errhandler_get_ptr(a,ptr) MPIR_Getb_ptr(Errhandler,ERRHANDLER,a,0x3,ptr)
+#define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,OP,a,0x000000ff,ptr)
+#define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
 #define MPIR_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
