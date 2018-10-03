@@ -47,6 +47,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_NM_am_request_init,
     .am_request_finalize = MPIDI_NM_am_request_finalize,
+    .prequest_free_hook = MPIDI_NM_prequest_free_hook,
     /* Active Message Routines */
     .am_send_hdr = MPIDI_NM_am_send_hdr,
     .am_isend = MPIDI_NM_am_isend,

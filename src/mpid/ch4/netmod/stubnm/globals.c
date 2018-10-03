@@ -42,6 +42,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_rma_target_local_cmpl_hook,
     MPIDI_NM_am_request_init,
     MPIDI_NM_am_request_finalize,
+    MPIDI_NM_prequest_free_hook,
     MPIDI_NM_am_send_hdr,
     MPIDI_NM_am_isend,
     MPIDI_NM_am_isendv,

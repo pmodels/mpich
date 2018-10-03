@@ -18,4 +18,8 @@ static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
     return MPIDIG_mpi_startall(count, requests);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_prequest_free_hook(MPIR_Request * req)
+{
+}
+
 #endif /* STUBNM_STARTALL_H_INCLUDED */
