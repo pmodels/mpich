@@ -52,6 +52,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_SHM_am_request_init,
     .am_request_finalize = MPIDI_SHM_am_request_finalize,
+    .prequest_free_hook = MPIDI_SHM_prequest_free_hook,
     /* Active Message Routines */
     .am_send_hdr = MPIDI_SHM_am_send_hdr,
     .am_isend = MPIDI_SHM_am_isend,

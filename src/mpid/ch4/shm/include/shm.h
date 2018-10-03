@@ -65,6 +65,7 @@ typedef int (*MPIDI_SHM_mpi_op_commit_hook_t) (MPIR_Op * op);
 typedef int (*MPIDI_SHM_mpi_op_free_hook_t) (MPIR_Op * op);
 typedef void (*MPIDI_SHM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_SHM_am_request_finalize_t) (MPIR_Request * req);
+typedef void (*MPIDI_SHM_prequest_free_hook_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_mpi_send_t) (const void *buf, MPI_Aint count,
                                      MPI_Datatype datatype, int rank, int tag,
                                      MPIR_Comm * comm, int context_offset,
@@ -463,6 +464,7 @@ typedef struct MPIDI_SHM_funcs {
     /* Request allocation routines */
     MPIDI_SHM_am_request_init_t am_request_init;
     MPIDI_SHM_am_request_finalize_t am_request_finalize;
+    MPIDI_SHM_prequest_free_hook_t prequest_free_hook;
     /* Active Message Routines */
     MPIDI_SHM_am_send_hdr_t am_send_hdr;
     MPIDI_SHM_am_isend_t am_isend;
@@ -654,6 +656,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request *
                                                         req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request *
                                                             req) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_prequest_free_hook(MPIR_Request *
+                                                           req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
