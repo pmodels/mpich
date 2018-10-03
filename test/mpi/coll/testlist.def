@@ -166,3 +166,8 @@ nbicalltoallw 8 mpiversion=3.0
 neighb_coll 4 mpiversion=3.0
 
 @coll_algo_tests@
+
+# Tests for Persistent collectives API extensions. These are proposed to
+# be part of MPI 4
+p_bcast 4 strict=false
+p_bcast2 8 strict=false

@@ -65,7 +65,15 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
                                          preq->comm->context_id, &preq->u.persist.real_request);
 
                 break;
+            case MPIR_REQUEST_KIND__PREQUEST_BCAST:
+                mpi_errno = MPIR_Ibcast(preq->u.persist.coll_args.bcast.buffer,
+                                        preq->u.persist.coll_args.bcast.count,
+                                        preq->u.persist.coll_args.bcast.datatype,
+                                        preq->u.persist.coll_args.bcast.root,
+                                        preq->u.persist.coll_args.bcast.comm,
+                                        &preq->u.persist.real_request);
 
+                break;
             default:
                 MPIR_Assert(0);
                 break;

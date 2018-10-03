@@ -1502,4 +1502,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw_sched(const void *sendbuf,
     return ret;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Bcast_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Bcast_init(void *buffer, int count, MPI_Datatype datatype,
+                                             int root, MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                             MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_COLL_H_INCLUDED */
