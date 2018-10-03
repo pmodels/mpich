@@ -1,0 +1,11 @@
+--- libtool.m4	2018-10-03 15:25:03.000000000 -0500
++++ libtool.m4.fix	2018-10-03 15:30:04.000000000 -0500
+@@ -4746,7 +4746,7 @@
+ 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+ 	  _LT_TAGVAR(lt_prog_compiler_wl, $1)=''
+ 	  ;;
+-	*Sun\ F* | *Sun*Fortran*)
++	*Sun\ F* | *Sun*Fortran* | *Studio*Fortran*)
+ 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
+ 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+ 	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Qoption ld '
