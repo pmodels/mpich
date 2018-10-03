@@ -106,4 +106,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_prequest_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_prequest_free_hook(MPIR_Request * req)
+{
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(req, datatype));
+}
+
 #endif /* MPIDIG_STARTALL_H_INCLUDED */
