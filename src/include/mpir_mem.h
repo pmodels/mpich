@@ -100,7 +100,7 @@ extern "C" {
  */
 #if defined(strdup) || defined(__strdup)
 #undef strdup
-#endif
+#endif                          /* defined(strdup) || defined(__strdup) */
     /* The ::: should cause the compiler to choke; the string
      * will give the explanation */
 #undef strdup                   /* in case strdup is a macro */
@@ -118,9 +118,9 @@ extern "C" {
     rc_=MPIR_Err_create_code(MPI_SUCCESS,                               \
                              MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,    \
                              MPI_ERR_OTHER, "**nomem2", "**nomem2 %d %s", nbytes_, name_)
-#else
+#else                           /* HAVE_ERROR_CHECKING */
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_) rc_=MPI_ERR_OTHER
-#endif
+#endif                          /* HAVE_ERROR_CHECKING */
 
     /* CHKPMEM_REGISTER is used for memory allocated within another routine */
 
@@ -129,7 +129,7 @@ extern "C" {
 #if defined(HAVE_ALLOCA) && defined(USE_ALLOCA)
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif
+#endif                          /* HAVE_ALLOCA_H */
 /* Define decl with a dummy definition to allow us to put a semi-colon
    after the macro without causing the declaration block to end (restriction
    imposed by C) */
@@ -143,7 +143,7 @@ extern "C" {
             stmt_;                                                      \
         }                                                               \
     }
-#else
+#else                           /* defined(HAVE_ALLOCA) && defined(USE_ALLOCA) */
 #define MPIR_CHKLMEM_DECL(n_)                                   \
     void *(mpiu_chklmem_stk_[n_]) = { NULL };                   \
     int mpiu_chklmem_stk_sp_=0;                                 \
@@ -166,7 +166,7 @@ extern "C" {
             MPL_free(mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_]);        \
         }                                                               \
     } while (0)
-#endif                          /* HAVE_ALLOCA */
+#endif                          /* defined(HAVE_ALLOCA) && defined(USE_ALLOCA) */
 #define MPIR_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_)    \
     MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
 #define MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \

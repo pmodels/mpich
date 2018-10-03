@@ -27,9 +27,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                       int k, MPIR_TSP_sched_t * sched)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
-
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
@@ -42,6 +39,11 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     MPII_Treealgo_tree_t my_tree, parents_tree;
     int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
     int offset, recv_size, num_dependencies;
+    MPIR_CHKLMEM_DECL(3);
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
+
 
     size = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
@@ -79,8 +81,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     num_children = my_tree.num_children;
-    child_subtree_size = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);  /* to store size of subtree of each child */
-    child_data_offset = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);   /* to store the offset of the data to be sent to each child  */
+    MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
+    MPIR_CHKLMEM_MALLOC(child_data_offset, int *, sizeof(int) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);     /* to store the offset of the data to be sent to each child  */
 
     /* calculate size of subtree of each child */
 
@@ -140,7 +142,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
         tmp_buf = (void *) sendbuf;
     }
 
-    recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
+                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
     /* Leaf nodes send to parent */
     if (num_children == 0) {
         MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent,
@@ -190,9 +193,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     MPII_Treealgo_tree_free(&my_tree);
 
   fn_exit:
-    MPL_free(child_subtree_size);
-    MPL_free(child_data_offset);
-    MPL_free(recv_id);
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
@@ -212,10 +213,11 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
+
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);

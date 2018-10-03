@@ -601,7 +601,7 @@ static HYD_status exec_wdir_fn(char *arg, char ***argv)
 
 static HYD_status exec_args_fn(char *arg, char ***argv)
 {
-    int i, count;
+    long int i, count;
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -610,7 +610,9 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
 
-    count = atoi(**argv);
+    count = strtol(**argv, NULL, 10);
+    if (errno == ERANGE || errno == EINVAL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Exec arg not convertible to integer\n");
     for (i = 0; i < count; i++) {
         (*argv)++;
         exec->exec[i] = MPL_strdup(**argv);
