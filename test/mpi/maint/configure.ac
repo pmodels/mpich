@@ -26,12 +26,3 @@ if test "$xargs_out" != "0" ; then
     XARGS_NODATA_OPT=-r
 fi
 AC_SUBST(XARGS_NODATA_OPT)
-
-AC_OUTPUT_COMMANDS([chmod a+x f77tof90] )
-
-# The directory substitutions apparently don't work under Cygwin, so
-# simplemake manufactures these in a way that avoids triggering the 
-# autoconf replacement.
-# Note that top_srcdir and srcdir are special cases (they must not
-# be changed in configure.ac because configure uses them to find other files)
-AC_OUTPUT(f77tof90)
