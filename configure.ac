@@ -378,7 +378,7 @@ AC_ARG_ENABLE(g,
         all      - All of the above choices
 ],,enable_g=none)
 
-AC_ARG_ENABLE([mpit_pvars],
+AC_ARG_ENABLE([mpit-pvars],
 [  --enable-mpit-pvars=list - Selectively enable MPI_T performance variables in
                       modules. list is a comma-separated module names,
                       including (Default is "none"):
