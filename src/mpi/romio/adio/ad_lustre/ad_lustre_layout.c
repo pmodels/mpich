@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 2014, 2015, Intel Corporation
+ *   Copyright (C) 2018, DDN, Lustre group
  */
 
 #include "ad_lustre.h"

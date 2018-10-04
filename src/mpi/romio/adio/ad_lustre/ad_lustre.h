@@ -6,12 +6,13 @@
  *   Copyright (C) 2007 Oak Ridge National Laboratory
  *
  *   Copyright (C) 2008 Sun Microsystems, Lustre group
+ *
+ *   Copyright (C) 2018 DDN, Lustre group
  */
 
 #ifndef AD_LUSTRE_H_INCLUDED
 #define AD_LUSTRE_H_INCLUDED
 
-/* temp*/
 #define HAVE_ASM_TYPES_H 1
 
 #include <unistd.h>
@@ -109,12 +110,153 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
 
 int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
                                  int *striping_info, ADIO_Offset * len);
+
 #ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
-int ADIOI_LUSTRE_Get_lcm_stripe_count(struct llapi_layout *layout);
-ADIO_Offset ADIOI_LUSTRE_Get_last_stripe_size(struct llapi_layout *layout);
 int ADIOI_LUSTRE_Parse_comp_layout_opt(char *opt, struct llapi_layout **layout_ptr);
+
 #ifdef HAVE_YAML_SUPPORT
 int ADIOI_LUSTRE_Parse_yaml_temp(char *tempfile, struct llapi_layout **layout_ptr);
 #endif /* HAVE_YAML_SUPPORT */
-#endif /*  HAVE_LUSTRE_COMP_LAYOUT_SUPPORT */
+
+#else /* Backward compatibility support */
+
+#define llapi_layout lov_user_md
+
+static inline struct llapi_layout *llapi_layout_alloc()
+{
+    struct llapi_layout *layout;
+
+    layout = ADIOI_Calloc(1, XATTR_SIZE_MAX);
+    layout->lmm_magic = LOV_USER_MAGIC;
+
+    return layout;
+}
+
+static inline void llapi_layout_free(struct llapi_layout *layout)
+{
+    if (layout != NULL)
+        ADIOI_Free(layout);
+}
+
+static inline int
+llapi_layout_file_open(const char *path, int open_flags, mode_t mode,
+                       const struct llapi_layout *layout)
+{
+    int fd;
+
+    if (path == NULL || layout == NULL || (layout != NULL && layout->lmm_magic != LOV_USER_MAGIC)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (layout != NULL && (open_flags & O_CREAT))
+        open_flags |= O_LOV_DELAY_CREATE;
+
+    fd = open(path, open_flags, mode);
+    if (layout == NULL || fd < 0)
+        return fd;
+
+    return ioctl(fd, LL_IOC_LOV_SETSTRIPE, layout);
+}
+
+static inline int
+llapi_layout_file_create(const char *path, int open_flags, int mode,
+                         const struct llapi_layout *layout)
+{
+    return llapi_layout_file_open(path, open_flags | O_CREAT | O_EXCL, mode, layout);
+}
+
+static inline struct llapi_layout *llapi_layout_get_by_fd(int fd, uint32_t flags)
+{
+    struct llapi_layout *layout;
+    int err;
+
+    layout = llapi_layout_alloc();
+    if (layout == NULL)
+        goto out;
+
+    err = ioctl(fd, LL_IOC_LOV_GETSTRIPE, (void *) layout);
+    if (err)
+        goto out;
+
+    if (layout->lmm_magic == LOV_USER_MAGIC_V1 || layout->lmm_magic == LOV_USER_MAGIC_V3)
+        return layout;
+  out:
+    if (layout)
+        ADIOI_Free(layout);
+    return NULL;
+}
+
+static inline struct llapi_layout *llapi_layout_get_by_path(const char *path, uint32_t flags)
+{
+    struct llapi_layout *layout = NULL;
+    int fd;
+    int tmp;
+
+    fd = open(path, O_RDONLY);
+    if (fd < 0)
+        return layout;
+
+    layout = llapi_layout_get_by_fd(fd, flags);
+    tmp = errno;
+    close(fd);
+    errno = tmp;
+
+    return layout;
+}
+
+static inline int llapi_layout_stripe_count_get(struct llapi_layout *layout, uint64_t * count)
+{
+    if (layout == NULL)
+        return -1;
+
+    *count = layout->lmm_stripe_count;
+    return 0;
+}
+
+static inline int llapi_layout_stripe_size_get(const struct llapi_layout *layout, uint64_t * size)
+{
+    if (layout == NULL)
+        return -1;
+
+    *size = layout->lmm_stripe_size;
+    return 0;
+}
+
+static inline int llapi_layout_stripe_size_set(struct llapi_layout *layout, uint64_t size)
+{
+    if (layout == NULL)
+        return -1;
+
+    layout->lmm_stripe_size = size;
+
+    return 0;
+}
+
+static inline int llapi_layout_stripe_count_set(struct llapi_layout *layout, uint64_t count)
+{
+    if (layout == NULL)
+        return -1;
+
+    layout->lmm_stripe_count = count;
+
+    return 0;
+}
+
+static inline int
+llapi_layout_ost_index_set(struct llapi_layout *layout, int stripe_number, uint64_t ost_index)
+{
+    if (layout == NULL)
+        return -1;
+
+    layout->lmm_stripe_offset = ost_index;
+
+    return 0;
+}
+
+#endif /* HAVE_LUSTRE_COMP_LAYOUT_SUPPORT */
+
+ADIO_Offset ADIOI_LUSTRE_Get_last_stripe_size(struct llapi_layout * layout);
+int ADIOI_LUSTRE_Get_lcm_stripe_count(struct llapi_layout *layout);
+
 #endif /* AD_LUSTRE_H_INCLUDED */

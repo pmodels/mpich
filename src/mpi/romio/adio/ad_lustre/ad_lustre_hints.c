@@ -6,6 +6,8 @@
  *   Copyright (C) 2007 Oak Ridge National Laboratory
  *
  *   Copyright (C) 2008 Sun Microsystems, Lustre group
+ *
+ *   Copyright (C) 2018 DDN, Lustre group
  */
 
 #include "ad_lustre.h"

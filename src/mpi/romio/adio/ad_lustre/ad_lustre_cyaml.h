@@ -18,10 +18,8 @@
  *
  * LGPL HEADER END
  *
- * Copyright (c) 2014, Intel Corporation.
+ * Copyright (C) 2018 DDN, Lustre group
  *
- * Author:
- *   Amir Shehata <amir.shehata@intel.com>
  */
 
 #ifdef HAVE_YAML_SUPPORT

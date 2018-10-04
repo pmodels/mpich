@@ -18,10 +18,8 @@
  *
  * LGPL HEADER END
  *
- * Copyright (c) 2014, 2015, Intel Corporation.
+ * Copyright (C) 2018 DDN, Lustre Group
  *
- * Author:
- *   Amir Shehata <amir.shehata@intel.com>
  */
 
 #include <stdio.h>
@@ -91,8 +89,6 @@ static enum cYAML_handler_error yaml_parse_error(yaml_token_t * token,
 static enum cYAML_handler_error yaml_stream_start(yaml_token_t * token,
                                                   struct cYAML_tree_node *tree);
 static enum cYAML_handler_error yaml_stream_end(yaml_token_t * token, struct cYAML_tree_node *tree);
-static enum cYAML_handler_error yaml_not_supported(yaml_token_t * token,
-                                                   struct cYAML_tree_node *tree);
 static enum cYAML_handler_error yaml_blk_mapping_start(yaml_token_t * token,
                                                        struct cYAML_tree_node *tree);
 static enum cYAML_handler_error yaml_block_end(yaml_token_t * token, struct cYAML_tree_node *tree);
@@ -113,6 +109,7 @@ static yaml_token_handler dispatch_tbl[] = {
 };
 
 /* dispatch table */
+#ifdef YAML_DEBUG
 static char *token_type_string[] = {
     [YAML_NO_TOKEN] = "YAML_NO_TOKEN",
     [YAML_STREAM_START_TOKEN] = "YAML_STREAM_START_TOKEN",
@@ -123,6 +120,7 @@ static char *token_type_string[] = {
     [YAML_VALUE_TOKEN] = "YAML_VALUE_TOKEN",
     [YAML_SCALAR_TOKEN] = "YAML_SCALAR_TOKEN",
 };
+#endif
 
 static void cYAML_ll_free(struct list_head *ll)
 {
@@ -532,7 +530,6 @@ struct cYAML *cYAML_build_tree(char *yaml_file)
     struct cYAML_tree_node tree;
     enum cYAML_handler_error rc;
     yaml_token_type_t token_type;
-    char err_str[256];
     FILE *input = NULL;
     int done = 0;
 

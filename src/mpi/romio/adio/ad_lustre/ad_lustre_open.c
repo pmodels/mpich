@@ -6,6 +6,8 @@
  *   Copyright (C) 2007 Oak Ridge National Laboratory
  *
  *   Copyright (C) 2008 Sun Microsystems, Lustre group
+ *
+ *   Copyright (C) 2018 DDN, Lustre group
  */
 
 #include "ad_lustre.h"
@@ -18,8 +20,7 @@ int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd); /* in ad_lustre_lock.c *
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 {
     int perm, old_mask, amode, amode_direct;
-    int myrank, flag, err;
-    bool set_layout = false;
+    int myrank, flag, err = MPI_SUCCESS, set_layout = 0;
     struct llapi_layout *layout = NULL;
     char *value;
     ADIO_Offset str_factor = 0, str_unit = 0, start_iodev = -1;
@@ -57,7 +58,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     if (fd->info != MPI_INFO_NULL) {
 #ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
         if (fd->hints->fs_hints.lustre.comp_layout != NULL) {
-            set_layout = true;
+            set_layout = 1;
         } else
 #endif
         {
@@ -74,7 +75,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
                 start_iodev = atoll(value);
 
             if (str_unit > 0 || (str_factor == -1 || str_factor > 0) || start_iodev >= 0)
-                set_layout = true;
+                set_layout = 1;
 #ifdef OPEN_DEBUG
             if (myrank == 0)
                 LDEBUG("stripe_size=%ld, stripe_count=%d, stripe_offset=%d\n",
@@ -119,9 +120,12 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
                 }
             }
             if (str_factor == -1 || str_factor > 0) {
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
                 if (str_factor == -1)
                     str_factor = LLAPI_LAYOUT_WIDE;
-                else if (str_factor > USHRT_MAX)
+                else
+#endif
+                if (str_factor > USHRT_MAX)
                     str_factor = USHRT_MAX;
                 err = llapi_layout_stripe_count_set(layout, (uint64_t) str_factor);
                 if (err) {
