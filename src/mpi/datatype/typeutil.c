@@ -11,9 +11,6 @@
 /* This is the utility file for datatypes that contains the basic datatype
    items and storage management.  It also contains a temporary routine
    that is used by ROMIO to test to see if datatypes are contiguous */
-#ifndef MPIR_DATATYPE_PREALLOC
-#define MPIR_DATATYPE_PREALLOC 8
-#endif
 
 /* Preallocated datatype objects */
 MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN] = { {0}
