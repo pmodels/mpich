@@ -300,6 +300,8 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int pofk = 1, log_pofk = 0;
     int *digit, *digit_reverse;
     int remainder, index = 0;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
@@ -318,8 +320,10 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     step2rank = MPII_Recexchalgo_origrank_to_step2rank(rank, rem, T, k);
 
     /* calculate the digits in base k representation of step2rank */
-    digit = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
-    digit_reverse = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(digit, int *, sizeof(int) * log_pofk,
+                        mpi_errno, "digit buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(digit_reverse, int *, sizeof(int) * log_pofk,
+                        mpi_errno, "digit_reverse buffer", MPL_MEM_COLL);
     for (i = 0; i < log_pofk; i++)
         digit[i] = 0;
     while (step2rank != 0) {
@@ -347,10 +351,11 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "reverse_rank is %d", step2_reverse_rank));
 
-    MPL_free(digit);
-    MPL_free(digit_reverse);
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
 
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return step2_reverse_rank;
+  fn_fail:
+    goto fn_exit;
 }
