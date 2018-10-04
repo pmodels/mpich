@@ -402,8 +402,8 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
     if (made_progress)
         *made_progress = FALSE;
-    if (is_complete)
-        *is_complete = FALSE;
+
+    *is_complete = FALSE;
 
     /* If issued list is empty, go over the vertices and issue ready
      * vertices.  Issued list should be empty only when the
