@@ -28,44 +28,6 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 #undef MPI_Comm_set_info
 #define MPI_Comm_set_info PMPI_Comm_set_info
 
-int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_info = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-
-    mpi_errno = MPII_Comm_apply_hints(comm_ptr, info_ptr);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    if (comm_ptr->info == NULL) {
-        /* Always have at least a blank info hint. */
-        mpi_errno = MPIR_Info_alloc(&(comm_ptr->info));
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-    }
-
-    /* MPIR_Info_set_impl will do an O(n) search to prevent duplicate keys, so
-     * this _FOREACH loop will cost O(m*n) time, where "m" is the number of keys
-     * in info_ptr and "n" is the number of keys in comm_ptr->info. */
-    LL_FOREACH(info_ptr, curr_info) {
-        /* Have we hit the default, empty info hint? */
-        if (curr_info->key == NULL)
-            continue;
-
-        mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

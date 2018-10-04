@@ -169,7 +169,6 @@ struct MPIR_Comm {
 
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
-    MPIR_Info *info;            /* Hints to the communicator */
 
     struct {
         int pof2;               /* Nearest (smaller than or equal to) power of 2
@@ -258,10 +257,6 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
-/* Communicator info hint functions */
-typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, MPIR_Info *, void *);
-int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
-
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function * comm_delete_attr_fn,
@@ -333,9 +328,6 @@ extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functio
 int MPII_Comm_init(MPIR_Comm *);
 
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
-
-/* applies the specified info chain to the specified communicator */
-int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 
 int MPII_Comm_copy(MPIR_Comm *, int, MPIR_Comm **);
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);

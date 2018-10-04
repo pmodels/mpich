@@ -35,13 +35,6 @@ MPIR_Object_alloc_t MPIR_Comm_mem = {
 
 /* Communicator creation functions */
 struct MPIR_Commops *MPIR_Comm_fns = NULL;
-struct MPIR_Comm_hint_fn_elt {
-    char name[MPI_MAX_INFO_KEY];
-    MPIR_Comm_hint_fn_t fn;
-    void *state;
-    UT_hash_handle hh;
-};
-static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
 static int MPIR_Comm_commit_internal(MPIR_Comm * comm);
 
 /* FIXME :
@@ -88,7 +81,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->local_group = NULL;
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
-    comm_p->info = NULL;
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
@@ -737,11 +729,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         mpi_errno = MPID_Comm_free_hook(comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* Free info hints */
-        if (comm_ptr->info != NULL) {
-            MPIR_Info_free(comm_ptr->info);
-        }
-
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)
             MPIR_Comm_release(comm_ptr->local_comm);
 
@@ -832,83 +819,4 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/* Apply all known info hints in the specified info chain to the given
- * communicator. */
-int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *hint = NULL;
-    char hint_name[MPI_MAX_INFO_KEY] = { 0 };
-    struct MPIR_Comm_hint_fn_elt *hint_fn = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-
-    LL_FOREACH(info_ptr, hint) {
-        /* Have we hit the default, empty info hint? */
-        if (hint->key == NULL)
-            continue;
-
-        MPL_strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
-
-        HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
-
-        /* Skip hints that MPICH doesn't recognize. */
-        if (hint_fn) {
-            mpi_errno = hint_fn->fn(comm_ptr, hint, hint_fn->state);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int free_hint_handles(void *ignore)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Comm_hint_fn_elt *curr_hint = NULL, *tmp = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-
-    if (MPID_hint_fns) {
-        HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
-            HASH_DEL(MPID_hint_fns, curr_hint);
-            MPL_free(curr_hint);
-        }
-    }
-
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-    return mpi_errno;
-}
-
-/* The hint logic is stored in a uthash, with hint name as key and
- * the function responsible for applying the hint as the value. */
-int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Comm_hint_fn_elt *hint_elt = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-
-    if (MPID_hint_fns == NULL) {
-        MPIR_Add_finalize(free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
-    }
-
-    hint_elt = MPL_malloc(sizeof(struct MPIR_Comm_hint_fn_elt), MPL_MEM_COMM);
-    MPL_strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
-    hint_elt->state = state;
-    hint_elt->fn = fn;
-
-    HASH_ADD_STR(MPID_hint_fns, name, hint_elt, MPL_MEM_COMM);
-
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-    return mpi_errno;
 }
