@@ -20,6 +20,10 @@
 #define MPIR_DTYPE_BEGINNING  0
 #define MPIR_DTYPE_END       -1
 
+#ifndef MPIR_DATATYPE_PREALLOC
+#define MPIR_DATATYPE_PREALLOC 8
+#endif /* MPIR_DATATYPE_PREALLOC */
+
 /*S
   MPIR_Datatype_contents - Holds envelope and contents data for a given
                            datatype
