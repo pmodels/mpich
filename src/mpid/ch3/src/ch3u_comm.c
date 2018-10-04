@@ -30,6 +30,7 @@ cvars:
 static int register_hook_finalize(void *param);
 static int comm_created(MPIR_Comm *comm, void *param);
 static int comm_destroyed(MPIR_Comm *comm, void *param);
+static int set_hint_eager_threshold(MPIR_Comm *comm_ptr, const char *info_value);
 
 /* macros and head for list of communicators */
 #define COMM_ADD(comm) DL_PREPEND_NP(comm_list, comm, dev.next, dev.prev)
@@ -549,6 +550,27 @@ void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm)
     MPIR_FUNC_VERBOSE_EXIT(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
 }
 
+static int set_hint_eager_threshold(MPIR_Comm *comm_ptr, const char* info_value)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char *endptr;
+    MPIR_FUNC_TERSE_STATE_DECL(MPIDI_STATE_SET_HINT_EAGER_THRESHOLD);
+
+    MPIR_FUNC_TERSE_ENTER(MPIDI_STATE_SET_HINT_EAGER_THRESHOLD);
+
+    comm_ptr->dev.eager_max_msg_sz = strtol(info_value, &endptr, 0);
+
+    MPIR_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
+                         "**infohintparse", "**infohintparse %s",
+                         "eager_rendezvous_threshold");
+
+ fn_exit:
+    MPIR_FUNC_TERSE_EXIT(MPIDI_STATE_SET_HINT_EAGER_THRESHOLD);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -558,11 +580,45 @@ int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
 int MPID_Comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Info *curr_info = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SET_INFO);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SET_INFO);
+
+    LL_FOREACH(info, curr_info) {
+        if (curr_info->key == NULL)
+            continue;
+
+        if (!strcmp (curr_info->key, "eager_rendezvous_threshold"))
+            set_hint_eager_threshold(comm, curr_info->value);
+        /* else: Skip hints that MPICH doesn't recognize. */
+    }
+
+ fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SET_INFO);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 int MPID_Comm_get_info(MPIR_Comm * comm, MPIR_Info ** info)
 {
     int mpi_errno = MPI_SUCCESS;
+    char hint_val_str[MPI_MAX_INFO_VAL];
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_GET_INFO);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_GET_INFO);
+
+    mpi_errno = MPIR_Info_alloc(info);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "%d", comm->dev.eager_max_msg_sz);
+    mpi_errno = MPIR_Info_set_impl(*info, "eager_rendezvous_threshold", hint_val_str);
+
+ fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_GET_INFO);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
