@@ -193,7 +193,8 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                 cnts[i] = count / pof2;
             cnts[pof2 - 1] = count - (count / pof2) * (pof2 - 1);
 
-            disps[0] = 0;
+            if (pof2)
+                disps[0] = 0;
             for (i = 1; i < pof2; i++)
                 disps[i] = disps[i - 1] + cnts[i - 1];
 

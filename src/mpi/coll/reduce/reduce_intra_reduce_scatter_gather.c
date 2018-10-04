@@ -189,7 +189,8 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                 cnts[i] += 1;
         }
 
-        disps[0] = 0;
+        if (pof2)
+            disps[0] = 0;
         for (i = 1; i < pof2; i++)
             disps[i] = disps[i - 1] + cnts[i - 1];
 
@@ -274,7 +275,8 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                         cnts[i] += 1;
                 }
 
-                disps[0] = 0;
+                if (pof2)
+                    disps[0] = 0;
                 for (i = 1; i < pof2; i++)
                     disps[i] = disps[i - 1] + cnts[i - 1];
 
