@@ -363,11 +363,17 @@ M*/
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+            MPIR_Per_thread_t *per_thread = NULL;                       \
+            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
+                                         MPIR_Per_thread, per_thread, &err_); \
             MPIR_Assert(err_ == 0);                                     \
+            if (per_thread->lock_depth > 0) {                           \
+                MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
+                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
+                MPIDU_Thread_yield(&mutex, &err_);                          \
+                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+                MPIR_Assert(err_ == 0);                                 \
+            }                                                           \
         }                                                               \
     } while (0)
 #define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) do {} while (0)
