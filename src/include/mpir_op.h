@@ -185,8 +185,8 @@ extern MPI_User_function *MPIR_Op_table[];
 typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
 extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
-#define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf) - 1]
-#define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf) - 1]
+#define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
+#define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
 int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute);
 
