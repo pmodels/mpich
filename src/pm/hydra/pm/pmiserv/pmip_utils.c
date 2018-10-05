@@ -35,14 +35,15 @@ void HYD_pmcd_pmip_send_signal(int sig)
 
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
-    char *port = NULL;
+    char *port = NULL, *name;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_ERR_CHKANDJUMP(status, HYD_pmcd_pmip.upstream.server_name, HYD_INTERNAL_ERROR,
                         "duplicate control port setting\n");
 
     port = MPL_strdup(**argv);
-    HYD_pmcd_pmip.upstream.server_name = MPL_strdup(strtok(port, ":"));
+    name = strtok(port, ":");
+    HYD_pmcd_pmip.upstream.server_name = name ? MPL_strdup(name) : NULL;
     HYD_pmcd_pmip.upstream.server_port = strtol(strtok(NULL, ":"), NULL, 10);
 
     (*argv)++;
