@@ -379,7 +379,6 @@ Makefile.am-stamp
 /maint/createcoverage
 /maint/showsizes
 /maint/getcross
-/maint/f77tof90
 /maint/makerpm
 /maint/clmake
 /maint/conftimestamp
