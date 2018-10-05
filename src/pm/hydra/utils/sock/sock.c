@@ -558,6 +558,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
         ip = MPL_strdup(localhost);
+        HYDU_ERR_CHKANDJUMP(status, NULL == ip, HYD_INTERNAL_ERROR, "%s", "");
     }
 
     sport = HYDU_int_to_str(port);
