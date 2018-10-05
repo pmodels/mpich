@@ -19,8 +19,6 @@ dist_noinst_SCRIPTS +=                \
     maint/extractfixme.in             \
     maint/extractstates.in            \
     maint/extractstrings.in           \
-    maint/f77tof90                    \
-    maint/f77tof90.in                 \
     maint/findunusederrtxt            \
     maint/gcovmerge.in                \
     maint/getcoverage.in              \
