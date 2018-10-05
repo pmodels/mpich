@@ -1,4 +1,18 @@
 #! /bin/sh
+trap "exit" INT
+
+echo '**** Creating DAOS Pool ****'
+pool=`mpirun -np 1 dmg create --size=1GB`
+value=$pool
+echo $value
+OLDIFS=$IFS
+IFS=" "
+read -a array <<< "$(printf "%s" "$value")"
+IFS=$OLDIFS
+
+export DAOS_POOL=${array[0]}
+export DAOS_SVCL=${array[1]}
+
 FILENAME=$1
 echo '**** Testing I/O functions ****'
 echo '**** Testing simple.c ****'
@@ -18,7 +32,7 @@ mpirun -np 2 ./i_noncontig -fname "${FILENAME}_7"
 echo '**** Testing noncontig.c ****'
 mpirun -np 2 ./noncontig -fname "${FILENAME}_8"
 echo '**** Testing noncontig_coll.c ****'
-mpirun -np 2 ./noncontig_coll -fname "${FILENAME}9"
+mpirun -np 2 ./noncontig_coll -fname "${FILENAME}_9"
 echo '**** Testing noncontig_coll2.c ****'
 mpirun -np 4 ./noncontig_coll2 -fname "${FILENAME}_10"
 echo '**** Testing aggregation1.c ****'
@@ -43,5 +57,8 @@ echo '**** Testing fcoll_test.f ****'
 mpirun -np 4 ./fcoll_test -fname "${FILENAME}_20"
 echo '**** Testing pfcoll_test.f ****'
 mpirun -np 4 ./pfcoll_test -fname "${FILENAME}_21"
+
+echo '**** Destroying DAOS Pool ****'
+pool=`mpirun -np 1 dmg destroy --force --pool=${array[0]}`
+
 exit 0
- 

@@ -23,13 +23,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     static char myname[] = "ADIOI_DAOS_CLOSE";
     int rc;
 
-#if 0
-    {
-        char uuid_str[37];
-        uuid_unparse(cont->uuid, uuid_str);
-        fprintf(stderr, "File Close %s %s\n", fd->filename, uuid_str);
-    }
-#endif
+    /* if RW, get the max epoch written to commit in the next step */
     if (cont->amode == DAOS_COO_RW) {
         daos_epoch_t max_epoch;
 
@@ -41,6 +35,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     MPI_Comm_rank(fd->comm, &rank);
 
+    /* release the dfs object handle for the file and commit the epoch on rank 0 */
     if (rank == 0) {
         daos_epoch_t epoch;
 
@@ -75,6 +70,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     }
 
 bcast_rc:
+    /* bcast the return code to the other ranks */
     MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
     if (rc != 0) {
         PRINT_MSG(stderr, "Failed to close file (%d)\n", rc);
@@ -86,7 +82,7 @@ bcast_rc:
         return;
     }
 
-    /* array is closed on rank 0 in dfs_release() */
+    /* array is closed on rank 0 in dfs_release(), close it on the other ranks */
     if (rank != 0) {
         rc = daos_array_close(cont->oh, NULL);
         if (rc != 0) {
@@ -100,17 +96,25 @@ bcast_rc:
         }
     }
 
-    rc = daos_cont_close(cont->coh, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_cont_close() failed (%d)\n", rc);
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "Container Close failed", 0);
-        return;
+    /* close the container handle if it's created with l2g,g2l, 
+       otherwise just decrement ref count on the container info in the hashtable. */
+    if (cont->hdl) {
+        adio_daos_cont_release(cont->hdl);
+    } else {
+        rc = daos_cont_close(cont->coh, NULL);
+        if (rc != 0) {
+            PRINT_MSG(stderr, "daos_cont_close() failed (%d)\n", rc);
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Container Close failed", 0);
+            return;
+        }
     }
 
+    free(cont->obj_name);
+    free(cont->cont_name);
     ADIOI_Free(fd->fs_ptr);
     fd->fs_ptr = NULL;
 

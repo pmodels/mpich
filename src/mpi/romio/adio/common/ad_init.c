@@ -9,8 +9,7 @@
 #include "adio_extern.h"
 
 #ifdef ROMIO_DAOS
-#include <daos_types.h>
-#include <daos_api.h>
+#include "../ad_daos/ad_daos.h"
 
 daos_handle_t daos_pool_oh;
 bool daos_initialized = false;
@@ -148,7 +147,14 @@ bcast:
         } else {
             daos_pool_oh = DAOS_HDL_INVAL;
         }
+    }
+
+    if (comm_world_rank == 0)
         daos_rank_list_free(svcl);
+
+    rc = adio_daos_coh_hash_init();
+    if (rc < 0) {
+        fprintf(stderr, "Failed to init daos handle hash table\n");
     }
 #endif /* ROMIO_DAOS */
 
@@ -167,9 +173,6 @@ bcast:
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_stat_a, &ADIOI_MPE_stat_b);
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_iread_a, &ADIOI_MPE_iread_b);
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_iwrite_a, &ADIOI_MPE_iwrite_b);
-
-        int comm_world_rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
 
         if (comm_world_rank == 0) {
             MPE_Describe_state(ADIOI_MPE_open_a, ADIOI_MPE_open_b, "open", "orange");

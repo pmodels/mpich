@@ -34,6 +34,13 @@
                 __FILE__, __LINE__, __func__, ##__VA_ARGS__);                         \
     } while (0)
 
+struct adio_daos_co_hdl {
+	d_list_t	co_entry;
+	uuid_t		co_uuid;
+	daos_handle_t	co_coh;
+	int		co_ref;
+};
+
 struct ADIO_DAOS_cont {
     /** container uuid */
     uuid_t		uuid;
@@ -59,6 +66,8 @@ struct ADIO_DAOS_cont {
     daos_handle_t	eqh;
     /** epoch currently the handle is at */
     daos_epoch_t	epoch;
+    /** container handle for directory holding the file object */
+    struct adio_daos_co_hdl *hdl;
 };
 
 struct ADIO_DAOS_req {
@@ -72,6 +81,14 @@ struct ADIO_DAOS_req {
     daos_range_t *rgs;
     daos_iov_t *iovs;
 };
+
+/** Container Handle Hash functions */
+int adio_daos_coh_hash_init(void);
+void adio_daos_coh_hash_finalize(void);
+struct adio_daos_co_hdl *adio_daos_cont_lookup(const uuid_t uuid);
+int adio_daos_cont_lookup_create(uuid_t uuid, bool create,
+                                 struct adio_daos_co_hdl **hdl);
+void adio_daos_cont_release(struct adio_daos_co_hdl *hdl);
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state);
 int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status);
