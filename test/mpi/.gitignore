@@ -938,6 +938,7 @@
 /f90/pt2pt/statusesf90
 /f90/pt2pt/statusesf90.f90
 /f90/pt2pt/testlist
+/f90/rma
 /f90/rma/Makefile.am
 /f90/rma/Makefile.sm
 /f90/rma/aintf90.f90
