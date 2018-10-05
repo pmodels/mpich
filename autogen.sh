@@ -95,7 +95,6 @@ do_bindings=yes
 do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
-do_f77tof90=yes
 do_build_configure=yes
 do_genstates=yes
 do_atdir_check=no
@@ -122,7 +121,7 @@ export autoreconf_args
 
 # List of steps that we will consider (We do not include depend
 # because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates getparms"
+AllSteps="geterrmsgs bindings f77 build_configure genstates getparms"
 stepsCleared=no
 
 for arg in "$@" ; do
@@ -905,40 +904,6 @@ if test -x maint/extractcvars -a "$do_getcvars" = "yes" ; then
     fi
 else
     echo "skipped"
-fi
-
-# Create and/or update the f90 tests
-if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
-    echo_n "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
-    for dir in test/mpi/f77/* ; do
-        if [ ! -d $dir ] ; then continue ; fi
-	leafDir=`basename $dir`
-        if [ ! -d test/mpi/f90/$leafDir ] ; then
-	    mkdir test/mpi/f90/$leafDir
-        fi
-        if maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap ; then
-            echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
-        else
-            echo "failed"
-            error "maint/f77tof90 $dir failed!"
-            exit 1
-        fi
-    done
-    for dir in test/mpi/errors/f77/* ; do
-        if [ ! -d $dir ] ; then continue ; fi
-	leafDir=`basename $dir`
-        if [ ! -d test/mpi/errors/f90/$leafDir ] ; then
-	    mkdir test/mpi/errors/f90/$leafDir
-        fi
-        if maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap ; then
-            echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
-        else
-            echo "failed"
-            error "maint/f77tof90 $dir failed!"
-            exit 1
-        fi
-    done
-    echo "done"
 fi
 
 echo
