@@ -79,8 +79,14 @@ int MPL_shm_hnd_deserialize_by_ref(MPL_shm_hnd_t hnd, char **ser_hnd_ptr)
 int MPL_shm_hnd_init(MPL_shm_hnd_t * hnd_ptr)
 {
     int rc = -1;
+
     rc = MPLI_shm_hnd_alloc(hnd_ptr, MPL_MEM_SHM);
+
+    if (MPL_SHM_SUCCESS != rc)
+        return rc;
+
     MPLI_shm_hnd_reset_val(*hnd_ptr);
+
     return rc;
 }
 
