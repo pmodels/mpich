@@ -68,6 +68,43 @@ void MPII_Op_set_fc(MPI_Op op)
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Op_create_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
+{
+    MPIR_Op *op_ptr;
+    int mpi_errno = MPI_SUCCESS;
+
+    op_ptr = (MPIR_Op *) MPIR_Handle_obj_alloc(&MPIR_Op_mem);
+    /* --BEGIN ERROR HANDLING-- */
+    if (!op_ptr) {
+        mpi_errno =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**nomem", "**nomem %s", "MPI_Op");
+        goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+
+    op_ptr->language = MPIR_LANG__C;
+    op_ptr->kind = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
+    op_ptr->function.c_function = (void (*)(const void *, void *,
+                                            const int *, const MPI_Datatype *)) user_fn;
+    MPIR_Object_set_ref(op_ptr, 1);
+
+    MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
+
+#ifdef MPID_Op_commit_hook
+    MPID_Op_commit_hook(op_ptr);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPI_Op_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -105,7 +142,6 @@ Output Parameters:
 @*/
 int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
-    MPIR_Op *op_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
 
@@ -116,27 +152,10 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
     /* ... body of routine ...  */
 
-    op_ptr = (MPIR_Op *) MPIR_Handle_obj_alloc(&MPIR_Op_mem);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!op_ptr) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", "**nomem %s", "MPI_Op");
+    mpi_errno = MPIR_Op_create_impl(user_fn, commute, op);
+    if (mpi_errno)
         goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
 
-    op_ptr->language = MPIR_LANG__C;
-    op_ptr->kind = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
-    op_ptr->function.c_function = (void (*)(const void *, void *,
-                                            const int *, const MPI_Datatype *)) user_fn;
-    MPIR_Object_set_ref(op_ptr, 1);
-
-    MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
-
-#ifdef MPID_Op_commit_hook
-    MPID_Op_commit_hook(op_ptr);
-#endif
     /* ... end of body of routine ... */
 
   fn_exit:
