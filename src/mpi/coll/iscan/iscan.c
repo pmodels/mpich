@@ -21,6 +21,7 @@ cvars:
         Variable to select allgather algorithm
         auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
+        gentran_recursive_doubling - Force generic transport recursive doubling algorithm
 
     - name        : MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -142,6 +143,28 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Iscan_intra_algo_choice) {
+            case MPIR_ISCAN_INTRA_ALGO_GENTRAN_RECURSIVE_DOUBLING:
+                mpi_errno =
+                    MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
+                                                                datatype, op, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
