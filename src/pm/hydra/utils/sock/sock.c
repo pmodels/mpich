@@ -6,6 +6,7 @@
 
 #include "hydra.h"
 #include "demux.h"
+#include "mpl.h"
 
 struct fwd_hash {
     int in;
@@ -18,9 +19,10 @@ struct fwd_hash {
     struct fwd_hash *next;
 };
 
+/* FIXME: redudant code with PMIServGetPort. Can we call PMIServGetPort here? */
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
-    struct sockaddr_in sa;
+    int ret;
     int one = 1;
     uint16_t low_port, high_port;
     char *port_str;
@@ -55,7 +57,8 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     }
 
   setup_socket:
-    *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    *listen_fd = MPL_socket();
+    /* FIXME: duplicate with pm/hydra2/libhydra/sock/hydra_sock.c */
     if (*listen_fd < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
                             MPL_strerror(errno));
@@ -71,46 +74,21 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set SO_REUSEADDR\n");
 
-    for (i = low_port; i <= high_port; i++) {
-        memset((void *) &sa, 0, sizeof(struct sockaddr_in));
-        sa.sin_family = AF_INET;
-        sa.sin_port = htons(i);
-        sa.sin_addr.s_addr = INADDR_ANY;
-
-        if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in)) < 0) {
-            /* If the address is in use, we should try the next
-             * port. Otherwise, it's an error. */
-            if (errno != EADDRINUSE)
-                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "bind error (%s)\n",
-                                    MPL_strerror(errno));
-        } else  /* We got a port */
-            break;
-    }
-
-    *port = i;
-    if (*port > high_port)
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "no port to bind\n");
-
-    if (listen(*listen_fd, SOMAXCONN) < 0) {
-        if (errno == EADDRINUSE) {
-            /* We need to close the socket and rebind to a new port */
-            close(*listen_fd);
-            goto setup_socket;
-        } else {
+    if (low_port == 0) {
+        ret = MPL_listen_anyport(*listen_fd, port);
+        if (ret)
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "failed to bind to any port\n");
+    } else {
+        ret = MPL_listen_portrange(*listen_fd, port, low_port, high_port);
+        if (ret == -2) {
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "no port to bind\n");
+        } else if (ret < 0) {
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "listen error (%s)\n", MPL_strerror(errno));
         }
+        /* We got a port */
     }
 
-    /* We asked for any port, so we need to find out which port we
-     * actually got. */
-    if (*port == 0) {
-        socklen_t sinlen = sizeof(struct sockaddr_in);
-
-        if (getsockname(*listen_fd, (struct sockaddr *) &sa, &sinlen) < 0)
-            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "getsockname error (%s)\n",
-                                MPL_strerror(errno));
-        *port = ntohs(sa.sin_port);
-    }
+    /* FIXME: the original code checks EADDRINUSE in both bind and listen. Is there a case EADDRINUSE slip through bind? If there is, we need somehow restore the original code logic.  */
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -124,29 +102,18 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
                              unsigned long delay)
 {
-    struct hostent *ht;
-    struct sockaddr_in sa;
+    struct sockaddr_storage addr;
     int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    memset((char *) &sa, 0, sizeof(struct sockaddr_in));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
-
-    /* Get the remote host's IP address. Note that this is not
-     * thread-safe. Since we don't use threads right now, we don't
-     * worry about locking it. */
-    ht = gethostbyname(host);
-    if (ht == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address for %s (%s)\n", host ? host : "NULL",
-                            HYDU_herror(h_errno));
-    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
+    ret = MPL_get_sockaddr(host, &addr);
+    if (ret)
+        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM, "unable to get host address for %s\n", host);
 
     /* Create a socket and set the required options */
-    *fd = socket(AF_INET, SOCK_STREAM, 0);
+    *fd = MPL_socket();
     if (*fd < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
                             MPL_strerror(errno));
@@ -156,7 +123,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
      * layer can decide what to do with the return status. */
     retry_count = 0;
     do {
-        ret = connect(*fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in));
+        ret = MPL_connect(*fd, &addr, port);
         if (ret < 0 && (errno == ECONNREFUSED || errno == ETIMEDOUT)) {
             /* connection error; increase retry count and delay */
             retry_count++;
@@ -477,36 +444,17 @@ void HYDU_sock_finalize(void)
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 {
     HYD_status status = HYD_SUCCESS;
+    int ret;
 
 #if defined(HAVE_GETIFADDRS)
-    struct ifaddrs *ifaddr, *ifa;
-    char buf[MAX_HOSTNAME_LEN];
-    struct sockaddr_in *sa;
-
-    /* Got the interface name; let's query for the IP address */
-    if (getifaddrs(&ifaddr) == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
-
-    for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr) &&
-            (ifa->ifa_addr->sa_family == AF_INET))
-            break;
-
-    if (!ifa)
+    struct sockaddr_storage addr;
+    ret = MPL_get_sockaddr_iface(iface, &addr);
+    if (ret)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n", iface);
 
-    sa = (struct sockaddr_in *) ifa->ifa_addr;
-#if defined HAVE_INET_NTOP
-    (*ip) = MPL_strdup((char *)
-                       inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
-#else
-    (*ip) = NULL;
-#endif /* HAVE_INET_NTOP */
-    if (!*ip)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unable to find IP for interface %s\n", iface);
-
-    freeifaddrs(ifaddr);
+    char buf[MAX_HOSTNAME_LEN];
+    ret = MPL_sockaddr_to_str(&addr, buf, MAX_HOSTNAME_LEN);
+    (*ip) = MPL_strdup(buf);
 #else
     /* For now just disable interface selection when getifaddrs isn't
      * available, such as on AIX.  In the future we can implement in MPL

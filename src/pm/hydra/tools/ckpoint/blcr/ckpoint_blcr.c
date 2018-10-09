@@ -78,31 +78,19 @@ static HYD_status create_stdinouterr_sock(int *port)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;
-    struct sockaddr_in sin;
-    socklen_t len;
+    unsigned short t_port;
+    struct sockaddr_storage addr;
     HYDU_FUNC_ENTER();
 
-    listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    listen_fd = MPL_socket();
     HYDU_ERR_CHKANDJUMP(status, listen_fd < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
                         strerror(errno));
 
-    memset((void *) &sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port = htons(0);
-
-    ret = bind(listen_fd, (struct sockaddr *) &sin, sizeof(sin));
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n", strerror(errno));
-
-    ret = listen(listen_fd, SOMAXCONN);
+    MPL_LISTEN_PUSH(1, SOMAXCONN);
+    ret = MPL_listen_anyport(listen_fd, &t_port);
+    *port = t_port;
+    MPL_LISTEN_POP;
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n", strerror(errno));
-
-    len = sizeof(sin);
-    ret = getsockname(listen_fd, (struct sockaddr *) &sin, &len);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "getsockname() failed, %s\n",
-                        strerror(errno));
-
-    *port = ntohs(sin.sin_port);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -145,7 +133,7 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
         char *id_p;
         /* wait for a connection */
         do {
-            struct sockaddr_in rmt_addr;
+            struct sockaddr_storage rmt_addr;
             socklen_t sa_len = sizeof(rmt_addr);;
             fd = accept(listen_fd, (struct sockaddr *) &rmt_addr, &sa_len);
         } while (fd && errno == EINTR);
