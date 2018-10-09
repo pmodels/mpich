@@ -838,6 +838,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
 
                 case FI_ECANCELED:
                     req = MPIDI_OFI_context_to_request(e.op_context);
+                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
                     break;
 
