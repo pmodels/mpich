@@ -19,8 +19,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallw algorithm
-        auto   - Internal algorithm selection
-        linear - Force linear algorithm
+        auto            - Internal algorithm selection
+        linear          - Force linear algorithm
+        gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
