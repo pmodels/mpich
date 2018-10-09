@@ -34,10 +34,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
 
     OPA_incr_int(&MPIDI_global.progress_count);
 
-    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
-        NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))
-        MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_FREE_HOOK);
     return;
 }

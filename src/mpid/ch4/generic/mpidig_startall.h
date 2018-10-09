@@ -15,6 +15,12 @@
 #include "ch4_impl.h"
 #include <../mpi/pt2pt/bsendutil.h>
 
+/* Forward declaration for persistent receive */
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(int transport, void *buf, MPI_Aint count,
+                                         MPI_Datatype datatype, int rank, int tag,
+                                         MPIR_Comm * comm, int context_offset,
+                                         MPIR_Request ** request);
+
 #undef FUNCNAME
 #define FUNCNAME MPIDIG_mpi_startall
 #undef FCNAME
@@ -30,13 +36,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
         MPIR_Request *const preq = requests[i];
 
         switch (MPIDIG_REQUEST(preq, p_type)) {
-
+                int recv_transport;
             case MPIDI_PTYPE_RECV:
-                mpi_errno = MPID_Irecv(MPIDIG_REQUEST(preq, buffer), MPIDIG_REQUEST(preq, count),
-                                       MPIDIG_REQUEST(preq, datatype), MPIDIG_REQUEST(preq, rank),
-                                       MPIDIG_REQUEST(preq, tag), preq->comm,
-                                       MPIDIG_request_get_context_offset(preq),
-                                       &preq->u.persist.real_request);
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+                recv_transport = MPIDI_TRANSPORT_ALL;
+#else
+                /* In case of ANY_SOURCE receive, coupling shm/nm partner logic is already
+                 * implemented at MPID_*_init and MPID_Startall (presistent "parent" requests from shm and nm
+                 * become partners). Blindly calling MPID_Irecv here would call another partner structure
+                 * underneath the netmod (MPIDIG)-side persistent request.
+                 * For that reason, here we are calling a receive to specifically look at either
+                 * shmmod or netmod depending on who created this `preq` object. */
+                recv_transport = MPIDI_REQUEST(preq, is_local) ? MPIDI_SHM : MPIDI_NETMOD;
+#endif
+                mpi_errno = MPIDI_irecv(recv_transport,
+                                        MPIDIG_REQUEST(preq, buffer),
+                                        MPIDIG_REQUEST(preq, count),
+                                        MPIDIG_REQUEST(preq, datatype),
+                                        MPIDIG_REQUEST(preq, rank),
+                                        MPIDIG_REQUEST(preq, tag),
+                                        preq->comm,
+                                        MPIDIG_request_get_context_offset(preq),
+                                        &preq->u.persist.real_request);
                 break;
 
             case MPIDI_PTYPE_SEND:

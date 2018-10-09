@@ -136,6 +136,11 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
          * Need to clean up both shmmod and netmod. */
         MPIDI_SHM_prequest_free_hook(req);
         MPIDI_NM_prequest_free_hook(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
+        MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
+        /* In case of ANY_SOURCE receive, a user is only facing to a
+         * shmmod-created request object. So let's free the netmod-created one
+         * on behalf of the user. */
+        MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
     } else {
         if (MPIDI_REQUEST(req, is_local))
             MPIDI_SHM_prequest_free_hook(req);

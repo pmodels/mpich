@@ -31,8 +31,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
         /* This is sub-optimal, can we do better? */
         if (MPIDI_REQUEST_ANYSOURCE_PARTNER(req)) {
             mpi_errno = MPIDI_SHM_mpi_startall(1, &req);
-            if (mpi_errno == MPI_SUCCESS) {
+            if (mpi_errno == MPI_SUCCESS && !MPIR_Request_is_complete(req)) {
                 mpi_errno = MPIDI_NM_mpi_startall(1, &MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
+                if (MPIR_Request_is_complete(MPIDI_REQUEST_ANYSOURCE_PARTNER(req))) {
+                    /* NM request completed immediately (e.g. matched with an unexpected receive) */
+                    MPIR_Request *shm_real_req, *nm_real_req;
+                    shm_real_req = req->u.persist.real_request;
+                    nm_real_req = MPIDI_REQUEST_ANYSOURCE_PARTNER(req)->u.persist.real_request;
+                    mpi_errno = MPIDI_SHM_mpi_cancel_recv(shm_real_req);
+                    if (MPIR_STATUS_GET_CANCEL_BIT(shm_real_req->status)) {
+                        shm_real_req->status = nm_real_req->status;
+                    }
+                    MPIR_Request_free(nm_real_req);
+                    continue;
+                }
                 MPIDI_REQUEST_ANYSOURCE_PARTNER(req->u.persist.real_request) =
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(req)->u.persist.real_request;
                 MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER
