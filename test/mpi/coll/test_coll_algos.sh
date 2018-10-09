@@ -142,7 +142,7 @@ testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring"
+algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring gentran_brucks"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -217,6 +217,10 @@ for algo_name in ${algo_names}; do
     done
 done
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> fb13db4fc... mtest: Add tests for Allgatherv brucks algo
 ######### Add tests for Scatter algorithms ###########
 
 #disable device collectives for scatter to test MPIR algorithms
