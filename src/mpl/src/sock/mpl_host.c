@@ -35,9 +35,9 @@ static void init_lhost_list(void)
         return;
 
 #if defined(MPL_HAVE_GETIFADDRS) && defined (MPL_HAVE_INET_NTOP)
-    char tmp_lhost[MAX_HOSTNAME_LEN], *lhost_ip;
-    struct hostent *ht;
-    struct sockaddr_in sa;
+    char tmp_lhost[MAX_HOSTNAME_LEN];
+    int ret;
+    struct sockaddr_storage addr;
     struct ifaddrs *ifaddr, *ifa;
     char buf[MAX_HOSTNAME_LEN];
 
@@ -48,15 +48,12 @@ static void init_lhost_list(void)
     append_lhost(tmp_lhost);
 
     /* we have our host name; try gethostbyname */
-    if ((ht = gethostbyname(tmp_lhost))) {
-        memset((char *) &sa, 0, sizeof(struct sockaddr_in));
-        memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
-
+    ret = MPL_get_sockaddr(tmp_lhost, &addr);
+    if (ret == 0) {
         /* Find the IP address of the host */
-        lhost_ip = (char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf, MAX_HOSTNAME_LEN);
-
-        if (lhost_ip)
-            append_lhost(lhost_ip);
+        ret = MPL_sockaddr_to_str(&addr, buf, MAX_HOSTNAME_LEN);
+        if (ret == 0)
+            append_lhost(buf);
     }
 
     /* try getifaddrs to see if we can get additional IPs */
@@ -65,13 +62,12 @@ static void init_lhost_list(void)
 
     /* Find the IP addresses of all local interfaces */
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+        /* FIXME: IPv4 only local addresses */
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
-            struct sockaddr_in *sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
-
-            lhost_ip = (char *)
-                inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf, MAX_HOSTNAME_LEN);
-            if (lhost_ip)
-                append_lhost(lhost_ip);
+            ret = MPL_sockaddr_to_str((struct sockaddr_storage *) ifa->ifa_addr,
+                                      buf, MAX_HOSTNAME_LEN);
+            if (ret == 0)
+                append_lhost(buf);
         }
     }
     freeifaddrs(ifaddr);
