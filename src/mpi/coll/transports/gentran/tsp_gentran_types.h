@@ -102,6 +102,8 @@ typedef struct {
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;
+
+    int is_persistent;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;

@@ -12,9 +12,14 @@
 #include "mpiimpl.h"
 #include "tsp_stubtran.h"
 
-int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched)
+int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int is_persistent)
 {
     return MPI_SUCCESS;
+}
+
+void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched)
+{
+    return;
 }
 
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,

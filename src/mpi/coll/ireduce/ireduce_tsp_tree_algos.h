@@ -275,7 +275,7 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched);
+    MPIR_TSP_sched_create(sched, 0);
 
     /* schedule pipelined tree algo */
     mpi_errno =
