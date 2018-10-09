@@ -262,4 +262,22 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Alltoallv algorithms ###########
+
+#disable device collectives for alltoallv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_blocked gentran_inplace"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="alltoallv 10 ${env}${nl}"
+    coll_algo_tests+="alltoallv0 10 ${env}${nl}"
+done
+
 export coll_algo_tests
