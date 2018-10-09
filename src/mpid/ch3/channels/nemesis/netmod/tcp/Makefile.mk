@@ -13,7 +13,6 @@ mpi_core_sources +=                                   \
     src/mpid/ch3/channels/nemesis/netmod/tcp/tcp_send.c     \
     src/mpid/ch3/channels/nemesis/netmod/tcp/tcp_utility.c  \
     src/mpid/ch3/channels/nemesis/netmod/tcp/socksm.c       \
-    src/mpid/ch3/channels/nemesis/netmod/tcp/tcp_getip.c    \
     src/mpid/ch3/channels/nemesis/netmod/tcp/tcp_ckpt.c
 
 noinst_HEADERS +=                                                \
