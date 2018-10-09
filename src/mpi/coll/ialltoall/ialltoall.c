@@ -24,6 +24,8 @@ cvars:
         inplace           - Force inplace algorithm
         pairwise          - Force pairwise algorithm
         permuted_sendrecv - Force permuted sendrecv algorithm
+        gentran_brucks    - Force generic transport based brucks algorithm
+        gentran_scattered - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -50,6 +52,50 @@ cvars:
         option to call the MPIR-level algorithms manually.
         If set to false, the device-level ialltoall function will not be
         called.
+
+    - name        : MPIR_CVAR_IALLTOALL_BRUCKS_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        radix (k) value for generic transport brucks based ialltoall
+
+    - name        : MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR
+      category    : COLLECTIVE
+      type        : boolean
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, the gentran based brucks algorithm will allocate
+        dedicated send and receive buffers for every neighbor in the brucks
+        algorithm. Otherwise, it would reuse a single buffer for sending
+        and receiving data to/from neighbors
+
+    - name        : MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS
+      category    : COLLECTIVE
+      type        : int
+      default     : 64
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum number of outstanding sends and recvs posted at a time
+
+    - name        : MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 4
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Number of send/receive tasks that scattered algorithm waits for
+        completion before posting another batch of send/receives of that size
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -274,6 +320,39 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ialltoall_intra_algo_choice) {
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_SCATTERED:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_scattered(sendbuf, sendcount,
+                                                           sendtype, recvbuf,
+                                                           recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
+
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
 
     *request = NULL;
 

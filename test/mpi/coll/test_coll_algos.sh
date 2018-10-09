@@ -262,4 +262,39 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Alltoall algorithms ###########
+
+#disable device collectives for allgather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_brucks gentran_scattered"
+kvalues="2 3 4"
+batchsizes="1 2 4"
+outstandingtasks="4 8"
+
+for algo_name in ${algo_names}; do
+    if[ ${algo_name} -eq "brucks"]; then
+        for kval in ${kvalues}; do
+            env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+            env+="env=MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=${kval} "
+
+            coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0${nl}"
+            coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1${nl}"
+        done
+    else
+        for task in $ {outstandingtasks}; do
+            for batchsize in $ {batchsizes}; do
+                env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE=${batchsize} "
+                env+="env=MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS=${task} "
+
+                coll_algo_tests+="alltoall1 8 ${env}${nl}"
+            done
+        done
+    fi
+done
+
 export coll_algo_tests
