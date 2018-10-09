@@ -262,4 +262,21 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Ineighbor_alltoall algorithms ###########
+
+#disable device collectives for neighnor_alltoall to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_alltoall 4 mpiversion=3.0 ${env}${nl}"
+done
+
 export coll_algo_tests
