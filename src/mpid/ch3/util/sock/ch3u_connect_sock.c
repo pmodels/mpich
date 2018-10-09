@@ -198,7 +198,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     MPIR_CHKPMEM_DECL(1);
     char host_description[MAX_HOST_DESCRIPTION_LEN];
     int port, port_name_tag;
-    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
+    struct sockaddr_storage ifaddr;
     int hasIfaddr = 0;
     MPIDI_CH3I_Connection_t * conn;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_CONNECT_TO_ROOT_SOCK);
@@ -310,7 +310,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 
 int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 				     char *host_description, int maxlen,
-				     int *port, MPIDI_CH3I_Sock_ifaddr_t *ifaddr,
+				     int *port, struct sockaddr_storage *ifaddr,
 				     int *hasIfaddr )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -360,23 +360,9 @@ int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
     str_errno = MPL_str_get_string_arg(bc, MPIDI_CH3I_IFNAME_KEY,
 					ifname, sizeof(ifname) );
     if (str_errno == MPL_STR_SUCCESS) {
-	/* Convert ifname into 4-byte ip address */
-	/* Use AF_INET6 for IPv6 (inet_pton may still be used).
-	   An address with more than 3 :'s is an IPv6 address */
-	
-	int rc = inet_pton( AF_INET, (const char *)ifname, ifaddr->ifaddr );
-	if (rc == 0) {
+        int ret = MPL_get_sockaddr((const char *)ifname, ifaddr);
+        if (ret) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ifnameinvalid");
-	}
-	else if (rc < 0) {
-	    /* af_inet not supported */
-	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**afinetinvalid");
-	}
-	else {
-	    /* Success */
-	    *hasIfaddr = 1;
-	    ifaddr->len = 4;  /* IPv4 address */
-	    ifaddr->type = AF_INET;
 	}
     }
 #endif
@@ -405,7 +391,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
-    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
+    struct sockaddr_storage ifaddr;
     char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
 #ifdef MPL_USE_DBG_LOGGING
     char *bc_orig = *bc_val_p;
@@ -470,12 +456,9 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 #endif 
 
     {
-	char ifname[256];
-	unsigned char *p;
-	if (ifaddr.len > 0 && ifaddr.type == AF_INET) {
-	    p = (unsigned char *)(ifaddr.ifaddr);
-	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
-			   p[0], p[1], p[2], p[3] );
+	char ifname[256]="";
+        MPL_sockaddr_to_str(&ifaddr, ifname, 256);
+	if (ifname[0]) {
 	    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
 	    str_errno = MPL_str_add_string_arg( bc_val_p,
 						 val_max_sz_p,
@@ -1082,7 +1065,7 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 {
     char host_description[MAX_HOST_DESCRIPTION_LEN];
-    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
+    struct sockaddr_storage ifaddr;
     int hasIfaddr = 0, port;
     MPIDI_CH3I_Connection_t * conn = 0;
     int mpi_errno = MPI_SUCCESS;

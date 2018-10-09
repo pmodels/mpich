@@ -58,11 +58,11 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t **);
 void MPIDI_CH3I_Connection_free(MPIDI_CH3I_Connection_t *);
 
 /* Routines to get the socket address */
-int MPIDU_CH3U_GetSockInterfaceAddr( int, char *, int, MPIDI_CH3I_Sock_ifaddr_t * );
+int MPIDU_CH3U_GetSockInterfaceAddr( int, char *, int, struct sockaddr_storage * );
 
 int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 				     char *host_description, int maxlen,
-				     int *port, MPIDI_CH3I_Sock_ifaddr_t *ifaddr,
+				     int *port, struct sockaddr_storage *ifaddr,
 				     int *hasIfaddr );
 
 /* These two routines from util/sock initialize and shutdown the 

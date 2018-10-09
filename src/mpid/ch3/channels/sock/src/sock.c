@@ -193,8 +193,6 @@ static int MPIDI_CH3I_Socki_set_next_id = 0;
    or other option; if "firm" is true, fail if the buffer size is not
    successfully set */
 int MPIDI_CH3I_Sock_SetSockBufferSize(int fd, int firm);
-/* Get a string version of the address in ifaddr*/
-int MPIDI_CH3I_Sock_AddrToStr(MPIDI_CH3I_Sock_ifaddr_t * ifaddr, char *str, int maxlen);
 
 
 
@@ -1177,24 +1175,6 @@ int MPIDI_CH3I_Sock_SetSockBufferSize(int fd, int firm)
     return mpi_errno;
 }
 
-/* This routine provides a string version of the address. */
-int MPIDI_CH3I_Sock_AddrToStr(MPIDI_CH3I_Sock_ifaddr_t * ifaddr, char *str, int maxlen)
-{
-    int i;
-    unsigned char *p = ifaddr->ifaddr;
-    for (i = 0; i < ifaddr->len && maxlen > 4; i++) {
-        snprintf(str, maxlen, "%.3d.", *p++);
-        str += 4;
-        maxlen -= 4;
-    }
-    /* Change the last period to a null; but be careful in case len was zero */
-    if (i > 0)
-        *--str = 0;
-    else
-        *str = 0;
-    return 0;
-}
-
 /*********** end of socki_util.i *********/
 
 /*********** sock_init.i *****************/
@@ -1516,14 +1496,11 @@ int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set *sock_set)
 /*********** sock_post.i *****************/
 
 /*
- This routine connects to a particular address (in byte form; for ipv4,
- the address is four bytes, typically the value of h_addr_list[0] in
- struct hostent.  By avoiding a character name for an interface (we *never*
+ This routine connects to a particular address (in byte form).
+  By avoiding a character name for an interface (we *never*
  connect to a host; we are *always* connecting to a particular interface
  on a host), we avoid problems with DNS services, including lack of properly
- configured services and scalability problems.  As this routine uses
- a four-byte field, it is currently restricted to ipv4.  This routine should
- evolve to support ipv4 and ipv6 addresses.
+ configured services and scalability problems.
 
  This routine was constructed from MPIDI_CH3I_Sock_post_connect by removing the
  poorly placed use of gethostname within the middle of that routine and
@@ -1533,16 +1510,15 @@ int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set *sock_set)
  compatibility until it is determined that we can always use explicit addrs
  needed in setting up the socket instead of character strings.
  */
-int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
-                                        void *user_ptr,
-                                        MPIDI_CH3I_Sock_ifaddr_t * ifaddr, int port,
-                                        struct MPIDI_CH3I_Sock **sockp)
+int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set * sock_set,
+                                        void * user_ptr,
+                                        struct sockaddr_storage *p_addr, int port,
+                                        struct MPIDI_CH3I_Sock ** sockp)
 {
     struct MPIDI_CH3I_Sock *sock = NULL;
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
     int fd = -1;
-    struct sockaddr_in addr;
     long flags;
     int nodelay;
     int rc;
@@ -1556,7 +1532,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
     /*
      * Create a non-blocking socket with Nagle's algorithm disabled
      */
-    fd = socket(PF_INET, SOCK_STREAM, 0);
+    fd = MPL_socket();
     if (fd == -1) {
         /* FIXME: It would be better to include a special formatting
          * clue for system error messages (e.g., %dSE; in the recommended
@@ -1611,11 +1587,6 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
     pollinfo->state = MPIDI_CH3I_SOCKI_STATE_CONNECTED_RW;
     pollinfo->os_errno = 0;
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    memcpy(&addr.sin_addr.s_addr, ifaddr->ifaddr, sizeof(addr.sin_addr.s_addr));
-    addr.sin_port = htons((unsigned short) port);
-
     /*
      * Set and verify the socket buffer size
      */
@@ -1625,17 +1596,16 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
     /*
      * Attempt to establish the connection
      */
-    MPL_DBG_STMT(MPIDI_CH3I_DBG_SOCK_CONNECT, TYPICAL, {
-                 char addrString[64];
-                 MPIDI_CH3I_Sock_AddrToStr(ifaddr, addrString, sizeof(addrString));
-                 MPL_DBG_MSG_FMT(MPIDI_CH3I_DBG_SOCK_CONNECT, TYPICAL, (MPL_DBG_FDEST,
-                                                                        "Connecting to %s:%d",
-                                                                        addrString, port));
-                 }
-)
+    MPL_DBG_STMT(MPIDI_CH3I_DBG_SOCK_CONNECT,TYPICAL,{
+	char addrString[64];
+        MPL_sockaddr_to_str(p_addr, addrString, 64);
+	MPL_DBG_MSG_FMT(MPIDI_CH3I_DBG_SOCK_CONNECT,TYPICAL,(MPL_DBG_FDEST,
+			      "Connecting to %s:%d", addrString, port ));
+	})
 
-        do {
-        rc = connect(fd, (struct sockaddr *) &addr, sizeof(addr));
+    do
+    {
+        rc = MPL_connect(fd, p_addr, port);
     }
     while (rc == -1 && errno == EINTR);
 
@@ -1712,8 +1682,8 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *use
                                  char *host_description, int port, struct MPIDI_CH3I_Sock **sockp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
-    struct hostent *hostent;
+    int ret;
+    struct sockaddr_storage addr;
 
     /*
      * Convert hostname to IP address
@@ -1726,20 +1696,16 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *use
      * the host description be a const char [] and not modified by this
      * routine? */
     strtok(host_description, " ");
-    /* FIXME: For ipv6, we should use getaddrinfo */
-    hostent = gethostbyname(host_description);
+    ret = MPL_get_sockaddr(host_description, &addr);
     /* --BEGIN ERROR HANDLING-- */
-    if (hostent == NULL || hostent->h_addrtype != AF_INET) {
-        /* FIXME: Set error */
-        goto fn_exit;
+    if (ret) {
+	/* FIXME: Set error */
+	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
-    /* These are correct for IPv4 */
-    memcpy(ifaddr.ifaddr, (unsigned char *) hostent->h_addr_list[0], 4);
-    ifaddr.len = 4;
-    ifaddr.type = AF_INET;
-    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr, &ifaddr, port, sockp);
-  fn_exit:
+    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
+						    &addr, port, sockp);
+ fn_exit:
     return mpi_errno;
 }
 
@@ -1758,8 +1724,6 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     int fd = -1;
     long flags;
     int optval;
-    struct sockaddr_in addr;
-    socklen_t addr_len;
     int rc;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_LISTEN);
@@ -1780,7 +1744,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /*
      * Create a non-blocking socket for the listener
      */
-    fd = socket(PF_INET, SOCK_STREAM, 0);
+    fd = MPL_socket();
     /* --BEGIN ERROR HANDLING-- */
     if (fd == -1) {
         mpi_errno =
@@ -1829,87 +1793,45 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --END ERROR HANDLING-- */
 
     /*
+     * Set and verify the socket buffer size
+     * (originally this is set after bind and before listen).
+     */
+    mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize( fd, 1 );
+    if (mpi_errno) { MPIR_ERR_POP( mpi_errno ); }
+
+    /*
      * Bind the socket to all interfaces and the specified port.  The port specified by the calling routine may be 0, indicating
      * that the operating system can select an available port in the ephemeral port range.
      */
     if (*port == 0) {
-        int portnum;
-        /* see if we actually want to find values within a range */
+        unsigned short portnum;
 
-        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
-                            MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
-                            MPI_ERR_OTHER, "**badportrange");
+	/* see if we actually want to find values within a range */
+        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 || MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
-        for (portnum = MPIR_CVAR_CH3_PORT_RANGE.low; portnum <= MPIR_CVAR_CH3_PORT_RANGE.high;
-             ++portnum) {
-            memset((void *) &addr, 0, sizeof(addr));
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = htonl(INADDR_ANY);
-            addr.sin_port = htons((unsigned short) portnum);
-
-            rc = bind(fd, (struct sockaddr *) &addr, sizeof(addr));
-            if (rc < 0) {
-                if (errno != EADDRINUSE && errno != EADDRNOTAVAIL) {
-                    close(fd);
-                    break;
-                }
-            } else
-                break;
+        if (MPIR_CVAR_CH3_PORT_RANGE.low == 0){
+            rc = MPL_listen_anyport(fd, &portnum);
         }
-    } else {
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        addr.sin_port = htons((unsigned short) *port);
-        rc = bind(fd, (struct sockaddr *) &addr, sizeof(addr));
+        else {
+            rc = MPL_listen_portrange(fd, &portnum, MPIR_CVAR_CH3_PORT_RANGE.low, MPIR_CVAR_CH3_PORT_RANGE.high);
+        }
+        *port = portnum;
     }
+    else {
+        rc = MPL_listen(fd, *port);
+    }
+    /*
+     * listening for incoming connections...
+     */
     /* --BEGIN ERROR HANDLING-- */
-    if (rc == -1) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|bind",
-                                 "**sock|poll|bind %d %d %s", *port, errno, MPIR_Strerror(errno));
-        goto fn_fail;
+    if (rc)
+    {
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
+					 "**sock|poll|listen", "**sock|poll|listen %d %s", errno, MPIR_Strerror(errno));
+	goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
-
-    /*
-     * Set and verify the socket buffer size
-     */
-    mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize(fd, 1);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /*
-     * Start listening for incoming connections...
-     */
-    rc = listen(fd, SOMAXCONN);
-    /* --BEGIN ERROR HANDLING-- */
-    if (rc == -1) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|listen",
-                                 "**sock|poll|listen %d %s", errno, MPIR_Strerror(errno));
-        goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /*
-     * Get listener port.  Techincally we don't need to do this if a port was
-     * specified by the calling routine; but it adds an extra error check.
-     */
-    addr_len = sizeof(addr);
-    rc = getsockname(fd, (struct sockaddr *) &addr, &addr_len);
-    /* --BEGIN ERROR HANDLING-- */
-    if (rc == -1) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|getport",
-                                 "**sock|poll|getport %d %s", errno, MPIR_Strerror(errno));
-        goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
-    *port = (unsigned int) ntohs(addr.sin_port);
 
     /*
      * Allocate and initialize sock and poll structures.  If another thread is
@@ -2235,7 +2157,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
     int fd = -1;
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
     socklen_t addr_len;
     long flags;
     int nodelay;
@@ -2279,7 +2201,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
      * Make the socket nonblocking, and disable Nagle's
      * alogorithm (to minimize latency of small messages).
      */
-    addr_len = sizeof(struct sockaddr_in);
+    addr_len = sizeof(addr);
     /* FIXME: Either use the syscall macro or correctly wrap this in a
      * test for EINTR */
     fd = accept(pollinfo->fd, (struct sockaddr *) &addr, &addr_len);
@@ -3854,7 +3776,7 @@ static int MPIDI_CH3I_Socki_handle_write(struct pollfd *const pollfd,
 static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
                                            struct pollinfo *const pollinfo)
 {
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
     socklen_t addr_len;
     int rc;
     int mpi_errno = MPI_SUCCESS;
@@ -3862,7 +3784,7 @@ static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SOCKI_HANDLE_CONNECT);
 
-    addr_len = sizeof(struct sockaddr_in);
+    addr_len = sizeof(addr);
     rc = getpeername(pollfd->fd, (struct sockaddr *) &addr, &addr_len);
     if (rc == 0) {
         MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_CONNECT, 0, pollinfo->user_ptr,
