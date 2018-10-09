@@ -22,7 +22,7 @@ cvars:
         auto              - Internal algorithm selection
         blocked           - Force blocked algorithm
         inplace           - Force inplace algorithm
-        pairwise_exchange - Force pairwise exchange algorithm
+        gentran_blocked   - Force genereic transport based blocked algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -34,6 +34,7 @@ cvars:
       description : |-
         Variable to select ialltoallw algorithm
         auto - Internal algorithm selection
+        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -207,6 +208,42 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        switch (MPIR_Ialltoallw_intra_algo_choice) {
+            case MPIR_IALLTOALLW_INTRA_ALGO_GENTRAN_BLOCKED:
+                if (sendbuf != MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                              sendtypes, recvbuf, recvcounts,
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_IALLTOALLW_INTRA_ALGO_GENTRAN_INPLACE:
+                if (sendbuf == MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                              sendtypes, recvbuf, recvcounts,
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
