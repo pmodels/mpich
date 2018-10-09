@@ -163,6 +163,10 @@ nbicalltoall 8 mpiversion=3.0
 nbicalltoallv 8 mpiversion=3.0
 nbicalltoallw 8 mpiversion=3.0
 
-neighb_coll 4 mpiversion=3.0
+neighb_allgather 4 mpiversion=3.0
+neighb_allgatherv 4 mpiversion=3.0
+neighb_alltoall 4 mpiversion=3.0
+neighb_alltoallv 4 mpiversion=3.0
+neighb_alltoallw 4 mpiversion=3.0
 
 @coll_algo_tests@

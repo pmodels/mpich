@@ -567,6 +567,9 @@ int MPII_Coll_init(void)
     /* Ineighbor_allgather Intra */
     if (0 == strcmp(MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM, "linear"))
         MPIR_Ineighbor_allgather_intra_algo_choice = MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM, "gentran_linear"))
+        MPIR_Ineighbor_allgather_intra_algo_choice =
+            MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_GENTRAN_LINEAR;
     else
         MPIR_Ineighbor_allgather_intra_algo_choice = MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO;
 
