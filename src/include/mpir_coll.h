@@ -453,7 +453,10 @@ int MPIR_Iallgather_intra_recexch_distance_halving(const void *sendbuf, int send
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,
                                                    MPIR_Comm * comm, MPIR_Request ** req);
-
+int MPIR_Iallgather_intra_gentran_ring(const void *sendbuf, int sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf,
+                                       int recvcount, MPI_Datatype recvtype,
+                                       MPIR_Comm * comm, MPIR_Request ** req);
 /* sched-based intercomm-only functions */
 int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,

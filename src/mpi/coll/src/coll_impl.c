@@ -379,6 +379,8 @@ int MPII_Coll_init(void)
             MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_brucks"))
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_ring"))
+        MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RING;
     else
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_AUTO;
 
