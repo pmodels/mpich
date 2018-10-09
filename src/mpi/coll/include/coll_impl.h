@@ -332,6 +332,7 @@ extern MPIR_Igather_inter_algo_t MPIR_Igather_inter_algo_choice;
 typedef enum MPIR_Igatherv_intra_algo_t {
     MPIR_IGATHERV_INTRA_ALGO_AUTO,
     MPIR_IGATHERV_INTRA_ALGO_LINEAR,
+    MPIR_IGATHERV_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Igatherv_intra_algo_t;
 extern MPIR_Igatherv_intra_algo_t MPIR_Igatherv_intra_algo_choice;
 

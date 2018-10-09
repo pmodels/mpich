@@ -24,6 +24,7 @@
 #define MPIR_TSP_sched_isend               MPII_Genutil_sched_isend
 #define MPIR_TSP_sched_irecv               MPII_Genutil_sched_irecv
 #define MPIR_TSP_sched_imcast              MPII_Genutil_sched_imcast
+#define MPIR_TSP_sched_issend              MPII_Genutil_sched_issend
 #define MPIR_TSP_sched_reduce_local        MPII_Genutil_sched_reduce_local
 #define MPIR_TSP_sched_localcopy           MPII_Genutil_sched_localcopy
 #define MPIR_TSP_sched_selective_sink      MPII_Genutil_sched_selective_sink
@@ -46,6 +47,15 @@ int MPII_Genutil_sched_isend(const void *buf,
                              int tag,
                              MPIR_Comm * comm_ptr,
                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
+
+/* Transport function to schedule a issend vertex */
+int MPII_Genutil_sched_issend(const void *buf,
+                              int count,
+                              MPI_Datatype dt,
+                              int dest,
+                              int tag,
+                              MPIR_Comm * comm_ptr,
+                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
 /* Transport function to schedule a irecv vertex */
 int MPII_Genutil_sched_irecv(void *buf,

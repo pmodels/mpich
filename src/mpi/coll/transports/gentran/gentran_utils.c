@@ -105,6 +105,25 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 }
                 break;
 
+            case MPII_GENUTIL_VTX_KIND__ISSEND:{
+                    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+                    MPIC_Isend(vtxp->u.issend.buf,
+                               vtxp->u.issend.count,
+                               vtxp->u.issend.dt,
+                               vtxp->u.issend.dest,
+                               vtxp->u.issend.tag, vtxp->u.issend.comm, &vtxp->u.issend.req,
+                               &errflag);
+
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (issend) issued, tag = %d",
+                                     vtxp->u.issend.tag));
+                    vtx_record_issue(vtxp, sched);
+                }
+                break;
+
+
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:{
                     vtx_record_issue(vtxp, sched);
                     MPIR_Reduce_local(vtxp->u.reduce_local.inbuf,
@@ -488,6 +507,26 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                 }
                 if (i == vtxp->u.imcast.num_dests)
                     vtx_record_completion(vtxp, sched);
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__ISSEND:
+                if (MPIR_Request_is_complete(vtxp->u.issend.req)) {
+                    MPIR_Request_free(vtxp->u.issend.req);
+                    vtxp->u.issend.req = NULL;
+#ifdef MPL_USE_DBG_LOGGING
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (vtx_kind=%d) complete",
+                                     vtxp->vtx_kind));
+                    if (vtxp->u.issend.count >= 1)
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                        (MPL_DBG_FDEST, "data sent: %d",
+                                         *(int *) (vtxp->u.issend.buf)));
+#endif
+                    vtx_record_completion(vtxp, sched);
+                    if (made_progress)
+                        *made_progress = TRUE;
+                }
                 break;
 
             default:

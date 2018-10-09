@@ -852,6 +852,10 @@ int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root,
                        MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Igatherv_allcomm_gentran_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                         void *recvbuf, const int *recvcounts, const int *displs,
+                                         MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                         MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
