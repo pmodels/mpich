@@ -473,6 +473,7 @@ extern MPIR_Iscatter_inter_algo_t MPIR_Iscatter_inter_algo_choice;
 typedef enum MPIR_Iscatterv_intra_algo_t {
     MPIR_ISCATTERV_INTRA_ALGO_AUTO,
     MPIR_ISCATTERV_INTRA_ALGO_LINEAR,
+    MPIR_ISCATTERV_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Iscatterv_intra_algo_t;
 extern MPIR_Iscatterv_intra_algo_t MPIR_Iscatterv_intra_algo_choice;
 

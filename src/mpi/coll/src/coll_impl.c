@@ -725,6 +725,8 @@ int MPII_Coll_init(void)
     /* Iscatterv Intra */
     if (0 == strcmp(MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM, "linear"))
         MPIR_Iscatterv_intra_algo_choice = MPIR_ISCATTERV_INTRA_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM, "gentran_linear"))
+        MPIR_Iscatterv_intra_algo_choice = MPIR_ISCATTERV_INTRA_ALGO_GENTRAN_LINEAR;
     else
         MPIR_Iscatterv_intra_algo_choice = MPIR_ISCATTERV_INTRA_ALGO_AUTO;
 
