@@ -70,6 +70,7 @@ MPIR_Iallgatherv_intra_algo_t MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATH
 MPIR_Iallgatherv_inter_algo_t MPIR_Iallgatherv_inter_algo_choice = MPIR_IALLGATHERV_INTER_ALGO_AUTO;
 MPIR_Iallreduce_intra_algo_t MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 MPIR_Iallreduce_inter_algo_t MPIR_Iallreduce_inter_algo_choice = MPIR_IALLREDUCE_INTER_ALGO_AUTO;
+MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ialltoall_intra_algo_t MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_AUTO;
 MPIR_Ialltoall_inter_algo_t MPIR_Ialltoall_inter_algo_choice = MPIR_IALLTOALL_INTER_ALGO_AUTO;
 MPIR_Ialltoallv_intra_algo_t MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_AUTO;
@@ -108,7 +109,6 @@ MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice
     MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice =
     MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
-MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Ireduce_scatter_inter_algo_t MPIR_Ireduce_scatter_inter_algo_choice =
     MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
 MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice =
@@ -117,6 +117,7 @@ MPIR_Ireduce_scatter_block_inter_algo_t MPIR_Ireduce_scatter_block_inter_algo_ch
     MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 MPIR_Ireduce_intra_algo_t MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_AUTO;
 MPIR_Ireduce_inter_algo_t MPIR_Ireduce_inter_algo_choice = MPIR_IREDUCE_INTER_ALGO_AUTO;
+MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Iscan_intra_algo_t MPIR_Iscan_intra_algo_choice = MPIR_ISCAN_INTRA_ALGO_AUTO;
 MPIR_Iscatter_intra_algo_t MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_AUTO;
 MPIR_Iscatter_inter_algo_t MPIR_Iscatter_inter_algo_choice = MPIR_ISCATTER_INTER_ALGO_AUTO;
@@ -412,6 +413,14 @@ int MPII_Coll_init(void)
     else
         MPIR_Iallgatherv_inter_algo_choice = MPIR_IALLGATHERV_INTER_ALGO_AUTO;
 
+    /* Iallreduce */
+    if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "kary"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_1"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_2"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+
     /* Iallreduce Intra */
     if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "naive"))
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_NAIVE;
@@ -425,10 +434,8 @@ int MPII_Coll_init(void)
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer"))
         MPIR_Iallreduce_intra_algo_choice =
             MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER;
-    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_kary"))
-        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree_knomial"))
-        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "tree"))
+        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE;
     else
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 
