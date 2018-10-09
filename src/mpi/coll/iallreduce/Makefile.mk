@@ -25,4 +25,5 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallreduce/iallreduce_intra_recexch_single_buffer.c    \
     src/mpi/coll/iallreduce/iallreduce_intra_recexch_multiple_buffer.c \
     src/mpi/coll/iallreduce/iallreduce_intra_tree_kary.c    \
-    src/mpi/coll/iallreduce/iallreduce_intra_tree_knomial.c
+    src/mpi/coll/iallreduce/iallreduce_intra_tree_knomial.c	\
+    src/mpi/coll/iallreduce/iallreduce_intra_ring.c

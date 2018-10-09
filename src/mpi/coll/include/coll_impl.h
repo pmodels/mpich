@@ -229,6 +229,7 @@ typedef enum MPIR_Iallreduce_intra_algo_t {
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL,
+    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RING,
 } MPIR_Iallreduce_intra_algo_t;
 extern MPIR_Iallreduce_intra_algo_t MPIR_Iallreduce_intra_algo_choice;
 
