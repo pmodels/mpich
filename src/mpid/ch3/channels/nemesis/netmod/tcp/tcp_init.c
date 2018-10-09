@@ -114,6 +114,7 @@ static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPID
 
 MPL_dbg_class MPIDI_NEM_TCP_DBG_DET;
 
+int MPID_nem_tcp_listen (int sockfd);
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
 #undef FCNAME
@@ -133,11 +134,8 @@ static int set_up_listener(void)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPID_nem_tcp_g_lstn_plfd.events = POLLIN;
-    mpi_errno = MPID_nem_tcp_bind(MPID_nem_tcp_g_lstn_sc.fd);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    ret = listen(MPID_nem_tcp_g_lstn_sc.fd, SOMAXCONN);
-    MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", MPIR_Strerror(errno), errno);
+    mpi_errno = MPID_nem_tcp_listen(MPID_nem_tcp_g_lstn_sc.fd);
+    MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", MPIR_Strerror(errno), errno);
     MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
     MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
 
@@ -295,7 +293,7 @@ fn_fail:
  */
 
 static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
-                                MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr)
+                                struct sockaddr_storage *p_addr)
 {
     const char *ifname_string;
     int mpi_errno = MPI_SUCCESS;
@@ -306,19 +304,16 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_INTERFACE_HOSTNAME && MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER, "**ifname_and_hostname");
     
-    /* Set "not found" for ifaddr */
-    ifaddr->len = 0;
-
     /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
     if (MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE) {
+        char s[100];
 	int len;
-        mpi_errno = MPIDI_Get_IP_for_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, ifaddr, &ifaddrFound);
-        MPIR_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
-        
+        mpi_errno = MPL_get_sockaddr_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, p_addr);
+        MPIR_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
+
+        MPL_sockaddr_to_str(p_addr, s, 100);
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPL_DBG_FDEST,
-                                                "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%d.%d.%d.%d",
-                                                ifaddr->type, ifaddr->len, ifaddr->ifaddr[0], ifaddr->ifaddr[1], ifaddr->ifaddr[2],
-                                                ifaddr->ifaddr[3]));
+                                                "ifaddrFound: %s", s));
 
         /* In this case, ifname is only used for debugging purposes */
 	mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len );
@@ -364,8 +359,9 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	   directly from the available interfaces, if that is supported on
 	   this platform.  Otherwise, we'll drop into the next step that uses 
 	   the ifname */
-	mpi_errno = MPIDI_GetIPInterface( ifaddr, &ifaddrFound );
+	mpi_errno = MPL_get_sockaddr_iface( NULL, p_addr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        ifaddrFound = 1;
     }
     else {
 	/* Copy this name into the output name */
@@ -374,27 +370,8 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     /* If we don't have an IP address, try to get it from the name */
     if (!ifaddrFound) {
-        int i;
-	struct hostent *info = NULL;
-        for (i = 0; i < MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES; ++i) {
-            info = gethostbyname( ifname_string );
-            if (info || h_errno != TRY_AGAIN)
-                break;
-        }
-        MPIR_ERR_CHKANDJUMP2(!info || !info->h_addr_list, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", ifname_string, h_errno);
-        
-        /* Use the primary address */
-        ifaddr->len  = info->h_length;
-        ifaddr->type = info->h_addrtype;
-        if (ifaddr->len > sizeof(ifaddr->ifaddr)) {
-            /* If the address won't fit in the field, reset to
-               no address */
-            ifaddr->len = 0;
-            ifaddr->type = -1;
-            MPIR_ERR_INTERNAL(mpi_errno, "Address too long to fit in field");
-        } else {
-            MPIR_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
-	}
+        mpi_errno = MPL_get_sockaddr(ifname_string, p_addr);
+        MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", ifname_string, h_errno);
     }
 
 fn_exit:
@@ -412,16 +389,16 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
-    MPIDI_CH3I_nem_tcp_ifaddr_t ifaddr;
+    struct sockaddr_storage addr;
     char ifname[MAX_HOST_DESCRIPTION_LEN];
     int ret;
-    struct sockaddr_in sock_id;
+    struct sockaddr_storage sock_id;
     socklen_t len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
     
-    mpi_errno = GetSockInterfaceAddr(my_rank, ifname, sizeof(ifname), &ifaddr);
+    mpi_errno = GetSockInterfaceAddr(my_rank, ifname, sizeof(ifname), &addr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     
@@ -435,17 +412,15 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     ret = getsockname (MPID_nem_tcp_g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
     MPIR_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIR_Strerror (errno));
 
-    str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
+    str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, MPL_sockaddr_port(&sock_id));
     if (str_errno) {
         MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
     
-    if (ifaddr.len > 0 && ifaddr.type == AF_INET)
+    if (addr.ss_family == AF_INET)
     {
-        unsigned char *p;
-        p = (unsigned char *)(ifaddr.ifaddr);
-        MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
+        MPL_sockaddr_to_str(&addr, ifname, MAX_HOST_DESCRIPTION_LEN);
         MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
         str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
@@ -612,19 +587,18 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     goto fn_exit;
 }
 
-/* MPID_nem_tcp_bind -- if MPICH_PORT_RANGE is set, this
+/* MPID_nem_tcp_listen -- if MPICH_PORT_RANGE is set, this
    binds the socket to an available port number in the range.
    Otherwise, it binds it to any addr and any port */
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_bind
+#define FUNCNAME MPID_nem_tcp_listen
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_bind (int sockfd)
+int MPID_nem_tcp_listen (int sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    struct sockaddr_in sin;
-    int port;
+    unsigned short port;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_BIND);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_BIND);
@@ -633,22 +607,20 @@ int MPID_nem_tcp_bind (int sockfd)
 
     /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    for (port = MPIR_CVAR_CH3_PORT_RANGE.low; port <= MPIR_CVAR_CH3_PORT_RANGE.high; ++port)
-    {
-        memset ((void *)&sin, 0, sizeof(sin));
-        sin.sin_family      = AF_INET;
-        sin.sin_addr.s_addr = htonl(INADDR_ANY);
-        sin.sin_port        = htons(port);
-
-        ret = bind (sockfd, (struct sockaddr *)&sin, sizeof(sin));
-        if (ret == 0)
-            break;
-        
+    if (MPIR_CVAR_CH3_PORT_RANGE.low==0){
+        ret = MPL_listen_anyport(sockfd, &port);
+    }
+    else {
+        ret = MPL_listen_portrange(sockfd, &port, MPIR_CVAR_CH3_PORT_RANGE.low, MPIR_CVAR_CH3_PORT_RANGE.high);
+    }
+    if (ret == -2) {
+        /* check if an available port was found */
+        MPIR_ERR_CHKANDJUMP3 (1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port-1, errno, MPIR_Strerror (errno));
+    }
+    else if (ret) {
         /* check for real error */
         MPIR_ERR_CHKANDJUMP3 (errno != EADDRINUSE && errno != EADDRNOTAVAIL, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port, errno, MPIR_Strerror (errno));
     }
-    /* check if an available port was found */
-    MPIR_ERR_CHKANDJUMP3 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port-1, errno, MPIR_Strerror (errno));
 
  fn_exit:
 /*     if (ret == 0) */

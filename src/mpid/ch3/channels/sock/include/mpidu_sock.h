@@ -456,18 +456,6 @@ Utility-Sock
 @*/
 int MPIDI_CH3I_Sock_post_connect(MPIDI_CH3I_Sock_set_t set, void * user_ptr, char * host_description, int port, MPIDI_CH3I_Sock_t * sock);
 
-/*S
-  MPIDI_CH3I_Sock_ifaddr_t - Structure to hold an Internet address.
-
-+ len - Length of the address.  4 for IPv4, 16 for IPv6.
-- ifaddr - Address bytes (as bytes, not characters)
-
-S*/
-typedef struct MPIDI_CH3I_Sock_ifaddr_t {
-    int len, type;
-    unsigned char ifaddr[16];
-} MPIDI_CH3I_Sock_ifaddr_t;
-
 /*@ MPIDI_CH3I_Sock_post_connect_ifaddr - Post a connection given an interface
   address (bytes, not string).
 
@@ -476,7 +464,7 @@ typedef struct MPIDI_CH3I_Sock_ifaddr_t {
   @*/
 int MPIDI_CH3I_Sock_post_connect_ifaddr( MPIDI_CH3I_Sock_set_t sock_set,
 				    void * user_ptr, 
-				    MPIDI_CH3I_Sock_ifaddr_t *ifaddr, int port,
+				    struct sockaddr_storage *p_addr, int port,
 				    MPIDI_CH3I_Sock_t * sockp);
 
 
