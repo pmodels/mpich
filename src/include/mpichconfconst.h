@@ -34,6 +34,7 @@
 #define MPICH_THREAD_GRANULARITY__LOCKFREE 3
 /* _SINGLE is the "null" granularity, where all processes are single-threaded */
 #define MPICH_THREAD_GRANULARITY__SINGLE 4
+#define MPICH_THREAD_GRANULARITY__VNI 5
 
 /* _NONE means no concurrency control, such as when using MPI_THREAD_SINGLE */
 #define MPICH_REFCOUNT__NONE 1
