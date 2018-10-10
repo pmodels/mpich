@@ -290,8 +290,6 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
     dst->vtx_state = src->vtx_state;
     dst->vtx_id = src->vtx_id;
 
-    utarray_new(dst->in_vtcs, &ut_int_icd, MPL_MEM_COLL);
-    utarray_concat(dst->in_vtcs, src->in_vtcs, MPL_MEM_COLL);
     utarray_new(dst->out_vtcs, &ut_int_icd, MPL_MEM_COLL);
     utarray_concat(dst->out_vtcs, src->out_vtcs, MPL_MEM_COLL);
 
@@ -306,7 +304,6 @@ void MPII_Genutil_vtx_dtor(void *_elt)
 {
     vtx_t *elt = (vtx_t *) _elt;
 
-    utarray_free(elt->in_vtcs);
     utarray_free(elt->out_vtcs);
 }
 
@@ -317,27 +314,21 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     int i;
     UT_array *out_vtcs;
     MPII_Genutil_vtx_t *vtx;
-    UT_array *in;
 
     vtx = (vtx_t *) utarray_eltptr(sched->vtcs, vtx_id);
     MPIR_Assert(vtx != NULL);
-    in = vtx->in_vtcs;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "Updating in_vtcs of vtx %d, vtx_kind %d, in->used %d, n_in_vtcs %d", vtx_id,
-                     vtx->vtx_kind, utarray_len(in), n_in_vtcs));
-
-    /* insert the incoming edges */
-    vtx_extend_utarray(in, n_in_vtcs, in_vtcs);
+                     "Updating in_vtcs of vtx %d, vtx_kind %d, n_in_vtcs %d", vtx_id,
+                     vtx->vtx_kind, n_in_vtcs));
 
     /* update the list of outgoing vertices of the incoming
      * vertices */
     for (i = 0; i < n_in_vtcs; i++) {
-        int in_vtx_id = *(int *) utarray_eltptr(in, i);
-        vtx_t *in_vtx = (vtx_t *) utarray_eltptr(sched->vtcs, in_vtx_id);
+        vtx_t *in_vtx = (vtx_t *) utarray_eltptr(sched->vtcs, in_vtcs[i]);
         MPIR_Assert(in_vtx != NULL);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtx_id));
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtcs[i]));
         out_vtcs = in_vtx->out_vtcs;
         vtx_extend_utarray(out_vtcs, 1, &vtx_id);
 
@@ -353,9 +344,6 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
      * The application will never explicitly specify a dependency on it,
      * the transport has to make sure that the dependency on the fence operation is met */
     if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
-        /* add the last fence vertex as an incoming vertex to vtx */
-        vtx_extend_utarray(in, 1, &(sched->last_fence));
-
         /* add vtx as outgoing vtx of last_fence */
         vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, sched->last_fence);
         MPIR_Assert(sched_fence != NULL);
@@ -380,8 +368,7 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
     *vtx = (vtx_t *) utarray_back(sched->vtcs);
     vtxp = *vtx;
 
-    /* allocate memory for storing incoming and outgoing vertices */
-    utarray_new(vtxp->in_vtcs, &ut_int_icd, MPL_MEM_COLL);
+    /* allocate memory for storing outgoing vertices */
     utarray_new(vtxp->out_vtcs, &ut_int_icd, MPL_MEM_COLL);
 
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;

@@ -35,7 +35,6 @@ typedef struct MPII_Genutil_vtx_t {
     int vtx_state;
     int vtx_id;
 
-    UT_array *in_vtcs;
     UT_array *out_vtcs;
 
     int pending_dependencies;
