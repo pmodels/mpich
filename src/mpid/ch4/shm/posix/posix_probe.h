@@ -85,10 +85,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_improbe(int source,
         MPIR_STATUS_SET_COUNT(*status, count);
     } else {
         *flag = 0;
-        mpi_errno = MPID_Progress_test();
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
     }
 
   fn_exit:
@@ -137,12 +133,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_iprobe(int source,
         MPIR_STATUS_SET_COUNT(*status, count);
     } else {
         *flag = 0;
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        mpi_errno = MPID_Progress_test();
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     }
 
   fn_exit:
