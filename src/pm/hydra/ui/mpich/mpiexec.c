@@ -251,9 +251,13 @@ int main(int argc, char **argv)
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
+    /* NOTE:
+     *   user may accidently give on command line -np 0, or even -np -1,
+     *   these cases will all be treated as if it is being ignored.
+     */
     HYD_server_info.pg_list.pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count == -1) {
+        if (exec->proc_count <= 0) {
             global_core_count = 0;
             for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
                 global_core_count += node->core_count;
