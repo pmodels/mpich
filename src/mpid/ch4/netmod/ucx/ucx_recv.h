@@ -159,8 +159,7 @@ static inline int MPIDI_UCX_recv(void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
-                                                 MPI_Datatype datatype,
-                                                 MPIR_Request * message, MPIR_Request ** rreqp)
+                                                 MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -209,8 +208,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         MPIDI_UCX_REQ(message).a.ucp_request = ucp_request;
         ucp_request->req = message;
     }
-    message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreqp = message;
 
   fn_exit:
     return mpi_errno;

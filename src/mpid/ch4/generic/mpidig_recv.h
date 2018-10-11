@@ -288,32 +288,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               MPIR_Request * message, MPIR_Request ** rreqp)
+                                               MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
 
-    if (message == NULL) {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
-        *rreqp = rreq;
-        goto fn_exit;
-    }
-
-    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_count) = count;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
-    *rreqp = message;
 
     /* MPIDI_CS_ENTER(); */
     if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_BUSY) {
         MPIDI_CH4U_REQUEST(message, req->status) |= MPIDI_CH4U_REQ_UNEXP_CLAIMED;
     } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
-        message->kind = MPIR_REQUEST_KIND__RECV;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
@@ -335,48 +325,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMRECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
-                                          MPI_Aint count,
-                                          MPI_Datatype datatype,
-                                          MPIR_Request * message, MPI_Status * status)
-{
-    int mpi_errno = MPI_SUCCESS, active_flag;
-    MPID_Progress_state state;
-    MPIR_Request *rreq = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MRECV);
-
-    mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    MPID_Progress_start(&state);
-
-    while (!MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_wait(&state);
-    }
-
-    MPID_Progress_end(&state);
-
-    MPIR_Request_extract_status(rreq, status);
-
-    mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
-    MPIR_Request_free(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
