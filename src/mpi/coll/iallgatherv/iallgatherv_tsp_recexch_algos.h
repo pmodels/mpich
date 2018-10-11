@@ -223,7 +223,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
 int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const int *recvcounts, const int *displs,
-                                             MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
+                                             MPI_Datatype recvtype, MPIR_Comm * comm,
                                              int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -238,6 +238,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     int **step2_nbrs = NULL;
     int nrecvs;
     int *recv_id = NULL;
+    int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
@@ -250,6 +251,11 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
     recv_extent = MPL_MAX(recv_extent, true_extent);
 
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (nranks == 1) {  /*If only one rank, copy sendbuf to recvbuf and return */
         if (!is_inplace)
@@ -310,6 +316,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
                                                    step2_nphases, recvbuf, recvcounts, nranks, k,
                                                    nrecvs, recv_id, tag, recvtype, comm, sched);
 
+  fn_exit:
     /* free the memory */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
@@ -320,6 +327,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -330,7 +339,6 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
                                        int algo_type, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RECEXCH);
@@ -343,15 +351,9 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
     MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                 displs, recvtype, tag, comm, algo_type, k, sched);
+                                                 displs, recvtype, comm, algo_type, k, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
