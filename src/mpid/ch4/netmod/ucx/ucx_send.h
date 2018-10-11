@@ -52,7 +52,7 @@ static inline int MPIDI_UCX_send(const void *buf,
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *req = NULL;
+    MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
@@ -95,10 +95,13 @@ static inline int MPIDI_UCX_send(const void *buf,
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request) {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+        if (req == NULL)
+            req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         MPIR_Request_add_ref(req);
         ucp_request->req = req;
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
+    } else if (req != NULL) {
+        MPIR_cc_set(&req->cc, 0);
     } else if (have_request) {
 #ifndef HAVE_DEBUGGER_SUPPORT
         req = MPIDI_UCX_global.lw_send_req;
