@@ -37,6 +37,7 @@ void MPIR_Op_free_impl(MPI_Op * op)
     int in_use;
 
     MPIR_Op_get_ptr(*op, op_ptr);
+    MPIR_Assert(op_ptr);
 
     MPIR_Op_ptr_release_ref(op_ptr, &in_use);
     if (!in_use) {
