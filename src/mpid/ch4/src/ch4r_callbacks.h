@@ -26,6 +26,8 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq);
 #define FUNCNAME MPIDI_check_cmpl_order
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* Checks to make sure that the specified request is the next one expected to finish. If it isn't
+ * supposed to finish next, it is appended to a list of requests to be retrieved later. */
 static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
                                          MPIDIG_am_target_cmpl_cb target_cmpl_cb)
 {
@@ -104,6 +106,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_CMPL);
 
+    /* Check if this message has already been claimed by a probe. */
     /* MPIDI_CS_ENTER(); */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_UNEXP_DQUED) {
         if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_UNEXP_CLAIMED) {
@@ -116,6 +119,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 
     root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
 
+    /* If this request was previously matched, but not handled */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDI_CH4U_REQUEST(rreq, req->rreq.match_req);
 
@@ -137,6 +141,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 
     } else {
+        /* If this message hasn't been matched yet, look for it in the posted queue. */
         /* MPIDI_CS_ENTER(); */
         if (root_comm) {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -175,6 +180,8 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
         }
 
+        /* If we found a matching request, remove it from the unexpected queue and clean things up
+         * before we move the data around. */
         if (match_req) {
             MPIDI_CH4U_delete_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
             /* Decrement the counter twice, one for posted_list and the other for unexp_list */
@@ -184,6 +191,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         /* MPIDI_CS_EXIT(); */
     }
 
+    /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
     if (!match_req) {
         MPIDI_CH4U_REQUEST(rreq, req->status) &= ~MPIDI_CH4U_REQ_BUSY;
         goto fn_exit;
@@ -192,12 +200,14 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     match_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
     match_req->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
 
+    /* Figure out how much data needs to be moved. */
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(match_req, count),
                             MPIDI_CH4U_REQUEST(match_req, datatype),
                             dt_contig, dt_sz, dt_ptr, dt_true_lb);
     MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(match_req, datatype), dt_sz);
     MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
+    /* Make sure this request has the right amount of data in it. */
     if (MPIDI_CH4U_REQUEST(rreq, count) > dt_sz * MPIDI_CH4U_REQUEST(match_req, count)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
         count = MPIDI_CH4U_REQUEST(match_req, count);
@@ -209,6 +219,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_STATUS_SET_COUNT(match_req->status, count * dt_sz);
     MPIDI_CH4U_REQUEST(rreq, count) = count;
 
+    /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
@@ -230,7 +241,10 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
                     MPIDI_CH4U_REQUEST(rreq, buffer), count * dt_sz);
     }
 
+    /* Now that the unexpected message has been completed, unset the status bit. */
     MPIDI_CH4U_REQUEST(rreq, req->status) &= ~MPIDI_CH4U_REQ_UNEXPECTED;
+
+    /* If this is a synchronous send, send the reply back to the sender to unlock them. */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
@@ -327,6 +341,8 @@ static inline int MPIDI_do_send_target(void **data,
 #define FUNCNAME MPIDI_recv_target_cmpl_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* This function is called when a receive has completed on the receiver side. The input is the
+ * request that has been completed. */
 static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -334,9 +350,11 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RECV_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV_TARGET_CMPL_CB);
 
+    /* Check if this request is supposed to complete next or if it should be delayed. */
     if (!MPIDI_check_cmpl_order(rreq, MPIDI_recv_target_cmpl_cb))
         return mpi_errno;
 
+    /* If the request contained noncontiguous data, free the iov array that described it. */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_RCV_NON_CONTIG) {
         MPL_free(MPIDI_CH4U_REQUEST(rreq, req->iov));
     }
