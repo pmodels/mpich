@@ -111,7 +111,7 @@ static inline int MPIDI_UCX_recv(void *buf,
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     uint64_t ucp_tag, tag_mask;
-    MPIR_Request *req;
+    MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV);
@@ -138,11 +138,18 @@ static inline int MPIDI_UCX_recv(void *buf,
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
-        req = ucp_request->req;
+        if (req == NULL) {
+            req = ucp_request->req;
+        } else {
+            MPIR_cc_set(&req->cc, 0);
+            memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
+            MPIR_Request_free((MPIR_Request *) ucp_request->req);
+        }
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        if (req == NULL)
+            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
