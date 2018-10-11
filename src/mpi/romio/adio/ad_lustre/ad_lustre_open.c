@@ -166,7 +166,12 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     layout = llapi_layout_get_by_fd(fd->fd_sys, 0);
     if (layout != NULL) {
         fd->hints->striping_unit = ADIOI_LUSTRE_Get_last_stripe_size(layout);
+        MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "%d", fd->hints->striping_unit);
+        ADIOI_Info_set(fd->info, "striping_unit", value);
+
         fd->hints->striping_factor = ADIOI_LUSTRE_Get_lcm_stripe_count(layout);
+        MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "%d", fd->hints->striping_factor);
+        ADIOI_Info_set(fd->info, "stripoing_factor", value);
     }
 
     if (fd->access_mode & ADIO_APPEND)
