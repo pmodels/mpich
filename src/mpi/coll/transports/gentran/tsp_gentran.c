@@ -353,7 +353,10 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
              * the subsequent call to MPIC_Genutil_vtx_add_dependencies function */
             break;
         else {
-            in_vtcs[n_in_vtcs++] = i;
+            /* this vertex only depends on the sink when it has no
+             * outgoing dependence     */
+            if (utarray_len(&sched_fence->out_vtcs) == 0)
+                in_vtcs[n_in_vtcs++] = i;
         }
     }
 
