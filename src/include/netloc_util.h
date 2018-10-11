@@ -57,4 +57,11 @@ int MPIR_Netloc_get_torus_network_coordinates(MPIR_Netloc_network_attributes net
                                               netloc_topology_t netloc_topology,
                                               netloc_node_t * node, long *node_coordinates);
 
+void MPIR_Netloc_get_cart_graph_comm_matrix(int ndim, int *dim, int ** period, double ***comm_matrix);
+
+void MPIR_Netloc_get_mpi_graph_comm_matrix(int num_nodes, const int* index,
+	    const int* edges, double ***comm_matrix);
+
+int MPIR_Netloc_get_reordered_rank(int rank, int * newrank, int comm_size, double ** comm_matrix);
+
 #endif /* NETLOC_UTIL_H_INCLUDED */

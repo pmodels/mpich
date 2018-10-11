@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     }
     dims[0] = size - 1;
     periods[0] = 1;
-    MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 0, &comm);
+    MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 1, &comm);
 
     if (comm != MPI_COMM_NULL) {
         int csize;

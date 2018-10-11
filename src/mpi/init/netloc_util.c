@@ -9,6 +9,7 @@
 
 #ifdef HAVE_NETLOC
 #include "netloc_util.h"
+#include <netlocscotch.h>
 #include "mpl.h"
 #include <math.h>
 #define MAX_DISTANCE 65535
@@ -1718,6 +1719,128 @@ int MPIR_Netloc_get_torus_network_coordinates(MPIR_Netloc_network_attributes net
 
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Netloc_get_cart_graph_comm_matrix
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void MPIR_Netloc_get_cart_graph_comm_matrix(int ndim, int *dim, int **period, double ***comm_matrix)
+{
+    int i;
+    int **matrix;
+    int num_nodes = 1;
+    for (i = 0; i < ndim; i++) {
+        num_nodes *= dim[i];
+    }
+    matrix = (double **) MPL_calloc(num_nodes, sizeof(double *), MPL_MEM_OTHER);
+    for (i = 0; i < num_nodes; i++) {
+        int j;
+        int current_node = i;
+        int *node_coordinates = MPL_calloc(ndim, sizeof(int), MPL_MEM_OTHER);
+        matrix[i] = (double *) MPL_calloc(num_nodes, sizeof(double), MPL_MEM_OTHER);
+
+        for (j = 0; j < ndim; j++) {
+            node_coordinates[j] = current_node % dim[j];
+            current_node = current_node / dim[j];
+        }
+        for (j = 0; j < ndim; j++) {
+            int *first_neighbor = MPL_calloc(ndim, sizeof(int), MPL_MEM_OTHER);
+            int *second_neighbor = MPL_calloc(ndim, sizeof(int), MPL_MEM_OTHER);
+            int k;
+            for (k = 0; k < ndim; k++) {
+                if (k == j) {
+                    if ((node_coordinates[j] - 1) >= 0) {
+                        first_neighbor[k] = (node_coordinates[j] - 1);
+                    }
+                    if ((node_coordinates[j] + 1) < dim[j]) {
+                        second_neighbor[k] = (node_coordinates[j] + 1);
+                    }
+                } else {
+                    first_neighbor[k] = node_coordinates[j];
+                    second_neighbor[k] = node_coordinates[j];
+                }
+            }
+
+            if (node_coordinates[j] != 0) {
+                /* Flatten the coordinates of the first neighbor and add 1 to communication matrix */
+                int neighbor_index = first_neighbor[0];
+                for (k = 1; k < ndim; k++) {
+                    neighbor_index = neighbor_index * dim[k - 1]
+                        + first_neighbor[k];
+                }
+                matrix[i][neighbor_index] = 1;
+            }
+            if (node_coordinates[j] != dim[j]) {
+                /* Flatten the coordinates of the first neighbor and add 1 to communication matrix */
+                int neighbor_index = second_neighbor[0];
+                for (k = 1; k < ndim; k++) {
+                    neighbor_index = neighbor_index * dim[k - 1]
+                        + second_neighbor[k];
+                }
+                matrix[i][neighbor_index] = 1;
+            }
+        }
+    }
+    *comm_matrix = matrix;
+  fn_exit:return;
+  fn_fail:goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Netloc_get_mpi_graph_comm_matrix
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void MPIR_Netloc_get_mpi_graph_comm_matrix(int num_nodes, const int *index,
+                                           const int *edges, double ***comm_matrix)
+{
+    int **matrix = (double **) MPL_calloc(num_nodes, sizeof(double *), MPL_MEM_OTHER);
+    int i;
+    for (i = 0; i < num_nodes; i++) {
+        matrix[i] = (double *) MPI_calloc(num_nodes, sizeof(double), MPL_MEM_OTHER);
+        int current_node = i;
+        int start_index = 0;
+        int j;
+        if (i > 0) {
+            start_index = index[i - 1];
+        }
+        for (j = start_index; j < index[i]; j++) {
+            int neighbor_node = edges[j];
+            matrix[current_node][neighbor_node] = 1;
+        }
+    }
+
+    *comm_matrix = matrix;
+  fn_exit:return;
+  fn_fail:goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Netloc_get_reordered_rank
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Netloc_get_reordered_rank(int rank, int *newrank, int comm_size, double **comm_matrix)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    SCOTCH_Graph graph;
+    netlocscotch_core_t *pcores;
+
+    comm_matrix_to_scotch_graph(comm_matrix, &graph);
+    pcores =
+        (netlocscotch_core_t *) MPL_calloc(comm_size, sizeof(netlocscotch_core_t), MPL_MEM_OTHER);
+    /* Using this instead of `netloc_arch_build` call because we don't need to specify the partition to which the graph is mapped */
+    netlocscotch_get_mapping_from_graph_topology_input(graph, MPIR_Process.netloc_topology,
+                                                       &pcores);
+    for (i = 0; i < comm_size; i++) {
+        if (pcores[i]->rank == rank) {
+            *newrank = pcores[i].core;
+            break;
+        }
+    }
+    MPL_free(pcores);
+  fn_exit:return mpi_errno;
+  fn_fail:goto fn_exit;
 }
 
 #endif

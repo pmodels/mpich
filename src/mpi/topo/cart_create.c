@@ -98,6 +98,9 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
          * (but do not duplicate the attributes) */
         if (reorder) {
 
+            double **comm_matrix;
+            int newrank = (rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1);
+            int comm_size;
             /* Allow the cart map routine to remap the assignment of ranks to
              * processes */
             mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims, (const int *) dims,
@@ -105,14 +108,20 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
+#ifdef HAVE_NETLOC
+            comm_size = MPIR_Comm_size(comm_ptr);
+            MPIR_Netloc_get_cart_graph_comm_matrix(ndims, dims, periods, &comm_matrix);
+            MPIR_Netloc_get_reordered_rank(rank, &newrank, comm_size, comm_matrix);
+#endif
             /* Create the new communicator with split, since we need to reorder
              * the ranks (including the related internals, such as the connection
              * tables */
-            mpi_errno = MPIR_Comm_split_impl(comm_ptr,
-                                             rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
-                                             rank, &newcomm_ptr);
+            mpi_errno = MPIR_Comm_split_impl(comm_ptr, newrank, rank, &newcomm_ptr);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
+            if (comm_matrix != NULL) {
+                MPL_free(comm_matrix);
+            }
 
         } else {
             mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, newsize, &newcomm_ptr);
