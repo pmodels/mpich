@@ -120,7 +120,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset *lustre_offsets0, *lustre_offsets, *count_sizes = NULL;
 
     MPI_Comm_size(fd->comm, &nprocs);
-    fd->hints->cb_nodes = nprocs;
     MPI_Comm_rank(fd->comm, &myrank);
 
     orig_fp = fd->fp_ind;
