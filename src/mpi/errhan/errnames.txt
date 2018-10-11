@@ -1024,27 +1024,27 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_pack_size:MPI_Pack_size failed
 **mpi_pack_size %d %D %C %p:MPI_Pack_size(count=%d, %D, %C, size=%p) failed
 **mpi_barrier:MPI_Barrier failed
-**mpi_barrier %C:MPI_Barrier(%C) failed
+**mpi_barrier %C:MPI_Barrier(comm=%C) failed
 **mpi_bcast:MPI_Bcast failed
-**mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, %C) failed
+**mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, comm=%C) failed
 **mpi_gather:MPI_Gather failed
-**mpi_gather %p %d %D %p %d %D %d %C:MPI_Gather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, %C) failed
+**mpi_gather %p %d %D %p %d %D %d %C:MPI_Gather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
 **mpi_gatherv:MPI_Gatherv failed
-**mpi_gatherv %p %d %D %p %p %p %D %d %C:MPI_Gatherv failed(sbuf=%p, scount=%d, %D, rbuf=%p, rcnts=%p, displs=%p, %D, root=%d, %C) failed
+**mpi_gatherv %p %d %D %p %p %p %D %d %C:MPI_Gatherv failed(sbuf=%p, scount=%d, %D, rbuf=%p, rcnts=%p, displs=%p, datatype=%D, root=%d, comm=%C) failed
 **mpi_scatter:MPI_Scatter failed
-**mpi_scatter %p %d %D %p %d %D %d %C:MPI_Scatter(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, %C) failed
+**mpi_scatter %p %d %D %p %d %D %d %C:MPI_Scatter(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
 **mpi_scatterv:MPI_Scatterv failed
-**mpi_scatterv %p %p %p %D %p %d %D %d %C:MPI_Scatterv(sbuf=%p, scnts=%p, displs=%p, %D, rbuf=%p, rcount=%d, %D, root=%d, %C) failed
+**mpi_scatterv %p %p %p %D %p %d %D %d %C:MPI_Scatterv(sbuf=%p, scnts=%p, displs=%p, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
 **mpi_allgather:MPI_Allgather failed
-**mpi_allgather %p %d %D %p %d %D %C:MPI_Allgather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, %C) failed
+**mpi_allgather %p %d %D %p %d %D %C:MPI_Allgather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, datatype=%D, comm=%C) failed
 **mpi_allgatherv:MPI_Allgatherv failed
-**mpi_allgatherv %p %d %D %p %p %p %D %C:MPI_Allgatherv(sbuf=%p, scount=%d, %D, rbuf=%p, rcounts=%p, displs=%p, %D, %C) failed
+**mpi_allgatherv %p %d %D %p %p %p %D %C:MPI_Allgatherv(sbuf=%p, scount=%d, %D, rbuf=%p, rcounts=%p, displs=%p, datatype=%D, comm=%C) failed
 **mpi_alltoall:MPI_Alltoall failed
-**mpi_alltoall %p %d %D %p %d %D %C:MPI_Alltoall(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, %C) failed
+**mpi_alltoall %p %d %D %p %d %D %C:MPI_Alltoall(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, datatype=%D, comm=%C) failed
 **mpi_alltoallv:MPI_Alltoallv failed
-**mpi_alltoallv %p %p %p %D %p %p %p %D %C:MPI_Alltoallv(sbuf=%p, scnts=%p, sdispls=%p, %D, rbuf=%p, rcnts=%p, rdispls=%p, %D, %C) failed
+**mpi_alltoallv %p %p %p %D %p %p %p %D %C:MPI_Alltoallv(sbuf=%p, scnts=%p, sdispls=%p, %D, rbuf=%p, rcnts=%p, rdispls=%p, datatype=%D, comm=%C) failed
 **mpi_reduce:MPI_Reduce failed
-**mpi_reduce %p %p %d %D %O %d %C:MPI_Reduce(sbuf=%p, rbuf=%p, count=%d, %D, %O, root=%d, %C) failed
+**mpi_reduce %p %p %d %D %O %d %C:MPI_Reduce(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C) failed
 **mpi_op_create:MPI_Op_create failed
 **mpi_op_create %p %d %p:MPI_Op_create(fn=%p, commute=%d, op=%p) failed
 **mpi_op_free:MPI_Op_free failed
@@ -1052,15 +1052,15 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_op_commutative:MPI_Op_commutative failed
 **mpi_op_commutative %O %p:MPI_Op_commutative(op=%O, commute=%p) failed
 **mpi_allreduce:MPI_Allreduce failed
-**mpi_allreduce %p %p %d %D %O %C:MPI_Allreduce(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
+**mpi_allreduce %p %p %d %D %O %C:MPI_Allreduce(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, comm=%C) failed
 **mpi_reduce_scatter:MPI_Reduce_scatter failed
-**mpi_reduce_scatter %p %p %p %D %O %C:MPI_Reduce_scatter(sbuf=%p, rbuf=%p, rcnts=%p, %D, %O, %C) failed
+**mpi_reduce_scatter %p %p %p %D %O %C:MPI_Reduce_scatter(sbuf=%p, rbuf=%p, rcnts=%p, datatype=%D, op=%O, comm=%C) failed
 **mpi_reduce_scatter_block:MPI_Reduce_scatter_block failed
-**mpi_reduce_scatter_block %p %p %d %D %O %C:MPI_Reduce_scatter_block(sbuf=%p, rbuf=%p, recvcount=%d, %D, %O, %C) failed
+**mpi_reduce_scatter_block %p %p %d %D %O %C:MPI_Reduce_scatter_block(sbuf=%p, rbuf=%p, recvcount=%d, datatype=%D, op=%O, comm=%C) failed
 **mpi_reduce_local:MPI_Reduce_local failed
-**mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, %D, %O) failed
+**mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, datatype=%D, op=%O) failed
 **mpi_scan:MPI_Scan failed
-**mpi_scan %p %p %d %D %O %C:MPI_Scan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
+**mpi_scan %p %p %d %D %O %C:MPI_Scan(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, comm=%C) failed
 **mpi_group_size:MPI_Group_size failed
 **mpi_group_size %G %p:MPI_Group_size(%G, size=%p) failed
 **mpi_group_rank:MPI_Group_rank failed
