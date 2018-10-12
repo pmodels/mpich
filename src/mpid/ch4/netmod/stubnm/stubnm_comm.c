@@ -25,3 +25,18 @@ int MPIDI_STUBNM_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_Assert(0);
     return mpi_errno;
 }
+
+int MPIDI_NM_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    return MPIDI_CH4R_mpi_comm_set_info_mutable(comm, info);
+}
+
+int MPIDI_NM_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    return MPIDI_CH4R_mpi_comm_set_info_immutable(comm, info);
+}
+
+int MPIDI_NM_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p)
+{
+    return MPIDI_CH4R_mpi_comm_get_info(comm, info_p_p);
+}

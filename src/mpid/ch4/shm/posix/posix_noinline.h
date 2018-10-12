@@ -62,4 +62,8 @@ int MPIDI_POSIX_mpi_free_mem(void *ptr);
 
 int MPIDI_POSIX_progress(int blocking);
 
+int MPIDI_POSIX_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_POSIX_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_POSIX_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p);
+
 #endif

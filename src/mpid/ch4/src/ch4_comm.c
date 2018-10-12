@@ -507,20 +507,93 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 /* Sets the comm info hints that have no restriction on when they can be set/modified */
 int MPID_Comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SET_INFO_MUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SET_INFO_MUTABLE);
+
+    /* NM and SHM levels don't need to invoke CH4R level hook: it is done here */
+    mpi_errno = MPIDI_CH4R_mpi_comm_set_info_mutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+    mpi_errno = MPIDI_NM_mpi_comm_set_info_mutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_comm_set_info_mutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SET_INFO_MUTABLE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Sets the comm info hints that can be set/modified only when creating a communicator */
 int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
 {
-    int mpi_errno = MPI_SUCCESS;
-    return mpi_errno;
-}
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SET_INFO_IMMUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SET_INFO_IMMUTABLE);
 
+    mpi_errno = MPIDI_CH4R_mpi_comm_set_info_immutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+    mpi_errno = MPIDI_NM_mpi_comm_set_info_immutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_comm_set_info_immutable(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SET_INFO_IMMUTABLE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPID_Comm_get_info(MPIR_Comm * comm, MPIR_Info ** info)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_GET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_GET_INFO);
+
+    /* Create a new info object */
+    mpi_errno = MPIR_Info_alloc(info);
+
+    /* ch4 level hints common for all devices */
+    mpi_errno = MPIDI_CH4R_mpi_comm_get_info(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        goto fn_fail;
+    }
+
+    mpi_errno = MPIDI_NM_mpi_comm_get_info(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        goto fn_fail;
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_comm_get_info(comm, info);
+    if (mpi_errno != MPI_SUCCESS) {
+        goto fn_fail;
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_GET_INFO);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

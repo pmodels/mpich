@@ -242,3 +242,57 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_MLUT);
     return mpi_errno;
 }
+
+int MPIDI_CH4R_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_MUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_MUTABLE);
+
+    mpi_errno = MPIR_Barrier(comm, &errflag);   /* TODO: Is it needed? */
+
+    if (MPI_SUCCESS != mpi_errno)
+        goto fn_fail;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_MUTABLE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_CH4R_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_IMMUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_IMMUTABLE);
+
+    mpi_errno = MPIR_Barrier(comm, &errflag);   /* TODO: Is it needed? */
+
+    if (MPI_SUCCESS != mpi_errno)
+        goto fn_fail;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_IMMUTABLE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_CH4R_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_GET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_GET_INFO);
+
+    if (MPI_SUCCESS != mpi_errno)
+        goto fn_fail;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_COMM_GET_INFO);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

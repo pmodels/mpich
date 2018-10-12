@@ -85,3 +85,42 @@ int MPIDI_SHMI_progress(int vci, int blocking)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_PROGRESS);
     return ret;
 }
+
+int MPIDI_SHMI_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_MUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_MUTABLE);
+
+    ret = MPIDI_POSIX_mpi_comm_set_info_mutable(comm, info);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_MUTABLE);
+    return ret;
+}
+
+int MPIDI_SHMI_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_IMMUTABLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_IMMUTABLE);
+
+    ret = MPIDI_POSIX_mpi_comm_set_info_immutable(comm, info);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_SET_INFO_IMMUTABLE);
+    return ret;
+}
+
+int MPIDI_SHMI_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_GET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_GET_INFO);
+
+    ret = MPIDI_POSIX_mpi_comm_get_info(comm, info_p_p);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_GET_INFO);
+    return ret;
+}

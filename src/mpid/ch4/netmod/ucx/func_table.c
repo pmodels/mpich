@@ -55,7 +55,11 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
-    .am_recv = MPIDI_NM_am_recv
+    .am_recv = MPIDI_NM_am_recv,
+    /* Communicator */
+    .mpi_comm_set_info_mutable = MPIDI_NM_mpi_comm_set_info_mutable,
+    .mpi_comm_set_info_immutable = MPIDI_NM_mpi_comm_set_info_immutable,
+    .mpi_comm_get_info = MPIDI_NM_mpi_comm_get_info,
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {

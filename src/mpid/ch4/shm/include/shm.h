@@ -415,6 +415,10 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
                                           void *recvbuf, int recvcount,
                                           MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm_ptr, MPIR_Request ** req);
+typedef int (*MPIDI_SHM_mpi_comm_set_info_mutable_t) (MPIR_Comm * comm, MPIR_Info * info);
+typedef int (*MPIDI_SHM_mpi_comm_set_info_immutable_t) (MPIR_Comm * comm, MPIR_Info * info);
+typedef int (*MPIDI_SHM_mpi_comm_get_info_t) (MPIR_Comm * comm, MPIR_Info ** info_p_p);
+
 
 /* These structs are used when inlining is turned off and we call functions pointers for the shared
  * memory functions instead of directly inlining the functions into the device code. */
@@ -461,6 +465,10 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_am_isend_reply_t am_isend_reply;
     MPIDI_SHM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_SHM_am_recv_t am_recv;
+    /* Communicator */
+    MPIDI_SHM_mpi_comm_set_info_mutable_t mpi_comm_set_info_mutable;
+    MPIDI_SHM_mpi_comm_set_info_immutable_t mpi_comm_set_info_immutable;
+    MPIDI_SHM_mpi_comm_get_info_t mpi_comm_get_info;
 } MPIDI_SHM_funcs_t;
 
 typedef struct MPIDI_SHM_native_funcs {
@@ -1064,5 +1072,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscatterv(const void *sendbuf, const 
                                                      MPI_Datatype recvtype, int root,
                                                      MPIR_Comm * comm_ptr,
                                                      MPIR_Request ** req) MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_SHM_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_SHM_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_SHM_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p);
 
 #endif /* SHM_H_INCLUDED */

@@ -29,6 +29,9 @@ typedef int (*MPIDI_NM_mpi_open_port_t) (MPIR_Info * info_ptr, char *port_name);
 typedef int (*MPIDI_NM_mpi_close_port_t) (const char *port_name);
 typedef int (*MPIDI_NM_mpi_comm_accept_t) (const char *port_name, MPIR_Info * info, int root,
                                            MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
+typedef int (*MPIDI_NM_mpi_comm_get_info_t) (MPIR_Comm * comm, MPIR_Info ** info_p_p);
+typedef int (*MPIDI_NM_mpi_comm_set_info_mutable_t) (MPIR_Comm * comm, MPIR_Info * info);
+typedef int (*MPIDI_NM_mpi_comm_set_info_immutable_t) (MPIR_Comm * comm, MPIR_Info * info);
 typedef int (*MPIDI_NM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
                                        const void *am_hdr, size_t am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
@@ -503,6 +506,10 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_isend_reply_t am_isend_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_NM_am_recv_t am_recv;
+    /* Communicator */
+    MPIDI_NM_mpi_comm_set_info_mutable_t mpi_comm_set_info_mutable;
+    MPIDI_NM_mpi_comm_set_info_immutable_t mpi_comm_set_info_immutable;
+    MPIDI_NM_mpi_comm_get_info_t mpi_comm_get_info;
 } MPIDI_NM_funcs_t;
 
 typedef struct MPIDI_NM_native_funcs {
@@ -780,6 +787,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
                                                      MPIDI_av_entry_t *
                                                      addr) MPL_STATIC_INLINE_SUFFIX;
 int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p);
+int MPIDI_NM_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_NM_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPIDI_NM_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p);
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr, int origin_count,
                                               MPI_Datatype origin_datatype, int target_rank,
                                               MPI_Aint target_disp, int target_count,
