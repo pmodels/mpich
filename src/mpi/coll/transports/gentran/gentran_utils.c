@@ -163,11 +163,10 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */
         {
-            MPII_Genutil_vtx_t *vtx = sched->issued_head;
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Issued vertices list: "));
-            while (vtx) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "%d ", vtx->vtx_id));
-                vtx = vtx->next;
+            vtx_t *vtxp;
+            LL_FOREACH(sched->issued_head, vtxp) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "%d", vtxp->vtx_id));
             }
         }
 #endif
