@@ -179,7 +179,8 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     /* generic hints might step on striping_unit */
     if (users_info != MPI_INFO_NULL) {
-        ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit", NULL, myname, error_code);
+        ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
+                                         &(fd->hints->striping_unit), myname, error_code);
     }
 
     if (ADIOI_Direct_read)
