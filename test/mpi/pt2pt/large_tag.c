@@ -14,7 +14,7 @@
 #define ITER 5
 #define BUF_COUNT (16)
 
-char recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
+int recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
 
 int main(int argc, char *argv[])
 {
