@@ -52,6 +52,7 @@ typedef enum {
 #define MPIDI_CH4U_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDI_CH4U_REQ_MATCHED (0x1 << 6)
 #define MPIDI_CH4U_REQ_LONG_RTS (0x1 << 7)
+#define MPIDI_CH4U_REQ_IN_PROGRESS (0x1 << 8)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
@@ -195,6 +196,7 @@ typedef struct {
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
+#define MPIDI_CH4U_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDI_CH4U_REQ_IN_PROGRESS)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)

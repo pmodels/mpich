@@ -186,6 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_send_init(const void *buf,
                                                        int rank,
                                                        int tag,
                                                        MPIR_Comm * comm, int context_offset,
+                                                       MPIDI_av_entry_t * addr,
                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -223,7 +224,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ssend_init(const void *buf,
                                                         int rank,
                                                         int tag,
                                                         MPIR_Comm * comm,
-                                                        int context_offset, MPIR_Request ** request)
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
@@ -257,7 +260,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bsend_init(const void *buf,
                                                         int rank,
                                                         int tag,
                                                         MPIR_Comm * comm,
-                                                        int context_offset, MPIR_Request ** request)
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
@@ -291,7 +296,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rsend_init(const void *buf,
                                                         int rank,
                                                         int tag,
                                                         MPIR_Comm * comm,
-                                                        int context_offset, MPIR_Request ** request)
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
