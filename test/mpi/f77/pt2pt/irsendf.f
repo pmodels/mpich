@@ -80,7 +80,7 @@ C
 C
          index = -1
          do while (index .ne. 1)
-            call MPI_Waitany(2, requests, index, statuses, ierr)
+            call MPI_Waitany(2, requests, index, statuses(:,1), ierr)
          end do
 C
          call rq_check( requests(1), 1, 'irsend and irecv' )
