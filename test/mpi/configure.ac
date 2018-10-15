@@ -1643,37 +1643,52 @@ AC_OUTPUT(maint/testmerge \
           coll/Makefile \
 	  coll/testlist \
           comm/Makefile \
+          comm/testlist \
           datatype/Makefile \
           datatype/testlist \
           errhan/Makefile \
+          errhan/testlist\
           group/Makefile \
+          group/testlist \
           info/Makefile \
+          info/testlist \
           init/Makefile \
+          init/testlist \
           pt2pt/Makefile \
           pt2pt/testlist \
           mpi_t/Makefile \
+          mpi_t/testlist \
           rma/Makefile \
           rma/testlist \
           spawn/Makefile \
           spawn/testlist \
           topo/Makefile \
+          topo/testlist \
           io/Makefile \
           io/testlist \
           f77/Makefile \
           f77/attr/Makefile \
+          f77/attr/testlist \
           f77/attr/attraints.h \
           f77/pt2pt/attr1aints.h \
           f77/ext/add1size.h \
           f77/datatype/Makefile \
+          f77/datatype/testlist \
           f77/datatype/typeaints.h \
           f77/util/Makefile \
           f77/coll/Makefile \
+          f77/coll/testlist \
           f77/comm/Makefile \
+          f77/comm/testlist \
           f77/topo/Makefile \
+          f77/topo/testlist \
           f77/init/Makefile \
+          f77/init/testlist \
           f77/rma/addsize.h \
           f77/pt2pt/Makefile \
+          f77/pt2pt/testlist \
           f77/info/Makefile \
+          f77/info/testlist \
           f77/spawn/Makefile \
 	  f77/spawn/testlist \
           f77/spawn/type1aint.h \
@@ -1686,106 +1701,164 @@ AC_OUTPUT(maint/testmerge \
           f77/io/ioaint.h \
           f77/io/testlist \
 	  f77/profile/Makefile \
+	  f77/profile/testlist \
           f90/Makefile \
           f90/attr/Makefile \
+          f90/attr/testlist \
           f90/datatype/Makefile \
+          f90/datatype/testlist \
           f90/f90types/Makefile \
+          f90/f90types/testlist \
           f90/util/Makefile \
           f90/coll/Makefile \
+          f90/coll/testlist \
           f90/comm/Makefile \
+          f90/comm/testlist \
           f90/topo/Makefile \
+          f90/topo/testlist \
           f90/init/Makefile \
+          f90/init/testlist \
           f90/pt2pt/Makefile \
+          f90/pt2pt/testlist \
           f90/rma/Makefile \
           f90/info/Makefile \
+          f90/info/testlist \
           f90/spawn/Makefile \
 	  f90/spawn/testlist \
           f90/timer/Makefile \
+          f90/timer/testlist \
           f90/ext/Makefile \
           f90/ext/testlist \
           f90/io/Makefile \
           f90/io/testlist \
           f90/misc/Makefile \
+          f90/misc/testlist \
 	      f90/profile/Makefile \
+	      f90/profile/testlist \
 	  f08/Makefile \
 	      f08/attr/Makefile \
+	      f08/attr/testlist \
 	      f08/datatype/Makefile \
+	      f08/datatype/testlist \
 	      f08/util/Makefile \
 	      f08/coll/Makefile \
+	      f08/coll/testlist \
 	      f08/comm/Makefile \
+	      f08/comm/testlist \
 	      f08/pt2pt/Makefile \
+	      f08/pt2pt/testlist \
 	      f08/rma/Makefile \
 	      f08/subarray/Makefile \
+	      f08/subarray/testlist \
 	      f08/topo/Makefile \
+	      f08/topo/testlist \
 	      f08/io/Makefile \
 	      f08/io/testlist \
           f08/init/Makefile \
+          f08/init/testlist \
           f08/info/Makefile \
+          f08/info/testlist \
           f08/spawn/Makefile \
           f08/spawn/testlist \
           f08/timer/Makefile \
+          f08/timer/testlist \
           f08/ext/Makefile \
+          f08/ext/testlist \
           f08/misc/Makefile \
+          f08/misc/testlist \
           f08/profile/Makefile \
+          f08/profile/testlist \
      cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \
           cxx/attr/testlist \
           cxx/pt2pt/Makefile \
+          cxx/pt2pt/testlist \
           cxx/comm/Makefile \
+          cxx/comm/testlist \
           cxx/coll/Makefile \
+          cxx/coll/testlist \
 	  cxx/errhan/Makefile \
+	  cxx/errhan/testlist \
           cxx/info/Makefile \
+          cxx/info/testlist \
           cxx/datatype/Makefile \
           cxx/datatype/testlist \
           cxx/io/Makefile \
+          cxx/io/testlist \
           cxx/init/Makefile \
+          cxx/init/testlist \
           cxx/rma/Makefile \
+          cxx/rma/testlist \
           cxx/spawn/Makefile \
           cxx/spawn/testlist \
 	  cxx/topo/Makefile \
           threads/Makefile \
           threads/pt2pt/Makefile \
+          threads/pt2pt/testlist \
           threads/util/Makefile \
           threads/comm/Makefile \
           threads/comm/testlist \
           threads/init/Makefile \
+          threads/init/testlist \
           threads/mpi_t/Makefile \
+          threads/mpi_t/testlist \
           threads/spawn/Makefile \
+          threads/spawn/testlist \
           threads/rma/Makefile \
+          threads/rma/testlist \
           threads/coll/Makefile \
           threads/coll/testlist \
           errors/Makefile \
           errors/attr/Makefile \
+          errors/attr/testlist \
           errors/basic/Makefile \
           errors/coll/Makefile \
+          errors/coll/testlist \
           errors/comm/Makefile \
+          errors/comm/testlist \
           errors/datatype/Makefile \
+          errors/datatype/testlist \
           errors/faults/Makefile \
+          errors/faults/testlist \
           errors/group/Makefile \
+          errors/group/testlist \
           errors/pt2pt/Makefile \
+          errors/pt2pt/testlist \
           errors/rma/Makefile \
+          errors/rma/testlist \
           errors/spawn/Makefile \
           errors/spawn/testlist \
           errors/topo/Makefile \
+          errors/topo/testlist \
           errors/io/Makefile \
+          errors/io/testlist \
           errors/cxx/Makefile \
           errors/cxx/errhan/Makefile \
+          errors/cxx/errhan/testlist \
           errors/cxx/io/Makefile \
+          errors/cxx/io/testlist \
           errors/f77/Makefile \
           errors/f77/io/Makefile \
+          errors/f77/io/testlist \
           errors/f77/io/addsize.h \
           errors/f77/io/iooffset.h \
           errors/f90/Makefile \
 	  errors/f90/io/Makefile \
+	  errors/f90/io/testlist \
           errors/f08/Makefile \
+          errors/f08/testlist \
 	  errors/f08/io/Makefile \
+	  errors/f08/io/testlist \
 	  ckpoint/Makefile \
+	  ckpoint/testlist \
 	  ft/Makefile \
+	  ft/testlist \
           manual/Makefile \
           manual/manyconnect \
           manual/mpi_t/Makefile \
           perf/Makefile \
+          perf/testlist \
           testlist \
           cxx/testlist \
 	  cxx/topo/testlist \
@@ -1807,5 +1880,6 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \
+          impls/mpich/mpi_t/testlist \
           )
 

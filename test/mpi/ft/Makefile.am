@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS =
 ## for all programs that are just built from the single corresponding source

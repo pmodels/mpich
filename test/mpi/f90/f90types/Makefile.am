@@ -9,7 +9,7 @@
 # we use the C makefile stub
 include $(top_srcdir)/Makefile.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = createf90types
 createf90types_SOURCES = createf90types.c

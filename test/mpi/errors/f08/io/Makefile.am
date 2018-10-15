@@ -9,7 +9,7 @@
 
 include $(top_srcdir)/Makefile_f08.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 AM_DEFAULT_SOURCE_EXT = .f90
 

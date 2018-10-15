@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_f90.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = wtimef90
 wtimef90_SOURCES = wtimef90.f90

@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_f08.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 SUBDIRS = @iodir@
 DIST_SUBDIRS = io

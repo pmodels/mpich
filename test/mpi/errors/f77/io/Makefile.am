@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_f77.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 AM_DEFAULT_SOURCE_EXT = .f
 

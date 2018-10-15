@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_f08.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 SUBDIRS = attr coll comm datatype ext info init io misc profile pt2pt rma spawn subarray timer topo
 DIST_SUBDIRS = $(SUBDIRS) util
