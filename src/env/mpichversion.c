@@ -49,6 +49,14 @@ typedef enum { Version_number = 0, Date = 1,
 int main(int argc, char *argv[])
 {
     int i, flags[10];
+    char version[MPI_MAX_LIBRARY_VERSION_STRING];
+    int versionlen;
+
+    /* FIXME: this is needed to avoid unresolved symbols issues when building with
+     * --disable-weak-symbols on some platforms. Ideally, we could use the output
+     * from this call instead of accessing internal library variables.
+     */
+    MPI_Get_library_version(version, &versionlen);
 
     if (argc <= 1) {
         /* Show all values */
