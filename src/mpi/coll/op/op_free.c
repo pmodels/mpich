@@ -78,7 +78,6 @@ Input Parameters:
 int MPI_Op_free(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
-    int in_use;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
