@@ -5,6 +5,12 @@
  *
  */
 
+/*
+ * If inlining is turned off, this file will be used to call into the shared memory module. It will
+ * use the function pointer structure to call the appropriate functions rather than directly
+ * inlining them.
+ */
+
 #ifndef SHM_IMPL_H_INCLUDED
 #define SHM_IMPL_H_INCLUDED
 
@@ -2229,7 +2235,5 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
 #include "../src/shm_inline.h"
 
 #endif /* SHM_INLINE           */
-
-#include "posix_impl.h"
 
 #endif /* SHM_IMPL_H_INCLUDED */

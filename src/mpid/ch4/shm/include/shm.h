@@ -16,6 +16,8 @@
 
 #define MPIDI_MAX_SHM_STRING_LEN 64
 
+/* These typedef function definitions are used when not inlining the shared memory module along
+ * with the struct of function pointers below. */
 typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vnis_provided, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
 typedef int (*MPIDI_SHM_get_vni_attr_t) (int vni);
@@ -424,6 +426,8 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
                                           MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
+/* These structs are used when inlining is turned off and we call functions pointers for the shared
+ * memory functions instead of directly inlining the functions into the device code. */
 typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_hook_t mpi_init;
     MPIDI_SHM_mpi_finalize_hook_t mpi_finalize;
