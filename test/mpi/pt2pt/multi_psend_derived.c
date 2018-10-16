@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
             MPI_Wait(&req, &s);
             if (v != i) {
                 errs++;
-                fprintf(stderr, "Send-pecv(anysrc) iteration %d: Expected %d but got %d\n",
+                fprintf(stderr, "Send-precv(anysrc) iteration %d: Expected %d but got %d\n",
                         i, i, v);
             }
         }
