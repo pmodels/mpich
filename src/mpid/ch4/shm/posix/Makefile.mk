@@ -31,6 +31,8 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_am_impl.h   \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
                   src/mpid/ch4/shm/posix/posix_proc.h      \
+                  src/mpid/ch4/shm/posix/posix_datatype.h  \
+                  src/mpid/ch4/shm/posix/posix_op.h        \
                   src/mpid/ch4/shm/posix/posix_types.h
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
