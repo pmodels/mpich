@@ -184,15 +184,14 @@ static inline int MPIDI_CH4R_RMA_Init_sync_pvars(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_mpi_win_set_info
+#define FUNCNAME MPIDI_CH4I_win_set_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_SET_INFO);
 
     MPIR_Info *curr_ptr;
     char *value, *token, *savePtr = NULL;
@@ -292,6 +291,28 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
         curr_ptr = curr_ptr->next;
     }
 
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_WIN_SET_INFO);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4R_mpi_win_set_info
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
+
+    mpi_errno = MPIDI_CH4I_win_set_info(win, info, FALSE /* is_init */);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
@@ -373,7 +394,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = -1;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
-        mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
+        mpi_errno = MPIDI_CH4I_win_set_info(win, info, TRUE /* is_init */);
         if (MPI_SUCCESS != mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
