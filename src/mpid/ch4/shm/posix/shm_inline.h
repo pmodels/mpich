@@ -25,5 +25,7 @@
 #include "posix_coll.h"
 #include "posix_unimpl.h"
 #include "posix_proc.h"
+#include "posix_datatype.h"
+#include "posix_op.h"
 
 #endif /* POSIX_INLINE_H_INCLUDED */
