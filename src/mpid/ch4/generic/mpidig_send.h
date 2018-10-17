@@ -28,7 +28,7 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
                                  int is_blocking, int type)
 {
     int mpi_errno = MPI_SUCCESS, c;
-    MPIR_Request *sreq = NULL;
+    MPIR_Request *sreq = *request;
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
@@ -38,17 +38,25 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     if (unlikely(rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
-        if (!is_blocking) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-            MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                                "**nomemreq");
+        if (!is_blocking || sreq != NULL) {
+            if (sreq == NULL) {
+                *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+                MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                    "**nomemreq");
+            } else {
+                MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND, 2);
+            }
             MPID_Request_complete((*request));
         }
         goto fn_exit;
     }
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    if (sreq == NULL) {
+        sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    } else {
+        MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND, 2);
+    }
 
     *request = sreq;
 
