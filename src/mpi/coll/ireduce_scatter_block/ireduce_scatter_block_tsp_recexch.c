@@ -91,7 +91,9 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         }
     }
 
-    step1_id = MPIR_TSP_sched_sink(sched);      /* sink for all the tasks up to end of Step 1 */
+    mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Step 2 */
     for (phase = step2_nphases - 1; phase >= 0 && step1_sendto == -1; phase--) {
@@ -152,6 +154,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
                              recvcount, datatype, step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs);
     }
 
+  fn_exit:
     /* free all allocated memory for storing nbrs */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
@@ -161,4 +164,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
