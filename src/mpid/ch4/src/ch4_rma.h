@@ -231,12 +231,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
-        MPIR_Request *sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-        *request = sreq;
-        mpi_errno = MPI_SUCCESS;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         goto fn_exit;
     }
 
@@ -291,12 +288,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
-        MPIR_Request *sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-        *request = sreq;
-        mpi_errno = MPI_SUCCESS;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         goto fn_exit;
     }
 
@@ -393,12 +387,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
-        MPIR_Request *sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-        *request = sreq;
-        mpi_errno = MPI_SUCCESS;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         goto fn_exit;
     }
 
@@ -448,12 +439,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
-        MPIR_Request *sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-        *request = sreq;
-        mpi_errno = MPI_SUCCESS;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         goto fn_exit;
     }
 
