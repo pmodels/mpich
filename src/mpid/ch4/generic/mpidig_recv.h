@@ -133,6 +133,13 @@ static inline int MPIDI_do_irecv(void *buf,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
+        if (*request != NULL) {
+            MPIDI_CH4I_am_request_copy(*request, unexp_req);
+            MPIR_Request_add_ref(*request);
+            MPIR_Object_set_ref(unexp_req, 0);
+            MPIR_Handle_obj_free(&MPIR_Request_mem, unexp_req);
+            unexp_req = *request;
+        }
         MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_BUSY) {
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
@@ -164,7 +171,10 @@ static inline int MPIDI_do_irecv(void *buf,
         }
     }
 
-    if (alloc_req) {
+    if (*request != NULL) {
+        rreq = *request;
+        MPIDI_CH4I_am_request_init(rreq, MPIR_REQUEST_KIND__RECV, 2);
+    } else if (alloc_req) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
