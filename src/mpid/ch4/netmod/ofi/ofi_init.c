@@ -267,6 +267,18 @@ cvars:
       description : >-
         Specifies the number of buffers for receiving active messages.
 
+    - name        : MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL
+      category    : CH4_OFI
+      type        : int
+      default     : 100
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the interval for manually flushing RMA operations when automatic progress is not
+        enabled. It the underlying OFI provider supports auto data progress, this value is ignored.
+        If the value is -1, this optimization will be turned off.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
