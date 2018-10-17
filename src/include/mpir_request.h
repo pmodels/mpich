@@ -8,6 +8,8 @@
 #ifndef MPIR_REQUEST_H_INCLUDED
 #define MPIR_REQUEST_H_INCLUDED
 
+#include "mpir_process.h"
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -288,6 +290,21 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 
 #define MPIR_Request_release_ref(req_p_, inuse_) \
     do { MPIR_Object_release_ref(req_p_, inuse_); } while (0)
+
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request_kind_t kind)
+{
+    MPIR_Request *req;
+
+#ifdef HAVE_DEBUGGER_SUPPORT
+    req = MPIR_Request_create(kind);
+    MPIR_cc_set(&req->cc, 0);
+#else
+    req = MPIR_Process.lw_req;
+    MPIR_Request_add_ref(req);
+#endif
+
+    return req;
+}
 
 static inline void MPIR_Request_free(MPIR_Request * req)
 {
