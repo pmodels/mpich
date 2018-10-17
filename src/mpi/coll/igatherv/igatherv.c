@@ -426,11 +426,11 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    /* create a complete request, if needed */
+    if (!request_ptr)
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
     /* return the handle of the request to the user */
-    if (request_ptr)
-        *request = request_ptr->handle;
-    else
-        *request = MPI_REQUEST_NULL;
+    *request = request_ptr->handle;
 
     /* ... end of body of routine ... */
 
