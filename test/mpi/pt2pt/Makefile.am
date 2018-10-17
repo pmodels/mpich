@@ -56,6 +56,7 @@ noinst_PROGRAMS =  \
     huge_underflow \
     huge_anysrc    \
     huge_dupcomm   \
+    huge_ssend     \
     dtype_send		 \
     recv_any		\
     irecv_any   \
