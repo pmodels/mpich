@@ -554,6 +554,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    /* Create complete request to return in the event of immediately complete
+     * operations. Use a SEND request to cover all possible use-cases. */
+    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
+
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();
     if (mpi_errno)
