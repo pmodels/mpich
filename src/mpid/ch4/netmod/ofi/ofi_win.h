@@ -69,6 +69,7 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
         }
 
         MPIDI_OFI_WIN(win).syncQ = NULL;
+        MPIDI_OFI_WIN(win).progress_counter = 1;
     }
 
   fn_exit:
@@ -76,6 +77,29 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* If the OFI provider does not have automatic progress, check to see if the progress engine should
+ * be manually triggered to keep performance from suffering when doing large, non-continuguous
+ * transfers. */
+static inline int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+
+    if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
+        if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
+            MPIDI_OFI_win_progress_fence_impl(win, false);
+            MPIDI_OFI_WIN(win).progress_counter = 1;
+        }
+        MPIDI_OFI_WIN(win).progress_counter++;
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+
+    return mpi_errno;
 }
 
 static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
