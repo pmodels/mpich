@@ -204,8 +204,8 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */
         {
+            vtx_t *vtxp_tmp = vtxp;
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Issued vertices list: "));
-            vtx_t *vtxp_tmp;
             LL_FOREACH(sched->issued_head, vtxp_tmp) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "%d", vtxp_tmp->vtx_id));
             }
@@ -239,15 +239,14 @@ static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil
      * unfinished dependencies */
     for (i = 0; i < utarray_len(out_vtcs); i++) {
         int outvtx_id = ut_int_array(out_vtcs)[i];
-        int pending_dependencies =
-            --(((vtx_t *) utarray_eltptr(&sched->vtcs, outvtx_id))->pending_dependencies);
+        vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *) + outvtx_id;
 
         /* if all dependencies of the outgoing vertex are complete,
          * issue the vertex */
-        if (pending_dependencies == 0) {
+        if (--vtx->pending_dependencies == 0) {
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "Issuing vertex number %d", outvtx_id));
-            vtx_issue(outvtx_id, (vtx_t *) utarray_eltptr(&sched->vtcs, outvtx_id), sched);
+            vtx_issue(outvtx_id, vtx, sched);
         }
     }
 
@@ -346,7 +345,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     UT_array *out_vtcs;
     MPII_Genutil_vtx_t *vtx;
 
-    vtx = (vtx_t *) utarray_eltptr(&sched->vtcs, vtx_id);
+    vtx = ut_type_array(&sched->vtcs, vtx_t *) + vtx_id;
     MPIR_Assert(vtx != NULL);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,

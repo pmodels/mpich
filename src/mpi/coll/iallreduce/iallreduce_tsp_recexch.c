@@ -254,7 +254,9 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     if (in_step2)
         MPL_free(step1_recvbuf);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH);
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

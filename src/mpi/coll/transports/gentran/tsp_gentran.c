@@ -55,7 +55,7 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     void **p;
 
     /* free up the sched resources */
-    vtx = ut_type_array(sched->vtcs, vtx_t *);
+    vtx = ut_type_array(&sched->vtcs, vtx_t *);
     MPII_Genutil_vtx_type_t *vtype =
         ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {
@@ -330,6 +330,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
                     (MPL_DBG_FDEST, "Gentran: sched [sink] total=%d", sched->total_vtcs));
 
     vtx_t *vtxp;
+    vtx_t *sched_fence;
     int i, n_in_vtcs = 0;
     int *in_vtcs;
     int mpi_errno = MPI_SUCCESS;
@@ -344,9 +345,9 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
     MPIR_CHKLMEM_MALLOC(in_vtcs, int *, sizeof(int) * (*vtx_id),
                         mpi_errno, "in_vtcs buffer", MPL_MEM_COLL);
     /* record incoming vertices */
+    sched_fence = ut_type_array(&sched->vtcs, vtx_t *) + *vtx_id - 1;
+    MPIR_Assert(sched_fence != NULL);
     for (i = *vtx_id - 1; i >= 0; i--) {
-        vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, i);
-        MPIR_Assert(sched_fence != NULL);
         if (sched_fence->vtx_kind == MPII_GENUTIL_VTX_KIND__FENCE)
             /* no need to record this and any vertex before fence.
              * Dependency on the last fence call will be added by
@@ -358,6 +359,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
             if (utarray_len(&sched_fence->out_vtcs) == 0)
                 in_vtcs[n_in_vtcs++] = i;
         }
+        sched_fence--;
     }
 
     MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
