@@ -13,6 +13,10 @@
 
 #include "ch4_impl.h"
 
+int MPID_Comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info);
+int MPID_Comm_get_info(MPIR_Comm * comm, MPIR_Info ** info);
+
 int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                           MPIR_Comm ** newcomm_ptr);
 

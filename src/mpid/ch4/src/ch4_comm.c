@@ -503,3 +503,24 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
+
+/* Sets the comm info hints that have no restriction on when they can be set/modified */
+int MPID_Comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
+/* Sets the comm info hints that can be set/modified only when creating a communicator */
+int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
+
+int MPID_Comm_get_info(MPIR_Comm * comm, MPIR_Info ** info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
