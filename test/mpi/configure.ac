@@ -1434,6 +1434,7 @@ pac_cv_have_mpi_2double_complex,[
 if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
     AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBLE_COMPLEX is available])
 fi
+
 # 2COMPLEX was in MPI 1.0 and removed after that.  This allows us to 
 # test 2COMPLEX if it is present
 AC_CACHE_CHECK([whether MPI_2COMPLEX is available],
@@ -1451,6 +1452,83 @@ pac_cv_have_mpi_2complex,[
 if test "$pac_cv_have_mpi_2complex" = yes ; then 
     AC_DEFINE(HAVE_MPI_2COMPLEX,1,[Define if MPI_2COMPLEX is available])
 fi
+
+if test "$FROM_MPICH" = yes ; then
+    pac_cv_have_mpi_sizeof=yes
+fi
+AC_CACHE_CHECK([whether MPI_Sizeof() is available],
+pac_cv_have_mpi_sizeof,[
+    AC_LANG_PUSH([Fortran])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([[
+      program mpi_sizeof_test
+        use mpi
+        implicit none
+
+        integer :: isize, ierror
+        integer :: i, i_1(2), i_2(2,2)
+        integer*1 :: i1, i1_1(2), i1_2(2,2)
+        integer*2 :: i2, i2_1(2), i2_2(2,2)
+        integer*4 :: i4, i4_1(2), i4_2(2,2)
+        integer*8 :: i8, i8_1(2), i8_2(2,2)
+        real :: r, r_1(2), r_2(2,2)
+        real*4 :: r4, r4_1(2), r4_2(2,2)
+        real*8 :: r8, r8_1(2), r8_2(2,2)
+        complex :: c, c_1(2), c_2(2,2)
+        complex*8 :: c8, c8_1(2), c8_2(2,2)
+        logical :: l, l_1(2), l_2(2,2)
+        character :: ch, ch_1(2), ch_2(2,2)
+
+        call MPI_INIT(ierror)
+
+        call mpi_sizeof(i, isize, ierror)
+        call mpi_sizeof(i_1, isize, ierror)
+        call mpi_sizeof(i_2, isize, ierror)
+        call mpi_sizeof(i1, isize, ierror)
+        call mpi_sizeof(i1_1, isize, ierror)
+        call mpi_sizeof(i1_2, isize, ierror)
+        call mpi_sizeof(i2, isize, ierror)
+        call mpi_sizeof(i2_1, isize, ierror)
+        call mpi_sizeof(i2_2, isize, ierror)
+        call mpi_sizeof(i4, isize, ierror)
+        call mpi_sizeof(i4_1, isize, ierror)
+        call mpi_sizeof(i4_2, isize, ierror)
+        call mpi_sizeof(i8, isize, ierror)
+        call mpi_sizeof(i8_1, isize, ierror)
+        call mpi_sizeof(i8_2, isize, ierror)
+        call mpi_sizeof(r, isize, ierror)
+        call mpi_sizeof(r_1, isize, ierror)
+        call mpi_sizeof(r_2, isize, ierror)
+        call mpi_sizeof(r4, isize, ierror)
+        call mpi_sizeof(r4_1, isize, ierror)
+        call mpi_sizeof(r4_2, isize, ierror)
+        call mpi_sizeof(r8, isize, ierror)
+        call mpi_sizeof(r8_1, isize, ierror)
+        call mpi_sizeof(r8_2, isize, ierror)
+        call mpi_sizeof(c, isize, ierror)
+        call mpi_sizeof(c_1, isize, ierror)
+        call mpi_sizeof(c_2, isize, ierror)
+        call mpi_sizeof(c8, isize, ierror)
+        call mpi_sizeof(c8_1, isize, ierror)
+        call mpi_sizeof(c8_2, isize, ierror)
+        call mpi_sizeof(l, isize, ierror)
+        call mpi_sizeof(l_1, isize, ierror)
+        call mpi_sizeof(l_2, isize, ierror)
+        call mpi_sizeof(ch, isize, ierror)
+        call mpi_sizeof(ch_1, isize, ierror)
+        call mpi_sizeof(ch_2, isize, ierror)
+
+        call MPI_FINALIZE(ierror)
+      end program]])
+    ],[
+        pac_cv_have_mpi_sizeof=yes
+    ],[
+        pac_cv_have_mpi_sizeof=no
+    ])
+    AC_LANG_POP([Fortran])
+])
+AM_CONDITIONAL(BUILD_F90_SIZEOF, [test "$pac_cv_have_mpi_sizeof" = "yes"])
+
 
 # MPI_Aint was intended as an address-sized int.  However, MPI didn't 
 # specify this - MPI_Aint must be large enough to hold an address-sized

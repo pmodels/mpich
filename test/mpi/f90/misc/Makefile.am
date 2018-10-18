@@ -11,5 +11,10 @@ EXTRA_DIST = testlist
 
 EXTRA_DIST += testlist.ap
 
-noinst_PROGRAMS = sizeof2
+noinst_PROGRAMS =
+
+if BUILD_F90_SIZEOF
+noinst_PROGRAMS += sizeof2
+endif
+
 sizeof2_SOURCES = sizeof2.f90

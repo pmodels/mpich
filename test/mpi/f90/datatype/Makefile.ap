@@ -1,6 +1,10 @@
 ## vim: set ft=automake :
 
-noinst_PROGRAMS += structf indtype createf90 sizeof kinds trf90 get_elem_d get_elem_u
+noinst_PROGRAMS += structf indtype createf90 kinds trf90 get_elem_u
+
+if BUILD_F90_SIZEOF
+noinst_PROGRAMS += sizeof get_elem_d
+endif
 
 structf_SOURCES    = structf.f90
 indtype_SOURCES    = indtype.f90
