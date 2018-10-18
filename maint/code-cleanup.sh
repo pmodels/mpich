@@ -6,6 +6,14 @@ else
 	indent=indent
 fi
 
+indent_version=$($indent --version)
+if echo "$indent_version" | grep -q "GNU indent"; then
+    :
+else
+    echo "This script requires GNU indent."
+    exit
+fi
+
 indent_code()
 {
     file=$1
