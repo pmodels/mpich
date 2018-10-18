@@ -537,9 +537,8 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_UNSIGNED_SHORT, &index);
     add_index(MPI_INT, &index);
     add_index(MPI_UNSIGNED, &index);
-    add_index(MPI_LONG, &index);
-    add_index(MPI_UNSIGNED_LONG, &index);       /* 10 */
-
+    add_index(MPI_LONG, &index);        /* count=10 */
+    add_index(MPI_UNSIGNED_LONG, &index);
     add_index(MPI_FLOAT, &index);
     add_index(MPI_DOUBLE, &index);
     add_index(MPI_LONG_DOUBLE, &index);
@@ -548,10 +547,10 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_PACKED, &index);
     add_index(MPI_LB, &index);
     add_index(MPI_UB, &index);
-    add_index(MPI_2INT, &index);
+    add_index(MPI_2INT, &index);        /* count=20 */
 
     /* C99 types */
-    add_index(MPI_INT8_T, &index);      /* 20 */
+    add_index(MPI_INT8_T, &index);
     add_index(MPI_INT16_T, &index);
     add_index(MPI_INT32_T, &index);
     add_index(MPI_INT64_T, &index);
@@ -560,23 +559,23 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_UINT32_T, &index);
     add_index(MPI_UINT64_T, &index);
     add_index(MPI_C_BOOL, &index);
-    add_index(MPI_C_FLOAT_COMPLEX, &index);
-    add_index(MPI_C_DOUBLE_COMPLEX, &index);    /* 30 */
+    add_index(MPI_C_FLOAT_COMPLEX, &index);     /* count=30 */
+    add_index(MPI_C_DOUBLE_COMPLEX, &index);
     add_index(MPI_C_LONG_DOUBLE_COMPLEX, &index);
 
     /* address/offset/count types */
     add_index(MPI_AINT, &index);
     add_index(MPI_OFFSET, &index);
-    add_index(MPI_COUNT, &index);
+    add_index(MPI_COUNT, &index);       /* count=35 */
 
-    /* Fortran types */
+    /* Fortran types (count=23) */
 #ifdef HAVE_FORTRAN_BINDING
     add_index(MPI_COMPLEX, &index);
     add_index(MPI_DOUBLE_COMPLEX, &index);
     add_index(MPI_LOGICAL, &index);
     add_index(MPI_REAL, &index);
-    add_index(MPI_DOUBLE_PRECISION, &index);
-    add_index(MPI_INTEGER, &index);     /* 40 */
+    add_index(MPI_DOUBLE_PRECISION, &index);    /* count=40 */
+    add_index(MPI_INTEGER, &index);
     add_index(MPI_2INTEGER, &index);
 #ifdef MPICH_DEFINE_2COMPLEX
     add_index(MPI_2COMPLEX, &index);
@@ -587,8 +586,8 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_CHARACTER, &index);
     add_index(MPI_REAL4, &index);
     add_index(MPI_REAL8, &index);
-    add_index(MPI_REAL16, &index);
-    add_index(MPI_COMPLEX8, &index);    /* 50 */
+    add_index(MPI_REAL16, &index);      /* count=50 */
+    add_index(MPI_COMPLEX8, &index);
     add_index(MPI_COMPLEX16, &index);
     add_index(MPI_COMPLEX32, &index);
     add_index(MPI_INTEGER1, &index);
@@ -603,10 +602,13 @@ void MPIDI_OFI_index_datatypes()
 
 #endif
     add_index(MPI_FLOAT_INT, &index);
-    add_index(MPI_DOUBLE_INT, &index);
+    add_index(MPI_DOUBLE_INT, &index);  /* count=60 */
     add_index(MPI_LONG_INT, &index);
-    add_index(MPI_SHORT_INT, &index);   /* 60 */
+    add_index(MPI_SHORT_INT, &index);
     add_index(MPI_LONG_DOUBLE_INT, &index);
+
+    /* check if static dt_size is correct */
+    MPIR_Assert(MPIDI_OFI_DT_SIZES == index);
 
     /* do not generate map when atomics are not enabled */
     if (MPIDI_OFI_ENABLE_ATOMICS)
