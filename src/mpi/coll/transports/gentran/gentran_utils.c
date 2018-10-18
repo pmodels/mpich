@@ -419,8 +419,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
 
-    if (sched->total_vtcs == 0) /* NULL schedule, nothing to issue */
-        goto done;
+    MPIR_Assert(sched->total_vtcs > 0);
 
     if (made_progress)
         *made_progress = FALSE;
@@ -564,7 +563,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     }
 #endif
 
-  done:
     *is_complete = (sched->completed_vtcs == sched->total_vtcs);
     if (*is_complete) {
         if (made_progress)
