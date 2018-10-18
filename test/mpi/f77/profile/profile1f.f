@@ -59,6 +59,8 @@ C     check that we used the profiling versions of the routines
              print *, " Found ", toterrs, " errors"
           endif
        endif
+
+       call mpi_finalize(ierr)
 C
        end
 C
