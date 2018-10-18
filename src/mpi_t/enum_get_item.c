@@ -53,25 +53,14 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
     enum_item_t *item;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_ITEM);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_ENUM_GET_ITEM);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
-            MPIR_ERRTEST_ENUM_ITEM(enumtype, indx, mpi_errno);
-            MPIR_ERRTEST_ARGNULL(value, "value", mpi_errno);
-            /* Do not do TEST_ARGNULL for name or name_len, since this is
-             * permitted per MPI_T standard.
-             */
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ENUM_HANDLE(enumtype);
+    MPIT_ERRTEST_ENUM_ITEM(enumtype, index);
+    MPIT_ERRTEST_ARGNULL(value);
 
     /* ... body of routine ...  */
 
@@ -81,24 +70,11 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_ENUM_GET_ITEM);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p",
-                                 enumtype, indx, value, name, name_len);
-    }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
-#endif
 }

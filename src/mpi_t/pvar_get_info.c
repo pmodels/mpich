@@ -65,23 +65,12 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     const pvar_table_entry_t *info;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INFO);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_GET_INFO);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
-            /* Do not do _TEST_ARGNULL for other arguments, since this is
-             * allowed or will be allowed by MPI_T standard.
-             */
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_PVAR_INDEX(pvar_index);
 
     /* ... body of routine ...  */
 
@@ -128,18 +117,5 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_get_info",
-                                 "**mpi_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p",
-                                 pvar_index, name, name_len, verbosity, var_class, datatype,
-                                 enumtype, desc, desc_len, binding, readonly, continuous, atomic);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

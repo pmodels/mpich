@@ -41,7 +41,7 @@ int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *
             mark->first_used = 0;
             mark->first_started = 0;
         } else {
-            MPIR_Assert(mark->hlist);
+            MPIT_Assert(mark->hlist);
             if (mark->hlist == hnd) {
                 /* hnd happens to be the head */
                 mark->hlist = hnd->next2;
@@ -83,29 +83,21 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle * handl
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_FREE);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
-            if (*handle == MPI_T_PVAR_HANDLE_NULL)      /* free NULL is OK */
-                goto fn_exit;
-            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
-            MPIR_ERRTEST_PVAR_HANDLE(*handle, mpi_errno);
+    MPIT_ERRTEST_ARGNULL(handle);
+    if (*handle == MPI_T_PVAR_HANDLE_NULL)      /* free NULL is OK */
+        goto fn_exit;
+    MPIT_ERRTEST_PVAR_SESSION(session);
+    MPIT_ERRTEST_PVAR_HANDLE(*handle);
 
-            if ((*handle) == MPI_T_PVAR_ALL_HANDLES || (*handle)->session != session) {
-                mpi_errno = MPI_T_ERR_INVALID_HANDLE;
-                goto fn_fail;
-            }
-        }
-        MPID_END_ERROR_CHECKS;
+    if ((*handle) == MPI_T_PVAR_ALL_HANDLES || (*handle)->session != session) {
+        mpi_errno = MPI_T_ERR_INVALID_HANDLE;
+        goto fn_fail;
     }
-#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -120,16 +112,5 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle * handl
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_handle_free", "**mpi_t_pvar_handle_free %p %p",
-                                 session, handle);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

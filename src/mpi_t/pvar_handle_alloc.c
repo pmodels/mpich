@@ -47,7 +47,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     const pvar_table_entry_t *info;
     MPIR_T_pvar_handle_t *hnd;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIT_CHKPMEM_DECL(1);
 
     info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
 
@@ -73,11 +73,8 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     }
 
     /* Allocate memory and bzero it */
-    MPIR_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t *, sizeof(*hnd) + extra,
-                        mpi_errno, "performance variable handle", MPL_MEM_MPIT);
-#ifdef HAVE_ERROR_CHECKING
+    MPIT_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t *, sizeof(*hnd) + extra, MPL_MEM_MPIT);
     hnd->kind = MPIR_T_PVAR_HANDLE;
-#endif
 
     /* Setup the common fields */
     if (is_sum)
@@ -156,11 +153,11 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     *handle = hnd;
     *count = cnt;
 
-    MPIR_CHKPMEM_COMMIT();
+    MPIT_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
+    MPIT_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -194,24 +191,16 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     pvar_table_entry_t *entry;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
     /* Validate parameters  */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
-            MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
-            MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
-            /* Do not test obj_handle since it may be NULL when no binding */
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_PVAR_SESSION(session);
+    MPIT_ERRTEST_PVAR_INDEX(pvar_index);
+    MPIT_ERRTEST_ARGNULL(count);
+    MPIT_ERRTEST_ARGNULL(handle);
+    /* Do not test obj_handle since it may be NULL when no binding */
 
     /* ... body of routine ...  */
 
@@ -233,17 +222,5 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_handle_alloc",
-                                 "**mpi_t_pvar_handle_alloc %p %d %p %p %p", session, pvar_index,
-                                 obj_handle, handle, count);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

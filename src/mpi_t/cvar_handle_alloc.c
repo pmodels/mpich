@@ -32,16 +32,13 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_cvar_handle_t *hnd;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIT_CHKPMEM_DECL(1);
 
     cvar_table_entry_t *cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
     /* Allocate handle memory */
-    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t *, sizeof(*hnd), mpi_errno,
-                        "control variable handle", MPL_MEM_MPIT);
-#ifdef HAVE_ERROR_CHECKING
+    MPIT_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t *, sizeof(*hnd), MPL_MEM_MPIT);
     hnd->kind = MPIR_T_CVAR_HANDLE;
-#endif
 
     /* It is time to fix addr and count if they are unknown */
     if (cvar->get_count != NULL)
@@ -62,11 +59,11 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
 
     *handle = hnd;
 
-    MPIR_CHKPMEM_COMMIT();
+    MPIT_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
+    MPIT_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -98,24 +95,16 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
-            /* obj_handle is ignored if cvar has no binding, so no
-             * TEST_ARGNULL for it */
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_CVAR_INDEX(cvar_index);
+    /* obj_handle is ignored if cvar has no binding, so no
+     * TEST_ARGNULL for it */
+    MPIT_ERRTEST_ARGNULL(handle);
+    MPIT_ERRTEST_ARGNULL(count);
 
     /* ... body of routine ...  */
 
@@ -130,17 +119,5 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_cvar_handle_alloc",
-                                 "**mpi_t_cvar_handle_alloc %d %p %p %p", cvar_index, obj_handle,
-                                 handle, count);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

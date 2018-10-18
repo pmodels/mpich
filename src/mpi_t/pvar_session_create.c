@@ -29,25 +29,21 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
 int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(1);
+    MPIT_CHKPMEM_DECL(1);
 
     *session = MPI_T_PVAR_SESSION_NULL;
 
-    MPIR_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno,
-                        "performance var session", MPL_MEM_MPIT);
+    MPIT_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), MPL_MEM_MPIT);
 
     /* essential for utlist to work */
     (*session)->hlist = NULL;
-
-#ifdef HAVE_ERROR_CHECKING
     (*session)->kind = MPIR_T_PVAR_SESSION;
-#endif
 
-    MPIR_CHKPMEM_COMMIT();
+    MPIT_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
+    MPIT_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -71,20 +67,12 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ARGNULL(session);
 
     /* ... body of routine ...  */
 
@@ -100,16 +88,5 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_session_create", "**mpi_t_pvar_session_create %p",
-                                 session);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

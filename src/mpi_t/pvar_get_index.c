@@ -47,25 +47,14 @@ int MPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INDEX);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_GET_INDEX);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(name, "name", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(pvar_index, "pvar_index", mpi_errno);
-            if (var_class < MPIR_T_PVAR_CLASS_FIRST || var_class >= MPIR_T_PVAR_CLASS_LAST) {
-                mpi_errno = MPI_T_ERR_INVALID_NAME;
-                goto fn_fail;
-            }
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ARGNULL(name);
+    MPIT_ERRTEST_ARGNULL(pvar_index);
+    MPIT_ERRTEST_PVAR_CLASS(var_class);
 
     /* ... body of routine ...  */
 
