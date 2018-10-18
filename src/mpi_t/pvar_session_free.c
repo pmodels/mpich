@@ -73,20 +73,12 @@ int MPI_T_pvar_session_free(MPI_T_pvar_session * session)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ARGNULL(session);
 
     /* ... body of routine ...  */
 
@@ -102,16 +94,5 @@ int MPI_T_pvar_session_free(MPI_T_pvar_session * session)
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_session_free", "**mpi_t_pvar_session_free %p",
-                                 session);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

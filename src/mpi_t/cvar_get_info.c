@@ -61,23 +61,12 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     const cvar_table_entry_t *cvar;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_GET_INFO);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_GET_INFO);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
-            /* Do not do *_TEST_ARGNULL for pointer arguments, since this is
-             * allowed or will be allowed by MPI_T standard.
-             */
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_CVAR_INDEX(cvar_index);
 
     /* ... body of routine ...  */
 
@@ -102,26 +91,11 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
         *scope = cvar->scope;
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_GET_INFO);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_cvar_get_info",
-                                 "**mpi_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p", cvar_index,
-                                 name, name_len, verbosity, datatype, enumtype, desc, desc_len,
-                                 binding, scope);
-    }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
-#endif
 }

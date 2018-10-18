@@ -35,7 +35,7 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 
     count = hnd->count;
     addr = hnd->addr;
-    MPIR_Assert(addr != NULL);
+    MPIT_Assert(addr != NULL);
 
     switch (hnd->datatype) {
         case MPI_INT:
@@ -62,10 +62,8 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
             MPL_strncpy(buf, addr, count);
             break;
         default:
-            /* FIXME the error handling code may not have been setup yet */
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s",
-                                 "unexpected parameter type");
-            break;
+            mpi_errno = MPI_T_ERR_INVALID;
+            goto fn_fail;
     }
 
   fn_exit:
@@ -97,21 +95,13 @@ int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_READ);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_READ);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_CVAR_HANDLE(handle, mpi_errno);
-            MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_CVAR_HANDLE(handle);
+    MPIT_ERRTEST_ARGNULL(buf);
 
     /* ... body of routine ...  */
 
@@ -126,15 +116,5 @@ int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_cvar_read", "**mpi_t_cvar_read %p %p", handle, buf);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

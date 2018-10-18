@@ -33,13 +33,13 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum * handle)
     MPIR_T_enum_t *e;
     static const UT_icd enum_item_icd = { sizeof(enum_item_t), NULL, NULL, NULL };
 
-    MPIR_Assert(enum_name);
-    MPIR_Assert(handle);
+    MPIT_Assert(enum_name);
+    MPIT_Assert(handle);
 
     utarray_extend_back(enum_table, MPL_MEM_MPIT);
     e = (MPIR_T_enum_t *) utarray_back(enum_table);
     e->name = MPL_strdup(enum_name);
-    MPIR_Assert(e->name);
+    MPIT_Assert(e->name);
 #ifdef HAVE_ERROR_CHECKING
     e->kind = MPIR_T_ENUM_HANDLE;
 #endif
@@ -56,13 +56,13 @@ void MPIR_T_enum_add_item(MPI_T_enum handle, const char *item_name, int item_val
 {
     enum_item_t *item;
 
-    MPIR_Assert(handle);
-    MPIR_Assert(item_name);
+    MPIT_Assert(handle);
+    MPIT_Assert(item_name);
 
     utarray_extend_back(handle->items, MPL_MEM_MPIT);
     item = (enum_item_t *) utarray_back(handle->items);
     item->name = MPL_strdup(item_name);
-    MPIR_Assert(item->name);
+    MPIT_Assert(item->name);
     item->value = item_value;
 }
 
@@ -89,7 +89,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
     /* Record <cat_name, cat_idx> in cat_hash */
     cat_idx = utarray_len(cat_table) - 1;
     hash_entry = MPL_malloc(sizeof(name2index_hash_t), MPL_MEM_MPIT);
-    MPIR_Assert(hash_entry);
+    MPIT_Assert(hash_entry);
     /* Need not to Strdup cat_name, since cat_table and cat_hash co-exist */
     hash_entry->name = cat_name;
     hash_entry->idx = cat_idx;
@@ -229,8 +229,8 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
     cat_table_entry_t *cat;
 
     /* NULL args are not allowed */
-    MPIR_Assert(cat_name);
-    MPIR_Assert(cat_desc);
+    MPIT_Assert(cat_name);
+    MPIT_Assert(cat_desc);
 
     HASH_FIND_STR(cat_hash, cat_name, hash_entry);
 
@@ -238,14 +238,14 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
         /* Found it, i.e., category already exists */
         cat_idx = hash_entry->idx;
         cat = (cat_table_entry_t *) utarray_eltptr(cat_table, cat_idx);
-        MPIR_Assert(cat->desc == NULL);
+        MPIT_Assert(cat->desc == NULL);
         cat->desc = MPL_strdup(cat_desc);
-        MPIR_Assert(cat->desc);
+        MPIT_Assert(cat->desc);
     } else {
         /* Not found, so create a new category */
         cat = MPIR_T_cat_create(cat_name);
         cat->desc = MPL_strdup(cat_desc);
-        MPIR_Assert(cat->desc);
+        MPIT_Assert(cat->desc);
         /* Notify categories have been changed */
         cat_stamp++;
     }
@@ -287,7 +287,7 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
         cvar_idx = hash_entry->idx;
         cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_idx);
         /* Should never override an existing & active var */
-        MPIR_Assert(cvar->active != TRUE);
+        MPIT_Assert(cvar->active != TRUE);
         cvar->active = TRUE;
         /* FIXME: Do we need to check consistency between the old and new? */
     } else {
@@ -297,17 +297,17 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
         cvar->active = TRUE;
         cvar->datatype = dtype;
         cvar->name = MPL_strdup(name);
-        MPIR_Assert(cvar->name);
+        MPIT_Assert(cvar->name);
         if (dtype != MPI_CHAR) {
             cvar->addr = (void *) addr;
         } else {
             cvar->addr = MPL_malloc(count, MPL_MEM_MPIT);
-            MPIR_Assert(cvar->addr);
+            MPIT_Assert(cvar->addr);
             if (defaultval.str == NULL) {
                 ((char *) (cvar->addr))[0] = '\0';
             } else {
                 /* Use greater (>), since count includes the terminating '\0', but strlen does not */
-                MPIR_Assert((unsigned) count > strlen(defaultval.str));
+                MPIT_Assert((unsigned) count > strlen(defaultval.str));
                 strcpy(cvar->addr, defaultval.str);
             }
         }
@@ -319,12 +319,12 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
         cvar->get_count = get_count;
         cvar->defaultval = defaultval;
         cvar->desc = MPL_strdup(desc);
-        MPIR_Assert(cvar->desc);
+        MPIT_Assert(cvar->desc);
 
         /* Record <name, index> in hash table */
         cvar_idx = utarray_len(cvar_table) - 1;
         hash_entry = MPL_malloc(sizeof(name2index_hash_t), MPL_MEM_MPIT);
-        MPIR_Assert(hash_entry);
+        MPIT_Assert(hash_entry);
         /* Need not to Strdup name, since cvar_table and cvar_hash co-exist */
         hash_entry->name = name;
         hash_entry->idx = cvar_idx;
@@ -374,7 +374,7 @@ void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype,
         pvar_idx = hash_entry->idx;
         pvar = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_idx);
         /* Should never override an existing & active var */
-        MPIR_Assert(pvar->active != TRUE);
+        MPIT_Assert(pvar->active != TRUE);
         pvar->active = TRUE;
         /* FIXME: Do we need to check consistency between the old and new? */
     } else {
@@ -385,7 +385,7 @@ void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype,
         pvar->varclass = varclass;
         pvar->datatype = dtype;
         pvar->name = MPL_strdup(name);
-        MPIR_Assert(pvar->name);
+        MPIT_Assert(pvar->name);
         pvar->addr = addr;
         pvar->count = count;
         pvar->enumtype = etype;
@@ -395,12 +395,12 @@ void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype,
         pvar->get_value = get_value;
         pvar->get_count = get_count;
         pvar->desc = MPL_strdup(desc);
-        MPIR_Assert(pvar->desc);
+        MPIT_Assert(pvar->desc);
 
         /* Record <name, index> in hash table */
         pvar_idx = utarray_len(pvar_table) - 1;
         hash_entry = MPL_malloc(sizeof(name2index_hash_t), MPL_MEM_MPIT);
-        MPIR_Assert(hash_entry);
+        MPIT_Assert(hash_entry);
         /* Need not to Strdup name, since pvar_table and pvar_hashs co-exist */
         hash_entry->name = name;
         hash_entry->idx = pvar_idx;
@@ -447,7 +447,7 @@ void MPIR_T_strncpy(char *dst, const char *src, int *len)
             *len = (src == NULL) ? 1 : strlen(src) + 1;
         } else {
             /* MPL_strncpy will always terminate the string */
-            MPIR_Assert(*len > 0);
+            MPIT_Assert(*len > 0);
             if (src != NULL) {
                 MPL_strncpy(dst, src, *len);
                 *len = (int) strlen(dst) + 1;

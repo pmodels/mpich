@@ -46,20 +46,12 @@ int MPI_T_category_changed(int *stamp)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_CHANGED);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CATEGORY_CHANGED);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(stamp, "stamp", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ARGNULL(stamp);
 
     /* ... body of routine ...  */
 
@@ -67,23 +59,11 @@ int MPI_T_category_changed(int *stamp)
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CATEGORY_CHANGED);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_category_changed", "**mpi_t_category_changed %p", stamp);
-    }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
-#endif
 }

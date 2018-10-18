@@ -72,16 +72,15 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
                 break;
             default:
                 /* Code should never come here */
-                mpi_errno = MPI_ERR_INTERN;
+                mpi_errno = MPI_T_ERR_INVALID;
                 goto fn_fail;
-                break;
         }
 
     } else if (MPIR_T_pvar_is_watermark(handle)) {
         /* When handle is first, clear the flag in pvar too */
         if (MPIR_T_pvar_is_first(handle)) {
             mark = (MPIR_T_pvar_watermark_t *) handle->addr;
-            MPIR_Assert(mark->first_used);
+            MPIT_Assert(mark->first_used);
             mark->first_started = FALSE;
         }
     }
@@ -126,21 +125,13 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_STOP);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_STOP);
 
     /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
-            MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_PVAR_SESSION(session);
+    MPIT_ERRTEST_PVAR_HANDLE(handle);
 
     /* ... body of routine ...  */
 
@@ -181,15 +172,5 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_stop", "**mpi_t_pvar_stop %p %p", session, handle);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

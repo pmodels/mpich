@@ -44,20 +44,12 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle * handle)
     MPIR_T_cvar_handle_t *hnd;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
+    MPIT_ERRTEST_ARGNULL(handle);
 
     /* ... body of routine ...  */
 
@@ -67,23 +59,11 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle * handle)
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_cvar_handle_free", "**mpi_t_cvar_handle_free %p", handle);
-    }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
-#endif
 }
