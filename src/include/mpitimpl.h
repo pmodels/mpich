@@ -18,6 +18,10 @@
 #include "uthash.h"
 #include "mpir_objects.h"
 
+/* MPI T should not use MPIR_ error routines. */
+#include "mpit_err.h"
+#include "mpit_mem.h"
+
 #ifdef HAVE_ERROR_CHECKING
 typedef enum {
     MPIR_T_OBJECT_INVALID = 0,
