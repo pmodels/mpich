@@ -81,9 +81,8 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     break;
                 default:
                     /* Code should never come here */
-                    mpi_errno = MPI_ERR_INTERN;
+                    mpi_errno = MPI_T_ERR_INVALID;
                     goto fn_fail;
-                    break;
             }
         } else {
             /* A running SUM with callback. Read its current value into handle */
@@ -120,9 +119,8 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     break;
                 default:
                     /* Code should never come here */
-                    mpi_errno = MPI_ERR_INTERN;
+                    mpi_errno = MPI_T_ERR_INVALID;
                     goto fn_fail;
-                    break;
             }
         }
     } else if (MPIR_T_pvar_is_sum(handle) && !MPIR_T_pvar_is_started(handle)) {
@@ -132,7 +130,7 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
         /* Callback and array are not allowed for watermarks, since they
          * can not gurantee correct semantics of watermarks.
          */
-        MPIR_Assert(handle->get_value == NULL && handle->count == 1);
+        MPIT_Assert(handle->get_value == NULL && handle->count == 1);
 
         if (MPIR_T_pvar_is_first(handle)) {
             /* Current value of the first handle of a watermark is stored at
@@ -155,9 +153,8 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     break;
                 default:
                     /* Code should never come here */
-                    mpi_errno = MPI_ERR_INTERN;
+                    mpi_errno = MPI_T_ERR_INVALID;
                     goto fn_fail;
-                    break;
             }
         } else {
             /* For remaining handles, their current value are in the handle */
@@ -176,9 +173,8 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
                     break;
                 default:
                     /* Code should never come here */
-                    mpi_errno = MPI_ERR_INTERN;
+                    mpi_errno = MPI_T_ERR_INVALID;
                     goto fn_fail;
-                    break;
             }
         }
     } else {
@@ -235,27 +231,19 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_READ);
-    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
+    MPIT_ERRTEST_MPIT_INITIALIZED();
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_READ);
 
     /* Validate parameters */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
-            MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
-            MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
-            if (handle == MPI_T_PVAR_ALL_HANDLES || session != handle->session
-                || !MPIR_T_pvar_is_oncestarted(handle)) {
-                mpi_errno = MPI_T_ERR_INVALID_HANDLE;
-                goto fn_fail;
-            }
-        }
-        MPID_END_ERROR_CHECKS;
+    MPIT_ERRTEST_PVAR_SESSION(session);
+    MPIT_ERRTEST_PVAR_HANDLE(handle);
+    MPIT_ERRTEST_ARGNULL(buf);
+    if (handle == MPI_T_PVAR_ALL_HANDLES || session != handle->session
+        || !MPIR_T_pvar_is_oncestarted(handle)) {
+        mpi_errno = MPI_T_ERR_INVALID_HANDLE;
+        goto fn_fail;
     }
-#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -271,16 +259,5 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_t_pvar_read", "**mpi_t_pvar_read %p %p %p", session, handle,
-                                 buf);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
