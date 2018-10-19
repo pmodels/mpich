@@ -1250,15 +1250,34 @@ elif test "$enable_fc" = yes ; then
     AC_LANG_POP([Fortran])
 fi
 
-if test "$enable_f08" = "yes" ; then
+if test "$FROM_MPICH" = "yes" -a  "$enable_f08" = "yes" ; then
     PAC_FC_2008_SUPPORT([enable_f08=yes],[enable_f08=no])
 fi
 
 f08dir="#"
 AC_SUBST(f08dir)
-# FIXME if $FROM_MPICH is no, we should test build an MPI F08 program
-if test "$enable_f08" = "yes" -a "$FROM_MPICH" = "yes" ; then
-   f08dir=f08
+if test "$enable_f08" = "yes"; then
+    if test "$FROM_MPICH" = "yes" ; then
+        f08dir=f08
+    else
+        AC_MSG_CHECKING([that we can build MPI programs with Fortran 2008 bindings])
+        AC_LANG_PUSH([Fortran])
+        AC_LINK_IFELSE([
+            AC_LANG_SOURCE([
+            program main
+            use mpi_f08
+            call mpi_init()
+            call mpi_finalize()
+            end
+        ])
+        ],[
+            AC_MSG_RESULT(yes)
+            f08dir=f08
+        ],[
+            AC_MSG_RESULT(no)
+        ])
+        AC_LANG_POP([Fortran])
+    fi
 fi
 
 # Running C++ compiler tests
