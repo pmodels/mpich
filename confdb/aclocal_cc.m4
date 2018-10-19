@@ -1696,3 +1696,23 @@ if test x$have_builtin_expect = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_EXPECT], [1], [Define to 1 if the compiler supports __builtin_expect.])
 fi
 ])
+
+dnl
+dnl PAC_C_STATIC_ASSERT - Test whether C11 _Static_assert is supported
+dnl
+dnl will AC_DEFINE([HAVE_C11__STATIC_ASSERT]) if C11 _Static_assert is supported.
+dnl
+AC_DEFUN([PAC_C_STATIC_ASSERT], [
+    AC_MSG_CHECKING([for C11 _Static_assert functionality])
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+    int main(){
+        _Static_assert(1, "The impossible happened!");
+        return 0;
+    }
+    ])],[
+    AC_DEFINE([HAVE_C11__STATIC_ASSERT],[1],[Define if C11 _Static_assert is supported.])
+    AC_MSG_RESULT([yes])
+    ],[
+    AC_MSG_RESULT([no])
+    ])
+])

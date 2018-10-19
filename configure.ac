@@ -3050,6 +3050,7 @@ AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
+PAC_C_STATIC_ASSERT
 
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
