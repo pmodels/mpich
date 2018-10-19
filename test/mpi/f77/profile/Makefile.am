@@ -12,7 +12,11 @@ EXTRA_DIST = testlist.in
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
 
-noinst_PROGRAMS = profile1f
+noinst_PROGRAMS =
+
+if BUILD_F77_PROFILE
+noinst_PROGRAMS += profile1f
+endif
 
 ## attr1aints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
 

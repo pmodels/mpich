@@ -1529,6 +1529,64 @@ pac_cv_have_mpi_sizeof,[
 ])
 AM_CONDITIONAL(BUILD_F90_SIZEOF, [test "$pac_cv_have_mpi_sizeof" = "yes"])
 
+if test "$FROM_MPICH" = yes ; then
+    pac_cv_have_mpi_f90_profile=yes
+fi
+AC_CACHE_CHECK([whether use mpi supports the profile interface],
+pac_cv_have_mpi_f90_profile,[
+    AC_LANG_PUSH([Fortran])
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([[
+       subroutine mpi_send( smsg, count, dtype, dest, tag, comm, ierr )
+       use mpi
+       integer count, dtype, dest, tag, comm, ierr
+       integer smsg(count)
+!
+       call pmpi_send( smsg, count, dtype, dest, tag, comm, ierr )
+       return
+      end subroutine]])
+    ],[
+        pac_cv_have_mpi_f90_profile=yes
+    ],[
+        pac_cv_have_mpi_f90_profile=no
+    ])
+    AC_LANG_POP([Fortran])
+])
+dnl f90/profile/Makefile.am is automatically generated from f77/profile/Makefile.am
+dnl by f77tof90, in which F77 is replaced with FC.
+dnl That is why we need to define two macros
+dnl - BUILD_F77_PROFILE (always true)
+dnl - BUILD_FC_PROFILE (and not BUILD_F90_PROFILE) based on the previous test
+AM_CONDITIONAL(BUILD_F77_PROFILE, [true])
+AM_CONDITIONAL(BUILD_FC_PROFILE, [test "$pac_cv_have_mpi_f90_profile" = "yes"])
+
+if test "$enable_f08" = no; then
+    pac_cv_have_mpi_f08_profile=no
+elif test "$FROM_MPICH" = yes ; then
+    pac_cv_have_mpi_f08_profile=yes
+fi
+AC_CACHE_CHECK([whether use mpi_f08 supports the profile interface],
+pac_cv_have_mpi_f08_profile,[
+    AC_LANG_PUSH([Fortran])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([[
+      program mpi_profile_test
+        use mpi_f08
+       use :: mpi_f08, my_noname => mpi_send_f08ts
+        implicit none
+
+        integer :: i
+
+        call pmpi_send(i, 1, MPI_INT, 0, 0, MPI_COMM_WORLD)
+      end program]])
+    ],[
+        pac_cv_have_mpi_f08_profile=yes
+    ],[
+        pac_cv_have_mpi_f08_profile=no
+    ])
+    AC_LANG_POP([Fortran])
+])
+AM_CONDITIONAL(BUILD_F08_PROFILE, [test "$pac_cv_have_mpi_f08_profile" = "yes"])
 
 # MPI_Aint was intended as an address-sized int.  However, MPI didn't 
 # specify this - MPI_Aint must be large enough to hold an address-sized

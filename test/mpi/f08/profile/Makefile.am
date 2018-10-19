@@ -12,4 +12,8 @@ EXTRA_DIST = testlist.in
 # avoid having to write many "foo_SOURCES = foo.f90" lines
 AM_DEFAULT_SOURCE_EXT = .f90
 
-noinst_PROGRAMS = profile1f90
+noinst_PROGRAMS =
+
+if BUILD_F08_PROFILE
+noinst_PROGRAMS += profile1f90
+endif
