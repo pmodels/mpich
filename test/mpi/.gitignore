@@ -791,6 +791,7 @@
 /f90/attr/commattrf90
 /f90/attr/commattrf90.f90
 /f90/attr/fandcattrf90
+/f90/attr/testlist.in
 /f90/attr/testlist
 /f90/attr/typeattr2f90
 /f90/attr/typeattr2f90.f90
@@ -835,6 +836,7 @@
 /f90/datatype/packef90.f90
 /f90/datatype/sizeof
 /f90/datatype/structf
+/f90/datatype/testlist.in
 /f90/datatype/testlist
 /f90/datatype/trf90
 /f90/datatype/typecntsf90
