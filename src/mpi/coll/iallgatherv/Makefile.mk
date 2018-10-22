@@ -23,4 +23,8 @@ mpi_core_sources +=                                           \
     src/mpi/coll/iallgatherv/iallgatherv_gentran_algos.c                    \
     src/mpi/coll/iallgatherv/iallgatherv_intra_recexch_distance_doubling.c    \
     src/mpi/coll/iallgatherv/iallgatherv_intra_recexch_distance_halving.c    \
-    src/mpi/coll/iallgatherv/iallgatherv_intra_gentran_ring.c
+    src/mpi/coll/iallgatherv/iallgatherv_intra_gentran_ring.c        \
+    src/mpi/coll/iallgatherv/iallgatherv_utils.c
+
+noinst_HEADERS += \
+    src/mpi/coll/iallgatherv/iallgatherv.h
