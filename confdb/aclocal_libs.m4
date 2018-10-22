@@ -89,6 +89,8 @@ AC_DEFUN([PAC_CHECK_PREFIX],[
                  :
              elif test "$withval" = "embedded" ; then
                  :
+             elif test "$withval" = "no" ; then
+                 :
              else
                  PAC_APPEND_FLAG([-I${with_$1_prefix}/include],[CPPFLAGS])
                  if test -d "${with_$1_prefix}/lib64" ; then
