@@ -6,10 +6,10 @@
 #include "mpiimpl.h"
 #include "gentran_impl.h"
 
-static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
-                                  int remove);
+static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
+                                         int remove);
 
-static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
+static inline void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
 {
     int i;
 
@@ -18,7 +18,7 @@ static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
     }
 }
 
-static void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
+static inline void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
     LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
@@ -217,8 +217,8 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 }
 
 
-static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
-                                  int remove)
+static inline void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched,
+                                         int remove)
 {
     int i;
     UT_array *out_vtcs = vtxp->out_vtcs;
