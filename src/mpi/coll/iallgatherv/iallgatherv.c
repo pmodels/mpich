@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "iallgatherv.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -86,22 +87,6 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Iallgatherv
 #define MPI_Iallgatherv PMPI_Iallgatherv
-
-/* This function checks whether the displacements are in increasing order and
- * that there is no overlap or gap between the data of successive ranks. Some
- * algorithms can only handle ordered array of data and hence this function for
- * checking whether the data is ordered. */
-static int is_ordered(int comm_size, const int recvcounts[], const int displs[])
-{
-    int i, pos = 0;
-    for (i = 0; i < comm_size; i++) {
-        if (pos != displs[i]) {
-            return 0;
-        }
-        pos += recvcounts[i];
-    }
-    return 1;
-}
 
 /* This is the machine-independent implementation of allgatherv. The algorithm is:
 
@@ -316,7 +301,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* intracommunicator */
         switch (MPIR_Iallgatherv_intra_algo_choice) {
             case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
-                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                /* This algo cannot handle unordered data */
+                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
                     MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
@@ -327,7 +313,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 goto fn_exit;
                 break;
             case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
-                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                /* This algo cannot handle unordered data */
+                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
                     MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
