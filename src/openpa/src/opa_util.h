@@ -16,6 +16,7 @@
 #define OPA_ATTRIBUTE(x_)
 #endif
 
+/* FIXME: The following can use something similar to MPL_Static_assert. */
 /* FIXME this just needs a total rework in general with an OPA_NDEBUG or similar. */
 #define OPA_assert(expr_) do {} while (0)
 #define OPA_assertp(expr_) do { if (!(expr_)) ++((int *)NULL) } while (0)       /* SEGV intentionally */
