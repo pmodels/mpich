@@ -146,8 +146,6 @@ fn_fail:                      \
    ? strrchr(__FILE__,'/')+1                    \
    : __FILE__                                   \
 )
-#define OFI_COMPILE_TIME_ASSERT(expr_)                                  \
-  do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
 #define FI_RC(FUNC,STR)                                         \
   do                                                            \
