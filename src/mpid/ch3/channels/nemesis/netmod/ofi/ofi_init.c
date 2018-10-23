@@ -337,9 +337,9 @@ int MPID_nem_ofi_get_ordering(int *ordering)
 
 static inline int compile_time_checking()
 {
-    OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
-    OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
-    OFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
+    MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
                 ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==

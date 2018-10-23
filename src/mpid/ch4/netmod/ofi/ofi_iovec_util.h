@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
-    CH4_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
     if (likely(buf_limit > MPIR_AINT_MAX))
         buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;
@@ -205,7 +205,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
-    CH4_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
     if (likely(buf_limit > MPIR_AINT_MAX))
         buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;
@@ -337,8 +337,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment(MPIDI_OFI_seg_state_t * seg
     int origin_idx = 0, target_idx = 0;
     size_t len = 0, last_len = 0;
 
-    CH4_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_base) == offsetof(struct fi_rma_iov, addr));
-    CH4_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_len) == offsetof(struct fi_rma_iov, len));
+    MPL_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_base) == offsetof(struct fi_rma_iov, addr));
+    MPL_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_len) == offsetof(struct fi_rma_iov, len));
 
     rc = MPIDI_OFI_next_seg_state(seg_state, &origin_last_addr, &target_last_addr, &last_len);
     MPIR_Assert(rc != MPIDI_OFI_SEG_ERROR);

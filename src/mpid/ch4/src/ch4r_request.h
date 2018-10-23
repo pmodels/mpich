@@ -47,7 +47,7 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =
         (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request *
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =
         (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));

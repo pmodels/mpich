@@ -54,9 +54,6 @@ typedef struct {
     int progress_count;
 } MPID_Progress_state;
 
-#define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
-  do { switch(0) { case 0: case (expr_): default: break; } } while (0)
-
 typedef enum {
     MPIDI_PTYPE_RECV,
     MPIDI_PTYPE_SEND,
