@@ -14,7 +14,7 @@
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
 static int pmi_storage_len = 0;
-static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage, r[HYD_TMPBUF_SIZE];
+static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage;
 
 static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 {
@@ -178,12 +178,8 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         /* We don't have a full command. Copy the rest of the data to
          * the front of the storage buffer. */
 
-        /* FIXME: This dual memcpy is crazy and needs to be
-         * fixed. Single memcpy should be possible, but we need to be
-         * a bit careful not to corrupt the buffer. */
         if (sptr != pmi_storage) {
-            memcpy(r, sptr, pmi_storage_len);
-            memcpy(pmi_storage, r, pmi_storage_len);
+            memmove(pmi_storage, sptr, pmi_storage_len);
             sptr = pmi_storage;
         }
         *buf = NULL;
