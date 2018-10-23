@@ -54,6 +54,7 @@ AC_C_INLINE
 
 PAC_C_MACRO_VA_ARGS
 PAC_C_BUILTIN_EXPECT
+PAC_C_STATIC_ASSERT
 
 AC_ARG_ENABLE(embedded,
     AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),

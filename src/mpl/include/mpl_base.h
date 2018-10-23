@@ -104,6 +104,20 @@
 #define likely(x_)   (x_)
 #endif
 
+#ifdef MPL_HAVE_C11__STATIC_ASSERT
+#define MPL_static_assert(cond_,msg_) _Static_assert(cond_,msg_)
+#else
+/* A hack:
+    When expr_ is false, result in compile-time duplicated case error.
+    When expr_ is true, compiler should optimize it away.
+    Since it is compile time error, we don't care (much) about how error messgage's look.
+ */
+#define MPL_static_assert(cond_,msg_) \
+    do { switch(0) { case 0: case (expr_): default: break; } } while (0)
+#endif
+
+#define MPL_COMPILE_TIME_ASSERT(cond_) MPL_static_assert(cond_, "MPL_COMPILE_TIME_ASSERT failure")
+
 #define MPL_QUOTE(A) MPL_QUOTE2(A)
 #define MPL_QUOTE2(A) #A
 
