@@ -9,6 +9,43 @@
 #ifndef UCX_INIT_H_INCLUDED
 #define UCX_INIT_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : CH4_UCX
+      description : A category for CH4 UCX netmod variables
+
+cvars:
+    - name        : MPIR_CVAR_CH4_UCX_ENABLE_AMO32
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL
+      description : >-
+        If true, enable UCX 32-bit atomics feature. Otherwise disable.
+        When both AMO32 and AMO64 are disabled, all MPI accumulate operations
+        use active message based fallback; if any of the atomic feature is enabled,
+        selected MPI accumulate operations may use hardware atomics.
+
+    - name        : MPIR_CVAR_CH4_UCX_ENABLE_AMO64
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL
+      description : >-
+        If true, enable UCX 64-bit atomics feature. Otherwise disable.
+        When both AMO32 and AMO64 are disabled, all MPI accumulate operations
+        use active message based fallback; if any of the atomic feature is enabled,
+        selected MPI accumulate operations may use hardware atomics.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #include "ucx_impl.h"
 #include "mpir_cvars.h"
 #include "ucx_types.h"
@@ -46,6 +83,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
 
     /* For now use only the tag feature */
     features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
+
+    /* Some devices may not support atomics feature (e.g., only AMO64 on mlx4).
+     * Setting unsupported feature may cause failure at ucp_ep_create. We allow
+     * user to manually enable/disable the features based on the underlying platform.
+     *
+     * TODO: UCX will emulate unsupported AMO in software layer. We can delete the CVARs
+     * and always enable both AMO32 and AMO64 once this version is out.
+     * See discussion at https://github.com/openucx/ucx/issues/2994.*/
+    if (MPIR_CVAR_CH4_UCX_ENABLE_AMO32)
+        features |= UCP_FEATURE_AMO32;
+    if (MPIR_CVAR_CH4_UCX_ENABLE_AMO64)
+        features |= UCP_FEATURE_AMO64;
+
     ucp_params.features = features;
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
