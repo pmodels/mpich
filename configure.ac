@@ -3364,7 +3364,7 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 #endif
   ])
 ])
-
+AC_CHECK_SIZEOF([_Float16])
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex])
@@ -3376,7 +3376,8 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
     float_int double_int long_int short_int two_int long_double_int     \
-    _Bool float__Complex double__Complex long_double__Complex ; do
+    _Bool float__Complex double__Complex long_double__Complex \
+    _Float16; do
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then 
        len=0
@@ -3683,6 +3684,7 @@ MPI_C_BOOL=MPI_DATATYPE_NULL
 MPI_C_FLOAT_COMPLEX=MPI_DATATYPE_NULL
 MPI_C_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 MPI_C_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
+MPIX_C_FLOAT16=MPI_DATATYPE_NULL
 if test ${len__Bool} != 0 ; then
     MPI_C_BOOL=0x4c00${len__Bool}3f
 fi
@@ -3694,6 +3696,9 @@ if test ${len_double__Complex} != 0 ; then
 fi
 if test ${len_long_double__Complex} != 0 ; then
     MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
+fi
+if test ${len__Float16} != 0 ; then
+    MPIX_C_FLOAT16=0x4c000246
 fi
 
 AC_SUBST(MPI_INT8_T)
@@ -3708,6 +3713,7 @@ AC_SUBST(MPI_C_BOOL)
 AC_SUBST(MPI_C_FLOAT_COMPLEX)
 AC_SUBST(MPI_C_DOUBLE_COMPLEX)
 AC_SUBST(MPI_C_LONG_DOUBLE_COMPLEX)
+AC_SUBST(MPIX_C_FLOAT16)
 export MPI_INT8_T
 export MPI_INT16_T
 export MPI_INT32_T
@@ -3720,6 +3726,7 @@ export MPI_C_BOOL
 export MPI_C_FLOAT_COMPLEX
 export MPI_C_DOUBLE_COMPLEX
 export MPI_C_LONG_DOUBLE_COMPLEX
+export MPIX_C_FLOAT16
 
 
 # ----------------------------------------------------------------------------
