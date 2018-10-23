@@ -1,0 +1,22 @@
+sudo: false
+language: c
+
+os:
+  - linux
+  - osx
+
+addons:
+  apt:
+    packages: gfortran
+
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint; brew install gcc; fi
+
+before_script:
+  - MPICH_DEPS_PREFIX=$HOME/autotools ./maint/bootstrap.sh
+  - export PATH=$HOME/autotools/bin:$PATH
+
+script:
+  - ./autogen.sh
+  - ./configure --prefix=$PWD/i
+  - make -j2 install
