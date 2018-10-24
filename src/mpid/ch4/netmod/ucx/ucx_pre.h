@@ -53,6 +53,7 @@ typedef enum {
 
 typedef struct MPIDI_UCX_win_target_sync {
     MPIDI_UCX_win_sync_flag_t need_sync;        /* flag for op completion */
+    bool outstanding_atomics;   /* flag for atomics ordering and atomicity */
 } MPIDI_UCX_win_target_sync_t;
 
 typedef struct {
