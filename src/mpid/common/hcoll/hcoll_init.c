@@ -131,12 +131,6 @@ int hcoll_initialize(void)
 }
 
 
-#define INSTALL_COLL_WRAPPER(check_name, name) \
-    if (hcoll_enable_##check_name && (NULL != hcoll_collectives.coll_##check_name)) { \
-        comm_ptr->coll_fns->name      = hcoll_##name; \
-        MPL_DBG_MSG(MPIR_DBG_HCOLL,VERBOSE, #name " wrapper installed"); \
-    }
-
 #undef FUNCNAME
 #define FUNCNAME hcoll_comm_create
 #undef FCNAME
