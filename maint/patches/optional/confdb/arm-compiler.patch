@@ -1,0 +1,13 @@
+--- libtool.m4  2018-10-23 23:49:38.563030000 +0000
++++ libtool.m4.bak      2018-10-23 23:55:07.277722000 +0000
+@@ -4738,6 +4738,10 @@
+        _LT_TAGVAR(lt_prog_compiler_pic, $1)='-qpic'
+        _LT_TAGVAR(lt_prog_compiler_static, $1)='-qstaticlink'
+        ;;
++      armclang* | armclang++* | armflang*)
++        # ARM LLVM C/C++/Fortran
++        _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
++        ;;
+       *)
+        case `$CC -V 2>&1 | sed 5q` in
+        *Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-3]]*)
