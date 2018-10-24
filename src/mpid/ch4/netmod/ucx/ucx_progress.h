@@ -12,7 +12,7 @@
 #include "ucx_impl.h"
 //#include "events.h"
 
-static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -81,8 +81,8 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     return mpi_errno;
 }
 
-static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
-                                            ucp_tag_recv_info_t * info)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
+                                                       ucp_tag_recv_info_t * info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -94,7 +94,7 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_NM_progress
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_progress(int vni, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;
