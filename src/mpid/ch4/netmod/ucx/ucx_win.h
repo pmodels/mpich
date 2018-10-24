@@ -15,6 +15,35 @@ struct _UCX_share {
     MPI_Aint addr;
 };
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush(MPIR_Win * win)
+{
+    int rank;
+    bool need_flush = false;
+    /* including cases where FLUSH_LOCAL or FLUSH is set */
+    for (rank = 0; rank < win->comm_ptr->local_size; rank++)
+        need_flush |=
+            (MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL);
+    return need_flush;
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
+{
+    int rank;
+    bool need_flush_local = false;
+    for (rank = 0; rank < win->comm_ptr->local_size; rank++)
+        need_flush_local |=
+            (MPIDI_UCX_WIN(win).target_sync[rank].need_sync == MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL);
+    return need_flush_local;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
+{
+    int rank;
+    for (rank = 0; rank < win->comm_ptr->local_size; rank++)
+        MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
+}
+
+
 static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
                                           uint32_t disp_unit, void **base_ptr)
 {
@@ -127,7 +156,12 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
         MPIDI_UCX_WIN_INFO(win, i).disp = share_data[i].disp;
         MPIDI_UCX_WIN_INFO(win, i).addr = share_data[i].addr;
     }
-    MPIDI_UCX_WIN(win).need_local_flush = 0;
+
+    MPIDI_UCX_WIN(win).target_sync =
+        MPL_malloc(sizeof(MPIDI_UCX_win_target_sync_t) * comm_ptr->local_size, MPL_MEM_RMA);
+    MPIR_Assert(MPIDI_UCX_WIN(win).target_sync);
+    MPIDI_UCX_win_unset_sync(win);
+
   fn_exit:
     /* buffer release */
     if (rkey_buffer)
@@ -392,6 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
         if (win->size > 0)
             ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
         MPL_free(MPIDI_UCX_WIN(win).info_table);
+        MPL_free(MPIDI_UCX_WIN(win).target_sync);
     }
 #endif
 
@@ -406,11 +441,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-
-    /* maybe we just flush all eps here? More efficient for smaller communicators... */
-    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucp_status);
+    if (MPIDI_UCX_win_need_flush(win)) {
+        ucs_status_t ucp_status;
+        /* maybe we just flush all eps here? More efficient for smaller communicators... */
+        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
+        MPIDI_UCX_win_unset_sync(win);
+    }
 #endif
 
   fn_exit:
@@ -427,14 +464,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_LOCAL_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
+    if (MPIDI_UCX_win_need_flush_local(win)) {
+        ucs_status_t ucp_status;
 
-    /* currently, UCP does not support local flush, so we have to call
-     * a global flush. This is not good for performance - but OK for now */
-    if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
+        /* currently, UCP does not support local flush, so we have to call
+         * a global flush. This is not good for performance - but OK for now */
         ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
-        MPIDI_UCX_WIN(win).need_local_flush = 0;
+
+        /* TODO: should set to FLUSH after replace with real local flush. */
+        MPIDI_UCX_win_unset_sync(win);
     }
 #endif
 
@@ -452,13 +491,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
+    if (rank != MPI_PROC_NULL &&
+        /* including cases where FLUSH_LOCAL or FLUSH is set */
+        MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
 
-    if (rank != MPI_PROC_NULL) {
+        ucs_status_t ucp_status;
         ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
         /* only flush the endpoint */
         ucp_status = ucp_ep_flush(ep);
         MPIDI_UCX_CHK_STATUS(ucp_status);
+        MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
     }
 #endif
 
@@ -476,18 +518,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_LOCAL_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
+    if (rank != MPI_PROC_NULL &&
+        MPIDI_UCX_WIN(win).target_sync[rank].need_sync == MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
+        ucs_status_t ucp_status;
 
-    if (rank != MPI_PROC_NULL) {
         ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
+        ucp_status = ucp_ep_flush(ep);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
 
-        if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
-            ucp_status = ucp_ep_flush(ep);
-            MPIDI_UCX_CHK_STATUS(ucp_status);
-            MPIDI_UCX_WIN(win).need_local_flush = 0;
-        }
+        /* TODO: should set to FLUSH after replace with real local flush. */
+        MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
     }
 #endif
 

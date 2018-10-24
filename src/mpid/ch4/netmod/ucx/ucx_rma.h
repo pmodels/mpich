@@ -31,7 +31,12 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
 
     status = ucp_put_nbi(ep, origin_addr, size, base + offset, win_info->rkey);
     if (status == UCS_INPROGRESS)
-        MPIDI_UCX_WIN(win).need_local_flush = 1;
+        MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL;
+    else if (status == UCS_OK)
+        /* UCX 1.4 spec: completed immediately if returns UCS_OK.
+         * FIXME: is it local completion or remote ? Now we assume local,
+         * so we need flush to ensure remote completion.*/
+        MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH;
     else
         MPIDI_UCX_CHK_STATUS(status);
 
@@ -76,6 +81,9 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     status = ucp_put(ep, buffer, size, base + offset, win_info->rkey);
     MPIDI_UCX_CHK_STATUS(status);
 
+    /* Only need remote flush */
+    MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH;
+
   fn_exit:
     MPL_free(buffer);
     return mpi_errno;
@@ -105,7 +113,7 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
 
     /* UCX 1.4 spec: ucp_get_nbi always returns immediately and does not
      * guarantee completion */
-    MPIDI_UCX_WIN(win).need_local_flush = 1;
+    MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL;
 
   fn_exit:
     return mpi_errno;
