@@ -11,7 +11,7 @@
 
 #include "ucx_impl.h"
 
-static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *req = ucp_request->req;
@@ -32,7 +32,7 @@ static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t statu
     goto fn_exit;
 }
 
-static inline void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
@@ -55,13 +55,14 @@ static inline void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-static inline int MPIDI_NM_am_isend(int rank,
-                                    MPIR_Comm * comm,
-                                    int handler_id,
-                                    const void *am_hdr,
-                                    size_t am_hdr_sz,
-                                    const void *data,
-                                    MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
+                                               MPIR_Comm * comm,
+                                               int handler_id,
+                                               const void *am_hdr,
+                                               size_t am_hdr_sz,
+                                               const void *data,
+                                               MPI_Count count, MPI_Datatype datatype,
+                                               MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -162,13 +163,14 @@ static inline int MPIDI_NM_am_isend(int rank,
 #define FUNCNAME MPIDI_NM_am_isendv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_isendv(int rank,
-                                     MPIR_Comm * comm,
-                                     int handler_id,
-                                     struct iovec *am_hdr,
-                                     size_t iov_len,
-                                     const void *data,
-                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
+                                                MPIR_Comm * comm,
+                                                int handler_id,
+                                                struct iovec *am_hdr,
+                                                size_t iov_len,
+                                                const void *data,
+                                                MPI_Count count, MPI_Datatype datatype,
+                                                MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t am_hdr_sz = 0, i;
@@ -253,13 +255,13 @@ static inline int MPIDI_NM_am_isendv(int rank,
 #define FUNCNAME MPIDI_NM_am_isend_reply
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
-                                          int src_rank,
-                                          int handler_id,
-                                          const void *am_hdr,
-                                          size_t am_hdr_sz,
-                                          const void *data, MPI_Count count,
-                                          MPI_Datatype datatype, MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
+                                                     int src_rank,
+                                                     int handler_id,
+                                                     const void *am_hdr,
+                                                     size_t am_hdr_sz,
+                                                     const void *data, MPI_Count count,
+                                                     MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -333,7 +335,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     goto fn_exit;
 }
 
-static inline size_t MPIDI_NM_am_hdr_max_sz(void)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
 
@@ -346,9 +348,10 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
     return ret;
 }
 
-static inline int MPIDI_NM_am_send_hdr(int rank,
-                                       MPIR_Comm * comm,
-                                       int handler_id, const void *am_hdr, size_t am_hdr_sz)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
+                                                  MPIR_Comm * comm,
+                                                  int handler_id, const void *am_hdr,
+                                                  size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -392,9 +395,10 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
-                                             int src_rank,
-                                             int handler_id, const void *am_hdr, size_t am_hdr_sz)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
+                                                        int src_rank,
+                                                        int handler_id, const void *am_hdr,
+                                                        size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -438,7 +442,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_am_recv(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_send_long_ack_msg_t msg;

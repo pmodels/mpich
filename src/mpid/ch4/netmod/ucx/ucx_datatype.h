@@ -21,7 +21,7 @@ struct MPIDI_UCX_pack_state {
     MPI_Aint packsize;
 };
 
-static inline void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size_t count)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
     MPIR_Segment *segment_ptr;
@@ -39,7 +39,7 @@ static inline void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size
     return (void *) state;
 }
 
-static inline void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t count)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
     MPIR_Segment *segment_ptr;
@@ -57,14 +57,15 @@ static inline void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t c
     return (void *) state;
 }
 
-static inline size_t MPIDI_UCX_Packed_size(void *state)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Packed_size(void *state)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
 
     return (size_t) pack_state->packsize;
 }
 
-static inline size_t MPIDI_UCX_Pack(void *state, size_t offset, void *dest, size_t max_length)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Pack(void *state, size_t offset, void *dest,
+                                               size_t max_length)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     MPI_Aint last = MPL_MIN(pack_state->packsize, offset + max_length);
@@ -74,8 +75,8 @@ static inline size_t MPIDI_UCX_Pack(void *state, size_t offset, void *dest, size
     return (size_t) last - offset;
 }
 
-static inline ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const void *src,
-                                            size_t count)
+MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const void *src,
+                                                       size_t count)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     MPI_Aint last = MPL_MIN(pack_state->packsize, offset + count);
@@ -89,7 +90,7 @@ static inline ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const vo
     return UCS_OK;
 }
 
-static inline void MPIDI_UCX_Finish_pack(void *state)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Finish_pack(void *state)
 {
     MPIR_Datatype *dt_ptr;
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
@@ -99,7 +100,7 @@ static inline void MPIDI_UCX_Finish_pack(void *state)
     MPL_free(pack_state);
 }
 
-static inline int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {
     if (datatype_p->is_committed && (int) datatype_p->dev.netmod.ucx.ucp_datatype >= 0) {
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
@@ -112,7 +113,7 @@ static inline int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
     return 0;
 }
 
-static inline int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     ucp_datatype_t ucp_datatype;
     ucs_status_t status;

@@ -15,12 +15,12 @@
 #define FUNCNAME MPIDI_NM_am_request_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_NM_am_request_init(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
 }
 
-static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
     if ((req)->dev.ch4.am.netmod_am.ucx.pack_buffer) {
         MPL_free((req)->dev.ch4.am.netmod_am.ucx.pack_buffer);
@@ -28,7 +28,7 @@ static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
     /* MPIR_Request_free(req); */
 }
 
-static inline void MPIDI_UCX_Request_init_callback(void *request)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Request_init_callback(void *request)
 {
 
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;

@@ -17,7 +17,7 @@
 #define FUNCNAME MPIDI_NM_mpi_startall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
 {
     return MPIDIG_mpi_startall(count, requests);
 }
