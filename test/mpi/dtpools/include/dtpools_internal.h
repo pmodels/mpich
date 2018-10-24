@@ -12,7 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mpi.h"
+#define _NOT_IN_MAIN_
 #include "dtpools.h"
+#undef _NOT_IN_MAIN_
 
 #define ERR_STRING_MAX_LEN (512)
 

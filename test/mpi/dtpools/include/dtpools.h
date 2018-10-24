@@ -58,4 +58,50 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
 int DTP_obj_free(DTP_t dtp, int obj_idx);
 int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
 
+/* typelist table */
+typedef struct {
+    const char *typename;
+    MPI_Datatype type;
+} Type_t;
+
+#ifndef _NOT_IN_MAIN_
+Type_t typelist[] = {
+    {"MPI_CHAR", MPI_CHAR},
+    {"MPI_BYTE", MPI_BYTE},
+    {"MPI_WCHAR", MPI_WCHAR},
+    {"MPI_SHORT", MPI_SHORT},
+    {"MPI_INT", MPI_INT},
+    {"MPI_LONG", MPI_LONG},
+    {"MPI_LONG_LONG_INT", MPI_LONG_LONG_INT},
+    {"MPI_UNSIGNED_CHAR", MPI_UNSIGNED_CHAR},
+    {"MPI_UNSIGNED_SHORT", MPI_UNSIGNED_SHORT},
+    {"MPI_UNSIGNED", MPI_UNSIGNED},
+    {"MPI_UNSIGNED_LONG", MPI_UNSIGNED_LONG},
+    {"MPI_UNSIGNED_LONG_LONG", MPI_UNSIGNED_LONG_LONG},
+    {"MPI_FLOAT", MPI_FLOAT},
+    {"MPI_DOUBLE", MPI_DOUBLE},
+    {"MPI_LONG_DOUBLE", MPI_LONG_DOUBLE},
+    {"MPI_INT8_T", MPI_INT8_T},
+    {"MPI_INT16_T", MPI_INT16_T},
+    {"MPI_INT32_T", MPI_INT32_T},
+    {"MPI_INT64_T", MPI_INT64_T},
+    {"MPI_UINT8_T", MPI_UINT8_T},
+    {"MPI_UINT16_T", MPI_UINT16_T},
+    {"MPI_UINT32_T", MPI_UINT32_T},
+    {"MPI_UINT64_T", MPI_UINT64_T},
+    {"MPI_C_COMPLEX", MPI_C_COMPLEX},
+    {"MPI_C_FLOAT_COMPLEX", MPI_C_FLOAT_COMPLEX},
+    {"MPI_C_DOUBLE_COMPLEX", MPI_C_DOUBLE_COMPLEX},
+    {"MPI_C_LONG_DOUBLE_COMPLEX", MPI_C_LONG_DOUBLE_COMPLEX},
+    {"MPI_FLOAT_INT", MPI_FLOAT_INT},
+    {"MPI_DOUBLE_INT", MPI_DOUBLE_INT},
+    {"MPI_LONG_INT", MPI_LONG_INT},
+    {"MPI_2INT", MPI_2INT},
+    {"MPI_SHORT_INT", MPI_SHORT_INT},
+    {"MPI_LONG_DOUBLE_INT", MPI_LONG_DOUBLE_INT},
+    {"MPIX_C_FLOAT16", MPIX_C_FLOAT16},
+    {"MPI_DATATYPE_NULL", MPI_DATATYPE_NULL}
+};
+#endif /* _NOT_IN_MAIN_ */
+
 #endif /* DTPOOLS_H_INCLUDED */
