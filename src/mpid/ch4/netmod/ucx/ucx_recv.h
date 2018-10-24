@@ -15,8 +15,8 @@
 #define FUNCNAME MPIDI_UCX_recv_cmpl_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
-                                          ucp_tag_recv_info_t * info)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
+                                                     ucp_tag_recv_info_t * info)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = NULL;
@@ -66,8 +66,8 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_UCX_mrecv_cmpl_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
-                                           ucp_tag_recv_info_t * info)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
+                                                      ucp_tag_recv_info_t * info)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
@@ -107,13 +107,13 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_UCX_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_UCX_recv(void *buf,
-                                 MPI_Aint count,
-                                 MPI_Datatype datatype,
-                                 int rank,
-                                 int tag, MPIR_Comm * comm,
-                                 int context_offset,
-                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag, MPIR_Comm * comm,
+                                            int context_offset,
+                                            MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -273,7 +273,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-static inline int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {
         ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(rreq).a.ucp_request);

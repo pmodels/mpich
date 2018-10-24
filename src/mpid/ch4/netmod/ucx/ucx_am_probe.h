@@ -13,11 +13,12 @@
 
 #include "ucx_impl.h"
 
-static inline int MPIDI_NM_mpi_improbe(int source,
-                                       int tag,
-                                       MPIR_Comm * comm,
-                                       int context_offset, MPIDI_av_entry_t * addr,
-                                       int *flag, MPIR_Request ** message, MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
+                                                  int tag,
+                                                  MPIR_Comm * comm,
+                                                  int context_offset, MPIDI_av_entry_t * addr,
+                                                  int *flag, MPIR_Request ** message,
+                                                  MPI_Status * status)
 {
     int mpi_errno;
 
@@ -30,11 +31,11 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_mpi_iprobe(int source,
-                                      int tag,
-                                      MPIR_Comm * comm,
-                                      int context_offset, MPIDI_av_entry_t * addr, int *flag,
-                                      MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
+                                                 int tag,
+                                                 MPIR_Comm * comm,
+                                                 int context_offset, MPIDI_av_entry_t * addr,
+                                                 int *flag, MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);

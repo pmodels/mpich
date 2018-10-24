@@ -15,7 +15,7 @@
 #define FUNCNAME MPIDI_netmod_comm_open_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
   fn_exit:
@@ -29,7 +29,7 @@ static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 #define FUNCNAME MPIDI_netmod_comm_close_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_close_port(const char *port_name)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
   fn_exit:
@@ -43,10 +43,10 @@ static inline int MPIDI_NM_mpi_close_port(const char *port_name)
 #define FUNCNAME MPIDI_NM_mpi_comm_connect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
-                                            MPIR_Info * info,
-                                            int root, int timeout,
-                                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name,
+                                                       MPIR_Info * info,
+                                                       int root, int timeout,
+                                                       MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -63,7 +63,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
 #define FUNCNAME MPIDI_NM_mpi_comm_disconnect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -83,9 +83,10 @@ static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 #define FUNCNAME MPIDI_netmod_comm_close_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
-                                           MPIR_Info * info,
-                                           int root, MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_accept(const char *port_name,
+                                                      MPIR_Info * info,
+                                                      int root, MPIR_Comm * comm_ptr,
+                                                      MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
 
