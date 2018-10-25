@@ -291,7 +291,7 @@ static inline int MPIDI_do_send_target(void **data,
     *target_cmpl_cb = MPIDI_recv_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
-    if (p_data_sz == NULL)
+    if (p_data_sz == NULL || 0 == MPIDI_CH4U_REQUEST(rreq, count))
         return MPI_SUCCESS;
 
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(rreq, count),
