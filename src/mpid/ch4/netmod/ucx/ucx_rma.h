@@ -203,7 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
 #else
     int origin_contig, target_contig;
 
-    size_t origin_bytes, target_bytes;
+    size_t origin_bytes, target_bytes ATTRIBUTE((unused));
     size_t offset;
 
     MPI_Aint origin_true_lb, target_true_lb;
