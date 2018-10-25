@@ -102,10 +102,12 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
-    stype = mpi_dtype_2_dte_dtype(sdtype);
     rtype = mpi_dtype_2_dte_dtype(rdtype);
     if (MPI_IN_PLACE == sbuf) {
         sbuf = HCOLL_IN_PLACE;
+        stype = rtype;
+    } else {
+        stype = mpi_dtype_2_dte_dtype(sdtype);
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype)) {
