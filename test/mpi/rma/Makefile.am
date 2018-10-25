@@ -92,7 +92,11 @@ noinst_PROGRAMS =          \
     win_large_shm          \
     win_dynamic_acc        \
     get_acc_local          \
-    compare_and_swap       \
+    compare_and_swap_char      \
+    compare_and_swap_short     \
+    compare_and_swap_int       \
+    compare_and_swap_long      \
+    compare_and_swap_long_long \
     linked_list            \
     linked_list_fop        \
     linked_list_lockall    \
@@ -210,6 +214,18 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
+
+compare_and_swap_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
+compare_and_swap_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)
+compare_and_swap_int_CPPFLAGS        = -DFOP_TYPE_INT $(AM_CPPFLAGS)
+compare_and_swap_long_CPPFLAGS       = -DFOP_TYPE_LONG $(AM_CPPFLAGS)
+compare_and_swap_long_long_CPPFLAGS  = -DFOP_TYPE_LONG_LONG $(AM_CPPFLAGS)
+
+compare_and_swap_char_SOURCES        = compare_and_swap.c
+compare_and_swap_short_SOURCES       = compare_and_swap.c
+compare_and_swap_int_SOURCES         = compare_and_swap.c
+compare_and_swap_long_SOURCES        = compare_and_swap.c
+compare_and_swap_long_long_SOURCES      = compare_and_swap.c
 
 fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
 fetch_and_op_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)
