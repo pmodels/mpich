@@ -59,6 +59,35 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 }
 
 
+/* Function to read comm info hints from one communicator and
+ * apply them to another communicator */
+int MPII_Comm_copy_info(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Read the info from source comm and apply to the dup */
+    MPIR_Info *info_used_ptr = NULL;
+    mpi_errno = MPID_Comm_get_info(comm_ptr, &info_used_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    MPIR_Assert(info_used_ptr != NULL);
+    mpi_errno = MPID_Comm_set_info_mutable(newcomm_ptr, info_used_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+    mpi_errno = MPID_Comm_set_info_immutable(newcomm_ptr, info_used_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+  fn_exit:
+    /* Release the info object created for internal use */
+    if (info_used_ptr)
+        MPIR_Info_free(info_used_ptr);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 /*@
