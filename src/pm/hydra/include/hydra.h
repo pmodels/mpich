@@ -477,6 +477,9 @@ struct HYD_user_global {
     {                                                   \
         if (status && !HYD_SILENT_ERROR(status)) {      \
             HYDU_error_printf(__VA_ARGS__);             \
+            if (status == HYD_INTERNAL_ERROR) {         \
+                status = HYD_GRACEFUL_ABORT;            \
+            }                                           \
             goto fn_fail;                               \
         }                                               \
         else if (HYD_SILENT_ERROR(status)) {            \
