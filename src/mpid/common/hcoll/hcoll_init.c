@@ -24,10 +24,10 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static int hcoll_initialized = 0;
 static int hcoll_comm_world_initialized = 0;
 static int hcoll_progress_hook_id = 0;
 
+int hcoll_initialized = 0;
 int hcoll_enable = -1;
 int hcoll_enable_barrier = 1;
 int hcoll_enable_bcast = 1;

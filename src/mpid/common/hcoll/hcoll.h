@@ -8,6 +8,9 @@
 #define HCOLL_H_INCLUDED
 
 #include "hcoll/api/hcoll_api.h"
+#ifndef HCOLL_VERSION
+#define HCOLL_VERSION(major, minor) (((major)<<HCOLL_MAJOR_BIT)|((minor)<<HCOLL_MINOR_BIT))
+#endif
 #include "hcoll_dtypes.h"
 
 extern int world_comm_destroying;
@@ -15,6 +18,8 @@ extern int world_comm_destroying;
 #if defined(MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIR_DBG_HCOLL;
 #endif /* MPL_USE_DBG_LOGGING */
+
+int hcoll_initialize(void);
 
 int hcoll_comm_create(MPIR_Comm * comm, void *param);
 int hcoll_comm_destroy(MPIR_Comm * comm, void *param);
