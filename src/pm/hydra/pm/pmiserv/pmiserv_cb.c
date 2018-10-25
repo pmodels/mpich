@@ -205,6 +205,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     } else {
         status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read command from proxy\n");
+        if (count == 0 && closed) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy is closed\n");
+        }
         HYDU_ASSERT(!closed, status);
     }
 
