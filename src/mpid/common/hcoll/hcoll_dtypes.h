@@ -7,6 +7,16 @@
 #ifndef HCOLL_DTYPES_H_INCLUDED
 #define HCOLL_DTYPES_H_INCLUDED
 #include "hcoll/api/hcoll_dte.h"
+#include "hcoll.h"
+
+enum {
+    TRY_FIND_DERIVED,
+    NO_DERIVED
+};
+
+int hcoll_type_commit_hook(MPIR_Datatype * dtype_p);
+int hcoll_type_free_hook(MPIR_Datatype * dtype_p);
+dte_data_representation_t mpi_dtype_2_hcoll_dtype(MPI_Datatype datatype, int count, const int mode);
 
 static dte_data_representation_t mpi_dtype_2_dte_dtype(MPI_Datatype datatype)
 {

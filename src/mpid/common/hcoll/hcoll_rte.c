@@ -7,6 +7,8 @@
 #include "mpiimpl.h"
 #include "mpidimpl.h"
 #include "hcoll.h"
+#include "hcoll/api/hcoll_dte.h"
+#include "hcoll_dtypes.h"
 
 static int recv_nb(dte_data_representation_t data,
                    uint32_t count,
@@ -63,6 +65,22 @@ static void progress(void)
     }
 }
 
+#if HCOLL_API >= HCOLL_VERSION(3,6)
+static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
+                                 int *num_addresses, int *num_datatypes,
+                                 hcoll_mpi_type_combiner_t * combiner);
+static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
+                                 int max_datatypes, int *array_of_integers,
+                                 void *array_of_addresses, void *array_of_datatypes);
+static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type);
+static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type);
+static int get_mpi_constants(size_t * mpi_datatype_size,
+                             int *mpi_order_c, int *mpi_order_fortran,
+                             int *mpi_distribute_block,
+                             int *mpi_distribute_cyclic,
+                             int *mpi_distribute_none, int *mpi_distribute_dflt_darg);
+#endif
+
 #undef FUNCNAME
 #define FUNCNAME init_module_fns
 #undef FCNAME
@@ -86,6 +104,13 @@ static void init_module_fns(void)
     hcoll_rte_functions.rte_coll_handle_complete_fn = coll_handle_complete;
     hcoll_rte_functions.rte_group_id_fn = group_id;
     hcoll_rte_functions.rte_world_rank_fn = world_rank;
+#if HCOLL_API >= HCOLL_VERSION(3,6)
+    hcoll_rte_functions.rte_get_mpi_type_envelope_fn = get_mpi_type_envelope;
+    hcoll_rte_functions.rte_get_mpi_type_contents_fn = get_mpi_type_contents;
+    hcoll_rte_functions.rte_get_hcoll_type_fn = get_hcoll_type;
+    hcoll_rte_functions.rte_set_hcoll_type_fn = set_hcoll_type;
+    hcoll_rte_functions.rte_get_mpi_constants_fn = get_mpi_constants;
+#endif
 }
 
 #undef FUNCNAME
@@ -359,3 +384,109 @@ static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
     return ((struct MPIDI_VC *) ec.handle)->pg_rank;
 #endif
 }
+
+#if HCOLL_API >= HCOLL_VERSION(3,6)
+hcoll_mpi_type_combiner_t mpi_combiner_2_hcoll_combiner(int combiner)
+{
+    switch (combiner) {
+        case MPI_COMBINER_CONTIGUOUS:
+            return HCOLL_MPI_COMBINER_CONTIGUOUS;
+        case MPI_COMBINER_VECTOR:
+            return HCOLL_MPI_COMBINER_VECTOR;
+        case MPI_COMBINER_HVECTOR:
+            return HCOLL_MPI_COMBINER_HVECTOR;
+        case MPI_COMBINER_INDEXED:
+            return HCOLL_MPI_COMBINER_INDEXED;
+        case MPI_COMBINER_HINDEXED_INTEGER:
+        case MPI_COMBINER_HINDEXED:
+            return HCOLL_MPI_COMBINER_HINDEXED;
+        case MPI_COMBINER_DUP:
+            return HCOLL_MPI_COMBINER_DUP;
+        case MPI_COMBINER_INDEXED_BLOCK:
+            return HCOLL_MPI_COMBINER_INDEXED_BLOCK;
+        case MPI_COMBINER_HINDEXED_BLOCK:
+            return HCOLL_MPI_COMBINER_HINDEXED_BLOCK;
+        case MPI_COMBINER_SUBARRAY:
+            return HCOLL_MPI_COMBINER_SUBARRAY;
+        case MPI_COMBINER_DARRAY:
+            return HCOLL_MPI_COMBINER_DARRAY;
+        case MPI_COMBINER_F90_REAL:
+            return HCOLL_MPI_COMBINER_F90_REAL;
+        case MPI_COMBINER_F90_COMPLEX:
+            return HCOLL_MPI_COMBINER_F90_COMPLEX;
+        case MPI_COMBINER_F90_INTEGER:
+            return HCOLL_MPI_COMBINER_F90_INTEGER;
+        case MPI_COMBINER_RESIZED:
+            return HCOLL_MPI_COMBINER_RESIZED;
+        case MPI_COMBINER_STRUCT:
+        case MPI_COMBINER_STRUCT_INTEGER:
+            return HCOLL_MPI_COMBINER_STRUCT;
+        default:
+            break;
+    }
+    return HCOLL_MPI_COMBINER_LAST;
+}
+
+static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
+                                 int *num_addresses, int *num_datatypes,
+                                 hcoll_mpi_type_combiner_t * combiner)
+{
+    int mpi_combiner;
+    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+
+    MPIR_Type_get_envelope(dt_handle, num_integers, num_addresses, num_datatypes, &mpi_combiner);
+
+    *combiner = mpi_combiner_2_hcoll_combiner(mpi_combiner);
+
+    return HCOLL_SUCCESS;
+}
+
+static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
+                                 int max_datatypes, int *array_of_integers,
+                                 void *array_of_addresses, void *array_of_datatypes)
+{
+    int ret;
+    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+
+    ret = MPIR_Type_get_contents(dt_handle,
+                                 max_integers, max_addresses, max_datatypes,
+                                 array_of_integers,
+                                 (MPI_Aint *) array_of_addresses,
+                                 (MPI_Datatype *) array_of_datatypes);
+
+    return ret == MPI_SUCCESS ? HCOLL_SUCCESS : HCOLL_ERROR;
+}
+
+static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type)
+{
+    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+    MPIR_Datatype *dt_ptr;
+
+    *hcoll_type = mpi_dtype_2_hcoll_dtype(dt_handle, -1, TRY_FIND_DERIVED);
+
+    return HCOL_DTE_IS_ZERO((*hcoll_type)) ? HCOLL_ERR_NOT_FOUND : HCOLL_SUCCESS;
+}
+
+static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type)
+{
+    return HCOLL_SUCCESS;
+}
+
+static int get_mpi_constants(size_t * mpi_datatype_size,
+                             int *mpi_order_c, int *mpi_order_fortran,
+                             int *mpi_distribute_block,
+                             int *mpi_distribute_cyclic,
+                             int *mpi_distribute_none, int *mpi_distribute_dflt_darg)
+{
+    *mpi_datatype_size = sizeof(MPI_Datatype);
+    *mpi_order_c = MPI_ORDER_C;
+    *mpi_order_fortran = MPI_ORDER_FORTRAN;
+    *mpi_distribute_block = MPI_DISTRIBUTE_BLOCK;
+    *mpi_distribute_cyclic = MPI_DISTRIBUTE_CYCLIC;
+    *mpi_distribute_none = MPI_DISTRIBUTE_NONE;
+    *mpi_distribute_dflt_darg = MPI_DISTRIBUTE_DFLT_DARG;
+
+    return HCOLL_SUCCESS;
+}
+
+#endif

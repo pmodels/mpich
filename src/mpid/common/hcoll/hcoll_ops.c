@@ -38,7 +38,7 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL BCAST.");
-    dtype = mpi_dtype_2_dte_dtype(datatype);
+    dtype = mpi_dtype_2_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
     MPI_Comm comm = comm_ptr->handle;
     if (HCOL_DTE_IS_COMPLEX(dtype) || HCOL_DTE_IS_ZERO(dtype)) {
         /*If we are here then datatype is not simple predefined datatype */
@@ -69,7 +69,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOL ALLREDUCE.");
-    Dtype = mpi_dtype_2_dte_dtype(datatype);
+    Dtype = mpi_dtype_2_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
     Op = mpi_op_2_dte_op(op);
     if (MPI_IN_PLACE == sendbuf) {
         sendbuf = HCOLL_IN_PLACE;
@@ -102,12 +102,12 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
-    rtype = mpi_dtype_2_dte_dtype(rdtype);
+    rtype = mpi_dtype_2_hcoll_dtype(rdtype, rcount, TRY_FIND_DERIVED);
     if (MPI_IN_PLACE == sbuf) {
         sbuf = HCOLL_IN_PLACE;
         stype = rtype;
     } else {
-        stype = mpi_dtype_2_dte_dtype(sdtype);
+        stype = mpi_dtype_2_hcoll_dtype(sdtype, rcount, TRY_FIND_DERIVED);
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype)) {
