@@ -301,11 +301,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* setup receive queue statistics */
     mpi_errno = MPIDI_CH4U_Recvq_init();
     if (mpi_errno)
@@ -362,6 +357,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    /* Call any and all MPID_Init type functions */
+    MPIR_Err_init();
+    MPIR_Datatype_init();
+    MPIR_Group_init();
 
     /* Override split_type */
     MPIDI_CH4_Global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
