@@ -17,6 +17,18 @@ struct MPIR_Request;
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_LIBHCOLL
+#include "hcoll/api/hcoll_dte.h"
+#endif
+
+typedef struct {
+#ifdef HAVE_LIBHCOLL
+    hcoll_datatype_t hcoll_datatype;
+#endif
+    int foo; /* Shut up the compiler */
+} MPIDI_Devdt_t;
+#define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
+
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
