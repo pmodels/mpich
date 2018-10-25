@@ -241,6 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t *
                                                       char **local_upids)
 {
     MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size,
@@ -248,6 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size,
                                                       char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
