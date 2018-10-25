@@ -12,6 +12,9 @@
 #include "ucx_impl.h"
 #include "ucx_types.h"
 #include <ucp/api/ucp.h>
+#ifdef HAVE_LIBHCOLL
+#include "../../../common/hcoll/hcoll.h"
+#endif
 
 struct MPIDI_UCX_pack_state {
     MPIR_Segment *segment_ptr;
@@ -102,6 +105,9 @@ static inline int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
+#if HAVE_LIBHCOLL
+    hcoll_type_free_hook(datatype_p);
+#endif
 
     return 0;
 }
@@ -130,6 +136,9 @@ static inline int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
         datatype_p->dev.netmod.ucx.ucp_datatype = ucp_datatype;
 
     }
+#if HAVE_LIBHCOLL
+    hcoll_type_commit_hook(datatype_p);
+#endif
 
     return 0;
 }

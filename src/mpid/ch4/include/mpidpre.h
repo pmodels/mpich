@@ -16,6 +16,10 @@
 #endif
 
 #include "mpir_dataloop.h"
+#ifdef HAVE_LIBHCOLL
+#include "hcoll/api/hcoll_dte.h"
+#endif
+
 #include "mpid_thread.h"
 #include "mpid_sched.h"
 #include "mpid_timers_fallback.h"
@@ -25,6 +29,9 @@
 #include "ch4_coll_params.h"
 
 typedef struct {
+#ifdef HAVE_LIBHCOLL
+    hcoll_datatype_t hcoll_datatype;
+#endif
     union {
     MPIDI_NM_DT_DECL} netmod;
 } MPIDI_Devdt_t;
