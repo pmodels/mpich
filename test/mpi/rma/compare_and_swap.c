@@ -34,17 +34,18 @@ int main(int argc, char **argv)
 
     /* Test self communication */
 
+    MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
     for (i = 0; i < ITER; i++) {
         int next = i + 1, result = -1;
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
         MPI_Compare_and_swap(&next, &i, &result, MPI_INT, rank, 0, win);
-        MPI_Win_unlock(rank, win);
+        MPI_Win_flush(rank, win);
         if (result != i) {
             SQUELCH(printf("%d->%d -- Error: next=%d compare=%d result=%d val=%d\n", rank,
                            rank, next, i, result, *val_ptr););
             errors++;
         }
     }
+    MPI_Win_unlock(rank, win);
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
     *val_ptr = 0;
@@ -54,11 +55,11 @@ int main(int argc, char **argv)
 
     /* Test neighbor communication */
 
+    MPI_Win_lock(MPI_LOCK_SHARED, (rank + 1) % nproc, 0, win);
     for (i = 0; i < ITER; i++) {
         int next = i + 1, result = -1;
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank + 1) % nproc, 0, win);
         MPI_Compare_and_swap(&next, &i, &result, MPI_INT, (rank + 1) % nproc, 0, win);
-        MPI_Win_unlock((rank + 1) % nproc, win);
+        MPI_Win_flush((rank + 1) % nproc, win);
         if (result != i) {
             SQUELCH(printf("%d->%d -- Error: next=%d compare=%d result=%d val=%d\n", rank,
                            (rank + 1) % nproc, next, i, result, *val_ptr););
@@ -67,6 +68,7 @@ int main(int argc, char **argv)
     }
 
     fflush(NULL);
+    MPI_Win_unlock((rank + 1) % nproc, win);
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
@@ -78,21 +80,23 @@ int main(int argc, char **argv)
     /* Test contention */
 
     if (rank != 0) {
+        MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
         for (i = 0; i < ITER; i++) {
             int next = i + 1, result = -1;
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
             MPI_Compare_and_swap(&next, &i, &result, MPI_INT, 0, 0, win);
-            MPI_Win_unlock(0, win);
         }
+        MPI_Win_unlock(0, win);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (rank == 0 && nproc > 1) {
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
         if (*val_ptr != ITER) {
             SQUELCH(printf("%d - Error: expected=%d val=%d\n", rank, ITER, *val_ptr););
             errors++;
         }
+        MPI_Win_unlock(rank, win);
     }
 
     MPI_Win_free(&win);
