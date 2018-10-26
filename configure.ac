@@ -1501,9 +1501,7 @@ else
    AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
 
    if test "$have_hwloc" = "yes" ; then
-      hwloclib="-lhwloc"
       if test -d ${with_hwloc_prefix}/lib64 ; then
-         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
          hwloclibdir="-L${with_hwloc_prefix}/lib64"
       else
 	 hwloclibdir="-L${with_hwloc_prefix}/lib"
