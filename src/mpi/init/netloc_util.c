@@ -33,6 +33,7 @@ static int get_tree_attributes(netloc_topology_t topology,
     int prev_width = 0;
     int edges_go_across_levels = 0;
     int out_degree_mismatch_at_level = 0;
+    MPIR_CHKPMEM_DECL(3);
 
     network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
 
@@ -40,7 +41,6 @@ static int get_tree_attributes(netloc_topology_t topology,
         (netloc_dt_lookup_table_t *) MPL_malloc(sizeof(netloc_dt_lookup_table_t), MPL_MEM_OTHER);
     mpi_errno = netloc_get_all_host_nodes(topology, host_nodes);
 
-    MPIR_CHKPMEM_DECL(3);
     if (!mpi_errno) {
         int host_node_at_leaf_level;
 
