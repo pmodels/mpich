@@ -50,6 +50,9 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_CH4I_parse_info_accu_ops_str(const char 
     uint32_t ops = 0;
     char *value, *token, *savePtr = NULL;
 
+    /* str can never be NULL. */
+    MPIR_Assert(str);
+
     value = (char *) str;
     token = (char *) strtok_r(value, ",", &savePtr);
     while (token != NULL) {
@@ -212,6 +215,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_win_set_info(MPIR_Win * win, MPIR_Info *
                 /* For MPI-3, "none" means no ordering and is not default. */
                 goto next;
             }
+
+            /* value can never be NULL. */
+            MPIR_Assert(curr_ptr->value);
+
             value = curr_ptr->value;
             token = (char *) strtok_r(value, ",", &savePtr);
 
