@@ -1559,6 +1559,41 @@ if test "$have_hwloc" = "yes" ; then
 fi
 
 # ----------------------------------------------------------------------------
+# CUDA
+# ----------------------------------------------------------------------------
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([[--with-cuda[=DIR]]],
+                            [use the CUDA installation in DIR]) or system], [],
+                            [with_cuda=no])
+
+cudalibdir=""
+AC_SUBST([cudalibdir])
+
+if test "${with_cuda}" != "no" ; then
+    if test "${with_cuda}" != "system" ; then
+        AS_IF([test -s "${with_cuda}/include/cuda.h"],
+              [:],[AC_MSG_ERROR([the CUDA installation in "${with_cuda}" appears broken])])
+        PAC_APPEND_FLAG([-I${with_cuda}/include],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${with_cuda}/include],[CFLAGS])
+        PAC_APPEND_FLAG([-lcuda],[WRAPPER_LIBS])
+        PAC_APPEND_FLAG([-lcudart],[WRAPPER_LIBS])
+        if test -d ${with_cuda}/lib64 ; then
+            PAC_APPEND_FLAG([-L${with_cuda}/lib64],[WRAPPER_LDFLAGS])
+            cudalibdir="-L${with_cuda}/lib64"
+        else
+            PAC_APPEND_FLAG([-L${with_cuda}/lib],[WRAPPER_LDFLAGS])
+            cudalibdir="-L${with_cuda}/lib"
+        fi
+    else
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "cuda.h"
+                        ],
+                        [])],
+                        [AC_MSG_ERROR([the CUDA installation seems to be added from system path])], [])
+    fi
+    AC_DEFINE(HAVE_CUDA,1,[Define if cuda is available in either user specified path or in system path])
+fi
+
+# ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
 #
