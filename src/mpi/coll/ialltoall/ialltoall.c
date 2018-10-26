@@ -25,6 +25,7 @@ cvars:
         pairwise          - Force pairwise algorithm
         permuted_sendrecv - Force permuted sendrecv algorithm
         gentran_ring      - Force generic transport based ring algorithm
+        gentran_brucks    - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -287,6 +288,10 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_ring(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcount, recvtype, comm_ptr, request);
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
