@@ -45,28 +45,31 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
-MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_CH4I_parse_info_accu_ops_str(const char *str)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_parse_info_accu_ops_str(const char *str,
+                                                                 uint32_t * ops_ptr)
 {
     uint32_t ops = 0;
     char *value, *token, *savePtr = NULL;
 
-    /* str can never be NULL. */
-    MPIR_Assert(str);
-
     value = (char *) str;
+    /* str can never be NULL. */
+    MPIR_Assert(value);
+
+    /* handle special value */
+    if (!strncmp(value, "none", strlen("none"))) {
+        *ops_ptr = 0;
+        return;
+    } else if (!strncmp(value, "any_op", strlen("any_op"))) {
+        MPIDI_CH4U_win_info_accu_op_shift_t op_shift;
+        /* add all ops */
+        for (op_shift = 0; op_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST; op_shift++)
+            ops |= (1 << op_shift);
+        *ops_ptr = ops;
+        return;
+    }
+
     token = (char *) strtok_r(value, ",", &savePtr);
     while (token != NULL) {
-        MPIDI_CH4U_win_info_accu_op_shift_t op_shift;
-        /* if special value is set, skip others. */
-        if (!strncmp(token, "none", strlen("none"))) {
-            ops = 0;
-            break;
-        } else if (!strncmp(token, "any_op", strlen("any_op"))) {
-            /* add all ops */
-            for (op_shift = 0; op_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST; op_shift++)
-                ops |= (1 << op_shift);
-            break;
-        }
 
         /* traverse op list (exclude null and last) and add the op if set */
         if (!strncmp(token, "max", strlen("max")))
@@ -103,7 +106,10 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_CH4I_parse_info_accu_ops_str(const char 
 
         token = (char *) strtok_r(NULL, ",", &savePtr);
     }
-    return ops;
+
+    /* update info only when any valid value is set */
+    if (ops)
+        *ops_ptr = ops;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_get_info_accu_ops_str(uint32_t val, char *buf,
@@ -278,8 +284,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_win_set_info(MPIR_Win * win, MPIR_Info *
          * have a good way to ensure all outstanding atomic ops have been completed
          * on all processes especially in passive-target epochs. */
         else if (is_init && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
-            MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops =
-                MPIDI_CH4I_parse_info_accu_ops_str(curr_ptr->value);
+            MPIDI_CH4I_parse_info_accu_ops_str(curr_ptr->value,
+                                               &MPIDI_CH4U_WIN(win,
+                                                               info_args).which_accumulate_ops);
         } else if (is_init && !strcmp(curr_ptr->key, "accumulate_noncontig_dtype")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype = true;
