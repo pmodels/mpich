@@ -5,7 +5,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.63])
 AC_INIT([dtpools], [0.0], [discuss@mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
 
