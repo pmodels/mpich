@@ -232,9 +232,16 @@ static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                               recvcount, recvtype, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
                                    recvcount, recvtype, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     return mpi_errno;
 }
@@ -254,9 +261,16 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                recvcounts, rdispls, recvtype, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
                                     recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     return mpi_errno;
 }
@@ -296,8 +310,14 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     return mpi_errno;
 }
