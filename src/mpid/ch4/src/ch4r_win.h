@@ -112,7 +112,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_get_info_accu_ops_str(uint32_t val, cha
                                  "bxor,land,lor,lxor,replace,no_op,cswap") + 1);
 
     if (val & (1 << MPIDI_CH4I_ACCU_MAX_SHIFT))
-        c += snprintf(buf + c, maxlen - c, "%smax", (c > 0) ? "," : "");
+        c += snprintf(buf + c, maxlen - c, "max");
     if (val & (1 << MPIDI_CH4I_ACCU_MIN_SHIFT))
         c += snprintf(buf + c, maxlen - c, "%smin", (c > 0) ? "," : "");
     if (val & (1 << MPIDI_CH4I_ACCU_SUM_SHIFT))
