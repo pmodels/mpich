@@ -124,7 +124,8 @@ int hcoll_type_commit_hook(MPIR_Datatype * dtype_p)
         return MPI_ERR_OTHER;
     }
 
-    MPIR_Datatype_add_ref_if_not_builtin(dtype_p->handle);
+    if (HCOL_DTE_IS_ZERO(dtype_p->dev.hcoll_datatype))
+        MPIR_Datatype_add_ref_if_not_builtin(dtype_p->handle);
 
     return MPI_SUCCESS;
 }
@@ -135,14 +136,15 @@ int hcoll_type_free_hook(MPIR_Datatype * dtype_p)
         return MPI_SUCCESS;
     }
 
+    if (HCOL_DTE_IS_ZERO(dtype_p->dev.hcoll_datatype))
+        MPIR_Datatype_release_if_not_builtin(dtype_p->handle);
+
     int rc = hcoll_dt_destroy(dtype_p->dev.hcoll_datatype);
     if (HCOLL_SUCCESS != rc) {
         return MPI_ERR_OTHER;
     }
 
     dtype_p->dev.hcoll_datatype = DTE_ZERO;
-
-    MPIR_Datatype_release_if_not_builtin(dtype_p->handle);
 
     return MPI_SUCCESS;
 }
