@@ -31,8 +31,11 @@ int hcoll_initialized = 0;
 int hcoll_enable = -1;
 int hcoll_enable_barrier = 1;
 int hcoll_enable_bcast = 1;
+int hcoll_enable_reduce = 1;
 int hcoll_enable_allgather = 1;
 int hcoll_enable_allreduce = 1;
+int hcoll_enable_alltoall = 1;
+int hcoll_enable_alltoallv = 1;
 int hcoll_enable_ibarrier = 1;
 int hcoll_enable_ibcast = 1;
 int hcoll_enable_iallgather = 1;
@@ -118,8 +121,11 @@ int hcoll_initialize(void)
 
     CHECK_ENABLE_ENV_VARS(BARRIER, barrier);
     CHECK_ENABLE_ENV_VARS(BCAST, bcast);
+    CHECK_ENABLE_ENV_VARS(REDUCE, reduce);
     CHECK_ENABLE_ENV_VARS(ALLGATHER, allgather);
     CHECK_ENABLE_ENV_VARS(ALLREDUCE, allreduce);
+    CHECK_ENABLE_ENV_VARS(ALLTOALL, alltoall);
+    CHECK_ENABLE_ENV_VARS(ALLTOALLV, alltoallv);
     CHECK_ENABLE_ENV_VARS(IBARRIER, ibarrier);
     CHECK_ENABLE_ENV_VARS(IBCAST, ibcast);
     CHECK_ENABLE_ENV_VARS(IALLGATHER, iallgather);
