@@ -939,6 +939,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 # There is no need to patch if we're not going to use Fortran.
                 ifort_patch_requires_rebuild=no
                 oracle_patch_requires_rebuild=no
+                arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
