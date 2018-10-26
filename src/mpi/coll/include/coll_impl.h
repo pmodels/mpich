@@ -246,6 +246,7 @@ typedef enum MPIR_Ialltoall_intra_algo_t {
     MPIR_IALLTOALL_INTRA_ALGO_PAIRWISE,
     MPIR_IALLTOALL_INTRA_ALGO_PERMUTED_SENDRECV,
     MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_RING,
+    MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_BRUCKS,
 } MPIR_Ialltoall_intra_algo_t;
 extern MPIR_Ialltoall_intra_algo_t MPIR_Ialltoall_intra_algo_choice;
 
