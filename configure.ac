@@ -5598,13 +5598,6 @@ fi
 LT_OUTPUT
 
 if test "X$enable_shared" = "Xyes" ; then
-    # see Github issue pmodels/mpich#3050 for shared object linking issue with
-    # IBM compiler
-    PAC_C_CHECK_COMPILER_OPTION("-qmkshrobj",found_opt=yes,found_opt=no)
-    if test "$found_opt" = "yes" ; then
-        PAC_APPEND_FLAG([-qmkshrobj],[LDFLAGS])
-    fi
-
     # see ticket #1590 for some more background on these Darwin linking issues
     AS_CASE([$host],
         [*-*-darwin*],
