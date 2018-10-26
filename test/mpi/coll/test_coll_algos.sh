@@ -276,6 +276,18 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
 
     coll_algo_tests+="alltoall1 8 ${env}${nl}"
+
+algo_names="gentran_brucks"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=${kval} "
+
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0${nl}"
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1${nl}"
+    done
 done
 
 export coll_algo_tests
