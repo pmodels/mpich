@@ -5,9 +5,22 @@ os:
   - linux
   - osx
 
+env:
+  - DEVICE=ch3:nemesis
+  - DEVICE=ch3:sock
+  - DEVICE=ch4:ofi
+  - DEVICE=ch4:ucx
+
+matrix:
+  exclude:
+    - os: osx
+      env: DEVICE=ch4:ofi
+    - os: osx
+      env: DEVICE=ch4:ucx
+
 addons:
   apt:
-    packages: gfortran
+    packages: gfortran libnuma-dev
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint; brew install gcc; fi
@@ -18,5 +31,5 @@ before_script:
 
 script:
   - ./autogen.sh
-  - ./configure --prefix=$PWD/i
+  - ./configure --prefix=$PWD/i --with-device=$DEVICE
   - make -j2 install
