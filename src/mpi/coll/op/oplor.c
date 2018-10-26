@@ -64,7 +64,7 @@ void MPIR_LOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
                 /* We previously supported floating point types, although I question
                  * their utility in logical boolean ops [goodell@ 2009-03-16] */
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
+                /* MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA) */
 #undef MPIR_OP_TYPE_MACRO
                 /* --BEGIN ERROR HANDLING-- */
         default:{
