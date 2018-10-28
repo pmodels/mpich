@@ -49,6 +49,11 @@
 #include <sys/param.h>
 #endif
 
+#ifdef HAVE_CUDA
+#include <cuda.h>
+#include <cuda_runtime.h>
+#endif
+
 #if defined (HAVE_USLEEP)
 #include <unistd.h>
 #if defined (NEEDS_USLEEP_DECL)

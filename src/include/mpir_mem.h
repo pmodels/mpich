@@ -78,11 +78,33 @@ extern "C" {
 /* Define the string copy and duplication functions */
 /* ------------------------------------------------------------------------- */
 
+#ifdef HAVE_CUDA
+#define MPIR_Memcpy(dst, src, len)                      \
+    do {                                                \
+        if (MPIR_is_copy_mem_type_owned(src) &&         \
+            MPIR_is_copy_mem_type_owned(dst)) {         \
+            CHECK_MEMCPY((dst),(src),(len));            \
+            memcpy((dst), (src), (len));                \
+        } else if (!MPIR_is_copy_mem_type_owned(src) && \
+                   MPIR_is_copy_mem_type_owned(dst)) {  \
+            cudaMemcpy((dst), (src), (len),             \
+                       (cudaMemcpyDeviceToHost));       \
+        } else if (MPIR_is_copy_mem_type_owned(src) &&  \
+                   !MPIR_is_copy_mem_type_owned(dst)) { \
+            cudaMemcpy((dst), (src), (len),             \
+                       (cudaMemcpyHostToDevice));       \
+        } else {                                        \
+            cudaMemcpy((dst), (src), (len),             \
+                       (cudaMemcpyDeviceToDevice));     \
+        }                                               \
+    } while (0)
+#else
 #define MPIR_Memcpy(dst, src, len)              \
     do {                                        \
         CHECK_MEMCPY((dst),(src),(len));        \
         memcpy((dst), (src), (len));            \
     } while (0)
+#endif
 
 #ifdef USE_MEMORY_TRACING
 

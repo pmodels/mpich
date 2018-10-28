@@ -495,13 +495,15 @@ int MPIR_Segment_vector_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count ATTRIBUTE
     blocks_left = (DLOOP_Count) ((blksz > 0) ? (*blocks_p % (DLOOP_Offset) blksz) : 0);
 
     if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
-        if (el_size == 8 MPIR_ALIGN8_TEST(paramp->streambuf, cbufp)) {
+        if (el_size == 8 MPIR_ALIGN8_TEST(paramp->streambuf, cbufp) &&
+            MPIR_IS_MEMORY_OWNED(paramp->streambuf, cbufp)) {
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, stride, int64_t, blksz, whole_count);
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, 0, int64_t, blocks_left, 1);
-        } else if (el_size == 4 MPIR_ALIGN4_TEST(paramp->streambuf, cbufp)) {
+        } else if (el_size == 4 MPIR_ALIGN4_TEST(paramp->streambuf, cbufp) &&
+                   MPIR_IS_MEMORY_OWNED(paramp->streambuf, cbufp)) {
             MPII_COPY_TO_VEC((paramp->streambuf), cbufp, stride, int32_t, blksz, whole_count);
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, 0, int32_t, blocks_left, 1);
-        } else if (el_size == 2) {
+        } else if (el_size == 2 && MPIR_IS_MEMORY_OWNED(paramp->streambuf, cbufp)) {
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, stride, int16_t, blksz, whole_count);
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, 0, int16_t, blocks_left, 1);
         } else {
@@ -535,13 +537,15 @@ int MPIR_Segment_vector_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count ATTRIBUTE
         }
     } else {    /* M2M_FROM_USERBUF */
 
-        if (el_size == 8 MPIR_ALIGN8_TEST(cbufp, paramp->streambuf)) {
+        if (el_size == 8 MPIR_ALIGN8_TEST(cbufp, paramp->streambuf) &&
+            MPIR_IS_MEMORY_OWNED(cbufp, paramp->streambuf)) {
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, stride, int64_t, blksz, whole_count);
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, 0, int64_t, blocks_left, 1);
-        } else if (el_size == 4 MPIR_ALIGN4_TEST(cbufp, paramp->streambuf)) {
+        } else if (el_size == 4 MPIR_ALIGN4_TEST(cbufp, paramp->streambuf) &&
+                   MPIR_IS_MEMORY_OWNED(cbufp, paramp->streambuf)) {
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, stride, int32_t, blksz, whole_count);
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, 0, int32_t, blocks_left, 1);
-        } else if (el_size == 2) {
+        } else if (el_size == 2 && MPIR_IS_MEMORY_OWNED(cbufp, paramp->streambuf)) {
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, stride, int16_t, blksz, whole_count);
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, 0, int16_t, blocks_left, 1);
         } else {
@@ -621,11 +625,11 @@ int MPIR_Segment_blkidx_m2m(DLOOP_Offset * blocks_p,
         }
 
         /* note: macro modifies dest buffer ptr, so we must reset */
-        if (el_size == 8 MPIR_ALIGN8_TEST(src, dest)) {
+        if (el_size == 8 MPIR_ALIGN8_TEST(src, dest) && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int64_t, blocklen, 1);
-        } else if (el_size == 4 MPIR_ALIGN4_TEST(src, dest)) {
+        } else if (el_size == 4 MPIR_ALIGN4_TEST(src, dest) && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int32_t, blocklen, 1);
-        } else if (el_size == 2) {
+        } else if (el_size == 2 && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int16_t, blocklen, 1);
         } else {
             DLOOP_Memcpy(dest, src, (DLOOP_Offset) blocklen * el_size);
@@ -689,11 +693,11 @@ int MPIR_Segment_index_m2m(DLOOP_Offset * blocks_p,
         }
 
         /* note: macro modifies dest buffer ptr, so we must reset */
-        if (el_size == 8 MPIR_ALIGN8_TEST(src, dest)) {
+        if (el_size == 8 MPIR_ALIGN8_TEST(src, dest) && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int64_t, cur_block_sz, 1);
-        } else if (el_size == 4 MPIR_ALIGN4_TEST(src, dest)) {
+        } else if (el_size == 4 MPIR_ALIGN4_TEST(src, dest) && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int32_t, cur_block_sz, 1);
-        } else if (el_size == 2) {
+        } else if (el_size == 2 && MPIR_IS_MEMORY_OWNED(src, dest)) {
             MPII_COPY_FROM_VEC(src, dest, 0, int16_t, cur_block_sz, 1);
         } else {
             DLOOP_Memcpy(dest, src, cur_block_sz * el_size);

@@ -61,6 +61,8 @@ extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 
+int MPIR_is_copy_mem_type_owned(const void *addr);
+
 /*@ MPIR_Add_finalize - Add a routine to be called when MPI_Finalize is invoked
 
 + routine - Routine to call

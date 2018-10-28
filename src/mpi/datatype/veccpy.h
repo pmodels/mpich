@@ -20,6 +20,8 @@
 #define MPIR_ALIGN4_TEST(p1,p2) && (((DLOOP_VOID_PTR_CAST_TO_OFFSET p1 | DLOOP_VOID_PTR_CAST_TO_OFFSET p2) & 0x3) == 0)
 #endif
 
+#define MPIR_IS_MEMORY_OWNED(p1,p2) ((MPIR_is_copy_mem_type_owned(p1) && MPIR_is_copy_mem_type_owned(p2)) ? 1 : 0)
+
 #define MPII_COPY_FROM_VEC(src,dest,stride,type,nelms,count)            \
     {                                                                   \
         if (!nelms) {                                                   \

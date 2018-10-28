@@ -148,3 +148,44 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
   fn_fail:
     goto fn_exit;
 }
+
+#ifdef HAVE_CUDA
+#undef FUNCNAME
+#define FUNCNAME MPIR_is_copy_mem_type_owned
+#undef FCNAME
+#define FCNAME "MPIR_is_copy_mem_type_owned"
+int MPIR_is_copy_mem_type_owned(const void *addr)
+{
+    int memory_type;
+    struct cudaPointerAttributes attributes;
+    cudaError_t cuda_err;
+    CUresult cu_err;
+
+    if (addr == NULL) {
+        return 1;
+    }
+
+    cu_err = cuPointerGetAttribute(&memory_type,
+                                   CU_POINTER_ATTRIBUTE_MEMORY_TYPE, (CUdeviceptr) addr);
+    if (cu_err != CUDA_SUCCESS) {
+        cuda_err = cudaPointerGetAttributes(&attributes, addr);
+        if (cuda_err == cudaSuccess) {
+            if (attributes.memoryType == cudaMemoryTypeDevice) {
+                return 0;
+            }
+        }
+    } else if (memory_type == CU_MEMORYTYPE_DEVICE) {
+        return 0;
+    }
+    return 1;
+}
+#else
+#undef FUNCNAME
+#define FUNCNAME MPIR_is_copy_mem_type_owned
+#undef FCNAME
+#define FCNAME "MPIR_is_copy_mem_type_owned"
+int MPIR_is_copy_mem_type_owned(const void *addr)
+{
+    return 1;
+}
+#endif
