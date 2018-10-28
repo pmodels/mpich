@@ -22,14 +22,13 @@ addons:
   apt:
     packages: gfortran libnuma-dev
 
-install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask uninstall oclint; brew install gcc; fi
-
 before_script:
   - MPICH_DEPS_PREFIX=$HOME/autotools ./maint/bootstrap.sh
   - export PATH=$HOME/autotools/bin:$PATH
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then MPICH_FORTRAN=--disable-fortran; fi
+
 
 script:
   - ./autogen.sh
-  - ./configure --prefix=$PWD/i --with-device=$DEVICE
+  - ./configure --prefix=$PWD/i --with-device=$DEVICE $MPICH_FORTRAN
   - make -j2 install
