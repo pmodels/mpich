@@ -76,6 +76,12 @@
 #define MPL_ATTR_ALIGNED(x)
 #endif
 
+#ifdef MPL_HAVE_VAR_ATTRIBUTE_USED
+#define MPL_USED ATTRIBUTE((used))
+#else
+#define MPL_USED
+#endif
+
 /* These likely/unlikely macros provide static branch prediction hints to the
  * compiler, if such hints are available.  Simply wrap the relevant expression in
  * the macro, like this:
@@ -124,7 +130,7 @@
  * via the preprocessor).  A semicolon is expected after each invocation
  * of this macro. */
 #define MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING \
-    static int MPL_UNIQUE_SYMBOL_NAME(dummy) ATTRIBUTE((unused,used)) = 0
+    static int MPL_UNIQUE_SYMBOL_NAME(dummy) ATTRIBUTE((unused)) MPL_USED = 0
 
 /* we jump through a couple of extra macro hoops to append the line
  * number to the variable name in order to reduce the chance of a name
