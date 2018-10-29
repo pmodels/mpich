@@ -1004,6 +1004,7 @@ AC_CHECK_FUNCS(inet_ntop getifaddrs)
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 AX_GCC_VAR_ATTRIBUTE(aligned)
+AX_GCC_VAR_ATTRIBUTE(used)
 
 dnl Check for fallthrough attribute
 PAC_PUSH_ALL_FLAGS
