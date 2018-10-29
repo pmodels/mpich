@@ -148,8 +148,8 @@ static int get_tree_attributes(netloc_topology_t topology,
                 goto fn_exit;
             }
 
-            /*Assign depths to nodes of the graph bottom up, in breadth first order */
-            /* indexed by node id, visited_node_list[i] > -1 indicates that the
+            /* Assign depths to nodes of the graph bottom up, in breadth first order */
+            /* Indexed by node id, visited_node_list[i] > -1 indicates that the
              * node i has been visited */
 
             MPIR_CHKPMEM_MALLOC(network_attr->u.tree.node_levels, int *,
@@ -178,7 +178,7 @@ static int get_tree_attributes(netloc_topology_t topology,
                     for (j = 0; j < num_edges; j++) {
                         if (network_attr->u.tree.node_levels[edges[j]->dest_node->__uid__] < 0) {
                             traversal_order[traversal_end++] = edges[j]->dest_node;
-                            /*Switch levels start from 1 */
+                            /* Switch levels start from 1 */
                             network_attr->u.tree.node_levels[edges[j]->dest_node->__uid__] = 1;
                             max_depth = 1;
                             visited_count++;
@@ -192,7 +192,7 @@ static int get_tree_attributes(netloc_topology_t topology,
                 netloc_edge_t **edges;
                 int depth = network_attr->u.tree.node_levels[traversed_node->__uid__];
 
-                /* find all nodes not visited with an edge from the current node */
+                /* Find all nodes not visited with an edge from the current node */
                 netloc_get_all_edges(topology, traversed_node, &num_edges, &edges);
                 for (j = 0; j < num_edges; j++) {
                     if (edges[j]->dest_node == traversed_node) {
@@ -210,9 +210,9 @@ static int get_tree_attributes(netloc_topology_t topology,
                     }
                 }
             }
-            /*End of depth assignment */
+            /* End of depth assignment */
 
-            /*Count the number of nodes and bandwidth at each level */
+            /* Count the number of nodes and bandwidth at each level */
             for (i = 0; i < max_depth; i++) {
                 int width_at_level = 0;
                 int num_nodes_at_level = 0;
@@ -327,7 +327,7 @@ static int get_physical_address(hwloc_obj_t hwloc_obj, char **device_physical_ad
     int mpi_errno = MPI_SUCCESS;
 
     for (i = 0; i < hwloc_obj->infos_count; i++) {
-        /*Check if node guid matches for infiniband networks */
+        /* Check if node guid matches for infiniband networks */
         if (!strcmp(hwloc_obj->infos[i].name, "NodeGUID")) {
             physical_address =
                 (char *) MPL_malloc(sizeof(hwloc_obj->infos[i].value), MPL_MEM_OTHER);
