@@ -280,6 +280,15 @@ static int get_tree_attributes(netloc_topology_t topology,
                 if (!count_at_level_mismatch && !bandwidth_mismatch && !out_degree_mismatch) {
                     network_attr->type = MPIR_NETLOC_NETWORK_TYPE__FAT_TREE;
                 }
+
+                errno = MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
+                                                          MPIR_Process.netloc_topology,
+                                                          MPIR_Process.hwloc_topology,
+                                                          &MPIR_Process.
+                                                          network_attr.network_endpoint);
+                if (errno != MPI_SUCCESS) {
+                    network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                }
             } else {
                 network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
             }
