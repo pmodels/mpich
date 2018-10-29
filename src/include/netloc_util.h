@@ -21,7 +21,7 @@ typedef struct {
 
     union {
         struct {
-            /* the levels at which the host and switch nodes are in
+            /* The levels at which the host and switch nodes are in
              * the network */
             int *node_levels;
         } tree;
