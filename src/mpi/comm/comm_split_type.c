@@ -511,7 +511,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
         /* Send the count to processes */
         mpi_errno =
-            MPIR_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
+            MPID_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
                            MPI_SUM, comm_ptr, &errflag);
 
         color =
@@ -542,7 +542,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
             /* Send the bindset to processes in node communicator */
             mpi_errno =
-                MPIR_Allreduce(MPI_IN_PLACE, node_comm_bindset,
+                MPID_Allreduce(MPI_IN_PLACE, node_comm_bindset,
                                num_procs * sizeof(hwloc_cpuset_t), MPI_BYTE,
                                MPI_NO_OP, node_comm, &errflag);
 
@@ -667,14 +667,14 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
      * its hintval size to the global max, and makes sure that this
      * comparison is successful on all processes. */
     mpi_errno =
-        MPIR_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+        MPID_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     hintval_equal = (hintval_size == hintval_size_max);
 
     mpi_errno =
-        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -688,7 +688,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     hintval_global = (char *) MPL_malloc(strlen(hintval), MPL_MEM_OTHER);
 
     mpi_errno =
-        MPIR_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
+        MPID_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
                        MPI_MAX, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -696,7 +696,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
 
     mpi_errno =
-        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
