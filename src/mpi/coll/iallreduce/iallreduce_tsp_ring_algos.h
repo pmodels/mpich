@@ -47,9 +47,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     cnts = (int *) MPL_malloc(nranks * sizeof(int), MPL_MEM_COLL);
     MPIR_Assert(cnts != NULL);
     displs = (int *) MPL_malloc(nranks * sizeof(int), MPL_MEM_COLL);
@@ -85,6 +82,12 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     MPIR_Assert(reduce_id != NULL);
     tmpbuf = MPIR_TSP_sched_malloc(count * extent, sched);
 
+    /* For correctness transport based collectives need to get the tag
+     * from the same pool as schedule based collectives */
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     src = (nranks + rank - 1) % nranks;
     dst = (rank + 1) % nranks;
 
@@ -109,6 +112,11 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
 
         MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
                              datatype, dst, tag, comm, sched, nvtcs, &vtcs);
+
+        /* get a new tag to prevent out of order messages */
+        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
