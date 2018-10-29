@@ -370,15 +370,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         mpi_errno =
             netloc_parse_topology(&MPIR_Process.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
         if (mpi_errno == NETLOC_SUCCESS) {
-            mpi_errno =
-                MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology,
-                                           &MPIR_Process.network_attr);
-            if (mpi_errno == MPI_SUCCESS) {
-                MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
-                                                  MPIR_Process.netloc_topology,
-                                                  MPIR_Process.hwloc_topology,
-                                                  &MPIR_Process.network_attr.network_endpoint);
-            }
+            MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology, &MPIR_Process.network_attr);
         }
     }
 #endif
