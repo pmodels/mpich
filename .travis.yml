@@ -8,8 +8,8 @@ os:
 env:
   - DEVICE=ch3:nemesis
   - DEVICE=ch3:sock
-  - DEVICE=ch4:ofi
-  - DEVICE=ch4:ucx
+#  - DEVICE=ch4:ofi
+#  - DEVICE=ch4:ucx
 
 matrix:
   exclude:
