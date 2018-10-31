@@ -53,13 +53,13 @@ int main(int argc, char **argv)
     MPI::DOUBLE.Get_name(name, namelen);
     if (strncmp(name, "MPI_DOUBLE", MPI::MAX_OBJECT_NAME)) {
         errs++;
-        cout << "Expected MPI_DOUBLE but got :" << name << ":\n";
+        cout << "Expected MPI_DOUBLE but got :" << name << ": namelen " << namelen << "\n";
     }
 
     MPI::INT.Get_name(name, namelen);
     if (strncmp(name, "MPI_INT", MPI::MAX_OBJECT_NAME)) {
         errs++;
-        cout << "Expected MPI_INT but got :" << name << ":\n";
+        cout << "Expected MPI_INT but got :" << name << ": namelen " << namelen << "\n";
     }
 
     /* Now we try them ALL */
@@ -70,9 +70,10 @@ int main(int argc, char **argv)
             continue;
         name[0] = 0;
         mpi_names[i].dtype.Get_name(name, namelen);
-        if (strncmp(name, mpi_names[i].name, namelen)) {
+        if (strncmp(name, mpi_names[i].name, MPI::MAX_OBJECT_NAME)) {
             errs++;
-            cout << "Expected " << mpi_names[i].name << " but got " << name << "\n";
+            cout << "Expected " << mpi_names[i].name << " but got :" << name << ": namelen " <<
+                namelen << "\n";
         }
     }
 
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
     MPI::INT.Get_name(name, namelen);
     if (strncmp(name, "int", MPI::MAX_OBJECT_NAME)) {
         errs++;
-        cout << "Expected int but got :" << name << ":\n";
+        cout << "Expected int but got :" << name << ": namelen " << namelen << "\n";
     }
 
     delete[]name;

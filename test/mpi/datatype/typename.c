@@ -141,13 +141,13 @@ int main(int argc, char **argv)
     MPI_Type_get_name(MPI_DOUBLE, name, &namelen);
     if (strncmp(name, "MPI_DOUBLE", MPI_MAX_OBJECT_NAME)) {
         errs++;
-        fprintf(stderr, "Expected MPI_DOUBLE but got :%s:\n", name);
+        fprintf(stderr, "Expected MPI_DOUBLE but got :%s:, namelen %d\n", name, namelen);
     }
 
     MPI_Type_get_name(MPI_INT, name, &namelen);
     if (strncmp(name, "MPI_INT", MPI_MAX_OBJECT_NAME)) {
         errs++;
-        fprintf(stderr, "Expected MPI_INT but got :%s:\n", name);
+        fprintf(stderr, "Expected MPI_INT but got :%s:, namelen %d\n", name, namelen);
     }
 
     /* Now we try them ALL */
@@ -169,9 +169,10 @@ int main(int argc, char **argv)
         MTestPrintfMsg(10, "Checking type %s\n", mpi_names[i].name);
         name[0] = 0;
         MPI_Type_get_name(mpi_names[i].dtype, name, &namelen);
-        if (strncmp(name, mpi_names[i].name, namelen)) {
+        if (strncmp(name, mpi_names[i].name, MPI_MAX_OBJECT_NAME)) {
             errs++;
-            fprintf(stderr, "Expected %s but got %s\n", mpi_names[i].name, name);
+            fprintf(stderr, "Expected %s but got :%s:, namelen %d\n", mpi_names[i].name, name,
+                    namelen);
         }
     }
 
@@ -181,7 +182,7 @@ int main(int argc, char **argv)
     MPI_Type_get_name(MPI_INT, name, &namelen);
     if (strncmp(name, "int", MPI_MAX_OBJECT_NAME)) {
         errs++;
-        fprintf(stderr, "Expected int but got :%s:\n", name);
+        fprintf(stderr, "Expected int but got :%s:, namelen %d\n", name, namelen);
     }
 #ifndef HAVE_MPI_INTEGER16
     errs++;
