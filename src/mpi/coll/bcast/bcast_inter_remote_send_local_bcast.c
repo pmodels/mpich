@@ -65,8 +65,11 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         }
 
         /* Get the local intracommunicator */
-        if (!comm_ptr->local_comm)
-            MPII_Setup_intercomm_localcomm(comm_ptr);
+        if (!comm_ptr->local_comm) {
+            mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
 
         newcomm_ptr = comm_ptr->local_comm;
 
