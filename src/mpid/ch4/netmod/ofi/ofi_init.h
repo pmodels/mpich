@@ -1009,9 +1009,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
 
-    MPIR_Datatype_init_names();
-    MPIDI_OFI_index_datatypes();
-
 #ifndef HAVE_DEBUGGER_SUPPORT
     MPIDI_Global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     if (MPIDI_Global.lw_send_req == NULL) {
