@@ -136,6 +136,19 @@ for option in $enable_fortran ; do
 done
 IFS="$save_IFS"
 
+# DTPools switch
+AC_ARG_ENABLE([dtpools],
+              [AC_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
+              [enable_dtpools=yes])
+
+if test "x${enable_dtpools}" = "xyes"; then
+    DTP_SWITCH="ON"
+else
+    DTP_SWITCH="OFF"
+fi
+
+AC_SUBST(DTP_SWITCH)
+
 AC_ARG_ENABLE(cxx,
 	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
