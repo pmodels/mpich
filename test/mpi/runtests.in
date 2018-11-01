@@ -417,6 +417,7 @@ sub RunList {
     my $InitForRun = "";
     my $listfileSource = $listfile;
     my @TYPES = "";
+    my $DTP_SWITCH = "@DTP_SWITCH@";
 
     if (! defined $ENV{"DTP_NUM_OBJS"}) {
         $ENV{"DTP_NUM_OBJS"} = "5";
@@ -473,7 +474,14 @@ sub RunList {
 	my $progEnv    = "";
 	my $mpiVersion = "";
         my $xfail = "";
-    my $enable_test = 0;
+    my $dtp_match_type = 0;
+    my $dtp_test_type = "";    # this test type
+    # get the type of this test
+    if ($programname =~ /BASIC/) {
+        $dtp_test_type = "BASIC";
+    } elsif ($programname =~ /STRUCT/) {
+        $dtp_test_type = "STRUCT";
+    }
 	if ($#args >= 1) { $np = $args[1]; }
 	# Process the key=value arguments
 	for (my $i=2; $i <= $#args; $i++) {
@@ -493,7 +501,8 @@ sub RunList {
             # match allowed datatypes here
             for my $j (@TYPES) {
                 if ($value eq "-type=$j") {
-                    $enable_test=1;
+                    $dtp_match_type=1;
+                    break;
                 }
             }
 
@@ -531,9 +540,16 @@ sub RunList {
 	    }
 	}
 
-    # check whether to skip this test (only for BASIC)
-    if ($enable_test == 0 && $programname =~ /BASIC/) {
-        $programname = "";
+    if ($DTP_SWITCH eq "ON") {
+        # if dtpools tests are ON only run matching types for basic tests
+        if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
+            $programname = "";
+        }
+    } else {
+        # if dtpools tests are OFF only disable dtpools tests, run the rest
+        if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
+            $programname = "";
+        }
     }
 
 	# skip empty lines
