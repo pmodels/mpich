@@ -301,7 +301,9 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
             MPID_Wtime(&time_now);
             MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
-            /* FIXME: not thread-safe */
+
+            /* Avoid blocking other threads since I am inside an infinite loop */
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         } while (connreq->stat == MPIDI_CH3I_PORT_CONNREQ_INITED
                  && (int) time_gap < timeout);
     }
