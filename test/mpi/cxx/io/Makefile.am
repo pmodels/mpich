@@ -106,7 +106,7 @@ clean-local:
 
 # a parallel-safe scheme to generate the tests, see the automake-1.11.1 manual,
 # section 27.9 "Handling Tools That Produce Multiple Outputs" for an explanation
-# 
+#
 # Note that using testmerge at make-time adds a dependency on perl for users.
 # See the note in test/mpi/f77/io/Makefile.am for more info.
 gen-src-stamp: $(srcdir)/ioharness.defn $(srcdir)/ioharness.tlt

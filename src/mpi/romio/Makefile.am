@@ -14,13 +14,13 @@
 ACLOCAL_AMFLAGS = -I confdb
 
 # empty variable initializations so that later code can append (+=)
-include_HEADERS = 
+include_HEADERS =
 nodist_include_HEADERS =
-noinst_HEADERS = 
+noinst_HEADERS =
 AM_CFLAGS = @VISIBILITY_CFLAGS@
 AM_CPPFLAGS =
 EXTRA_DIST =
-SUFFIXES = 
+SUFFIXES =
 doc1_src_txt =
 
 external_subdirs = @mpl_srcdir@
@@ -36,14 +36,14 @@ external_libs = @mpl_lib@
 # In MPICH these will have an MPI_ and a PMPI_ version.  Other implementations
 # (like OMPI) only want these to be MPI_ routines, possibly with some
 # name-shifting prefix.
-romio_mpi_sources = 
+romio_mpi_sources =
 
 # regular old source files that implement ROMIO, such as ADIO code
 romio_other_sources =
 
 # code that may need to be "up" called from the MPI library and/or is
 # MPI-implementation-specific in some way
-glue_sources = 
+glue_sources =
 
 # ------------------------------------------------------------------------
 # when building under MPICH we must be able to find mpi.h
@@ -89,7 +89,7 @@ if BUILD_PROFILING_LIB
 # won't work very well the other way around.
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
-libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING 
+libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
 libpromio_la_LDFLAGS = $(external_ldflags)
 libpromio_la_LIBADD = $(external_libs)
 else !BUILD_PROFILING_LIB

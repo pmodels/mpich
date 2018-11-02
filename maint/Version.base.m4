@@ -1,6 +1,6 @@
 dnl
 dnl this m4 file expects to be processed with "autom4te -l M4sugar"
-dnl 
+dnl
 m4_init
 
 dnl get the real version values

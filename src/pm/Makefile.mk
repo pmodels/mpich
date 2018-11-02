@@ -20,7 +20,7 @@ include $(top_srcdir)/src/pm/remshell/Makefile.mk
 ##
 ## The implication for "make dist" and friends is that we should only "make
 ## dist" in a tree that has been configured to enable to directories that we
-## want to distribute.  Because of this, we will probably need to continue using 
+## want to distribute.  Because of this, we will probably need to continue using
 ## the release.pl script because various SUBDIRS are incompatible with each
 ## other.
 

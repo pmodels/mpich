@@ -6,7 +6,7 @@ AC_INIT(rlog.c)
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(rlogconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -23,13 +23,13 @@ dnl
 dnl Enable better caching control
 PAC_ARG_CACHING
 dnl
-AC_ARG_ENABLE(echo, 
+AC_ARG_ENABLE(echo,
 [--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
 
 AC_ARG_ENABLE(sharedlibs,
 [--enable-sharedlibs=kind - Enable shared libraries.  kind may be
     gnu     - Standard gcc and GNU ld options for creating shared libraries
-    libtool - GNU libtool 
+    libtool - GNU libtool
 This option is currently ignored])
 
 dnl First check that we have a clean build if we are doing a VPATH build
@@ -38,11 +38,11 @@ PAC_VPATH_CHECK()
 dnl This test is complicated by the fact that top_srcdir is not set until
 dnl the very end of configure.  Instead, we get it ourselves
 if test -z "$top_srcdir" ; then
-   use_top_srcdir=$srcdir   
+   use_top_srcdir=$srcdir
 else
    use_top_srcdir=$top_srcdir
 fi
-if test -z "$master_top_srcdir" ; then 
+if test -z "$master_top_srcdir" ; then
     master_top_srcdir=$use_top_srcdir
 fi
 AC_SUBST(master_top_srcdir)
@@ -92,7 +92,7 @@ AC_SUBST(PMPILIBNAME)
 
 dnl
 dnl How do I get configure to find these values for me?
-dnl use AC_PATH_PROG to find a likely location, then search likely 
+dnl use AC_PATH_PROG to find a likely location, then search likely
 dnl directory paths for the files that you need.  Allow an environment
 dnl variable to provide the values, so that if they are in a strange
 dnl place, the user can set the environment variable and configure will
@@ -134,7 +134,7 @@ AC_SUBST(ETAGSADD)
 export ETAGS
 export ETAGSADD
 dnl
-dnl 
+dnl
 dnl
 dnl Other autoconf variables that may be imported from the calling environment
 AC_SUBST(DOCTEXT)

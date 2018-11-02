@@ -44,7 +44,7 @@ if test "$enable_pmiport" = "yes" ; then
     AC_SEARCH_LIBS(socket,socket,,[missing_functions=yes])
     AC_SEARCH_LIBS(gethostbyname,nsl,,[missing_functions=yes])
     AC_SEARCH_LIBS(setsockopt,,,[missing_functions=yes])
-    
+
     if test "$missing_functions" = "no" ; then
         AC_DEFINE(USE_PMI_PORT,1,[Define if access to PMI information through a port rather than just an fd is allowed])
     else

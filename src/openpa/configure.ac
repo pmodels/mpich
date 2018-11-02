@@ -1,8 +1,8 @@
 # -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
-#  
+#
 #  (C) 2008 by Argonne National Laboratory.
 #      See COPYRIGHT in top-level directory.
-# 
+#
 
 AC_PREREQ(2.62)
 
@@ -164,8 +164,8 @@ dnl Check for __attribute__ support.  This was originally taken from
 dnl the PAC_C_GNU_ATTRIBUTE macro in mpich.
 dnl
 dnl We start by requiring Gcc.  Some other compilers accept __attribute__
-dnl but generate warning messages, or have different interpretations 
-dnl (which seems to make __attribute__ just as bad as #pragma) 
+dnl but generate warning messages, or have different interpretations
+dnl (which seems to make __attribute__ just as bad as #pragma)
 dnl For example, the Intel icc compiler accepts __attribute__ and
 dnl __attribute__((pure)) but generates warnings for __attribute__((format...))
 if test "$GCC" = "yes" ; then
@@ -285,7 +285,7 @@ fi
 ])
 
 dnl OPA_TRY_RUN_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
-dnl Does an AC_RUN_IFELSE() to see if the header file works, but falls back to AC_LINK_IFELSE() 
+dnl Does an AC_RUN_IFELSE() to see if the header file works, but falls back to AC_LINK_IFELSE()
 dnl if we're cross-compiling
 AC_DEFUN([OPA_TRY_RUN_PRIMITIVE_HEADER],[
 if test "$with_atomic_primitives" = "auto"                 || \
@@ -338,7 +338,7 @@ dnl
 dnl If the compiler can't tell that it's getting bad assembly, we have
 dnl no hope of being able to check what asm statements are supported
 dnl without AC_TRY_RUN().
-    if test "$compiler_rejects_bogus_asm" = "yes"  ; then 
+    if test "$compiler_rejects_bogus_asm" = "yes"  ; then
         # if we're cross compiling, don't try the gcc_intel_32_64
         # test, since it uses fence operations which are not supported
         # on pre Pentium 4 machines, but it may still compile and link

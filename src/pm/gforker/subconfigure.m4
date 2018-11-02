@@ -23,7 +23,7 @@ AM_COND_IF([BUILD_PM_GFORKER],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR src/pm/gforker])
 
 # Check that we are using the simple PMI implementation
-# (Selecting multiple PMs may require incompatible PMI implementations 
+# (Selecting multiple PMs may require incompatible PMI implementations
 # (e.g., gforker and SMPD).
 if test -z "$PM_REQUIRES_PMI" ; then
     PM_REQUIRES_PMI=simple
@@ -51,11 +51,11 @@ dnl
 dnl Check for a specific header
 AC_CHECK_HEADERS([sys/types.h signal.h sys/ptrace.h])
 dnl
-dnl Check for functions.  This invokes another test if the function is 
-dnl found.  The braces around the second test are essential. 
+dnl Check for functions.  This invokes another test if the function is
+dnl found.  The braces around the second test are essential.
 dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
 AC_CHECK_FUNCS([strsignal])
-dnl 
+dnl
 dnl Check for signal handlers
 AC_CHECK_FUNCS([sigaction signal sigset])
 sigaction_ok=no

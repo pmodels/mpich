@@ -24,9 +24,9 @@ lib_libtvmpich_la_SOURCES = src/mpi/debugger/dll_mpich.c
 lib_libtvmpich_la_CFLAGS = -g
 lib_libtvmpich_la_LDFLAGS = -g $(ABIVERSIONFLAGS)
 
-# tvtest builds a main program that uses the routines in dll_mpich to 
+# tvtest builds a main program that uses the routines in dll_mpich to
 # access the internal structure of an MPICH program.  This is only a partial
-# test, but it allows a developer to check out the basic functioning of 
+# test, but it allows a developer to check out the basic functioning of
 # dll_mpich (but without loading it).
 #
 # NB: these tests can only be built *after* a "make install" step.  They must be

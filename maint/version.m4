@@ -1,5 +1,5 @@
 [#] start of __file__
-# 
+#
 # (C) 2011 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #

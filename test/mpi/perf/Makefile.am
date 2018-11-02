@@ -13,7 +13,7 @@ noinst_PROGRAMS = transp_datatype non_zero_root sendrecvl twovec dtpack \
                   allredtrace commcreatep allredtrace commcreatep timer \
                   manyrma nestvec nestvec2 indexperf
 
-# Force all tests to be compiled with optimization 
+# Force all tests to be compiled with optimization
 AM_CFLAGS        = -O
 # While the AM_CFLAGS should be sufficient, to make this Makefile more
 # robust, indicate that these specific programs *must* be compiled with

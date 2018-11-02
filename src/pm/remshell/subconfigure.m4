@@ -23,7 +23,7 @@ AM_COND_IF([BUILD_PM_REMSHELL],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR src/pm/remshell])
 
 # Check that we are using the simple PMI implementation
-# (Selecting multiple PMs may require incompatible PMI implementations 
+# (Selecting multiple PMs may require incompatible PMI implementations
 # (e.g., remshell and SMPD).
 if test -z "$PM_REQUIRES_PMI" ; then
     PM_REQUIRES_PMI=simple
@@ -65,11 +65,11 @@ dnl
 dnl Check for a specific header
 AC_CHECK_HEADERS([sys/types.h signal.h sys/ptrace.h])
 dnl
-dnl Check for functions.  This invokes another test if the function is 
-dnl found.  The braces around the second test are essential. 
+dnl Check for functions.  This invokes another test if the function is
+dnl found.  The braces around the second test are essential.
 dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
 AC_CHECK_FUNCS([strsignal])
-dnl 
+dnl
 dnl Check for signal handlers
 AC_CHECK_FUNCS([sigaction signal sigset])
 sigaction_ok=no
@@ -114,7 +114,7 @@ fi
 AC_CHECK_HEADERS([string.h sys/time.h unistd.h stdlib.h sys/socket.h wait.h errno.h])
 
 AC_CHECK_FUNCS([ptrace])
-# It isn't enough to find ptrace.  We also need the ptrace 
+# It isn't enough to find ptrace.  We also need the ptrace
 # parameters, which some systems, such as IRIX, do not define.
 if test "$ac_cv_func_ptrace" = yes ; then
     AC_CACHE_CHECK([for ptrace named parameters],

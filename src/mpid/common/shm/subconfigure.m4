@@ -14,7 +14,7 @@ dnl AM_CONDITIONAL for the moment
 dnl
 dnl AM_COND_IF([BUILD_MPID_COMMON_SHM],[
 dnl AC_MSG_NOTICE([RUNNING CONFIGURE FOR src/mpid/common/shm])
-dnl 
+dnl
 dnl ])dnl end AM_COND_IF(BUILD_MPID_COMMON_SHM,...)
 ])dnl end _BODY
 dnl

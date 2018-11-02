@@ -29,7 +29,7 @@ nodist_pkgconfig_DATA =
 CLEANFILES =
 DISTCLEANFILES =
 MAINTAINERCLEANFILES =
-SUFFIXES = 
+SUFFIXES =
 EXTRA_DIST =
 DOC_SUBDIRS =
 MANDOC_SUBDIRS =
@@ -47,7 +47,7 @@ pkgconfigdir = @pkgconfigdir@
 
 # contains all of the "errnames.txt" files that are used by maint/extracterrmsgs
 # to build src/mpi/errhan/defmsg.h
-errnames_txt_files = 
+errnames_txt_files =
 
 external_subdirs = @mplsrcdir@ @opasrcdir@ @zmsrcdir@ @hwlocsrcdir@
 external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@

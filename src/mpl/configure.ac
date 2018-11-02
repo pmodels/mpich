@@ -217,8 +217,8 @@ fi
 #######################################################################
 
 # ----------------------------------------------------------------------------
-# Support for timers.  The following code processes the 
-#  --enable-timer-type=name argument and selects the timer based on 
+# Support for timers.  The following code processes the
+#  --enable-timer-type=name argument and selects the timer based on
 # both that field and what configure is able to determine is available.
 # The file src/include/mpl_timer.h is also created.
 # ----------------------------------------------------------------------------
@@ -266,7 +266,7 @@ if test -z "$timer_type" ; then
     AC_CHECK_FUNCS(clock_gettime clock_getres gethrtime mach_absolute_time gettimeofday)
     if test "$ac_cv_func_gethrtime" = "yes" ; then
         # Sigh.  The Solaris include files do not define hrtime_t
-	# Before we accept this choice, make sure that we can 
+	# Before we accept this choice, make sure that we can
 	# do arithmetic with hrtime_t .
         AC_CACHE_CHECK([that hrtime_t is properly defined for gethrtime],
 	pac_cv_hrtime_works,[
@@ -274,10 +274,10 @@ if test -z "$timer_type" ; then
 #include <sys/time.h>
 ],[hrtime_t t1, t2; t1 = 1; t2 = 2; t1 = t1 + t2;],
 pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
-	# A more ambitious test would look to see if casting an 
+	# A more ambitious test would look to see if casting an
 	# hrtime_t to int64_t works, and even more ambitious
 	# would check whether long or long long was 64 bits (or even
-	# better, the sizeof hrtime_t).  
+	# better, the sizeof hrtime_t).
 
         # AC_CHECK_FUNCS has false positive when checking whether gethrtime is
         # available on Solaris with strict configuration. We must use
@@ -293,7 +293,7 @@ pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
 	 # Test on both because some systems (e.g., cygwin) provide
 	 # clock_gettime but not clock_getres
         timer_type=clock_gettime
-    elif test "$ac_cv_func_mach_absolute_time" = "yes" ; then 
+    elif test "$ac_cv_func_mach_absolute_time" = "yes" ; then
         timer_type=mach_absolute_time
     elif test "$ac_cv_func_gettimeofday" = "yes" ; then
         timer_type=gettimeofday
@@ -345,8 +345,8 @@ case "$timer_type" in
 	    AC_MSG_ERROR([The available timer requires _XOPEN_SOURCE=500.  Add -D_XOPEN_SOURCE=500 to CFLAGS and rerun configure])
         fi
     fi
-    # 
-    # FreeBSD 4.3 incorrectly puts the header into sys/time.h; 
+    #
+    # FreeBSD 4.3 incorrectly puts the header into sys/time.h;
     # time.h is required (see pages 45 and 46 in the POSIX standard).
     # See if we can compile
     AC_CACHE_CHECK([for CLOCK_REALTIME defined in time.h],pac_cv_posix_clock_realtime,[
@@ -384,7 +384,7 @@ pac_cv_posix_clock_realtime=no)
     ;;
 
     linux86_cycle|linux86_cycle_2)
-    
+
 # The following AC_TRY_RUN statements are needed because x86_64 compilers
 # usually know about rdtscp but the cpu may or may not actually implement the
 # feature.  This is not cross-compile safe, unfortunately.  In the long run we

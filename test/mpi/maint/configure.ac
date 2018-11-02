@@ -19,7 +19,7 @@ abs_mpichsrcdir=`cd $abs_srcdir && cd .. && pwd`
 
 AC_SUBST(abs_mpichsrcdir)
 
-# Does xargs need the -r option to handle the case where the input 
+# Does xargs need the -r option to handle the case where the input
 # is empty (gnu utils do, Mac OSX does not accept -r)
 xargs_out=`echo "" | xargs ls | wc -l | sed -e 's/ //g'`
 if test "$xargs_out" != "0" ; then

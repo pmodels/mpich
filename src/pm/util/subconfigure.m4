@@ -28,7 +28,7 @@ AC_TYPE_PID_T
 
 if test "$enable_onsig" = "yes" ; then
     AC_CHECK_FUNCS(ptrace)
-    # It isn't enough to find ptrace.  We also need the ptrace 
+    # It isn't enough to find ptrace.  We also need the ptrace
     # parameters, which some systems, such as IRIX, do not define.
     if test "$ac_cv_func_ptrace" = yes ; then
         AC_CACHE_CHECK([for ptrace named parameters],
@@ -53,7 +53,7 @@ fi
 # Cygwin has setsid but not getsid
 AC_CHECK_FUNCS(setsid isatty getsid)
 # See if we need to define getsid (in the case that the above XOPEN
-# definitions have not been made.  
+# definitions have not been made.
 PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getsid)
 if test "$enable_newsession" = "yes" ; then
     AC_DEFINE(USE_NEW_SESSION,1,[Define if mpiexec should create a new process group session])
@@ -67,7 +67,7 @@ AC_CHECK_FUNCS(unsetenv)
 # This is the simplest possible test; lets hope that it is sufficient
 AC_CACHE_CHECK([for cygwin1.dll in /bin],pac_cv_needs_bin_in_path,[
 pac_cv_needs_bin_in_path=no
-if test /bin/cygwin1.dll ; then 
+if test /bin/cygwin1.dll ; then
     pac_cv_needs_bin_in_path=yes
 fi])
 if test "$pac_cv_needs_bin_in_path" = yes ; then
@@ -117,14 +117,14 @@ pac_cv_has_struct_iovec=no)])
     fi
 fi
 dnl
-dnl Check for functions.  This invokes another test if the function is 
-dnl found.  The braces around the second test are essential. 
+dnl Check for functions.  This invokes another test if the function is
+dnl found.  The braces around the second test are essential.
 dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
 AC_CHECK_FUNCS(strsignal)
 if test "$ac_cv_func_strsignal" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strsignal)
 fi
-dnl 
+dnl
 dnl Check for signal handlers
 AC_CHECK_FUNCS(sigaction signal sigset)
 sigaction_ok=no
@@ -182,7 +182,7 @@ fi
 
 
 #
-# Check for select and working FD_ZERO 
+# Check for select and working FD_ZERO
 AC_CHECK_FUNCS(select)
 AC_CHECK_HEADERS(sys/select.h)
 if test "$ac_cv_func_select" != yes ; then
@@ -191,7 +191,7 @@ else
     # Check that FD_ZERO works.  Under the Darwin xlc (version 6) compiler,
     # FD_ZERO gets turned into a referece to __builtin_bzero, which is not
     # in the xlc libraries.  This is apparently due to xlc pretending that it
-    # is GCC within the system header files (the same test that must 
+    # is GCC within the system header files (the same test that must
     # succeed within the system header files to cause the declaration to
     # be __builtin_bzero fails outside of the header file).
     # (sys/select.h is POSIX)
@@ -206,7 +206,7 @@ else
 fi
 #
 # Check for the Linux functions for controlling processor affinity.
-# 
+#
 # LINUX: sched_setaffinity
 # AIX:   bindprocessor
 # OSX (Leopard): thread_policy_set
@@ -227,7 +227,7 @@ if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
 	if test "$pac_cv_cpu_set_defined" = "yes" ; then
 	    AC_DEFINE(HAVE_CPU_SET_MACROS,1,[Define if CPU_SET and CPU_ZERO defined])
         fi
-	# FIXME: Some versions of sched_setaffinity return ENOSYS (!), 
+	# FIXME: Some versions of sched_setaffinity return ENOSYS (!),
 	# so we should test for the unfriendly and useless behavior
     fi
 fi
@@ -246,7 +246,7 @@ fi
 
 AC_CHECK_HEADERS([string.h sys/time.h time.h stdlib.h sys/socket.h wait.h errno.h])
 AC_CHECK_FUNCS(time)
-# Check for socklen_t .  
+# Check for socklen_t .
 # (note the conditional inclusion of sys/socket.h)
 AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)],
 pac_cv_have_socklen_t,[

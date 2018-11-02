@@ -91,7 +91,7 @@ EXTRA_DIST += ioharness.defn ioharness.tlt
 
 # a parallel-safe scheme to generate the tests, see the automake-1.11.1 manual,
 # section 27.9 "Handling Tools That Produce Multiple Outputs" for an explanation
-# 
+#
 # Note that using testmerge at make-time adds a dependency on perl for users.
 # It's been like this for a long time, so I don't think it's a problem in
 # practice.  The best way to fix this is to drop the nodist_foo_SOURCES lines,

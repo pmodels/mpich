@@ -1,12 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.67)
 dnl
-dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes 
+dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes
 dnl bugs in autoconf caching.
 dnl
 dnl
 dnl Environment variables that affect behavior of the test configure
-dnl MPICH_FAST 
+dnl MPICH_FAST
 dnl
 dnl The file name here refers to a file in the source being configured
 dnl FIXME this is the old style, needs updating to new style
@@ -20,7 +20,7 @@ AC_INIT([mpich-testsuite],
 
 AC_CONFIG_HEADER(include/mpitestconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -42,9 +42,9 @@ AM_MAINTAINER_MODE([enable])
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-if test -z "$mpich_top_srcdir" ; then 
+if test -z "$mpich_top_srcdir" ; then
     if test -z "$top_srcdir" ; then
-       use_top_srcdir=$srcdir   
+       use_top_srcdir=$srcdir
     else
        use_top_srcdir=$top_srcdir
     fi
@@ -52,9 +52,9 @@ if test -z "$mpich_top_srcdir" ; then
     /*) ;;
     *)
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
-        ;;        
+        ;;
     esac
-    if test -f $use_top_srcdir/../../maint/version.m4 ; then 
+    if test -f $use_top_srcdir/../../maint/version.m4 ; then
         mpich_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
     fi
 fi
@@ -65,11 +65,11 @@ AC_SUBST(mpich_top_srcdir)
 AC_ARG_VAR([master_top_builddir],[path to the MPICH top-level build directory (if present)])
 AC_ARG_VAR([master_top_srcdir],[path to the MPICH top-level source directory (if present)])
 
-# Ensure that master_top_srcdir is set if maintainer mode for is set, 
+# Ensure that master_top_srcdir is set if maintainer mode for is set,
 # since some of the Makefile targets require it.
 if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     if test -z "$top_srcdir" ; then
-       use_top_srcdir=$srcdir   
+       use_top_srcdir=$srcdir
     else
        use_top_srcdir=$top_srcdir
     fi
@@ -78,12 +78,12 @@ if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     /*) ;;
     *)
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
-        ;;        
+        ;;
     esac
     # Now, see if we can find the f77tof90 routine
     if test -x $use_top_srcdir/maint/f77tof90 ; then
         master_top_srcdir=$use_top_srcdir
-    else 
+    else
         AC_MSG_ERROR([Unable to find master source file - reconfigure using --disable-maintainer_mode])
     fi
 fi
@@ -298,7 +298,7 @@ AC_ARG_WITH(config-args,
 	[with_config_args=no])
 
 if test "$with_config_args" != "no" ; then
-    case "$with_config_args" in 
+    case "$with_config_args" in
         /*|../*|./*)
             config_args_file="$with_config_args"
             ;;
@@ -340,13 +340,13 @@ AC_ARG_VAR([MPICH_THREAD_LEVEL],
            [the MPI thread level supported by the enclosing MPICH build (when built within MPICH)])
 # ------------------------------------------------------------------------
 
-if test "$enable_threads" = "yes" ; then 
+if test "$enable_threads" = "yes" ; then
     enable_threads=multiple
 elif test "$enable_threads" = "no" ; then
     enable_threads=single
 elif test "$enable_threads" = default ; then
     if test -n "$MPICH_THREAD_LEVEL" ; then
-        case $MPICH_THREAD_LEVEL in 
+        case $MPICH_THREAD_LEVEL in
             MPI_THREAD_MULTIPLE)
             enable_threads=multiple
             ;;
@@ -396,12 +396,12 @@ else
 fi
 AC_SUBST(comm_overlap)
 
-# 
+#
 # Only run the threads tests if multiple is specified
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
     threadsdir="threads"
 fi
-# 
+#
 # Only run the checkpointing tests if enabled
 ckpointdir="#ckpoint"
 if test "$enable_checkpointing" = "yes" ; then
@@ -450,7 +450,7 @@ fi
 
 # Some MPI-2 implementations (including some of the MPICH shared-memory
 # channels and BG/L) leave out the dynamic process routines.  This
-# allows tests to avoid reporting failure for these routines.  
+# allows tests to avoid reporting failure for these routines.
 # This can be controlled by either a --disable-spawn argument or by
 # setting the environment variable MPI_NO_SPAWN to yes.
 AC_ARG_VAR([MPI_NO_SPAWN],[set to "yes" to disable dynamic process tests])
@@ -573,11 +573,11 @@ else
     fi
     if test "x$MPICC" != "x" ; then
         CC=$MPICC
-    fi 
+    fi
     if test -z "$MPIF77" ; then
         AC_PATH_PROG(MPIF77,$MPIF77_NAME mpf77)
     fi
-    if test "x$MPIF77" != "x" ; then 
+    if test "x$MPIF77" != "x" ; then
         F77=$MPIF77
     fi
     if test -z "$MPIFC" ; then
@@ -587,13 +587,13 @@ else
         FC=$MPIFC
     fi
     if test -z "$MPICXX" ; then
-        # We left mpiCC off of this list because mpicc and mpiCC are the 
+        # We left mpiCC off of this list because mpicc and mpiCC are the
         # same on Mac OSX systems.
         AC_PATH_PROG(MPICXX,$MPICXX_NAME mpCC)
     fi
     if test "x$MPICXX" != "x" ; then
         CXX=$MPICXX
-    fi 
+    fi
     if test -z "$MPIEXEC" ; then
         AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
@@ -607,14 +607,14 @@ AC_CONFIG_SUBDIRS([dtpools])
 PAC_PROG_CC
 AM_PROG_CC_C_O
 
-# Note that some versions of autoconf will insist that the compiler 
+# Note that some versions of autoconf will insist that the compiler
 # produce executables at this point, which is why we must do something
 # special for building within MPICH
 
 # Ensure that we can compile an MPI program before we go any further
 # We don't use a cached value here because this is a sanity check
-# The exception is if we are executing this configure from within the 
-# MPICH configure - in that case, the 
+# The exception is if we are executing this configure from within the
+# MPICH configure - in that case, the
 if test "$FROM_MPICH" != "yes" ; then
     AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
     AC_LINK_IFELSE([
@@ -632,7 +632,7 @@ dnl same test in the MPICH configure.
 # Check on support for long double and long long types.  Do this before the
 # structure alignment test because it will test for including those
 # types as well
-# 
+#
 # If --disable-long-double is selected, then bypass this test.
 # Some MPI implementations may choose to not support long double because
 # their C compilers are inconsistent on the length of long double (this
@@ -653,7 +653,7 @@ AC_CACHE_CHECK([whether long long is supported],pac_cv_have_long_long,[
         AC_LANG_PROGRAM([],[long long a;])
     ],[pac_cv_have_long_long=yes],[pac_cv_have_long_long=no])
 ])
-if test "$pac_cv_have_long_long" = yes ; then 
+if test "$pac_cv_have_long_long" = yes ; then
     AC_DEFINE(HAVE_LONG_LONG,1,[Define if compiler supports long long])
 fi
 #
@@ -749,7 +749,7 @@ if test "$threadsdir" = "threads" ; then
     AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
     if test "$FROM_MPICH" != yes ; then
         AC_CHECK_FUNCS(MPI_Init_thread)
-    fi    
+    fi
 fi
 AC_SUBST(threadlib)
 
@@ -784,7 +784,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finaliz
     AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
 for pac_cv_mpi_major_version in 3 2 1 unknown ; do
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
-#if MPI_VERSION == $pac_cv_mpi_major_version 
+#if MPI_VERSION == $pac_cv_mpi_major_version
     ''' force failure '''
 #endif])],,break)
 done
@@ -793,7 +793,7 @@ done
     AC_CACHE_CHECK([for minor version of MPI],pac_cv_mpi_minor_version,[
 for pac_cv_mpi_minor_version in 4 3 2 1 0 unknown ; do
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
-#if MPI_SUBVERSION == $pac_cv_mpi_minor_version 
+#if MPI_SUBVERSION == $pac_cv_mpi_minor_version
     ''' force failure '''
 #endif])],,break)
 done
@@ -801,8 +801,8 @@ done
 MPI_VERSION=$pac_cv_mpi_major_version
 MPI_SUBVERSION=$pac_cv_mpi_minor_version
 else
-    # We are within the MPICH build.  Extract the MPI versions from 
-    # mpi.h.in	
+    # We are within the MPICH build.  Extract the MPI versions from
+    # mpi.h.in
     if test ! -f $mpich_top_srcdir/src/include/mpi.h.in ; then
         AC_MSG_ERROR([Could not find the required mpi.h.in file!])
     fi
@@ -821,9 +821,9 @@ if test "$enable_f77" = yes ; then
     # If there is no working F77, then set enable_f77 to no
     if test -z "$F77" ; then
         enable_f77=no
-    fi    
+    fi
 fi
-# Simple tests for which other languages we can handle.  
+# Simple tests for which other languages we can handle.
 # Use these only when configuring separate from an MPICH build
 f77dir="#"
 AC_SUBST(f77dir)
@@ -858,7 +858,7 @@ elif test "$enable_f77" = yes ; then
     AC_LANG_POP([Fortran 77])
 fi
 #
-# At least one test (C++ test of C and Fortran datatypes) needs to 
+# At least one test (C++ test of C and Fortran datatypes) needs to
 # know if Fortran is supported
 if test "$f77dir" = "f77" ; then
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
@@ -881,17 +881,17 @@ if test "$buildingF77" = "yes" ; then
         # Aint should be an address-sized integer, the same as void*
         # We use a test on the size of void * to avoid any complications
         # in dealing with running programs containing MPI headers (e.g.,
-        # the IBM MPI changes the main entry point so that MPI 
+        # the IBM MPI changes the main entry point so that MPI
         # programs cannot be run on the host node)
         AC_CHECK_SIZEOF(void *)
         MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
     fi
     if test -z "$MPI_SIZEOF_OFFSET" ; then
-        # We have to try and get the size of offset anyway, since 
+        # We have to try and get the size of offset anyway, since
         # it is not the same as void * (it depends on the available
         # file systems).  Since we want to avoid using the MPI linker,
         # we could do the following:
-        #    Use the mpi compiler to compile the file, using the mpi 
+        #    Use the mpi compiler to compile the file, using the mpi
         #    header but no MPI calls
         #    Use the regular C linker to link the program
         # However, we do this only if the environment variable BASECC
@@ -918,7 +918,7 @@ dnl }
 dnl EOF
 dnl             # FIXME.  Check for BASECC
 dnl             # Note: This assumes that CC has been set to the C compiler for
-dnl             # MPI Programs, and that either any necessary include paths are 
+dnl             # MPI Programs, and that either any necessary include paths are
 dnl             # already set or they are in CPPFLAGS (prefered) or CFLAGS.
 dnl             if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
 dnl                 if ./conftest$ac_exeext ; then
@@ -947,7 +947,7 @@ dnl         ])
              MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
         fi
     fi
-    
+
     AC_LANG_PUSH([Fortran 77])
     AC_CACHE_CHECK([whether integer*4 is supported],pac_cv_fort_integer4,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*4 i])],
@@ -989,20 +989,20 @@ dnl         ])
     cat > f77/init/checksizes.c <<EOF
 #include "mpi.h"
 #include <stdio.h>
-int main( int argc, char **argv ) 
+int main( int argc, char **argv )
 {
   int fsizeof_aint   = $MPI_SIZEOF_AINT;
   int fsizeof_offset = $MPI_SIZEOF_OFFSET;
   int err = 0, rc = 0;
-  
+
   MPI_Init( &argc, &argv );
   if (sizeof(MPI_Aint) != fsizeof_aint) {
-     printf( "Sizeof MPI_Aint is %d but Fortran thinks it is %d\n", 
+     printf( "Sizeof MPI_Aint is %d but Fortran thinks it is %d\n",
              (int)sizeof(MPI_Aint), fsizeof_aint );
      err++;
   }
   if (sizeof(MPI_Offset) != fsizeof_offset) {
-     printf( "Sizeof MPI_Offset is %d but Fortran thinks it is %d\n", 
+     printf( "Sizeof MPI_Offset is %d but Fortran thinks it is %d\n",
              (int)sizeof(MPI_Offset), fsizeof_offset );
      err++;
   }
@@ -1019,7 +1019,7 @@ EOF
 
     # Check that the Fortran compiler will allow us to pass arguments
     # of different types (e.g., for MPI_Send)
-    # Any strict Fortran compiler will require that the arguments be 
+    # Any strict Fortran compiler will require that the arguments be
     # the same type - currently, the NAG Fortran compiler (nagfor) is known
     # to enforce this.
     # We could set the FFLAGS/FCFLAGS values with the option that disables
@@ -1027,22 +1027,22 @@ EOF
     # instead we tell the user and exit.
     PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
     if test "X$addarg" != "X" ; then
-        # We could add the names of all of the MPI routines that 
-        # accept different types.  Instead, we fail cleanly.  
-        # Some Fortran compilers allow you to turn off checking for 
+        # We could add the names of all of the MPI routines that
+        # accept different types.  Instead, we fail cleanly.
+        # Some Fortran compilers allow you to turn off checking for
         # mismatched arguments for *all* routines.  Adding an argument
-	# that turns off checking for *everything* is not something that 
+	# that turns off checking for *everything* is not something that
 	# configure should do - if the user wants this, they can follow
 	# the instructions in the following error message.
 	AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
     fi
 
-    # Check whether we need -lU77 to get iargc and getarg, which 
+    # Check whether we need -lU77 to get iargc and getarg, which
     # are used for a few of the tests in spawn (U77 was needed with
-    # the native compilers on HPUX.  See the aclocal_f77(old).m4 file, 
+    # the native compilers on HPUX.  See the aclocal_f77(old).m4 file,
     # which has a much more complete set of tests.
     #
-    # FIXME: if we can't figure out how to get iargc/getarg, then 
+    # FIXME: if we can't figure out how to get iargc/getarg, then
     # we should really turn off those spawn tests
     # Even better is to limit this to the F200x version, where there is
     # an interface to the command line.
@@ -1079,10 +1079,10 @@ EOF
     if test -n "$F77_GETARG_LIBS" ; then
         AC_MSG_RESULT($F77_GETARG_LIBS)
     else
-        if test "$pac_cv_getarg_needs_u77" = "unavailable" ; then 
+        if test "$pac_cv_getarg_needs_u77" = "unavailable" ; then
             AC_MSG_RESULT([getarg and/or iargc are not available.  Some spawn tests will fail to link])
 	    F77SPAWNARGTEST="#"
-        else 
+        else
             AC_MSG_RESULT([none needed])
         fi
     fi
@@ -1090,8 +1090,8 @@ EOF
     # FIXME: Currently, we hope that FC accepts the same library
     FC_GETARG_LIBS="$F77_GETARG_LIBS"
     AC_SUBST(FC_GETARG_LIBS)
-    # F77SPAWNARGTEST is set to "#" to comment out tests in 
-    # f77/spawn/testlist.in that require non-standard extensions to 
+    # F77SPAWNARGTEST is set to "#" to comment out tests in
+    # f77/spawn/testlist.in that require non-standard extensions to
     # access the commandline
     AC_SUBST(F77SPAWNARGTEST)
 
@@ -1145,12 +1145,12 @@ fi
 dnl If enable_fc=yes up to this point then enable_f77=yes also
 dnl PAC_PROG_FC and PAC_PROG_FC_WORKS return OK
 if test "$enable_fc" = yes ; then
-    # Make sure that the compilers are compatible.  This 
+    # Make sure that the compilers are compatible.  This
     # will also make sure that the program named in FC is
     # a working Fortran 90 compiler
-    # Only check if we're *not* building within MPICH 
+    # Only check if we're *not* building within MPICH
     # (MPICH will have made the test)
-    # FIXME: Do we want to check only simple routine names 
+    # FIXME: Do we want to check only simple routine names
     # (those without an underscore?)
     if test "$FROM_MPICH" != yes ; then
         PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
@@ -1173,7 +1173,7 @@ if test "$enable_fc" = yes ; then
     # The Fortran90 tests rely on free-form input which needs to be tested
     # before any test that may modify FCFLAGS, e.g. the cray-pointer test.
     # The order of the tests is important in compiler like g95.
-    # Recent experience showed that the IBM xlf compiler, at least on 
+    # Recent experience showed that the IBM xlf compiler, at least on
     # some systems, requires -qfree=f90 instead of -qfree .  At this
     # writing (11/27/12), this Autoconf macro still uses -qfree and has
     # no mechanism for extension.  This test may fail in that case; if
@@ -1202,9 +1202,9 @@ if test "$enable_fc" = yes ; then
     AC_MSG_RESULT($pac_cv_fc_has_args)
     if test "$pac_cv_fc_has_args" != "yes" ; then
         F03SPAWNARGTEST="#"
-    fi      
-    # F03SPAWNARGTEST is set to "#" to comment out tests in 
-    # f90/spawn/testlist.in that require Fortran 2003 features to 
+    fi
+    # F03SPAWNARGTEST is set to "#" to comment out tests in
+    # f90/spawn/testlist.in that require Fortran 2003 features to
     # access the commandline
     AC_SUBST(F03SPAWNARGTEST)
     AC_LANG_POP([Fortran])
@@ -1340,7 +1340,7 @@ if test "$enable_cxx" = yes ; then
         fi
         # Warning: the autoconf macros will fall back onto /lib/cpp for
         # C and C++ preprocessing *without* checking that /lib/cpp even
-        # exists.  
+        # exists.
         if test "$CXXCPP" = "/lib/cpp" ; then
             if test ! -x "/lib/cpp" ; then
                 AC_MSG_WARN([Warning: Autoconf error, could not find a C++ Preprocessor.  Using false for the preprocessor so that tests will continue.])
@@ -1350,8 +1350,8 @@ if test "$enable_cxx" = yes ; then
     fi
 
     AX_CXX_NAMESPACE_STD
-   
-    if test "$ac_cv_cxx_namespaces" != yes ; then 
+
+    if test "$ac_cv_cxx_namespaces" != yes ; then
         AC_MSG_WARN([The compiler $CXX does not support C++ namespaces.  This may cause problems for the tests])
     fi
     AC_LANG_POP([C++])
@@ -1366,7 +1366,7 @@ if test "$enable_romio" != no ; then
     if test "$FROM_MPICH" = yes ; then
         # MPICH no longer uses and MPIO_Request
         pac_cv_have_mpio_request=no
-    else 
+    else
         AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],
         pac_cv_have_mpio_request,[
             AC_COMPILE_IFELSE([
@@ -1400,7 +1400,7 @@ fi
 AC_SUBST(impldir)
 #
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
-# implementations may have missed it.  Check to see if it is available in 
+# implementations may have missed it.  Check to see if it is available in
 # C.
 if test "$FROM_MPICH" = yes ; then
    # MPICH correctly includes this type.
@@ -1415,7 +1415,7 @@ else
         ],[pac_cv_have_mpi_integer16=yes],[pac_cv_have_mpi_integer16=no])
     ])
 fi
-if test "$pac_cv_have_mpi_integer16" = yes ; then 
+if test "$pac_cv_have_mpi_integer16" = yes ; then
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
 fi
 AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],
@@ -1430,10 +1430,10 @@ pac_cv_have_mpi_2double_complex,[
         pac_cv_have_mpi_2double_complex=no
     ])
 ])
-if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
+if test "$pac_cv_have_mpi_2double_complex" = yes ; then
     AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBLE_COMPLEX is available])
 fi
-# 2COMPLEX was in MPI 1.0 and removed after that.  This allows us to 
+# 2COMPLEX was in MPI 1.0 and removed after that.  This allows us to
 # test 2COMPLEX if it is present
 AC_CACHE_CHECK([whether MPI_2COMPLEX is available],
 pac_cv_have_mpi_2complex,[
@@ -1447,11 +1447,11 @@ pac_cv_have_mpi_2complex,[
         pac_cv_have_mpi_2complex=no
     ])
 ])
-if test "$pac_cv_have_mpi_2complex" = yes ; then 
+if test "$pac_cv_have_mpi_2complex" = yes ; then
     AC_DEFINE(HAVE_MPI_2COMPLEX,1,[Define if MPI_2COMPLEX is available])
 fi
 
-# MPI_Aint was intended as an address-sized int.  However, MPI didn't 
+# MPI_Aint was intended as an address-sized int.  However, MPI didn't
 # specify this - MPI_Aint must be large enough to hold an address-sized
 # integer, but it can be larger.  To get clean compilation in some places,
 # we need a pointer-sized integer.  The following code looks for one.
@@ -1476,7 +1476,7 @@ done
 AC_MSG_RESULT($POINTERINT)
 AC_DEFINE_UNQUOTED(POINTERINT_t,$POINTERINT,[POINTERINT_t is a pointer-sized integer])
 
-# Find perl; used to create some of the tests from template and 
+# Find perl; used to create some of the tests from template and
 # defintion files
 AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
@@ -1495,10 +1495,10 @@ AC_SUBST(MPI_SOURCE)
 if test "$FROM_MPICH" = yes ; then
     # Set compilers/flags to be substituted in output files, e.g. Makefiles.
     LDFLAGS="$saveLDFLAGS"
-    # note that the default definition of bindir is 
+    # note that the default definition of bindir is
     #    '${exec_prefix}/bin'
     # so even if prefix is set, exec prefix is not until
-    # the very last moment (i.e., not here). 
+    # the very last moment (i.e., not here).
     if test "X$exec_prefix" = "XNONE" ; then
         saveExec_prefix=$exec_prefix
         if test "X$prefix" = "XNONE" ; then

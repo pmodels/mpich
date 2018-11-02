@@ -15,7 +15,7 @@ noinst_PROGRAMS = singjoin testconnect testconnectserial dimsbalanced \
 # testconnectserial would like MPICHLIBSTR to be defined as the installation
 # directory of the MPI library.  This definition is not required.
 noinst_HEADERS = connectstuff.h
-testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c 
+testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c
 testconnectserial_LDADD   = $(LDADD) -lm -lpthread
 
 singjoin_LDADD = $(LDADD) @socklib@ @nslib@
