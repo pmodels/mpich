@@ -14,7 +14,7 @@ MPID_Win_fence().
 struct MPIR_Win
 {
     /*** insert struct MPIR_Win here ***/
-    
+
     unsigned				state;
     unsigned				cur_epoch;
 }
@@ -52,11 +52,11 @@ MPID_Win_fence(assert, win)
 	zero(dwin->rhc_cnts[0..np-1]);
     }
     thread_mutex_unlock(dwin->thread_mutex);
-    
+
     MPI_Alltoall(dwin->rhc_cnts + np, np, MPI_INT,
 		 dwin->rhc_cnts + np * 2, np, MPI_INT, dwin->comm)
     dwin->rhc_incoming = sum(rhc[np*2..np*3-1]);
-    
+
     while(dwin->rhc_processed < dwin->rhc_incoming &&
 	  dwin->lops_completed < dwin->lops_posted)
     {
@@ -76,7 +76,7 @@ MPID_Win_fence(assert, win)
 	 */
 	MPID_Win_wait(dwin);
     }
-    
+
     thread_mutex_lock(dwin->thread_mutex);
     {
 	if (assert & MPI_MODE_NOSUCCEED)
@@ -88,16 +88,16 @@ MPID_Win_fence(assert, win)
 	    dwin->access_epoch_state = EPOCH_STATE_ACTIVE;
 	    dwin->exposure_epoch_state = EPOCH_STATE_ACTIVE;
 	}
-	
+
 	dwin->exposure_epoch_id++;
 	dwin->rhc_processed = 0;
-	
+
 	dwin->tag = 0;
     }
     thread_mutex_unlock(dwin->thread_mutex);
-    
+
     /*
-     * We could perform a barrier here to ensure that 
+     * We could perform a barrier here to ensure that
      */
     MPI_Barrier(dwin->comm);
 
@@ -129,13 +129,13 @@ MPID_Get(origin_addr, origin_count, origin_datatype,
 	 */
 
 	/*
-	 * NOTE: the tag 
+	 * NOTE: the tag
 	 */
 	tag = dwin->lops_posted++;
 	rc = MPID_Irecv(origin_addr, origin_count, origin_datatype, tag,
 		   target_rank, dwin->comm, &req);
 	MPIR_Win_req_add(dwin->cur_reqs, req);
-	
+
 	MPID_Hid_Win_get_t header;
 
 	header.win = dwin->wins[target_rank];

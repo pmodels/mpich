@@ -76,7 +76,7 @@ MPIR_Win_verify_dt_compat(src_count, src_datatype, dest_count, dest_datatype)
 	 * If the datatypes are not the same basic type and neither is
 	 * MPI_PACKED, so they are incompatible.
 	 */
-	
+
 	rc = MPI_ERR_XXX;
     }
 
@@ -86,7 +86,7 @@ MPIR_Win_verify_dt_compat(src_count, src_datatype, dest_count, dest_datatype)
      */
     if (dest_count * dest_datatype.size < src_count * src_datatype.size)
     {
-	/* 
+	/*
 	 * NOTE: The standard does not define what the application should
 	 * expect when truncation occurs.  We could copy as much data as
 	 * possible before rc =ing an error, but that would only delay
@@ -132,7 +132,7 @@ MPIR_Win_verify_dt_op_compat(src_count, src_datatype,
      */
     if (dest_count < src_count)
     {
-	/* 
+	/*
 	 * NOTE: The standard does not define what the application should
 	 * expect when truncation occurs.  We could peform the operation on as
 	 * much data as possible before rc =ing an error, but that would only
@@ -153,14 +153,14 @@ MPIR_Win_verify_buffer(count, datatype, rank, disp, dwin)
 		? dwin->size : dwin->sizes[target_size]);
     win_displ = ((dwin->flags & MPID_WIN_CONST_DISPL)
 		 ? dwin->displs : dwin->displs[target_size]);
-    
+
     /*
      * Verify that the target buffer is contained within the target's local
      * window.
      */
     byte_count = count * datatype.size;
     offset = win_displ * disp;
-    
+
     if (offset >= win_size)
     {
 	rc = MPI_ERR_DISP;
@@ -173,7 +173,7 @@ MPIR_Win_verify_buffer(count, datatype, rank, disp, dwin)
 
     rc = MPI_SUCCESS;
 }
-    
+
 
 MPIR_Win_compute_addr(dwin, rank, disp)
 {

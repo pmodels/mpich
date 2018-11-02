@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -68,13 +68,13 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_STDINT(type)
 #endif
 
-#ifdef __STDC_VERSION__ 
+#ifdef __STDC_VERSION__
 #if __STDC_VERSION__ >= 199901
 #  define MPICH_ATTR_TYPE_TAG_C99(type) MPICH_ATTR_TYPE_TAG(type)
 #else
 #  define MPICH_ATTR_TYPE_TAG_C99(type)
 #endif
-#else 
+#else
 #  define MPICH_ATTR_TYPE_TAG_C99(type)
 #endif
 
@@ -145,13 +145,13 @@ static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsig
 #define MPI_LB             ((MPI_Datatype)@MPI_LB@)
 #define MPI_UB             ((MPI_Datatype)@MPI_UB@)
 
-/* 
+/*
    The layouts for the types MPI_DOUBLE_INT etc are simply
-   struct { 
+   struct {
        double var;
        int    loc;
    }
-   This is documented in the man pages on the various datatypes.   
+   This is documented in the man pages on the various datatypes.
  */
 #define MPI_FLOAT_INT         ((MPI_Datatype)@MPI_FLOAT_INT@)
 #define MPI_DOUBLE_INT        ((MPI_Datatype)@MPI_DOUBLE_INT@)
@@ -202,9 +202,9 @@ static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_C
 #define MPI_DOUBLE_PRECISION  ((MPI_Datatype)@MPI_DOUBLE_PRECISION@)
 #define MPI_INTEGER           ((MPI_Datatype)@MPI_INTEGER@)
 #define MPI_2INTEGER          ((MPI_Datatype)@MPI_2INTEGER@)
-/* 
- * MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX were defined by accident in 
- * MPI 1.0 and removed in MPI 1.1.  
+/*
+ * MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX were defined by accident in
+ * MPI 1.0 and removed in MPI 1.1.
  *
  * This definition provides backward compatibility.  These definitions
  * will be removed in a subsequent MPICH release
@@ -212,7 +212,7 @@ static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_C
 #ifdef MPICH_DEFINE_2COMPLEX
 #define MPI_2COMPLEX          ((MPI_Datatype)@MPI_2COMPLEX@)
 #define MPI_2DOUBLE_COMPLEX   ((MPI_Datatype)@MPI_2DOUBLE_COMPLEX@)
-#endif 
+#endif
 #define MPI_2REAL             ((MPI_Datatype)@MPI_2REAL@)
 #define MPI_2DOUBLE_PRECISION ((MPI_Datatype)@MPI_2DOUBLE_PRECISION@)
 #define MPI_CHARACTER         ((MPI_Datatype)@MPI_CHARACTER@)
@@ -326,12 +326,12 @@ typedef int MPI_Op;
 /* C Versions (return pointer to value),
    Fortran Versions (return integer value).
    Handled directly by the attribute value routine
-   
+
    DO NOT CHANGE THESE.  The values encode:
    builtin kind (0x1 in bit 30-31)
    Keyval object (0x9 in bits 26-29)
    for communicator (0x1 in bits 22-25)
-   
+
    Fortran versions of the attributes are formed by adding one to
    the C version.
  */
@@ -400,10 +400,10 @@ extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
 
 /* C functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
-typedef int (MPI_Comm_copy_attr_function)(MPI_Comm, int, void *, void *, 
+typedef int (MPI_Comm_copy_attr_function)(MPI_Comm, int, void *, void *,
 					  void *, int *);
 typedef int (MPI_Comm_delete_attr_function)(MPI_Comm, int, void *, void *);
-typedef int (MPI_Type_copy_attr_function)(MPI_Datatype, int, void *, void *, 
+typedef int (MPI_Type_copy_attr_function)(MPI_Datatype, int, void *, void *,
 					  void *, int *);
 typedef int (MPI_Type_delete_attr_function)(MPI_Datatype, int, void *, void *);
 typedef int (MPI_Win_copy_attr_function)(MPI_Win, int, void *, void *, void *,
@@ -423,14 +423,14 @@ typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
 #define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
 #define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
 /* MPIR_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
-   facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS. 
+   facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS.
    Using the MPIR prefix preserved the MPI_ names for objects defined by
    the standard. */
 #define MPIR_ERRORS_THROW_EXCEPTIONS ((MPI_Errhandler)0x54000002)
 typedef int MPI_Errhandler;
 
 /* Make the C names for the dup function mixed case.
-   This is required for systems that use all uppercase names for Fortran 
+   This is required for systems that use all uppercase names for Fortran
    externals.  */
 /* MPI 1 names */
 #define MPI_NULL_COPY_FN   ((MPI_Copy_function *)0)
@@ -454,7 +454,7 @@ typedef int MPI_Request;
 typedef int MPI_Message;
 
 /* User combination function */
-typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * ); 
+typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
 
 /* MPI Attribute copy and delete functions */
 typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
@@ -505,14 +505,14 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 enum MPIR_Combiner_enum {
     MPI_COMBINER_NAMED            = 1,
     MPI_COMBINER_DUP              = 2,
-    MPI_COMBINER_CONTIGUOUS       = 3, 
+    MPI_COMBINER_CONTIGUOUS       = 3,
     MPI_COMBINER_VECTOR           = 4,
     MPI_COMBINER_HVECTOR_INTEGER  = 5,
     MPI_COMBINER_HVECTOR          = 6,
     MPI_COMBINER_INDEXED          = 7,
-    MPI_COMBINER_HINDEXED_INTEGER = 8, 
-    MPI_COMBINER_HINDEXED         = 9, 
-    MPI_COMBINER_INDEXED_BLOCK    = 10, 
+    MPI_COMBINER_HINDEXED_INTEGER = 8,
+    MPI_COMBINER_HINDEXED         = 9,
+    MPI_COMBINER_INDEXED_BLOCK    = 10,
     MPI_COMBINER_STRUCT_INTEGER   = 11,
     MPI_COMBINER_STRUCT           = 12,
     MPI_COMBINER_SUBARRAY         = 13,
@@ -546,7 +546,7 @@ typedef int MPI_Info;
 #define MPI_MODE_NOSTORE      2048
 #define MPI_MODE_NOPUT        4096
 #define MPI_MODE_NOPRECEDE    8192
-#define MPI_MODE_NOSUCCEED   16384 
+#define MPI_MODE_NOSUCCEED   16384
 
 /* predefined types for MPI_Comm_split_type */
 #define MPI_COMM_TYPE_SHARED    1
@@ -564,14 +564,14 @@ static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI
 #endif
 
 /* FIXME: The following two definition are not defined by MPI and must not be
-   included in the mpi.h file, as the MPI namespace is reserved to the MPI 
+   included in the mpi.h file, as the MPI namespace is reserved to the MPI
    standard */
 #define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
 #define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
 
 /* Let ROMIO know that MPI_Offset is already defined */
 #define HAVE_MPI_OFFSET
-/* MPI_OFFSET_TYPEDEF is set in configure and is 
+/* MPI_OFFSET_TYPEDEF is set in configure and is
       typedef $MPI_OFFSET MPI_Offset;
    where $MPI_OFFSET is the correct C type */
 @MPI_OFFSET_TYPEDEF@
@@ -735,7 +735,7 @@ typedef enum MPIR_T_pvar_class_t {
 @MPIU_DLL_SPEC_DEF@
 extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
 extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used 
+/* The annotation MPIU_DLL_SPEC to the extern statements is used
    as a hook for systems that require C extensions to correctly construct
    DLLs, and is defined as an empty string otherwise
  */
@@ -772,9 +772,9 @@ extern MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 #define MPI_THREAD_MULTIPLE 3
 
 /* Typedefs for generalized requests */
-typedef int (MPI_Grequest_cancel_function)(void *, int); 
-typedef int (MPI_Grequest_free_function)(void *); 
-typedef int (MPI_Grequest_query_function)(void *, MPI_Status *); 
+typedef int (MPI_Grequest_cancel_function)(void *, int);
+typedef int (MPI_Grequest_free_function)(void *);
+typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 
@@ -848,7 +848,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_ERR_LOCKTYPE    47      /* */
 #define MPI_ERR_KEYVAL      48      /* Erroneous attribute key */
 #define MPI_ERR_RMA_CONFLICT 49     /* */
-#define MPI_ERR_RMA_SYNC    50      /* */ 
+#define MPI_ERR_RMA_SYNC    50      /* */
 #define MPI_ERR_SIZE        51      /* */
 #define MPI_ERR_DISP        52      /* */
 #define MPI_ERR_ASSERT      53      /* */
@@ -880,7 +880,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
 
-#define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
+#define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a
 					   predefined error class */
 #define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
 				       last valid class */
@@ -903,16 +903,16 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 /* End of MPI's error classes */
 
 /* Function type defs */
-typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int, 
+typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int,
              void *, MPI_Offset, void *);
 typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
                       void *);
 #define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
 
-/* 
+/*
    For systems that may need to add additional definitions to support
-   different declaration styles and options (e.g., different calling 
-   conventions or DLL import/export controls).  
+   different declaration styles and options (e.g., different calling
+   conventions or DLL import/export controls).
 */
 /* --Insert Additional Definitions Here-- */
 
@@ -1234,7 +1234,7 @@ int MPI_Win_flush_all(MPI_Win win) MPICH_API_PUBLIC;
 int MPI_Win_flush_local(int rank, MPI_Win win) MPICH_API_PUBLIC;
 int MPI_Win_flush_local_all(MPI_Win win) MPICH_API_PUBLIC;
 int MPI_Win_sync(MPI_Win win) MPICH_API_PUBLIC;
- 
+
 /* External Interfaces */
 int MPI_Add_error_class(int *errorclass) MPICH_API_PUBLIC;
 int MPI_Add_error_code(int errorclass, int *errorcode) MPICH_API_PUBLIC;
@@ -1348,7 +1348,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler) MPICH_API_PU
 int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler) MPICH_API_PUBLIC;
 
 /* Fortran 90-related functions.  These routines are available only if
-   Fortran 90 support is enabled 
+   Fortran 90 support is enabled
 */
 int MPI_Type_create_f90_integer(int range, MPI_Datatype *newtype) MPICH_API_PUBLIC;
 int MPI_Type_create_f90_real(int precision, int range, MPI_Datatype *newtype) MPICH_API_PUBLIC;
@@ -1878,7 +1878,7 @@ int PMPI_Win_flush_all(MPI_Win win) MPICH_API_PUBLIC;
 int PMPI_Win_flush_local(int rank, MPI_Win win) MPICH_API_PUBLIC;
 int PMPI_Win_flush_local_all(MPI_Win win) MPICH_API_PUBLIC;
 int PMPI_Win_sync(MPI_Win win) MPICH_API_PUBLIC;
- 
+
 /* External Interfaces */
 int PMPI_Add_error_class(int *errorclass) MPICH_API_PUBLIC;
 int PMPI_Add_error_code(int errorclass, int *errorcode) MPICH_API_PUBLIC;
@@ -1992,7 +1992,7 @@ int PMPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler) MPICH_API_P
 int PMPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler) MPICH_API_PUBLIC;
 
 /* Fortran 90-related functions.  These routines are available only if
-   Fortran 90 support is enabled 
+   Fortran 90 support is enabled
 */
 int PMPI_Type_create_f90_integer(int r, MPI_Datatype *newtype) MPICH_API_PUBLIC;
 int PMPI_Type_create_f90_real(int p, int r, MPI_Datatype *newtype) MPICH_API_PUBLIC;
@@ -2212,13 +2212,13 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
-#define MPIIMPL_HAVE_MPI_INFO 1                                                 
-#define MPIIMPL_HAVE_MPI_COMBINER_DARRAY 1                                      
+#define MPIIMPL_HAVE_MPI_INFO 1
+#define MPIIMPL_HAVE_MPI_COMBINER_DARRAY 1
 #define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
-#define MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY 1                                    
+#define MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY 1
 #define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
-#define MPIIMPL_HAVE_MPI_COMBINER_DUP 1                                         
-#define MPIIMPL_HAVE_MPI_GREQUEST 1      
+#define MPIIMPL_HAVE_MPI_COMBINER_DUP 1
+#define MPIIMPL_HAVE_MPI_GREQUEST 1
 #define MPIIMPL_HAVE_STATUS_SET_BYTES 1
 #define MPIIMPL_HAVE_STATUS_SET_INFO 1
 
@@ -2227,7 +2227,7 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 #if defined(__cplusplus)
 }
 /* Add the C++ bindings */
-/* 
+/*
    If MPICH_SKIP_MPICXX is defined, the mpicxx.h file will *not* be included.
    This is necessary, for example, when building the C++ interfaces.  It
    can also be used when you want to use a C++ compiler to compile C code,
@@ -2235,11 +2235,11 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
    be made by the C++ compilation script
  */
 #if !defined(MPICH_SKIP_MPICXX)
-/* mpicxx.h contains the MPI C++ binding.  In the mpi.h.in file, this 
-   include is in an autoconf variable in case the compiler is a C++ 
+/* mpicxx.h contains the MPI C++ binding.  In the mpi.h.in file, this
+   include is in an autoconf variable in case the compiler is a C++
    compiler but MPI was built without the C++ bindings */
 @INCLUDE_MPICXX_H@
-#endif 
+#endif
 #endif
 
 

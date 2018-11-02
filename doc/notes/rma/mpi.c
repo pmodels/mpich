@@ -1,11 +1,11 @@
 struct MPIR_Win
 {
     MPI_Win				handle;
-    
+
     MPI_Comm				comm;
     int					rank;
     int					np;
-    
+
     void *				base;
     MPI_Aint				size;
     int					displ;
@@ -27,15 +27,15 @@ MPI_Win_create(base, size, disp_unit, info, comm, win)
     MPI_Comm_dup(comm, dwin_p.comm);
 
     rc = MPIR_ID_allocate(MPIR_Win_refs, dwin, &(dwin->handle));
-    
+
     dwin->base = base;
     dwin->size = size;
     dwin->displ = disp_unit;
-    
+
     dwin->bases = malloc(sizeof(void *) * dwin->np);
     dwin->sizes = malloc(sizeof(MPIR_Win * dwin->np);
     dwin->displs = malloc(sizeof(MPIR_Win) * dwin->np);
-    
+
     rc = MPI_Allgather(dwin->base, dwin->bases, dwin->comm);
     rc = MPI_Allgather(dwin->size, dwin->sizes, dwin->comm);
     rc = MPI_Allgather(dwin->displ, dwin->displs, dwin->comm);
@@ -57,7 +57,7 @@ MPI_Win_create(base, size, disp_unit, info, comm, win)
 	    dwin->flags &= ~MPID_WIN_CONST_DISPL;
 	}
     }
-    
+
     rc = MPID_Win_create(dwin, info);
 
     *win = dwin->handle;
@@ -70,10 +70,10 @@ MPI_Win_free(win)
     rc = MPIR_ID_lookup(win, &dwin);
 
     rc = MPID_Win_free(dwin);
-    
+
     free(dwin->bases);
-    free(dwin->sizes); 
-    free(dwin->displs); 
+    free(dwin->sizes);
+    free(dwin->displs);
     free(win);
 
     MPI_Comm_free(dwin->comm);
@@ -86,7 +86,7 @@ MPI_Win_free(win)
 MPI_Win_fence(assert, win)
 {
     rc = MPIR_ID_lookup(win, &dwin);
-    
+
     rc = MPID_Win_fence(assert, dwin);
 
     if (assert & MPI_MODE_NOSUCCEED)
@@ -105,15 +105,15 @@ MPI_Get(origin_addr, origin_count, origin_datatype,
         target_rank, target_disp, target_count, target_datatype, win)
 {
     rc = MPIR_ID_lookup(win, &dwin);
-    
+
     if ((dwin->flags & MPID_WIN_EPOCH_OPEN) != MPID_WIN_EPOCH_OPEN)
     {
 	rc = MPI_ERR_XXX;
     }
-    
+
     rc = MPIR_Win_verify_dt_compat(target_count, target_datatype,
 				   origin_count, origin_datatype);
-    
+
     rc = MPIR_Win_verify_buffer(target_count, target_datatype, target_rank,
 				target_disp, win);
 
@@ -128,15 +128,15 @@ MPI_Put(origin_addr, origin_count, origin_datatype,
         target_rank, target_disp, target_count, target_datatype, win)
 {
     rc = MPIR_ID_lookup(win, &dwin);
-    
+
     if ((dwin->flags & MPID_WIN_EPOCH_OPEN) != MPID_WIN_EPOCH_OPEN)
     {
 	rc = MPI_ERR_XXX;
     }
-    
+
     rc = MPIR_Win_verify_dt_compat(origin_count, origin_datatype,
 				   target_count, target_datatype);
-    
+
     rc = MPIR_Win_verify_buffer(target_count, target_datatype, target_rank,
 				target_disp, win);
 
@@ -152,15 +152,15 @@ MPI_Accumulate(origin_addr, origin_count, origin_datatype,
 	       op, win)
 {
     rc = MPIR_ID_lookup(win, &dwin);
-    
+
     if ((dwin->flags & MPID_WIN_EPOCH_OPEN) != MPID_WIN_EPOCH_OPEN)
     {
 	rc = MPI_ERR_XXX;
     }
-    
+
     rc = MPIR_Win_verify_dt_op_compat(origin_count, origin_datatype,
 				      target_count, target_datatype, op);
-    
+
     rc = MPIR_Win_verify_buffer(target_count, target_datatype, target_rank,
 				target_disp, win);
 
