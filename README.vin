@@ -44,7 +44,8 @@ shared memory), Hydra process management) of MPICH up and running.
 
     - REQUIRED: This tar file mpich-%VERSION%.tar.gz
 
-    - REQUIRED: A C compiler (gcc is sufficient)
+    - REQUIRED: A C compiler (C99 support is required. See
+      https://wiki.mpich.org/mpich/index.php/Shifting_toward_C99)
 
     - OPTIONAL: A C++ compiler, if C++ applications are to be used
       (g++, etc.). If you do not require support for C++ applications,
