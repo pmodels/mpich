@@ -53,11 +53,13 @@
 
  # Removed the PAMI device and poe PMI client.
 
+ # C99 compiler support is now required to build MPICH.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3b3
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3rc1
 
    A list of bugs that have been fixed is available at the following
    link:
