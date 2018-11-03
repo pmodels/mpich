@@ -164,5 +164,6 @@ nbicalltoallv 8 mpiversion=3.0
 nbicalltoallw 8 mpiversion=3.0
 
 neighb_coll 4 mpiversion=3.0
+neighb_coll2 4 mpiversion=3.0
 
 @coll_algo_tests@

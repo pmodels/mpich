@@ -262,4 +262,30 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Neighbor Collective algorithms ###########
+######### Only Neighbor Allgather and Neighbor Alltoallv for now ###########
+#disable device collectives to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0 "
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLGATHER_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0 "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+algo_names="comb"
+kvalues="4 8"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} "
+        env+="env=MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_NEIGHBOR_COLL_MSG_COMB_FRNDSHP_THRSHLD=${kval}"
+
+        coll_algo_tests+="neighb_coll2 32 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
