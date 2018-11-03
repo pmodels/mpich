@@ -125,7 +125,9 @@ noinst_PROGRAMS =      \
     neighb_alltoallv   \
     neighb_alltoallw   \
     bcast              \
-    bcast_comm_world_only
+    bcast_comm_world_only \
+    neighb_coll        \
+    neighb_coll2
 
 allgatherv4_LDADD = $(LDADD) -lm
 
