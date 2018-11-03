@@ -13,6 +13,90 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include "dtpools.h"
+#include "dtpoolsconf.h"
+
+#ifdef HAVE_CUDA
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+enum DTPI_mem_copy_direction {
+    DTPI_MEMCPY_HOST_TO_HOST = cudaMemcpyHostToHost,
+    DTPI_MEMCPY_HOST_TO_DEVICE = cudaMemcpyHostToDevice,
+    DTPI_MEMCPY_DEVICE_TO_HOST = cudaMemcpyDeviceToHost,
+    DTPI_MEMCPY_DEVICE_TO_DEVICE = cudaMemcpyDeviceToDevice
+};
+
+#define DTPI_OBJ_ALLOC_OR_FAIL_IMPL(obj, size, mem_type)            \
+    do {                                                            \
+        if (mem_type == DTPI_MEM_TYPE__HOST) {                      \
+            obj = malloc(size);                                     \
+        } else if (mem_type == DTPI_MEM_TYPE__CUDA) {               \
+            cudaMalloc((void **)&obj, size);                        \
+        }                                                           \
+        if (!obj) {                                                 \
+            err = DTP_ERR_OTHER;                                    \
+            fprintf(stdout, "Out of memory in %s\n", __FUNCTION__); \
+            fflush(stdout);                                         \
+            goto fn_fail;                                           \
+        }                                                           \
+        DTPI_OBJ_MEMSET_IMPL(obj, 0, size, mem_type);               \
+    } while (0)
+#define DTPI_OBJ_FREE_IMPL(obj, mem_type)                           \
+    do {                                                            \
+        if (mem_type == DTPI_MEM_TYPE__HOST) {                      \
+            free(obj);                                              \
+        } else if (mem_type == DTPI_MEM_TYPE__CUDA) {               \
+            cudaFree(obj);                                          \
+        }                                                           \
+    } while (0)
+#define DTPI_OBJ_MEMCPY_IMPL(dst, src, size, mem_type, direction)   \
+    do {                                                            \
+        if (mem_type == DTPI_MEM_TYPE__HOST) {                      \
+            memcpy(dst, src, size);                                 \
+        } else if (mem_type == DTPI_MEM_TYPE__CUDA) {               \
+            cudaMemcpy(dst, src, size, direction);                  \
+        }                                                           \
+    } while (0)
+#define DTPI_OBJ_MEMSET_IMPL(obj, val, size, mem_type)              \
+    do {                                                            \
+        if (mem_type == DTPI_MEM_TYPE__HOST) {                      \
+            memset(obj, val, size);                                 \
+        } else if (mem_type == DTPI_MEM_TYPE__CUDA) {               \
+            cudaMemset(obj, val, size);                             \
+        }                                                           \
+    } while (0)
+#else
+enum DTPI_mem_copy_direction {
+    DTPI_MEMCPY_HOST_TO_HOST = 0,
+    DTPI_MEMCPY_HOST_TO_DEVICE,
+    DTPI_MEMCPY_DEVICE_TO_HOST,
+    DTPI_MEMCPY_DEVICE_TO_DEVICE
+};
+
+#define DTPI_OBJ_ALLOC_OR_FAIL_IMPL(obj, size, mem_type)            \
+    do {                                                            \
+        obj = malloc(size);                                         \
+        if (!obj) {                                                 \
+            err = DTP_ERR_OTHER;                                    \
+            fprintf(stdout, "Out of memory in %s\n", __FUNCTION__); \
+            fflush(stdout);                                         \
+            goto fn_fail;                                           \
+        }                                                           \
+        DTPI_OBJ_MEMSET(obj, 0, size);                              \
+    } while (0)
+#define DTPI_OBJ_FREE_IMPL(obj, mem_type)                           \
+    do {                                                            \
+        free(obj);                                                  \
+    } while (0)
+#define DTPI_OBJ_MEMCPY_IMPL(dst, src, size, mem_type, direction)   \
+    do {                                                            \
+        memcpy(dst, src, size);                                     \
+    } while (0)
+#define DTPI_OBJ_MEMSET_IMPL(obj, val, size, mem_type)              \
+    do {                                                            \
+        memset(obj, val, size);                                     \
+    } while (0)
+#endif
 
 #define ERR_STRING_MAX_LEN (512)
 
@@ -26,17 +110,23 @@
 #define FPRINTF(...)
 #endif
 
-#define DTPI_OBJ_ALLOC_OR_FAIL(obj, size)                           \
-    do {                                                            \
-        obj = malloc(size);                                         \
-        if (!obj) {                                                 \
-            err = DTP_ERR_OTHER;                                    \
-            fprintf(stdout, "Out of memory in %s\n", __FUNCTION__); \
-            fflush(stdout);                                         \
-            goto fn_fail;                                           \
-        }                                                           \
-        memset(obj, 0, size);                                       \
-    } while (0)
+#define DTPI_OBJ_ALLOC_OR_FAIL(obj, size) \
+    DTPI_OBJ_ALLOC_OR_FAIL_IMPL(obj, size, DTPI_MEM_TYPE__HOST)
+#define DTPI_OBJ_FREE(obj) \
+    DTPI_OBJ_FREE_IMPL(obj, DTPI_MEM_TYPE__HOST)
+#define DTPI_OBJ_MEMCPY(dst, src, size) \
+    DTPI_OBJ_MEMCPY_IMPL(dst, src, size, DTPI_MEM_TYPE__HOST, 0)
+#define DTPI_OBJ_MEMSET(obj, val, size) \
+    DTPI_OBJ_MEMSET_IMPL(obj, val, size, DTPI_MEM_TYPE__HOST)
+
+
+/*
+ * Memory type
+ */
+typedef enum {
+    DTPI_MEM_TYPE__HOST,
+    DTPI_MEM_TYPE__CUDA
+} DTPI_mem_type;
 
 /*
  * Simple derived datatype layouts:

@@ -94,10 +94,10 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
 
   fn_fail:
     if (*dtp) {
-        free(*dtp);
+        DTPI_OBJ_FREE(*dtp);
     }
     if (obj_array) {
-        free(obj_array);
+        DTPI_OBJ_FREE(obj_array);
     }
     goto fn_exit;
 }
@@ -151,10 +151,10 @@ int DTP_pool_create_struct(int num_types, MPI_Datatype * basic_types, int *basic
 
   fn_fail:
     if (*dtp) {
-        free(*dtp);
+        DTPI_OBJ_FREE(*dtp);
     }
     if (obj_array) {
-        free(obj_array);
+        DTPI_OBJ_FREE(obj_array);
     }
     goto fn_exit;
 }
@@ -169,8 +169,8 @@ int DTP_pool_free(DTP_t dtp)
     if (!dtp) {
         return DTP_ERR_OTHER;
     }
-    free(dtp->DTP_obj_array);
-    free(dtp);
+    DTPI_OBJ_FREE(dtp->DTP_obj_array);
+    DTPI_OBJ_FREE(dtp);
 
     return err;
 }
@@ -385,3 +385,121 @@ int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI
 
     return err;
 }
+
+#ifndef HAVE_CUDA
+int DTP_obj_create_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count)
+{
+    return 0;
+}
+
+int DTP_obj_free_cuda(DTP_t dtp, int obj_idx)
+{
+    return 0;
+}
+
+int DTP_obj_buf_check_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride,
+                           MPI_Aint val_count)
+{
+    return 0;
+}
+#else
+int DTP_obj_create_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count)
+{
+    int err = DTP_SUCCESS;
+    DTPI_t *dtpi;
+    MPI_Aint lb, extent;
+    DTPI_obj_type_e obj_type;
+    size_t size;
+    void *cuda_buf;
+
+    /* create dtp obj using host memory first */
+    err = DTP_obj_create(dtp, obj_idx, val_start, val_stride, val_count);
+
+    /* get dtp obj info */
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    obj_type = dtpi->obj_type;
+
+    /* get buffer size */
+    lb = dtpi->type_lb;
+    extent = dtpi->type_extent;
+    size =
+        (obj_type ==
+         DTPI_OBJ_TYPE__BASIC) ? extent * dtp->DTP_obj_array[obj_idx].DTP_obj_count : lb + extent;
+
+    /* allocate device memory */
+    DTPI_OBJ_ALLOC_OR_FAIL_IMPL(cuda_buf, size, DTPI_MEM_TYPE__CUDA);
+
+    /* copy host memory to device memory */
+    DTPI_OBJ_MEMCPY_IMPL(cuda_buf, dtp->DTP_obj_array[obj_idx].DTP_obj_buf, size,
+                         DTPI_MEM_TYPE__CUDA, DTPI_MEMCPY_HOST_TO_DEVICE);
+
+    /* free host memory */
+    DTPI_OBJ_FREE(dtp->DTP_obj_array[obj_idx].DTP_obj_buf);
+
+    /* update dtp obj array to point to device memory */
+    dtp->DTP_obj_array[obj_idx].DTP_obj_buf = cuda_buf;
+
+  fn_exit:
+    return err;
+
+  fn_fail:
+    DTP_obj_free(dtp, obj_idx);
+    goto fn_exit;
+}
+
+int DTP_obj_free_cuda(DTP_t dtp, int obj_idx)
+{
+    DTPI_OBJ_FREE_IMPL(dtp->DTP_obj_array[obj_idx].DTP_obj_buf, DTPI_MEM_TYPE__CUDA);
+    dtp->DTP_obj_array[obj_idx].DTP_obj_buf = NULL;
+    return DTP_obj_free(dtp, obj_idx);
+}
+
+int DTP_obj_buf_check_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride,
+                           MPI_Aint val_count)
+{
+    int err = DTP_SUCCESS;
+    DTPI_t *dtpi;
+    MPI_Aint lb, extent;
+    DTPI_obj_type_e obj_type;
+    size_t size;
+    void *host_buf, *cuda_buf;
+
+    /* get dtp obj info */
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    obj_type = dtpi->obj_type;
+
+    /* get buffer size */
+    lb = dtpi->type_lb;
+    extent = dtpi->type_extent;
+    size =
+        (obj_type ==
+         DTPI_OBJ_TYPE__BASIC) ? extent * dtp->DTP_obj_array[obj_idx].DTP_obj_count : lb + extent;
+
+    /* allocate host memory */
+    DTPI_OBJ_ALLOC_OR_FAIL(host_buf, size);
+
+    /* copy device memory to host memory */
+    DTPI_OBJ_MEMCPY_IMPL(host_buf, dtp->DTP_obj_array[obj_idx].DTP_obj_buf, size,
+                         DTPI_MEM_TYPE__CUDA, DTPI_MEMCPY_DEVICE_TO_HOST);
+
+    /* update dtp obj array to point to host memory */
+    cuda_buf = dtp->DTP_obj_array[obj_idx].DTP_obj_buf;
+    dtp->DTP_obj_array[obj_idx].DTP_obj_buf = host_buf;
+
+    /* check buffer */
+    err = DTP_obj_buf_check(dtp, obj_idx, val_start, val_stride, val_count);
+
+    /* restore original buffer */
+    dtp->DTP_obj_array[obj_idx].DTP_obj_buf = cuda_buf;
+
+    /* free host memory */
+    DTPI_OBJ_FREE(host_buf);
+
+  fn_exit:
+    return err;
+
+  fn_fail:
+    DTP_obj_free(dtp, obj_idx);
+    goto fn_exit;
+}
+#endif

@@ -5,6 +5,7 @@
 #
 AM_CPPFLAGS = $(MPI_H_INCLUDE)
 AM_CPPFLAGS += -DDTP_MPI_DATATYPE=@DTP_DATATYPES@   # Coma separated list of MPI datatypes
+AM_LDFLAGS = $(cudalibdir)
 
 pkglib_LTLIBRARIES = libdtpools.la
 libdtpools_la_SOURCES = dtpools.c dtpools_internal.c

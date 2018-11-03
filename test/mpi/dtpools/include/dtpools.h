@@ -57,6 +57,10 @@ int DTP_pool_free(DTP_t dtp);
 int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
 int DTP_obj_free(DTP_t dtp, int obj_idx);
 int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
+int DTP_obj_create_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
+int DTP_obj_free_cuda(DTP_t dtp, int obj_idx);
+int DTP_obj_buf_check_cuda(DTP_t dtp, int obj_idx, int val_start, int val_stride,
+                           MPI_Aint val_count);
 
 /* Define a list of MPI Datatypes.
    Used in both test/mpi/util/mtest.c and test/mpi/cxx/util/mtest.cxx.

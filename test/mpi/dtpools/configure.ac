@@ -44,6 +44,38 @@ AM_PROG_AR
 LT_PREREQ([2.2.6])
 LT_INIT
 
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([[--with-cuda[=DIR]]],
+                            [use the CUDA installation in DIR]) or system], [],
+                            [with_cuda=no])
+
+cudalibdir=""
+AC_SUBST([cudalibdir])
+
+if test "${with_cuda}" != "no" ; then
+    if test "${with_cuda}" != "system" ; then
+        AS_IF([test -s "${with_cuda}/include/cuda.h"],
+              [:],[AC_MSG_ERROR([the CUDA installation in "${with_cuda}" appears broken])])
+        CPPFLAGS="-I${with_cuda}/include $CPPFLAGS"
+        CFLAGS="-I${with_cuda}/include $CFLAGS"
+        LIBS=-lcuda
+        LIBS="-lcudart $LIBS"
+        if test -d ${with_cuda}/lib64 ; then
+            LDFLAGS="-L${with_cuda}/lib64 $LDFLAGS"
+            cudalibdir="-L${with_cuda}/lib64"
+        else
+            LDFLAGS="-L${with_cuda}/lib $LDFLAGS"
+            cudalibdir="-L${with_cuda}/lib"
+        fi
+    else
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "cuda.h"
+                        ],
+                        [])],
+                        [AC_MSG_ERROR([the CUDA installation seems to be added from system path])], [])
+    fi
+    AC_DEFINE(HAVE_CUDA,1,[Define if cuda is available in either user specified path or in system path])
+fi
+
 AC_ARG_VAR([DTP_NUM_OBJS],
            [used to limit the number of objects to test from each pool])
 
@@ -73,7 +105,6 @@ AC_SUBST([MPI_H_INCLUDE])
 # Checks for typedefs, structures, and compiler characteristics.
 
 # Checks for library functions.
-AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset])
 
 AC_CONFIG_FILES([Makefile

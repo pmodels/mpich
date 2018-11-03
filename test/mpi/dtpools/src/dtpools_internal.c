@@ -525,7 +525,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     dtp->DTP_obj_array[obj_idx].private_info = dtpi;
 
     /* set type name for debug information */
-    memset(type_name, 0, sizeof(type_name));
+    DTPI_OBJ_MEMSET(type_name, 0, sizeof(type_name));
     sprintf(type_name, "%s (%d elements)", "struct", num_types);
     err = MPI_Type_set_name(dtp->DTP_obj_array[obj_idx].DTP_obj_type, (char *) type_name);
     if (err) {
