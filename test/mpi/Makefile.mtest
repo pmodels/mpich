@@ -22,6 +22,10 @@ LDADD = $(top_builddir)/util/mtest.o
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
 LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
 
+# Add CUDA support
+AM_CPPFLAGS += -I$(cudaincludedir)
+LDADD += -L$(cudalibdir) $(cudalibs)
+
 ## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
 ## prog_DEPENDENCIES variable, but it would be better to figure out the right
 ## way to do this

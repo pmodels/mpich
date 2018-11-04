@@ -17,6 +17,85 @@ macros=""    # additional control macros (user defined)
 timelimit="" # time limit for testlist.in
 procs=""     # number of processes to use in testlist.in
 other_macros=""
+sed_opt=""   # sed in-place command option
+
+gen_cuda_source() {
+    dir=$1     # directory name
+    source=$2  # source name - extension
+    ext=$3     # source extension
+
+    # build origin and target pathnames
+    originname="${dir}/${source}.${ext}"
+    targetname="${dir}/${source}_cuda.${ext}"
+
+    # init an empty file to fill up
+    printf "" >& $targetname
+
+    # start from top of the origin file
+    count=0
+
+    # search the origin source to find where to insert CUDA detection
+    while read -r l; do
+        if [ "$ext" == "c" ]; then
+            if [ "$(echo $l | grep '#include "mpitest.h"')" != "" ]; then
+                break
+            fi
+            count=$((count+1))
+        elif [ "$ext" == "cxx" ]; then
+            if [ "$(echo $l | grep '#include "mpitestcxx.h"')" != "" ]; then
+                break
+            fi
+            count=$((count+1))
+        fi
+    done < $originname
+
+    # skip mpitest.h or mpitestconf.h
+    count=$((count+1))
+
+    # copy first 'count' lines from origin to target
+    head -n $count $originname >> $targetname
+
+    # add CUDA detection
+    if [ "$ext" == "c" ]; then
+        cat >> $targetname << EOF
+#ifndef HAVE_CUDA
+int main(int argc, char *argv[]) {
+    MTest_Init(NULL, NULL);
+    MTest_Finalize(0);
+    return MTestReturnValue(0);
+}
+#else
+EOF
+    elif [ "$ext" == "cxx" ]; then
+        cat >> $targetname << EOF
+#ifndef HAVE_CUDA
+int main(int argc, char *argv[]) {
+    MTest_Init();
+    MTest_Finalize(0);
+    return 0;
+}
+#else
+EOF
+    fi
+
+    # copy rest of the origin to target
+    tail -n +$((count+1)) $originname >> $targetname
+
+    # add final endif
+    echo "#endif /* HAVE_CUDA */" >> $targetname
+
+    # Change DTP_obj_create, DTP_obj_free, DTP_obj_buf_check to their CUDA versions
+    sed $sed_opt 's/DTP_obj_create/DTP_obj_create_cuda/g' $targetname
+    sed $sed_opt 's/DTP_obj_free/DTP_obj_free_cuda/g' $targetname
+    sed $sed_opt 's/DTP_obj_buf_check/DTP_obj_buf_check_cuda/g' $targetname
+}
+
+# Detect sed version for in-place replacement option
+if [ "$(file `which sed` | grep 'Mach-O')" != "" ]; then
+    sed_opt="-i.bak"
+else
+    sed_opt="-i"
+fi
 
 # Read basic MPI datatypes
 while read -r line
@@ -47,6 +126,9 @@ do
     dir=`dirname $pathname`
     source=`echo $(basename $pathname) | sed -E "s|(.+)\.c[xx]*|\1|"`
     ext=`echo $(basename $pathname) | sed -E "s|.+\.(c[xx]*)|\1|"`
+
+    # generate CUDA tests from default ones
+    gen_cuda_source ${dir} ${source} ${ext}
 
     # check whether .dtp and .in files already exist in dir ...
     exists=0
@@ -103,8 +185,43 @@ do
             fi
         done
     done
-    ln=$((ln+1)) # increment line count
     printf "done\n"
+
+    # Generate compile instructions for CUDA tests
+    printf "basictypetest.txt:${ln}: Generate tests for: ${source}_cuda.${ext} ... "
+
+    # generate Makefile.dtp
+    echo "noinst_PROGRAMS += ${source}_cuda__BASIC__L${ln}" >> ${dir}/Makefile.dtp
+    echo "${source}_cuda__BASIC__L${ln}_CPPFLAGS = $other_macros \$(AM_CPPFLAGS)" >> ${dir}/Makefile.dtp
+    echo "${source}_cuda__BASIC__L${ln}_SOURCES = ${source}_cuda.${ext}" >> ${dir}/Makefile.dtp
+
+    sendcounts=$counts
+
+    for type in $types
+    do
+        recvcounts=$sendcounts # reset recv counts to send counts
+
+        for sendcount in $sendcounts
+        do
+            if [ $dir = "pt2pt" ] ; then # only send/recv comm can use types from different pools
+                # do combination of different send recv count where recv count >= send count
+                for recvcount in $recvcounts
+                do
+                    echo "${source}_cuda__BASIC__L${ln} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} $timelimit" >> ${dir}/testlist.dtp
+                     # limit the mixed pool case to only one
+                     # TODO: this should be defined in the config file
+                    if [ $recvcount -gt $sendcount ]; then
+                        break
+                    fi
+                done
+                recvcounts=`echo $recvcounts | sed -e "s|$sendcount||"` # update recv counts
+            else
+                echo "${source}_cuda__BASIC__L${ln} $procs arg=-type=${type} arg=-count=${sendcount} $timelimit" >> ${dir}/testlist.dtp
+            fi
+        done
+    done
+    printf "done\n"
+    ln=$((ln+1)) # increment line count
 done < basictypetest.txt
 
 ln=1 # line number
@@ -158,6 +275,13 @@ do
     echo "${source}__STRUCT__L${ln}_CPPFLAGS = $other_macros \$(AM_CPPFLAGS)" >> ${dir}/Makefile.dtp
     echo "${source}__STRUCT__L${ln}_SOURCES = ${source}.${ext}" >> ${dir}/Makefile.dtp
     echo "${source}__STRUCT__L${ln} $procs arg=-numtypes=$numtypes arg=-types=$types arg=-counts=$counts $timelimit" >> ${dir}/testlist.dtp
+    printf "done\n"
+
+    printf "structtypetest.txt:${ln}: Generate tests for: ${source}_cuda.${ext} ... "
+    echo "noinst_PROGRAMS += ${source}_cuda__STRUCT__L${ln}" >> ${dir}/Makefile.dtp
+    echo "${source}_cuda__STRUCT__L${ln}_CPPFLAGS = $other_macros \$(AM_CPPFLAGS)" >> ${dir}/Makefile.dtp
+    echo "${source}_cuda__STRUCT__L${ln}_SOURCES = ${source}_cuda.${ext}" >> ${dir}/Makefile.dtp
+    echo "${source}_cuda__STRUCT__L${ln} $procs arg=-numtypes=$numtypes arg=-types=$types arg=-counts=$counts $timelimit" >> ${dir}/testlist.dtp
     printf "done\n"
     ln=$((ln+1))
 done < structtypetest.txt

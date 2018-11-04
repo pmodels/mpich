@@ -251,6 +251,11 @@ AC_ARG_ENABLE(collalgo-tests,
                               [Run extended collective algorithm tests])],,
               [enable_collalgo_tests=no])
 
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([[--with-cuda[=DIR]]],
+                            [use the CUDA installation in DIR]) or system], [],
+                            [with_cuda=no])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -669,6 +674,35 @@ AC_CACHE_CHECK([whether long long is supported],pac_cv_have_long_long,[
 if test "$pac_cv_have_long_long" = yes ; then 
     AC_DEFINE(HAVE_LONG_LONG,1,[Define if compiler supports long long])
 fi
+
+# Detect CUDA
+cudaincludedir=""
+cudalibdir=""
+cudalibs=""
+AC_SUBST([cudaincludedir])
+AC_SUBST([cudalibs])
+AC_SUBST([cudalibdir])
+
+if test "${with_cuda}" != "no" ; then
+    if test "${with_cuda}" != "system" ; then
+        AS_IF([test -s "${with_cuda}/include/cuda.h"],
+              [:],[AC_MSG_ERROR([the CUDA installation in "${with_cuda}" appears broken])])
+        cudaincludedir="${with_cuda}/include"
+        cudalibs="-lcuda -lcudart"
+        if test -d ${with_cuda}/lib64 ; then
+            cudalibdir="${with_cuda}/lib64"
+        else
+            cudalibdir="${with_cuda}/lib"
+        fi
+    else
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "cuda.h"
+                        ],
+                        [])],
+                        [AC_MSG_ERROR([the CUDA installation seems to be added from system path])], [])
+    fi
+    AC_DEFINE(HAVE_CUDA,1,[Define if cuda is available in either user specified path or in system path])
+fi
+
 #
 # Check for const and restrict (used in some of the performance tests)
 AC_C_CONST
