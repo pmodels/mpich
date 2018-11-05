@@ -1746,10 +1746,12 @@ AC_OUTPUT(maint/testmerge \
           f90/rma/testlist \
           f08/rma/testlist \
           impls/Makefile \
-	  impls/hydra/Makefile \
-	  impls/hydra/proc_binding.sh \
+          impls/hydra/Makefile \
+          impls/hydra/proc_binding.sh \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \
+          impls/mpich/comm/Makefile \
+          impls/mpich/comm/testlist \
           )
 
