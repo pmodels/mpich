@@ -92,6 +92,11 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
         recv_rank = (nranks + rank - 2 - i) % nranks;
         send_rank = (nranks + rank - 1 - i) % nranks;
 
+        /* get a new tag to prevent out of order messages */
+        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
         nvtcs = (i == 0) ? 0 : 1;
         vtcs = (i == 0) ? 0 : reduce_id[(i - 1) % 2];
         recv_id =
@@ -116,7 +121,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                          displs, datatype, tag, comm, sched);
+                                          displs, datatype, comm, sched);
 
     MPL_free(cnts);
     MPL_free(displs);
