@@ -24,7 +24,7 @@
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
-                                          MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
+                                          MPI_Datatype recvtype, MPIR_Comm * comm,
                                           MPIR_TSP_sched_t * sched)
 {
     size_t extent;
@@ -36,6 +36,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     int send_rank, recv_rank;
     void *data_buf, *buf1, *buf2, *sbuf, *rbuf;
     int max_count;
+    int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
@@ -92,6 +93,11 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
         recv_rank = (rank - i - 1 + nranks) % nranks;   /* Rank whose data you're receiving */
         send_rank = (rank - i + nranks) % nranks;       /* Rank whose data you're sending */
 
+        /* New tag for each send-recv pair. */
+        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
         if (i == 0) {
             nvtcs = 1;
             vtcs[0] = dtcopy_id[0];
@@ -140,6 +146,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -153,7 +161,6 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
                                     MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
@@ -166,15 +173,9 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
     MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIDU_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                              displs, recvtype, tag, comm, sched);
+                                              displs, recvtype, comm, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
