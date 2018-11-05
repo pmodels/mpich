@@ -23,6 +23,11 @@ AH_BOTTOM([
 #endif /* !defined(DTPOOLSCONF_H_INCLUDED) */
 ])
 
+# Ensure we have an MPI compiler wrapper
+if test -n "$MPICC" ; then
+  CC=$MPICC
+fi
+
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
