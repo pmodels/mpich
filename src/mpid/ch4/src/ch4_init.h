@@ -516,7 +516,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 {
-    int mpi_errno, thr_err;
+    int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
@@ -541,8 +541,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
-
 #ifdef USE_PMIX_API
     PMIx_Finalize(NULL, 0);
 #elif defined(USE_PMI2_API)
@@ -551,11 +549,33 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     PMI_Finalize();
 #endif
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_CS_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS, thr_err;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
+
+    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
