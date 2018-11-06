@@ -67,15 +67,24 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
 typedef struct {
     MPL_thread_mutex_t mutex;
     OPA_int_t num_queued_threads;
+    MPL_thread_id_t owner;
+    int count;
 } MPIDU_Thread_mutex_t;
 typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
+
 #else
 typedef struct {
     zm_lock_t mutex;
     OPA_int_t num_queued_threads;
+    MPL_thread_id_t owner;
+    int count;
 } MPIDU_Thread_mutex_t;
 typedef zm_cond_t MPIDU_Thread_cond_t;
 #endif
+typedef struct {
+    MPL_thread_id_t owner;
+    int count;
+} MPIDU_thread_mutex_state_t;
 
 typedef MPL_thread_id_t MPIDU_Thread_id_t;
 typedef MPL_thread_tls_t MPIDU_Thread_tls_t;
@@ -107,20 +116,19 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_REC(mutex)                               \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int rec_err_ = 0;                                           \
-            MPIR_Per_thread_t *per_thread = NULL;                              \
-                                                                        \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive locking GLOBAL mutex"); \
-            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
-                                         MPIR_Per_thread, per_thread, &rec_err_); \
-            MPIR_Assert(rec_err_ == 0);                                 \
-                                                                        \
-            if (per_thread->lock_depth == 0) {                          \
+            int equal_ = 0;                                             \
+            MPL_thread_id_t self_, owner_;                              \
+            MPL_thread_self(&self_);                                    \
+            owner_ = mutex.owner;                                       \
+            MPL_thread_same(&self_, &owner_, &equal_);                  \
+            if (!equal_) {                                              \
                 int err_ = 0;                                           \
                 MPIDU_Thread_mutex_lock(&mutex, &err_);                 \
                 MPIR_Assert(err_ == 0);                                 \
+                MPIR_Assert(mutex.count == 0);                          \
+                MPL_thread_self(&mutex.owner);                          \
             }                                                           \
-            per_thread->lock_depth++;                                   \
+            mutex.count++;                                              \
         }                                                               \
     } while (0)
 
@@ -143,7 +151,7 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL MPIDUI_THREAD_CS_ENTER_REC
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) MPIDUI_THREAD_CS_ENTER_NREC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -153,6 +161,61 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
+
+/* Stateful non-recursive version of CS_ENTER.
+ * It takes a MPIDU_thread_state_t variable to pass the state between
+ * ENTER and EXIT. */
+
+#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st) MPIDUI_THREAD_CS_ENTER_ST_##name(mutex,st)
+
+#if defined(MPICH_IS_THREADED)
+
+#define MPIDUI_THREAD_CS_ENTER_ST(mutex, st)                            \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_;                                                   \
+            MPIR_Assert(st.owner != 0);                                 \
+            MPIR_Assert(st.count > 0);                                  \
+            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPIR_Assert(err_ == 0);                                     \
+            MPIR_Assert(mutex.count == 0);                              \
+            /* restore mutex state */                                   \
+            mutex.owner = st.owner;                                     \
+            mutex.count = st.count;                                     \
+        }                                                               \
+    } while (0)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL    MPIDUI_THREAD_CS_ENTER_ST
+#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+
+#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_ST(mutex)
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL MPIDUI_THREAD_CS_ENTER_ST
+#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) MPIDUI_THREAD_CS_ENTER_ST(mutex)
+
+#endif /* MPICH_THREAD_GRANULARITY */
+
+#else /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -184,22 +247,23 @@ M*/
 #define MPIDUI_THREAD_CS_TRYENTER_REC(mutex, cs_req)                    \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int rec_err_ = 0;                                           \
-            MPIR_Per_thread_t *per_thread = NULL;                       \
-                                                                        \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive try locking mutex"); \
-            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
-                                         MPIR_Per_thread, per_thread, &rec_err_); \
-            MPIR_Assert(rec_err_ == 0);                                 \
-                                                                        \
-            if (per_thread->lock_depth == 0) {                          \
+            int equal_ = 0;                                             \
+            MPL_thread_id_t self_;                                      \
+            MPL_thread_self(&self_);                                    \
+            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
+            if (!equal_) {                                               \
                 int err_ = 0;                                           \
                 MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);     \
                 MPIR_Assert(err_ == 0);                                 \
-                if (cs_acq)                                              \
-                    per_thread->lock_depth++;                           \
-            } else                                                      \
-                per_thread->lock_depth++;                               \
+                if (cs_acq) {                                           \
+                    MPIR_Assert(mutex.count == 0);                      \
+                    MPL_thread_self(&mutex.owner);                      \
+                    mutex.count++;                                      \
+                }                                                       \
+            } else {                                                    \
+                cs_req = 1;                                             \
+                mutex.count++;                                          \
+            }                                                           \
         }                                                               \
     } while (0)
 
@@ -222,7 +286,7 @@ M*/
 #define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_NREC(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -263,22 +327,15 @@ M*/
 #define MPIDUI_THREAD_CS_EXIT_REC(mutex)                                \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int rec_err_ = 0;                                           \
-            MPIR_Per_thread_t *per_thread = NULL;                              \
-                                                                        \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking GLOBAL mutex"); \
-            MPIR_Assert(rec_err_ == 0);                                 \
-            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
-                                         MPIR_Per_thread, per_thread, &rec_err_); \
-            MPIR_Assert(rec_err_ == 0);                                 \
-                                                                        \
-            if (per_thread->lock_depth == 1) {                          \
+            mutex.count--;                                              \
+            MPIR_Assert(mutex.count >= 0);                              \
+            if (mutex.count == 0) {                                     \
+                mutex.owner = 0;                                        \
                 int err_ = 0;                                           \
                 MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
                 MPIDU_Thread_mutex_unlock(&mutex, &err_);               \
                 MPIR_Assert(err_ == 0);                                 \
             }                                                           \
-            per_thread->lock_depth--;                                   \
         }                                                               \
     } while (0)
 
@@ -301,7 +358,7 @@ M*/
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL MPIDUI_THREAD_CS_EXIT_REC
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) MPIDUI_THREAD_CS_EXIT_NREC(mutex)
+#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -314,6 +371,61 @@ M*/
 
 #endif /* MPICH_IS_THREADED */
 
+/* Stateful non-recursive version of CS_EXIT.
+ * It takes a MPIDU_thread_state_t variable to pass the state between
+ * ENTER and EXIT. */
+
+#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st) MPIDUI_THREAD_CS_EXIT_ST_##name(mutex,st)
+
+#if defined(MPICH_IS_THREADED)
+
+#define MPIDUI_THREAD_CS_EXIT_ST(mutex, st)                             \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_;                                                   \
+            MPIR_Assert(mutex.owner != 0);                              \
+            MPIR_Assert(mutex.count > 0);                               \
+            /* save current mutex state */                              \
+            st.owner = mutex.owner;                                     \
+            st.count = mutex.count;                                     \
+            mutex.owner = 0;                                            \
+            mutex.count = 0;                                            \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+
+#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL    MPIDUI_THREAD_CS_EXIT_ST
+#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+
+#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex)  MPIDUI_THREAD_CS_EXIT_ST(mutex)
+#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL MPIDUI_THREAD_CS_EXIT_ST
+#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) MPIDUI_THREAD_CS_EXIT_ST(mutex)
+
+#endif /* MPICH_THREAD_GRANULARITY */
+
+#else /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
 
 /*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
     to other threads
@@ -362,12 +474,11 @@ M*/
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)                            \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPIR_Per_thread_t *per_thread = NULL;                       \
-            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
-                                         MPIR_Per_thread, per_thread, &err_); \
-            MPIR_Assert(err_ == 0);                                     \
-            if (per_thread->lock_depth > 0) {                           \
+            int err_ = 0, equal_ = 0;                                   \
+            MPL_thread_id_t self_;                                      \
+            MPL_thread_self(&self_);                                    \
+            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
+            if (equal_ && mutex.count > 0) {                            \
                 MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
                 MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
                 MPIDU_Thread_yield(&mutex, &err_);                          \
@@ -376,6 +487,7 @@ M*/
             }                                                           \
         }                                                               \
     } while (0)
+#define MPIDUI_THREAD_CS_YIELD_VNI(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
 #define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
@@ -442,12 +554,20 @@ M*/
 @*/
 #define MPIDU_Thread_yield(mutex_ptr_, err_ptr_)                        \
     do {                                                                \
+        int saved_count_ = (mutex_ptr_)->count;                         \
+        MPL_thread_id_t saved_owner_ = (mutex_ptr_)->owner;             \
+        MPIR_Assert(saved_count_ > 0);                                  \
         if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
             break;                                                      \
+        (mutex_ptr_)->count = 0;                                        \
+        (mutex_ptr_)->owner = 0;                                        \
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_thread_yield();                                             \
         MPIDU_Thread_mutex_lock_l(mutex_ptr_, err_ptr_);                \
+        MPIR_Assert((mutex_ptr_)->count == 0);                          \
+        (mutex_ptr_)->count = saved_count_;                             \
+        (mutex_ptr_)->owner = saved_owner_;                             \
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -541,7 +661,9 @@ do {                                                                    \
 #define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_)                 \
     do {                                                                \
         OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
-        MPIDUI_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);        \
+        (mutex_ptr_)->owner = 0;                                        \
+        (mutex_ptr_)->count = 0;                                        \
+        MPIDUI_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);     \
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIDUI_thread_mutex %p", (mutex_ptr_)); \
     } while (0)
@@ -666,12 +788,18 @@ do {                                                                    \
 @*/
 #define MPIDU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)         \
     do {                                                                \
+        int saved_count_ = (mutex_ptr_)->count;                         \
+        MPL_thread_id_t saved_owner_ = (mutex_ptr_)->owner;              \
+        (mutex_ptr_)->count = 0;                                        \
+        (mutex_ptr_)->owner = 0;                                        \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
         MPL_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPL_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
         MPIDUI_thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
         MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_wait failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
         MPL_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPL_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
+        (mutex_ptr_)->count = saved_count_;                             \
+        (mutex_ptr_)->owner = saved_owner_;                             \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
