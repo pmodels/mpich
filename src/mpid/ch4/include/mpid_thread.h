@@ -34,9 +34,12 @@ typedef MPIDI_CH4_Ticket_lock MPID_Thread_mutex_t;
 #define MPID_Thread_cond_wait      MPIDI_CH4I_Thread_cond_wait
 #else
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
+typedef MPIDU_thread_mutex_state_t MPID_Thread_mutex_state_t;
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 #define MPID_THREAD_CS_TRYENTER    MPIDU_THREAD_CS_TRYENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
+#define MPID_THREAD_CS_ENTER_ST    MPIDU_THREAD_CS_ENTER_ST
+#define MPID_THREAD_CS_EXIT_ST     MPIDU_THREAD_CS_EXIT_ST
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
 #define MPID_THREAD_SAFE_BEGIN(name, mutex, cs_acq)                     \
