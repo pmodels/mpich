@@ -54,19 +54,103 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
     pt2pt_elemt->processed = processed;
-    pt2pt_elemt->pt2pt.send_buf = send_buf;
-    pt2pt_elemt->pt2pt.recv_buf = recv_buf;
-    pt2pt_elemt->pt2pt.count = count;
-    pt2pt_elemt->pt2pt.datatype = datatype;
-    pt2pt_elemt->pt2pt.rank = rank;
-    pt2pt_elemt->pt2pt.tag = tag;
-    pt2pt_elemt->pt2pt.comm_ptr = comm_ptr;
-    pt2pt_elemt->pt2pt.context_offset = context_offset;
-    pt2pt_elemt->pt2pt.addr = addr;
-    pt2pt_elemt->pt2pt.status = status;
-    pt2pt_elemt->pt2pt.request = request;
-    pt2pt_elemt->pt2pt.flag = flag;
-    pt2pt_elemt->pt2pt.message = message;
+
+    /* Find what type of work descriptor (wd) this element is and populate
+     * it accordingly. */
+
+    switch (op) {
+        case SEND:
+        case ISEND:
+        case SSEND:
+        case ISSEND:
+        case RSEND:
+        case IRSEND:
+            {
+                struct MPIDI_workq_send *wd = &pt2pt_elemt->params.pt2pt.send;
+                wd->send_buf = send_buf;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->rank = rank;
+                wd->tag = tag;
+                wd->comm_ptr = comm_ptr;
+                wd->context_offset = context_offset;
+                wd->addr = addr;
+                wd->request = request;
+                break;
+            }
+        case RECV:
+            {
+                struct MPIDI_workq_recv *wd = &pt2pt_elemt->params.pt2pt.recv;
+                wd->recv_buf = recv_buf;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->rank = rank;
+                wd->tag = tag;
+                wd->comm_ptr = comm_ptr;
+                wd->context_offset = context_offset;
+                wd->addr = addr;
+                wd->status = status;
+                wd->request = request;
+                break;
+            }
+        case IRECV:
+            {
+                struct MPIDI_workq_irecv *wd = &pt2pt_elemt->params.pt2pt.irecv;
+                wd->recv_buf = recv_buf;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->rank = rank;
+                wd->tag = tag;
+                wd->comm_ptr = comm_ptr;
+                wd->context_offset = context_offset;
+                wd->addr = addr;
+                wd->request = request;
+                break;
+            }
+        case IPROBE:
+            {
+                struct MPIDI_workq_iprobe *wd = &pt2pt_elemt->params.pt2pt.iprobe;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->rank = rank;
+                wd->tag = tag;
+                wd->comm_ptr = comm_ptr;
+                wd->context_offset = context_offset;
+                wd->addr = addr;
+                wd->status = status;
+                wd->request = request;
+                wd->flag = flag;
+                break;
+            }
+        case IMPROBE:
+            {
+                struct MPIDI_workq_improbe *wd = &pt2pt_elemt->params.pt2pt.improbe;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->rank = rank;
+                wd->tag = tag;
+                wd->comm_ptr = comm_ptr;
+                wd->context_offset = context_offset;
+                wd->addr = addr;
+                wd->status = status;
+                wd->request = request;
+                wd->flag = flag;
+                wd->message = message;
+                break;
+            }
+        case IMRECV:
+            {
+                struct MPIDI_workq_imrecv *wd = &pt2pt_elemt->params.pt2pt.imrecv;
+                wd->buf = recv_buf;
+                wd->count = count;
+                wd->datatype = datatype;
+                wd->message = message;
+                wd->request = request;
+                break;
+            }
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIDI_workq_enqueue(workq, pt2pt_elemt);
 }
@@ -95,23 +179,42 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
     rma_elemt = MPIDI_workq_elemt_create();
     rma_elemt->op = op;
     rma_elemt->processed = processed;
-    rma_elemt->rma.origin_addr = origin_addr;
-    rma_elemt->rma.origin_count = origin_count;
-    rma_elemt->rma.origin_datatype = origin_datatype;
-    rma_elemt->rma.result_addr = result_addr;
-    rma_elemt->rma.result_count = result_count;
-    rma_elemt->rma.result_datatype = result_datatype;
-    rma_elemt->rma.target_rank = target_rank;
-    rma_elemt->rma.target_disp = target_disp;
-    rma_elemt->rma.target_count = target_count;
-    rma_elemt->rma.target_datatype = target_datatype;
-    rma_elemt->rma.acc_op = acc_op;
-    rma_elemt->rma.group = group;
-    rma_elemt->rma.lock_type = lock_type;
-    rma_elemt->rma.assert = assert;
-    rma_elemt->rma.win_ptr = win_ptr;
-    rma_elemt->rma.addr = addr;
 
+    /* Find what type of work descriptor (wd) this element is and populate
+     * it accordingly. */
+
+    switch (op) {
+        case PUT:
+            {
+                struct MPIDI_workq_put *wd = &rma_elemt->params.rma.put;
+                wd->origin_addr = origin_addr;
+                wd->origin_count = origin_count;
+                wd->origin_datatype = origin_datatype;
+                wd->target_rank = target_rank;
+                wd->target_disp = target_disp;
+                wd->target_count = target_count;
+                wd->target_datatype = target_datatype;
+                wd->win_ptr = win_ptr;
+                wd->addr = addr;
+                break;
+            }
+        case GET:
+            {
+                struct MPIDI_workq_get *wd = &rma_elemt->params.rma.get;
+                wd->origin_addr = result_addr;
+                wd->origin_count = origin_count;
+                wd->origin_datatype = origin_datatype;
+                wd->target_rank = target_rank;
+                wd->target_disp = target_disp;
+                wd->target_count = target_count;
+                wd->target_datatype = target_datatype;
+                wd->win_ptr = win_ptr;
+                wd->addr = addr;
+                break;
+            }
+        default:
+            MPIR_Assert(0);
+    }
     MPIDI_workq_enqueue(workq, rma_elemt);
 }
 
