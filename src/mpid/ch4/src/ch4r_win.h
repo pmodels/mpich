@@ -557,7 +557,9 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
                                               &all_local_completed);
     } while (all_local_completed != 1);
@@ -712,7 +714,9 @@ static inline int MPIDI_CH4R_mpi_win_test(MPIR_Win * win, int *flag)
         MPIR_Group_release(group);
         MPIDI_CH4U_WIN(win, sync).exposure_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     } else {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
         *flag = 0;
     }
 
@@ -827,7 +831,9 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
     if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
@@ -1145,7 +1151,9 @@ static inline int MPIDI_CH4R_mpi_win_fence(int massert, MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
     MPIDI_CH4U_EPOCH_FENCE_EVENT(win, massert);
 
@@ -1161,7 +1169,12 @@ static inline int MPIDI_CH4R_mpi_win_fence(int massert, MPIR_Win * win)
      * MPI_Win_fence(MODE_NOPRECEDE)   MPI_Win_fence(MODE_NOPRECEDE)
      * MPI_Get(from rank 1)
      */
+    /* MPIR_Barrier's state is protected by ALLFUNC_MUTEX.
+     * In VNI granularity, individual send/recv/wait operations will take
+     * the VNI lock internally. */
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FENCE);
@@ -1634,7 +1647,9 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
     }
 
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     } while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
   fn_exit:
@@ -1673,7 +1688,9 @@ static inline int MPIDI_CH4R_mpi_win_flush_local_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
     } while (all_local_completed != 1);
 
@@ -1717,7 +1734,9 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
     } while (all_remote_completed != 1);
 
@@ -1841,7 +1860,9 @@ static inline int MPIDI_CH4R_mpi_win_flush_local(int rank, MPIR_Win * win)
     }
 
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     } while (target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
 
   fn_exit:
@@ -1897,7 +1918,9 @@ static inline int MPIDI_CH4R_mpi_win_flush_all(MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
 
         /* FIXME: now we simply set per-target counters for lockall in case
          * user flushes per target, but this should be optimized. */
