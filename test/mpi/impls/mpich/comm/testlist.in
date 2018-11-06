@@ -1,0 +1,7 @@
+# To add a ch4 comm hints support test:
+# start with @ch4_commhints_tests_enabled@
+# e.g., @ch4_commhints_tests_enabled@comm_infokey_hint_support -comminfohint=<hint_name> -value=<val>
+@ch4_commhints_tests_enabled@comm_infokey_hint_support 1 arg=-comminfohint=mpi_assert_no_any_source arg=-value=true arg=-hintmutable=false
+@ch4_commhints_tests_enabled@comm_infokey_hint_support 1 arg=-comminfohint=mpi_assert_no_any_tag arg=-value=true arg=-hintmutable=false
+@ch4_commhints_tests_enabled@comm_infokey_hint_support 1 arg=-comminfohint=mpi_assert_allow_overtaking arg=-value=true arg=-hintmutable=false
+@ch4_commhints_tests_enabled@comm_infokey_hint_support 1 arg=-comminfohint=mpi_assert_exact_length arg=-value=true arg=-hintmutable=false
