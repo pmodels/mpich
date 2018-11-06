@@ -997,7 +997,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         utarray_free(MPIDI_Global.rma_sep_idx_array);
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
     }
-    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.rma_stx_ctx != NULL)
+    if (MPIDI_Global.rma_stx_ctx != NULL)
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
