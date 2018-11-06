@@ -24,16 +24,10 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 
-    if (ucp_request->req) {
+    if (ucp_request->req)
         rreq = ucp_request->req;
-        MPIDI_CH4U_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    } else {
+    else
         rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_cc_set(&rreq->cc, 0);
-        ucp_request->req = rreq;
-    }
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -48,6 +42,22 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
         rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
         MPIR_STATUS_SET_COUNT(rreq->status, count);
     }
+
+#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
+    /* FIXME: is this too strong? The reason a barrier is needed in fine-grained locking
+     * is to avoid detecting request completion before changes to rreq->status is visible.*/
+    OPA_read_write_barrier();
+#endif
+
+    if (ucp_request->req) {
+        MPIDI_CH4U_request_complete(rreq);
+        ucp_request->req = NULL;
+        ucp_request_release(ucp_request);
+    } else {
+        MPIR_cc_set(&rreq->cc, 0);
+        ucp_request->req = rreq;
+    }
+
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 }
@@ -141,8 +151,12 @@ static inline int MPIDI_UCX_recv(void *buf,
         if (req == NULL) {
             req = ucp_request->req;
         } else {
-            MPIR_cc_set(&req->cc, 0);
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
+#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
+            /* FIXME: is this too strong? same reason as in the above callback */
+            OPA_read_write_barrier();
+#endif
+            MPIR_cc_set(&req->cc, 0);
             MPIR_Request_free((MPIR_Request *) ucp_request->req);
         }
         ucp_request->req = NULL;
