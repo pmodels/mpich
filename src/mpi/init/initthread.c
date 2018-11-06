@@ -304,6 +304,8 @@ int MPIR_Thread_CS_Finalize(void)
 #error Unrecognized thread granularity
 #endif
 
+    MPID_CS_finalize();
+
     MPID_THREADPRIV_KEY_DESTROY;
 
     return MPI_SUCCESS;
