@@ -64,18 +64,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
             MPIR_ERR_POP(mpi_errno);
         }
         /* cancel the shm request if netmod/am handles the request from unexpected queue. */
-        else if (*request) {
-            if (MPIR_Request_is_complete(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request))) {
-                mpi_errno = MPIDI_SHM_mpi_cancel_recv(*request);
-                if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
-                    (*request)->status = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)->status;
-                }
-                MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request));
-                goto fn_exit;
+        if (MPIR_Request_is_complete(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request))) {
+            mpi_errno = MPIDI_SHM_mpi_cancel_recv(*request);
+            if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
+                (*request)->status = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)->status;
             }
-            MPIDI_CH4I_REQUEST(*request, is_local) = 1;
-            MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
+            MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request));
+            goto fn_exit;
         }
+        MPIDI_CH4I_REQUEST(*request, is_local) = 1;
+        MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
 
         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
             *request;
