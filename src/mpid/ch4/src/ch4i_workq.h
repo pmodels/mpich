@@ -41,7 +41,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, MPI_Aint, MPI_Datatype, 
                                                 MPIR_Request **);
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *,
                                                  MPIR_Request **);
-
+MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *, int, MPI_Datatype, int, MPI_Aint, int,
+                                              MPI_Datatype, MPIR_Win *);
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *, int, MPI_Datatype, int, MPI_Aint, int,
+                                              MPI_Datatype, MPIR_Win *);
 MPL_STATIC_INLINE_PREFIX struct MPIDI_workq_elemt *MPIDI_workq_elemt_create(void)
 {
     return MPIR_Handle_obj_alloc(&MPIDI_workq_elemt_mem);
@@ -181,6 +184,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                                                       const void *origin_addr,
                                                       int origin_count,
                                                       MPI_Datatype origin_datatype,
+                                                      const void *compare_addr,
                                                       void *result_addr,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
@@ -250,7 +254,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
-    MPI_Datatype datatype;
+    MPI_Datatype datatype, origin_datatype, target_datatype;
 
     MPIR_Assert(workq_elemt != NULL);
 
@@ -326,6 +330,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
 #endif
                     MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+                break;
+            }
+        case PUT:{
+                struct MPIDI_workq_put *wd = &workq_elemt->params.rma.put;
+                origin_datatype = wd->origin_datatype;
+                target_datatype = wd->target_datatype;
+                MPIDI_put_unsafe(wd->origin_addr, wd->origin_count, wd->origin_datatype,
+                                 wd->target_rank, wd->target_disp,
+                                 wd->target_count, wd->target_datatype, wd->win_ptr);
+                MPIR_Datatype_release_if_not_builtin(origin_datatype);
+                MPIR_Datatype_release_if_not_builtin(target_datatype);
+                MPIDI_workq_elemt_free(workq_elemt);
+                break;
+            }
+        case GET:{
+                struct MPIDI_workq_get *wd = &workq_elemt->params.rma.get;
+                origin_datatype = wd->origin_datatype;
+                target_datatype = wd->target_datatype;
+                MPIDI_get_unsafe(wd->origin_addr, wd->origin_count, wd->origin_datatype,
+                                 wd->target_rank, wd->target_disp,
+                                 wd->target_count, wd->target_datatype, wd->win_ptr);
+                MPIR_Datatype_release_if_not_builtin(origin_datatype);
+                MPIR_Datatype_release_if_not_builtin(target_datatype);
+                MPIDI_workq_elemt_free(workq_elemt);
                 break;
             }
         default:
