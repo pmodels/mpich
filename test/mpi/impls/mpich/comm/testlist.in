@@ -1,0 +1,3 @@
+# To add a ch4 comm hints support test:
+# start with @ch4_commhints_tests_enabled@
+# e.g., @ch4_commhints_tests_enabled@comm_infokey_hint_support -comminfohint=<hint_name> -value=<val>
