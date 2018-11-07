@@ -300,11 +300,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_win_set_info(MPIR_Win * win, MPIR_Info *
                 if (max_bytes >= 0)
                     MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = max_bytes;
             }
-        } else if (is_init && !strcmp(curr_ptr->key, "use_hw_accumulate")) {
+        } else if (is_init && !strcmp(curr_ptr->key, "disable_shm_accumulate")) {
             if (!strcmp(curr_ptr->value, "true"))
-                MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate = true;
+                MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate = true;
             else
-                MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate = false;
+                MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate = false;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -411,7 +411,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
         MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops |= (1 << op_shift);
     MPIDI_CH4U_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDI_CH4U_WIN(win, info_args).accumulate_max_bytes = -1;
-    MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate = false;
+    MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate = false;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = MPIDI_CH4I_win_set_info(win, info, TRUE /* is_init */);
@@ -995,10 +995,10 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
     if (MPI_SUCCESS != mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (MPIDI_CH4U_WIN(win, info_args).use_hw_accumulate)
-        mpi_errno = MPIR_Info_set_impl(*info_p_p, "use_hw_accumulate", "true");
+    if (MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "true");
     else
-        mpi_errno = MPIR_Info_set_impl(*info_p_p, "use_hw_accumulate", "false");
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
     if (MPI_SUCCESS != mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
