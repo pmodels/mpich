@@ -719,6 +719,14 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
 fi
 AC_SUBST(largetest)
 
+# Enable comm hints support tests for ch4
+device_name=`echo $with_device | sed -e 's/:.*$//'`
+ch4_commhints_tests_enabled="#"
+if test "$device_name" = "ch4" ; then
+    ch4_commhints_tests_enabled=""
+fi
+AC_SUBST(ch4_commhints_tests_enabled)
+
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
    test "x$enable_long_double_complex" = "xyes" && \
