@@ -264,7 +264,7 @@ typedef struct MPIDI_CH4U_win_info_args_t {
     bool accumulate_noncontig_dtype;    /* true by default. */
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
-    bool use_hw_accumulate;     /* false by default. */
+    bool disable_shm_accumulate;        /* false by default. */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.

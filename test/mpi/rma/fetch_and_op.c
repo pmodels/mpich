@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 
 #ifdef TEST_HWACC_INFO
     MPI_Info_create(&info);
-    MPI_Info_set(info, "use_hw_accumulate", "true");
+    MPI_Info_set(info, "disable_shm_accumulate", "true");
 #endif
 
 #ifdef TEST_ACCOPS_INFO
