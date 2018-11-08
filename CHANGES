@@ -32,6 +32,11 @@
    communicators by machine topology. Both on-node (socket, core,
    etc.) and off-node (switch-level) hints are defined.
 
+ # Improvements to MPI_THREAD_MULTIPLE in CH4 through new thread safety
+   models at the Virtual Network Interface (VNI) level. This introduces two
+   new models that leverage work-queues to offload operations and improve
+   scalability under contention.
+
  # Message Driven Thread Activation (MDTA). An alternative locking
    model is defined for MPI_THREAD_MULTIPLE in CH4.
 
