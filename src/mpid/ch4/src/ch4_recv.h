@@ -118,16 +118,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-
+        MPIR_Assert(*request);
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
                                        &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)));
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
-        } else if (*request) {
-            MPIDI_CH4I_REQUEST(*request, is_local) = 1;
-            MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
         }
+        MPIDI_CH4I_REQUEST(*request, is_local) = 1;
+        MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
 
         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
             *request;
@@ -140,7 +139,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
             mpi_errno =
                 MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
                                    request);
-        if (mpi_errno == MPI_SUCCESS && *request) {
+        if (mpi_errno == MPI_SUCCESS) {
+            MPIR_Assert(*request);
             MPIDI_CH4I_REQUEST(*request, is_local) = r;
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
