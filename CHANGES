@@ -7,9 +7,6 @@
    and POSIX shared memory. Thanks to Intel, Mellanox, and RIKEN AICS for
    participating in the CH4 coding effort.
 
- # Added support for splitting communicators based on hardware
-   topology using info hints.
-
  # Fixed SLURM integration in Hydra for new node list format.
 
  # Added support for PMIx (https://pmix.github.io/pmix/) client
