@@ -109,9 +109,36 @@ typedef struct {
         (sreq_)->u.persist.real_request   = NULL;               \
     }
 
+#define MPIDI_POSIX_REQUEST_CREATE_COND_SREQ(sreq_)             \
+    {                                                           \
+        if ((sreq_) == NULL)                                     \
+            (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND); \
+        MPIR_ERR_CHKANDSTMT((sreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
+        MPIR_Request_add_ref((sreq_));                          \
+        (sreq_)->u.persist.real_request   = NULL;               \
+    }
+
+#define MPIDI_POSIX_REQUEST_COMPLETE_COND_SREQ(sreq_)           \
+    {                                                           \
+        if ((sreq_) != NULL) {                                   \
+            int c;                                              \
+            MPIR_cc_decr((sreq_)->cc_ptr, &c);                  \
+        }                                                       \
+    }
+
+
 #define MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq_)                  \
     {                                                           \
         (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV); \
+        MPIR_ERR_CHKANDSTMT((rreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
+        MPIR_Request_add_ref((rreq_));                          \
+        (rreq_)->u.persist.real_request   = NULL;               \
+    }
+
+#define MPIDI_POSIX_REQUEST_CREATE_COND_RREQ(rreq_)             \
+    {                                                           \
+        if ((rreq_) == NULL)                                     \
+            (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV); \
         MPIR_ERR_CHKANDSTMT((rreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((rreq_));                          \
         (rreq_)->u.persist.real_request   = NULL;               \

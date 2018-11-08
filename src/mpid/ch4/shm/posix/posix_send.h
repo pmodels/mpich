@@ -45,7 +45,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_isend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    MPIDI_POSIX_REQUEST_CREATE_SREQ(sreq);
+    MPIDI_POSIX_REQUEST_CREATE_COND_SREQ(*request);
+    sreq = *request;
     sreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(sreq), comm->rank, tag,
@@ -74,7 +75,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_isend(const void *buf,
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     /* enqueue sreq */
     MPIDI_POSIX_REQUEST_ENQUEUE(sreq, MPIDI_POSIX_sendq);
-    *request = sreq;
     MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
                     (MPL_DBG_FDEST,
                      "Enqueued to grank %d from %d (comm_kind %d) in recv %d,%d,%d\n",
@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_send(const void *buf, MPI_Aint coun
             MPIR_Memcpy((void *) cell->pkt.mpich.p.payload, (char *) buf + dt_true_lb, data_sz);
             cell->pending = NULL;
             MPIDI_POSIX_queue_enqueue(MPIDI_POSIX_mem_region.RecvQ[grank], cell);
-            *request = NULL;
+            MPIDI_POSIX_REQUEST_COMPLETE_COND_SREQ(*request);
             MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
                             (MPL_DBG_FDEST, "Sent to grank %d from %d in send %d,%d,%d\n", grank,
                              cell->my_rank, cell->rank, cell->tag, cell->context_id));
