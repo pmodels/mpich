@@ -2262,15 +2262,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function *query_fn,
                         MPIX_Grequest_wait_function *wait_fn, void *extra_state,
                         MPI_Request *request) MPICH_API_PUBLIC;
 
-/* RMA Mutexes Extensions */
-struct mpixi_mutex_s;
-typedef struct mpixi_mutex_s * MPIX_Mutex;
-int MPIX_Mutex_create(int count, MPI_Comm comm, MPIX_Mutex *hdl) MPICH_API_PUBLIC;
-int MPIX_Mutex_free(MPIX_Mutex *hdl) MPICH_API_PUBLIC;
-int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) MPICH_API_PUBLIC;
-int MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) MPICH_API_PUBLIC;
-
-
 #if !defined(MPI_BUILD_PROFILING)
 /* Generalized requests extensions */
 int PMPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
@@ -2287,12 +2278,6 @@ int PMPIX_Grequest_start(MPI_Grequest_query_function *query_fn,
                          MPIX_Grequest_poll_function *poll_fn,
                          MPIX_Grequest_wait_function *wait_fn, void *extra_state,
                          MPI_Request *request) MPICH_API_PUBLIC;
-
-/* RMA Mutexes Extensions */
-int PMPIX_Mutex_create(int count, MPI_Comm comm, MPIX_Mutex *hdl) MPICH_API_PUBLIC;
-int PMPIX_Mutex_free(MPIX_Mutex *hdl) MPICH_API_PUBLIC;
-int PMPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) MPICH_API_PUBLIC;
-int PMPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) MPICH_API_PUBLIC;
 #endif /* MPI_BUILD_PROFILING */
 
 #endif
