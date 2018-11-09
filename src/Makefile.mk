@@ -14,7 +14,6 @@ include $(top_srcdir)/src/env/Makefile.mk
 include $(top_srcdir)/src/glue/Makefile.mk
 include $(top_srcdir)/src/include/Makefile.mk
 include $(top_srcdir)/src/mpid/Makefile.mk
-include $(top_srcdir)/src/mutex/Makefile.mk
 include $(top_srcdir)/src/mpi_t/Makefile.mk
 include $(top_srcdir)/src/nameserv/Makefile.mk
 include $(top_srcdir)/src/packaging/Makefile.mk
