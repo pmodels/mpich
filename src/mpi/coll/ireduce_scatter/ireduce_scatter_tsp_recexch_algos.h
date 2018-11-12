@@ -31,11 +31,10 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     int in_step2;
     int *step1_recvfrom = NULL;
     int **step2_nbrs = NULL;
-    int nranks, rank, p_of_k, T, dst;
-    int total_count, send_cnt, recv_cnt, current_cnt;
-    int i, j, phase, offset, rank_for_offset, send_offset, recv_offset;
-    int dtcopy_id = -1, send_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
-    int nvtcs, vtcs[2];
+    int nranks, rank, p_of_k, T;
+    int total_count;
+    int dtcopy_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
+    int i, nvtcs, vtcs[2];
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int *displs;
     int tag;
