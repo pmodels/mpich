@@ -98,7 +98,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
 #define FUNCNAME MPIDI_irecv_unsafe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(int transport,
+                                                void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
                                                 int rank,
@@ -110,12 +111,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_UNSAFE);
 
+    MPIR_Assert((transport & (MPIDI_NETMOD | MPIDI_SHM)) != 0);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
-    if (unlikely(rank == MPI_ANY_SOURCE)) {
+    /* There is a case where a caller wants to disable ANY_SOURCE partner logic in MPID_Irecv.
+     * (See MPIDIG_mpi_startall, where SHM/NM partner logic is already handled in the persistent
+     * request level, so having the partner logic here would be redundant.)
+     * So enable the partner logic only when the caller explicitly requests it by passing
+     * `MPIDI_TRANSPORT_ALL`. */
+    if (unlikely(transport == MPIDI_TRANSPORT_ALL && rank == MPI_ANY_SOURCE)) {
         mpi_errno =
             MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
 
@@ -148,17 +155,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
             MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)) = *request;
         }
     } else {
-        int r;
-        if ((r = MPIDI_av_is_local(av)))
+        int use_shm;
+
+        if (transport == MPIDI_TRANSPORT_ALL) {
+            /* Not ANY_SOURCE but the caller didn't restrict which transport to look at
+             * -- use locality information to decide the transport */
+            use_shm = MPIDI_av_is_local(av);
+        } else {
+            /* The caller restricts which transport to use. Just follow the order. */
+            use_shm = transport & MPIDI_SHM;
+        }
+
+        if (use_shm)
             mpi_errno =
                 MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
         else
             mpi_errno =
                 MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
                                    request);
-        if (mpi_errno == MPI_SUCCESS) {
-            MPIR_Assert(*request);
-            MPIDI_REQUEST(*request, is_local) = r;
+        if (mpi_errno == MPI_SUCCESS && *request) {
+            MPIDI_REQUEST(*request, is_local) = use_shm;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
     }
@@ -250,9 +266,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(RECV, NULL /*send_buf */ , buf, count, datatype,
-                                  rank, tag, comm, context_offset, av,
-                                  status, *req, NULL /*flag */ , NULL /*message */ ,
+        MPIDI_workq_pt2pt_enqueue(RECV, 0 /* transport */ , NULL /*send_buf */ , buf, count,
+                                  datatype,
+                                  rank, tag, comm, context_offset, av, status, *req,
+                                  NULL /*flag */ , NULL /*message */ ,
                                   NULL /*processed */);
     } else {
         *(req) = NULL;
@@ -275,7 +292,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
 #define FUNCNAME MPIDI_irecv_safe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(int transport,
+                                              void *buf,
                                               int count,
                                               MPI_Datatype datatype,
                                               int rank,
@@ -288,13 +306,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
+    MPIR_Assert((transport & (MPIDI_NETMOD | MPIDI_SHM)) != 0);
+
     MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
+        MPIDI_workq_pt2pt_enqueue(IRECV, transport, NULL /*send_buf */ , buf, count, datatype,
                                   rank, tag, comm, context_offset, av,
                                   NULL /*status */ , *req, NULL /*flag */ , NULL /*message */ ,
                                   NULL /*processed */);
@@ -302,7 +322,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
         *(req) = NULL;
         MPIDI_workq_vci_progress_unsafe();
         mpi_errno =
-            MPIDI_irecv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
+            MPIDI_irecv_unsafe(transport, buf, count, datatype, rank, tag, comm,
+                               context_offset, av, req);
     }
 
   fn_exit:
@@ -332,8 +353,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
         MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
-                                  0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
+        MPIDI_workq_pt2pt_enqueue(IMRECV, 0 /* transport */ , NULL /*send_buf */ , buf, count,
+                                  datatype, 0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
                                   0 /*context_offset */ , NULL /*av */ ,
                                   NULL /*status */ , request, NULL /*flag */ ,
                                   &message, NULL /*processed */);
@@ -564,21 +585,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Irecv
+#define FUNCNAME MPIDI_irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
-                                        MPI_Aint count,
-                                        MPI_Datatype datatype,
-                                        int rank,
-                                        int tag,
-                                        MPIR_Comm * comm, int context_offset,
-                                        MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(int transport,
+                                         void *buf,
+                                         MPI_Aint count,
+                                         MPI_Datatype datatype,
+                                         int rank,
+                                         int tag,
+                                         MPIR_Comm * comm, int context_offset,
+                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV);
+
+    MPIR_Assert((transport & (MPIDI_NETMOD | MPIDI_SHM)) != 0);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -594,17 +618,42 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    mpi_errno =
-        MPIDI_irecv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+    mpi_errno = MPIDI_irecv_safe(transport, buf, count, datatype,
+                                 rank, tag, comm, context_offset, av, request);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Irecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
+                                        MPI_Aint count,
+                                        MPI_Datatype datatype,
+                                        int rank,
+                                        int tag,
+                                        MPIR_Comm * comm, int context_offset,
+                                        MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
+
+    /* We want to enable the ANY_SOURCE partner logic inside Irecv, so pass `MPIDI_TRANSPORT_ALL`
+     * to say we want to look into both shmmod and netmod. */
+    mpi_errno = MPIDI_irecv(MPIDI_TRANSPORT_ALL, buf, count, datatype,
+                            rank, tag, comm, context_offset, request);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
+    return mpi_errno;
 }
 
 #undef FUNCNAME

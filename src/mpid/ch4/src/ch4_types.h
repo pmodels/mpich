@@ -110,11 +110,12 @@ enum {
     MPIDIG_EPOTYPE_LOCK_ALL = 6       /**< MPI_Win_lock_all access epoch */
 };
 
-/* Enum for calling types between netmod and shm */
+/* Enum (bit mask fields) for calling types between netmod and shm */
 enum {
-    MPIDI_NETMOD = 0,
-    MPIDI_SHM = 1
+    MPIDI_NETMOD = MPL_BIT(0),
+    MPIDI_SHM = MPL_BIT(1),
 };
+#define MPIDI_TRANSPORT_ALL (MPIDI_NETMOD | MPIDI_SHM)
 
 /* Enum for src buffer kind when computing accumulate op */
 enum {

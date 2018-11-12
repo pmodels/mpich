@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *, MPI_Aint, MPI_Dat
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
                                                MPIR_Comm *, int, MPIDI_av_entry_t *, MPI_Status *,
                                                MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(int, void *, MPI_Aint, MPI_Datatype, int, int,
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *,
@@ -56,6 +56,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *e
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
+                                                        int transport,
                                                         const void *send_buf,
                                                         void *recv_buf,
                                                         MPI_Aint count,
@@ -121,6 +122,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
         case IRECV:
             {
                 struct MPIDI_workq_irecv *wd = &pt2pt_elemt->params.pt2pt.irecv;
+                wd->transport = transport;
                 wd->recv_buf = recv_buf;
                 wd->count = count;
                 wd->datatype = datatype;
@@ -310,8 +312,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 struct MPIDI_workq_irecv *wd = &workq_elemt->params.pt2pt.irecv;
                 req = wd->request;
                 datatype = wd->datatype;
-                MPIDI_irecv_unsafe(wd->recv_buf, wd->count, wd->datatype, wd->rank, wd->tag,
-                                   wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                MPIDI_irecv_unsafe(wd->transport, wd->recv_buf, wd->count, wd->datatype, wd->rank,
+                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;

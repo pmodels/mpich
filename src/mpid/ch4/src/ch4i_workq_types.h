@@ -111,6 +111,7 @@ typedef struct MPIDI_workq_elemt {
                 MPIR_Request *request;
             } recv;
             struct MPIDI_workq_irecv {
+                int transport;
                 void *recv_buf;
                 MPI_Aint count;
                 MPI_Datatype datatype;
