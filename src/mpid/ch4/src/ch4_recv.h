@@ -95,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_irecv_unsafe
+#define FUNCNAME MPIDI_irecv_unsafe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
