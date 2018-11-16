@@ -75,6 +75,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request *
     MPIR_Request_add_ref(req);
 
     MPIDI_NM_am_request_init(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_am_request_init(req);
+#endif
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =
@@ -98,6 +101,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_copy(MPIR_Request * dest, MP
 
     MPIR_Assert(dest != NULL && src != NULL);
     MPIDI_NM_am_request_init(dest);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_am_request_init(dest);
+#endif
 
     MPIDI_CH4U_REQUEST(dest, req) = MPIDI_CH4U_REQUEST(src, req);;
     MPIDI_CH4U_REQUEST(dest, req->rreq.request) = (uint64_t) dest;
