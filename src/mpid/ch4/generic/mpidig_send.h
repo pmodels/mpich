@@ -45,7 +45,7 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
                 MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                                     "**nomemreq");
             } else {
-                MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND, 2);
+                MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND);
             }
             MPID_Request_complete((*request));
         }
@@ -56,7 +56,7 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
         sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
-        MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND, 2);
+        MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND);
     }
 
     *request = sreq;
