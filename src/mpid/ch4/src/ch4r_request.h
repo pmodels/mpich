@@ -65,17 +65,14 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request * req,
-                                                                  MPIR_Request_kind_t kind,
-                                                                  int ref_increment)
+                                                                  MPIR_Request_kind_t kind)
 {
-    int i;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
 
     MPIR_Assert(req != NULL);
-    for (i = 0; i < ref_increment - 1; i++)
-        MPIR_Request_add_ref(req);
+    /* Increment the refcount by one to account for the MPIDIG layer */
+    MPIR_Request_add_ref(req);
 
     MPIDI_NM_am_request_init(req);
 

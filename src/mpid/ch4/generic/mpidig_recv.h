@@ -182,7 +182,7 @@ static inline int MPIDI_do_irecv(void *buf,
 
     if (*request != NULL) {
         rreq = *request;
-        MPIDI_CH4I_am_request_init(rreq, MPIR_REQUEST_KIND__RECV, 2);
+        MPIDI_CH4I_am_request_init(rreq, MPIR_REQUEST_KIND__RECV);
     } else if (alloc_req) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
