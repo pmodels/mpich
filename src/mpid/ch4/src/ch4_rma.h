@@ -858,7 +858,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_safe(const void *origin_addr,
                                                        MPI_Datatype target_datatype, MPI_Op op,
                                                        MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
 
@@ -872,7 +872,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_safe(const void *origin_addr,
     MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VNI, MPIDI_CH4_Global.vni_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
     return mpi_errno;
   fn_fail:
