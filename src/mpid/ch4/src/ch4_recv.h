@@ -204,6 +204,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     else
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #endif
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CANCEL_RECV_UNSAFE);
@@ -358,6 +360,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
     mpi_errno = MPIDI_cancel_recv_unsafe(rreq);
 
     MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IRECV_SAFE);

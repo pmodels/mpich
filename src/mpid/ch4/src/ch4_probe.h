@@ -119,6 +119,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
 
     MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
 
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE_SAFE);
     return mpi_errno;
@@ -148,6 +151,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     mpi_errno = MPIDI_improbe_unsafe(source, tag, comm, context_offset, av, flag, message, status);
 
     MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE_SAFE);
