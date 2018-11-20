@@ -577,8 +577,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

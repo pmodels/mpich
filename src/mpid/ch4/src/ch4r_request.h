@@ -85,8 +85,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request *
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
     return req;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -114,8 +112,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_copy(MPIR_Request * dest, MP
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_COPY);
     return;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* This function should be called any time an anysource request is matched so
