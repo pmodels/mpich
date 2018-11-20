@@ -91,8 +91,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_improbe(int source,
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IMPROBE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_iprobe(int source,
@@ -139,8 +137,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_iprobe(int source,
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IPROBE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* POSIX_PROBE_H_INCLUDED */
