@@ -116,8 +116,6 @@ typedef struct MPIDI_workq_elemt {
                 MPIR_Request *request;
             } irecv;
             struct MPIDI_workq_iprobe {
-                MPI_Aint count;
-                MPI_Datatype datatype;
                 int rank;
                 int tag;
                 MPIR_Comm *comm_ptr;
@@ -128,8 +126,6 @@ typedef struct MPIDI_workq_elemt {
                 int *flag;
             } iprobe;
             struct MPIDI_workq_improbe {
-                MPI_Aint count;
-                MPI_Datatype datatype;
                 int rank;
                 int tag;
                 MPIR_Comm *comm_ptr;
@@ -158,7 +154,6 @@ typedef struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                struct MPIDI_av_entry *addr;
             } put;
             struct MPIDI_workq_get {
                 void *origin_addr;
@@ -169,7 +164,6 @@ typedef struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                struct MPIDI_av_entry *addr;
             } get;
         } rma;
     } params;
