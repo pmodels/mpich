@@ -135,8 +135,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
         case IPROBE:
             {
                 struct MPIDI_workq_iprobe *wd = &pt2pt_elemt->params.pt2pt.iprobe;
-                wd->count = count;
-                wd->datatype = datatype;
                 wd->rank = rank;
                 wd->tag = tag;
                 wd->comm_ptr = comm_ptr;
@@ -150,8 +148,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
         case IMPROBE:
             {
                 struct MPIDI_workq_improbe *wd = &pt2pt_elemt->params.pt2pt.improbe;
-                wd->count = count;
-                wd->datatype = datatype;
                 wd->rank = rank;
                 wd->tag = tag;
                 wd->comm_ptr = comm_ptr;
@@ -217,7 +213,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                 wd->target_count = target_count;
                 wd->target_datatype = target_datatype;
                 wd->win_ptr = win_ptr;
-                wd->addr = addr;
                 break;
             }
         case GET:
@@ -231,7 +226,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                 wd->target_count = target_count;
                 wd->target_datatype = target_datatype;
                 wd->win_ptr = win_ptr;
-                wd->addr = addr;
                 break;
             }
         default:
