@@ -45,7 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
             } else {
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
             }
-
         }
     }
     /* todo: progress unexp_list */
