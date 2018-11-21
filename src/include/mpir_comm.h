@@ -172,6 +172,10 @@ struct MPIR_Comm {
 
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
+    bool uniform_ranks;         /* Flag to that checks whether there
+                                 * are same number of processes across nodes or not */
+    int max_num_procs;          /* provides processes per node, to be used when processes per
+                                 * node is same across the nodes */
     MPIR_Info *info;            /* Hints to the communicator */
 
 #if defined HAVE_LIBHCOLL

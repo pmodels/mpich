@@ -104,6 +104,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->revoked = 0;
     comm_p->mapper_head = NULL;
     comm_p->mapper_tail = NULL;
+    comm_p->max_num_procs = -1;
+    comm_p->uniform_ranks = 1;
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     {
@@ -340,6 +342,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     int num_local = -1, num_external = -1;
     int local_rank = -1, external_rank = -1;
     int *local_procs = NULL, *external_procs = NULL;
+    int max_node_id, node_id, i, *nodemap = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
@@ -478,6 +481,30 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
     }
 
+    /* Topology information collection for selection logic */
+    mpi_errno = MPID_Get_max_node_id(comm, &max_node_id);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_Assert(max_node_id >= 0);
+    nodemap = MPL_calloc((max_node_id + 1), sizeof(int), MPL_MEM_OTHER);
+    for (i = 0; i < comm->remote_size; ++i) {
+        mpi_errno = MPID_Get_node_id(comm, i, &node_id);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(node_id >= 0);
+        nodemap[node_id]++;
+        if (comm->max_num_procs < nodemap[node_id]) {
+            comm->max_num_procs = nodemap[node_id];
+        }
+    }
+
+    for (i = 0; i <= max_node_id; i++) {
+        if (nodemap[i] < comm->max_num_procs) {
+            comm->uniform_ranks = 0;
+            break;
+        }
+    }
+
   fn_exit:
     if (comm == MPIR_Process.comm_world) {
         mpi_errno = MPID_Comm_create_hook(comm);
@@ -487,8 +514,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_Comm_map_free(comm);
     }
 
-    MPL_free(external_procs);
-    MPL_free(local_procs);
+    if (nodemap)
+        MPL_free(nodemap);
+
+    if (external_procs != NULL)
+        MPL_free(external_procs);
+    if (local_procs != NULL)
+        MPL_free(local_procs);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
     return mpi_errno;
