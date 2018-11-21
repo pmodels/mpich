@@ -36,7 +36,7 @@ void MPL_thread_yield();
 
 void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err);
 void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err);
-void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err);
+void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err, int prio);
 void MPL_thread_mutex_unlock(MPL_thread_mutex_t * mutex, int *err);
 
 void MPL_thread_cond_create(MPL_thread_cond_t * cond, int *err);

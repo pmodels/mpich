@@ -139,7 +139,7 @@ static MPL_thread_mutex_t memalloc_mutex;
     do {                                                                \
         if (TR_is_threaded) {                                           \
             int err_;                                                   \
-            MPL_thread_mutex_lock(&memalloc_mutex, &err_);              \
+            MPL_thread_mutex_lock(&memalloc_mutex, &err_, MPL_THREAD_PRIO_HIGH);\
             if (err_)                                                   \
                 MPL_error_printf("Error acquiring memalloc mutex lock\n"); \
         }                                                               \
