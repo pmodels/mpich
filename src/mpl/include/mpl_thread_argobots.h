@@ -14,6 +14,7 @@
 #include "abt.h"
 
 #include <errno.h>
+#include <assert.h>
 
 typedef ABT_mutex MPL_thread_mutex_t;
 typedef ABT_cond MPL_thread_cond_t;
@@ -61,10 +62,15 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         *(int *)(err_ptr_) = err__;                                           \
     } while (0)
 
-#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)                           \
+#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)                    \
     do {                                                                      \
         int err__;                                                            \
-        err__ = ABT_mutex_lock(*mutex_ptr_);                                  \
+        if (prio_ == MPL_THREAD_PRIO_HIGH) {                                  \
+            err__ = ABT_mutex_lock(*mutex_ptr_);                              \
+        } else {                                                              \
+            assert(prio_ == MPL_THREAD_PRIO_LOW);                             \
+            err__ = ABT_mutex_lock_low(*mutex_ptr_);                          \
+        }                                                                     \
         if (unlikely(err__))                                                  \
             MPL_internal_sys_error_printf("ABT_mutex_lock", err__,            \
                                           "    %s:%d\n", __FILE__, __LINE__); \
@@ -88,17 +94,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         }                                                               \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
-
-#define MPL_thread_mutex_lock_low(mutex_ptr_, err_ptr_)                       \
-    do {                                                                      \
-        int err__;                                                            \
-        err__ = ABT_mutex_lock_low(*mutex_ptr_);                              \
-        if (unlikely(err__))                                                  \
-            MPL_internal_sys_error_printf("ABT_mutex_lock_low", err__,        \
-                                          "    %s:%d\n", __FILE__, __LINE__); \
-        *(int *)(err_ptr_) = err__;                                           \
-    } while (0)
-
 
 #define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)                         \
     do {                                                                      \

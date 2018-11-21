@@ -103,7 +103,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
     } while (0)
 
 
-#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)                     \
+#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)              \
     do {                                                                \
         int err__;                                                      \
         err__ = pthread_mutex_lock(mutex_ptr_);                         \

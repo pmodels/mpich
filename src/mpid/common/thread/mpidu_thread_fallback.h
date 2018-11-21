@@ -107,7 +107,7 @@ M*/
             int err_ = 0;                                               \
             MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
             MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH); \
             MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
             MPIR_Assert(err_ == 0);                                     \
         }                                                               \
@@ -123,7 +123,7 @@ M*/
             MPL_thread_same(&self_, &owner_, &equal_);                  \
             if (!equal_) {                                              \
                 int err_ = 0;                                           \
-                MPIDU_Thread_mutex_lock(&mutex, &err_);                 \
+                MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
                 MPIR_Assert(err_ == 0);                                 \
                 MPIR_Assert(mutex.count == 0);                          \
                 MPL_thread_self(&mutex.owner);                          \
@@ -178,7 +178,7 @@ M*/
             int err_;                                                   \
             MPIR_Assert(st.owner != 0);                                 \
             MPIR_Assert(st.count > 0);                                  \
-            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
             MPIR_Assert(err_ == 0);                                     \
             MPIR_Assert(mutex.count == 0);                              \
             /* restore mutex state */                                   \
@@ -564,7 +564,7 @@ M*/
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_thread_yield();                                             \
-        MPIDU_Thread_mutex_lock_l(mutex_ptr_, err_ptr_);                \
+        MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, MPL_THREAD_PRIO_LOW);\
         MPIR_Assert((mutex_ptr_)->count == 0);                          \
         (mutex_ptr_)->count = saved_count_;                             \
         (mutex_ptr_)->owner = saved_owner_;                             \
@@ -579,10 +579,8 @@ M*/
     MPL_thread_mutex_create(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_mutex_destroy(mutex_ptr_, err_ptr_)               \
     MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_)
-#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
-    MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
-#define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
-    MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)           \
+    MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)
 #define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
     MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
@@ -608,17 +606,19 @@ do {                                                                    \
 do {                                                                    \
     *err_ptr_ = zm_lock_destroy(mutex_ptr_);                            \
 } while (0)
-#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
+#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)           \
 do {                                                                    \
-    *err_ptr_ = zm_lock_acquire(mutex_ptr_);                            \
+    if (prio_ == MPL_THREAD_PRIO_HIGH) {                        \
+        *err_ptr_ = zm_lock_acquire(mutex_ptr_);                        \
+    } else {                                                            \
+        MPIR_Assert(prio_ == MPL_THREAD_PRIO_LOW)               \
+        *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                      \
+    }
 } while (0)
+
 #define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
 do {                                                                    \
     *err_ptr_ = zm_lock_tryacq(mutex_ptr_, cs_acq_ptr_);                \
-} while (0)
-#define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
-do {                                                                    \
-    *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                          \
 } while (0)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
 do {                                                                    \
@@ -690,30 +690,13 @@ do {                                                                    \
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                   \
+#define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)            \
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
-        MPIDUI_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);          \
+        MPIDUI_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_, prio_);\
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
-        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
-    } while (0)
-
-/*@
-  MPIDU_Thread_lock_l - acquire a mutex with a low priority
-
-  Input Parameter:
-. mutex - mutex
-@*/
-
-#define MPIDU_Thread_mutex_lock_l(mutex_ptr_, err_ptr_)                 \
-    do {                                                                \
-        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_lock_l %p", &(mutex_ptr_)->mutex); \
-        MPIDUI_thread_mutex_lock_l(&(mutex_ptr_)->mutex, err_ptr_);     \
-        MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock_l %p", &(mutex_ptr_)->mutex); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
