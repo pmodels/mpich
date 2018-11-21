@@ -237,9 +237,9 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive try locking mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_trylock %p", &mutex); \
             MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);         \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_trylock %p", &mutex); \
             MPIR_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -702,10 +702,10 @@ do {                                                                    \
 
 #define MPIDU_Thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)       \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_trylock %p", &(mutex_ptr_)->mutex); \
         MPIDUI_thread_mutex_trylock(&(mutex_ptr_)->mutex, err_ptr_, cs_acq_ptr);\
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_trylock %p", &(mutex_ptr_)->mutex); \
     } while (0)
 
 /*@
