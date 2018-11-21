@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     assert(buf_size >= 0);
 
     /* Initialize */
-    ret = ABT_init(*argc, *argv);
+    ret = ABT_init(argc, argv);
     if (ret != ABT_SUCCESS) {
         printf("Failed to initialize Argobots\n");
         return EXIT_FAILURE;
