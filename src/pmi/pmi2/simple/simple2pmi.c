@@ -1325,7 +1325,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPL_thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked && !cmd->complete)
             MPL_thread_cond_wait(&cond, &mutex, &err);
@@ -1468,7 +1468,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPL_thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
@@ -1605,7 +1605,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPL_thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
 
         while (blocked)
             MPL_thread_cond_wait(&cond, &mutex, &err);
@@ -1633,7 +1633,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPL_thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err, MPL_THREAD_PRIO_HIGH);
         blocked = FALSE;
         MPL_thread_cond_broadcast(&cond, &err);
         MPL_thread_mutex_unlock(&mutex, &err);
