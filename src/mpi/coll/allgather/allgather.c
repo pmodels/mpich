@@ -114,7 +114,7 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint tot_bytes;
-    int type_size;
+    int type_size, max_node_id, threshold = 0;
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         return MPI_SUCCESS;
@@ -122,16 +122,44 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
     comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_size_macro(recvtype, type_size);
+    mpi_errno = MPID_Get_max_node_id(comm_ptr, &max_node_id);
 
     tot_bytes = (MPI_Aint) recvcount *comm_size * type_size;
-    if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        mpi_errno =
-            MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
-                                                    recvcount, recvtype, comm_ptr, errflag);
-    } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        mpi_errno =
-            MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                        comm_ptr, errflag);
+    if ((!(comm_ptr->uniform_ranks)) && !(comm_size & (comm_size - 1))) {
+        /* Use default selection logic */
+        if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
+            mpi_errno =
+                MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, errflag);
+        } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
+            mpi_errno =
+                MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                            recvtype, comm_ptr, errflag);
+        } else {
+            mpi_errno =
+                MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                          recvtype, comm_ptr, errflag);
+        }
+    } else {
+        /* Threshold Computation for new selection logic */
+        if ((((max_node_id + 1)) > 32) && (comm_ptr->max_num_procs <= (((max_node_id + 1)) / 32))) {
+            threshold = MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE;
+        } else {
+            threshold = (((max_node_id + 1)) * 32768) / comm_ptr->max_num_procs;
+        }
+    }
+
+    /* Use new selection logic */
+    if ((tot_bytes < threshold) || (((max_node_id + 1)) == 1)) {
+        if (!(comm_size & (comm_size - 1))) {
+            mpi_errno =
+                MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, errflag);
+        } else {
+            mpi_errno =
+                MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                            recvtype, comm_ptr, errflag);
+        }
     } else {
         mpi_errno =
             MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
