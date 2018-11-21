@@ -168,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
                                                  MPI_Aint count, MPI_Datatype datatype,
-                                                 MPIR_Request * message, MPIR_Request ** rreqp)
+                                                 MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMRECV_UNSAFE);
@@ -292,7 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                                MPI_Aint count, MPI_Datatype datatype,
-                                               MPIR_Request * message, MPIR_Request ** rreqp)
+                                               MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMRECV_SAFE);
@@ -311,7 +311,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                   &message, NULL /*processed */);
     } else {
         MPIDI_workq_vci_progress_unsafe();
-        mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message, rreqp);
+        mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message);
     }
 
   fn_exit:
@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     message->kind = MPIR_REQUEST_KIND__RECV;
     *rreq = message;
 
-    mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message, rreq);
+    mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -504,7 +504,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
     message->kind = MPIR_REQUEST_KIND__RECV;
     *rreqp = message;
 
-    mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message, rreqp);
+    mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
