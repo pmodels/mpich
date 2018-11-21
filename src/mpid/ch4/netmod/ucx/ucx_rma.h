@@ -101,10 +101,11 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
     offset = target_disp * win_info->disp + true_lb;
 
     status = ucp_get_nbi(ep, origin_addr, size, base + offset, win_info->rkey);
-    if (status == UCS_INPROGRESS)
-        MPIDI_UCX_WIN(win).need_local_flush = 1;
-    else
-        MPIDI_UCX_CHK_STATUS(status);
+    MPIDI_UCX_CHK_STATUS(status);
+
+    /* UCX 1.4 spec: ucp_get_nbi always returns immediately and does not
+     * guarantee completion */
+    MPIDI_UCX_WIN(win).need_local_flush = 1;
 
   fn_exit:
     return mpi_errno;
