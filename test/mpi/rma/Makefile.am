@@ -180,6 +180,8 @@ noinst_PROGRAMS =          \
     rget_unlock  \
     lock_nested  \
     rget_testall \
+    get_flushlocal         \
+    get_flushlocal_shm     \
     win_shared_query_null
 
 if BUILD_MPIX_TESTS
@@ -342,5 +344,8 @@ overlap_wins_acc_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
 overlap_wins_gacc_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
 overlap_wins_fop_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
 overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
+
+get_flushlocal_shm_SOURCES        = get_flushlocal.c
+get_flushlocal_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
 
 include Makefile.dtp
