@@ -156,6 +156,8 @@ overlap_wins_fop 3
 overlap_wins_cas 3
 lock_nested 3
 rget_testall 2
+get_flushlocal 4 mpiversion=3.0
+get_flushlocal_shm 4 mpiversion=3.0
 win_shared_query_null 4 mpiversion=3.0
 
 ## This test is not strictly correct.  This was meant to test out the

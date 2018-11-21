@@ -1194,6 +1194,8 @@
 /rma/get_accumulate_long_derived
 /rma/get_accumulate_short
 /rma/get_accumulate_short_derived
+/rma/get_flushlocal
+/rma/get_flushlocal_shm
 /rma/getfence1
 /rma/getgroup
 /rma/ircpi
