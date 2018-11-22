@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
     MPIR_Comm *comm = win->comm_ptr;
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     struct MPIR_Segment *segment_ptr;
     char *buffer = NULL;
     MPIR_Comm *comm = win->comm_ptr;
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     segment_ptr = MPIR_Segment_alloc();
     MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
@@ -168,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
     MPIR_Comm *comm = win->comm_ptr;
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
