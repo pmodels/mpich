@@ -26,30 +26,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
-                                 target_rank, target_disp, target_count, target_datatype, win,
-                                 NULL);
+                                 target_rank, target_disp, target_count, target_datatype, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_put(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win);
     else
         mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win,
-                                     NULL);
+                                     av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -74,30 +72,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
-                                 target_rank, target_disp, target_count, target_datatype, win,
-                                 NULL);
+                                 target_rank, target_disp, target_count, target_datatype, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_get(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win);
     else
         mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win,
-                                     NULL);
+                                     av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -123,23 +119,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
                                                      MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count,
-                                        target_datatype, op, win, NULL);
+                                        target_datatype, op, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
@@ -147,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                             target_rank, target_disp, target_count,
-                                            target_datatype, op, win, NULL);
+                                            target_datatype, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -171,28 +166,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
                                                            MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                              datatype, target_rank, target_disp, win, NULL);
+                                              datatype, target_rank, target_disp, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                    datatype, target_rank, target_disp, win);
     else
         mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                                  datatype, target_rank, target_disp, win, NULL);
+                                                  datatype, target_rank, target_disp, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -220,16 +214,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
                                                       MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                          target_rank, target_disp, target_count,
-                                         target_datatype, op, win, NULL, request);
+                                         target_datatype, op, win, av, request);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
@@ -239,7 +233,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
@@ -247,7 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
-                                             target_datatype, op, win, NULL, request);
+                                             target_datatype, op, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -277,6 +270,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
                                                           MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
 
@@ -284,10 +278,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
     mpi_errno = MPIDI_NM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                              result_addr, result_count, result_datatype,
                                              target_rank, target_disp, target_count,
-                                             target_datatype, op, win, NULL, request);
+                                             target_datatype, op, win, av, request);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
@@ -297,7 +290,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
@@ -307,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
         mpi_errno = MPIDI_NM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
                                                  target_rank, target_disp, target_count,
-                                                 target_datatype, op, win, NULL, request);
+                                                 target_datatype, op, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -331,28 +323,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
                                                        MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
-                                          datatype, target_rank, target_disp, op, win, NULL);
+                                          datatype, target_rank, target_disp, op, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_fetch_and_op(origin_addr, result_addr,
                                                datatype, target_rank, target_disp, op, win);
     else
         mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
-                                              datatype, target_rank, target_disp, op, win, NULL);
+                                              datatype, target_rank, target_disp, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -378,16 +369,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
                                                MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count,
-                                  target_datatype, win, NULL, request);
+                                  target_datatype, win, av, request);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
@@ -397,7 +388,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
@@ -405,7 +395,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, win, NULL, request);
+                                      target_datatype, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -431,16 +421,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
                                                MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RPUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RPUT_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count,
-                                  target_datatype, win, NULL, request);
+                                  target_datatype, win, av, request);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         /* create a completed request for user. */
@@ -450,7 +440,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
@@ -458,7 +447,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
     else
         mpi_errno = MPIDI_NM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, win, NULL, request);
+                                      target_datatype, win, av, request);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -487,6 +476,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
                                                          MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
 
@@ -494,17 +484,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
     mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                             result_addr, result_count, result_datatype,
                                             target_rank, target_disp, target_count, target_datatype,
-                                            op, win, NULL);
+                                            op, win, av);
 #else
     int r;
-    MPIDI_av_entry_t *av = NULL;
 
     if (unlikely(target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
-    av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
     if ((r = MPIDI_av_is_local(av)) && !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
@@ -514,7 +502,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
         mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                 result_addr, result_count, result_datatype,
                                                 target_rank, target_disp, target_count,
-                                                target_datatype, op, win, NULL);
+                                                target_datatype, op, win, av);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
