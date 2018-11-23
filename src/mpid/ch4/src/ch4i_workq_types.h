@@ -169,10 +169,4 @@ typedef struct MPIDI_workq_elemt {
     } params;
 } MPIDI_workq_elemt_t;
 
-/* List structure to implement per-object (e.g. per-communicator, per-window) work queues */
-struct MPIDI_workq_list {
-    MPIDI_workq_t pend_ops;
-    struct MPIDI_workq_list *next, *prev;
-};
-
 #endif /* CH4I_WORKQ_TYPES_H_INCLUDED */
