@@ -46,22 +46,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        /* FIXME: we do this because vci_lock is not a recursive lock that can
-         * be yielded easily. Recursive locking currently only works for the global
-         * lock. One way to improve this is to fix the lock yielding API to avoid this
-         * constraint.*/
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IPROBE);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm * comm,
@@ -108,18 +98,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMPROBE);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_mprobe(int source, int tag, MPIR_Comm * comm,
