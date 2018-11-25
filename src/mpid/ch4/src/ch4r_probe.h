@@ -106,18 +106,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_mprobe(int source, int tag, MPIR_Comm * comm,
-                                               int context_offset, MPIR_Request ** message,
-                                               MPI_Status * status)
-{
-    int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_MPROBE);
-    while (!flag) {
-        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_MPROBE);
-    return mpi_errno;
-}
-
 #endif /* CH4R_PROBE_H_INCLUDED */
