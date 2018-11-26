@@ -16,7 +16,7 @@ integer rank, size
 type(MPI_Comm) :: comm_cart, comm_new
 integer dims(2), coords(2)
 logical periods(2), reorder, remain_dims(2)
-integer errs
+integer errs, ierr
 
 dims(1:2) = 0
 periods(1) = .TRUE.
@@ -26,7 +26,7 @@ remain_dims(1) = .TRUE.
 remain_dims(2) = .FALSE.
 errs = 0
 
-call MTEST_Init()
+call MTEST_Init(ierr)
 call MPI_Comm_rank(MPI_COMM_WORLD, rank)
 call MPI_Comm_size(MPI_COMM_WORLD, size)
 call MPI_Dims_create(size, 2, dims)
