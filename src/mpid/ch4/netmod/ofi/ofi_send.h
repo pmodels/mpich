@@ -214,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = comm->rank;
-    msg.addr = MPIDI_OFI_comm_to_phys(comm, rank);
+    msg.addr = MPIDI_OFI_av_to_phys(addr);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg, flags), tsendv,
                          MPIDI_OFI_CALL_LOCK, FALSE);
