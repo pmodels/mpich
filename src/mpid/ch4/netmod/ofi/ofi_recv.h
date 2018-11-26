@@ -33,8 +33,8 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
-                                                MPIR_Request * rreq, MPIR_Datatype * dt_ptr,
-                                                uint64_t flags)
+                                                MPIDI_av_entry_t * addr, MPIR_Request * rreq,
+                                                MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
@@ -224,8 +224,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
             mpi_errno =
-                MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, rreq,
-                                   dt_ptr, flags);
+                MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, addr,
+                                   rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS)       /* Receive posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_RECV_NEEDS_UNPACK)
