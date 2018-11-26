@@ -65,7 +65,6 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE(mpi_type_,c_type_,type_name_)
@@ -107,10 +106,6 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #if defined(HAVE_LONG_DOUBLE)
 #undef MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE
 #define MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_FLOAT16)
-#undef MPIR_OP_TYPE_MACRO_HAVE_FLOAT16
-#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* Fortran fixed width integer type support */
 #if defined(MPIR_INTEGER1_CTYPE)
@@ -308,15 +303,13 @@ typedef struct {
     MPIR_OP_TYPE_MACRO(MPI_DOUBLE, double, mpir_typename_double)                                                      \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_REAL, MPIR_FC_REAL_CTYPE, mpir_typename_real)                                 \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_PRECISION, MPIR_FC_DOUBLE_CTYPE, mpir_typename_double_precision)       \
-    MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(MPI_LONG_DOUBLE, long double, mpir_typename_long_double)
-
-/* The MPI Standard doesn't include these types in the floating point group for
- * predefined operations but MPICH supports them when possible. */
+    MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(MPI_LONG_DOUBLE, long double, mpir_typename_long_double)                      \
+        /* The MPI Standard doesn't include these types in the floating point group for
+         * predefined operations but MPICH supports them when possible. */
 #define MPIR_OP_TYPE_GROUP_FLOATING_POINT_EXTRA                                               \
     MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(MPI_REAL4, MPIR_REAL4_CTYPE, mpir_typename_real4)     \
     MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(MPI_REAL8, MPIR_REAL8_CTYPE, mpir_typename_real8)     \
-    MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(MPI_REAL16, MPIR_REAL16_CTYPE, mpir_typename_real16) \
-    MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(MPIX_C_FLOAT16, _Float16, mpir_typename_float16)
+    MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(MPI_REAL16, MPIR_REAL16_CTYPE, mpir_typename_real16)
 
 /* logical group */
 /* FIXME Is MPI_Fint really OK here? */
