@@ -13,8 +13,9 @@
 #define TYPE_NAME_MAXLEN (256)
 #define BASIC_TYPE_NAME_MAXLEN (64)
 
-#define DTPI_OBJ_INIT_BUF(c_type, type_ptr)                                  \
+#define DTPI_OBJ_INIT_BUF(par, c_type, type_ptr)                             \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -28,8 +29,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_INIT_COMP_BUF(c_type, a_type, b_type, type_ptr)             \
+#define DTPI_OBJ_INIT_COMP_BUF(par, c_type, a_type, b_type, type_ptr)        \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -44,8 +46,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_CHECK_BUF_AND_JUMP(c_type, type_ptr)                        \
+#define DTPI_OBJ_CHECK_BUF_AND_JUMP(par, c_type, type_ptr)                   \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -63,8 +66,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(c_type, a_type, b_type, type_ptr)   \
+#define DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, c_type, a_type, b_type, type_ptr) \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -246,7 +250,6 @@ void DTPI_Init_checkers(DTPI_Checker * checkers)
 
 static void DTPI_Basic_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
 {
-    int i, j, k;
     int count;
     char *buf_ptr;
     union DTPI_Cast_ptr ptrs;
@@ -265,76 +268,78 @@ static void DTPI_Basic_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_ty
 
     buf_ptr = (char *) buf + par->core.type_displ;
     if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
-        DTPI_OBJ_INIT_BUF(char, ptrs.char_ptr);
+        DTPI_OBJ_INIT_BUF(par, char, ptrs.char_ptr);
     } else if (basic_type == MPI_WCHAR) {
-        DTPI_OBJ_INIT_BUF(wchar_t, ptrs.wchar_ptr);
+        DTPI_OBJ_INIT_BUF(par, wchar_t, ptrs.wchar_ptr);
     } else if (basic_type == MPI_SHORT) {
-        DTPI_OBJ_INIT_BUF(short int, ptrs.short_ptr);
+        DTPI_OBJ_INIT_BUF(par, short int, ptrs.short_ptr);
     } else if (basic_type == MPI_INT) {
-        DTPI_OBJ_INIT_BUF(int, ptrs.int_ptr);
+        DTPI_OBJ_INIT_BUF(par, int, ptrs.int_ptr);
     } else if (basic_type == MPI_LONG) {
-        DTPI_OBJ_INIT_BUF(long int, ptrs.long_ptr);
+        DTPI_OBJ_INIT_BUF(par, long int, ptrs.long_ptr);
     } else if (basic_type == MPI_LONG_LONG_INT) {
-        DTPI_OBJ_INIT_BUF(long long int, ptrs.long_long_ptr);
+        DTPI_OBJ_INIT_BUF(par, long long int, ptrs.long_long_ptr);
     } else if (basic_type == MPI_UNSIGNED_CHAR) {
-        DTPI_OBJ_INIT_BUF(unsigned char, ptrs.uchar_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned char, ptrs.uchar_ptr);
     } else if (basic_type == MPI_UNSIGNED_SHORT) {
-        DTPI_OBJ_INIT_BUF(unsigned short int, ptrs.ushort_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned short int, ptrs.ushort_ptr);
     } else if (basic_type == MPI_UNSIGNED) {
-        DTPI_OBJ_INIT_BUF(unsigned int, ptrs.uint_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned int, ptrs.uint_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG) {
-        DTPI_OBJ_INIT_BUF(unsigned long int, ptrs.ulong_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned long int, ptrs.ulong_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
-        DTPI_OBJ_INIT_BUF(unsigned long long int, ptrs.ulong_long_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned long long int, ptrs.ulong_long_ptr);
     } else if (basic_type == MPI_FLOAT) {
-        DTPI_OBJ_INIT_BUF(float, ptrs.float_ptr);
+        DTPI_OBJ_INIT_BUF(par, float, ptrs.float_ptr);
     } else if (basic_type == MPI_DOUBLE) {
-        DTPI_OBJ_INIT_BUF(double, ptrs.double_ptr);
+        DTPI_OBJ_INIT_BUF(par, double, ptrs.double_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE) {
-        DTPI_OBJ_INIT_BUF(long double, ptrs.long_double_ptr);
+        DTPI_OBJ_INIT_BUF(par, long double, ptrs.long_double_ptr);
     } else if (basic_type == MPI_INT8_T) {
-        DTPI_OBJ_INIT_BUF(int8_t, ptrs.int8_ptr);
+        DTPI_OBJ_INIT_BUF(par, int8_t, ptrs.int8_ptr);
     } else if (basic_type == MPI_INT16_T) {
-        DTPI_OBJ_INIT_BUF(int16_t, ptrs.int16_ptr);
+        DTPI_OBJ_INIT_BUF(par, int16_t, ptrs.int16_ptr);
     } else if (basic_type == MPI_INT32_T) {
-        DTPI_OBJ_INIT_BUF(int32_t, ptrs.int32_ptr);
+        DTPI_OBJ_INIT_BUF(par, int32_t, ptrs.int32_ptr);
     } else if (basic_type == MPI_INT64_T) {
-        DTPI_OBJ_INIT_BUF(int64_t, ptrs.int64_ptr);
+        DTPI_OBJ_INIT_BUF(par, int64_t, ptrs.int64_ptr);
     } else if (basic_type == MPI_UINT8_T) {
-        DTPI_OBJ_INIT_BUF(uint8_t, ptrs.uint8_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint8_t, ptrs.uint8_ptr);
     } else if (basic_type == MPI_UINT16_T) {
-        DTPI_OBJ_INIT_BUF(uint16_t, ptrs.uint16_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint16_t, ptrs.uint16_ptr);
     } else if (basic_type == MPI_UINT32_T) {
-        DTPI_OBJ_INIT_BUF(uint32_t, ptrs.uint32_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint32_t, ptrs.uint32_ptr);
     } else if (basic_type == MPI_UINT64_T) {
-        DTPI_OBJ_INIT_BUF(uint64_t, ptrs.uint64_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint64_t, ptrs.uint64_ptr);
     } else if (basic_type == MPI_C_COMPLEX) {   /* composite types */
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_complex, float, float, ptrs.c_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_complex, float, float, ptrs.c_complex_ptr);
     } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_float_complex, float, float, ptrs.c_float_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_float_complex, float, float, ptrs.c_float_complex_ptr);
     } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_double_complex, double, double, ptrs.c_double_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_double_complex, double, double,
+                               ptrs.c_double_complex_ptr);
     } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_long_double_complex, long double, long double,
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_long_double_complex, long double, long double,
                                ptrs.c_long_double_complex_ptr);
     } else if (basic_type == MPI_FLOAT_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_float_int, float, int, ptrs.float_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_float_int, float, int, ptrs.float_int_ptr);
     } else if (basic_type == MPI_DOUBLE_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_double_int, double, int, ptrs.double_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_double_int, double, int, ptrs.double_int_ptr);
     } else if (basic_type == MPI_LONG_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_long_int, long, int, ptrs.long_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_long_int, long, int, ptrs.long_int_ptr);
     } else if (basic_type == MPI_2INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_2int, int, int, ptrs.int_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_2int, int, int, ptrs.int_int_ptr);
     } else if (basic_type == MPI_SHORT_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_short_int, short, int, ptrs.short_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_short_int, short, int, ptrs.short_int_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_long_double_int, long double, int, ptrs.long_double_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_long_double_int, long double, int,
+                               ptrs.long_double_int_ptr);
     }
 }
 
 static int DTPI_Basic_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
 {
-    int i, j, k, err = DTP_SUCCESS;
+    int err = DTP_SUCCESS;
     int count;
     char *buf_ptr;
     union DTPI_Cast_ptr ptrs;
@@ -349,72 +354,72 @@ static int DTPI_Basic_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_ty
 
     buf_ptr = (char *) buf + par->core.type_displ;
     if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(char, ptrs.char_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, char, ptrs.char_ptr);
     } else if (basic_type == MPI_WCHAR) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(wchar_t, ptrs.wchar_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, wchar_t, ptrs.wchar_ptr);
     } else if (basic_type == MPI_SHORT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(short int, ptrs.short_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, short int, ptrs.short_ptr);
     } else if (basic_type == MPI_INT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int, ptrs.int_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int, ptrs.int_ptr);
     } else if (basic_type == MPI_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long int, ptrs.long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long int, ptrs.long_ptr);
     } else if (basic_type == MPI_LONG_LONG_INT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long long int, ptrs.long_long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long long int, ptrs.long_long_ptr);
     } else if (basic_type == MPI_UNSIGNED_CHAR) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned char, ptrs.uchar_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned char, ptrs.uchar_ptr);
     } else if (basic_type == MPI_UNSIGNED_SHORT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned short int, ptrs.ushort_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned short int, ptrs.ushort_ptr);
     } else if (basic_type == MPI_UNSIGNED) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned int, ptrs.uint_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned int, ptrs.uint_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned long int, ptrs.ulong_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long int, ptrs.ulong_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned long long int, ptrs.ulong_long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long long int, ptrs.ulong_long_ptr);
     } else if (basic_type == MPI_FLOAT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(float, ptrs.float_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, float, ptrs.float_ptr);
     } else if (basic_type == MPI_DOUBLE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(double, ptrs.double_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, double, ptrs.double_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long double, ptrs.long_double_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long double, ptrs.long_double_ptr);
     } else if (basic_type == MPI_INT8_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int8_t, ptrs.int8_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int8_t, ptrs.int8_ptr);
     } else if (basic_type == MPI_INT16_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int16_t, ptrs.int16_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int16_t, ptrs.int16_ptr);
     } else if (basic_type == MPI_INT32_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int32_t, ptrs.int32_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int32_t, ptrs.int32_ptr);
     } else if (basic_type == MPI_INT64_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int64_t, ptrs.int64_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int64_t, ptrs.int64_ptr);
     } else if (basic_type == MPI_UINT8_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint8_t, ptrs.uint8_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint8_t, ptrs.uint8_ptr);
     } else if (basic_type == MPI_UINT16_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint16_t, ptrs.uint16_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint16_t, ptrs.uint16_ptr);
     } else if (basic_type == MPI_UINT32_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint32_t, ptrs.uint32_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint32_t, ptrs.uint32_ptr);
     } else if (basic_type == MPI_UINT64_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint64_t, ptrs.uint64_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint64_t, ptrs.uint64_ptr);
     } else if (basic_type == MPI_C_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_complex, float, float, ptrs.c_complex_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_complex, float, float, ptrs.c_complex_ptr);
     } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_float_complex, float, float,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_float_complex, float, float,
                                          ptrs.c_float_complex_ptr);
     } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_double_complex, double, double,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_double_complex, double, double,
                                          ptrs.c_double_complex_ptr);
     } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_long_double_complex, long double, long double,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_long_double_complex, long double, long double,
                                          ptrs.c_long_double_complex_ptr);
     } else if (basic_type == MPI_FLOAT_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_float_int, float, int, ptrs.float_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_float_int, float, int, ptrs.float_int_ptr);
     } else if (basic_type == MPI_DOUBLE_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_double_int, double, int, ptrs.double_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_double_int, double, int, ptrs.double_int_ptr);
     } else if (basic_type == MPI_LONG_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_long_int, long, int, ptrs.long_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_int, long, int, ptrs.long_int_ptr);
     } else if (basic_type == MPI_2INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_2int, int, int, ptrs.int_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_2int, int, int, ptrs.int_int_ptr);
     } else if (basic_type == MPI_SHORT_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_short_int, short, int, ptrs.short_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_short_int, short, int, ptrs.short_int_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_long_double_int, long double, int,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_double_int, long double, int,
                                          ptrs.long_double_int_ptr);
     }
 
