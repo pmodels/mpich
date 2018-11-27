@@ -130,7 +130,7 @@ static mpi_names_t mpi_names[] = {
 int main(int argc, char **argv)
 {
     char name[MPI_MAX_OBJECT_NAME];
-    int namelen, i, inOptional;
+    int namelen, i, inOptional, isSynonymName;
     int errs = 0;
 
     MTest_Init(&argc, &argv);
@@ -152,6 +152,7 @@ int main(int argc, char **argv)
 
     /* Now we try them ALL */
     inOptional = 0;
+    isSynonymName = 0;
     for (i = 0; mpi_names[i].name != 0; i++) {
         /* Are we in the optional types? */
         if (strcmp(mpi_names[i].name, "MPI_REAL4") == 0)
@@ -169,7 +170,12 @@ int main(int argc, char **argv)
         MTestPrintfMsg(10, "Checking type %s\n", mpi_names[i].name);
         name[0] = 0;
         MPI_Type_get_name(mpi_names[i].dtype, name, &namelen);
-        if (strncmp(name, mpi_names[i].name, MPI_MAX_OBJECT_NAME)) {
+
+        /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is a vaild name */
+        isSynonymName = (mpi_names[i].dtype == MPI_LONG_LONG &&
+                         !strncmp(name, "MPI_LONG_LONG_INT", MPI_MAX_OBJECT_NAME));
+
+        if (strncmp(name, mpi_names[i].name, MPI_MAX_OBJECT_NAME) && !isSynonymName) {
             errs++;
             fprintf(stderr, "Expected %s but got :%s:, namelen %d\n", mpi_names[i].name, name,
                     namelen);
