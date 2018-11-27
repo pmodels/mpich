@@ -1,0 +1,17 @@
+## -*- Mode: Makefile; -*-
+## vim: set ft=automake :
+##
+## (C) 2019 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
+
+if BUILD_SHM_XPMEM
+
+noinst_HEADERS += src/mpid/ch4/shm/xpmem/shm_inline.h      \
+                  src/mpid/ch4/shm/xpmem/xpmem_noinline.h  \
+                  src/mpid/ch4/shm/xpmem/xpmem_impl.h      \
+                  src/mpid/ch4/shm/xpmem/xpmem_pre.h
+
+mpi_core_sources += src/mpid/ch4/shm/xpmem/globals.c       \
+                    src/mpid/ch4/shm/xpmem/xpmem_init.c
+endif
