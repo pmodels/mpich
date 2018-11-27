@@ -110,7 +110,9 @@ int f2ctype_(MPI_Fint * fhandle, MPI_Fint * typeidx)
          * corresponding C version of the MPI Datatype bit-for-bit.  But
          * if *must* act like it - e.g., the datatype name must be the same */
         MPI_Type_get_name(ctype, mytypename, &mytypenamelen);
-        if (strcmp(mytypename, mpi_names[*typeidx].name) != 0) {
+        if (strcmp(mytypename, mpi_names[*typeidx].name) != 0 &&
+            /* LONG_LONG is a synonym of LONG_LONG_INT, thus LONG_LONG_INT is also a vaild name */
+            (ctype != MPI_LONG_LONG || strcmp(mytypename, "MPI_LONG_LONG_INT") != 0)) {
             errs++;
             printf("C and Fortran types for %s (c name is %s) do not match f=%d, ctof=%d.\n",
                    mpi_names[*typeidx].name, mytypename, *fhandle, MPI_Type_c2f(ctype));
