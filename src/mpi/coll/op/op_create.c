@@ -65,7 +65,6 @@ void MPII_Op_set_fc(MPI_Op op)
 }
 #endif
 
-#endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Op_create_impl
@@ -103,6 +102,8 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
   fn_fail:
     goto fn_exit;
 }
+
+#endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_create

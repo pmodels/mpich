@@ -25,7 +25,6 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #undef MPI_Op_free
 #define MPI_Op_free PMPI_Op_free
 
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Op_free_impl
@@ -48,6 +47,8 @@ void MPIR_Op_free_impl(MPI_Op * op)
     }
     *op = MPI_OP_NULL;
 }
+
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_free
