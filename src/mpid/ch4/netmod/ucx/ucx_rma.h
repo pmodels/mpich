@@ -214,11 +214,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
-    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
-    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
-
-    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
-
+    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
