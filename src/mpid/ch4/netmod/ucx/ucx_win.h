@@ -15,6 +15,10 @@ struct _UCX_share {
     MPI_Aint addr;
 };
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_win_need_flush
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush(MPIR_Win * win)
 {
     int rank;
@@ -26,6 +30,10 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush(MPIR_Win * win)
     return need_flush;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_win_need_flush_local
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
 {
     int rank;
@@ -36,6 +44,10 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
     return need_flush_local;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_win_unset_sync
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
 {
     int rank;
@@ -44,6 +56,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Win_allgather
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
                                                      uint32_t disp_unit, void **base_ptr)
 {
@@ -197,23 +213,37 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_Win_init(MPIR_Win * win)
 
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_set_info
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     return MPIDI_CH4R_mpi_win_set_info(win, info);
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_start
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_start(group, assert, win);
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_complete
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_complete(win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_post
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
 
@@ -221,46 +251,75 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int asser
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_wait
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_wait(win);
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_test
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
     return MPIDI_CH4R_mpi_win_test(win, flag);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_lock
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
                                                    MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_unlock
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
                                                      MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_unlock(rank, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_get_info
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     return MPIDI_CH4R_mpi_win_get_info(win, info_p_p);
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 {
     return MPIDI_CH4R_mpi_win_free(win_ptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_fence
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_fence(assert, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_create
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create(void *base,
                                                      MPI_Aint length,
                                                      int disp_unit,
@@ -270,11 +329,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create(void *base,
     return MPIDI_CH4R_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_attach
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     return MPIDI_CH4R_mpi_win_attach(win, base, size);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_allocate_shared
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                                                               int disp_unit,
                                                               MPIR_Info * info_ptr,
@@ -285,11 +352,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                                               win_ptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_detach
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach(MPIR_Win * win, const void *base)
 {
     return MPIDI_CH4R_mpi_win_detach(win, base);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_shared_query
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
                                                            int rank,
                                                            MPI_Aint * size, int *disp_unit,
@@ -298,6 +373,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
     return MPIDI_CH4R_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_allocate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
                                                        int disp_unit,
                                                        MPIR_Info * info,
@@ -308,49 +387,85 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
     return MPIDI_CH4R_mpi_win_allocate(length, disp_unit, info, comm_ptr, baseptr, win_ptr);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_flush
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
                                                     MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_flush(rank, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_flush_local_all
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_flush_local_all(win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_unlock_all
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_unlock_all(win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_create_dynamic
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
                                                              MPIR_Win ** win)
 {
     return MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_flush_local
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win,
                                                           MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_flush_local(rank, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_sync
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_sync(win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_flush_all
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_flush_all(win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_lock_all
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     return MPIDI_CH4R_mpi_win_lock_all(assert, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_create_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -375,6 +490,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_allocate_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -399,26 +518,46 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_allocate_shared_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_create_dynamic_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_attach_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 {
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_detach_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win, const void *base)
 {
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -438,6 +577,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_win_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -461,6 +604,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_win_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -488,6 +635,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_target_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -515,6 +666,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_target_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

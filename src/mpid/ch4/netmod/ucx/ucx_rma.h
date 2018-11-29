@@ -11,6 +11,10 @@
 
 #include "ucx_impl.h"
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_contig_put
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
                                                   size_t size,
                                                   int target_rank,
@@ -46,6 +50,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_noncontig_put
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
                                                      int origin_count, MPI_Datatype origin_datatype,
                                                      int target_rank, size_t size,
@@ -91,6 +99,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_contig_get
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
                                                   size_t size,
                                                   int target_rank,
@@ -190,6 +202,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
 
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_get
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
@@ -250,6 +266,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
 
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_rput
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                                int origin_count,
                                                MPI_Datatype origin_datatype,
@@ -266,6 +286,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_compare_and_swap
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                            const void *compare_addr,
                                                            void *result_addr,
@@ -277,6 +301,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
                                            datatype, target_rank, target_disp, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_raccumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                                       int origin_count,
                                                       MPI_Datatype origin_datatype,
@@ -293,6 +321,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                       target_datatype, op, win, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_rget_accumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                           int origin_count,
                                                           MPI_Datatype origin_datatype,
@@ -313,6 +345,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
                                           target_datatype, op, win, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_fetch_and_op
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                                        void *result_addr,
                                                        MPI_Datatype datatype,
@@ -325,6 +361,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_rget
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                                int origin_count,
                                                MPI_Datatype origin_datatype,
@@ -341,6 +381,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_get_accumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                                          int origin_count,
                                                          MPI_Datatype origin_datatype,
@@ -359,6 +403,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
                                          target_datatype, op, win);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_accumulate
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                                      int origin_count,
                                                      MPI_Datatype origin_datatype,
