@@ -422,7 +422,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    if (win->create_flavor != MPI_WIN_FLAVOR_SHARED && win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {
+    if (MPIDI_UCX_is_reachable_win(win)) {
         if (win->size > 0)
             ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
         MPL_free(MPIDI_UCX_WIN(win).info_table);
@@ -441,7 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    if (MPIDI_UCX_win_need_flush(win)) {
+    if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
         /* maybe we just flush all eps here? More efficient for smaller communicators... */
         ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
@@ -464,7 +464,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_LOCAL_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    if (MPIDI_UCX_win_need_flush_local(win)) {
+    if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush_local(win)) {
         ucs_status_t ucp_status;
 
         /* currently, UCP does not support local flush, so we have to call
@@ -491,7 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    if (rank != MPI_PROC_NULL &&
+    if (MPIDI_UCX_is_reachable_target(rank, win) &&
         /* including cases where FLUSH_LOCAL or FLUSH is set */
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
 
@@ -518,7 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_LOCAL_CMPL_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
-    if (rank != MPI_PROC_NULL &&
+    if (MPIDI_UCX_is_reachable_target(rank, win) &&
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync == MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
         ucs_status_t ucp_status;
 
