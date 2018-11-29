@@ -145,15 +145,11 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
-    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED
-        || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win))
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
     MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
-
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
@@ -214,16 +210,13 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_GET);
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win))
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
     MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
-    /* Check target sync status for any target_rank except PROC_NULL. */
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
     MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
 
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
@@ -235,7 +228,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         goto fn_exit;
 
 
-    if (!origin_contig || !target_contig || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
+    if (!origin_contig || !target_contig)
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
