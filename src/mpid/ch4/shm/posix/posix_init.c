@@ -103,6 +103,8 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     choose_posix_eager();
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* There is no restriction on the tag_bits from the posix shmod side */
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
@@ -126,13 +128,12 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
 
     mpi_errno = MPIDI_POSIX_eager_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIDIU_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
-
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
