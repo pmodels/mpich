@@ -13,6 +13,10 @@
 
 #include "ucx_impl.h"
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_improbe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
                                                   int tag,
                                                   MPIR_Comm * comm,
@@ -31,6 +35,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_iprobe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
                                                  int tag,
                                                  MPIR_Comm * comm,

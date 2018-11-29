@@ -12,6 +12,10 @@
 #include "ucx_impl.h"
 //#include "events.h"
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_am_handler
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -81,6 +85,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Handle_am_recv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
                                                        ucp_tag_recv_info_t * info)
 {

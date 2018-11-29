@@ -21,6 +21,10 @@ struct MPIDI_UCX_pack_state {
     MPI_Aint packsize;
 };
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Start_pack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
@@ -39,6 +43,10 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *b
     return (void *) state;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Start_unpack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
@@ -57,6 +65,10 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffe
     return (void *) state;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Packed_size
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Packed_size(void *state)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
@@ -64,6 +76,10 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Packed_size(void *state)
     return (size_t) pack_state->packsize;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Pack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Pack(void *state, size_t offset, void *dest,
                                                size_t max_length)
 {
@@ -75,6 +91,10 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Pack(void *state, size_t offset, void 
     return (size_t) last - offset;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Unpack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const void *src,
                                                        size_t count)
 {
@@ -90,6 +110,10 @@ MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offse
     return UCS_OK;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_UCX_Finish_pack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Finish_pack(void *state)
 {
     MPIR_Datatype *dt_ptr;
@@ -100,6 +124,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Finish_pack(void *state)
     MPL_free(pack_state);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_type_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {
     if (datatype_p->is_committed && (int) datatype_p->dev.netmod.ucx.ucp_datatype >= 0) {
@@ -113,6 +141,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatyp
     return 0;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_type_commit_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     ucp_datatype_t ucp_datatype;

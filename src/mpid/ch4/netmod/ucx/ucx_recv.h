@@ -178,6 +178,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_imrecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -236,6 +240,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_recv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -249,6 +257,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_irecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -260,6 +272,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_recv_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int count,
                                                     MPI_Datatype datatype,
@@ -273,6 +289,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_cancel_recv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {
