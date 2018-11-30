@@ -1508,3 +1508,4 @@
 /pt2pt/testlist.gpu
 /rma/testlist.dtp
 /rma/testlist.gpu
+/impls/mpich/threads/pt2pt/sendrecv_vci_assignment
