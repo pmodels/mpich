@@ -15,7 +15,9 @@ typedef union {
 typedef enum {
     MPIDI_POSIX_Bcast_intra_binomial_id,
     MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id,
-    MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id
+    MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id,
+    MPIDI_POSIX_Bcast_intra_auto_id,
+    MPIDI_POSIX_Bcast_intra_invalid_id
 } MPIDI_POSIX_Bcast_id_t;
 
 typedef union {
@@ -29,9 +31,13 @@ typedef union {
     } posix_bcast_empty_parameters;
 } MPIDI_POSIX_Bcast_params_t;
 
+extern MPIDI_POSIX_Bcast_id_t MPIDI_POSIX_Bcast_algo_choice;
+
 typedef enum {
     MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id,
-    MPIDI_POSIX_Reduce_intra_binomial_id
+    MPIDI_POSIX_Reduce_intra_binomial_id,
+    MPIDI_POSIX_Reduce_intra_auto_id,
+    MPIDI_POSIX_Reduce_intra_invalid_id
 } MPIDI_POSIX_Reduce_id_t;
 
 typedef union {
@@ -40,6 +46,8 @@ typedef union {
         int empty;
     } posix_reduce_empty_parameters;
 } MPIDI_POSIX_Reduce_params_t;
+
+extern MPIDI_POSIX_Reduce_id_t MPIDI_POSIX_Reduce_algo_choice;
 
 typedef enum {
     MPIDI_POSIX_Allreduce_intra_recursive_doubling_id,
