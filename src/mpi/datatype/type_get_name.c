@@ -110,7 +110,10 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_UINT32_T),
     type_name_entry(MPI_UINT64_T),
     type_name_entry(MPI_C_BOOL),
-    type_name_entry(MPI_C_FLOAT_COMPLEX),
+    /* C_FLOAT_COMPLEX is a synonym of C_COMPLEX; we don't make it a separate
+     * type */
+/*    type_name_entry(MPI_C_FLOAT_COMPLEX), */
+    type_name_entry(MPI_C_COMPLEX),
     type_name_entry(MPI_C_DOUBLE_COMPLEX),
     type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
 
