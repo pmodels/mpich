@@ -120,7 +120,7 @@ void InitMPINames(void)
         {MPI::FLOAT, "MPI_FLOAT"},
         {MPI::DOUBLE, "MPI_DOUBLE"},
         {MPI::LONG_DOUBLE, "MPI_LONG_DOUBLE"},
-        /*    { MPI::LONG_LONG_INT, "MPI_LONG_LONG_INT" }, */
+        {MPI::LONG_LONG_INT, "MPI_LONG_LONG_INT"},
         {MPI::LONG_LONG, "MPI_LONG_LONG"},
         {MPI::UNSIGNED_LONG_LONG, "MPI_UNSIGNED_LONG_LONG"},
         {MPI::PACKED, "MPI_PACKED"},
