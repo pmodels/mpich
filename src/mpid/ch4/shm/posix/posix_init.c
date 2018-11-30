@@ -109,6 +109,10 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     /* There is no restriction on the tag_bits from the posix shmod side */
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
+    mpi_errno = MPIDI_POSIX_coll_init(rank, size);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
@@ -135,8 +139,43 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
+    mpi_errno = MPIDI_POSIX_coll_finalize();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_POSIX_coll_init(int rank, int size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
+
+    mpi_errno = collective_cvars_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_POSIX_coll_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
