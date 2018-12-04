@@ -117,7 +117,7 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     MPIR_Datatype_get_ptr(dt, dt_ptr);
 
     dt_index = MPIDI_OFI_DATATYPE(dt_ptr).index;
-    MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index);
+    op_index = MPIDI_OFI_get_mpi_acc_op_index(op);
 
     *fi_dt = (enum fi_datatype) MPIDI_Global.win_op_table[dt_index][op_index].dt;
     *fi_op = (enum fi_op) MPIDI_Global.win_op_table[dt_index][op_index].op;

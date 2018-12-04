@@ -36,10 +36,15 @@
 
 /* Get op index.
  * TODO: OP_NULL is the oddball. Change configure to table this correctly */
-#define MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index) do {   \
-    if (op == MPI_OP_NULL) op_index = 14;                \
-    else op_index = (0x000000FFU & op) - 1;              \
-} while (0);
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
+{
+    int op_index;
+    if (op == MPI_OP_NULL)
+        op_index = 14;
+    else
+        op_index = (0x000000FFU & op) - 1;
+    return op_index;
+}
 
 /*
  * Helper routines and macros for request completion
