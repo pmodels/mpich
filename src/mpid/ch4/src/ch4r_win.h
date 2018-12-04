@@ -1290,7 +1290,7 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
     int mapfail_flag = 0;
     unsigned symheap_flag = 1, global_symheap_flag = 0;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_WIN_SHM_ALLOC_IMPL);
@@ -1305,9 +1305,9 @@ static inline int MPIDI_CH4I_win_shm_alloc_impl(MPI_Aint size,
      * we need to count the total size on a node for shared memory allocation. */
     if (shm_comm_ptr != NULL) {
         MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
-        MPIDI_CH4U_WIN(win, shared_table) =
-            (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
-                                                        shm_comm_ptr->local_size, MPL_MEM_RMA);
+        MPIR_CHKPMEM_MALLOC(MPIDI_CH4U_WIN(win, shared_table), MPIDI_CH4U_win_shared_info_t *,
+                            sizeof(MPIDI_CH4U_win_shared_info_t) * shm_comm_ptr->local_size,
+                            mpi_errno, "shared table", MPL_MEM_RMA);
         shared_table = MPIDI_CH4U_WIN(win, shared_table);
         shared_table[shm_comm_ptr->rank].size = size;
         shared_table[shm_comm_ptr->rank].disp_unit = disp_unit;
