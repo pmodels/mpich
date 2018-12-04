@@ -551,7 +551,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
 
     /* If scalable EP is not available, try shared transmit context next. */
     /* Create tx using shared transmit context. */
-    if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
+    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
         goto fn_exit;
     }
 
