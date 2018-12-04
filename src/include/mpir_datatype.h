@@ -12,11 +12,8 @@
  * the predefined handles.  That is, look at the last two hex digits of all
  * predefined datatype handles, take the greatest one, and convert it to decimal
  * here. */
-/* FIXME calculating this value this way is foolish, we should make this more
- * automatic and less error prone */
-/* FIXME: Given that this is relatively static, an adequate alternative is
-   to provide a check that this value is valid. */
-#define MPIR_DATATYPE_N_BUILTIN 70
+/* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
+#define MPIR_DATATYPE_N_BUILTIN 71
 #define MPIR_DTYPE_BEGINNING  0
 #define MPIR_DTYPE_END       -1
 
