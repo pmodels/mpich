@@ -118,6 +118,8 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
 
     dt_index = MPIDI_OFI_DATATYPE(dt_ptr).index;
     op_index = MPIDI_OFI_get_mpi_acc_op_index(op);
+    MPIR_Assert(op_index >= 0);
+    MPIR_Assert(op_index < MPIDI_OFI_OP_SIZES);
 
     *fi_dt = (enum fi_datatype) MPIDI_Global.win_op_table[dt_index][op_index].dt;
     *fi_op = (enum fi_op) MPIDI_Global.win_op_table[dt_index][op_index].op;
