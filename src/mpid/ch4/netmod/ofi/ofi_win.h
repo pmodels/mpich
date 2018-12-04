@@ -359,6 +359,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
             mpi_errno = MPIDI_OFI_EPERROR;
+            /* Close the per-window counter opened by MPIDI_OFI_win_set_per_win_sync */
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
             goto fn_fail;
         }
     } else {
@@ -405,6 +407,7 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     /* Activate per-window EP/counter using STX */
     int ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
+    bool have_per_win_cntr = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
@@ -430,6 +433,7 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     }
 
     if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
+        have_per_win_cntr = true;
         MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.rma_stx_ctx->fid, 0),
                               ret);
         if (ret < 0) {
@@ -478,6 +482,10 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
         /* Close an endpoint and release all resources associated with it. */
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
         MPIDI_OFI_WIN(win).ep = NULL;
+    }
+    if (have_per_win_cntr) {
+        /* Close the per-window counter opened by MPIDI_OFI_win_set_per_win_sync */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
     }
     goto fn_exit;
 }
