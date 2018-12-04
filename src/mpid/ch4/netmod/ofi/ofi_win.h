@@ -20,49 +20,49 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_accu_op_hint_get_index(MPIDI_CH4U_win_inf
     int op_index = 0;
     switch (hint_shift) {
         case MPIDI_CH4I_ACCU_MAX_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MAX, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MAX);
             break;
         case MPIDI_CH4I_ACCU_MIN_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MIN, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MIN);
             break;
         case MPIDI_CH4I_ACCU_SUM_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_SUM, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_SUM);
             break;
         case MPIDI_CH4I_ACCU_PROD_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_PROD, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_PROD);
             break;
         case MPIDI_CH4I_ACCU_MAXLOC_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MAXLOC, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MAXLOC);
             break;
         case MPIDI_CH4I_ACCU_MINLOC_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MINLOC, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MINLOC);
             break;
         case MPIDI_CH4I_ACCU_BAND_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BAND, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BAND);
             break;
         case MPIDI_CH4I_ACCU_BOR_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BOR, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BOR);
             break;
         case MPIDI_CH4I_ACCU_BXOR_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BXOR, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BXOR);
             break;
         case MPIDI_CH4I_ACCU_LAND_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LAND, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LAND);
             break;
         case MPIDI_CH4I_ACCU_LOR_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LOR, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LOR);
             break;
         case MPIDI_CH4I_ACCU_LXOR_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LXOR, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LXOR);
             break;
         case MPIDI_CH4I_ACCU_REPLACE_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_REPLACE, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_REPLACE);
             break;
         case MPIDI_CH4I_ACCU_NO_OP_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_NO_OP, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_NO_OP);
             break;
         case MPIDI_CH4I_ACCU_CSWAP_SHIFT:
-            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_OP_NULL, op_index);
+            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_OP_NULL);
             break;
         default:
             MPIR_Assert(hint_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST);
