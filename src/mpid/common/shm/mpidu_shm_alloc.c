@@ -619,6 +619,9 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
+    /* reset segment_len to zero */
+    segment_len = 0;
+
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
     return mpi_errno;
