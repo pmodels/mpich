@@ -436,6 +436,13 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
         if (mapsize > 0) {
             if (shm_comm_ptr != NULL) {
                 /* calculate local start address */
+
+                /* Some static analyzer doesn't understand the relationship
+                 * that shm_comm_ptr != NULL => shm_offsets != NULL.
+                 * This assertion is to make it easier to understand not only
+                 * for static analyzers but also humans. */
+                MPIR_Assert(shm_offsets != NULL);
+
                 *base_ptr = (void *) ((char *) map_pointer - shm_offsets[shm_comm_ptr->rank]);
                 mpi_errno = MPIDI_CH4I_allocate_symshm_segment(shm_comm_ptr, mapsize,
                                                                shm_segment_hdl_ptr, base_ptr,
