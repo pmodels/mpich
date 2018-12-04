@@ -953,7 +953,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     goto fn_exit;
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_finalize_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
