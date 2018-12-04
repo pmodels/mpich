@@ -5,9 +5,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-## the simplemake version also included the following bits that seem wrong:
-## -I../../../src/include -I${top_srcdir}/src/include
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(srcdir)/../../include -I../../include -I$(srcdir)/../../dtpools/include
 
 ## list a dummy library that we don't actually build in order to cause automake
 ## to emit a rule for building mtest.o from mtest.cxx
