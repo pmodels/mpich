@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 {
     int op_index;
     if (op == MPI_OP_NULL)
-        op_index = 14;
+        op_index = MPIDI_OFI_OP_SIZES - 1;
     else
         op_index = (0x000000FFU & op) - 1;
     return op_index;
