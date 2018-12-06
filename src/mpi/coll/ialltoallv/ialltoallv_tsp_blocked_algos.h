@@ -24,7 +24,7 @@
 int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],
-                                            const int rdispls[], MPI_Datatype recvtype, int tag,
+                                            const int rdispls[], MPI_Datatype recvtype,
                                             MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -33,12 +33,18 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
     int i, j, bblock, comm_block, dst;
+    int tag = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_Assert(!is_inplace);
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
@@ -82,9 +88,11 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
         MPIR_TSP_sched_fence((MPIR_TSP_sched_t *) sched);
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -99,7 +107,6 @@ int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[
                                       MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
@@ -112,15 +119,9 @@ int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[
     MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     mpi_errno =
         MPIR_TSP_Ialltoallv_sched_intra_blocked(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                                recvcounts, rdispls, recvtype, tag, comm, sched);
+                                                recvcounts, rdispls, recvtype, comm, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
