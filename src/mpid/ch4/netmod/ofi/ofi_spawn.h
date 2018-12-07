@@ -727,7 +727,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;
-    fi_addr_t conn;
+    fi_addr_t conn = -1;
     int rank = comm_ptr->rank;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
