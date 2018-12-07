@@ -115,6 +115,7 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 
     MPIR_Datatype_get_ptr(dt, dt_ptr);
+    MPIR_Assert(dt_ptr != NULL);
 
     dt_index = MPIDI_OFI_DATATYPE(dt_ptr).index;
     op_index = MPIDI_OFI_get_mpi_acc_op_index(op);
