@@ -18,7 +18,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
     AC_ARG_WITH(ch4-netmod-ucx-args,
     [  --with-ch4-netmod-ucx-args=arg1:arg2:arg3
-    CH4 OFI netmod arguments:
+    CH4 UCX netmod arguments:
             am-only          - Do not use UCX tagged or RMA communication.
             ],
             [ucx_netmod_args=$withval],
@@ -29,7 +29,7 @@ dnl Parse the device arguments
     IFS=':'
     args_array=$ucx_netmod_args
     do_am_only=false
-    echo "Parsing Arguments for OFI Netmod"
+    echo "Parsing Arguments for UCX Netmod"
     for arg in $args_array; do
     case ${arg} in
       am-only)
@@ -86,7 +86,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
     fi
 
-])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
+])dnl end AM_COND_IF(BUILD_CH4_NETMOD_UCX,...)
 ])dnl end _BODY
 
 [#] end of __file__
