@@ -34,8 +34,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     MPI_Aint lb, true_extent;
     int is_commutative;
     int nranks, rank;
-    int step1_sendto = -1, step1_nrecvs, *step1_recvfrom;
-    int step2_nphases, **step2_nbrs;
+    int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom;
+    int step2_nphases = 0, **step2_nbrs;
     int p_of_k, T;
     int buf = 0;
     int nvtcs, step1_id, *recv_id, *vtcs;

@@ -251,13 +251,13 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     int nranks, rank;
     size_t recv_extent;
     MPI_Aint recv_lb, true_extent;
-    int step1_sendto = -1, step2_nphases, step1_nrecvs, p_of_k, T;
+    int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
     int is_instep2, log_pofk;
-    int *step1_recvfrom;
-    int **step2_nbrs;
+    int *step1_recvfrom = NULL;
+    int **step2_nbrs = NULL;
     int nrecvs;
-    int *recv_id;
+    int *recv_id = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RECEXCH);

@@ -32,7 +32,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     size_t extent;
     MPI_Aint lb, true_extent;
     int is_commutative;
-    int step1_sendto = -1, step2_nphases, step1_nrecvs;
+    int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0;
     int in_step2;
     int *step1_recvfrom = NULL;
     int **step2_nbrs = NULL;
