@@ -18,7 +18,7 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
     ADIO_Status status;
     MPI_Count typesize;
     MPI_Offset len;
-    int actual_len=0;
+    int actual_len = 0;
 
 
     MPI_Type_size_x(datatype, &typesize);
