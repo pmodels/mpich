@@ -57,7 +57,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS
       category    : CH4_OFI
       type        : int
-      default     : -1
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -1426,7 +1426,8 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_scalable_endpoints :
         MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
-    /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
+    /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
+     * and fall back if necessary in the RMA init code */
     MPIDI_Global.settings.enable_shared_contexts =
         MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS : prov_name ?
