@@ -27,7 +27,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size;
-    MPI_Aint extent, true_extent, true_lb = 0;
+    MPI_Aint recvtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
@@ -53,19 +53,14 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
-
-            MPIR_Datatype_get_extent_macro(recvtype, extent);
-
+            MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
             MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *,
-                                      recvcount * local_size * (MPL_MAX(extent, true_extent)),
+                                      recvcount * local_size * recvtype_sz,
                                       mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-            /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
-
             mpi_errno =
-                MPIR_Sched_recv(tmp_buf, recvcount * local_size, recvtype, root, comm_ptr, s);
+                MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
+                                root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -79,8 +74,8 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
-            MPIR_Iscatter_sched(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0,
-                                newcomm_ptr, s);
+            MPIR_Iscatter_sched(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+                                recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

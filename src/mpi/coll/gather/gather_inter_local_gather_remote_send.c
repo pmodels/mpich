@@ -27,7 +27,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint extent, true_extent, true_lb = 0;
+    MPI_Aint sendtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
@@ -61,14 +61,10 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
-            MPIR_Datatype_get_extent_macro(sendtype, extent);
-
+            MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                                sendcount * local_size * (MPL_MAX(extent, true_extent)), mpi_errno,
+                                sendcount * local_size * sendtype_sz, mpi_errno,
                                 "tmp_buf", MPL_MEM_BUFFER);
-            /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
         }
 
         /* all processes in remote group form new intracommunicator */
@@ -81,9 +77,9 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the a local gather on this intracommunicator */
-        mpi_errno =
-            MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount, sendtype, 0, newcomm_ptr,
-                        errflag);
+        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
+                                tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
+                                0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -94,9 +90,8 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
         }
 
         if (rank == 0) {
-            mpi_errno =
-                MPIC_Send(tmp_buf, sendcount * local_size, sendtype, root, MPIR_GATHER_TAG,
-                          comm_ptr, errflag);
+            mpi_errno = MPIC_Send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
+                                  root, MPIR_GATHER_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =

@@ -27,7 +27,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint extent, true_extent, true_lb = 0;
+    MPI_Aint recvtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
@@ -61,20 +61,13 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
-
-            MPIR_Datatype_get_extent_macro(recvtype, extent);
-
+            MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                                recvcount * local_size * (MPL_MAX(extent, true_extent)), mpi_errno,
+                                recvcount * local_size * recvtype_sz, mpi_errno,
                                 "tmp_buf", MPL_MEM_BUFFER);
 
-            /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
-
-            mpi_errno =
-                MPIC_Recv(tmp_buf, recvcount * local_size, recvtype, root, MPIR_SCATTER_TAG,
-                          comm_ptr, &status, errflag);
+            mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
+                                  root, MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =
@@ -92,9 +85,8 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the usual scatter on this intracommunicator */
-        mpi_errno =
-            MPIR_Scatter(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0, newcomm_ptr,
-                         errflag);
+        mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
