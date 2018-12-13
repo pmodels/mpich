@@ -58,8 +58,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
                 MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks
                 [MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE];
             /* Figure out the next fastbox to poll by incrementing the counter. */
-            last_cache =
-                (last_cache + 1) % (int16_t) MPIDI_POSIX_eager_fbox_control_global.num_local;
+            last_cache = (last_cache + 1) % (int16_t) MPIDI_POSIX_global.num_local;
             local_rank = last_cache;
             MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks
                 [MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE] = last_cache;
@@ -75,7 +74,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
         /* If the data ready flag is set, there is a message waiting. */
         if (fbox_in->data_ready) {
             /* Initialize public transaction part */
-            grank = MPIDI_POSIX_eager_fbox_control_global.local_procs[local_rank];
+            grank = MPIDI_POSIX_global.local_procs[local_rank];
 
             if (likely(fbox_in->is_header)) {
                 /* Only received the header for the message */
@@ -154,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
     int local_rank, i;
 
     if (grank >= 0) {
-        local_rank = MPIDI_POSIX_eager_fbox_control_global.local_ranks[grank];
+        local_rank = MPIDI_POSIX_global.local_ranks[grank];
 
         /* Put the posted receive in the list of fastboxes to be polled first. If the list is full,
          * it will get polled after the boxes in the list are polled, which will be slower, but will
@@ -183,7 +182,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMPLETED_HOOK);
 
     if (grank >= 0) {
-        local_rank = MPIDI_POSIX_eager_fbox_control_global.local_ranks[grank];
+        local_rank = MPIDI_POSIX_global.local_ranks[grank];
 
         /* Remove the posted receive from the list of fastboxes to be polled first now that the
          * request is done. */

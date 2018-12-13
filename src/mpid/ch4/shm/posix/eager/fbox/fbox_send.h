@@ -40,8 +40,7 @@ MPIDI_POSIX_eager_send(int grank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
 
     fbox_out =
-        MPIDI_POSIX_eager_fbox_control_global.mailboxes.
-        out[MPIDI_POSIX_eager_fbox_control_global.local_ranks[grank]];
+        MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[MPIDI_POSIX_global.local_ranks[grank]];
 
     /* Check if the fastbox is already full and if so, return to the caller, which will cause this
      * message to be queued. */
