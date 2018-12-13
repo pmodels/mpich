@@ -20,7 +20,7 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
     int comm_size, rank, i, j, k;
     int curr_count, send_offset, incoming_count, recv_offset;
     int mask, dst, total_count, position, offset, my_tree_root, dst_tree_root;
-    MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
+    MPI_Aint recvtype_extent, recvtype_sz;
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
@@ -35,8 +35,8 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
 
     /* need to receive contiguously into tmp_buf because
      * displs could make the recvbuf noncontiguous */
+    MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
     total_count = 0;
     for (i = 0; i < comm_size; i++)
@@ -45,12 +45,8 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
     if (total_count == 0)
         goto fn_exit;
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *,
-                              total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent)),
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count * recvtype_sz,
                               mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
-    /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - recvtype_true_lb);
 
     /* copy local data into right location in tmp_buf */
     position = 0;
@@ -58,16 +54,16 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
         position += recvcounts[i];
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
-                                    ((char *) tmp_buf + position * recvtype_extent),
-                                    recvcounts[rank], recvtype, s);
+                                    ((char *) tmp_buf + position * recvtype_sz),
+                                    recvcounts[rank] * recvtype_sz, MPI_BYTE, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
         /* if in_place specified, local data is found in recvbuf */
         mpi_errno = MPIR_Sched_copy(((char *) recvbuf + displs[rank] * recvtype_extent),
                                     recvcounts[rank], recvtype,
-                                    ((char *) tmp_buf + position * recvtype_extent),
-                                    recvcounts[rank], recvtype, s);
+                                    ((char *) tmp_buf + position * recvtype_sz),
+                                    recvcounts[rank] * recvtype_sz, MPI_BYTE, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -115,13 +111,13 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
             for (j = dst_tree_root; j < (dst_tree_root + mask) && j < comm_size; ++j)
                 incoming_count += recvcounts[j];
 
-            mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset * recvtype_extent),
-                                        curr_count, recvtype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset * recvtype_sz),
+                                        curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset * recvtype_extent),
-                                        incoming_count, recvtype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset * recvtype_sz),
+                                        incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -180,13 +176,14 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
                     offset = 0;
                     for (j = 0; j < (my_tree_root + mask); j++)
                         offset += recvcounts[j];
-                    offset *= recvtype_extent;
+                    offset *= recvtype_sz;
 
                     /* incoming_count was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
                     mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
-                                                incoming_count, recvtype, dst, comm_ptr, s);
+                                                incoming_count * recvtype_sz, MPI_BYTE,
+                                                dst, comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
@@ -207,8 +204,9 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
                     for (j = dst_tree_root; j < (dst_tree_root + mask) && j < comm_size; ++j)
                         incoming_count += recvcounts[j];
 
-                    mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset * recvtype_extent),
-                                                incoming_count, recvtype, dst, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset * recvtype_sz),
+                                                incoming_count * recvtype_sz, MPI_BYTE,
+                                                dst, comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
@@ -233,8 +231,8 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
         if ((sendbuf != MPI_IN_PLACE) || (j != rank)) {
             /* not necessary to copy if in_place and
              * j==rank. otherwise copy. */
-            mpi_errno = MPIR_Sched_copy(((char *) tmp_buf + position * recvtype_extent),
-                                        recvcounts[j], recvtype,
+            mpi_errno = MPIR_Sched_copy(((char *) tmp_buf + position * recvtype_sz),
+                                        recvcounts[j] * recvtype_sz, MPI_BYTE,
                                         ((char *) recvbuf + displs[j] * recvtype_extent),
                                         recvcounts[j], recvtype, s);
             if (mpi_errno)

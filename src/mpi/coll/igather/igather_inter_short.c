@@ -25,7 +25,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
     int mpi_errno = MPI_SUCCESS;
     int rank;
     MPI_Aint local_size, remote_size;
-    MPI_Aint extent, true_extent, true_lb = 0;
+    MPI_Aint sendtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
@@ -46,14 +46,10 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
-            MPIR_Datatype_get_extent_macro(sendtype, extent);
-
+            MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
             MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *,
-                                      sendcount * local_size * (MPL_MAX(extent, true_extent)),
+                                      sendcount * local_size * sendtype_sz,
                                       mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-            /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
         }
 
         /* all processes in remote group form new intracommunicator */
@@ -67,13 +63,14 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
 
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
-                                       tmp_buf, sendcount, sendtype, 0, newcomm_ptr, s);
+                                       tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
+                                       0, newcomm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         if (rank == 0) {
-            mpi_errno =
-                MPIR_Sched_send(tmp_buf, sendcount * local_size, sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
+                                        root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
