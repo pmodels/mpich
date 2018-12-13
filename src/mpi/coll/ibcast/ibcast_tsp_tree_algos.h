@@ -32,7 +32,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     int rank;
     int recv_id;
     int num_children;
-    MPII_Treealgo_tree_t my_tree;
+    MPIR_Treealgo_tree_t my_tree;
     int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
@@ -59,7 +59,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
                                              maxbytes, count, num_chunks,
                                              chunk_size_floor, chunk_size_ceil));
 
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -93,7 +93,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
         offset += msgsize;
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);

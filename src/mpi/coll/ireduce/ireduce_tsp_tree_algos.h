@@ -40,7 +40,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
                                  * rank 0 sends the reduced data to the root of the ecollective op. */
     int is_tree_root, is_tree_leaf, is_tree_intermediate;       /* Variables to store location of this rank in the tree */
     int is_root;
-    MPII_Treealgo_tree_t my_tree;
+    MPIR_Treealgo_tree_t my_tree;
     void **child_buffer = NULL; /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which reduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
@@ -85,7 +85,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
     /* initialize the tree */
     my_tree.children = NULL;
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, tree_root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, tree_root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -240,7 +240,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
         offset += msgsize;
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPL_free(vtcs);
