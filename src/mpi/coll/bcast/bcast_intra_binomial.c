@@ -30,7 +30,6 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     MPI_Status status;
     int is_contig;
     MPI_Aint type_size;
-    MPI_Aint position;
     void *tmp_buf = NULL;
     MPIR_CHKLMEM_DECL(1);
 
@@ -57,9 +56,8 @@ int MPIR_Bcast_intra_binomial(void *buffer,
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
-        position = 0;
         if (rank == root) {
-            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes, &position);
+            mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
@@ -165,8 +163,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
 
     if (!is_contig) {
         if (rank != root) {
-            position = 0;
-            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);
+            mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 

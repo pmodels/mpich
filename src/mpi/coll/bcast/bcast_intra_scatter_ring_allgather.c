@@ -38,7 +38,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size;
     int j, i, is_contig;
-    MPI_Aint nbytes, type_size, position;
+    MPI_Aint nbytes, type_size;
     int left, right, jnext;
     void *tmp_buf;
     MPI_Aint recvd_size, curr_size = 0;
@@ -73,9 +73,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     } else {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-        position = 0;
         if (rank == root) {
-            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes, &position);
+            mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
@@ -150,8 +149,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
     if (!is_contig) {
         if (rank != root) {
-            position = 0;
-            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);
+            mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
