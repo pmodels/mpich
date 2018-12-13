@@ -43,16 +43,6 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
     MPIDI_POSIX_fbox_arrays_t mailboxes;        /* The array of buffers that make up the total collection
                                                  * of mailboxes */
 
-    MPIDU_shm_barrier_t *barrier;
-    void *barrier_region;
-
-    /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
-     * in that communicator. */
-    int num_local;
-    int my_local_rank;
-    int *local_ranks;
-    int *local_procs;
-
     /* A small cache of local ranks that have posted receives that we use to poll fastboxes more
      * efficiently. The last entry in this array is a counter to keep track of the most recently
      * checked fastbox so we can make sure we don't starve the fastboxes where receives haven't been
@@ -62,6 +52,7 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
      * is much bigger than any currently immaginable single-node without something like wildly
      * oversubscribed ranks as threads). */
     int16_t *first_poll_local_ranks;
+    int next_poll_local_rank;
 
 } MPIDI_POSIX_eager_fbox_control_t;
 

@@ -73,7 +73,7 @@ static int choose_posix_eager(void)
 int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    int i, num_local = 0, local_rank_0 = -1, my_local_rank = -1;
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_POSIX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX", "shm_posix");
@@ -87,6 +87,20 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
 
+    /* Populate these values with transformation information about each rank and its original
+     * information in MPI_COMM_WORLD. */
+
+    mpi_errno = MPIR_Find_local(MPIR_Process.comm_world, &num_local, &my_local_rank,
+                                /* comm_world rank of each local process */
+                                &MPIDI_POSIX_global.local_procs,
+                                /* local rank of each process in comm_world if it is on the same node */
+                                &MPIDI_POSIX_global.local_ranks);
+
+    local_rank_0 = MPIDI_POSIX_global.local_procs[0];
+    MPIDI_POSIX_global.num_local = num_local;
+    MPIDI_POSIX_global.my_local_rank = my_local_rank;
+
+    MPIDI_POSIX_global.local_rank_0 = local_rank_0;
     *n_vcis_provided = 1;
 
     /* This is used to track messages that the eager submodule was not ready to send. */
@@ -142,6 +156,9 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     mpi_errno = MPIDI_POSIX_coll_finalize();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    MPL_free(MPIDI_POSIX_global.local_ranks);
+    MPL_free(MPIDI_POSIX_global.local_procs);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
