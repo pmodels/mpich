@@ -15,7 +15,7 @@
 #include "treeutil.h"
 #include "mpiimpl.h"
 
-static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
+static int tree_add_child(MPIR_Treealgo_tree_t * t, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -26,7 +26,7 @@ static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
 }
 
 
-int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Treealgo_tree_t * ct)
 {
     int lrank, child;
     int mpi_errno = MPI_SUCCESS;
@@ -76,7 +76,7 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
  *                     3
  */
 int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
-                                      MPII_Treealgo_tree_t * ct)
+                                      MPIR_Treealgo_tree_t * ct)
 {
     int lrank, i, j, maxtime, tmp, time, parent, current_rank, running_rank, crank;
     int mpi_errno = MPI_SUCCESS;
@@ -171,7 +171,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
  *                      7
  */
 int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
-                                      MPII_Treealgo_tree_t * ct)
+                                      MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
     int lrank, i, j, depth;

@@ -33,7 +33,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int size;
     int rank;
     int num_children = 0;
-    MPII_Treealgo_tree_t my_tree;
+    MPIR_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
@@ -76,7 +76,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
     /* initialize the tree */
     my_tree.children = NULL;
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -216,7 +216,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         offset += msgsize;
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPL_free(vtcs);

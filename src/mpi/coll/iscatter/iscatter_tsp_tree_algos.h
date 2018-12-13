@@ -35,7 +35,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     void *tmp_buf = NULL;
     int recv_id;
     int tree_type;
-    MPII_Treealgo_tree_t my_tree, parents_tree;
+    MPIR_Treealgo_tree_t my_tree, parents_tree;
     int next_child;
     int num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
     int offset, recv_size;
@@ -50,7 +50,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
         is_inplace = (recvbuf == MPI_IN_PLACE); /* For scatter, MPI_IN_PLACE is significant only at root */
 
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for scatter */
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -85,7 +85,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
 
     /* get tree information of the parent */
     if (my_tree.parent != -1) {
-        MPII_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
+        MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
     } else {    /* initialize an empty children array */
         utarray_new(parents_tree.children, &ut_int_icd, MPL_MEM_COLL);
         parents_tree.num_children = 0;
@@ -118,7 +118,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
         recv_size += child_subtree_size[i];
     }
 
-    MPII_Treealgo_tree_free(&parents_tree);
+    MPIR_Treealgo_tree_free(&parents_tree);
 
     recv_size *= (lrank == 0) ? sendcount : recvcount;
     offset = (lrank == 0) ? sendcount : recvcount;
@@ -177,7 +177,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
                                  recvcount, recvtype, sched, 0, NULL);
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPL_free(child_subtree_size);
