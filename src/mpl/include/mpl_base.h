@@ -171,4 +171,7 @@ typedef bool _Bool;
 #define __bool_true_false_are_defined 1
 #endif
 
+#define MPL_ROUND_UP_ALIGN(a, alignment) (((a) + ((alignment) - 1)) & (~((alignment) - 1)))
+#define MPL_ROUND_DOWN_ALIGN(a, alignment) ((a) & (~((alignment) - 1)))
+
 #endif /* MPL_BASE_H_INCLUDED */
