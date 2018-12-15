@@ -139,8 +139,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
          * processes. The result is an array each of start and end offsets
          * stored in order of process rank. */
 
-        st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
-        end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
+        st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
+        end_offsets = st_offsets + nprocs;
 
         MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
         MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
@@ -160,9 +160,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
         /* don't do aggregation */
         if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
             ADIOI_Free(offset_list);
-            ADIOI_Free(len_list);
             ADIOI_Free(st_offsets);
-            ADIOI_Free(end_offsets);
         }
 
         fd->fp_ind = orig_fp;
@@ -233,13 +231,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * let's free the memory
      */
     ADIOI_Free(count_my_req_per_proc);
-    for (i = 0; i < nprocs; i++) {
-        if (my_req[i].count) {
-            ADIOI_Free(my_req[i].offsets);
-        }
-    }
+    ADIOI_Free(my_req[0].offsets);
     ADIOI_Free(my_req);
-
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
      * communicate, and fill user buf.
@@ -251,21 +244,14 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
 
     /* free all memory allocated for collective I/O */
-    for (i = 0; i < nprocs; i++) {
-        if (others_req[i].count) {
-            ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].mem_ptrs);
-        }
-    }
+    ADIOI_Free(others_req[0].offsets);
+    ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
-    ADIOI_Free(len_list);
     ADIOI_Free(st_offsets);
-    ADIOI_Free(end_offsets);
     ADIOI_Free(fd_start);
-    ADIOI_Free(fd_end);
 
 #ifdef HAVE_STATUS_SET_BYTES
     MPI_Type_size_x(datatype, &size);
@@ -319,8 +305,8 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
     if (!filetype_size) {
         *contig_access_count_ptr = 0;
-        *offset_list_ptr = (ADIO_Offset *) ADIOI_Malloc(2 * sizeof(ADIO_Offset));
-        *len_list_ptr = (ADIO_Offset *) ADIOI_Malloc(2 * sizeof(ADIO_Offset));
+        *offset_list_ptr = (ADIO_Offset *) ADIOI_Malloc(4 * sizeof(ADIO_Offset));
+        *len_list_ptr = *offset_list_ptr + 2;
         /* 2 is for consistency. everywhere I malloc one more than needed */
 
         offset_list = *offset_list_ptr;
@@ -336,8 +322,8 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
     if (filetype_is_contig) {
         *contig_access_count_ptr = 1;
-        *offset_list_ptr = (ADIO_Offset *) ADIOI_Malloc(2 * sizeof(ADIO_Offset));
-        *len_list_ptr = (ADIO_Offset *) ADIOI_Malloc(2 * sizeof(ADIO_Offset));
+        *offset_list_ptr = (ADIO_Offset *) ADIOI_Malloc(4 * sizeof(ADIO_Offset));
+        *len_list_ptr = *offset_list_ptr + 2;
         /* 2 is for consistency. everywhere I malloc one more than needed */
 
         offset_list = *offset_list_ptr;
@@ -437,10 +423,9 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
         /* allocate space for offset_list and len_list */
 
-        *offset_list_ptr = (ADIO_Offset *)
-            ADIOI_Malloc((contig_access_count + 1) * sizeof(ADIO_Offset));
-        *len_list_ptr =
-            (ADIO_Offset *) ADIOI_Malloc((contig_access_count + 1) * sizeof(ADIO_Offset));
+        *offset_list_ptr =
+            (ADIO_Offset *) ADIOI_Malloc((contig_access_count + 1) * 2 * sizeof(ADIO_Offset));
+        *len_list_ptr = *offset_list_ptr + (contig_access_count + 1);
         /* +1 to avoid a 0-size malloc */
 
         offset_list = *offset_list_ptr;
@@ -574,30 +559,30 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
     read_buf = fd->io_buf;      /* Allocated at open time */
 
-    curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs * 7, sizeof(int));
     /* its use is explained below. calloc initializes to 0. */
 
-    count = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    count = curr_offlen_ptr + nprocs;
     /* to store count of how many off-len pairs per proc are satisfied
      * in an iteration. */
 
-    partial_send = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    partial_send = count + nprocs;
     /* if only a portion of the last off-len pair is sent to a process
      * in a particular iteration, the length sent is stored here.
      * calloc initializes to 0. */
 
-    send_size = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    send_size = partial_send + nprocs;
     /* total size of data to be sent to each proc. in an iteration */
 
-    recv_size = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    recv_size = send_size + nprocs;
     /* total size of data to be recd. from each proc. in an iteration.
      * Of size nprocs so that I can use MPI_Alltoall later. */
 
-    recd_from_proc = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    recd_from_proc = recv_size + nprocs;
     /* amount of data recd. so far from each proc. Used in
      * ADIOI_Fill_user_buffer. initialized to 0 here. */
 
-    start_pos = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    start_pos = recd_from_proc + nprocs;
     /* used to store the starting value of curr_offlen_ptr[i] in
      * this iteration */
 
@@ -767,12 +752,6 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                               others_req, m, buftype_extent, buf_idx);
 
     ADIOI_Free(curr_offlen_ptr);
-    ADIOI_Free(count);
-    ADIOI_Free(partial_send);
-    ADIOI_Free(send_size);
-    ADIOI_Free(recv_size);
-    ADIOI_Free(recd_from_proc);
-    ADIOI_Free(start_pos);
 }
 
 static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
@@ -789,6 +768,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 {
     int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
+    size_t memLen;
     MPI_Request *requests;
     MPI_Datatype send_type;
     MPI_Status *statuses;
@@ -799,14 +779,15 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     MPI_Alltoall(send_size, 1, MPI_INT, recv_size, 1, MPI_INT, fd->comm);
 
     nprocs_recv = 0;
-    for (i = 0; i < nprocs; i++)
+    nprocs_send = 0;
+    memLen = 0;
+    for (i = 0; i < nprocs; i++) {
+        memLen += recv_size[i];
         if (recv_size[i])
             nprocs_recv++;
-
-    nprocs_send = 0;
-    for (i = 0; i < nprocs; i++)
         if (send_size[i])
             nprocs_send++;
+    }
 
     requests = (MPI_Request *)
         ADIOI_Malloc((nprocs_send + nprocs_recv + 1) * sizeof(MPI_Request));
@@ -830,13 +811,11 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             }
         }
     } else {
-/* allocate memory for recv_buf and post receives */
+        /* allocate memory for recv_buf and post receives */
         recv_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
-        for (i = 0; i < nprocs; i++) {
-            if (recv_size[i]) {
-                recv_buf[i] = (char *) ADIOI_Malloc(recv_size[i]);
-            }
-        }
+        recv_buf[0] = (char *) ADIOI_Malloc(memLen);
+        for (i = 1; i < nprocs; i++)
+            recv_buf[i] = recv_buf[i - 1] + recv_size[i - 1];
 
         j = 0;
         for (i = 0; i < nprocs; i++) {
@@ -915,9 +894,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     ADIOI_Free(requests);
 
     if (!buftype_is_contig) {
-        for (i = 0; i < nprocs; i++)
-            if (recv_size[i])
-                ADIOI_Free(recv_buf[i]);
+        ADIOI_Free(recv_buf[0]);
         ADIOI_Free(recv_buf);
     }
 #ifdef AGGREGATION_PROFILE
@@ -1003,9 +980,9 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         filled into user buffer in previous iterations
     user_buf_idx = current location in user buffer
     recv_buf_idx[p] = current location in recv_buf of proc. p  */
-    curr_from_proc = (unsigned *) ADIOI_Malloc(nprocs * sizeof(unsigned));
-    done_from_proc = (unsigned *) ADIOI_Malloc(nprocs * sizeof(unsigned));
-    recv_buf_idx = (unsigned *) ADIOI_Malloc(nprocs * sizeof(unsigned));
+    curr_from_proc = (unsigned *) ADIOI_Malloc(nprocs * 3 * sizeof(unsigned));
+    done_from_proc = curr_from_proc + nprocs;
+    recv_buf_idx = done_from_proc + nprocs;
 
     for (i = 0; i < nprocs; i++) {
         recv_buf_idx[i] = curr_from_proc[i] = 0;
@@ -1069,6 +1046,4 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             recd_from_proc[i] = curr_from_proc[i];
 
     ADIOI_Free(curr_from_proc);
-    ADIOI_Free(done_from_proc);
-    ADIOI_Free(recv_buf_idx);
 }
