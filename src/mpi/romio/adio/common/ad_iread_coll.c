@@ -280,8 +280,8 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
          * processes. The result is an array each of start and end offsets
          * stored in order of process rank. */
 
-        vars->st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
-        vars->end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
+        vars->st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
+        vars->end_offsets = vars->st_offsets + nprocs;
 
         *error_code = MPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
                                      vars->st_offsets, 1, ADIO_OFFSET,
@@ -344,9 +344,7 @@ static void ADIOI_GEN_IreadStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *e
         /* don't do aggregation */
         if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
             ADIOI_Free(vars->offset_list);
-            ADIOI_Free(vars->len_list);
             ADIOI_Free(vars->st_offsets);
-            ADIOI_Free(vars->end_offsets);
         }
 
         fd->fp_ind = vars->orig_fp;
@@ -457,18 +455,12 @@ static void ADIOI_GEN_IreadStridedColl_read(ADIOI_NBC_Request * nbc_req, int *er
     ADIOI_GEN_IreadStridedColl_vars *vars = nbc_req->data.rd.rsc_vars;
     ADIOI_Iread_and_exch_vars *rae_vars = NULL;
     ADIOI_Access *my_req = vars->my_req;
-    int nprocs = vars->nprocs;
-    int i;
 
     /* my_req[] and count_my_req_per_proc aren't needed at this point, so
      * let's free the memory
      */
     ADIOI_Free(vars->count_my_req_per_proc);
-    for (i = 0; i < nprocs; i++) {
-        if (my_req[i].count) {
-            ADIOI_Free(my_req[i].offsets);
-        }
-    }
+    ADIOI_Free(my_req[0].offsets);
     ADIOI_Free(my_req);
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
@@ -500,26 +492,17 @@ static void ADIOI_GEN_IreadStridedColl_free(ADIOI_NBC_Request * nbc_req, int *er
     ADIOI_GEN_IreadStridedColl_vars *vars = nbc_req->data.rd.rsc_vars;
     ADIO_File fd = vars->fd;
     ADIOI_Access *others_req = vars->others_req;
-    int nprocs = vars->nprocs;
-    int i;
 
 
     /* free all memory allocated for collective I/O */
-    for (i = 0; i < nprocs; i++) {
-        if (others_req[i].count) {
-            ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].mem_ptrs);
-        }
-    }
+    ADIOI_Free(others_req[0].offsets);
+    ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
     ADIOI_Free(vars->buf_idx);
     ADIOI_Free(vars->offset_list);
-    ADIOI_Free(vars->len_list);
     ADIOI_Free(vars->st_offsets);
-    ADIOI_Free(vars->end_offsets);
     ADIOI_Free(vars->fd_start);
-    ADIOI_Free(vars->fd_end);
 
     fd->fp_sys_posn = -1;       /* set it to null. */
 

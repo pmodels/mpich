@@ -250,8 +250,8 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
      fd_size = min_fd_size;
      */
     fd_size = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
-    *fd_start_ptr = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
-    *fd_end_ptr = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
+    *fd_start_ptr = (ADIO_Offset *) ADIOI_Malloc(nprocs_for_coll * 2 * sizeof(ADIO_Offset));
+    *fd_end_ptr = *fd_start_ptr + nprocs_for_coll;
     fd_start = *fd_start_ptr;
     fd_end = *fd_end_ptr;
 

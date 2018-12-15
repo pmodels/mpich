@@ -13,9 +13,8 @@
 
 #undef AGG_DEBUG
 
-void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int mode)
+void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int *striping_info, int mode)
 {
-    int *striping_info = NULL;
     /* get striping information:
      *  striping_info[0]: stripe_size
      *  striping_info[1]: stripe_count
@@ -88,8 +87,6 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
         }
     }
 
-    *striping_info_ptr = (int *) ADIOI_Malloc(3 * sizeof(int));
-    striping_info = *striping_info_ptr;
     striping_info[0] = stripe_size;
     striping_info[1] = stripe_count;
     striping_info[2] = avail_cb_nodes;
@@ -142,7 +139,8 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
     int *count_my_req_per_proc, count_my_req_procs;
     int i, l, proc;
-    ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx;
+    size_t memLen;
+    ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
@@ -152,8 +150,6 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
      * I'm allocating memory of size nprocs, so that I can do an
      * MPI_Alltoall later on.
      */
-
-    buf_idx = (ADIO_Offset **) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset *));
 
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
@@ -194,23 +190,30 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
      * without extra buffer. This can't be done if buftype is not contig.
      */
 
+    memLen = 0;
+    for (i = 0; i < nprocs; i++)
+        memLen += count_my_req_per_proc[i];
+    ptr = (ADIO_Offset *) ADIOI_Malloc((memLen * 3 + nprocs) * sizeof(ADIO_Offset));
+
     /* initialize buf_idx vectors */
-    for (i = 0; i < nprocs; i++) {
-        /* add one to count_my_req_per_proc[i] to avoid zero size malloc */
-        buf_idx[i] = (ADIO_Offset *) ADIOI_Malloc((count_my_req_per_proc[i] + 1)
-                                                  * sizeof(ADIO_Offset));
-    }
+    buf_idx = (ADIO_Offset **) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset *));
+    buf_idx[0] = ptr;
+    for (i = 1; i < nprocs; i++)
+        buf_idx[i] = buf_idx[i - 1] + count_my_req_per_proc[i - 1] + 1;
+    ptr += memLen + nprocs;     /* "+ nprocs" puts a terminal index at the end */
 
     /* now allocate space for my_req, offset, and len */
     *my_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     my_req = *my_req_ptr;
+    my_req[0].offsets = ptr;
 
     count_my_req_procs = 0;
     for (i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i]) {
-            my_req[i].offsets = (ADIO_Offset *)
-                ADIOI_Malloc(count_my_req_per_proc[i] * 2 * sizeof(ADIO_Offset));
-            my_req[i].lens = my_req[i].offsets + count_my_req_per_proc[i];
+            my_req[i].offsets = ptr;
+            ptr += count_my_req_per_proc[i];
+            my_req[i].lens = ptr;
+            ptr += count_my_req_per_proc[i];
             count_my_req_procs++;
         }
         my_req[i].count = 0;    /* will be incremented where needed later */
