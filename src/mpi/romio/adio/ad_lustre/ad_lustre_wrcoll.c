@@ -899,6 +899,9 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         MPI_Type_free(recv_types + i);
     ADIOI_Free(recv_types);
 
+#ifdef MPI_STATUSES_IGNORE
+    statuses = MPI_STATUSES_IGNORE;
+#else
     /* bug fix from Wei-keng Liao and Kenin Coloma */
     /* +1 to avoid a 0-size malloc */
     if (fd->atomicity) {
@@ -907,6 +910,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         statuses = (MPI_Status *) ADIOI_Malloc((nprocs_send + nprocs_recv + 1) *
                                                sizeof(MPI_Status));
     }
+#endif
 
 #ifdef NEEDS_MPI_TEST
     i = 0;
@@ -925,7 +929,10 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
     else
         MPI_Waitall(nprocs_send + nprocs_recv, requests, statuses);
 #endif
+
+#ifndef MPI_STATUSES_IGNORE
     ADIOI_Free(statuses);
+#endif
     ADIOI_Free(requests);
     if (!buftype_is_contig && nprocs_send) {
         for (i = 0; i < nprocs; i++)
