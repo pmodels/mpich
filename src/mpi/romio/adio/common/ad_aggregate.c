@@ -433,7 +433,6 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     int *count_others_req_per_proc, count_others_req_procs;
     int i, j;
     MPI_Request *requests;
-    MPI_Status *statuses;
     ADIOI_Access *others_req;
 
 /* first find out how much to send/recv and from/to whom */
@@ -485,10 +484,13 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     }
 
     if (j) {
-        /* TODO: consider using MPI_STATUSES_IGNORE to avoid malloc */
-        statuses = (MPI_Status *) ADIOI_Malloc(j * sizeof(MPI_Status));
+#ifdef MPI_STATUSES_IGNORE
+        MPI_Waitall(j, requests, MPI_STATUSES_IGNORE);
+#else
+        MPI_Status *statuses = (MPI_Status *) ADIOI_Malloc(j * sizeof(MPI_Status));
         MPI_Waitall(j, requests, statuses);
         ADIOI_Free(statuses);
+#endif
     }
 
     ADIOI_Free(requests);

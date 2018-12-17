@@ -878,8 +878,12 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
         }
     }
 
+#ifdef MPI_STATUSES_IGNORE
+    statuses = MPI_STATUSES_IGNORE;
+#else
     statuses = (MPI_Status *) ADIOI_Malloc((nprocs_send + nprocs_recv + 1) * sizeof(MPI_Status));
     /* +1 to avoid a 0-size malloc */
+#endif
 
     /* wait on the receives */
     if (nprocs_recv) {
@@ -901,9 +905,13 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     }
 
     /* wait on the sends */
+#ifdef MPI_STATUSES_IGNORE
+    MPI_Waitall(nprocs_send, requests + nprocs_recv, MPI_STATUSES_IGNORE);
+#else
     MPI_Waitall(nprocs_send, requests + nprocs_recv, statuses + nprocs_recv);
 
     ADIOI_Free(statuses);
+#endif
     ADIOI_Free(requests);
 
     if (!buftype_is_contig) {
