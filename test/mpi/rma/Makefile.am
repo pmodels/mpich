@@ -158,6 +158,7 @@ noinst_PROGRAMS =          \
     atomic_get_double_int          \
     atomic_get_long_double_int     \
     acc_pairtype           \
+    acc_pairtype_shm       \
     manyget                \
     derived_acc_flush_local\
     large_acc_flush_local  \
@@ -201,6 +202,9 @@ atomic_get_long_int_CPPFLAGS        = -DTEST_LONG_INT $(AM_CPPFLAGS)
 atomic_get_float_int_CPPFLAGS       = -DTEST_FLOAT_INT $(AM_CPPFLAGS)
 atomic_get_double_int_CPPFLAGS      = -DTEST_DOUBLE_INT $(AM_CPPFLAGS)
 atomic_get_long_double_int_CPPFLAGS = -DTEST_LONG_DOUBLE_INT $(AM_CPPFLAGS)
+
+acc_pairtype_shm_SOURCES            = acc_pairtype.c
+acc_pairtype_shm_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
