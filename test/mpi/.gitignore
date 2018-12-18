@@ -1146,6 +1146,7 @@
 /results.txt
 /rma/acc_loc
 /rma/acc_pairtype
+/rma/acc_pairtype_shm
 /rma/acc_flush_get
 /rma/acc_ordering
 /rma/accfence1
