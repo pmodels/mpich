@@ -40,7 +40,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     /* Handle contig origin datatype */
     if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
         mpi_errno = MPIDI_CH4U_compute_acc_op(origin_addr, origin_count, origin_datatype,
-                                              target_addr, target_count, target_datatype, op);
+                                              target_addr, target_count, target_datatype, op,
+                                              MPIDI_CH4U_ACC_SRCBUF_DEFAULT);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -83,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
 
     mpi_errno = MPIDI_CH4U_compute_acc_op((void *) packed_buf, (int) predefined_dtp_count,
                                           basic_type, target_addr, target_count, target_datatype,
-                                          op);
+                                          op, MPIDI_CH4U_ACC_SRCBUF_PACKED);
 
   fn_exit:
     MPL_free(packed_buf);
