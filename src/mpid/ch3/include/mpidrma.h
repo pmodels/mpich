@@ -884,7 +884,8 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
                                    void *target_buf, int target_count, MPI_Datatype target_dtp,
-                                   MPI_Aint stream_offset, MPI_Op acc_op)
+                                   MPI_Aint stream_offset, MPI_Op acc_op,
+                                   MPIDI_RMA_Acc_srcbuf_kind_t srckind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
@@ -940,7 +941,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
-        MPI_Aint type_extent, type_size;
+        MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype*dtp;
         MPI_Aint curr_len;
@@ -984,6 +985,13 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Assert(type == source_dtp);
         type_size = source_dtp_size;
         type_extent = source_dtp_extent;
+        /* If the source buffer has been packed by the caller, the distance between
+         * two elements can be smaller than extent. E.g., predefined pairtype may
+         * have larger extent than size.*/
+        if (srckind == MPIDI_RMA_ACC_SRCBUF_PACKED)
+            src_type_stride = type_size;
+        else
+            src_type_stride = type_extent;
 
         i = 0;
         curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
@@ -999,7 +1007,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
             MPIR_Assign_trunc(count, curr_len / type_size, int);
 
-            (*uop) ((char *) source_buf + type_extent * accumulated_count,
+            (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
                     (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
 
             if (curr_len % type_size == 0) {
