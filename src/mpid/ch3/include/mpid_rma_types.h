@@ -28,6 +28,11 @@ typedef enum MPIDI_RMA_Pool_type {
     MPIDI_RMA_POOL_GLOBAL = 7
 } MPIDI_RMA_Pool_type_t;
 
+typedef enum MPIDI_RMA_Acc_srcbuf_kind {
+    MPIDI_RMA_ACC_SRCBUF_DEFAULT,
+    MPIDI_RMA_ACC_SRCBUF_PACKED
+} MPIDI_RMA_Acc_srcbuf_kind_t;
+
 /* for keeping track of RMA ops, which will be executed at the next sync call */
 typedef struct MPIDI_RMA_Op {
     struct MPIDI_RMA_Op *next;  /* pointer to next element in list */
