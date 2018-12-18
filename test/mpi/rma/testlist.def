@@ -134,6 +134,7 @@ atomic_get_double_int 3 mpiversion=3.0 timeLimit=300
 atomic_get_long_double_int 3 mpiversion=3.0 timeLimit=300
 aint 2 mpiversion=3.1
 acc_pairtype 2
+acc_pairtype_shm 2
 manyget 2 timeLimit=300
 derived_acc_flush_local 3 mpiversion=3.0
 large_acc_flush_local 3 mpiversion=3.0
