@@ -667,7 +667,8 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_addr),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_count),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype),
-                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op),
+                                              MPIDI_CH4U_ACC_SRCBUF_DEFAULT);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -683,7 +684,8 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
                                                   iov[i].iov_base, count,
                                                   MPIDI_CH4U_REQUEST(rreq,
                                                                      req->areq.target_datatype),
-                                                  MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                                  MPIDI_CH4U_REQUEST(rreq, req->areq.op),
+                                                  MPIDI_CH4U_ACC_SRCBUF_DEFAULT);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             src_ptr += count * basic_sz;
@@ -772,7 +774,8 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_addr),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_count),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype),
-                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op),
+                                              MPIDI_CH4U_ACC_SRCBUF_DEFAULT);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -791,7 +794,8 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
                                                   iov[i].iov_base, count,
                                                   MPIDI_CH4U_REQUEST(rreq,
                                                                      req->areq.target_datatype),
-                                                  MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                                  MPIDI_CH4U_REQUEST(rreq, req->areq.op),
+                                                  MPIDI_CH4U_ACC_SRCBUF_DEFAULT);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             src_ptr += count * basic_sz;

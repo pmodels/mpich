@@ -116,6 +116,12 @@ enum {
     MPIDI_CH4R_SHM = 1
 };
 
+/* Enum for src buffer kind when computing accumulate op */
+enum {
+    MPIDI_CH4U_ACC_SRCBUF_DEFAULT = 0,
+    MPIDI_CH4U_ACC_SRCBUF_PACKED = 1
+};
+
 typedef struct MPIDI_CH4U_hdr_t {
     int src_rank;
     int tag;

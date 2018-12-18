@@ -1052,7 +1052,8 @@ static inline int MPIDI_CH4U_destroy_shm_segment(MPI_Aint shm_segment_len,
 
 /* Compute accumulate operation.
  * The source datatype can be only predefined; the target datatype can be
- * predefined or derived. */
+ * predefined or derived. If the source buffer has been packed by the caller,
+ * src_kind must be set to MPIDI_CH4U_ACC_SRCBUF_PACKED.*/
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_compute_acc_op
 #undef FCNAME
@@ -1060,7 +1061,7 @@ static inline int MPIDI_CH4U_destroy_shm_segment(MPI_Aint shm_segment_len,
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int source_count,
                                                        MPI_Datatype source_dtp, void *target_buf,
                                                        int target_count, MPI_Datatype target_dtp,
-                                                       MPI_Op acc_op)
+                                                       MPI_Op acc_op, int src_kind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
@@ -1102,7 +1103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
-        MPI_Aint type_extent, type_size;
+        MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype *dtp;
         MPI_Aint curr_len;
@@ -1145,6 +1146,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         MPIR_Assert(type == source_dtp);
         type_size = source_dtp_size;
         type_extent = source_dtp_extent;
+        /* If the source buffer has been packed by the caller, the distance between
+         * two elements can be smaller than extent. E.g., predefined pairtype may
+         * have larger extent than size.*/
+        if (src_kind == MPIDI_CH4U_ACC_SRCBUF_PACKED)
+            src_type_stride = source_dtp_size;
+        else
+            src_type_stride = source_dtp_extent;
 
         i = 0;
         curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
@@ -1160,7 +1168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
 
             MPIR_Assign_trunc(count, curr_len / type_size, int);
 
-            (*uop) ((char *) source_buf + type_extent * accumulated_count,
+            (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
                     (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
 
             if (curr_len % type_size == 0) {
