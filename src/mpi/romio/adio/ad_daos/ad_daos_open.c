@@ -247,22 +247,11 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     else
         amode = O_RDONLY;
 
-    /* Mount a flat namespace on the container */
+    /* Mount a DFS namespace on the container */
     rc = dfs_mount(daos_pool_oh, cont->coh, amode, &cont->dfs);
     if (rc) {
         PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
         goto err_cont;
-    }
-
-    rc = dfs_get_epoch(cont->dfs, &cont->epoch);
-    if (rc) {
-        PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "dfs_get_epoch() Failed", 0);
-        goto err_dfs;
     }
 
     /* Set file access flags */
@@ -318,7 +307,7 @@ err_obj:
     if (fd->access_mode & ADIO_CREATE)
         dfs_remove(cont->dfs, NULL, cont->obj_name, true);
 err_dfs:
-    dfs_umount(cont->dfs, false);
+    dfs_umount(cont->dfs);
 err_cont:
     adio_daos_cont_release(cont->hdl);
     goto out;
@@ -404,7 +393,6 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     if (mpi_size > 1) {
         handle_share(&cont->coh, HANDLE_CO, rank, daos_pool_oh, comm);
         handle_share(&cont->oh, HANDLE_OBJ, rank, cont->coh, comm);
-        MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, comm);
     }
 
     fd->is_open = 1;
@@ -436,85 +424,27 @@ ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
     if (fd->is_open <= 0)
         goto out;
 
-    if (cont->amode == DAOS_COO_RW) {
-        daos_epoch_t max_epoch;
+    daos_sync_ranks(fd->comm);
 
-        MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX,
-                      fd->comm);
-        cont->epoch = max_epoch;
-
-        if (rank == 0) {
-            daos_epoch_t epoch;
-
-            rc = dfs_get_epoch(cont->dfs, &epoch);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-
-            if (cont->epoch > epoch) {
-                rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
-                if (rc) {
-                    PRINT_MSG(stderr, "daos_epoch_commit() failed (%d)\n", rc);
-                    goto bcast_rc;
-                }
-            }
-
-            rc = dfs_sync(cont->dfs);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-
-            rc = dfs_get_epoch(cont->dfs, &cont->epoch);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-        }
-
-bcast_rc:
-        MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
-
-        if (rc != 0) {
-            PRINT_MSG(stderr, "Epoch Commit/Hold Failed\n");
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Epoch Commit failed", 0);
-            return;
-        }
-    } else {
-        if (rank == 0) {
-            rc = dfs_sync(cont->dfs);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-
-            rc = dfs_get_epoch(cont->dfs, &cont->epoch);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-        }
-
-        MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
-
-        if (rc != 0) {
-            PRINT_MSG(stderr, "Epoch Query Failed\n");
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Epoch Query Failed", 0);
-            return;
+    if (rank == 0) {
+        rc = dfs_sync(cont->dfs);
+        if (rc) {
+            PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
+            goto bcast_rc;
         }
     }
 
-    MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
+bcast_rc:
+    MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
+    if (rc != 0) {
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "DFS Sync Failed", 0);
+        return;
+    }
 out:
     *error_code = MPI_SUCCESS;
 }
@@ -523,7 +453,6 @@ void
 ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
     struct adio_daos_co_hdl *co_hdl;
-    daos_epoch_t epoch = 0;
     uuid_t uuid;
     dfs_t *dfs;
     char *obj_name, *cont_name;
@@ -567,7 +496,7 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     *error_code = MPI_SUCCESS;
 
 out_dfs:
-    dfs_umount(dfs, rc ? false : true);
+    dfs_umount(dfs);
 out_cont:
     adio_daos_cont_release(co_hdl);
 out_free:

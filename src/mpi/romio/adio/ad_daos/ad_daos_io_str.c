@@ -230,8 +230,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         rgs->rg_idx = off;
         rgs->rg_len = bufsize;
 #ifdef D_PRINT_IO
-        printf("(%d) Single : epoch %lld off %lld len %zu\n",
-            mpi_rank, cont->epoch, rgs->rg_idx, rgs->rg_len);
+        printf("(%d) Single: idx %lld len %zu\n",
+               mpi_rank, rgs->rg_idx, rgs->rg_len);
 #endif
 
         if (request)
@@ -334,8 +334,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                 if(request)
                     aio_req->nbytes += rgs[i].rg_len;
 #ifdef D_PRINT_IO
-                printf("(%d) %d: epoch %lld off %lld len %zu\n",
-                    mpi_rank, i, cont->epoch, rgs[i].rg_idx, rgs[i].rg_len);
+                printf("(%d) %d: idx %lld len %zu\n",
+                    mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
 #endif
             }
             else {
@@ -345,8 +345,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                         + flat_file->indices[j];
                     rgs[i].rg_len = flat_file->blocklens[j];
 #ifdef D_PRINT_IO
-                    printf("(%d) %d: epoch %lld off %lld len %zu\n",
-                           mpi_rank, i, cont->epoch, rgs[i].rg_idx, rgs[i].rg_len);
+                    printf("(%d) %d: idx %lld len %zu\n",
+                           mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
 #endif
                     if(request)
                         aio_req->nbytes += rgs[i].rg_len;
@@ -370,7 +370,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         aio_req->rgs = rgs;
 
     if (rw_type == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, cont->epoch++, iod, sgl, NULL,
+        ret = daos_array_write(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
@@ -383,7 +383,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         }
     }
     else if (rw_type == DAOS_READ) {
-        ret = daos_array_read(cont->oh, cont->epoch, iod, sgl, NULL,
+        ret = daos_array_read(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
@@ -427,14 +427,9 @@ void ADIOI_DAOS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                                 int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    daos_epoch_t max_epoch;
-
-    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
-    cont->epoch = max_epoch;
 
     ADIOI_GEN_ReadStridedColl(fd, buf, count, datatype, file_ptr_type,
                               offset, status, error_code);
-
     return;
 }
 
@@ -444,14 +439,9 @@ void ADIOI_DAOS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                                  int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    daos_epoch_t max_epoch;
 
     ADIOI_GEN_WriteStridedColl(fd, buf, count, datatype, file_ptr_type,
                                offset, status, error_code);
-
-    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
-    cont->epoch = max_epoch;
-
     return;
 }
 
@@ -461,10 +451,6 @@ void ADIOI_DAOS_IreadStridedColl(ADIO_File fd, void *buf, int count,
                                  int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    daos_epoch_t max_epoch;
-
-    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
-    cont->epoch = max_epoch;
 
     ADIOI_DAOS_StridedListIO(fd, buf, count, datatype, file_ptr_type,
                              offset, NULL, request, DAOS_READ, error_code);
@@ -477,13 +463,8 @@ void ADIOI_DAOS_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
                                   int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    daos_epoch_t max_epoch;
 
     ADIOI_DAOS_StridedListIO(fd, (void *)buf, count, datatype, file_ptr_type,
                              offset, NULL, request, DAOS_WRITE, error_code);
-
-    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX, fd->comm);
-    cont->epoch = max_epoch;
-
     return;
 }

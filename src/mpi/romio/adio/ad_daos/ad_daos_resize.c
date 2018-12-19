@@ -20,24 +20,20 @@ void ADIOI_DAOS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 {
     int ret, rank;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    daos_epoch_t max_epoch;
     static char myname[] = "ADIOI_DAOS_RESIZE";
-
-    MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX,
-                  fd->comm);
-    cont->epoch = max_epoch;
 
     *error_code = MPI_SUCCESS;
 
     MPI_Comm_rank(fd->comm, &rank);
+    daos_sync_ranks(fd->comm);
 
     if (rank == fd->hints->ranklist[0]) {
-	ret = daos_array_set_size(cont->oh, cont->epoch, size, NULL);
+	ret = daos_array_set_size(cont->oh, DAOS_TX_NONE, size, NULL);
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     } else  {
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     }
-    cont->epoch++;
+
     /* --BEGIN ERROR HANDLING-- */
     if (ret != 0) {
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS,

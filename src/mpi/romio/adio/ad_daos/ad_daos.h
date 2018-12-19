@@ -25,7 +25,7 @@
 
 #include "adio.h"
 
-/* #define D_PRINT_IO */
+#define D_PRINT_IO
 /* #define D_PRINT_IO_MEM */
 
 #define PRINT_MSG(str, fmt, ...)                                            \
@@ -64,8 +64,6 @@ struct ADIO_DAOS_cont {
     unsigned int	amode;
     /** Event queue to store all async requests on file */
     daos_handle_t	eqh;
-    /** epoch currently the handle is at */
-    daos_epoch_t	epoch;
     /** container handle for directory holding the file object */
     struct adio_daos_co_hdl *hdl;
 };
@@ -81,6 +79,24 @@ struct ADIO_DAOS_req {
     daos_range_t *rgs;
     daos_iov_t *iovs;
 };
+
+static inline void
+daos_sync_ranks(MPI_Comm comm)
+{
+	daos_epoch_t e = daos_ts2epoch();
+	daos_epoch_t ge;
+
+	MPI_Allreduce(&e, &ge, 1, MPI_UINT64_T, MPI_MAX, comm);
+
+	e = daos_ts2epoch();
+	if (ge > e) {
+		struct timespec ts;
+
+		ts.tv_sec = 0;
+		ts.tv_nsec = ge - e;
+		nanosleep(&ts, NULL);
+	}
+}
 
 /** Container Handle Hash functions */
 int adio_daos_coh_hash_init(void);

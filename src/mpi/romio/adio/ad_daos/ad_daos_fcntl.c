@@ -28,7 +28,7 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
     {
         daos_size_t fsize;
 
-	ret = daos_array_get_size(cont->oh, cont->epoch, &fsize, NULL);
+	ret = daos_array_get_size(cont->oh, DAOS_TX_NONE, &fsize, NULL);
 	if (ret != 0 ) {
 	    /* --BEGIN ERROR HANDLING-- */
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,

@@ -104,12 +104,12 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     int mpi_rank;
 
     MPI_Comm_rank(fd->comm, &mpi_rank);
-    printf("(%d) CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n",
-           mpi_rank, cont->epoch, flag, offset, len);
+    printf("(%d) CONTIG IO OP %d, Off %llu, Len %zu\n",
+           mpi_rank, flag, offset, len);
 #endif
 
     if (flag == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, cont->epoch++, iod, sgl, NULL,
+        ret = daos_array_write(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
@@ -122,7 +122,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         }
     }
     else if (flag == DAOS_READ) {
-        ret = daos_array_read(cont->oh, cont->epoch, iod, sgl, NULL,
+        ret = daos_array_read(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);

@@ -23,46 +23,22 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     static char myname[] = "ADIOI_DAOS_CLOSE";
     int rc;
 
-    /* if RW, get the max epoch written to commit in the next step */
-    if (cont->amode == DAOS_COO_RW) {
-        daos_epoch_t max_epoch;
-
-        MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX,
-                      fd->comm);
-        cont->epoch = max_epoch;
-    } else
+    if (cont->amode == DAOS_COO_RW)
+        daos_sync_ranks(fd->comm);
+    else
         MPI_Barrier(fd->comm);
 
     MPI_Comm_rank(fd->comm, &rank);
 
-    /* release the dfs object handle for the file and commit the epoch on rank 0 */
     if (rank == 0) {
-        daos_epoch_t epoch;
-
+        /* release the dfs object handle for the file. */
         rc = dfs_release(cont->obj);
         if (rc) {
             PRINT_MSG(stderr, "dfs_release() failed (%d)\n", rc);
             goto bcast_rc;
         }
 
-        if (cont->amode == DAOS_COO_RW) {
-            rc = dfs_get_epoch(cont->dfs, &epoch);
-            if (rc) {
-                PRINT_MSG(stderr, "dfs_get_epoch() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-
-            if (epoch > cont->epoch)
-                cont->epoch = epoch;
-
-            rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
-            if (rc) {
-                PRINT_MSG(stderr, "daos_epoch_commit() failed (%d)\n", rc);
-                goto bcast_rc;
-            }
-        }
-
-        rc = dfs_umount(cont->dfs, false);
+        rc = dfs_umount(cont->dfs);
         if (rc) {
             PRINT_MSG(stderr, "dfs_umount() failed (%d)\n", rc);
             goto bcast_rc;
@@ -73,12 +49,11 @@ bcast_rc:
     /* bcast the return code to the other ranks */
     MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
     if (rc != 0) {
-        PRINT_MSG(stderr, "Failed to close file (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
-                                           "Epoch Commit failed", 0);
+                                           "Failed DFS umount", 0);
         return;
     }
 
@@ -91,7 +66,7 @@ bcast_rc:
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
                                                ADIOI_DAOS_error_convert(rc),
-                                               "Container Close failed", 0);
+                                               "Array Close failed", 0);
             return;
         }
     }
