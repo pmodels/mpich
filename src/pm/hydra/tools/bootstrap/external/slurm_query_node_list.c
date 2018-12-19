@@ -127,31 +127,31 @@ static HYD_status list_to_nodes(char *str)
 
             if (regexec(&rmatch_old, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (h)(00)-(h)(12) */
-                sprintf(basename, "%.*s%c",
-                        (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
-                        '\0');
-                sprintf(rbegin, "%.*s%c",
-                        (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
-                        '\0');
-                sprintf(rend, "%.*s%c",
-                        (int) (rmatch[4].rm_eo - rmatch[4].rm_so), rpattern + rmatch[4].rm_so,
-                        '\0');
+                snprintf(basename, MAX_HOSTNAME_LEN, "%.*s%c",
+                         (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
+                         '\0');
+                snprintf(rbegin, MAX_NNODES_STRLEN, "%.*s%c",
+                         (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
+                         '\0');
+                snprintf(rend, MAX_NNODES_STRLEN, "%.*s%c",
+                         (int) (rmatch[4].rm_eo - rmatch[4].rm_so), rpattern + rmatch[4].rm_so,
+                         '\0');
                 begin = atoi(rbegin);
                 end = atoi(rend);
 
                 /* expand range and add nodes to global node list */
                 for (j = begin; j <= end; j++) {
-                    sprintf(hostname, "%s%.*d%c",
-                            basename, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j, '\0');
+                    snprintf(hostname, MAX_HOSTNAME_LEN, "%s%.*d%c",
+                             basename, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j, '\0');
                     status =
                         HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                     HYDU_ERR_POP(status, "unable to add to node list\n");
                 }
             } else if (regexec(&ematch_old, epattern, MAX_EMATCH, ematch, 0) == 0) {
                 /* matched element: (h14) */
-                sprintf(hostname, "%.*s%c",
-                        (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so,
-                        '\0');
+                snprintf(hostname, MAX_HOSTNAME_LEN, "%.*s%c",
+                         (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so,
+                         '\0');
                 status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                 HYDU_ERR_POP(status, "unable to add to node list\n");
             }
@@ -192,12 +192,12 @@ static HYD_status list_to_nodes(char *str)
 
             if (regexec(&rmatch_new, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (00)-(10) */
-                sprintf(rbegin, "%.*s%c",
-                        (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
-                        '\0');
-                sprintf(rend, "%.*s%c",
-                        (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
-                        '\0');
+                snprintf(rbegin, MAX_NNODES_STRLEN, "%.*s%c",
+                         (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
+                         '\0');
+                snprintf(rend, MAX_NNODES_STRLEN, "%.*s%c",
+                         (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
+                         '\0');
                 begin = atoi(rbegin);
                 end = atoi(rend);
 
@@ -375,6 +375,7 @@ static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
     HYDU_MALLOC_OR_JUMP(tmp_core_list, char **, nnodes * sizeof(char *), status);
 
     task_set = strtok(task_list, ",");
+    HYDU_ASSERT(task_set, status);
     i = 0;
     do {
         HYDU_MALLOC_OR_JUMP(tmp_core_list[i], char *, strlen(task_set) + 1, status);

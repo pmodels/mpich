@@ -95,7 +95,6 @@ do_bindings=yes
 do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
-do_f77tof90=yes
 do_build_configure=yes
 do_genstates=yes
 do_atdir_check=no
@@ -122,7 +121,7 @@ export autoreconf_args
 
 # List of steps that we will consider (We do not include depend
 # because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates getparms"
+AllSteps="geterrmsgs bindings f77 build_configure genstates getparms"
 stepsCleared=no
 
 for arg in "$@" ; do
@@ -272,25 +271,6 @@ EOF
 
     esac
 done
-
-########################################################################
-## Set up external packages
-########################################################################
-
-# external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
-
-if [ "yes" = "$do_izem" ] ; then
-    externals="${externals} src/izem"
-fi
-
-if [ "yes" = "$do_ucx" ] ; then
-    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
-fi
-
-if [ "yes" = "$do_ofi" ] ; then
-    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
-fi
 
 ########################################################################
 ## Check for the location of autotools
@@ -588,7 +568,7 @@ else
 fi
 
 ########################################################################
-## Set up submodules
+## Setup external packages
 ########################################################################
 
 echo
@@ -656,6 +636,9 @@ done
 # Copying hwloc to hydra
 sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
 sync_external src/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+# remove .git directories to avoid confusing git clean
+rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
+rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
 
 # a couple of other random files
 if [ -f maint/version.m4 ] ; then
@@ -703,7 +686,7 @@ fi
 echo_n "Updating the README... "
 . ./maint/Version
 if [ -f README.vin ] ; then
-    sed -e "s/%VERSION%/${MPICH_VERSION}/g" README.vin > README
+    sed -e "s/%VERSION%/${MPICH_VERSION}/g" -e "s/%LIBFABRIC_VERSION%/${LIBFABRIC_VERSION}/g" README.vin > README
     echo "done"
 else
     echo "error"
@@ -923,40 +906,6 @@ else
     echo "skipped"
 fi
 
-# Create and/or update the f90 tests
-if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
-    echo_n "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
-    for dir in test/mpi/f77/* ; do
-        if [ ! -d $dir ] ; then continue ; fi
-	leafDir=`basename $dir`
-        if [ ! -d test/mpi/f90/$leafDir ] ; then
-	    mkdir test/mpi/f90/$leafDir
-        fi
-        if maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap ; then
-            echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
-        else
-            echo "failed"
-            error "maint/f77tof90 $dir failed!"
-            exit 1
-        fi
-    done
-    for dir in test/mpi/errors/f77/* ; do
-        if [ ! -d $dir ] ; then continue ; fi
-	leafDir=`basename $dir`
-        if [ ! -d test/mpi/errors/f90/$leafDir ] ; then
-	    mkdir test/mpi/errors/f90/$leafDir
-        fi
-        if maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap ; then
-            echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
-        else
-            echo "failed"
-            error "maint/f77tof90 $dir failed!"
-            exit 1
-        fi
-    done
-    echo "done"
-fi
-
 echo
 echo
 echo "###########################################################"
@@ -989,6 +938,9 @@ if [ "$do_build_configure" = "yes" ] ; then
             if [ -f $amdir/confdb/libtool.m4 ] ; then
                 # There is no need to patch if we're not going to use Fortran.
                 ifort_patch_requires_rebuild=no
+                oracle_patch_requires_rebuild=no
+                arm_patch_requires_rebuild=no
+                ibm_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
                     patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch
@@ -1000,9 +952,40 @@ if [ "$do_build_configure" = "yes" ] ; then
                     else
                         echo "failed"
                     fi
+                    echo_n "Patching libtool.m4 for fort compatibility with Oracle Dev Studio 12.6..."
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/oracle-fort.patch
+                    if [ $? -eq 0 ] ; then
+                        oracle_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                    else
+                        echo "failed"
+                    fi
+                    echo_n "Patching libtool.m4 for compatibility with Arm LLVM compilers..."
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/arm-compiler.patch
+                    if [ $? -eq 0 ] ; then
+                        arm_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                    else
+                        echo "failed"
+                    fi
+                    echo_n "Patching libtool.m4 for compatibility with IBM XL Fortran compilers..."
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/ibm-xlf.patch
+                    if [ $? -eq 0 ] ; then
+                        ibm_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                    else
+                        echo "failed"
+                    fi
                 fi
 
-                if [ $ifort_patch_requires_rebuild = "yes" ] ; then
+                if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
+                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make

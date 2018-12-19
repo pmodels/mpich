@@ -179,9 +179,7 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                                 proc_failure = TRUE;
                             mpi_errno = MPI_ERR_IN_STATUS;
                         }
-                    } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                        MPID_Request_is_anysource(request_ptrs[i]) &&
-                                        !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                         mpi_errno = MPI_ERR_IN_STATUS;
                         MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
                         if (!ignoring_status)
@@ -321,7 +319,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTALL);
 
     /* Check the arguments */
@@ -359,7 +357,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
   fn_exit:
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTALL);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

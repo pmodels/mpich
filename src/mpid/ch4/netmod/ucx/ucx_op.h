@@ -11,12 +11,20 @@
 
 #include "ucx_impl.h"
 
-static inline int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_op_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 {
     return 0;
 }
 
-static inline int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_op_commit_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p)
 {
     return 0;
 }

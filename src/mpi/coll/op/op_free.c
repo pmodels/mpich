@@ -25,6 +25,29 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #undef MPI_Op_free
 #define MPI_Op_free PMPI_Op_free
 
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Op_free_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void MPIR_Op_free_impl(MPI_Op * op)
+{
+    MPIR_Op *op_ptr = NULL;
+    int in_use;
+
+    MPIR_Op_get_ptr(*op, op_ptr);
+    MPIR_Assert(op_ptr);
+
+    MPIR_Op_ptr_release_ref(op_ptr, &in_use);
+    if (!in_use) {
+        MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
+#ifdef MPID_Op_free_hook
+        MPID_Op_free_hook(op_ptr);
+#endif
+    }
+    *op = MPI_OP_NULL;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -56,7 +79,6 @@ Input Parameters:
 int MPI_Op_free(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
-    int in_use;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
@@ -87,14 +109,7 @@ int MPI_Op_free(MPI_Op * op)
 
     /* ... body of routine ...  */
 
-    MPIR_Op_ptr_release_ref(op_ptr, &in_use);
-    if (!in_use) {
-        MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
-#ifdef MPID_Op_free_hook
-        MPID_Op_free_hook(op_ptr);
-#endif
-    }
-    *op = MPI_OP_NULL;
+    MPIR_Op_free_impl(op);
 
     /* ... end of body of routine ... */
 

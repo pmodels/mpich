@@ -74,6 +74,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
     }
 
     MPIR_Request_get_ptr(*request, request_ptr);
+    MPIR_Assert(request_ptr != NULL);
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
     if (mpi_errno)
@@ -88,9 +89,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         /* Fall through to the exit */
-    } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPID_Request_is_anysource(request_ptr) &&
-                        !MPID_Comm_AS_enabled(request_ptr->comm))) {
+    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
         MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
         if (status != MPI_STATUS_IGNORE)
             status->MPI_ERROR = mpi_errno;
@@ -140,7 +139,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TEST);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -191,7 +190,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
   fn_exit:
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TEST);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

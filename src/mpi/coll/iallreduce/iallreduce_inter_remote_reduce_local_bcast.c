@@ -73,7 +73,7 @@ int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, v
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
-        MPII_Setup_intercomm_localcomm(comm_ptr);
+        mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

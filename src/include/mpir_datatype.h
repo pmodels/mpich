@@ -12,13 +12,14 @@
  * the predefined handles.  That is, look at the last two hex digits of all
  * predefined datatype handles, take the greatest one, and convert it to decimal
  * here. */
-/* FIXME calculating this value this way is foolish, we should make this more
- * automatic and less error prone */
-/* FIXME: Given that this is relatively static, an adequate alternative is
-   to provide a check that this value is valid. */
-#define MPIR_DATATYPE_N_BUILTIN 69
+/* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
+#define MPIR_DATATYPE_N_BUILTIN 71
 #define MPIR_DTYPE_BEGINNING  0
 #define MPIR_DTYPE_END       -1
+
+#ifndef MPIR_DATATYPE_PREALLOC
+#define MPIR_DATATYPE_PREALLOC 8
+#endif /* MPIR_DATATYPE_PREALLOC */
 
 /*S
   MPIR_Datatype_contents - Holds envelope and contents data for a given
@@ -154,7 +155,7 @@ struct MPIR_Datatype {
 #endif
 };
 
-extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN + 1];
+extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
@@ -183,6 +184,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             basic_type_ = ((MPIR_Datatype *) ptr)->basic_type;      \
             break;                                                  \
@@ -208,7 +210,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         basic_type_ = MPI_DATATYPE_NULL;                            \
  } while (0)
 
-#define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,a,0x000000ff,ptr)
+#define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,DATATYPE,a,0x000000ff,ptr)
 
 /* Note: Probably there is some clever way to build all of these from a macro.
  */
@@ -216,12 +218,14 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                          \
     switch (HANDLE_GET_KIND(a)) {                                       \
         case HANDLE_KIND_DIRECT:                                        \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);      \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);                 \
             size_ = ((MPIR_Datatype *) ptr)->size;                      \
             break;                                                      \
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));       \
+            MPIR_Assert(ptr != NULL);                                   \
             size_ = ((MPIR_Datatype *) ptr)->size;                      \
             break;                                                      \
         case HANDLE_KIND_BUILTIN:                                       \
@@ -239,12 +243,14 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                          \
     switch (HANDLE_GET_KIND(a)) {                                       \
         case HANDLE_KIND_DIRECT:                                        \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);      \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);                 \
             extent_ = ((MPIR_Datatype *) ptr)->extent;                  \
             break;                                                      \
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));       \
+            MPIR_Assert(ptr != NULL);                                   \
             extent_ = ((MPIR_Datatype *) ptr)->extent;                  \
             break;                                                      \
         case HANDLE_KIND_INVALID:                                       \
@@ -265,6 +271,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         else {                                                                 \
             MPIR_Datatype *dtp_ = NULL;                                        \
             MPIR_Datatype_get_ptr((dtype_), dtp_);                             \
+            MPIR_Assert(dtp_ != NULL);                                         \
             *(is_contig_) = dtp_->is_contig;                                   \
         }                                                                      \
     } while (0)
@@ -317,6 +324,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             MPIR_DATALOOP_GET_FIELD(depth_,_depth);                 \
             break;                                                  \
@@ -338,6 +346,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                    \
     switch (HANDLE_GET_KIND(a)) {                      \
         case HANDLE_KIND_DIRECT:                       \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);               \
             MPIR_DATALOOP_GET_FIELD(lptr_,);                             \
             break;                                \
@@ -358,6 +367,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC) ; \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             MPIR_DATALOOP_GET_FIELD(depth_,_size);                  \
             break;                                                  \
@@ -378,6 +388,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             MPIR_DATALOOP_SET_FIELD(depth_,_depth);                 \
             break;                                                  \
@@ -398,6 +409,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             MPIR_DATALOOP_SET_FIELD(lptr_,);                        \
             break;                                                  \
@@ -418,6 +430,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
         case HANDLE_KIND_DIRECT:                                    \
+            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
             MPIR_DATALOOP_SET_FIELD(depth_,_size);                  \
             break;                                                  \
@@ -454,6 +467,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Assert(dtp_ != NULL);                                  \
         MPIR_Datatype_ptr_release(dtp_);                            \
     }                                                               \
     } while (0)
@@ -714,6 +728,7 @@ static inline MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
         MPIR_Dataloop *dlp = NULL;
 
         MPIR_Datatype_get_loopptr_macro(type, dlp);
+        MPIR_Assert(dlp != NULL);
 
         return MPIR_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
     }

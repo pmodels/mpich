@@ -14,6 +14,7 @@
 #include <mpidimpl.h>
 #include <stdio.h>
 #include "mpir_cvars.h"
+#include "ch4i_workq_types.h"
 
 /* Macros and inlines */
 #define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
@@ -265,6 +266,10 @@ typedef struct MPIDI_CH4U_map_t {
     MPIDI_CH4U_map_entry_t *head;
 } MPIDI_CH4U_map_t;
 
+typedef struct {
+    unsigned mt_model;
+} MPIDI_CH4_configurations_t;
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -297,6 +302,11 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     OPA_int_t progress_count;
 
+    MPID_Thread_mutex_t vni_lock;
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    MPIDI_workq_t workqueue;
+#endif
+    MPIDI_CH4_configurations_t settings;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

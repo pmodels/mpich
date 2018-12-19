@@ -79,7 +79,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     reduce_id = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);      /* to store reduce vertex ids */
     recv_id = (int *) MPL_malloc(sizeof(int) * step2_nphases * (k - 1), MPL_MEM_COLL);  /* to store receive vertex ids */
     vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL); /* to store graph dependencies */
-
+    MPIR_Assert(send_id != NULL && reduce_id != NULL && recv_id != NULL && vtcs != NULL);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy"));
     if (in_step2 && !is_inplace && count > 0) { /* copy the data to recvbuf but only if you are a rank participating in Step 2 */
@@ -99,6 +99,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
         MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0, NULL);
     } else {    /* Step 2 participating rank */
         step1_recvbuf = (void **) MPL_malloc(sizeof(void *) * step1_nrecvs, MPL_MEM_COLL);
+        MPIR_Assert(step1_recvbuf != NULL);
         if (per_nbr_buffer != 1 && step1_nrecvs > 0)
             step1_recvbuf[0] = MPIR_TSP_sched_malloc(count * extent, sched);
 
@@ -146,6 +147,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     /* allocate memory for receive buffers */
     nbr_buffer = (void **) MPL_malloc(sizeof(void *) * step2_nphases * (k - 1), MPL_MEM_COLL);
+    MPIR_Assert(nbr_buffer != NULL);
     buf = 0;
     if (step2_nphases > 0)
         nbr_buffer[0] = MPIR_TSP_sched_malloc(count * extent, sched);
@@ -367,14 +369,15 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);
 
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+    MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
     /* For correctness, transport based collectives need to get the

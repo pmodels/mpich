@@ -54,6 +54,8 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
 
+    /* Calculate the size of the data from the active message information and update the request
+     * object. */
     in_data_sz = MPIDI_CH4U_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
 
@@ -69,6 +71,8 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPIDI_CH4U_REQUEST(rreq, count) = nbytes;
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, dt_sz, dt_ptr, dt_true_lb);
+
+    /* Copy the data from the message. */
 
     if (!dt_contig) {
         segment_ptr = MPIR_Segment_alloc();
@@ -95,11 +99,16 @@ static inline int MPIDI_handle_unexpected(void *buf,
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
 
+    /* If this is a synchronous send, send back the reply indicating that the message has been
+     * matched. */
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    /* Decrement the refrence counter for the request object (for the reference held by the sending
+     * process). */
     MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
@@ -128,16 +137,23 @@ static inline int MPIDI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_IRECV);
 
-    root_comm = MPIDI_CH4U_context_id_to_comm(comm->recvcontext_id);
+    root_comm = MPIDI_CH4U_context_id_to_comm(context_id);
     unexp_req = MPIDI_CH4U_dequeue_unexp(rank, tag, context_id,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
+        if (*request != NULL) {
+            MPIDI_CH4I_am_request_copy(*request, unexp_req);
+            MPIR_Request_add_ref(*request);
+            MPIR_Object_set_ref(unexp_req, 0);
+            MPIR_Handle_obj_free(&MPIR_Request_mem, unexp_req);
+            unexp_req = *request;
+        }
         MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_BUSY) {
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
         } else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
-            /* Matching receive is now posted, tell the netmod */
+            /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDI_CH4U_REQUEST(unexp_req, datatype) = datatype;
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;
@@ -164,7 +180,10 @@ static inline int MPIDI_do_irecv(void *buf,
         }
     }
 
-    if (alloc_req) {
+    if (*request != NULL) {
+        rreq = *request;
+        MPIDI_CH4I_am_request_init(rreq, MPIR_REQUEST_KIND__RECV);
+    } else if (alloc_req) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
@@ -202,6 +221,7 @@ static inline int MPIDI_do_irecv(void *buf,
         /* MPIDI_CS_EXIT(); */
     } else {
         MPIDI_CH4U_REQUEST(unexp_req, req->rreq.match_req) = (uint64_t) rreq;
+        MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_IN_PROGRESS;
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_IRECV);
@@ -288,32 +308,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               MPIR_Request * message, MPIR_Request ** rreqp)
+                                               MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
 
-    if (message == NULL) {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
-        *rreqp = rreq;
-        goto fn_exit;
-    }
-
-    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_count) = count;
     MPIDI_CH4U_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
-    *rreqp = message;
 
     /* MPIDI_CS_ENTER(); */
     if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_BUSY) {
         MPIDI_CH4U_REQUEST(message, req->status) |= MPIDI_CH4U_REQ_UNEXP_CLAIMED;
     } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
-        message->kind = MPIR_REQUEST_KIND__RECV;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
@@ -335,48 +344,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMRECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
-                                          MPI_Aint count,
-                                          MPI_Datatype datatype,
-                                          MPIR_Request * message, MPI_Status * status)
-{
-    int mpi_errno = MPI_SUCCESS, active_flag;
-    MPID_Progress_state state;
-    MPIR_Request *rreq = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MRECV);
-
-    mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    MPID_Progress_start(&state);
-
-    while (!MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_wait(&state);
-    }
-
-    MPID_Progress_end(&state);
-
-    MPIR_Request_extract_status(rreq, status);
-
-    mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
-    MPIR_Request_free(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -421,22 +388,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
 
-    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
+    if (!MPIR_Request_is_complete(rreq) &&
+        !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDI_CH4U_REQUEST_IN_PROGRESS(rreq)) {
+        root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
 
-    /* MPIDI_CS_ENTER(); */
-    found =
-        MPIDI_CH4U_delete_posted(&rreq->dev.ch4.am.req->rreq,
-                                 &MPIDI_CH4U_COMM(root_comm, posted_list));
-    /* MPIDI_CS_EXIT(); */
+        /* MPIDI_CS_ENTER(); */
+        found =
+            MPIDI_CH4U_delete_posted(&MPIDI_CH4U_REQUEST(rreq, req->rreq),
+                                     &MPIDI_CH4U_COMM(root_comm, posted_list));
+        /* MPIDI_CS_EXIT(); */
 
-    if (found) {
+        if (found) {
+            MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(rreq, datatype));
+            MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+        }
+
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPID_Request_complete(rreq);
-    } else {
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
     }
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     return mpi_errno;
 }

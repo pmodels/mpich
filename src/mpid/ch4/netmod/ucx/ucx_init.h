@@ -18,12 +18,13 @@
 #define FUNCNAME MPIDI_NM_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_init_hook(int rank,
-                                         int size,
-                                         int appnum,
-                                         int *tag_ub,
-                                         MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
+                                                    int size,
+                                                    int appnum,
+                                                    int *tag_bits,
+                                                    MPIR_Comm * comm_world,
+                                                    MPIR_Comm * comm_self, int spawned,
+                                                    int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -112,8 +113,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
 #endif
 
-    /* we reserve one bit to differentiate AMs from native messages */
-    *tag_ub = MPIDI_UCX_TAG_USABLE_BITS;
+    *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
@@ -129,7 +129,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
 }
 
-static inline int MPIDI_NM_mpi_finalize_hook(void)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_finalize_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
     int i, p = 0, completed;
@@ -214,14 +218,22 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
 }
 
-static inline int MPIDI_NM_get_vni_attr(int vni)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_get_vni_attr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_vni_attr(int vni)
 {
     MPIR_Assert(0 <= vni && vni < 1);
     return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
-static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                         int idx, int *lpid_ptr, MPL_bool is_remote)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_comm_get_lpid
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
+                                                    int idx, int *lpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -237,31 +249,53 @@ static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
 
 }
 
-static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                           char **local_upids)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_get_local_upids
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+                                                      char **local_upids)
 {
     MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_upids_to_lupids(int size,
-                                           size_t * remote_upid_size,
-                                           char *remote_upids, int **remote_lupids)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_upids_to_lupids
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size,
+                                                      size_t * remote_upid_size,
+                                                      char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                       int size, const int lpids[])
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_create_intercomm_from_lpids
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
+                                                                  int size, const int lpids[])
 {
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_mpi_free_mem(void *ptr)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_free_mem
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr)
 {
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_alloc_mem
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
 }

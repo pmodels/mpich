@@ -118,8 +118,8 @@ MPIR_Thread_sync_list_t sync_wait_list = { NULL };
    If the Fortran binding is supported, these can be initialized to
    their Fortran values (MPI only requires that they be valid between
    MPI_Init and MPI_Finalize) */
-MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE ATTRIBUTE((used)) = 0;
-MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE ATTRIBUTE((used)) = 0;
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPL_USED = 0;
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPL_USED = 0;
 
 /* This will help force the load of initinfo.o, which contains data about
    how MPICH was configured. */
@@ -186,7 +186,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #if defined(MPICH_IS_THREADED)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || \
-    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ   || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
 MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #endif
 
@@ -196,6 +197,10 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
+#endif
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 #endif
 
 /* These routine handle any thread initialization that my be required */
@@ -225,6 +230,12 @@ static int thread_cs_init(void)
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
@@ -275,6 +286,11 @@ int MPIR_Thread_CS_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIR_Assert(err == 0);
 
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without
@@ -288,6 +304,8 @@ int MPIR_Thread_CS_Finalize(void)
 #error Unrecognized thread granularity
 #endif
 
+    MPID_CS_finalize();
+
     MPID_THREADPRIV_KEY_DESTROY;
 
     return MPI_SUCCESS;
@@ -295,13 +313,8 @@ int MPIR_Thread_CS_Finalize(void)
 #endif /* MPICH_IS_THREADED */
 
 #ifdef HAVE_F08_BINDING
-MPI_Status *MPIR_C_MPI_STATUS_IGNORE;
-MPI_Status *MPIR_C_MPI_STATUSES_IGNORE;
-char **MPIR_C_MPI_ARGV_NULL;
-char ***MPIR_C_MPI_ARGVS_NULL;
 int *MPIR_C_MPI_UNWEIGHTED;
 int *MPIR_C_MPI_WEIGHTS_EMPTY;
-int *MPIR_C_MPI_ERRCODES_IGNORE;
 
 MPI_F08_status MPIR_F08_MPI_STATUS_IGNORE_OBJ;
 MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1];
@@ -368,15 +381,15 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
 #ifdef HAVE_NETLOC
     MPIR_Process.network_attr.u.tree.node_levels = NULL;
+    MPIR_Process.network_attr.network_endpoint = NULL;
+    MPIR_Process.netloc_topology = NULL;
+    MPIR_Process.network_attr.type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
     if (strlen(MPIR_CVAR_NETLOC_NODE_FILE)) {
         mpi_errno =
             netloc_parse_topology(&MPIR_Process.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
         if (mpi_errno == NETLOC_SUCCESS) {
             MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology, &MPIR_Process.network_attr);
         }
-    } else {
-        MPIR_Process.netloc_topology = NULL;
-        MPIR_Process.network_attr.type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
     }
 #endif
     /* For any code in the device that wants to check for runtime
@@ -435,7 +448,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Process.attrs.host = MPI_PROC_NULL;
     MPIR_Process.attrs.io = MPI_PROC_NULL;
     MPIR_Process.attrs.lastusedcode = MPI_ERR_LASTCODE;
-    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
     MPIR_Process.attrs.universe = MPIR_UNIVERSE_SIZE_NOT_SET;
     MPIR_Process.attrs.wtime_is_global = 0;
 
@@ -457,13 +469,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 #endif
 
 #ifdef HAVE_F08_BINDING
-    MPIR_C_MPI_STATUS_IGNORE = MPI_STATUS_IGNORE;
-    MPIR_C_MPI_STATUSES_IGNORE = MPI_STATUSES_IGNORE;
-    MPIR_C_MPI_ARGV_NULL = MPI_ARGV_NULL;
-    MPIR_C_MPI_ARGVS_NULL = MPI_ARGVS_NULL;
     MPIR_C_MPI_UNWEIGHTED = MPI_UNWEIGHTED;
     MPIR_C_MPI_WEIGHTS_EMPTY = MPI_WEIGHTS_EMPTY;
-    MPIR_C_MPI_ERRCODES_IGNORE = MPI_ERRCODES_IGNORE;
 #endif
 
     /* This allows the device to select an alternative function for
@@ -550,14 +557,25 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPL_trinit();
 #endif
 
+    /* Set the number of tag bits. The device may override this value. */
+    MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
+
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    /* Create complete request to return in the event of immediately complete
+     * operations. Use a SEND request to cover all possible use-cases. */
+    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    /* Set tag_ub as function of tag_bits set by the device */
+    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
 
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned) MPIR_Process.

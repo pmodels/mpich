@@ -5,8 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "mpidimpl.h"   /* FIXME this is including a ch3 include file!
-                         * Implement these functions at the device level. */
 
 #if defined(HAVE_LIMITS_H)
 #include <limits.h>

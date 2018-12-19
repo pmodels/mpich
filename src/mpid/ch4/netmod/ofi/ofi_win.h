@@ -14,6 +14,123 @@
 #include "ofi_impl.h"
 #include <opa_primitives.h>
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_accu_op_hint_get_index(MPIDI_CH4U_win_info_accu_op_shift_t
+                                                              hint_shift)
+{
+    int op_index = 0;
+    switch (hint_shift) {
+        case MPIDI_CH4I_ACCU_MAX_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MAX, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_MIN_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MIN, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_SUM_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_SUM, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_PROD_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_PROD, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_MAXLOC_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MAXLOC, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_MINLOC_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_MINLOC, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_BAND_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BAND, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_BOR_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BOR, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_BXOR_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_BXOR, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_LAND_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LAND, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_LOR_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LOR, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_LXOR_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_LXOR, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_REPLACE_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_REPLACE, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_NO_OP_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_NO_OP, op_index);
+            break;
+        case MPIDI_CH4I_ACCU_CSWAP_SHIFT:
+            MPIDI_OFI_MPI_ACCU_OP_INDEX(MPI_OP_NULL, op_index);
+            break;
+        default:
+            MPIR_Assert(hint_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST);
+            break;
+    }
+    return op_index;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_load_acc_hint
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_acc_hint(MPIR_Win * win)
+{
+    int op_index = 0, i;
+    MPIDI_CH4U_win_info_accu_op_shift_t hint_shift = 0;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_LOAD_ATOMIC_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_LOAD_ATOMIC_INFO);
+
+    if (!MPIDI_OFI_WIN(win).acc_hint)
+        MPIDI_OFI_WIN(win).acc_hint = MPL_malloc(sizeof(MPIDI_OFI_win_acc_hint_t), MPL_MEM_RMA);
+
+    /* TODO: we assume all pes pass the same hint. Allreduce is needed to check
+     * the maximal value or the spec must define it as same value on all pes.
+     * Now we assume the spec requries same value on all pes. */
+
+    /* We translate the atomic op hints to max count allowed for all possible atomics with each
+     * datatype. We do not need more specific info (e.g., <datatype, op>, because any process may use
+     * the op with accumulate or get_accumulate.*/
+    for (i = 0; i < MPIDI_OFI_DT_SIZES; i++) {
+        MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = 0;
+        bool first_valid_op = true;
+
+        for (hint_shift = 0; hint_shift < MPIDI_CH4I_ACCU_OP_SHIFT_LAST; hint_shift++) {
+            uint64_t max_count = 0;
+            /* Calculate the max count of all possible atomics if this op is enabled.
+             * If the op is disabled for the datatype, the max counts are set to 0 (see util.c).*/
+            if (MPIDI_CH4U_WIN(win, info_args).which_accumulate_ops & (1 << hint_shift)) {
+                op_index = MPIDI_OFI_accu_op_hint_get_index(hint_shift);
+
+                /* Invalid <datatype, op> pairs should be excluded as it is never used in a
+                 * correct program (e.g., <double, MAXLOC>).*/
+                if (!MPIDI_Global.win_op_table[i][op_index].mpi_acc_valid)
+                    continue;
+
+                if (hint_shift == MPIDI_CH4I_ACCU_NO_OP_SHIFT)  /* atomic get */
+                    max_count = MPIDI_Global.win_op_table[i][op_index].max_fetch_atomic_count;
+                else if (hint_shift == MPIDI_CH4I_ACCU_CSWAP_SHIFT)     /* compare and swap */
+                    max_count = MPIDI_Global.win_op_table[i][op_index].max_compare_atomic_count;
+                else    /* atomic write and fetch_and_write */
+                    max_count = MPL_MIN(MPIDI_Global.win_op_table[i][op_index].max_atomic_count,
+                                        MPIDI_Global.
+                                        win_op_table[i][op_index].max_fetch_atomic_count);
+
+                /* calculate the minimal max_count. */
+                if (first_valid_op) {
+                    MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = max_count;
+                    first_valid_op = false;
+                } else
+                    MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] =
+                        MPL_MIN(max_count, MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i]);
+            }
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_LOAD_ATOMIC_INFO);
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_win_allgather
@@ -36,22 +153,26 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
-    MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,       /* In:  Domain Object       */
-                             base,      /* In:  Lower memory address */
-                             win->size, /* In:  Length              */
-                             FI_REMOTE_READ | FI_REMOTE_WRITE,  /* In:  Expose MR for read  */
-                             0ULL,      /* In:  offset(not used)    */
-                             MPIDI_OFI_WIN(win).mr_key, /* In:  requested key       */
-                             0ULL,      /* In:  flags               */
-                             &MPIDI_OFI_WIN(win).mr,    /* Out: memregion object    */
-                             NULL), mr_reg);    /* In:  context             */
-
+    /* Don't register MR for NULL buffer, because FI_MR_BASIC mode requires
+     * that all registered memory regions must be backed by physical memory
+     * pages at the time the registration call is made. */
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE || base) {
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,   /* In:  Domain Object       */
+                                 base,  /* In:  Lower memory address */
+                                 win->size,     /* In:  Length              */
+                                 FI_REMOTE_READ | FI_REMOTE_WRITE,      /* In:  Expose MR for read  */
+                                 0ULL,  /* In:  offset(not used)    */
+                                 MPIDI_OFI_WIN(win).mr_key,     /* In:  requested key       */
+                                 0ULL,  /* In:  flags               */
+                                 &MPIDI_OFI_WIN(win).mr,        /* Out: memregion object    */
+                                 NULL), mr_reg);        /* In:  context             */
+    }
     MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
 
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
 
-    if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_SCALABLE && MPIDI_OFI_WIN(win).mr) {
         /* MR_BASIC */
         MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
         winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
@@ -78,6 +199,8 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
             MPIDI_OFI_WIN(win).winfo = NULL;
         }
     }
+
+    MPIDI_OFI_load_acc_hint(win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
@@ -289,27 +412,6 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     finfo = fi_dupinfo(MPIDI_Global.prov_use);
     MPIR_Assert(finfo);
 
-    /* Create shared context only in first call. */
-    if (MPIDI_Global.rma_stx_ctx == NULL) {
-        memset(finfo->tx_attr, 0, sizeof(struct fi_tx_attr));
-        /* A shared transmit context’s attributes must be a union of all associated
-         * endpoints' transmit capabilities. */
-        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        finfo->tx_attr->msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-        finfo->tx_attr->op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
-        MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
-                                             finfo->tx_attr,
-                                             &MPIDI_Global.rma_stx_ctx, NULL /* context */), ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to create shared TX context for RMA, "
-                        "falling back to global EP/counter scheme");
-            MPIDI_Global.rma_stx_ctx = NULL;
-            mpi_errno = MPIDI_OFI_ENAVAIL;
-            goto fn_fail;
-        }
-    }
-
     /* Set per window transmit attributes. */
     MPIDI_OFI_set_rma_fi_info(win, finfo);
     /* Still need to take out rx capabilities for shared context. */
@@ -410,8 +512,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT);
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devwin_t) >= sizeof(MPIDI_OFI_win_t));
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devdt_t) >= sizeof(MPIDI_OFI_datatype_t));
+    MPIR_Datatype_init_names();
+    MPIDI_OFI_index_datatypes();
+
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devwin_t) >= sizeof(MPIDI_OFI_win_t));
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devdt_t) >= sizeof(MPIDI_OFI_datatype_t));
 
     memset(&MPIDI_OFI_WIN(win), 0, sizeof(MPIDI_OFI_win_t));
 
@@ -483,7 +588,9 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
     while (tcount > donecount) {
         MPIR_Assert(donecount <= tcount);
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_OFI_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
         itercount++;
@@ -1148,11 +1255,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
         if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
+        if (MPIDI_OFI_WIN(win).mr)
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
         if (MPIDI_OFI_WIN(win).winfo) {
             MPL_free(MPIDI_OFI_WIN(win).winfo);
             MPIDI_OFI_WIN(win).winfo = NULL;
         }
+        MPL_free(MPIDI_OFI_WIN(win).acc_hint);
+        MPIDI_OFI_WIN(win).acc_hint = NULL;
     }
     /* This hook is called by CH4 generic call before CH4 finalization */
 

@@ -46,18 +46,8 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
             /* --END ERROR HANDLING-- */
         }
 
-        if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                     !MPIR_Request_is_complete(request_ptr) &&
-                     MPID_Request_is_anysource(request_ptr) &&
-                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
-            /* A process fail during progress, which is manifested through this check. */
-            if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
-                /* We only handle receive request at the moment. */
-                MPID_Cancel_recv(request_ptr);
-                MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
-            }
-            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
-            mpi_errno = request_ptr->status.MPI_ERROR;
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+            mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
             goto fn_fail;
         }
     }
@@ -86,14 +76,13 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     }
 
     MPIR_Request_get_ptr(*request, request_ptr);
+    MPIR_Assert(request_ptr != NULL);
 
     if (!MPIR_Request_is_complete(request_ptr)) {
         /* If this is an anysource request including a communicator with
          * anysource disabled, convert the call to an MPI_Test instead so we
          * don't get stuck in the progress engine. */
-        if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                     MPID_Request_is_anysource(request_ptr) &&
-                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Test(request, &active_flag, status);
             goto fn_exit;
         }
@@ -103,6 +92,9 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
                 mpi_errno = MPIR_Grequest_poll(request_ptr, status);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
+
+                /* Avoid blocking other threads since I am inside an infinite loop */
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             }
         } else {
             mpi_errno = MPID_Wait(request_ptr, status);
@@ -162,7 +154,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAIT);
 
     /* Check the arguments */
@@ -214,7 +206,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
 
   fn_exit:
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAIT);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

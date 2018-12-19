@@ -16,7 +16,7 @@
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
-typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
+typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
                                     int *n_vnis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
@@ -47,7 +47,7 @@ typedef int (*MPIDI_NM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src_
 typedef size_t(*MPIDI_NM_am_hdr_max_sz_t) (void);
 typedef int (*MPIDI_NM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
-                                         MPL_bool is_remote);
+                                         bool is_remote);
 typedef int (*MPIDI_NM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
                                            char **local_upids);
 typedef int (*MPIDI_NM_upids_to_lupids_t) (int size, size_t * remote_upid_size, char *remote_upids,
@@ -69,6 +69,7 @@ typedef int (*MPIDI_NM_rma_target_cmpl_hook_t) (int rank, MPIR_Win * win);
 typedef int (*MPIDI_NM_rma_target_local_cmpl_hook_t) (int rank, MPIR_Win * win);
 typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
+typedef void (*MPIDI_NM_prequest_free_hook_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_mpi_send_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPIR_Request ** request);
@@ -106,7 +107,7 @@ typedef int (*MPIDI_NM_mpi_irecv_t) (void *buf, MPI_Aint count, MPI_Datatype dat
                                      int tag, MPIR_Comm * comm, int context_offset,
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_imrecv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                      MPIR_Request * message, MPIR_Request ** rreqp);
+                                      MPIR_Request * message);
 typedef int (*MPIDI_NM_mpi_cancel_recv_t) (MPIR_Request * rreq);
 typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (size_t size, MPIR_Info * info_ptr);
 typedef int (*MPIDI_NM_mpi_free_mem_t) (void *ptr);
@@ -504,6 +505,7 @@ typedef struct MPIDI_NM_funcs {
     /* Request allocation routines */
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
+    MPIDI_NM_prequest_free_hook_t prequest_free_hook;
     /* Active Message Routines */
     MPIDI_NM_am_send_hdr_t am_send_hdr;
     MPIDI_NM_am_isend_t am_isend;
@@ -653,7 +655,7 @@ extern MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 extern int MPIDI_num_netmods;
 extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
                                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self,
                                                     int spawned, int *n_vnis_provided)
     MPL_STATIC_INLINE_SUFFIX;
@@ -699,7 +701,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void) MPL_STATIC_INLINE_S
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                     int *lpid_ptr,
-                                                    MPL_bool is_remote) MPL_STATIC_INLINE_SUFFIX;
+                                                    bool is_remote) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
                                                       char **local_upids) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size, size_t * remote_upid_size,
@@ -736,6 +738,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank,
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request *
                                                            req) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_prequest_free_hook(MPIR_Request *
+                                                          req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
@@ -799,8 +803,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, MPI_Aint count, MPI_D
                                                 int context_offset, MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                 MPIR_Request * message,
-                                                 MPIR_Request ** rreqp) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPIR_Request * message) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
     MPL_STATIC_INLINE_SUFFIX;

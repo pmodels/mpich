@@ -140,10 +140,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 /* If one of the requests is an anysource on a communicator that's
                  * disabled such communication, convert this operation to a testall
                  * instead to prevent getting stuck in the progress engine. */
-                if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                             MPID_Request_is_anysource(request_ptrs[i]) &&
-                             !MPIR_Request_is_complete(request_ptrs[i]) &&
-                             !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                     disabled_anysource = TRUE;
                 }
 
@@ -313,7 +310,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAITALL);
 
     /* Check the arguments */
@@ -349,7 +346,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 
   fn_exit:
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAITALL);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

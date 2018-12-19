@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    the ch4r/netmod/shmmod fields of the request.
 */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_request_complete
+#define FUNCNAME MPID_Request_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
@@ -102,12 +102,49 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIDI_SHM_am_request_finalize(req);
+#endif
         }
         MPIR_Request_free(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_COMPLETE);
     return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Prequest_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
+
+    /* If a user passed a derived datatype for this persistent communication,
+     * free it.
+     * We could have done this cleanup in more general request cleanup functions,
+     * like MPID_Request_destroy_hook. However, that would always add a few
+     * instructions for any kind of request object, even if it's no a request
+     * from persistent communications. */
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_NM_prequest_free_hook(req);
+#else
+    if (unlikely(NULL != MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))) {
+        /* `req` is created by Recv_init(MPI_ANY_SOURCE).
+         * Need to clean up both shmmod and netmod. */
+        MPIDI_SHM_prequest_free_hook(req);
+        MPIDI_NM_prequest_free_hook(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+    } else {
+        if (MPIDI_CH4I_REQUEST(req, is_local))
+            MPIDI_SHM_prequest_free_hook(req);
+        else
+            MPIDI_NM_prequest_free_hook(req);
+    }
+#endif
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
 }
 
 #endif /* CH4_REQUEST_H_INCLUDED */

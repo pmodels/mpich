@@ -121,6 +121,8 @@ int MPI_Request_free(MPI_Request * request)
 
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
+                /* Tell the device that we are freeing a persistent request object */
+                MPID_Prequest_free_hook(request_ptr);
                 /* If this is an active persistent request, we must also
                  * release the partner request. */
                 if (request_ptr->u.persist.real_request != NULL) {
@@ -136,6 +138,8 @@ int MPI_Request_free(MPI_Request * request)
 
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
             {
+                /* Tell the device that we are freeing a persistent request object */
+                MPID_Prequest_free_hook(request_ptr);
                 /* If this is an active persistent request, we must also
                  * release the partner request. */
                 if (request_ptr->u.persist.real_request != NULL) {

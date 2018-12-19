@@ -162,6 +162,7 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
  * Device level request management macros
  */
 
+#define MPID_Prequest_free_hook(req_) do {} while(0)
 
 /*
  * Device level progress engine macros
@@ -193,6 +194,22 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
                                       int size, const int lpids[] );
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
+
+/* ULFM support */
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm_ptr)
+{
+    return comm_ptr->dev.anysource_enabled;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * request_ptr)
+{
+    int ret = 0;
+
+    if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
+        ret = request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
+
+    return ret;
+}
 
 /* communicator hooks */
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);

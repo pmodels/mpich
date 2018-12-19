@@ -385,13 +385,8 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
         traversal_stack =
             (netloc_node_t **) MPL_malloc(sizeof(netloc_node_t *) *
                                           MPIR_Process.netloc_topology->num_nodes, MPL_MEM_OTHER);
-        mpi_errno =
-            MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
-                                              MPIR_Process.netloc_topology,
-                                              MPIR_Process.hwloc_topology, MPIR_Process.bindset,
-                                              &network_node);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
 
         traversal_begin = 0;
         traversal_end = 0;
@@ -445,6 +440,336 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
     goto fn_exit;
 }
 
+static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_size, int min_size)
+{
+    int color;
+    int subset_size;
+    int current_comm_color;
+    int prev_comm_color;
+    int i;
+
+    subset_size = 0;
+    current_comm_color = 0;
+    prev_comm_color = -1;
+
+    for (i = 0; i < bitmap_size; i++) {
+        if (subset_size >= min_size) {
+            subset_size = 0;
+            prev_comm_color = current_comm_color;
+            current_comm_color = i;
+        }
+        subset_size += bitmap[i];
+        if (i == node_index) {
+            color = current_comm_color;
+        }
+    }
+    if (subset_size < min_size && i == bitmap_size)
+        color = prev_comm_color;
+
+  fn_exit:
+    return color;
+
+  fn_fail:
+    goto fn_exit;
+
+}
+
+static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
+                                    MPIR_Comm ** newcomm_ptr)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+    netloc_node_t *network_node;
+
+    if (subcomm_min_size == 0 || comm_size < subcomm_min_size ||
+        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        *newcomm_ptr = NULL;
+    } else {
+        int node_index, num_nodes, i;
+        int *num_processes_at_node = NULL;
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        int subset_size;
+        int current_comm_color;
+        int prev_comm_color;
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
+
+        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
+            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+            mpi_errno =
+                MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Process.network_attr,
+                                                       MPIR_Process.netloc_topology, network_node,
+                                                       &node_index, &num_nodes);
+
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
+            num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
+            num_processes_at_node[node_index] = 1;
+
+        } else if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__TORUS) {
+            num_processes_at_node =
+                (int *) MPL_calloc(1, sizeof(int) * MPIR_Process.netloc_topology->num_nodes,
+                                   MPL_MEM_OTHER);
+            num_processes_at_node[MPIR_Process.network_attr.u.torus.node_idx] = 1;
+        }
+        MPIR_Assert(num_processes_at_node != NULL);
+        /* Send the count to processes */
+        mpi_errno =
+            MPID_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
+                           MPI_SUM, comm_ptr, &errflag);
+
+        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
+            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+            color =
+                get_color_from_subset_bitmap(node_index, num_processes_at_node, num_nodes,
+                                             subcomm_min_size);
+        } else {
+            int *offset_along_dimension =
+                (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension, sizeof(int),
+                                   MPL_MEM_OTHER);
+            int *partition =
+                (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension, sizeof(int),
+                                   MPL_MEM_OTHER);
+            int start_index = offset_along_dimension[0];
+            int num_processes = 0, total_num_processes = 0;
+            int j, size;
+
+            for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+                partition[i] = 1;
+            }
+
+            while (1) {
+                int node_covered = 0;
+                color = total_num_processes;
+                for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension;
+                     i = (i + 1) % MPIR_Process.network_attr.u.torus.dimension) {
+                    int cube_size;
+                    if (partition[i] - 1 + offset_along_dimension[i] ==
+                        MPIR_Process.network_attr.u.torus.geometry[i]) {
+                        if (i == MPIR_Process.network_attr.u.torus.dimension - 1) {
+                            break;
+                        }
+                        continue;
+                    }
+                    partition[i]++;
+                    cube_size = 0;
+                    for (j = 0; j < MPIR_Process.network_attr.u.torus.dimension; j++) {
+                        if (partition[j] != 0) {
+                            cube_size = cube_size * partition[j];
+                        }
+                    }
+                    num_processes = 0;
+                    for (j = 0; j < cube_size; j++) {
+                        int *coordinate =
+                            (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension,
+                                               sizeof(int), MPL_MEM_OTHER);
+                        int index = j;
+                        int k;
+                        int current_dim = 0;
+                        while (current_dim < MPIR_Process.network_attr.u.torus.dimension) {
+                            coordinate[current_dim++] = index % partition[j];
+                            index = index / partition[j];
+                        }
+                        index = 0;
+                        for (k = 0; k < MPIR_Process.network_attr.u.torus.dimension; k++) {
+                            index =
+                                index * (partition[j] + offset_along_dimension[i]) + coordinate[k];
+                        }
+                        if (index == MPIR_Process.network_attr.u.torus.node_idx) {
+                            node_covered = 1;
+                            break;
+                        }
+                        num_processes += num_processes_at_node[index];
+                        MPL_free(coordinate);
+                    }
+                    if (num_processes >= subcomm_min_size) {
+                        total_num_processes += num_processes;
+                        num_processes = 0;
+                        for (j = 0; j < MPIR_Process.network_attr.u.torus.dimension; j++) {
+                            offset_along_dimension[i] += partition[j] + 1;
+                        }
+                        break;
+                    }
+                }
+                if (total_num_processes == MPIR_Process.netloc_topology->num_nodes || node_covered) {
+                    break;
+                }
+            }
+            MPL_free(offset_along_dimension);
+            MPL_free(partition);
+        }
+
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* There are more processes in the subset than requested within the node.
+         * Split further inside each node */
+        if (num_processes_at_node[node_index] > subcomm_min_size && node_index == color &&
+            ((node_index < (node_index - 1) ||
+              num_processes_at_node[node_index] < subcomm_min_size))) {
+            MPIR_Comm *node_comm;
+            int subcomm_rank;
+            int min_tree_depth;
+            hwloc_cpuset_t *node_comm_bindset;
+            int num_procs;
+
+            num_procs = num_processes_at_node[node_index];
+            node_comm = *newcomm_ptr;
+            subcomm_rank = MPIR_Comm_rank(node_comm);
+            node_comm_bindset =
+                (hwloc_cpuset_t *) MPL_calloc(num_procs, sizeof(hwloc_cpuset_t), MPL_MEM_OTHER);
+            node_comm_bindset[subcomm_rank] = MPIR_Process.bindset;
+
+            /* Send the bindset to processes in node communicator */
+            mpi_errno =
+                MPID_Allreduce(MPI_IN_PLACE, node_comm_bindset,
+                               num_procs * sizeof(hwloc_cpuset_t), MPI_BYTE,
+                               MPI_NO_OP, node_comm, &errflag);
+
+
+            min_tree_depth = -1;
+            for (i = 0; i < num_procs; i++) {
+                hwloc_obj_t obj_containing_cpuset =
+                    hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology,
+                                                  node_comm_bindset[i]);
+                if (obj_containing_cpuset->depth < min_tree_depth || min_tree_depth == -1) {
+                    min_tree_depth = obj_containing_cpuset->depth;
+                }
+            }
+
+            if (min_tree_depth) {
+                int num_hwloc_objs_at_depth =
+                    hwloc_get_nbobjs_by_depth(MPIR_Process.hwloc_topology, min_tree_depth);
+                int *processes_cpuset =
+                    (int *) MPL_calloc(num_hwloc_objs_at_depth, sizeof(int), MPL_MEM_OTHER);
+                hwloc_obj_t parent_obj;
+                int hw_obj_index;
+                int current_proc_index = -1;
+
+                parent_obj = NULL;
+                hw_obj_index = 0;
+                while ((parent_obj =
+                        hwloc_get_next_obj_by_depth(MPIR_Process.hwloc_topology, min_tree_depth,
+                                                    parent_obj)) != NULL) {
+                    for (i = 0; i < num_procs; i++) {
+                        if (hwloc_bitmap_isincluded(parent_obj->cpuset, node_comm_bindset[i]) ||
+                            hwloc_bitmap_isequal(parent_obj->cpuset, node_comm_bindset[i])) {
+                            processes_cpuset[hw_obj_index] = 1;
+                            if (i == subcomm_rank) {
+                                current_proc_index = hw_obj_index;
+                            }
+                            break;
+                        }
+                    }
+                    hw_obj_index++;
+                }
+
+                color =
+                    get_color_from_subset_bitmap(current_proc_index, processes_cpuset,
+                                                 num_hwloc_objs_at_depth, subcomm_min_size);
+
+                mpi_errno = MPIR_Comm_split_impl(node_comm, color, key, newcomm_ptr);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                MPL_free(processes_cpuset);
+                MPIR_Comm_free_impl(node_comm);
+            }
+            MPL_free(node_comm_bindset);
+        }
+        MPL_free(num_processes_at_node);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+                                        MPIR_Comm ** newcomm_ptr)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    netloc_node_t *network_node;
+
+    /* Get available memory in the node */
+    hwloc_obj_t memory_obj = NULL;
+    long total_memory_size = 0;
+    int memory_per_process;
+
+    while ((memory_obj =
+            hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, HWLOC_OBJ_NUMANODE,
+                                       memory_obj)) != NULL) {
+        /* Memory size is in bytes here */
+        total_memory_size += memory_obj->total_memory;
+    }
+
+    if (min_mem_size == 0 || MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        *newcomm_ptr = NULL;
+    } else {
+        int num_ranks_node;
+        if (MPIR_Process.comm_world->node_comm != NULL) {
+            num_ranks_node = MPIR_Comm_size(MPIR_Process.comm_world->node_comm);
+        } else {
+            num_ranks_node = 1;
+        }
+        memory_per_process = total_memory_size / num_ranks_node;
+        mpi_errno = network_split_by_minsize(comm_ptr, key, min_mem_size / memory_per_process,
+                                             newcomm_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
+                                            int dimension, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+
+    /* Dimension is assumed to be indexed from 0 */
+    if (MPIR_Process.network_attr.type != MPIR_NETLOC_NETWORK_TYPE__TORUS ||
+        dimension >= MPIR_Process.network_attr.u.torus.dimension) {
+        *newcomm_ptr = NULL;
+    } else {
+        int node_coordinates = MPIR_Process.network_attr.u.torus.node_idx;
+        int *node_dimensions = MPIR_Process.network_attr.u.torus.geometry;
+        color = 0;
+        for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+            int coordinate_along_dim;
+            if (i == dimension) {
+                coordinate_along_dim = 0;
+            } else {
+                coordinate_along_dim = node_coordinates % node_dimensions[i];
+            }
+            if (i == 0) {
+                color = coordinate_along_dim;
+            } else {
+                color = color + coordinate_along_dim * node_dimensions[i - 1];
+            }
+            node_coordinates = node_coordinates / node_dimensions[i];
+        }
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -464,14 +789,14 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
      * its hintval size to the global max, and makes sure that this
      * comparison is successful on all processes. */
     mpi_errno =
-        MPIR_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+        MPID_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     hintval_equal = (hintval_size == hintval_size_max);
 
     mpi_errno =
-        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -485,7 +810,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     hintval_global = (char *) MPL_malloc(strlen(hintval), MPL_MEM_OTHER);
 
     mpi_errno =
-        MPIR_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
+        MPID_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
                        MPI_MAX, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -493,7 +818,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
 
     mpi_errno =
-        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -604,6 +929,19 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         && *(hintval + strlen("switch_level:")) != '\0') {
         int switch_level = atoi(hintval + strlen("switch_level:"));
         mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
+    } else if (!strncmp(hintval, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
+               && *(hintval + strlen("subcomm_min_size:")) != '\0') {
+        int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
+        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hintval + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+        /* Split by minimum memory size per subcommunicator in bytes */
+        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
+               && *(hintval + strlen("torus_dimension:")) != '\0') {
+        int dimension = atol(hintval + strlen("torus_dimension:"));
+        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
 #endif
   fn_exit:

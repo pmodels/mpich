@@ -76,6 +76,12 @@
 #define MPL_ATTR_ALIGNED(x)
 #endif
 
+#ifdef MPL_HAVE_VAR_ATTRIBUTE_USED
+#define MPL_USED ATTRIBUTE((used))
+#else
+#define MPL_USED
+#endif
+
 /* These likely/unlikely macros provide static branch prediction hints to the
  * compiler, if such hints are available.  Simply wrap the relevant expression in
  * the macro, like this:
@@ -97,6 +103,20 @@
 #define unlikely(x_) (x_)
 #define likely(x_)   (x_)
 #endif
+
+#ifdef MPL_HAVE_C11__STATIC_ASSERT
+#define MPL_static_assert(cond_,msg_) _Static_assert(cond_,msg_)
+#else
+/* A hack:
+    When cond_ is false, result in compile-time duplicated case error.
+    When cond_ is true, compiler should optimize it away.
+    Since it is compile time error, we don't care (much) about how the error message look.
+ */
+#define MPL_static_assert(cond_,msg_) \
+    do { switch(0) { case 0: case (cond_): default: break; } } while (0)
+#endif
+
+#define MPL_COMPILE_TIME_ASSERT(cond_) MPL_static_assert(cond_, "MPL_COMPILE_TIME_ASSERT failure")
 
 #define MPL_QUOTE(A) MPL_QUOTE2(A)
 #define MPL_QUOTE2(A) #A
@@ -124,7 +144,7 @@
  * via the preprocessor).  A semicolon is expected after each invocation
  * of this macro. */
 #define MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING \
-    static int MPL_UNIQUE_SYMBOL_NAME(dummy) ATTRIBUTE((unused,used)) = 0
+    static int MPL_UNIQUE_SYMBOL_NAME(dummy) ATTRIBUTE((unused)) MPL_USED = 0
 
 /* we jump through a couple of extra macro hoops to append the line
  * number to the variable name in order to reduce the chance of a name
@@ -135,6 +155,20 @@
 #define MPL_UNIQUE_IMPL2_(prefix_,line_) MPL_UNIQUE_IMPL3_(prefix_,line_)
 #define MPL_UNIQUE_IMPL3_(prefix_,line_) prefix_##line_
 
-typedef int MPL_bool;
+#ifdef MPL_HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+#ifndef MPL_HAVE__BOOL
+#ifdef __cplusplus
+typedef bool _Bool;
+#else
+#define _Bool signed char
+#endif
+#endif
+#define bool _Bool
+#define false 0
+#define true 1
+#define __bool_true_false_are_defined 1
+#endif
 
 #endif /* MPL_BASE_H_INCLUDED */

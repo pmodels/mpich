@@ -25,7 +25,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                                   void **shm_addr_ptr, int offset, int flag)
 {
-    int rc = -1;
+    int rc = MPL_SHM_SUCCESS;
     int lhnd = -1;
 
     if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
@@ -36,7 +36,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
             goto fn_exit;
         }
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
-        if (rc < 0) {
+        if (rc != MPL_SHM_SUCCESS) {
             goto fn_exit;
         }
     } else {
@@ -48,10 +48,19 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
     }
 
     if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
+        const void *start_addr = NULL;
+
+        /* Caller ensures that shmaddr must be a page-aligned address
+         * at which the attach occurs. EINVAL error would result if a
+         * mapping already exists in this address range or the address
+         * is not page-aligned. */
+        if (flag & MPLI_SHM_FLAG_FIXED_ADDR)
+            start_addr = (const void *) *shm_addr_ptr;
+
         /* Attach to shared mem seg */
-        *shm_addr_ptr = shmat(MPLI_shm_lhnd_get(hnd), NULL, 0x0);
+        *shm_addr_ptr = shmat(MPLI_shm_lhnd_get(hnd), start_addr, 0x0);
         if (*shm_addr_ptr == (void *) -1) {
-            rc = -1;
+            rc = MPL_SHM_EINVAL;
         }
     }
 
@@ -105,6 +114,34 @@ int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, 
                                            MPLI_SHM_FLAG_SHM_ATTACH);
 }
 
+/* Create new SHM segment and attach to it with specified starting address
+ * hnd : A "init"ed shared mem handle
+ * seg_sz: Size of shared mem segment
+ * shm_addr_ptr (inout): Pointer to specified starting address, the address cannot be NULL.
+ *                       The actual attached memory address is updated at return.
+ * offset : Offset to attach the shared memory address to
+ */
+int MPL_shm_fixed_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                        void **shm_addr_ptr, int offset)
+{
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH |
+                                           MPLI_SHM_FLAG_FIXED_ADDR);
+}
+
+/* Attach to an existing SHM segment with specified starting address
+ * hnd : A "init"ed shared mem handle
+ * seg_sz: Size of shared mem segment
+ * shm_addr_ptr (inout): Pointer to specified starting address, the address cannot be NULL.
+ *                       The actual attached memory address is updated at return.
+ * offset : Offset to attach the shared memory address to
+ */
+int MPL_shm_fixed_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, void **shm_addr_ptr, int offset)
+{
+    return MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
+                                           MPLI_SHM_FLAG_SHM_ATTACH | MPLI_SHM_FLAG_FIXED_ADDR);
+}
+
 /* Detach from an attached SHM segment
  * hnd : Handle to the shm segment
  * shm_addr_ptr : Pointer to the shm address to detach
@@ -121,7 +158,7 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
     rc = shmdt(*shm_addr_ptr);
     *shm_addr_ptr = NULL;
 
-    return rc;
+    return (rc == 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN;
 }
 
 /* Remove a shared memory segment
@@ -134,8 +171,11 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, intptr_t seg_sz)
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
     struct shmid_ds ds;
+    int rc = -1;
 
-    return shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
+    rc = shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
+
+    return (rc == 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN;
 }
 
 #endif /* MPL_USE_SYSV_SHM */

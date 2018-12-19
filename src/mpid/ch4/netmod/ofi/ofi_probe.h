@@ -63,9 +63,8 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.data = 0;
 
     MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg,
-                                      peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA
-                                                                              ? FI_REMOTE_CQ_DATA :
-                                                                              0)), ofi_err);
+                                      peek_flags | FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA),
+                          ofi_err);
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
@@ -123,11 +122,13 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
 
+#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
         goto fn_exit;
     }
+#endif
 
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
@@ -159,10 +160,12 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IPROBE);
 
+#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, flag, status);
         goto fn_exit;
     }
+#endif
 
     mpi_errno =
         MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);

@@ -426,22 +426,6 @@ This will cause the MPICH libraries to be built with \texttt{-O3},
 and \texttt{-O3} will
 not be included in the \texttt{mpicc} and other MPI wrapper script.
 
-There are certain compiler flags that should not be used with MPICH's
-configure, e.g. gcc's \texttt{-Werror} which would confuse configure and cause
-certain configure tests to fail to detect the correct system features.
-To use \texttt{-Werror} in building MPICH libraries, you can pass the compiler
-flags during the make step through the Makefile variable,
-\texttt{MPICH\_MAKE\_CFLAGS} as follows:
-
-\begin{verbatim}
-  make VERBOSE=1 MPICH_MAKE_CFLAGS="-Wall -Werror"
-\end{verbatim}
-
-(assume CC is set to gcc).  The content of \texttt{MPICH\_MAKE\_CFLAGS}
-is appended to the \texttt{CFLAGS} in almost all Makefiles.
-
-
-
 \subsection{Common Non-Default Configuration Options}
 \label{sec:non-default}
 

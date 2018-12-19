@@ -13,7 +13,6 @@
 #define MPIDIG_SEND_H_INCLUDED
 
 #include "ch4_impl.h"
-#include <../mpi/pt2pt/bsendutil.h>
 
 #define MPIDI_NONBLOCKING 0
 #define MPIDI_BLOCKING    1
@@ -28,36 +27,52 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
                                  int is_blocking, int type)
 {
     int mpi_errno = MPI_SUCCESS, c;
-    MPIR_Request *sreq = NULL;
+    MPIR_Request *sreq = *request;
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ISEND);
 
+    /* If the message is going to MPI_PROC_NULL, we still need to create and complete the request so
+     * we have something we can pass back up the call stack to track the request status. */
     if (unlikely(rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
-        if (!is_blocking) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-            MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                                "**nomemreq");
+        if (!is_blocking || sreq != NULL) {
+            if (sreq == NULL) {
+                *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+                MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                    "**nomemreq");
+            } else {
+                MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND);
+            }
             MPID_Request_complete((*request));
         }
         goto fn_exit;
     }
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    if (sreq == NULL) {
+        sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    } else {
+        MPIDI_CH4I_am_request_init(sreq, MPIR_REQUEST_KIND__SEND);
+    }
 
     *request = sreq;
 
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
+
+    /* Synchronous send requires a special kind of AM header to track the return message so check
+     * for that and fill in the appropriate struct if necessary. */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
+
+        /* Increment the completion counter once to account for the extra message that needs to come
+         * back from the receiver to indicate completion. */
         ssend_req.sreq_ptr = (uint64_t) sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
@@ -71,6 +86,9 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = (uint64_t) sreq;
+
+        /* Increment the completion counter once to account for the extra message that needs to come
+         * back from the receiver to indicate completion. */
         MPIR_cc_incr(sreq->cc_ptr, &c);
         if (MPIDI_av_is_local(addr)) {
             mpi_errno = MPIDI_SHM_am_isend(rank, comm, type,
@@ -295,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send_init(const void *buf,
                                                   MPI_Datatype datatype,
                                                   int rank,
                                                   int tag, MPIR_Comm * comm, int context_offset,
-                                                  MPIR_Request ** request)
+                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -318,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend_init(const void *buf,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIR_Request ** request)
+                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -341,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_bsend_init(const void *buf,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIR_Request ** request)
+                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -364,7 +382,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend_init(const void *buf,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIR_Request ** request)
+                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 

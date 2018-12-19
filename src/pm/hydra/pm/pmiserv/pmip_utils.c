@@ -35,15 +35,17 @@ void HYD_pmcd_pmip_send_signal(int sig)
 
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
-    char *port = NULL;
+    char *port = NULL, *name;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_ERR_CHKANDJUMP(status, HYD_pmcd_pmip.upstream.server_name, HYD_INTERNAL_ERROR,
                         "duplicate control port setting\n");
 
     port = MPL_strdup(**argv);
-    HYD_pmcd_pmip.upstream.server_name = MPL_strdup(strtok(port, ":"));
-    HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
+    HYDU_ERR_CHKANDJUMP(status, NULL == port, HYD_INTERNAL_ERROR, "port not provided\n");
+    name = strtok(port, ":");
+    HYD_pmcd_pmip.upstream.server_name = name ? MPL_strdup(name) : NULL;
+    HYD_pmcd_pmip.upstream.server_port = strtol(strtok(NULL, ":"), NULL, 10);
 
     (*argv)++;
 
@@ -341,9 +343,13 @@ static HYD_status global_env_fn(char *arg, char ***argv)
             str[strlen(str) - 1] = 0;
         }
 
-        if (!strcmp(arg, "global-inherited-env"))
+        if (!strcmp(arg, "global-inherited-env")) {
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.inherited);
-        else if (!strcmp(arg, "global-system-env"))
+            /* Make sure to let proxy aware of HYDRA related variables */
+            if (!strncmp(str, "HYDRA_", 6)) {
+                MPL_putenv(str);
+            }
+        } else if (!strcmp(arg, "global-system-env"))
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.system);
         else if (!strcmp(arg, "global-user-env"))
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.user);
@@ -601,7 +607,7 @@ static HYD_status exec_wdir_fn(char *arg, char ***argv)
 
 static HYD_status exec_args_fn(char *arg, char ***argv)
 {
-    int i, count;
+    long int i, count;
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -610,7 +616,9 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
 
-    count = atoi(**argv);
+    count = strtol(**argv, NULL, 10);
+    if (errno == ERANGE || errno == EINVAL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Exec arg not convertible to integer\n");
     for (i = 0; i < count; i++) {
         (*argv)++;
         exec->exec[i] = MPL_strdup(**argv);

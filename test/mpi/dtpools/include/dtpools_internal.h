@@ -110,6 +110,7 @@ enum {
 };
 
 typedef enum {
+    DTPI_OBJ_TYPE__NONE = -1,
     DTPI_OBJ_TYPE__BASIC,
     DTPI_OBJ_TYPE__CONTIG,
     DTPI_OBJ_TYPE__VECTOR,
@@ -123,6 +124,80 @@ typedef enum {
     DTPI_OBJ_TYPE__STRUCT,
     DTPI_OBJ_TYPE__NUM
 } DTPI_obj_type_e;
+
+#define DTPI_GET_BASIC_OBJ_TYPE_FROM_IDX(obj_idx, obj_type)             \
+    DTPI_GET_OBJ_TYPE_FROM_IDX(, obj_idx, obj_type)
+
+#define DTPI_GET_STRUCT_OBJ_TYPE_FROM_IDX(obj_idx, obj_type)            \
+    DTPI_GET_OBJ_TYPE_FROM_IDX(STRUCT_, obj_idx, obj_type)
+
+#define DTPI_GET_OBJ_TYPE_FROM_IDX(pool_type, obj_idx, obj_type)        \
+    do {                                                                \
+        switch(obj_idx) {                                               \
+            case DTPI_OBJ_LAYOUT_SIMPLE__BASIC:                         \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##BASIC;           \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:                        \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##CONTIG;          \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:                        \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:                     \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:                     \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:                \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:                \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##VECTOR;          \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:                       \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:                    \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:                    \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:               \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:               \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##HVECTOR;         \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:                       \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:                    \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:                    \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:               \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:               \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##INDEXED;         \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:                      \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:                   \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:                   \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:              \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:              \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##HINDEXED;        \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:                 \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:              \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:              \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:         \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:         \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##BLOCK_INDEXED;   \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:                \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:             \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:             \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:        \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:        \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##BLOCK_HINDEXED;  \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:                 \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:                 \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:            \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:            \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##SUBARRAY_C;      \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:                 \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:                 \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:            \
+            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:            \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##SUBARRAY_F;      \
+                break;                                                  \
+            default:                                                    \
+                obj_type = DTPI_OBJ_TYPE__NONE;                         \
+        }                                                               \
+    } while (0)
 
 /*
  * Internal object information
@@ -203,6 +278,8 @@ struct DTPI_Par {
 };
 
 typedef int (*DTPI_Creator) (struct DTPI_Par * par, DTP_t dtp);
+typedef int (*DTPI_Destructor) (DTP_t dtp, int obj_idx);
+typedef int (*DTPI_Checker) (struct DTPI_Par * par, DTP_t dtp);
 
 int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp);
@@ -215,6 +292,18 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp);
+
+int DTPI_Struct_free(DTP_t dtp, int obj_idx);
+int DTPI_Basic_free(DTP_t dtp, int obj_idx);
+int DTPI_Contig_free(DTP_t dtp, int obj_idx);
+int DTPI_Vector_free(DTP_t dtp, int obj_idx);
+int DTPI_Hvector_free(DTP_t dtp, int obj_idx);
+int DTPI_Indexed_free(DTP_t dtp, int obj_idx);
+int DTPI_Hindexed_free(DTP_t dtp, int obj_idx);
+int DTPI_Block_indexed_free(DTP_t dtp, int obj_idx);
+int DTPI_Block_hindexed_free(DTP_t dtp, int obj_idx);
+int DTPI_Subarray_c_free(DTP_t dtp, int obj_idx);
+int DTPI_Subarray_f_free(DTP_t dtp, int obj_idx);
 
 int DTPI_Struct_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Basic_check_buf(struct DTPI_Par *par, DTP_t dtp);
@@ -230,5 +319,7 @@ int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp);
 
 void DTPI_Print_error(int errcode);
 void DTPI_Init_creators(DTPI_Creator * creators);
+void DTPI_Init_destructors(DTPI_Destructor * destructors);
+void DTPI_Init_checkers(DTPI_Checker * checkers);
 
 #endif /* DTPOOLS_INTERNAL_H_INCLUDED */

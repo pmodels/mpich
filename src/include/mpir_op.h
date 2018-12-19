@@ -163,6 +163,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Assert(op_ptr != NULL);                 \
             MPIR_Op_ptr_add_ref(op_ptr);                 \
         }                                                \
     } while (0)                                          \
@@ -173,6 +174,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Assert(op_ptr != NULL);                 \
             MPIR_Op_ptr_release(op_ptr);                 \
         }                                                \
     } while (0)                                          \
@@ -183,10 +185,13 @@ extern MPI_User_function *MPIR_Op_table[];
 typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
 extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
-#define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf) - 1]
-#define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf) - 1]
+#define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
+#define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
 int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute);
 
 int MPIR_Op_is_commutative(MPI_Op);
+
+int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op);
+void MPIR_Op_free_impl(MPI_Op * op);
 #endif /* MPIR_OP_H_INCLUDED */

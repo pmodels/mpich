@@ -30,9 +30,9 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 
 #define MPL_shm_SEG_ALREADY_EXISTS ERROR_ALREADY_EXISTS
 
-/* Returns 0 on success, -1 on error */
+/* Returns MPL_SHM_SUCCESS on success, MPL_SHM_EINTERN on error */
 #define MPLI_shm_lhnd_close(hnd)(\
-    (CloseHandle(MPLI_shm_lhnd_get(hnd)) != 0) ? 0 : -1            \
+    (CloseHandle(MPLI_shm_lhnd_get(hnd)) != 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN  \
 )
 
 #if defined (HAVE_QUERYPERFORMANCECOUNTER)
@@ -48,23 +48,23 @@ static inline int MPL_shm_get_uniq_str(char *str, int strlen)
 }
 #endif
 
-/* Returns 0 on success, -1 on error */
+/* Returns MPL_SHM_SUCCESS on success, MPL_SHM_EINTERN on error */
 static inline int MPLI_shm_ghnd_set_uniq(MPL_shm_hnd_t hnd)
 {
-    if (MPL_shm_hnd_ref_alloc(hnd) == 0) {
+    if (MPL_shm_hnd_ref_alloc(hnd) == MPL_SHM_SUCCESS) {
         if (MPLI_shm_get_uniq_str(hnd->ghnd, MPLI_SHM_GHND_SZ) != 0) {
-            return -1;
+            return MPL_SHM_EINTERN;
         }
     } else {
-        return -1;
+        return MPL_SHM_EINTERN;
     }
-    return 0;
+    return MPL_SHM_SUCCESS;
 }
 
 /* Nothing to be done when removing an SHM segment */
 static inline int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
-    return MPI_SUCCESS;
+    return MPL_SHM_SUCCESS;
 }
 
 #endif /* MPL_SHM_WIN_H_INCLUDED */

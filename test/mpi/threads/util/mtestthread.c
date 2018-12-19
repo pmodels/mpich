@@ -40,6 +40,7 @@ static volatile int nthreads = 0;
 #ifdef HAVE_WINDOWS_H
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
+    int errs = 0;
     if (nthreads >= MTEST_MAX_THREADS) {
         fprintf(stderr, "Too many threads already created: max is %d\n", MTEST_MAX_THREADS);
         return 1;
@@ -72,6 +73,7 @@ int MTest_Join_threads(void)
 
 int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE * lock)
 {
+    int errs = 0;
     if (lock == NULL)
         return -1;
 
@@ -85,6 +87,7 @@ int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE * lock)
 
 int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 {
+    int errs = 0;
     if (lock == NULL)
         return -1;
 
@@ -97,6 +100,7 @@ int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 
 int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE * lock)
 {
+    int errs = 0;
     if (lock == NULL)
         return -1;
     if (ReleaseMutex(*lock) == 0) {
@@ -107,6 +111,7 @@ int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE * lock)
 
 int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
 {
+    int errs = 0;
     if (lock != NULL) {
         if (CloseHandle(*lock) == 0) {
             return -1;

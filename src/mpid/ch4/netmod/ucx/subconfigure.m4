@@ -18,7 +18,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
     AC_ARG_WITH(ch4-netmod-ucx-args,
     [  --with-ch4-netmod-ucx-args=arg1:arg2:arg3
-    CH4 OFI netmod arguments:
+    CH4 UCX netmod arguments:
             am-only          - Do not use UCX tagged or RMA communication.
             ],
             [ucx_netmod_args=$withval],
@@ -29,7 +29,7 @@ dnl Parse the device arguments
     IFS=':'
     args_array=$ucx_netmod_args
     do_am_only=false
-    echo "Parsing Arguments for OFI Netmod"
+    echo "Parsing Arguments for UCX Netmod"
     for arg in $args_array; do
     case ${arg} in
       am-only)
@@ -79,14 +79,28 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
 
         ucxdir="src/mpid/ch4/netmod/ucx/ucx"
         ucxlib="src/mpid/ch4/netmod/ucx/ucx/src/ucp/libucp.la"
+
+        # embedded ucx is 1.4 or higher version, thus always set as defined.
+        have_ucp_put_nb=yes
+        have_ucp_get_nb=yes
     else
         PAC_PUSH_FLAG(LIBS)
         PAC_CHECK_HEADER_LIB_FATAL(ucx, ucp/api/ucp.h, ucp, ucp_config_read)
         PAC_POP_FLAG(LIBS)
         PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
+
+        # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
+        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_put_nb], [have_ucp_put_nb=yes], [have_ucp_put_nb=no])
+        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_get_nb], [have_ucp_get_nb=yes], [have_ucp_get_nb=no])
     fi
 
-])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
+    if test "${have_ucp_put_nb}" = "yes" ; then
+        AC_DEFINE(HAVE_UCP_PUT_NB,1,[Define if ucp_put_nb is defined in ucx])
+    fi
+    if test "${have_ucp_get_nb}" = "yes" ; then
+        AC_DEFINE(HAVE_UCP_GET_NB,1,[Define if ucp_get_nb is defined in ucx])
+    fi
+])dnl end AM_COND_IF(BUILD_CH4_NETMOD_UCX,...)
 ])dnl end _BODY
 
 [#] end of __file__

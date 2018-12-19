@@ -9,7 +9,7 @@
 #include "mpl.h"
 
 /* here to prevent "has no symbols" warnings from ranlib on OS X */
-static int dummy ATTRIBUTE((unused,used)) = 0;
+static int dummy ATTRIBUTE((unused)) MPL_USED = 0;
 
 #ifdef PAPI_MONITOR
 #include <papi.h>

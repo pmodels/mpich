@@ -409,6 +409,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
     if (!same_len) {
         indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
+        MPIR_Assert(indices);
         for (i = 0; i < size; i++)
             indices[i] = bc_len * i;
         *bc_indices = indices;

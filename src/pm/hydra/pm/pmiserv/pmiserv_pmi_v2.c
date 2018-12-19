@@ -75,7 +75,7 @@ static HYD_status poke_progress(char *key)
             req->next = NULL;
         }
 
-        if (key && strcmp(key, req->key)) {
+        if (key && req && strcmp(key, req->key)) {
             /* If the key doesn't match the request, just queue it back */
             if (list_head == NULL) {
                 list_head = req;
@@ -755,6 +755,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
     name = MPL_strdup(val);
+    HYDU_ERR_CHKANDJUMP(status, NULL == name, HYD_INTERNAL_ERROR, "%s", "");
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: port\n");

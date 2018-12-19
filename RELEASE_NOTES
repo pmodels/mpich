@@ -2,10 +2,13 @@
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
-### CH4 preview
+### CH4
 
  * Build Issues
    - CH4 will not build with Solaris compilers.
+ * Stability with large buffers
+   - CH4 may suffer from stability issues when operating on large
+     communication buffers (>= 2GB)
 
  * Dynamic process support
    - Requires fi_tagged capability in OFI netmod
@@ -32,6 +35,8 @@
    passing a lower optimization level than the default (-O2).
    Currently, this bug only seems to show up when the
    --disable-error-checking flag is passed to configure.
+
+ * Intel Compilers - MPICH will fail to build with ICC 18.0.0 on OS/X.
 
 ### Solaris compilers
 

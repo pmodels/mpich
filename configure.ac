@@ -48,10 +48,6 @@ dnl    MPID_MAX_PROCESSOR_NAME - The maximum number of character in a processor
 dnl                            name.  If not set, 128 will be used.
 dnl    MPID_MAX_ERROR_STRING - The maximum number of character in an error
 dnl                            string.  If not set, 1024 will be used.
-dnl    MPID_LIBTOOL_STATIC_FLAG - The static compilation flag to use
-dnl                               for the example executables within
-dnl                               mpich.  If not set, -static will be
-dnl                               used.
 dnl    PM_REQUIRES_PMI       - if set, provides the name of the PMI 
 dnl                            interface implementation.  If not set,
 dnl                            the "simple" PMI implementation is used.
@@ -382,7 +378,7 @@ AC_ARG_ENABLE(g,
         all      - All of the above choices
 ],,enable_g=none)
 
-AC_ARG_ENABLE([mpit_pvars],
+AC_ARG_ENABLE([mpit-pvars],
 [  --enable-mpit-pvars=list - Selectively enable MPI_T performance variables in
                       modules. list is a comma-separated module names,
                       including (Default is "none"):
@@ -511,7 +507,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be global
-                         (default), per-object, lock-free]),,enable_thread_cs=global)
+                         (default), per-object, per-vni, lock-free]),,enable_thread_cs=global)
 
 AC_ARG_ENABLE(mdta,
     AC_HELP_STRING([--enable-mdta],
@@ -526,7 +522,7 @@ AC_ARG_ENABLE(refcount,
                          Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object and lock-free, lock-free]),,
+                         for per-object, per-vni, and lock-free, lock-free]),,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
@@ -1304,6 +1300,7 @@ AC_ARG_ENABLE([izem],
 			  sync     - use the Izem interface for sychronization objects
                                      (locks and condition variables) instead of the MPL interface
                           queue    - use the Izem interface for atomic queue objects
+                          atomic   - use the Izem interface for CPU atomics
                           yes/all  - all of the above features are enabled
                           no/none  - none of the above features are enabled],,
 [enable_izem=no])
@@ -1319,9 +1316,13 @@ for option in $enable_izem ; do
         queue)
             izem_queue=yes
         ;;
+        atomic)
+            izem_atomic=yes
+        ;;
         yes|all)
             izem_sync=yes
             izem_queue=yes
+            izem_atomic=yes
         ;;
         no|none)
         ;;
@@ -1338,6 +1339,10 @@ fi
 
 if test "$izem_queue" = "yes" ; then
     AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
+fi
+
+if test "$izem_atomic" = "yes" ; then
+    AC_DEFINE(ENABLE_IZEM_ATOMIC,1,[Define to enable using Izem CPU atomics])
 fi
 
 AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
@@ -1657,6 +1662,10 @@ if test "$enable_threads" = "multiple" ; then
     thread_granularity=MPICH_THREAD_GRANULARITY__POBJ
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
+    per-vni|per_vni)
+    thread_granularity=MPICH_THREAD_GRANULARITY__VNI
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
+    ;;
     lock-free|lock_free|lockfree)
     thread_granularity=MPICH_THREAD_GRANULARITY__LOCKFREE
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
@@ -1681,6 +1690,10 @@ if test "$enable_threads" = "multiple" ; then
     esac
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+
+if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VNI" -a "$device_name" != "ch4" ; then
+    AC_MSG_ERROR([per-vni critical section granularity is only supported for the ch4 device])
+fi
 
 if test "$enable_mdta" = "yes" ; then
     if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
@@ -3037,6 +3050,7 @@ AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
+PAC_C_STATIC_ASSERT
 
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
@@ -3112,6 +3126,16 @@ if test "$MPID_NO_LONG_LONG" != "yes" ; then
     pac_cv_have_long_long=yes,pac_cv_have_long_long=no)])
     if test "$pac_cv_have_long_long" = "yes" ; then
         AC_DEFINE(HAVE_LONG_LONG_INT,1,[Define if long long is supported])
+    fi
+fi
+# Add HAVE_FLOAT16 detection
+if test "$MPID_NO_FLOAT16" != "yes" ; then
+    AC_CACHE_CHECK([whether _Float16 is supported],
+    pac_cv_have_float16,[
+    AC_TRY_COMPILE(,[_Float16 a;],
+    pac_cv_have_float16=yes,pac_cv_have_float16=no)])
+    if test "$pac_cv_have_float16" = "yes" ; then
+        AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
     fi
 fi
 # ----------------------------------------------------------------------------
@@ -3351,6 +3375,7 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 #endif
   ])
 ])
+AC_CHECK_SIZEOF([_Float16])
 
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
@@ -3363,7 +3388,8 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
     float_int double_int long_int short_int two_int long_double_int     \
-    _Bool float__Complex double__Complex long_double__Complex ; do
+    _Bool float__Complex double__Complex long_double__Complex \
+    _Float16; do
     eval len=\$ac_cv_sizeof_$type
     if test -z "$len" ; then 
        len=0
@@ -3670,6 +3696,7 @@ MPI_C_BOOL=MPI_DATATYPE_NULL
 MPI_C_FLOAT_COMPLEX=MPI_DATATYPE_NULL
 MPI_C_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 MPI_C_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
+MPIX_C_FLOAT16=MPI_DATATYPE_NULL
 if test ${len__Bool} != 0 ; then
     MPI_C_BOOL=0x4c00${len__Bool}3f
 fi
@@ -3681,6 +3708,9 @@ if test ${len_double__Complex} != 0 ; then
 fi
 if test ${len_long_double__Complex} != 0 ; then
     MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
+fi
+if test ${len__Float16} != 0 ; then
+    MPIX_C_FLOAT16=0x4c000246
 fi
 
 AC_SUBST(MPI_INT8_T)
@@ -3695,6 +3725,7 @@ AC_SUBST(MPI_C_BOOL)
 AC_SUBST(MPI_C_FLOAT_COMPLEX)
 AC_SUBST(MPI_C_DOUBLE_COMPLEX)
 AC_SUBST(MPI_C_LONG_DOUBLE_COMPLEX)
+AC_SUBST(MPIX_C_FLOAT16)
 export MPI_INT8_T
 export MPI_INT16_T
 export MPI_INT32_T
@@ -3707,6 +3738,7 @@ export MPI_C_BOOL
 export MPI_C_FLOAT_COMPLEX
 export MPI_C_DOUBLE_COMPLEX
 export MPI_C_LONG_DOUBLE_COMPLEX
+export MPIX_C_FLOAT16
 
 
 # ----------------------------------------------------------------------------
@@ -5481,14 +5513,6 @@ else
 fi
 AC_SUBST(MPI_MAX_ERROR_STRING)
 
-# Get the value of libtool_static_flag
-if test ! -z "$MPID_LIBTOOL_STATIC_FLAG" ; then
-   mpich_libtool_static_flag="$MPID_LIBTOOL_STATIC_FLAG"
-else
-   mpich_libtool_static_flag="-static"
-fi
-AC_SUBST([mpich_libtool_static_flag])
-
 # Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
@@ -5601,13 +5625,6 @@ fi
 LT_OUTPUT
 
 if test "X$enable_shared" = "Xyes" ; then
-    # see Github issue pmodels/mpich#3050 for shared object linking issue with
-    # IBM compiler
-    PAC_C_CHECK_COMPILER_OPTION("-qmkshrobj",found_opt=yes,found_opt=no)
-    if test "$found_opt" = "yes" ; then
-        PAC_APPEND_FLAG([-qmkshrobj],[LDFLAGS])
-    fi
-
     # see ticket #1590 for some more background on these Darwin linking issues
     AS_CASE([$host],
         [*-*-darwin*],

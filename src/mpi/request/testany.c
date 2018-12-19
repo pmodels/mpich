@@ -130,7 +130,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
@@ -183,10 +183,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                 MPID_END_ERROR_CHECKS;
             }
 #endif
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         MPID_Request_is_anysource(request_ptrs[i]) &&
-                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm) &&
-                         !MPIR_Request_is_complete(request_ptrs[i]))) {
+            if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 last_disabled_anysource = i;
             }
 
@@ -259,7 +256,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTANY);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

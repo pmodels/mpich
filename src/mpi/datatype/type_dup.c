@@ -175,6 +175,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
+    MPIR_Assert(datatype_ptr != NULL);
 
     /* ... body of routine ...  */
 

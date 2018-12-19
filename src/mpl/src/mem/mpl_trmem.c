@@ -106,10 +106,6 @@ static int TR_is_threaded = 0;
 static int is_configured = 0;
 static int classes_initialized = 0;
 
-#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
-
-static MPL_thread_mutex_t memalloc_mutex;
-
 static MPL_memory_allocation_t allocation_classes[MPL_MAX_MEMORY_CLASS];
 
 /* This list should match the enum in mpl_trmem.h */
@@ -135,11 +131,15 @@ static const char *allocation_class_strings[] = {
     "MPL_MEM_OTHER"
 };
 
+#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
+
+static MPL_thread_mutex_t memalloc_mutex;
+
 #define TR_THREAD_CS_ENTER                                              \
     do {                                                                \
         if (TR_is_threaded) {                                           \
             int err_;                                                   \
-            MPL_thread_mutex_lock(&memalloc_mutex, &err_);              \
+            MPL_thread_mutex_lock(&memalloc_mutex, &err_, MPL_THREAD_PRIO_HIGH);\
             if (err_)                                                   \
                 MPL_error_printf("Error acquiring memalloc mutex lock\n"); \
         }                                                               \

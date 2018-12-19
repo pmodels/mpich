@@ -65,6 +65,7 @@ int main(int argc, char **argv)
     int errors = 0, all_errors = 0;
     TYPE_C *val_ptr, *res_ptr;
     MPI_Win win;
+    MPI_Info info = MPI_INFO_NULL;
 
     MTest_Init(&argc, &argv);
 
@@ -79,8 +80,22 @@ int main(int argc, char **argv)
     MTEST_VG_MEM_INIT(val_ptr, sizeof(TYPE_C) * nproc);
     MTEST_VG_MEM_INIT(res_ptr, sizeof(TYPE_C) * nproc);
 
-    MPI_Win_create(val_ptr, sizeof(TYPE_C) * nproc, sizeof(TYPE_C), MPI_INFO_NULL, MPI_COMM_WORLD,
-                   &win);
+#ifdef TEST_HWACC_INFO
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "disable_shm_accumulate", "true");
+#endif
+
+#ifdef TEST_ACCOPS_INFO
+    if (info == MPI_INFO_NULL)
+        MPI_Info_create(&info);
+    MPI_Info_set(info, "which_accumulate_ops", "sum,no_op");
+#endif
+
+    MPI_Win_create(val_ptr, sizeof(TYPE_C) * nproc, sizeof(TYPE_C), info, MPI_COMM_WORLD, &win);
+
+#if defined(TEST_HWACC_INFO) || defined(TEST_ACCOPS_INFO)
+    MPI_Info_free(&info);
+#endif
 
     /* Test self communication */
 

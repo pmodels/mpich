@@ -79,6 +79,9 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
                     (MPL_DBG_FDEST, "allocate memory for storing communication pattern"));
     step1_recvfrom = *step1_recvfrom_ = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
     step2_nbrs = *step2_nbrs_ = (int **) MPL_malloc(sizeof(int *) * log_p_of_k, MPL_MEM_COLL);
+    MPIR_Assert(step1_recvfrom != NULL && *step1_recvfrom_ != NULL && step2_nbrs != NULL &&
+                *step2_nbrs_ != NULL);
+
     for (i = 0; i < log_p_of_k; i++) {
         (*step2_nbrs_)[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
     }
@@ -138,6 +141,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     /* Step 2 */
     if (*step1_sendto == -1) {  /* calulate step2_nbrs only for participating ranks */
         int *digit = (int *) MPL_malloc(sizeof(int) * log_p_of_k, MPL_MEM_COLL);
+        MPIR_Assert(digit != NULL);
         int temprank = newrank, index = 0, remainder;
         int mask = 0x1;
         int phase = 0, cbit, cnt, nbr, power;
@@ -296,6 +300,8 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int pofk = 1, log_pofk = 0;
     int *digit, *digit_reverse;
     int remainder, index = 0;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
@@ -314,8 +320,10 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     step2rank = MPII_Recexchalgo_origrank_to_step2rank(rank, rem, T, k);
 
     /* calculate the digits in base k representation of step2rank */
-    digit = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
-    digit_reverse = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(digit, int *, sizeof(int) * log_pofk,
+                        mpi_errno, "digit buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(digit_reverse, int *, sizeof(int) * log_pofk,
+                        mpi_errno, "digit_reverse buffer", MPL_MEM_COLL);
     for (i = 0; i < log_pofk; i++)
         digit[i] = 0;
     while (step2rank != 0) {
@@ -343,10 +351,11 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "reverse_rank is %d", step2_reverse_rank));
 
-    MPL_free(digit);
-    MPL_free(digit_reverse);
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
 
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return step2_reverse_rank;
+  fn_fail:
+    goto fn_exit;
 }

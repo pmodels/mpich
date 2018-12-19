@@ -23,8 +23,7 @@
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_TAG_USABLE_BITS      (MPIR_TAG_USABLE_BITS >> 1)
-#define MPIDI_UCX_AM_TAG               (MPIDI_UCX_TAG_USABLE_BITS + 1)
+#define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
 
 typedef struct {
     int avtid;
@@ -53,7 +52,6 @@ extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 
 #define MPIDI_UCX_CONTEXT_TAG_BITS 16
 #define MPIDI_UCX_CONTEXT_RANK_BITS 16
-#define UCX_TAG_BITS 32
 
 #define MPIDI_UCX_TAG_MASK      (0x00000000FFFFFFFFULL)
 #define MPIDI_UCX_SOURCE_MASK   (0x0000FFFF00000000ULL)

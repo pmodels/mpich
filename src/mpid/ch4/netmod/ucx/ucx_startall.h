@@ -17,9 +17,18 @@
 #define FUNCNAME MPIDI_NM_mpi_startall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
 {
     return MPIDIG_mpi_startall(count, requests);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_prequest_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_prequest_free_hook(MPIR_Request * req)
+{
+    MPIDIG_prequest_free_hook(req);
 }
 
 #endif /* UCX_STARTALL_H_INCLUDED */

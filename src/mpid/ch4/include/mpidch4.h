@@ -31,7 +31,7 @@ MPIDI_CH4I_API(int, Comm_get_all_failed_procs, MPIR_Comm *, MPIR_Group **, int);
 MPIDI_CH4I_API(int, Comm_revoke, MPIR_Comm *, int);
 MPIDI_CH4I_API(int, Comm_failure_ack, MPIR_Comm *);
 MPIDI_CH4I_API(int, Comm_AS_enabled, MPIR_Comm *);
-MPIDI_CH4I_API(int, Comm_get_lpid, MPIR_Comm *, int, int *, MPL_bool);
+MPIDI_CH4I_API(int, Comm_get_lpid, MPIR_Comm *, int, int *, bool);
 MPIDI_CH4I_API(int, Finalize, void);
 MPIDI_CH4I_API(int, Get_universe_size, int *);
 MPIDI_CH4I_API(int, Get_processor_name, char *, int, int *);
@@ -42,7 +42,8 @@ MPIDI_CH4I_API(int, Isend, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_
                MPIR_Request **);
 MPIDI_CH4I_API(int, Issend, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
                MPIR_Request **);
-MPIDI_CH4I_API(int, Mrecv, void *, MPI_Aint, MPI_Datatype, MPIR_Request *, MPI_Status *);
+MPIDI_CH4I_API(int, Mrecv, void *, MPI_Aint, MPI_Datatype, MPIR_Request *, MPI_Status *,
+               MPIR_Request **);
 MPIDI_CH4I_API(int, Imrecv, void *, MPI_Aint, MPI_Datatype, MPIR_Request *, MPIR_Request **);
 MPIDI_CH4I_API(int, Open_port, MPIR_Info *, char *);
 MPIDI_CH4I_API(int, Close_port, const char *);
@@ -67,6 +68,7 @@ MPIDI_CH4I_API(int, Recv_init, void *, int, MPI_Datatype, int, int, MPIR_Comm *,
 MPIDI_CH4I_API(void, Request_set_completed, MPIR_Request *);
 MPIDI_CH4I_API(int, Request_complete, MPIR_Request *);
 MPIDI_CH4I_API(int, Request_is_anysource, MPIR_Request *);
+MPIDI_CH4I_API(void, Prequest_free_hook, MPIR_Request *);
 MPIDI_CH4I_API(int, Send, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
                MPIR_Request **);
 MPIDI_CH4I_API(int, Ssend, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
@@ -254,6 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 /* circular dependencies                   */
 #include <netmod_impl.h>
 #include "shm_impl.h"
+
+#include "ch4i_workq.h"
 
 #include "ch4_init.h"
 #include "ch4_probe.h"

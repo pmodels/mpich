@@ -11,6 +11,25 @@
 #define MPIR_REQUEST_PTR_ARRAY_SIZE 16
 #endif
 
+/* -- Begin Profiling Symbol Block for routine MPI_Waitany */
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Waitany = PMPI_Waitany
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Waitany  MPI_Waitany
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Waitany as PMPI_Waitany
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status * status)
+    __attribute__ ((weak, alias("PMPI_Waitany")));
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Waitany
+#define MPI_Waitany PMPI_Waitany
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Waitany
 #undef FCNAME
@@ -88,25 +107,6 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
   fn_fail:
     goto fn_exit;
 }
-
-/* -- Begin Profiling Symbol Block for routine MPI_Waitany */
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Waitany = PMPI_Waitany
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Waitany  MPI_Waitany
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Waitany as PMPI_Waitany
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_Waitany")));
-#endif
-/* -- End Profiling Symbol Block */
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Waitany
-#define MPI_Waitany PMPI_Waitany
 
 #endif
 
@@ -213,10 +213,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
             }
 #endif
 
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         MPID_Request_is_anysource(request_ptrs[i]) &&
-                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm) &&
-                         !MPIR_Request_is_complete(request_ptrs[i]))) {
+            if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 last_disabled_anysource = i;
             }
 

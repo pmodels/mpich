@@ -381,7 +381,6 @@ Makefile.am-stamp
 /maint/createcoverage
 /maint/showsizes
 /maint/getcross
-/maint/f77tof90
 /maint/makerpm
 /maint/clmake
 /maint/conftimestamp
@@ -604,6 +603,3 @@ Makefile.am-stamp
 
 # /test/util/timer/
 /test/util/timer/timertest
-
-# /src/mpid/ch4/include
-/src/mpid/ch4/include/netmodpre.h

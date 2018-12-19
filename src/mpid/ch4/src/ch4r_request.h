@@ -43,8 +43,11 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
         MPIR_Request_add_ref(req);
 
     MPIDI_NM_am_request_init(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_am_request_init(req);
+#endif
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =
         (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
@@ -55,6 +58,66 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     return req;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4I_am_request_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request * req,
+                                                                  MPIR_Request_kind_t kind)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
+
+    MPIR_Assert(req != NULL);
+    /* Increment the refcount by one to account for the MPIDIG layer */
+    MPIR_Request_add_ref(req);
+
+    MPIDI_NM_am_request_init(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_am_request_init(req);
+#endif
+
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
+    MPIDI_CH4U_REQUEST(req, req) =
+        (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
+    MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
+    MPIDI_CH4U_REQUEST(req, req->status) = 0;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
+    return req;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4I_am_request_copy
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_copy(MPIR_Request * dest, MPIR_Request * src)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_COPY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_COPY);
+
+    MPIR_Assert(dest != NULL && src != NULL);
+    MPIDI_NM_am_request_init(dest);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_am_request_init(dest);
+#endif
+
+    MPIDI_CH4U_REQUEST(dest, req) = MPIDI_CH4U_REQUEST(src, req);;
+    MPIDI_CH4U_REQUEST(dest, req->rreq.request) = (uint64_t) dest;
+    MPIDI_CH4U_REQUEST(dest, datatype) = MPIDI_CH4U_REQUEST(src, datatype);
+    MPIDI_CH4U_REQUEST(dest, buffer) = MPIDI_CH4U_REQUEST(src, buffer);
+    MPIDI_CH4U_REQUEST(dest, count) = MPIDI_CH4U_REQUEST(src, count);
+    MPIDI_CH4U_REQUEST(dest, rank) = MPIDI_CH4U_REQUEST(src, rank);
+    MPIDI_CH4U_REQUEST(dest, tag) = MPIDI_CH4U_REQUEST(src, tag);
+    MPIDI_CH4U_REQUEST(dest, context_id) = MPIDI_CH4U_REQUEST(src, context_id);
+    MPIDI_CH4U_REQUEST(dest, req->status) = MPIDI_CH4U_REQUEST(src, req->status);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_COPY);
+    return;
 }
 
 /* This function should be called any time an anysource request is matched so

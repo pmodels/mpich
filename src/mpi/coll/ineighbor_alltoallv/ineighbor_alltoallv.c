@@ -318,6 +318,7 @@ int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const i
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Assert(comm_ptr != NULL);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -362,11 +363,11 @@ int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const i
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    /* create a complete request, if needed */
+    if (!request_ptr)
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
     /* return the handle of the request to the user */
-    if (request_ptr)
-        *request = request_ptr->handle;
-    else
-        *request = MPI_REQUEST_NULL;
+    *request = request_ptr->handle;
 
     /* ... end of body of routine ... */
 

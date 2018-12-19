@@ -16,6 +16,10 @@
 #endif
 
 #include "mpir_dataloop.h"
+#ifdef HAVE_LIBHCOLL
+#include "hcoll/api/hcoll_dte.h"
+#endif
+
 #include "mpid_thread.h"
 #include "mpid_sched.h"
 #include "mpid_timers_fallback.h"
@@ -23,8 +27,24 @@
 #include "shmpre.h"
 #include "uthash.h"
 #include "ch4_coll_params.h"
+#include "ch4i_workq_types.h"
+
+#ifdef MPIDI_CH4_USE_MT_DIRECT
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
+#elif defined MPIDI_CH4_USE_MT_HANDOFF
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
+#elif defined MPIDI_CH4_USE_MT_TRYLOCK
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
+#elif defined MPIDI_CH4_USE_MT_RUNTIME
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_Global.settings.mt_model
+#else
+#error "Unknown MT model or MT model not defined"
+#endif
 
 typedef struct {
+#ifdef HAVE_LIBHCOLL
+    hcoll_datatype_t hcoll_datatype;
+#endif
     union {
     MPIDI_NM_DT_DECL} netmod;
 } MPIDI_Devdt_t;
@@ -33,9 +53,6 @@ typedef struct {
 typedef struct {
     int progress_count;
 } MPID_Progress_state;
-
-#define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
-  do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
 typedef enum {
     MPIDI_PTYPE_RECV,
@@ -52,6 +69,7 @@ typedef enum {
 #define MPIDI_CH4U_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDI_CH4U_REQ_MATCHED (0x1 << 6)
 #define MPIDI_CH4U_REQ_LONG_RTS (0x1 << 7)
+#define MPIDI_CH4U_REQ_IN_PROGRESS (0x1 << 8)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
@@ -155,6 +173,8 @@ typedef struct MPIDI_CH4U_req_ext_t {
 typedef struct MPIDI_CH4U_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
+    union {
+    MPIDI_SHM_REQUEST_AM_DECL} shm_am;
     MPIDI_CH4U_req_ext_t *req;
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
@@ -195,6 +215,7 @@ typedef struct {
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
+#define MPIDI_CH4U_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDI_CH4U_REQ_IN_PROGRESS)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
@@ -222,6 +243,25 @@ typedef enum {
     MPIDI_CH4I_ACCU_SAME_OP_NO_OP
 } MPIDI_CH4U_win_info_accumulate_ops;
 
+typedef enum {
+    MPIDI_CH4I_ACCU_MAX_SHIFT = 0,      /* 1<<0 */
+    MPIDI_CH4I_ACCU_MIN_SHIFT = 1,
+    MPIDI_CH4I_ACCU_SUM_SHIFT = 2,
+    MPIDI_CH4I_ACCU_PROD_SHIFT = 3,
+    MPIDI_CH4I_ACCU_MAXLOC_SHIFT = 4,
+    MPIDI_CH4I_ACCU_MINLOC_SHIFT = 5,
+    MPIDI_CH4I_ACCU_BAND_SHIFT = 6,
+    MPIDI_CH4I_ACCU_BOR_SHIFT = 7,
+    MPIDI_CH4I_ACCU_BXOR_SHIFT = 8,
+    MPIDI_CH4I_ACCU_LAND_SHIFT = 9,
+    MPIDI_CH4I_ACCU_LOR_SHIFT = 10,
+    MPIDI_CH4I_ACCU_LXOR_SHIFT = 11,
+    MPIDI_CH4I_ACCU_REPLACE_SHIFT = 12,
+    MPIDI_CH4I_ACCU_NO_OP_SHIFT = 13,   /* atomic get */
+    MPIDI_CH4I_ACCU_CSWAP_SHIFT = 14,
+    MPIDI_CH4I_ACCU_OP_SHIFT_LAST
+} MPIDI_CH4U_win_info_accu_op_shift_t;
+
 typedef struct MPIDI_CH4U_win_info_args_t {
     int no_locks;
     int same_size;
@@ -229,6 +269,16 @@ typedef struct MPIDI_CH4U_win_info_args_t {
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDI_CH4U_win_info_accumulate_ops accumulate_ops;
+
+    /* hints to tradeoff atomicity support */
+    uint32_t which_accumulate_ops;      /* Arbitrary combination of {1<<max|1<<min|1<<sum|...}
+                                         * with bit shift defined in MPIDI_CH4U_win_info_accu_op_shift_t.
+                                         * any_op and none are two special values.
+                                         * any_op by default. */
+    bool accumulate_noncontig_dtype;    /* true by default. */
+    MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
+                                         * TODO: can be set to win_size.*/
+    bool disable_shm_accumulate;        /* false by default. */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.

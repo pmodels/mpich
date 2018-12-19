@@ -46,7 +46,7 @@ static inline int MPIDI_PTL_append_overflow(size_t i)
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,
-                                         int *tag_ub,
+                                         int *tag_bits,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
@@ -221,7 +221,7 @@ static inline int MPIDI_NM_get_vni_attr(int vni)
 }
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                         int idx, int *lpid_ptr, MPL_bool is_remote)
+                                         int idx, int *lpid_ptr, bool is_remote)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

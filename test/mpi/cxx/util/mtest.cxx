@@ -569,3 +569,49 @@ static void MTestRMACleanup(void)
 {
 }
 #endif
+
+/* ------------------------------------------------------------------------ */
+/* All dtpools related code */
+
+extern "C"
+{
+#include "dtpools.h"
+}
+
+struct _dt_type {
+    const char *name;
+    MPI::Datatype type;
+};
+static struct _dt_type typelist[] = { DTPOOLS_TYPE_LIST };
+
+int MTestInitBasicSignatureX(int argc, char *argv[], int *count, MPI::Datatype * basic_type)
+{
+    int i, j;
+
+    if (argc < 3) {
+        cout << "Usage: " << "-type=[TYPE] -count=[COUNT]\n";
+        return 1;
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
+                j = 0;
+
+                while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
+                       strcmp(argv[i] + strlen("-type="), typelist[j].name)) {
+                    j++;
+                }
+
+                if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
+                    *basic_type = typelist[j].type;
+                } else {
+                    cout << "Error: datatype not recognized\n";
+                    return 1;
+                }
+            } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
+                *count = atoi(argv[i] + strlen("-count="));
+            }
+        }
+    }
+
+    return 0;
+}

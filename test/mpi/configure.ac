@@ -81,8 +81,8 @@ if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
         ;;        
     esac
     # Now, see if we can find the f77tof90 routine
-    if test -x $use_top_srcdir/../../maint/f77tof90 ; then 
-        master_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
+    if test -x $use_top_srcdir/maint/f77tof90 ; then
+        master_top_srcdir=$use_top_srcdir
     else 
         AC_MSG_ERROR([Unable to find master source file - reconfigure using --disable-maintainer_mode])
     fi
@@ -135,6 +135,19 @@ for option in $enable_fortran ; do
     esac
 done
 IFS="$save_IFS"
+
+# DTPools switch
+AC_ARG_ENABLE([dtpools],
+              [AC_HELP_STRING([--disable-dtpools],[Disable dtpools tests])],,
+              [enable_dtpools=yes])
+
+if test "x${enable_dtpools}" = "xyes"; then
+    DTP_SWITCH="ON"
+else
+    DTP_SWITCH="OFF"
+fi
+
+AC_SUBST(DTP_SWITCH)
 
 AC_ARG_ENABLE(cxx,
 	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])

@@ -1,0 +1,34 @@
+sudo: false
+language: c
+
+os:
+  - linux
+  - osx
+
+env:
+  - DEVICE=ch3:nemesis
+  - DEVICE=ch3:sock
+#  - DEVICE=ch4:ofi
+#  - DEVICE=ch4:ucx
+
+matrix:
+  exclude:
+    - os: osx
+      env: DEVICE=ch4:ofi
+    - os: osx
+      env: DEVICE=ch4:ucx
+
+addons:
+  apt:
+    packages: gfortran libnuma-dev
+
+before_script:
+  - MPICH_DEPS_PREFIX=$HOME/autotools ./maint/bootstrap.sh
+  - export PATH=$HOME/autotools/bin:$PATH
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then MPICH_FORTRAN=--disable-fortran; fi
+
+
+script:
+  - ./autogen.sh
+  - ./configure --prefix=$PWD/i --with-device=$DEVICE $MPICH_FORTRAN
+  - make -j2 install

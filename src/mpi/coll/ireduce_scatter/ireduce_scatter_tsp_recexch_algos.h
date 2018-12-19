@@ -234,14 +234,15 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPIR_TSP_sched_t *sched;
-    *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
 
+    *req = NULL;
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
+    MPIR_Assert(sched != NULL);
     MPIR_TSP_sched_create(sched);
 
     /* For correctness, transport based collectives need to get the

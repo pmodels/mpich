@@ -1,4 +1,11 @@
 ===============================================================================
+                               Changes in 3.3.1
+===============================================================================
+
+ # Removed support for logical reduction operations on floating point
+   types.
+
+===============================================================================
                                Changes in 3.3
 ===============================================================================
 
@@ -6,9 +13,6 @@
    overheads. CH4 has experimental support for OFI and UCX network libraries,
    and POSIX shared memory. Thanks to Intel, Mellanox, and RIKEN AICS for
    participating in the CH4 coding effort.
-
- # Added support for splitting communicators based on hardware
-   topology using info hints.
 
  # Fixed SLURM integration in Hydra for new node list format.
 
@@ -35,6 +39,11 @@
    communicators by machine topology. Both on-node (socket, core,
    etc.) and off-node (switch-level) hints are defined.
 
+ # Improvements to MPI_THREAD_MULTIPLE in CH4 through new thread safety
+   models at the Virtual Network Interface (VNI) level. This introduces two
+   new models that leverage work-queues to offload operations and improve
+   scalability under contention.
+
  # Message Driven Thread Activation (MDTA). An alternative locking
    model is defined for MPI_THREAD_MULTIPLE in CH4.
 
@@ -51,11 +60,13 @@
 
  # Removed the PAMI device and poe PMI client.
 
+ # C99 compiler support is now required to build MPICH.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3b3
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3
 
    A list of bugs that have been fixed is available at the following
    link:

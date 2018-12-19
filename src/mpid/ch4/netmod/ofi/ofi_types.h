@@ -117,9 +117,9 @@
 
 #ifdef HAVE_FORTRAN_BINDING
 #ifdef MPICH_DEFINE_2COMPLEX
-#define MPIDI_OFI_DT_SIZES 62
+#define MPIDI_OFI_DT_SIZES 63
 #else
-#define MPIDI_OFI_DT_SIZES 60
+#define MPIDI_OFI_DT_SIZES 61
 #endif
 #else
 #define MPIDI_OFI_DT_SIZES 40
@@ -275,6 +275,7 @@ typedef struct {
     uint64_t max_atomic_count;
     uint64_t max_compare_atomic_count;
     uint64_t max_fetch_atomic_count;
+    bool mpi_acc_valid;
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
@@ -299,7 +300,6 @@ typedef struct {
 } MPIDI_OFI_cq_buff_entry_t;
 
 typedef struct {
-    unsigned enable_data:1;
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;
@@ -388,6 +388,8 @@ typedef struct {
     /* Window/RMA Globals */
     void *win_map;
     uint64_t rma_issued_cntr;
+    /* OFI atomics limitation of each pair of <dtype, op> returned by the
+     * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
@@ -482,11 +484,19 @@ typedef enum MPIDI_OFI_segment_side {
     MPIDI_OFI_SEGMENT_RESULT,
 } MPIDI_OFI_segment_side_t;
 
+typedef struct MPIDI_OFI_win_acc_hint {
+    uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
+                                                         * atomicity support of all OFI datatypes. A datatype
+                                                         * is supported only when all enabled ops are valid atomic
+                                                         * provided by the OFI provider (recored in MPIDI_Global.win_op_table).
+                                                         * Invalid <dtype, op> defined in MPI standard are excluded.
+                                                         * This structure is prepared at window creation time. */
+} MPIDI_OFI_win_acc_hint_t;
+
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    struct MPIDI_Iovec_array *next;
     union {
         struct {
             struct iovec *originv;

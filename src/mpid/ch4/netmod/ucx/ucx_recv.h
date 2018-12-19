@@ -15,8 +15,8 @@
 #define FUNCNAME MPIDI_UCX_recv_cmpl_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
-                                          ucp_tag_recv_info_t * info)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
+                                                     ucp_tag_recv_info_t * info)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = NULL;
@@ -24,16 +24,10 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 
-    if (ucp_request->req) {
+    if (ucp_request->req)
         rreq = ucp_request->req;
-        MPIDI_CH4U_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    } else {
+    else
         rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_cc_set(&rreq->cc, 0);
-        ucp_request->req = rreq;
-    }
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -49,6 +43,22 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
         MPIR_STATUS_SET_COUNT(rreq->status, count);
     }
 
+#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
+    /* FIXME: is this too strong? The reason a barrier is needed in fine-grained locking
+     * is to avoid detecting request completion before changes to rreq->status is visible.*/
+    OPA_read_write_barrier();
+#endif
+
+    if (ucp_request->req) {
+        MPIDI_CH4U_request_complete(rreq);
+        ucp_request->req = NULL;
+        ucp_request_release(ucp_request);
+    } else {
+        MPIR_cc_set(&rreq->cc, 0);
+        ucp_request->req = rreq;
+    }
+
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 }
 
@@ -56,8 +66,8 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_UCX_mrecv_cmpl_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
-                                           ucp_tag_recv_info_t * info)
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
+                                                      ucp_tag_recv_info_t * info)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
@@ -97,13 +107,13 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_UCX_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_UCX_recv(void *buf,
-                                 MPI_Aint count,
-                                 MPI_Datatype datatype,
-                                 int rank,
-                                 int tag, MPIR_Comm * comm,
-                                 int context_offset,
-                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag, MPIR_Comm * comm,
+                                            int context_offset,
+                                            MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -111,7 +121,7 @@ static inline int MPIDI_UCX_recv(void *buf,
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     uint64_t ucp_tag, tag_mask;
-    MPIR_Request *req;
+    MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV);
@@ -138,11 +148,22 @@ static inline int MPIDI_UCX_recv(void *buf,
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
-        req = ucp_request->req;
+        if (req == NULL) {
+            req = ucp_request->req;
+        } else {
+            memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
+#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
+            /* FIXME: is this too strong? same reason as in the above callback */
+            OPA_read_write_barrier();
+#endif
+            MPIR_cc_set(&req->cc, 0);
+            MPIR_Request_free((MPIR_Request *) ucp_request->req);
+        }
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        if (req == NULL)
+            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
@@ -157,10 +178,13 @@ static inline int MPIDI_UCX_recv(void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_imrecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
-                                                 MPI_Datatype datatype,
-                                                 MPIR_Request * message, MPIR_Request ** rreqp)
+                                                 MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -209,8 +233,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         MPIDI_UCX_REQ(message).a.ucp_request = ucp_request;
         ucp_request->req = message;
     }
-    message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreqp = message;
 
   fn_exit:
     return mpi_errno;
@@ -218,6 +240,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_recv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -231,6 +257,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_irecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -242,6 +272,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_recv_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int count,
                                                     MPI_Datatype datatype,
@@ -255,7 +289,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-static inline int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_cancel_recv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {
         ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(rreq).a.ucp_request);

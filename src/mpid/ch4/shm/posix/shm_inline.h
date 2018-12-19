@@ -3,7 +3,7 @@
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
@@ -24,5 +24,8 @@
 #include "posix_comm.h"
 #include "posix_coll.h"
 #include "posix_unimpl.h"
+#include "posix_proc.h"
+#include "posix_datatype.h"
+#include "posix_op.h"
 
 #endif /* POSIX_INLINE_H_INCLUDED */

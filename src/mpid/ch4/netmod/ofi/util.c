@@ -197,6 +197,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
                               size_t * data_sz,
+                              int is_local,
                               int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
@@ -260,6 +261,32 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
 
+#undef FUNCNAME
+#define FUNCNAME check_mpi_acc_valid
+#undef FCNAME
+#define FCNAME MPL_QUOTE(check_mpi_acc_valid)
+MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
+{
+    bool valid_flag = false;
+
+    /* Check if the <datatype, op> is supported by MPICH. Note that MPICH
+     * supports more combinations than that specified in standard (see definition
+     * of these checking routines for extended support). */
+
+    /* Predefined reduce operation, NO_OP, REPLACE */
+    if (op != MPI_OP_NULL) {
+        int mpi_errno;
+        mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (dtype);
+        if (mpi_errno == MPI_SUCCESS)
+            valid_flag = TRUE;
+    } else {
+        /* Compare and swap */
+        if (MPIR_Type_is_rma_atomic(dtype))
+            valid_flag = true;
+    }
+
+    return valid_flag;
+}
 
 #undef FUNCNAME
 #define FUNCNAME mpi_to_ofi
@@ -476,6 +503,7 @@ static inline void create_dt_map()
             _TBL.max_atomic_count = 0;
             _TBL.max_fetch_atomic_count = 0;
             _TBL.max_compare_atomic_count = 0;
+            _TBL.mpi_acc_valid = check_mpi_acc_valid(mpi_dtypes[i], mpi_ops[j]);
             ssize_t ret;
             size_t atomic_count;
 
@@ -499,7 +527,11 @@ static inline void add_index(MPI_Datatype datatype, int *index)
 
 void MPIDI_OFI_index_datatypes()
 {
+    static bool needs_init = true;
     int index = 0;
+
+    if (!needs_init)
+        return;
 
     add_index(MPI_CHAR, &index);
     add_index(MPI_UNSIGNED_CHAR, &index);
@@ -510,9 +542,8 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_UNSIGNED_SHORT, &index);
     add_index(MPI_INT, &index);
     add_index(MPI_UNSIGNED, &index);
-    add_index(MPI_LONG, &index);
-    add_index(MPI_UNSIGNED_LONG, &index);       /* 10 */
-
+    add_index(MPI_LONG, &index);        /* count=10 */
+    add_index(MPI_UNSIGNED_LONG, &index);
     add_index(MPI_FLOAT, &index);
     add_index(MPI_DOUBLE, &index);
     add_index(MPI_LONG_DOUBLE, &index);
@@ -521,10 +552,10 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_PACKED, &index);
     add_index(MPI_LB, &index);
     add_index(MPI_UB, &index);
-    add_index(MPI_2INT, &index);
+    add_index(MPI_2INT, &index);        /* count=20 */
 
     /* C99 types */
-    add_index(MPI_INT8_T, &index);      /* 20 */
+    add_index(MPI_INT8_T, &index);
     add_index(MPI_INT16_T, &index);
     add_index(MPI_INT32_T, &index);
     add_index(MPI_INT64_T, &index);
@@ -533,23 +564,23 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_UINT32_T, &index);
     add_index(MPI_UINT64_T, &index);
     add_index(MPI_C_BOOL, &index);
-    add_index(MPI_C_FLOAT_COMPLEX, &index);
-    add_index(MPI_C_DOUBLE_COMPLEX, &index);    /* 30 */
+    add_index(MPI_C_FLOAT_COMPLEX, &index);     /* count=30 */
+    add_index(MPI_C_DOUBLE_COMPLEX, &index);
     add_index(MPI_C_LONG_DOUBLE_COMPLEX, &index);
 
     /* address/offset/count types */
     add_index(MPI_AINT, &index);
     add_index(MPI_OFFSET, &index);
-    add_index(MPI_COUNT, &index);
+    add_index(MPI_COUNT, &index);       /* count=35 */
 
-    /* Fortran types */
+    /* Fortran types (count=23) */
 #ifdef HAVE_FORTRAN_BINDING
     add_index(MPI_COMPLEX, &index);
     add_index(MPI_DOUBLE_COMPLEX, &index);
     add_index(MPI_LOGICAL, &index);
     add_index(MPI_REAL, &index);
-    add_index(MPI_DOUBLE_PRECISION, &index);
-    add_index(MPI_INTEGER, &index);     /* 40 */
+    add_index(MPI_DOUBLE_PRECISION, &index);    /* count=40 */
+    add_index(MPI_INTEGER, &index);
     add_index(MPI_2INTEGER, &index);
 #ifdef MPICH_DEFINE_2COMPLEX
     add_index(MPI_2COMPLEX, &index);
@@ -560,8 +591,8 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_CHARACTER, &index);
     add_index(MPI_REAL4, &index);
     add_index(MPI_REAL8, &index);
-    add_index(MPI_REAL16, &index);
-    add_index(MPI_COMPLEX8, &index);    /* 50 */
+    add_index(MPI_REAL16, &index);      /* count=50 */
+    add_index(MPI_COMPLEX8, &index);
     add_index(MPI_COMPLEX16, &index);
     add_index(MPI_COMPLEX32, &index);
     add_index(MPI_INTEGER1, &index);
@@ -576,12 +607,18 @@ void MPIDI_OFI_index_datatypes()
 
 #endif
     add_index(MPI_FLOAT_INT, &index);
-    add_index(MPI_DOUBLE_INT, &index);
+    add_index(MPI_DOUBLE_INT, &index);  /* count=60 */
     add_index(MPI_LONG_INT, &index);
-    add_index(MPI_SHORT_INT, &index);   /* 60 */
+    add_index(MPI_SHORT_INT, &index);
     add_index(MPI_LONG_DOUBLE_INT, &index);
+
+    /* check if static dt_size is correct */
+    MPIR_Assert(MPIDI_OFI_DT_SIZES == index);
 
     /* do not generate map when atomics are not enabled */
     if (MPIDI_OFI_ENABLE_ATOMICS)
         create_dt_map();
+
+    /* only need to do this once */
+    needs_init = false;
 }

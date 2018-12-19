@@ -17,6 +17,18 @@ struct MPIR_Request;
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_LIBHCOLL
+#include "hcoll/api/hcoll_dte.h"
+#endif
+
+typedef struct {
+#ifdef HAVE_LIBHCOLL
+    hcoll_datatype_t hcoll_datatype;
+#endif
+    int foo; /* Shut up the compiler */
+} MPIDI_Devdt_t;
+#define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
+
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
@@ -533,6 +545,7 @@ int MPID_Init( int *argc_p, char ***argv_p, int requested,
 int MPID_InitCompleted( void );
 
 int MPID_Finalize(void);
+#define MPID_CS_finalize() do {} while (0)
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
 int MPID_Open_port(MPIR_Info *, char *);
@@ -622,14 +635,10 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
                 MPIR_Request *message, MPIR_Request **rreqp);
 
 int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
-               MPIR_Request *message, MPI_Status *status);
+               MPIR_Request *message, MPI_Status *status, MPIR_Request **rreq);
 
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
-
-int MPID_Comm_AS_enabled(MPIR_Comm *);
-
-int MPID_Request_is_anysource(MPIR_Request *);
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 
@@ -711,7 +720,7 @@ int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
 int MPID_Get_universe_size(int  * universe_size);
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPL_bool is_remote);
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, bool is_remote);
 
 void MPID_Request_create_hook(MPIR_Request *);
 void MPID_Request_free_hook(MPIR_Request *);

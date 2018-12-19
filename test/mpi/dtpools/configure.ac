@@ -5,7 +5,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.63])
 AC_INIT([dtpools], [0.0], [discuss@mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
 
@@ -22,6 +22,11 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 AH_BOTTOM([
 #endif /* !defined(DTPOOLSCONF_H_INCLUDED) */
 ])
+
+# Ensure we have an MPI compiler wrapper
+if test -n "$MPICC" ; then
+  CC=$MPICC
+fi
 
 # Checks for programs.
 AC_PROG_AWK

@@ -400,15 +400,13 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, recvcount, mpi_errno);
             } else if (sendbuf != MPI_IN_PLACE && recvcount != 0)
-                MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
+                MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
 
-                    MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, datatype, mpi_errno);
+            MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, datatype, mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf, recvcount, datatype, mpi_errno);
 
             MPIR_ERRTEST_OP(op, mpi_errno);
 
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);

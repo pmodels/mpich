@@ -22,6 +22,7 @@
 static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
 
@@ -49,7 +50,8 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         rem_bcs = MPIR_Comm_size(comm) - num_nodes;
         MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], &MPIDI_Global.addrname,
                            MPIDI_Global.addrnamelen, TRUE, &table, NULL);
-        mapped_table = (fi_addr_t *) MPL_malloc(rem_bcs * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(mapped_table, fi_addr_t *, rem_bcs * sizeof(fi_addr_t),
+                            mpi_errno, "mapped_table", MPL_MEM_ADDRESS);
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, rem_bcs, mapped_table, 0ULL, NULL),
                        avmap);
 
@@ -69,11 +71,11 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 #endif
             curr++;
         }
-        MPL_free(mapped_table);
         MPIDU_bc_table_destroy(table);
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
     return mpi_errno;
   fn_fail:

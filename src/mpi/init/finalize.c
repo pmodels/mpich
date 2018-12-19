@@ -165,8 +165,18 @@ int MPI_Finalize(void)
 #endif
 
 #ifdef HAVE_NETLOC
-    if (MPIR_Process.network_attr.u.tree.node_levels != NULL)
-        MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
+    switch (MPIR_Process.network_attr.type) {
+        case MPIR_NETLOC_NETWORK_TYPE__TORUS:
+            if (MPIR_Process.network_attr.u.torus.geometry != NULL)
+                MPL_free(MPIR_Process.network_attr.u.torus.geometry);
+            break;
+        case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
+        case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
+        default:
+            if (MPIR_Process.network_attr.u.tree.node_levels != NULL)
+                MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
+            break;
+    }
 #endif
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
@@ -251,6 +261,9 @@ int MPI_Finalize(void)
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
+
+    /* Free complete request */
+    MPIR_Request_free(MPIR_Process.lw_req);
 
     mpi_errno = MPII_Coll_finalize();
     if (mpi_errno)

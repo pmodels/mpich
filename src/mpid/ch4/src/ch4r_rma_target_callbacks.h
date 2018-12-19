@@ -528,7 +528,8 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
 #define FUNCNAME MPIDI_CH4U_win_unlock_ack_proc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info, MPIR_Win * win)
+static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info,
+                                         int is_local, MPIR_Win * win)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -546,7 +547,7 @@ static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info
     msg.origin_rank = win->comm_ptr->rank;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(info->origin_rank, win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDI_CH4U_win_to_context(win),
                                                 info->origin_rank,
                                                 MPIDI_CH4U_WIN_UNLOCK_ACK, &msg, sizeof(msg));
@@ -897,7 +898,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
 
     if (MPIDI_CH4U_REQUEST(req, req->greq.n_iov) == 0) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(req, rank), win->comm_ptr))
+        if (MPIDI_CH4I_REQUEST(req, is_local))
             mpi_errno = MPIDI_SHM_am_isend_reply(context_id,
                                                  MPIDI_CH4U_REQUEST(req, rank),
                                                  MPIDI_CH4U_GET_ACK,
@@ -945,7 +946,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
     MPIDI_CH4U_REQUEST(req, req->greq.dt_iov) = (void *) p_data;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(req, rank), win->comm_ptr))
+    if (MPIDI_CH4I_REQUEST(req, is_local))
         mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDI_CH4U_REQUEST(req, rank),
                                              MPIDI_CH4U_GET_ACK, &get_ack, sizeof(get_ack), p_data,
                                              data_sz, MPI_BYTE, req);
@@ -1339,7 +1340,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz, int *is_contig,
+                                              size_t * p_data_sz, int is_local, int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
@@ -1379,7 +1380,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz, int *is_contig,
+                                              size_t * p_data_sz, int is_local, int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
@@ -1420,7 +1421,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
-                                                  size_t * p_data_sz, int *is_contig,
+                                                  size_t * p_data_sz, int is_local, int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
@@ -1492,7 +1493,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                 void **data,
-                                                size_t * p_data_sz, int *is_contig,
+                                                size_t * p_data_sz, int is_local, int *is_contig,
                                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                 MPIR_Request ** req)
 {
@@ -1527,7 +1528,7 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
-                                               size_t * p_data_sz, int *is_contig,
+                                               size_t * p_data_sz, int is_local, int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
 {
@@ -1557,7 +1558,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 
         case MPIDI_CH4U_WIN_UNLOCK:
         case MPIDI_CH4U_WIN_UNLOCKALL:
-            MPIDI_win_unlock_proc(msg_hdr, win);
+            MPIDI_win_unlock_proc(msg_hdr, is_local, win);
             break;
 
         case MPIDI_CH4U_WIN_UNLOCK_ACK:
@@ -1595,6 +1596,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
+                                          int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
@@ -1632,6 +1634,9 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_put_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     offset = win->disp_unit * msg_hdr->target_disp;
     if (msg_hdr->n_iov) {
@@ -1640,13 +1645,15 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(dt_iov);
 
         iov = (struct iovec *) ((char *) am_hdr + sizeof(*msg_hdr));
-        for (i = 0; i < msg_hdr->n_iov; i++)
-            iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
-        MPIR_Memcpy(dt_iov, iov, sizeof(struct iovec) * msg_hdr->n_iov);
+        for (i = 0; i < msg_hdr->n_iov; i++) {
+            dt_iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
+            dt_iov[i].iov_len = iov[i].iov_len;
+        }
+
         MPIDI_CH4U_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDI_CH4U_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
         *is_contig = 0;
-        *data = iov;
+        *data = dt_iov;
         *p_data_sz = msg_hdr->n_iov;
         goto fn_exit;
     }
@@ -1696,6 +1703,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
+                                              int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
@@ -1724,6 +1732,9 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_put_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     /* Base adjustment for iov will be done after we get the entire iovs,
      * at MPIDI_CH4U_put_data_target_msg_cb */
@@ -1752,6 +1763,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
+                                                  int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
@@ -1774,7 +1786,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     win = MPIDI_CH4U_REQUEST(origin_req, req->preq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_PUT_DAT_REQ,
@@ -1818,6 +1830,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
+                                                  int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
@@ -1840,7 +1853,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     win = MPIDI_CH4U_REQUEST(origin_req, req->areq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_ACC_DAT_REQ,
@@ -1884,6 +1897,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                       void **data,
                                                       size_t * p_data_sz,
+                                                      int is_local,
                                                       int *is_contig,
                                                       MPIDIG_am_target_cmpl_cb *
                                                       target_cmpl_cb, MPIR_Request ** req)
@@ -1906,7 +1920,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
     win = MPIDI_CH4U_REQUEST(origin_req, req->areq.win_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(origin_req, rank), win->comm_ptr))
+    if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDI_CH4U_win_to_context(win),
                                              MPIDI_CH4U_REQUEST(origin_req, rank),
                                              MPIDI_CH4U_GET_ACC_DAT_REQ,
@@ -1950,6 +1964,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
 static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
                                                size_t * p_data_sz,
+                                               int is_local,
                                                int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
@@ -1993,6 +2008,7 @@ static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
                                                size_t * p_data_sz,
+                                               int is_local,
                                                int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
@@ -2023,6 +2039,7 @@ static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                    void **data,
                                                    size_t * p_data_sz,
+                                                   int is_local,
                                                    int *is_contig,
                                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                    MPIR_Request ** req)
@@ -2053,6 +2070,7 @@ static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
                                             void **data,
                                             size_t * p_data_sz,
+                                            int is_local,
                                             int *is_contig,
                                             MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                             MPIR_Request ** req)
@@ -2078,6 +2096,9 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_cswap_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     MPIDI_Datatype_check_contig_size(msg_hdr->datatype, 1, dt_contig, data_sz);
     *is_contig = dt_contig;
@@ -2117,6 +2138,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
+                                          int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
@@ -2148,6 +2170,9 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_acc_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     if (is_contig) {
         *is_contig = 1;
@@ -2205,6 +2230,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
+                                              int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
@@ -2217,8 +2243,8 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     /* the same handling processing as ACC except the completion handler function. */
     mpi_errno =
-        MPIDI_acc_target_msg_cb(handler_id, am_hdr, data, p_data_sz, is_contig, target_cmpl_cb,
-                                req);
+        MPIDI_acc_target_msg_cb(handler_id, am_hdr, data, p_data_sz, is_local, is_contig,
+                                target_cmpl_cb, req);
 
     *target_cmpl_cb = MPIDI_get_acc_target_cmpl_cb;
 
@@ -2234,6 +2260,7 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
+                                              int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
@@ -2284,6 +2311,9 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_acc_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_iov);
@@ -2300,6 +2330,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
+                                                  int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
@@ -2312,7 +2343,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     /* the same handling processing as ACC except the completion handler function. */
     mpi_errno = MPIDI_acc_iov_target_msg_cb(handler_id, am_hdr, data,
-                                            p_data_sz, is_contig, target_cmpl_cb, req);
+                                            p_data_sz, is_local, is_contig, target_cmpl_cb, req);
 
     *target_cmpl_cb = MPIDI_get_acc_iov_target_cmpl_cb;
 
@@ -2328,6 +2359,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
+                                          int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
@@ -2350,6 +2382,9 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
     *target_cmpl_cb = MPIDI_get_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
+#endif
 
     win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
@@ -2391,6 +2426,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
+                                              int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
@@ -2423,6 +2459,9 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_get_ack_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(greq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_CH4I_REQUEST(greq, is_local) = is_local;
+#endif
 
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(rreq, req->greq.count),
                             MPIDI_CH4U_REQUEST(rreq, req->greq.datatype),

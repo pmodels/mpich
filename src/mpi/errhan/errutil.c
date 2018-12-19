@@ -144,7 +144,7 @@ static int checkForUserErrcode(int);
 #endif
 
 /* Preallocated errorhandler objects */
-MPIR_Errhandler MPIR_Errhandler_builtin[3] = { {0} };
+MPIR_Errhandler MPIR_Errhandler_builtin[MPIR_ERRHANDLER_N_BUILTIN] = { {0} };
 MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC] = { {0} };
 
 MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
@@ -858,9 +858,6 @@ int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
     rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
                                      specific_msg, Argp);
     va_end(Argp);
-    /* Looks like Coverity has a hard time understanding that logic that
-     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
-    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
     return rc;
 }
 

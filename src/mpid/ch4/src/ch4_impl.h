@@ -451,10 +451,16 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
     return ret;
 }
 
+/* TODO: Several unbounded loops call this macro. One way to avoid holding the
+ * ALLFUNC_MUTEX lock forever is to insert YIELD in each loop. We choose to
+ * insert it here for simplicity, but this might not be the best place. One
+ * needs to investigate the appropriate place to yield the lock. */
+
 #define MPIDI_CH4R_PROGRESS()                                   \
     do {                                                        \
         mpi_errno = MPID_Progress_test();                       \
         if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);  \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
 #define MPIDI_CH4R_PROGRESS_WHILE(cond)         \
@@ -948,16 +954,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_r
 }
 
 /* Collectively allocate shared memory region.
- * MPL_shm routines and MPI collectives are internally used.
- *
- * TODO: If symmetric_flag is true, then the routine will try to get
- * a symmetric address and give up after tried predefined times. */
+ * MPL_shm routines and MPI collectives are internally used. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_allocate_shm_segment
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
-                                                  MPI_Aint shm_segment_len, int symmetric_flag,
+                                                  MPI_Aint shm_segment_len,
                                                   MPL_shm_hnd_t * shm_segment_hdl_ptr,
                                                   void **base_ptr)
 {
@@ -1120,6 +1123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
+        MPIR_Assert(dtp != NULL);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)

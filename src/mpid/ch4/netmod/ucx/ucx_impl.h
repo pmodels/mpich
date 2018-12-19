@@ -26,7 +26,8 @@
 #define MPIDI_UCX_WIN(win) ((win)->dev.netmod.ucx)
 #define MPIDI_UCX_WIN_INFO(win, rank) MPIDI_UCX_WIN(win).info_table[rank]
 
-static inline uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source, uint64_t tag)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source,
+                                                     uint64_t tag)
 {
     uint64_t ucp_tag = 0;
     ucp_tag = contextid;
@@ -37,12 +38,12 @@ static inline uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int sourc
     return ucp_tag;
 }
 
-static inline uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
 {
     uint64_t tag_mask = 0xffffffffffffffff;
     MPIR_TAG_CLEAR_ERROR_BITS(tag_mask);
     if (mpi_tag == MPI_ANY_TAG)
-        tag_mask &= ~MPIDI_UCX_TAG_USABLE_BITS;
+        tag_mask &= ~MPIR_TAG_USABLE_BITS;
 
     if (src == MPI_ANY_SOURCE)
         tag_mask &= ~(MPIDI_UCX_SOURCE_MASK);
@@ -50,7 +51,8 @@ static inline uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
     return tag_mask;
 }
 
-static inline uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src, MPIR_Context_id_t contextid)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src,
+                                                     MPIR_Context_id_t contextid)
 {
     uint64_t ucp_tag = contextid;
 
@@ -63,12 +65,12 @@ static inline uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src, MPIR_Context_id_
     return ucp_tag;
 }
 
-static inline int MPIDI_UCX_get_tag(uint64_t match_bits)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_tag(uint64_t match_bits)
 {
     return ((int) (match_bits & MPIDI_UCX_TAG_MASK));
 }
 
-static inline int MPIDI_UCX_get_source(uint64_t match_bits)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
 {
     return ((int) ((match_bits & MPIDI_UCX_SOURCE_MASK) >> MPIDI_UCX_TAG_SHIFT));
 }
@@ -136,4 +138,17 @@ static inline int MPIDI_UCX_get_source(uint64_t match_bits)
                              ucs_status_string(UCS_PTR_STATUS(_req)));  \
     } while (0)
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_win(MPIR_Win * win)
+{
+    /* UCX only enables HW RMA for create and allocate windows. */
+    return win->create_flavor == MPI_WIN_FLAVOR_CREATE ||
+        win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE;
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win * win)
+{
+    /* zero win target does not have rkey. */
+    return MPIDI_UCX_is_reachable_win(win) && rank != MPI_PROC_NULL &&
+        MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
+}
 #endif /* UCX_IMPL_H_INCLUDED */

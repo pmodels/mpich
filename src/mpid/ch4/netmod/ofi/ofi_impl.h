@@ -33,12 +33,20 @@
     MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
+
+/* Get op index.
+ * TODO: OP_NULL is the oddball. Change configure to table this correctly */
+#define MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index) do {   \
+    if (op == MPI_OP_NULL) op_index = 14;                \
+    else op_index = (0x000000FFU & op) - 1;              \
+} while (0);
+
 /*
  * Helper routines and macros for request completion
  */
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        mpi_errno = MPID_Progress_test();                        \
+        mpi_errno = MPIDI_NM_progress(0, 0);                      \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -105,7 +113,13 @@
                             "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
+        /* FIXME: by fixing the recursive locking interface to account
+         * for recursive locking in more than one lock (currently limited
+         * to one due to scalar TLS counter), this lock yielding
+         * operation can be avoided since we are inside a finite loop. */\
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
@@ -132,7 +146,10 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
@@ -205,6 +222,85 @@
     } while (0)
 #endif
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
+{
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
+        return (req == NULL);   /* Depends on upper layer */
+    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
+        return 1;       /* Always allocated by netmod */
+    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
+        return (req == NULL);
+    } else {
+        /* Invalid MT model */
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
+/* Initial value of the completion counter of request objects for lightweight (injection) operations */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
+{
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
+        /* Note on CC initialization: this might be overkill when trylock succeeds
+         * and the main thread directly issues injection.
+         * However, at this moment we assume trylock always goes through progress thread
+         * to simplify implementation. */
+        return 1;
+    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
+        return 0;
+    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
+        return 1;
+    } else {
+        /* Invalid MT model */
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
+#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
+      do {                                                              \
+          if (MPIDI_OFI_need_request_creation(req)) {                   \
+              MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
+                          (req) == NULL);                               \
+              (req) = MPIR_Request_create(kind);                        \
+              MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
+                                  "**nomemreq");                        \
+          }                                                             \
+          /* At this line we should always have a valid request */      \
+          MPIR_Assert((req) != NULL);                                   \
+          MPIR_Request_add_ref((req));                                  \
+      } while (0)
+
+#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
+    do {                                                                \
+        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
+            MPIDI_OFI_SEND_REQUEST_CREATE_LW(req);                      \
+        } else {                                                        \
+            if (MPIDI_OFI_need_request_creation(req)) {                 \
+                MPIR_Assert((req) == NULL);                             \
+                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);   \
+                MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
+                                    "**nomemreq");                      \
+            }                                                           \
+            /* At this line we should always have a valid request */    \
+            MPIR_Assert((req) != NULL);                                 \
+            /* Completing lightweight (injection) requests:             \
+               If a progess thread is issuing injection, we need to     \
+               keep CC>0 until the actual injection completes. */       \
+            MPIR_cc_set(&(req)->cc, MPIDI_OFI_lw_request_cc_val());     \
+        }                                                               \
+    } while (0)
+
+/* If we set CC>0 in case of injection, we need to decrement the CC
+   to tell the main thread we completed the injection. */
+#define MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(req) \
+    do {                                                    \
+        if (MPIDI_OFI_lw_request_cc_val()) {                \
+            int incomplete_;                                \
+            MPIR_cc_decr(&(req)->cc, &incomplete_);         \
+        }                                                   \
+    } while (0)
+
 #define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
@@ -237,7 +333,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
-                              void **data, size_t * data_sz, int *is_contig,
+                              void **data, size_t * data_sz, int is_local, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
@@ -297,28 +393,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct f
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_request_alloc_and_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req;
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
-           sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
-    req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)),
-                                                 MPL_MEM_BUFFER);
-  fn_exit:
-    return req;
-  fn_fail:
-    req = NULL;
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
     int in_use;
@@ -374,11 +448,6 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
     uint64_t match_bits;
     match_bits = contextid;
 
-    if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
-        match_bits |= source;
-    }
-
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
     return match_bits;
@@ -393,19 +462,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
     match_bits = contextid;
 
-    if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
-
-        if (MPI_ANY_SOURCE == source) {
-            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-            *mask_bits |= MPIDI_OFI_SOURCE_MASK;
-        } else {
-            match_bits |= source;
-            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-        }
-    } else {
-        match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-    }
+    match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
 
     if (MPI_ANY_TAG == tag)
         *mask_bits |= MPIDI_OFI_TAG_MASK;
@@ -443,19 +500,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
-        if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                                 do_lock, do_eagain);
-        else
-            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock,
-                                 do_eagain);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
+                             do_lock, do_eagain);
     } else {
-        if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                                 tsenddata, do_lock, do_eagain);
-        else
-            MPIDI_OFI_CALL_RETRY(fi_tsend(ep, buf, len, desc, dest_addr, tag, context), tsend,
-                                 do_lock, do_eagain);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
+                             tsenddata, do_lock, do_eagain);
     }
 
   fn_exit:
@@ -558,9 +607,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.context = (void *) &req.context;
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
-                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE |
-                                         (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), tsendmsg,
-                             MPIDI_OFI_CALL_LOCK, FALSE);
+                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
+                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 

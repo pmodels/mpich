@@ -81,7 +81,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_PT2PT_ENTER_BOTH(MPID_STATE_MPI_SENDRECV);
 
     /* Validate handle parameters needing to be converted */
@@ -195,14 +195,9 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 /* --END ERROR HANDLING-- */
             }
 
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         !MPIR_Request_is_complete(rreq) &&
-                         MPID_Request_is_anysource(rreq) && !MPID_Comm_AS_enabled(rreq->comm))) {
+            if (unlikely(MPIR_Request_is_anysrc_mismatched(rreq))) {
                 /* --BEGIN ERROR HANDLING-- */
-                MPID_Cancel_recv(rreq);
-                MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
-                MPIR_ERR_SET(rreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
-                mpi_errno = rreq->status.MPI_ERROR;
+                mpi_errno = MPIR_Request_handle_proc_failed(rreq);
                 if (!MPIR_Request_is_complete(sreq)) {
                     MPID_Cancel_send(sreq);
                     MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
@@ -230,7 +225,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
   fn_exit:
     MPIR_FUNC_TERSE_PT2PT_EXIT_BOTH(MPID_STATE_MPI_SENDRECV);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

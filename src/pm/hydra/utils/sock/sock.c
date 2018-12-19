@@ -141,7 +141,8 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address for %s (%s)\n", host, HYDU_herror(h_errno));
+                            "unable to get host address for %s (%s)\n", host ? host : "NULL",
+                            HYDU_herror(h_errno));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
@@ -549,6 +550,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
         HYDU_ERR_POP(status, "unable to get network interface IP\n");
     } else if (hostname) {
         ip = MPL_strdup(hostname);
+        HYDU_ERR_CHKANDJUMP(status, NULL == ip, HYD_INTERNAL_ERROR, "%s", "");
     } else {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
@@ -556,9 +558,11 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
         ip = MPL_strdup(localhost);
+        HYDU_ERR_CHKANDJUMP(status, NULL == ip, HYD_INTERNAL_ERROR, "%s", "");
     }
 
     sport = HYDU_int_to_str(port);
+    HYDU_ERR_CHKANDJUMP(status, NULL == sport, HYD_INTERNAL_ERROR, "%s", "");
     HYDU_MALLOC_OR_JUMP(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
     MPL_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
     MPL_free(sport);

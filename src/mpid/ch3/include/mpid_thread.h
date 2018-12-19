@@ -13,6 +13,7 @@
  * our own */
 
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
+typedef MPIDU_thread_mutex_state_t MPID_thread_mutex_state_t;
 typedef MPIDU_Thread_cond_t  MPID_Thread_cond_t;
 typedef MPIDU_Thread_id_t    MPID_Thread_id_t;
 typedef MPIDU_Thread_tls_t   MPID_Thread_tls_t;
@@ -20,6 +21,8 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
+#define MPID_THREAD_CS_ENTER_ST    MPIDU_THREAD_CS_ENTER_ST
+#define MPID_THREAD_CS_EXIT_ST     MPIDU_THREAD_CS_EXIT_ST
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
 #define MPID_Thread_create       MPIDU_Thread_create
@@ -30,7 +33,7 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 
 #define MPID_Thread_mutex_create  MPIDU_Thread_mutex_create
 #define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
-#define MPID_Thread_mutex_lock MPIDU_Thread_mutex_lock
+#define MPID_Thread_mutex_lock(mutex, err)     MPIDU_Thread_mutex_lock(mutex, err, MPL_THREAD_PRIO_HIGH)
 #define MPID_Thread_mutex_unlock MPIDU_Thread_mutex_unlock
 
 #define MPID_Thread_cond_create MPIDU_Thread_cond_create

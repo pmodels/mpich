@@ -13,8 +13,9 @@
 #define TYPE_NAME_MAXLEN (256)
 #define BASIC_TYPE_NAME_MAXLEN (64)
 
-#define DTPI_OBJ_INIT_BUF(c_type, type_ptr)                                  \
+#define DTPI_OBJ_INIT_BUF(par, c_type, type_ptr)                             \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -28,8 +29,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_INIT_COMP_BUF(c_type, a_type, b_type, type_ptr)             \
+#define DTPI_OBJ_INIT_COMP_BUF(par, c_type, a_type, b_type, type_ptr)        \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -44,8 +46,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_CHECK_BUF_AND_JUMP(c_type, type_ptr)                        \
+#define DTPI_OBJ_CHECK_BUF_AND_JUMP(par, c_type, type_ptr)                   \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -63,8 +66,9 @@
         }                                                                    \
     } while (0)
 
-#define DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(c_type, a_type, b_type, type_ptr)   \
+#define DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, c_type, a_type, b_type, type_ptr) \
     do {                                                                     \
+        int i, j, k;                                                         \
         type_ptr = (c_type *) buf_ptr;                                       \
         k = par->user.val_start;                                             \
         for (i = 0; i < par->core.type_totlen; i += par->core.type_stride) { \
@@ -81,6 +85,16 @@
                 }                                                            \
             }                                                                \
         }                                                                    \
+    } while (0)
+
+#define DTPI_OBJ_FREE(dtp)                                                   \
+    do {                                                                     \
+        err = MPI_Type_free(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);      \
+        dtp->DTP_obj_array[obj_idx].DTP_obj_count = 0;                       \
+        free(dtp->DTP_obj_array[obj_idx].DTP_obj_buf);                       \
+        dtp->DTP_obj_array[obj_idx].DTP_obj_buf = NULL;                      \
+        free(dtp->DTP_obj_array[obj_idx].private_info);                      \
+        dtp->DTP_obj_array[obj_idx].private_info = NULL;                     \
     } while (0)
 
 /*
@@ -192,51 +206,50 @@ void DTPI_Print_error(int errcode)
 void DTPI_Init_creators(DTPI_Creator * creators)
 {
     memset(creators, 0, sizeof(*creators));
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BASIC] = DTPI_Basic_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__CONTIG] = DTPI_Contig_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F] = DTPI_Subarray_f_create;
+    creators[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_create;
+    creators[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_create;
+    creators[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_create;
+    creators[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_create;
+    creators[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_create;
+    creators[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_create;
+    creators[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_create;
+    creators[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
+    creators[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_create;
+    creators[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_create;
 }
 
-static void DTPI_Type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+void DTPI_Init_destructors(DTPI_Destructor * destructors)
 {
-    int i, j, k;
+    memset(destructors, 0, sizeof(*destructors));
+    destructors[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_free;
+    destructors[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_free;
+    destructors[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_free;
+    destructors[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_free;
+    destructors[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_free;
+    destructors[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_free;
+    destructors[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_free;
+    destructors[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_free;
+    destructors[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_free;
+    destructors[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_free;
+}
+
+void DTPI_Init_checkers(DTPI_Checker * checkers)
+{
+    memset(checkers, 0, sizeof(*checkers));
+    checkers[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_check_buf;
+    checkers[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_check_buf;
+    checkers[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_check_buf;
+    checkers[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_check_buf;
+    checkers[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_check_buf;
+    checkers[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_check_buf;
+}
+
+static void DTPI_Basic_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+{
     int count;
     char *buf_ptr;
     union DTPI_Cast_ptr ptrs;
@@ -255,76 +268,78 @@ static void DTPI_Type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, vo
 
     buf_ptr = (char *) buf + par->core.type_displ;
     if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
-        DTPI_OBJ_INIT_BUF(char, ptrs.char_ptr);
+        DTPI_OBJ_INIT_BUF(par, char, ptrs.char_ptr);
     } else if (basic_type == MPI_WCHAR) {
-        DTPI_OBJ_INIT_BUF(wchar_t, ptrs.wchar_ptr);
+        DTPI_OBJ_INIT_BUF(par, wchar_t, ptrs.wchar_ptr);
     } else if (basic_type == MPI_SHORT) {
-        DTPI_OBJ_INIT_BUF(short int, ptrs.short_ptr);
+        DTPI_OBJ_INIT_BUF(par, short int, ptrs.short_ptr);
     } else if (basic_type == MPI_INT) {
-        DTPI_OBJ_INIT_BUF(int, ptrs.int_ptr);
+        DTPI_OBJ_INIT_BUF(par, int, ptrs.int_ptr);
     } else if (basic_type == MPI_LONG) {
-        DTPI_OBJ_INIT_BUF(long int, ptrs.long_ptr);
+        DTPI_OBJ_INIT_BUF(par, long int, ptrs.long_ptr);
     } else if (basic_type == MPI_LONG_LONG_INT) {
-        DTPI_OBJ_INIT_BUF(long long int, ptrs.long_long_ptr);
+        DTPI_OBJ_INIT_BUF(par, long long int, ptrs.long_long_ptr);
     } else if (basic_type == MPI_UNSIGNED_CHAR) {
-        DTPI_OBJ_INIT_BUF(unsigned char, ptrs.uchar_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned char, ptrs.uchar_ptr);
     } else if (basic_type == MPI_UNSIGNED_SHORT) {
-        DTPI_OBJ_INIT_BUF(unsigned short int, ptrs.ushort_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned short int, ptrs.ushort_ptr);
     } else if (basic_type == MPI_UNSIGNED) {
-        DTPI_OBJ_INIT_BUF(unsigned int, ptrs.uint_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned int, ptrs.uint_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG) {
-        DTPI_OBJ_INIT_BUF(unsigned long int, ptrs.ulong_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned long int, ptrs.ulong_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
-        DTPI_OBJ_INIT_BUF(unsigned long long int, ptrs.ulong_long_ptr);
+        DTPI_OBJ_INIT_BUF(par, unsigned long long int, ptrs.ulong_long_ptr);
     } else if (basic_type == MPI_FLOAT) {
-        DTPI_OBJ_INIT_BUF(float, ptrs.float_ptr);
+        DTPI_OBJ_INIT_BUF(par, float, ptrs.float_ptr);
     } else if (basic_type == MPI_DOUBLE) {
-        DTPI_OBJ_INIT_BUF(double, ptrs.double_ptr);
+        DTPI_OBJ_INIT_BUF(par, double, ptrs.double_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE) {
-        DTPI_OBJ_INIT_BUF(long double, ptrs.long_double_ptr);
+        DTPI_OBJ_INIT_BUF(par, long double, ptrs.long_double_ptr);
     } else if (basic_type == MPI_INT8_T) {
-        DTPI_OBJ_INIT_BUF(int8_t, ptrs.int8_ptr);
+        DTPI_OBJ_INIT_BUF(par, int8_t, ptrs.int8_ptr);
     } else if (basic_type == MPI_INT16_T) {
-        DTPI_OBJ_INIT_BUF(int16_t, ptrs.int16_ptr);
+        DTPI_OBJ_INIT_BUF(par, int16_t, ptrs.int16_ptr);
     } else if (basic_type == MPI_INT32_T) {
-        DTPI_OBJ_INIT_BUF(int32_t, ptrs.int32_ptr);
+        DTPI_OBJ_INIT_BUF(par, int32_t, ptrs.int32_ptr);
     } else if (basic_type == MPI_INT64_T) {
-        DTPI_OBJ_INIT_BUF(int64_t, ptrs.int64_ptr);
+        DTPI_OBJ_INIT_BUF(par, int64_t, ptrs.int64_ptr);
     } else if (basic_type == MPI_UINT8_T) {
-        DTPI_OBJ_INIT_BUF(uint8_t, ptrs.uint8_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint8_t, ptrs.uint8_ptr);
     } else if (basic_type == MPI_UINT16_T) {
-        DTPI_OBJ_INIT_BUF(uint16_t, ptrs.uint16_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint16_t, ptrs.uint16_ptr);
     } else if (basic_type == MPI_UINT32_T) {
-        DTPI_OBJ_INIT_BUF(uint32_t, ptrs.uint32_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint32_t, ptrs.uint32_ptr);
     } else if (basic_type == MPI_UINT64_T) {
-        DTPI_OBJ_INIT_BUF(uint64_t, ptrs.uint64_ptr);
+        DTPI_OBJ_INIT_BUF(par, uint64_t, ptrs.uint64_ptr);
     } else if (basic_type == MPI_C_COMPLEX) {   /* composite types */
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_complex, float, float, ptrs.c_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_complex, float, float, ptrs.c_complex_ptr);
     } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_float_complex, float, float, ptrs.c_float_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_float_complex, float, float, ptrs.c_float_complex_ptr);
     } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_double_complex, double, double, ptrs.c_double_complex_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_double_complex, double, double,
+                               ptrs.c_double_complex_ptr);
     } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_c_long_double_complex, long double, long double,
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_c_long_double_complex, long double, long double,
                                ptrs.c_long_double_complex_ptr);
     } else if (basic_type == MPI_FLOAT_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_float_int, float, int, ptrs.float_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_float_int, float, int, ptrs.float_int_ptr);
     } else if (basic_type == MPI_DOUBLE_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_double_int, double, int, ptrs.double_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_double_int, double, int, ptrs.double_int_ptr);
     } else if (basic_type == MPI_LONG_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_long_int, long, int, ptrs.long_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_long_int, long, int, ptrs.long_int_ptr);
     } else if (basic_type == MPI_2INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_2int, int, int, ptrs.int_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_2int, int, int, ptrs.int_int_ptr);
     } else if (basic_type == MPI_SHORT_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_short_int, short, int, ptrs.short_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_short_int, short, int, ptrs.short_int_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE_INT) {
-        DTPI_OBJ_INIT_COMP_BUF(dtp_long_double_int, long double, int, ptrs.long_double_int_ptr);
+        DTPI_OBJ_INIT_COMP_BUF(par, dtp_long_double_int, long double, int,
+                               ptrs.long_double_int_ptr);
     }
 }
 
-static int DTPI_Type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+static int DTPI_Basic_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
 {
-    int i, j, k, err = DTP_SUCCESS;
+    int err = DTP_SUCCESS;
     int count;
     char *buf_ptr;
     union DTPI_Cast_ptr ptrs;
@@ -339,72 +354,72 @@ static int DTPI_Type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, vo
 
     buf_ptr = (char *) buf + par->core.type_displ;
     if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(char, ptrs.char_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, char, ptrs.char_ptr);
     } else if (basic_type == MPI_WCHAR) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(wchar_t, ptrs.wchar_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, wchar_t, ptrs.wchar_ptr);
     } else if (basic_type == MPI_SHORT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(short int, ptrs.short_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, short int, ptrs.short_ptr);
     } else if (basic_type == MPI_INT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int, ptrs.int_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int, ptrs.int_ptr);
     } else if (basic_type == MPI_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long int, ptrs.long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long int, ptrs.long_ptr);
     } else if (basic_type == MPI_LONG_LONG_INT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long long int, ptrs.long_long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long long int, ptrs.long_long_ptr);
     } else if (basic_type == MPI_UNSIGNED_CHAR) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned char, ptrs.uchar_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned char, ptrs.uchar_ptr);
     } else if (basic_type == MPI_UNSIGNED_SHORT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned short int, ptrs.ushort_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned short int, ptrs.ushort_ptr);
     } else if (basic_type == MPI_UNSIGNED) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned int, ptrs.uint_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned int, ptrs.uint_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned long int, ptrs.ulong_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long int, ptrs.ulong_ptr);
     } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(unsigned long long int, ptrs.ulong_long_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long long int, ptrs.ulong_long_ptr);
     } else if (basic_type == MPI_FLOAT) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(float, ptrs.float_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, float, ptrs.float_ptr);
     } else if (basic_type == MPI_DOUBLE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(double, ptrs.double_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, double, ptrs.double_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(long double, ptrs.long_double_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, long double, ptrs.long_double_ptr);
     } else if (basic_type == MPI_INT8_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int8_t, ptrs.int8_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int8_t, ptrs.int8_ptr);
     } else if (basic_type == MPI_INT16_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int16_t, ptrs.int16_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int16_t, ptrs.int16_ptr);
     } else if (basic_type == MPI_INT32_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int32_t, ptrs.int32_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int32_t, ptrs.int32_ptr);
     } else if (basic_type == MPI_INT64_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(int64_t, ptrs.int64_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, int64_t, ptrs.int64_ptr);
     } else if (basic_type == MPI_UINT8_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint8_t, ptrs.uint8_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint8_t, ptrs.uint8_ptr);
     } else if (basic_type == MPI_UINT16_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint16_t, ptrs.uint16_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint16_t, ptrs.uint16_ptr);
     } else if (basic_type == MPI_UINT32_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint32_t, ptrs.uint32_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint32_t, ptrs.uint32_ptr);
     } else if (basic_type == MPI_UINT64_T) {
-        DTPI_OBJ_CHECK_BUF_AND_JUMP(uint64_t, ptrs.uint64_ptr);
+        DTPI_OBJ_CHECK_BUF_AND_JUMP(par, uint64_t, ptrs.uint64_ptr);
     } else if (basic_type == MPI_C_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_complex, float, float, ptrs.c_complex_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_complex, float, float, ptrs.c_complex_ptr);
     } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_float_complex, float, float,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_float_complex, float, float,
                                          ptrs.c_float_complex_ptr);
     } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_double_complex, double, double,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_double_complex, double, double,
                                          ptrs.c_double_complex_ptr);
     } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_c_long_double_complex, long double, long double,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_long_double_complex, long double, long double,
                                          ptrs.c_long_double_complex_ptr);
     } else if (basic_type == MPI_FLOAT_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_float_int, float, int, ptrs.float_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_float_int, float, int, ptrs.float_int_ptr);
     } else if (basic_type == MPI_DOUBLE_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_double_int, double, int, ptrs.double_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_double_int, double, int, ptrs.double_int_ptr);
     } else if (basic_type == MPI_LONG_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_long_int, long, int, ptrs.long_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_int, long, int, ptrs.long_int_ptr);
     } else if (basic_type == MPI_2INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_2int, int, int, ptrs.int_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_2int, int, int, ptrs.int_int_ptr);
     } else if (basic_type == MPI_SHORT_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_short_int, short, int, ptrs.short_int_ptr);
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_short_int, short, int, ptrs.short_int_ptr);
     } else if (basic_type == MPI_LONG_DOUBLE_INT) {
-        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(dtp_long_double_int, long double, int,
+        DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_double_int, long double, int,
                                          ptrs.long_double_int_ptr);
     }
 
@@ -493,7 +508,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
         par->core.type_blklen = 1;
         par->core.type_totlen = (MPI_Aint) basic_type_counts[i];
         par->core.type_displ = basic_type_displs[i];
-        DTPI_Type_init_buf(par, basic_types[i], buf);
+        DTPI_Basic_type_init_buf(par, basic_types[i], buf);
     }
 
     /* allocate space for private datatype info */
@@ -504,7 +519,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     dtpi->type_extent = extent;
     dtpi->type_lb = lb;
     dtpi->type_ub = lb + extent;
-    dtpi->u.structure.displs = basic_type_displs;       /* freed in DTP_obj_free() */
+    dtpi->u.structure.displs = basic_type_displs;
 
     dtp->DTP_obj_array[obj_idx].DTP_obj_buf = buf;
     dtp->DTP_obj_array[obj_idx].private_info = dtpi;
@@ -519,9 +534,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (basic_type_sizes) {
-        free(basic_type_sizes);
-    }
+    free(basic_type_sizes);
 
     return err;
 
@@ -532,12 +545,9 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(basic_type_displs);
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -584,7 +594,7 @@ int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -622,12 +632,8 @@ int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -689,7 +695,7 @@ int DTPI_Contig_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -729,12 +735,8 @@ int DTPI_Contig_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -795,7 +797,7 @@ int DTPI_Vector_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -836,12 +838,8 @@ int DTPI_Vector_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* clean up buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -905,7 +903,7 @@ int DTPI_Hvector_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -946,12 +944,8 @@ int DTPI_Hvector_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* clean up buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1022,7 +1016,7 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1054,12 +1048,8 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
-    if (type_blklens) {
-        free(type_blklens);
-    }
+    free(type_displs);
+    free(type_blklens);
 
     return err;
 
@@ -1070,12 +1060,8 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1147,7 +1133,7 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1179,12 +1165,8 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
-    if (type_blklens) {
-        free(type_blklens);
-    }
+    free(type_displs);
+    free(type_blklens);
 
     return err;
 
@@ -1195,12 +1177,8 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1269,7 +1247,7 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1302,9 +1280,7 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
+    free(type_displs);
 
     return err;
 
@@ -1315,12 +1291,8 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1389,7 +1361,7 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1422,9 +1394,7 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
+    free(type_displs);
 
     return err;
 
@@ -1435,12 +1405,8 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1515,7 +1481,7 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = (extent - par->core.type_displ) / basic_type_size;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* initialize private datatype info data */
     dtpi->obj_type = DTPI_OBJ_TYPE__SUBARRAY_C;
@@ -1554,12 +1520,8 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1636,7 +1598,7 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = (extent - par->core.type_displ) / basic_type_size;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* initialize private datatype info data */
     dtpi->obj_type = DTPI_OBJ_TYPE__SUBARRAY_F;
@@ -1675,16 +1637,119 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
 
+
+/* --------------------------------------------------------- */
+/* Datatype Pool Object Free Functions                       */
+/* --------------------------------------------------------- */
+
+int DTPI_Struct_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_t *dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+
+    free(dtpi->u.structure.displs);
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Basic_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Contig_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Vector_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Hvector_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Indexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Hindexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Block_indexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Block_hindexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Subarray_c_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Subarray_f_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
 
 /* --------------------------------------------------------- */
 /* Datatype Pool Buffer Check Functions                      */
@@ -1720,7 +1785,7 @@ int DTPI_Struct_check_buf(struct DTPI_Par *par, DTP_t dtp)
         par->core.type_blklen = 1;
         par->core.type_totlen = (MPI_Aint) basic_type_counts[i];
         par->core.type_displ = basic_type_displs[i];
-        err = DTPI_Type_check_buf(par, basic_types[i], buf);
+        err = DTPI_Basic_type_check_buf(par, basic_types[i], buf);
         if (err != DTP_SUCCESS) {
             break;
         }
@@ -1746,7 +1811,7 @@ int DTPI_Basic_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = basic_type_count;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Contig_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1766,7 +1831,7 @@ int DTPI_Contig_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Vector_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1786,7 +1851,7 @@ int DTPI_Vector_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Hvector_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1806,7 +1871,7 @@ int DTPI_Hvector_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1826,7 +1891,7 @@ int DTPI_Indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1846,7 +1911,7 @@ int DTPI_Hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Block_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1866,7 +1931,7 @@ int DTPI_Block_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Block_hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1886,7 +1951,7 @@ int DTPI_Block_hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1908,7 +1973,7 @@ int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_stride = dtpi->u.subarray.arr_sizes[1];
     par->core.type_blklen = dtpi->u.subarray.arr_subsizes[1];
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1930,5 +1995,5 @@ int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_stride = dtpi->u.subarray.arr_sizes[0];
     par->core.type_blklen = dtpi->u.subarray.arr_subsizes[0];
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }

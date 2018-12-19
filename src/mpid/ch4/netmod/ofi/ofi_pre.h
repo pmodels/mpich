@@ -146,6 +146,7 @@ typedef struct {
 } MPIDI_OFI_op_t;
 
 struct MPIDI_OFI_win_request;
+struct MPIDI_OFI_win_hint;
 
 /* Stores per-rank information for RMA */
 typedef struct {
@@ -171,6 +172,11 @@ typedef struct {
     uint64_t win_id;
     struct MPIDI_OFI_win_request *syncQ;
     MPIDI_OFI_win_targetinfo_t *winfo;
+
+    /* Accumulate related info. The struct internally uses MPIDI_OFI_DT_SIZES
+     * defined in ofi_types.h to allocate the max_count array. The struct
+     * size is unknown when we load ofi_pre.h, thus we only set a pointer here. */
+    struct MPIDI_OFI_win_acc_hint *acc_hint;
 } MPIDI_OFI_win_t;
 
 typedef struct {

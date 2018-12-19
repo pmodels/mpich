@@ -68,6 +68,29 @@ cvars:
       description : >-
         Enables an optimized business card exchange over PMI for node root processes only.
 
+    - name        : MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If enabled, CH4-level runtime configurations are printed out
+
+    - name        : MPIR_CVAR_CH4_MT_MODEL
+      category    : CH4
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the CH4 multi-threading model. Possible values are:
+        direct (default)
+        handoff
+        trylock
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -111,6 +134,8 @@ static inline int MPIDI_choose_netmod(void)
 
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
@@ -120,6 +145,58 @@ static inline int MPIDI_choose_netmod(void)
 #else
 #error "Thread Granularity:  Invalid"
 #endif
+
+MPL_STATIC_INLINE_PREFIX const char *MPIDI_get_mt_model_name(int mt)
+{
+    if (mt < 0 || mt >= MPIDI_CH4_NUM_MT_MODELS)
+        return "(invalid)";
+
+    return MPIDI_CH4_mt_model_names[mt];
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_print_runtime_configurations(void)
+{
+    printf("==== CH4 runtime configurations ====\n");
+    printf("MPIDI_CH4_MT_MODEL: %d (%s)\n",
+           MPIDI_CH4_MT_MODEL, MPIDI_get_mt_model_name(MPIDI_CH4_MT_MODEL));
+    printf("================================\n");
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_parse_mt_model(const char *name)
+{
+    int i;
+
+    if (!strcmp("", name))
+        return 0;       /* default */
+
+    for (i = 0; i < MPIDI_CH4_NUM_MT_MODELS; i++) {
+        if (!strcasecmp(name, MPIDI_CH4_mt_model_names[i]))
+            return i;
+    }
+    return -1;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+    int mt = MPIDI_parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
+    if (mt < 0)
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**ch4|invalid_mt_model", "**ch4|invalid_mt_model %s",
+                             MPIR_CVAR_CH4_MT_MODEL);
+    MPIDI_CH4_Global.settings.mt_model = mt;
+#else
+    /* Static configuration - no runtime selection */
+    if (strcmp(MPIR_CVAR_CH4_MT_MODEL, "") != 0)
+        printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
+               "unless --enable-ch4-mt=runtime is given at the configure time.\n");
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+
+  fn_fail:
+    return mpi_errno;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Init
@@ -141,6 +218,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    mpi_errno = MPIDI_set_runtime_configurations();
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
@@ -247,6 +328,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
 
+    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vni_lock, &mpi_errno);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    MPIDI_workq_init(&MPIDI_CH4_Global.workqueue);
+#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
+
+
+    if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
+        MPIDI_print_runtime_configurations();
+
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
     /* ---------------------------------- */
@@ -301,11 +394,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* setup receive queue statistics */
     mpi_errno = MPIDI_CH4U_Recvq_init();
     if (mpi_errno)
@@ -343,25 +431,30 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #endif
 
     {
-        int shm_tag_ub = MPIR_Process.attrs.tag_ub, nm_tag_ub = MPIR_Process.attrs.tag_ub;
+        int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_ub);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_ub,
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
                                            MPIR_Process.comm_world,
                                            MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 
-        /* Use the minimum tag_ub from the netmod and shmod */
-        MPIR_Process.attrs.tag_ub = MPL_MIN(shm_tag_ub, nm_tag_ub);
+        /* Use the minimum tag_bits from the netmod and shmod */
+        MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    /* Call any and all MPID_Init type functions */
+    MPIR_Err_init();
+    MPIR_Datatype_init();
+    MPIR_Group_init();
 
     /* Override split_type */
     MPIDI_CH4_Global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
@@ -423,7 +516,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 {
-    int mpi_errno, thr_err;
+    int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
@@ -456,14 +549,34 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     PMI_Finalize();
 #endif
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_CS_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS, thr_err;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
+
+    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -611,7 +724,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
-                                                int idx, int *lpid_ptr, MPL_bool is_remote)
+                                                int idx, int *lpid_ptr, bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;

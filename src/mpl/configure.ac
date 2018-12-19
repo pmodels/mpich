@@ -54,6 +54,7 @@ AC_C_INLINE
 
 PAC_C_MACRO_VA_ARGS
 PAC_C_BUILTIN_EXPECT
+PAC_C_STATIC_ASSERT
 
 AC_ARG_ENABLE(embedded,
     AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
@@ -131,6 +132,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
+AC_HEADER_STDBOOL
 
 #######################################################################
 # valgrind support
@@ -1003,6 +1005,7 @@ AC_CHECK_FUNCS(inet_ntop getifaddrs)
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 AX_GCC_VAR_ATTRIBUTE(aligned)
+AX_GCC_VAR_ATTRIBUTE(used)
 
 dnl Check for fallthrough attribute
 PAC_PUSH_ALL_FLAGS

@@ -938,6 +938,7 @@
 /f90/pt2pt/statusesf90
 /f90/pt2pt/statusesf90.f90
 /f90/pt2pt/testlist
+/f90/rma
 /f90/rma/Makefile.am
 /f90/rma/Makefile.sm
 /f90/rma/aintf90.f90
@@ -1056,7 +1057,6 @@
 /io/testlist
 /io/userioerr
 /maint/conftimestamp
-/maint/f77tof90
 /maint/testmerge
 /manual/dimsbalanced
 /manual/manyconnect
@@ -1122,6 +1122,7 @@
 /pt2pt/many_isend
 /pt2pt/manylmt
 /pt2pt/mprobe
+/pt2pt/multi_psend_derived
 /pt2pt/pingping
 /pt2pt/probe_unexp
 /pt2pt/probenull
@@ -1194,6 +1195,8 @@
 /rma/get_accumulate_long_derived
 /rma/get_accumulate_short
 /rma/get_accumulate_short_derived
+/rma/get_flushlocal
+/rma/get_flushlocal_shm
 /rma/getfence1
 /rma/getgroup
 /rma/ircpi

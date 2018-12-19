@@ -66,7 +66,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         }                                                               \
     } while (0)
 
-#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)                     \
+#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)              \
     do {                                                                \
         if ((err_ptr_) == NULL) {                                       \
             mutex_lock(mutex_ptr_);                                     \
@@ -75,6 +75,23 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
             *(err_ptr_) = mutex_lock(mutex_ptr_);                       \
             /* FIXME: convert error to an MPL_THREAD_ERR value */       \
         }                                                               \
+    } while (0)
+
+#define MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)      \
+    do {                                                                \
+        int err__;                                                      \
+        *(int*)cs_acq_ptr = 1;                                          \
+        err__ = mutex_trylock(mutex_ptr_);                              \
+        if (unlikely(err__ != 0 && err__ != EBUSY)) {                   \
+            *(int*)cs_acq_ptr = 0;                                      \
+        }                                                               \
+        else {                                                          \
+            if (unlikely(err__ != 0))                                   \
+                *(int*)cs_acq_ptr = 0;                                  \
+             err__ = 0;                                                 \
+        }                                                               \
+        if (err_ptr_ != NULL)                                           \
+            *(int *)(err_ptr_) = err__;                                 \
     } while (0)
 
 #define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)                   \
