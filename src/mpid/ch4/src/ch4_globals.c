@@ -22,6 +22,13 @@ MPIDI_av_table_t *MPIDI_av_table0;
 MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
+#ifdef MPIDI_CH4_ULFM
+struct MPIR_Comm *MPIDIU_comm_list = NULL;
+MPIR_Group *MPIDI_failed_procs_group = NULL;
+int MPIDI_last_known_failed = MPI_PROC_NULL;
+char *MPIDI_failed_procs_string = NULL;
+#endif
+
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
 struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC] = { {0}
 };

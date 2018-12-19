@@ -485,10 +485,24 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+
+#ifdef MPIDI_CH4_ULFM
+        int last_ack_rank;
+        int anysource_enabled;
+
+        struct MPIR_Comm *prev;
+        struct MPIR_Comm *next;
+#endif
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+
+#ifdef MPIDI_CH4_ULFM
+#define MPIDIU_COMM_LIST_ADD(comm) DL_PREPEND_NP(MPIDIU_comm_list, comm, dev.ch4.next, dev.ch4.prev)
+#define MPIDIU_COMM_LIST_DEL(comm) DL_DELETE_NP(MPIDIU_comm_list, comm, dev.ch4.next, dev.ch4.prev)
+#define MPIDIU_COMM_LIST_FOREACH(comm) DL_FOREACH_NP(MPIDIU_comm_list, comm, dev.ch4.next, dev.ch4.prev)
+#endif
 
 typedef struct {
     union {
@@ -516,6 +530,14 @@ typedef struct {
 
 extern MPIDI_av_table_t **MPIDI_av_table;
 extern MPIDI_av_table_t *MPIDI_av_table0;
+
+#ifdef MPIDI_CH4_ULFM
+extern struct MPIR_Comm *MPIDIU_comm_list;
+
+extern MPIR_Group *MPIDI_failed_procs_group;
+extern int MPIDI_last_known_failed;
+extern char *MPIDI_failed_procs_string;
+#endif
 
 #define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
