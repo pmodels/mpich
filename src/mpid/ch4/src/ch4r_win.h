@@ -44,6 +44,11 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
+enum {
+    MPIDIG_SHM_WIN_OPTIONAL,
+    MPIDIG_SHM_WIN_REQUIRED,
+};
+
 MPL_STATIC_INLINE_PREFIX void MPIDIG_parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
 {
     uint32_t ops = 0;
@@ -1053,8 +1058,8 @@ static inline int MPIDIG_win_finalize(MPIR_Win ** win_ptr)
 
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
         win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        /* if more than one process on a node, we always use shared memory */
-        if (win->comm_ptr->node_comm != NULL) {
+        /* if more than one process on a node, we use shared memory by default */
+        if (win->comm_ptr->node_comm != NULL && MPIDIG_WIN(win, mmap_addr)) {
             if (MPIDIG_WIN(win, mmap_sz) > 0) {
                 /* destroy shared window memory */
                 mpi_errno = MPIDIU_destroy_shm_segment(MPIDIG_WIN(win, mmap_sz),
@@ -1064,6 +1069,7 @@ static inline int MPIDIG_win_finalize(MPIR_Win ** win_ptr)
                     MPIR_ERR_POP(mpi_errno);
             }
 
+            /* if shared memory allocation fails or zero size window, free the table at allocation. */
             MPL_free(MPIDIG_WIN(win, shared_table));
         } else if (MPIDIG_WIN(win, mmap_sz) > 0) {
             /* if single process on the node, we use mmap with symm heap */
@@ -1256,7 +1262,7 @@ static inline int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint siz
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr,
-                                            void **base_ptr, MPIR_Win ** win_ptr)
+                                            void **base_ptr, MPIR_Win ** win_ptr, int shm_option)
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -1267,6 +1273,7 @@ static inline int MPIDIG_win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_C
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
     size_t page_sz = 0, mapsize;
     int mapfail_flag = 0;
+    bool shm_mapfail_flag = false;
     unsigned symheap_flag = 1, global_symheap_flag = 0;
 
     MPIR_CHKPMEM_DECL(2);
@@ -1319,7 +1326,7 @@ static inline int MPIDIG_win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_C
 
         /* if all processes give zero size on a single node window, simply return. */
         if (total_shm_size == 0 && shm_comm_ptr->local_size == comm_ptr->local_size)
-            goto fn_exit;
+            goto fn_no_shm;
 
         /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
         if (size != MPIDIU_get_mapsize(size, &page_sz) &&
@@ -1347,33 +1354,50 @@ static inline int MPIDIG_win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_C
      * size of entire shared memory segment on each node as the size of
      * each process. */
     mapsize = MPIDIU_get_mapsize(total_shm_size, &page_sz);
-    MPIDIG_WIN(win, mmap_sz) = mapsize;
 
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
+        MPIDIG_WIN(win, mmap_sz) = mapsize;
         mpi_errno = MPIDIU_get_shm_symheap(mapsize, shm_offsets, comm_ptr, win, &mapfail_flag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+
+        if (symheap_mapfail_flag) {
+            MPIDIG_WIN(win, mmap_sz) = 0;
+            MPIDIG_WIN(win, mmap_addr) = NULL;
+        }
     }
 
-    /* if fails, try normal shm segment allocation or malloc */
+    /* if symmetric heap is disabled or fails, try normal shm segment allocation */
     if (!global_symheap_flag || mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
+            MPIDIG_WIN(win, mmap_sz) = mapsize;
             mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, mapsize,
                                                     &MPIDIG_WIN(win, shm_segment_handle),
-                                                    &MPIDIG_WIN(win, mmap_addr));
+                                                    &MPIDIG_WIN(win, mmap_addr), &shm_mapfail_flag);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
-        } else if (size > 0) {
+
+            if (shm_mapfail_flag) {
+                MPIDIG_WIN(win, mmap_sz) = 0;
+                MPIDIG_WIN(win, mmap_addr) = NULL;
+            }
+
+            /* throw error here if shm allocation is required but fails */
+            if (shm_option == MPIDIG_SHM_WIN_REQUIRED)
+                MPIR_ERR_CHKANDJUMP(shm_mapfail_flag, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+        }
+
+        /* If only single process on a node or shm segment allocation fails, try malloc. */
+        if ((shm_comm_ptr == NULL || shm_mapfail_flag) && size > 0) {
             MPIR_CHKPMEM_MALLOC(*base_ptr, void *, size, mpi_errno, "(*win_ptr)->base",
                                 MPL_MEM_RMA);
             MPL_VG_MEM_INIT(*base_ptr, size);
-            MPIDIG_WIN(win, mmap_sz) = 0;       /* reset mmap_sz if use malloc */
         }
     }
 
     /* compute the base addresses of each process within the shared memory segment */
-    if (shm_comm_ptr != NULL) {
+    if (shm_comm_ptr != NULL && MPIDIG_WIN(win, mmap_addr)) {
         char *cur_base = (char *) MPIDIG_WIN(win, mmap_addr);
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             if (shared_table[i].size)
@@ -1393,6 +1417,13 @@ static inline int MPIDIG_win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_C
         *base_ptr = MPIDIG_WIN(win, mmap_addr);
     }
     /* otherwise, it has already be assigned with a local memory region or NULL (zero size). */
+
+  fn_no_shm:
+    /* free shared_table if no shm segment allocated */
+    if (shared_table && !MPIDIG_WIN(win, mmap_addr)) {
+        MPL_free(MPIDIG_WIN(win, shared_table));
+        MPIDIG_WIN(win, shared_table) = NULL;
+    }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -1422,7 +1453,8 @@ static inline int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, M
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDIG_win_shm_alloc_impl(size, disp_unit, comm_ptr, base_ptr, win_ptr);
+    mpi_errno = MPIDIG_win_shm_alloc_impl(size, disp_unit, comm_ptr, base_ptr, win_ptr,
+                                          MPIDIG_SHM_WIN_REQUIRED);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
@@ -1494,9 +1526,9 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SHARED_QUERY);
 
-    /* When only single process exists on the node, should only query
-     * MPI_PROC_NULL or local process. Thus, return local window's info. */
-    if (win->comm_ptr->node_comm == NULL) {
+    /* When only single process exists on the node or shared memory allocation fails,
+     * should only query MPI_PROC_NULL or local process. Thus, return local window's info. */
+    if (win->comm_ptr->node_comm == NULL || !shared_table) {
         *size = win->size;
         *disp_unit = win->disp_unit;
         *((void **) baseptr) = win->base;
@@ -1551,7 +1583,8 @@ static inline int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Inf
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPIDIG_win_shm_alloc_impl(size, disp_unit, comm, base_ptr, win_ptr);
+    mpi_errno = MPIDIG_win_shm_alloc_impl(size, disp_unit, comm, base_ptr, win_ptr,
+                                          MPIDIG_SHM_WIN_OPTIONAL);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
