@@ -22,7 +22,7 @@ kvalues="3"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        if [ ${algo_name} -eq "tree" ]; then
+        if [ ${algo_name} = "tree" ]; then
             for tree_type in ${tree_types}; do
                 #set the environment
                 env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
@@ -57,7 +57,7 @@ tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
-    if [ ${algo_name} -eq "tree" ]; then
+    if [ ${algo_name} = "tree" ]; then
         for tree_type in ${tree_types}; do
             for kval in ${kvalues}; do
                 #set the environment
