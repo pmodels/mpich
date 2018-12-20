@@ -25,7 +25,7 @@
 
 #include "adio.h"
 
-#define D_PRINT_IO
+/* #define D_PRINT_IO */
 /* #define D_PRINT_IO_MEM */
 
 #define PRINT_MSG(str, fmt, ...)                                            \
