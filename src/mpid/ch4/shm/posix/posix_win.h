@@ -409,27 +409,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
+    bool mapfail_flag = false;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_HOOK);
 
     posix_win = &win->dev.shm.posix;
     posix_win->shm_mutex_ptr = NULL;
 
-    /* Enable shm RMA only when interprocess mutex is supported and
-     * more than 1 processes exist on the node. */
-    if (shm_comm_ptr == NULL || !MPL_proc_mutex_enabled())
+    /* Enable shm RMA only when interprocess mutex is supported,
+     * more than 1 processes exist on the node, and shm buffer has been successfully allocated. */
+    if (shm_comm_ptr == NULL || !MPL_proc_mutex_enabled() || !MPIDIG_WIN(win, mmap_addr))
         goto fn_exit;
 
     posix_win = &win->dev.shm.posix;
-    MPIDIG_WIN(win, shm_allocated) = 1;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
     mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
                                             &posix_win->shm_mutex_segment_handle,
-                                            (void **) &posix_win->shm_mutex_ptr);
+                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
 
-    if (shm_comm_ptr->rank == 0)
-        MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+    /* disable shm_allocated optimization if mutex allocation fails */
+    if (!mapfail_flag) {
+        if (shm_comm_ptr->rank == 0)
+            MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+        MPIDIG_WIN(win, shm_allocated) = 1;
+    }
 
     /* No barrier is needed here, because the CH4 generic routine does it */
 
@@ -448,6 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win *
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = NULL;
+    bool mapfail_flag = false;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
 
@@ -456,15 +461,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win *
         goto fn_exit;
 
     posix_win = &win->dev.shm.posix;
-    MPIDIG_WIN(win, shm_allocated) = 1;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
     mpi_errno = MPIDIU_allocate_shm_segment(win->comm_ptr, sizeof(MPL_proc_mutex_t),
                                             &posix_win->shm_mutex_segment_handle,
-                                            (void **) &posix_win->shm_mutex_ptr);
+                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
 
-    if (win->comm_ptr->rank == 0)
-        MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+    /* disable shm_allocated optimization if mutex allocation fails */
+    if (!mapfail_flag) {
+        if (win->comm_ptr->rank == 0)
+            MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+        MPIDIG_WIN(win, shm_allocated) = 1;
+    }
 
     /* No barrier is needed here, because the CH4 generic routine does it */
 
