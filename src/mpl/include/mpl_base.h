@@ -174,4 +174,7 @@ typedef bool _Bool;
 #define MPL_ROUND_UP_ALIGN(a, alignment) (((a) + ((alignment) - 1)) & (~((alignment) - 1)))
 #define MPL_ROUND_DOWN_ALIGN(a, alignment) ((a) & (~((alignment) - 1)))
 
+/* Generate a constant whose (i_)'th bit is set */
+#define MPL_BIT(i_) (1 << (i_))
+
 #endif /* MPL_BASE_H_INCLUDED */
