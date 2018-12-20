@@ -1316,6 +1316,8 @@
 /rma/win_zero
 /rma/wincall
 /rma/window_creation
+/rma/window_allocation
+/rma/window_noncontig_allocation
 /rma/winname
 /rma/wintest
 /rma/wintest_shm
