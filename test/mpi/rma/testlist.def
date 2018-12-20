@@ -60,6 +60,8 @@ strided_putget_indexed_shared 4 mpiversion=3.0
 strided_getacc_indexed 4 mpiversion=3.0
 strided_getacc_indexed_shared 4 mpiversion=3.0
 window_creation 2
+window_allocation 4 mpiversion=3.0
+window_noncontig_allocation 4 mpiversion=3.0
 contention_put 4
 contention_putget 4
 put_base 2
