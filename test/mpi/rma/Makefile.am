@@ -81,6 +81,8 @@ noinst_PROGRAMS =          \
     strided_getacc_indexed \
     strided_getacc_indexed_shared \
     window_creation        \
+    window_allocation      \
+    window_noncontig_allocation  \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
@@ -214,6 +216,12 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
+
+window_allocation_SOURCES            = window_creation.c
+window_allocation_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+
+window_noncontig_allocation_SOURCES  = window_creation.c
+window_noncontig_allocation_CPPFLAGS = -DUSE_WIN_ALLOCATE_NONCONTIG $(AM_CPPFLAGS)
 
 fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
 fetch_and_op_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)
