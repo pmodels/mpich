@@ -30,6 +30,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_UNSAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
@@ -73,6 +75,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_UNSAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
@@ -113,6 +117,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SSEND_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SSEND_UNSAFE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -155,6 +161,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISSEND_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISSEND_UNSAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, av, req);
 #else
@@ -194,6 +202,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_SAFE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
 
@@ -237,6 +247,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_SAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
 
     if (!cs_acq) {
@@ -279,6 +291,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SSEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SSEND_SAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
 
     if (!cs_acq) {
@@ -320,6 +334,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISSEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISSEND_SAFE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
 
@@ -364,6 +380,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
@@ -400,6 +418,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
@@ -446,6 +466,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
@@ -489,6 +511,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRSEND);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
@@ -526,6 +550,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
@@ -565,7 +591,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISSEND);
 
-    if (unlikely(rank == MPI_PROC_NULL)) {
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag)
+
+        if (unlikely(rank == MPI_PROC_NULL)) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
@@ -602,6 +630,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_INIT);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
@@ -644,6 +675,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND_INIT);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
@@ -687,6 +721,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BSEND_INIT);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
@@ -730,6 +767,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND_INIT);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =

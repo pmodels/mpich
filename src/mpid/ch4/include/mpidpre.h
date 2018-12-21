@@ -597,6 +597,30 @@ int MPIDI_check_for_failed_procs(void);
 void MPIDI_sigusr1_handler(int sig);
 #endif
 
+#ifdef MPIDI_CH4_ULFM
+#define MPIDI_IS_COMM_REVOKED(comm)                                              \
+    do {                                                                              \
+        if ((comm)->revoked) {                                                        \
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,                              \
+                            (MPL_DBG_FDEST, "Comm %08x is revoked", (comm)->handle)); \
+            MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");              \
+        }                                                                             \
+    } while (0)
+#define MPIDI_IS_COMM_TAG_REVOKED(comm, tag)                                      \
+    do {                                                                               \
+        if ((comm)->revoked &&                                                         \
+            MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS((tag) & ~MPIR_TAG_COLL_BIT) &&  \
+            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS((tag) & ~MPIR_TAG_COLL_BIT)) { \
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,                               \
+                            (MPL_DBG_FDEST, "Comm %08x is revoked", (comm)->handle));  \
+            MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");               \
+        }                                                                              \
+    } while (0)
+#else
+#define MPIDI_IS_COMM_REVOKED(comm)
+#define MPIDI_IS_COMM_TAG_REVOKED(comm, tag)
+#endif
+
 #include "mpidu_pre.h"
 
 #endif /* MPIDPRE_H_INCLUDED */

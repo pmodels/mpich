@@ -27,6 +27,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROBE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROBE_UNSAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
 #else
@@ -68,6 +70,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
@@ -124,6 +128,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_SAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
@@ -157,6 +163,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_SAFE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
@@ -187,6 +195,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);
@@ -231,6 +241,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MPROBE);
 
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
+
     if (source == MPI_PROC_NULL) {
         MPIR_Status_set_procnull(status);
         *message = NULL;        /* should be interpreted as MPI_MESSAGE_NO_PROC */
@@ -273,6 +285,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMPROBE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     if (source == MPI_PROC_NULL) {
         MPIR_Status_set_procnull(status);
@@ -318,6 +332,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
+
+    MPIDI_IS_COMM_TAG_REVOKED(comm, tag);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);

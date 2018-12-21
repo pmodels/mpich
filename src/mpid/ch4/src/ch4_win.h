@@ -24,6 +24,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SET_INFO);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SET_INFO);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_set_info(win, info);
     if (mpi_errno != MPI_SUCCESS) {
@@ -52,6 +54,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_START);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -85,6 +89,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_COMPLETE);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -117,6 +123,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_POST);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -148,6 +156,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_WAIT);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -182,6 +192,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_TEST);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -213,6 +225,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_LOCK);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -246,6 +260,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -278,6 +294,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_GET_INFO);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_GET_INFO);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_get_info(win, info_p_p);
     if (mpi_errno != MPI_SUCCESS) {
@@ -307,6 +325,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_free(MPIR_Win ** win_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FREE);
 
+    MPIDI_IS_COMM_REVOKED((*win_ptr)->comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_free(win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
@@ -334,6 +354,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FENCE);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -370,6 +392,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_create(void *base,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_CREATE);
+
+    MPIDI_IS_COMM_REVOKED(comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
@@ -429,6 +454,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate_shared(MPI_Aint size,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
+
+    MPIDI_IS_COMM_REVOKED(comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_allocate_shared(size, disp_unit,
                                                  info_ptr, comm_ptr, base_ptr, win_ptr);
@@ -457,6 +485,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -490,6 +520,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_detach(MPIR_Win * win, const void *base)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_DETACH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_DETACH);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_detach(win, base);
     if (mpi_errno != MPI_SUCCESS) {
@@ -519,6 +551,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SHARED_QUERY);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
     if (mpi_errno != MPI_SUCCESS) {
@@ -549,6 +584,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate(MPI_Aint size,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_ALLOCATE);
+
+    MPIDI_IS_COMM_REVOKED(comm);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
     if (mpi_errno != MPI_SUCCESS) {
@@ -575,6 +613,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -608,6 +648,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -639,6 +681,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_UNLOCK_ALL);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -672,6 +716,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
+
+    MPIDI_IS_COMM_REVOKED(comm);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_create_dynamic(info, comm, win);
     if (mpi_errno != MPI_SUCCESS) {
@@ -698,6 +745,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SYNC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SYNC);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -731,6 +780,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_ALL);
 
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
+
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -762,6 +813,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int assert, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_LOCK_ALL);
+
+    MPIDI_IS_COMM_REVOKED(win->comm_ptr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
