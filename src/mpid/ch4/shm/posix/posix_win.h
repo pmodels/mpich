@@ -452,12 +452,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win *
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = NULL;
+    MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
     bool mapfail_flag = false;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
 
-    /* Enable shm RMA only when interprocess mutex is supported */
-    if (!MPL_proc_mutex_enabled())
+    /* Enable shm RMA only when interprocess mutex is supported and
+     * more than 1 processes exist on the node. */
+    if (!shm_comm_ptr || !MPL_proc_mutex_enabled())
         goto fn_exit;
 
     posix_win = &win->dev.shm.posix;
