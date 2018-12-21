@@ -481,6 +481,22 @@ if test "$enable_ch4_mt" != "direct"; then
     fi
 fi
 
+# Setup ULFM support in CH4
+# Eanbling this add one branch to check if the communicator is already revoked for each MPI Call.
+AC_ARG_ENABLE(ch4-ulfm,
+    [--enable-ch4-ulfm
+       Enables inlined shared memory build when a single shared memory module is used
+       level:
+         yes       - Enabled
+         no        - Disabled (default)
+    ],,)
+
+if test "$enable_ch4_ulfm" = "yes" ; then
+    AC_DEFINE([MPIDI_CH4_ULFM], [1],
+        [Define to enable support for ULFM])
+    AC_MSG_NOTICE([Using a symmetric heap])
+fi
+
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 
