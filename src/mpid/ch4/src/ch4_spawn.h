@@ -135,6 +135,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
 
+    MPIDI_CH4I_IS_COMM_REVOKED(comm_ptr);
+
     memset(port_name, 0, sizeof(port_name));
 
     if (comm_ptr->rank == root) {
@@ -264,6 +266,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_CONNECT);
 
+    MPIDI_CH4I_IS_COMM_REVOKED(comm);
+
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
@@ -294,6 +298,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_DISCONNECT);
+
+    MPIDI_CH4I_IS_COMM_REVOKED(comm_ptr);
+
     mpi_errno = MPIDI_NM_mpi_comm_disconnect(comm_ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
@@ -362,6 +369,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_accept(const char *port_name,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_ACCEPT);
+
+    MPIDI_CH4I_IS_COMM_REVOKED(comm);
+
     mpi_errno = MPIDI_NM_mpi_comm_accept(port_name, info, root, comm, newcomm_ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
