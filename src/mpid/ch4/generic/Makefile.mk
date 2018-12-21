@@ -18,4 +18,5 @@ noinst_HEADERS += src/mpid/ch4/generic/mpidig_send.h \
                   src/mpid/ch4/generic/mpidig.h
 
 mpi_core_sources += src/mpid/ch4/generic/mpidig_globals.c \
+                    src/mpid/ch4/generic/mpidig_comm.c \
                     src/mpid/ch4/generic/mpidig_init.c
