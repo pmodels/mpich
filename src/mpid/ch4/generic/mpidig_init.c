@@ -222,6 +222,12 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vcis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+#ifdef MPIDI_CH4_ULFM
+    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_COMM_REVOKE,
+                                 &MPIDI_comm_revoke_origin_cb, &MPIDI_comm_revoke_target_msg_cb);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     mpi_errno = MPIDIG_init_comm(comm_world);
     if (mpi_errno)

@@ -411,6 +411,10 @@ typedef struct MPIDIG_comm_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
     uint32_t window_instance;
+#ifdef MPIDI_CH4_ULFM
+    /* ULFM */
+    int waiting_for_revoke;
+#endif
 } MPIDIG_comm_t;
 
 #define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
@@ -540,7 +544,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 
 #ifdef MPIDI_CH4_ULFM
 extern struct MPIR_Comm *MPIDIU_comm_list;
-
 extern MPIR_Group *MPIDI_failed_procs_group;
 extern int MPIDI_last_known_failed;
 extern char *MPIDI_failed_procs_string;

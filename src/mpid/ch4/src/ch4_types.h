@@ -98,6 +98,9 @@ enum {
     MPIDIG_WIN_UNLOCKALL_ACK,
 
     MPIDIG_COMM_ABORT
+#ifdef MPIDI_CH4_ULFM
+        MPIDIG_COMM_REVOKE,
+#endif
 };
 
 enum {
