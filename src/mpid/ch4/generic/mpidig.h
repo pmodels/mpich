@@ -38,5 +38,8 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis);
 void MPIDIG_finalize(void);
 
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
+#ifdef MPIDI_CH4_ULFM
+int MPIDIG_comm_revoke(MPIR_Comm * comm, int is_remote);
+#endif
 
 #endif /* MPIDIG_H_INCLUDED */

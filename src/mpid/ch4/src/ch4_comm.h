@@ -391,13 +391,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_REVOKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_REVOKE);
 
+#ifdef MPIDI_CH4_ULFM
+    mpi_errno = MPIDIG_comm_revoke(comm_ptr, is_remote);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+#else
     MPIR_Assert(0);
+#endif
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_REVOKE);
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -535,6 +546,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 #ifdef MPIDI_CH4_ULFM
     MPIDI_COMM(comm, last_ack_rank) = -1;
     MPIDI_COMM(comm, anysource_enabled) = 1;
+    MPIDI_CH4U_COMM(comm, waiting_for_revoke) = 0;
 
     MPIDIU_COMM_LIST_ADD(comm);
 #endif

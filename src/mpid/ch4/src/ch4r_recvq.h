@@ -271,6 +271,168 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
     return found;
 }
 
+#ifdef MPIDI_CH4_ULFM
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_recvq_clean
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_recvq_clean(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t context_offset = 0;
+    MPIR_Request *req = NULL;
+    MPIDI_CH4U_rreq_t *curr = NULL, *tmp = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+
+    DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm, unexp_list), curr, tmp) {
+        req = (MPIR_Request *) curr->request;
+        context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+        if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+            if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm, unexp_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        else { /* This is a p2p message */
+            req->status.MPI_ERROR = MPI_ERR_OTHER;
+            MPID_Request_complete(req);
+            DL_DELETE(MPIDI_CH4U_COMM(comm, unexp_list), curr);
+            MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+            continue;
+        }
+    }
+
+    DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm, posted_list), curr, tmp) {
+        req = (MPIR_Request *) curr->request;
+        context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+        if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+            if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm, posted_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        else { /* This is a p2p message */
+            req->status.MPI_ERROR = MPI_ERR_OTHER;
+            MPID_Request_complete(req);
+            DL_DELETE(MPIDI_CH4U_COMM(comm, posted_list), curr);
+            MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+            continue;
+        }
+    }
+
+    if (MPIR_Comm_is_node_aware(comm)) {
+        /* intranode */
+        DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm->node_comm, unexp_list), curr, tmp) {
+            req = (MPIR_Request *) curr->request;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id)
+                             - comm->node_comm->recvcontext_id;
+            if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4U_COMM(comm->node_comm, unexp_list), curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+            else { /* This is a p2p message */
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm->node_comm, unexp_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm->node_roots_comm, unexp_list), curr, tmp) {
+            req = (MPIR_Request *) curr->request;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id)
+                             - comm->node_roots_comm->recvcontext_id;
+            if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4U_COMM(comm->node_roots_comm, unexp_list), curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+            else { /* This is a p2p message */
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm->node_roots_comm, unexp_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        /* internode */
+        DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm->node_comm, posted_list), curr, tmp) {
+            req = (MPIR_Request *) curr->request;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id)
+                             - comm->node_comm->recvcontext_id;
+            if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4U_COMM(comm->node_comm, posted_list), curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+            else { /* This is a p2p message */
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm->node_comm, posted_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        DL_FOREACH_SAFE(MPIDI_CH4U_COMM(comm->node_roots_comm, posted_list), curr, tmp) {
+            req = (MPIR_Request *) curr->request;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id)
+                             - comm->node_roots_comm->recvcontext_id;
+            if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4U_COMM(comm->node_roots_comm, posted_list), curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+            else { /* This is a p2p message */
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4U_COMM(comm->node_roots_comm, posted_list), curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif
+
 #else /* #ifdef MPIDI_CH4U_USE_PER_COMM_QUEUE */
 
 /* Use global queue */
@@ -466,6 +628,231 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_POSTED);
     return found;
 }
+
+#ifdef MPIDI_CH4_ULFM
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_recvq_clean
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_recvq_clean(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t context_offset = 0;
+    MPIR_Request *req = NULL;
+    MPIDI_CH4U_rreq_t *curr = NULL, *tmp = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+
+    DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
+        req = (MPIR_Request *) curr->request;
+        context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+
+        if (context_offset & MPIR_CONTEXT_INTRA_COLL) {
+            if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke unexp coll pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+        }
+        else {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                            (MPL_DBG_FDEST,
+                             "revoke unexp pt2pt pkt rank=%d tag=%d contextid=%d",
+                             MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                             MPIDI_CH4U_COMM(req, context_id)));
+            req->status.MPI_ERROR = MPI_ERR_OTHER;
+            MPID_Request_complete(req);
+            DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+            MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+            continue;
+        }
+
+        if (MPIR_Comm_is_node_aware(comm)) {
+            int offset;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT
+                : MPIR_CONTEXT_INTER_PT2PT;
+            if (context_offset == MPIR_CONTEXT_INTRANODE_OFFSET + offset) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke unexp internode pt2pt pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL
+                : MPIR_CONTEXT_INTER_COLL;
+            if (context_offset == MPIR_CONTEXT_INTRANODE_OFFSET + offset) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "revoke unexp internode coll pkt rank=%d tag=%d contextid=%d",
+                                     MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                     MPIDI_CH4U_COMM(req, context_id)));
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT
+                : MPIR_CONTEXT_INTER_PT2PT;
+            if (context_offset == MPIR_CONTEXT_INTERNODE_OFFSET + offset) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke unexp intranode pt2pt pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                continue;
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL
+                : MPIR_CONTEXT_INTER_COLL;
+            if (context_offset == MPIR_CONTEXT_INTERNODE_OFFSET + offset) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "revoke unexp intranode coll pkt rank=%d tag=%d contextid=%d",
+                                     MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                     MPIDI_CH4U_COMM(req, context_id)));
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    continue;
+                }
+            }
+        }
+    }
+
+    DL_FOREACH_SAFE(MPIDI_CH4_Global.posted_list, curr, tmp) {
+        req = (MPIR_Request *) curr->request;
+        context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+
+        if (context_offset == MPIR_CONTEXT_INTRA_PT2PT) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                            (MPL_DBG_FDEST,
+                             "revoke posted pt2pt pkt rank=%d tag=%d contextid=%d",
+                             MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                             MPIDI_CH4U_COMM(req, context_id)));
+            req->status.MPI_ERROR = MPI_ERR_OTHER;
+            MPID_Request_complete(req);
+            DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+            MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+            continue;
+        }
+        else if (context_offset == MPIR_CONTEXT_INTRA_COLL) {
+            if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke posted coll pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+                continue;
+            }
+        }
+
+        if (MPIR_Comm_is_node_aware(comm)) {
+            int offset;
+            context_offset = MPIDI_CH4U_REQUEST(req, context_id) - comm->recvcontext_id;
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT
+                : MPIR_CONTEXT_INTER_PT2PT;
+            if (context_offset == MPIR_CONTEXT_INTRANODE_OFFSET + offset) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke posted intranode pt2pt pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+                continue;
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL
+                : MPIR_CONTEXT_INTER_COLL;
+            if (context_offset == MPIR_CONTEXT_INTRANODE_OFFSET + offset) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "revoke posted intranode coll pkt rank=%d tag=%d contextid=%d",
+                                     MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                     MPIDI_CH4U_COMM(req, context_id)));
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+                    continue;
+                }
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT
+                : MPIR_CONTEXT_INTER_PT2PT;
+            if (context_offset == MPIR_CONTEXT_INTERNODE_OFFSET + offset) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                (MPL_DBG_FDEST,
+                                 "revoke posted internode pt2pt pkt rank=%d tag=%d contextid=%d",
+                                 MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                 MPIDI_CH4U_COMM(req, context_id)));
+                req->status.MPI_ERROR = MPI_ERR_OTHER;
+                MPID_Request_complete(req);
+                DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+                MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+                continue;
+            }
+            offset = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_COLL
+                : MPIR_CONTEXT_INTER_COLL;
+            if (context_offset == MPIR_CONTEXT_INTERNODE_OFFSET + offset) {
+                if (MPIDI_CH4U_REQUEST(req, tag) != MPIR_AGREE_TAG
+                    && MPIDI_CH4U_REQUEST(req, tag) != MPIR_SHRINK_TAG) {
+                    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "revoke posted internode coll pkt rank=%d tag=%d contextid=%d",
+                                     MPIDI_CH4U_COMM(req, rank), MPIDI_CH4U_COMM(req, tag),
+                                     MPIDI_CH4U_COMM(req, context_id)));
+                    req->status.MPI_ERROR = MPI_ERR_OTHER;
+                    MPID_Request_complete(req);
+                    DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+                    continue;
+                }
+            }
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RECVQ_CLEAN);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif
 
 #endif /* MPIDI_CH4U_USE_PER_COMM_QUEUE */
 

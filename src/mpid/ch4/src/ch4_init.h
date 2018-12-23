@@ -479,10 +479,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPIDI_COMM(MPIR_Process.comm_self, last_ack_rank) = MPI_PROC_NULL;
     MPIDI_COMM(MPIR_Process.comm_self, anysource_enabled) = 1;
+    MPIDI_CH4U_COMM(MPIR_Process.comm_self, waiting_for_revoke) = 0;
     MPIDIU_COMM_LIST_ADD(MPIR_Process.comm_self);
 
     MPIDI_COMM(MPIR_Process.comm_world, last_ack_rank) = MPI_PROC_NULL;
     MPIDI_COMM(MPIR_Process.comm_world, anysource_enabled) = 1;
+    MPIDI_CH4U_COMM(MPIR_Process.comm_world, waiting_for_revoke) = 0;
     MPIDIU_COMM_LIST_ADD(MPIR_Process.comm_world);
 #endif
 

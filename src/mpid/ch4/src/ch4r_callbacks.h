@@ -868,4 +868,54 @@ static inline int MPIDI_comm_abort_target_msg_cb(int handler_id, void *am_hdr,
     return MPI_SUCCESS;
 }
 
+#ifdef MPIDI_CH4_ULFM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_comm_revoke_origin_cb
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_comm_revoke_origin_cb(MPIR_Request * sreq)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_REVOKE_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_REVOKE_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_REVOKE_ORIGIN_CB);
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_comm_revoke_target_msg_cb
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_comm_revoke_target_msg_cb(int handler_id, void *am_hdr,
+                                                  void **data,
+                                                  size_t * p_data_sz,
+                                                  int is_local,
+                                                  int *is_contig,
+                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
+                                                  MPIR_Request ** req)
+{
+    MPIDI_CH4U_hdr_t *hdr = (MPIDI_CH4U_hdr_t *) am_hdr;
+    int context_id = 0;
+    MPIR_Comm *comm = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_REVOKE_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_REVOKE_TARGET_MSG_CB);
+
+    context_id = hdr->context_id - MPIR_CONTEXT_INTRA_PT2PT;
+    MPIDIU_COMM_LIST_FOREACH(comm) {
+        if (comm->recvcontext_id == context_id) {
+            break;
+        }
+    }
+    MPIR_Assert(comm->recvcontext_id == context_id);
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                    (MPL_DBG_FDEST, "Comm %08x received revoke message", comm->handle));
+
+    MPID_Comm_revoke(comm, 1);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_REVOKE_TARGET_MSG_CB);
+    return MPI_SUCCESS;
+}
+#endif
+
 #endif /* CH4R_CALLBACKS_H_INCLUDED */

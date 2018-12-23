@@ -68,6 +68,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
     }
 
     MPIDI_CH4U_COMM(comm, window_instance) = 0;
+#ifdef MPIDI_CH4_ULFM
+    MPIDI_CH4U_COMM(comm, waiting_for_revoke) = 0;
+#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_COMM);
     return mpi_errno;
