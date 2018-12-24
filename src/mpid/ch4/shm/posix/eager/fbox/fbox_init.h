@@ -79,21 +79,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     /* Create region with one fastbox for every pair of local processes. */
     mpi_errno =
         MPIDU_shm_seg_alloc(num_local * num_local * sizeof(MPIDI_POSIX_fastbox_t),
-                            (void **) &fastboxes_p, MPL_MEM_SHM);
+                            (void **) &fastboxes_p, MPIR_MEMTYPE__DEFAULT, MPL_MEM_SHM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Request shared collective barrier vars region */
     mpi_errno = MPIDU_shm_seg_alloc(MAX(sizeof(MPIDU_shm_barrier_t), MPIDU_SHM_CACHE_LINE_LEN),
                                     (void **) &MPIDI_POSIX_eager_fbox_control_global.barrier_region,
-                                    MPL_MEM_SHM);
+                                    MPIR_MEMTYPE__DEFAULT, MPL_MEM_SHM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
                                      &MPIDI_POSIX_eager_fbox_control_global.barrier,
-                                     num_local, my_local_rank, local_rank_0, rank, MPL_MEM_SHM);
+                                     num_local, my_local_rank, local_rank_0, rank, 0,
+                                     MPIDU_SHM_OBJ__NONE, MPL_MEM_SHM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

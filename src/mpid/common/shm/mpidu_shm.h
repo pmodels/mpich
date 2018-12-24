@@ -8,6 +8,9 @@
 #ifndef MPIDU_SHM_H_INCLUDED
 #define MPIDU_SHM_H_INCLUDED
 
+#include "mpidu_shm_obj.h"
+#include "mpir_memtype.h"
+
 #define MPIDU_SHM_MAX_FNAME_LEN 256
 #define MPIDU_SHM_CACHE_LINE_LEN 64
 
@@ -33,10 +36,10 @@ typedef struct MPIDU_shm_seg_info {
     char *addr;
 } MPIDU_shm_seg_info_t;
 
-int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class);
+int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPIR_Memtype type, MPL_memory_class class);
 int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
                          int num_local, int local_rank, int local_procs_0, int rank,
-                         MPL_memory_class class);
+                         int node_id, MPIDU_shm_obj_t object, MPL_memory_class class);
 int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local);
 
 int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t * barrier_region,

@@ -148,12 +148,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
         bc_len = VALLEN;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno =
+        MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPIR_MEMTYPE__DEFAULT,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+                             0, MPIDU_SHM_OBJ__NONE, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -254,12 +256,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
         bc_len = PMI2_MAX_VALLEN;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno =
+        MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPIR_MEMTYPE__DEFAULT,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+                             0, MPIDU_SHM_OBJ__NONE, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -365,12 +369,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, allocate 2x the space */
     if (!same_len)
         bc_len = val_max;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno =
+        MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPIR_MEMTYPE__DEFAULT,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+                             0, MPIDU_SHM_OBJ__NONE, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

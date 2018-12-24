@@ -40,20 +40,18 @@ typedef struct alloc_elem {
 
 static struct {
     alloc_elem_t *head, *tail;
-} allocq = {
+} allocq_default = {
+0}, allocq_sibling = {
+
 0};
 
 static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
                        int num_local, int local_rank);
 
-#define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
-#define ALLOCQ_EMPTY() GENERIC_Q_EMPTY(allocq)
-#define ALLOCQ_ENQUEUE(ep) GENERIC_Q_ENQUEUE(&allocq, ep, next)
-#define ALLOCQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&allocq, epp, next)
-
 #define ROUND_UP_8(x) (((x) + (size_t)7) & ~(size_t)7)  /* rounds up to multiple of 8 */
 
-static size_t segment_len = 0;
+static size_t default_segment_len = 0;
+static size_t sibling_segment_len = 0;
 
 static int num_segments = 0;
 
@@ -80,7 +78,7 @@ static asym_check_region *asym_check_region_p = NULL;
 #define FUNCNAME MPIDU_shm_seg_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
+int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPIR_Memtype type, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS;
     alloc_elem_t *ep;
@@ -101,9 +99,13 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
     ep->ptr_p = ptr_p;
     ep->len = len;
 
-    ALLOCQ_ENQUEUE(ep);
-
-    segment_len += len;
+    if (type == MPIR_MEMTYPE__DEFAULT || type == MPIR_MEMTYPE__NONE) {
+        GENERIC_Q_ENQUEUE(&allocq_default, ep, next);
+        default_segment_len += len;
+    } else {
+        GENERIC_Q_ENQUEUE(&allocq_sibling, ep, next);
+        sibling_segment_len += len;
+    }
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
@@ -135,7 +137,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
                          int num_local, int local_rank, int local_procs_0, int rank,
-                         MPL_memory_class class)
+                         int node_id, MPIDU_shm_obj_t object, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int pmi_errno;
@@ -153,6 +155,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
     size_t size_left;
+    size_t padding = 0;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
@@ -160,11 +163,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
 
     /* MPIDU_shm_seg_alloc() needs to have been called before this function */
-    MPIR_Assert(!ALLOCQ_EMPTY());
-    MPIR_Assert(segment_len > 0);
+    MPIR_Assert(!GENERIC_Q_EMPTY(allocq_default) || !GENERIC_Q_EMPTY(allocq_sibling));
+    MPIR_Assert(default_segment_len > 0 || sibling_segment_len > 0);
 
     /* allocate an area to check if the segment was allocated symmetrically */
-    mpl_err = MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p, class);
+    mpl_err =
+        MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p,
+                            MPIR_MEMTYPE__DEFAULT, class);
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
@@ -182,7 +187,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
     /* add space for local barrier region.  Use a whole cacheline. */
     MPIR_Assert(MPIDU_SHM_CACHE_LINE_LEN >= sizeof(MPIDU_shm_barrier_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
+    default_segment_len += MPIDU_SHM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     /* We have a similar bootstrapping problem when using OpenPA in
@@ -195,18 +200,28 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
 
     MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
+    default_segment_len += MPIDU_SHM_CACHE_LINE_LEN;
 #endif
 
-    memory->segment_len = segment_len;
+#ifdef HAVE_HWLOC
+    /* add padding to align sibling region to page boundaries */
+    if (num_local > 1 && default_segment_len > 0 && sibling_segment_len > 0) {
+        long page_sz = sysconf(_SC_PAGESIZE);
+        padding =
+            ((default_segment_len + (size_t) (page_sz - 1)) & ~((size_t) (page_sz - 1))) -
+            default_segment_len;
+    }
+#endif
+    /* segment has two contributions: default (e.g., DRAM) and sibling (e.g., MCDRAM) */
+    memory->segment_len = (default_segment_len + padding) + sibling_segment_len;
 
 #ifdef USE_PMI2_API
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
+        MPIR_CHKPMEM_MALLOC(addr, char *, memory->segment_len +
+                            MPIDU_SHM_CACHE_LINE_LEN, mpi_errno, "segment", class);
 
         memory->base_addr = addr;
         current_addr =
@@ -316,8 +331,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
+        MPIR_CHKPMEM_MALLOC(addr, char *, memory->segment_len +
+                            MPIDU_SHM_CACHE_LINE_LEN, mpi_errno, "segment", class);
 
         memory->base_addr = addr;
         current_addr =
@@ -461,8 +476,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
+        MPIR_CHKPMEM_MALLOC(addr, char *, memory->segment_len +
+                            MPIDU_SHM_CACHE_LINE_LEN, mpi_errno, "segment", class);
 
         memory->base_addr = addr;
         current_addr =
@@ -583,7 +598,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     /* assign sections of the shared memory segment to their pointers */
 
     start_addr = current_addr;
-    size_left = segment_len;
+    size_left = default_segment_len + padding + sibling_segment_len;
 
     /* reserve room for shared mem barrier (We used a whole cacheline) */
     current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
@@ -597,11 +612,9 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     size_left -= MPIDU_SHM_CACHE_LINE_LEN;
 #endif
 
-    do {
+    while (!GENERIC_Q_EMPTY(allocq_default)) {
         alloc_elem_t *ep;
-
-        ALLOCQ_DEQUEUE(&ep);
-
+        GENERIC_Q_DEQUEUE(&allocq_default, &ep, next);
         *(ep->ptr_p) = current_addr;
         MPIR_Assert(size_left >= ep->len);
         size_left -= ep->len;
@@ -609,9 +622,25 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
         MPL_free(ep);
 
-        MPIR_Assert((char *) current_addr <= (char *) start_addr + segment_len);
+        MPIR_Assert((char *) current_addr <= (char *) start_addr + default_segment_len);
     }
-    while (!ALLOCQ_EMPTY());
+
+    /* discard padding region */
+    current_addr = (char *) current_addr + padding;
+    start_addr = current_addr;
+
+    while (!GENERIC_Q_EMPTY(allocq_sibling)) {
+        alloc_elem_t *ep;
+        GENERIC_Q_DEQUEUE(&allocq_sibling, &ep, next);
+        *(ep->ptr_p) = current_addr;
+        MPIR_Assert(size_left >= ep->len);
+        size_left -= ep->len;
+        current_addr = (char *) current_addr + ep->len;
+
+        MPL_free(ep);
+
+        MPIR_Assert((char *) current_addr <= (char *) start_addr + sibling_segment_len);
+    }
 
     mpi_errno = check_alloc(memory, *barrier, num_local, local_rank);
     if (mpi_errno)
@@ -619,8 +648,9 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-    /* reset segment_len to zero */
-    segment_len = 0;
+    /* reset default_segment_len and sibling_segment_len to zero */
+    default_segment_len = 0;
+    sibling_segment_len = 0;
 
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
