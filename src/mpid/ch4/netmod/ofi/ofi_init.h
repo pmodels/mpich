@@ -1665,8 +1665,9 @@ static inline struct fi_info *MPIDI_OFI_pick_provider(struct fi_info *hints, con
                             (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
             prov = prov_use->next;
             continue;
-        } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED) &&
-                   (!(prov_use->caps & FI_DIRECTED_RECV) ||
+        } else if (MPIDI_OFI_ENABLE_TAGGED &&
+                   (!(prov_use->caps & FI_TAGGED) ||
+                    !(prov_use->caps & FI_DIRECTED_RECV) ||
                     prov_use->domain_attr->cq_data_size < 4)) {
             /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
              * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
@@ -1691,19 +1692,23 @@ static inline struct fi_info *MPIDI_OFI_pick_provider(struct fi_info *hints, con
                             (MPL_DBG_FDEST, "Provider doesn't support RMA"));
             prov = prov_use->next;
             continue;
-        } else if (MPIDI_OFI_ENABLE_ATOMICS && !(prov_use->caps & FI_ATOMICS)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support atomics"));
-            prov = prov_use->next;
-            continue;
+        } else if (MPIDI_OFI_ENABLE_ATOMICS) {
+            uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+            if (!(prov_use->caps & FI_ATOMICS) ||
+                (prov_use->tx_attr->msg_order & msg_order) != msg_order) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "Provider doesn't support atomics"));
+                prov = prov_use->next;
+                continue;
+            }
         } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
-                   !(hints->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
+                   !(prov_use->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
             prov = prov_use->next;
             continue;
         } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                   !(hints->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
+                   !(prov_use->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
             prov = prov_use->next;
