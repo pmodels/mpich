@@ -511,13 +511,25 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         prov_use = MPIDI_OFI_pick_provider(hints, (char *) provname, prov);
 
         if (NULL == prov_use) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "1st trial of pick_provider() returned NULL\n"));
             MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
             prov_use = MPIDI_OFI_pick_provider(hints, MPIDI_OFI_SET_NAME_DEFAULT, prov);
 
             if (NULL == prov_use) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "2nd trial of pick_provider() returned NULL\n"));
                 MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
                 prov_use = MPIDI_OFI_pick_provider(hints, MPIDI_OFI_SET_NAME_MINIMAL, prov);
+            } else {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "2nd trial of pick_provider() returned %s\n",
+                                 prov_use->fabric_attr->prov_name));
             }
+        } else {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "1st trial of pick_provider() returned %s\n",
+                             prov_use->fabric_attr->prov_name));
         }
 
         /* If we did not find a provider, return an error */
