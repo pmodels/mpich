@@ -373,6 +373,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
+                                                                     void *recvbuf, int count,
+                                                                     MPI_Datatype datatype,
+                                                                     MPI_Op op,
+                                                                     MPIR_Comm * comm,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
+                                                                     ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                allred_container);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, int count,
                                                                      MPI_Datatype datatype,
