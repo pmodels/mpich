@@ -64,6 +64,7 @@ typedef union {
 typedef enum {
     MPIDI_Allreduce_intra_composition_alpha_id,
     MPIDI_Allreduce_intra_composition_beta_id,
+    MPIDI_Allreduce_intra_composition_gamma_id,
     MPIDI_Allreduce_inter_composition_alpha_id,
 } MPIDI_Allreduce_id_t;
 
@@ -76,6 +77,9 @@ typedef union {
     struct MPIDI_Allreduce_beta {
         int allreduce;
     } ch4_allreduce_beta;
+    struct MPIDI_Allreduce_gamma {
+        int allreduce;
+    } ch4_allreduce_gamma;
 } MPIDI_Allreduce_params_t;
 
 typedef enum {
