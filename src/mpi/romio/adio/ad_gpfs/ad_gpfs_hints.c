@@ -60,7 +60,7 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
    ROMIO understands, override the default. */
 
     MPI_Info info;
-    char *value;
+    char *value = NULL;
     int flag, intval, nprocs = 0, nprocs_is_valid = 0;
     static char myname[] = "ADIOI_GPFS_SETINFO";
 
@@ -73,9 +73,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* Note that fd->hints is allocated at file open time; thus it is
      * not necessary to allocate it, or check for allocation, here.
      */
-
-    value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
-    ADIOI_Assert((value != NULL));
 
     /* initialize info and hints to default values if they haven't been
      * previously initialized
@@ -101,6 +98,11 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         if (fd->hints->cb_config_list != NULL)
             ADIOI_Free(fd->hints->cb_config_list);
         fd->hints->cb_config_list = NULL;
+
+        if (value == NULL) {
+            value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
+            ADIOI_Assert((value != NULL));
+        }
 
         /* number of processes that perform I/O in collective I/O */
         MPI_Comm_size(fd->comm, &nprocs);
@@ -208,6 +210,11 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_check_and_install_int(fd, users_info, "ind_rd_buffer_size",
                                          &(fd->hints->ind_rd_buffer_size), myname, error_code);
 
+        if (value == NULL) {
+            value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
+            ADIOI_Assert((value != NULL));
+        }
+
         memset(value, 0, MPI_MAX_INFO_VAL + 1);
         ADIOI_Info_get(users_info, "romio_min_fdomain_size", MPI_MAX_INFO_VAL, value, &flag);
         if (flag && ((intval = atoi(value)) > 0)) {
@@ -262,6 +269,11 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      * bglockless, we need to keep DS writes enabled on gpfs and disabled on
      * PVFS */
     if (ADIO_Feature(fd, ADIO_DATA_SIEVING_WRITES) == 0) {
+        if (value == NULL) {
+            value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
+            ADIOI_Assert((value != NULL));
+        }
+
         /* disable data sieving for fs that do not
          * support file locking */
         ADIOI_Info_get(info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, value, &flag);
@@ -276,7 +288,8 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->ds_write = ADIOI_HINT_DISABLE;
     }
 
-    ADIOI_Free(value);
+    if (value != NULL)
+        ADIOI_Free(value);
 
     *error_code = MPI_SUCCESS;
 }
