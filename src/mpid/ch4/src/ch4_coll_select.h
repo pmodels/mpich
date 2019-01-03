@@ -85,7 +85,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return &MPIDI_Allreduce_inter_composition_alpha_cnt;
     }
-
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     if (comm->node_comm != NULL && MPIR_Comm_size(comm) == MPIR_Comm_size(comm->node_comm)) {
         /* All the ranks in comm are on the same node */
         if (!((count * type_size) > MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
@@ -96,6 +96,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
             return &MPIDI_Allreduce_intra_composition_gamma_cnt;
         }
     }
+#endif
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
         nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;

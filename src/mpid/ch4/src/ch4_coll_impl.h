@@ -387,9 +387,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
     int mpi_errno = MPI_SUCCESS;
     const void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                 allred_container);
+#else
+    mpi_errno =
+        MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                               allred_container);
+#endif
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
