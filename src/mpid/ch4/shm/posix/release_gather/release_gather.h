@@ -86,10 +86,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
      * overwritten */
     const int relaxation =
         (operation ==
-         MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ? 0 : MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS - 1;
+         MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ? MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS - 1 : 0;
 
     rank = MPIR_Comm_rank(comm_ptr);
     release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr)->release_gather;
+    release_gather_info_ptr->release_state++;
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
         segment = release_gather_info_ptr->release_state % MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS;
@@ -133,7 +134,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         }
     }
 
-    release_gather_info_ptr->release_state++;
+    if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
+        /* For allreduce, ranks directly copy the data from the reduce buffer of rank 0 */
+        segment = release_gather_info_ptr->release_state % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
+        bcast_data_addr = MPIDI_POSIX_RELEASE_GATHER_REDUCE_DATA_ADDR(0, segment);
+    }
 
     if (rank == 0) {
         /* Rank 0 updates its flag when it arrives and data is ready in shm buffer (if bcast) */
@@ -142,14 +147,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         zm_atomic_store((release_gather_info_ptr->release_flag_addr),
                         release_gather_info_ptr->release_state, zm_memord_release);
     } else {
-        if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
-            parent_flag_addr =
-                MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(release_gather_info_ptr->
-                                                             bcast_tree.parent);
-        } else {
+        if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
             parent_flag_addr =
                 MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(release_gather_info_ptr->
                                                              reduce_tree.parent);
+        } else {
+            parent_flag_addr =
+                MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(release_gather_info_ptr->
+                                                             bcast_tree.parent);
         }
 
         /* Wait until the parent has updated its flag */
@@ -163,18 +168,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                         release_gather_info_ptr->release_state, zm_memord_release);
     }
 
-    if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
-        /* Non-root ranks copy data from shm buffer to user buffer */
-        if (rank != root) {
-            MPIR_ERR_CHKANDJUMP(!bcast_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-            mpi_errno = MPIR_Localcopy(bcast_data_addr, count, datatype,
-                                       local_buf, count, datatype);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+    if (((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) && (rank != root)) ||
+        (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE)) {
+        /* For bcast only non-root ranks copy data from shm buffer to user buffer and in case of
+         * allreduce all ranks copy data from shm buffer to their user buffer */
+        MPIR_ERR_CHKANDJUMP(!bcast_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        mpi_errno = MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
 
@@ -213,21 +217,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
      * overwritten */
     const int relaxation =
         (operation ==
-         MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ? 0 : MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS - 1;
+         MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ? MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS - 1 : 0;
     zm_atomic_uint_t min_gather;
     UT_array *children;
 
     release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr)->release_gather;
-    segment = release_gather_info_ptr->gather_state % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
     children = release_gather_info_ptr->bcast_tree.children;
     num_children = release_gather_info_ptr->bcast_tree.num_children;
     rank = MPIR_Comm_rank(comm_ptr);
 
     release_gather_info_ptr->gather_state++;
     min_gather = release_gather_info_ptr->gather_state;
+    segment = release_gather_info_ptr->gather_state % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
 
-    if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
-        if (rank == 0) {
+    if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
+        operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
+        if (rank == 0 && operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
             /* Rank 0 reduces the data directly in its outbuf. Copy the data from inbuf to outbuf
              * if needed */
             if (inbuf != outbuf) {
@@ -252,7 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
     /* Avoid checking for availabilty of next buffer if it is guaranteed to be available */
     /* zm_memord_acquire makes sure no writes/reads are reordered before this load */
-    if ((operation != MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) &&
+    if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) &&
         (zm_atomic_load(release_gather_info_ptr->gather_flag_addr, zm_memord_acquire)) >=
         (release_gather_info_ptr->gather_state - relaxation)) {
         skip_checking = true;
@@ -269,7 +274,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                             release_gather_info_ptr->gather_state -
                                                             relaxation);
 
-            if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
+            if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
+                operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
                 child_data_addr =
                     (char *) release_gather_info_ptr->child_reduce_buf_addr[i] +
                     segment * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE;
