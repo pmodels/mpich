@@ -94,6 +94,12 @@ int collective_cvars_init(void)
     else
         MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_auto_id;
 
+    /* Allreduce */
+    if (0 == strcmp(MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM, "release_gather"))
+        MPIDI_POSIX_Allreduce_algo_choice = MPIDI_POSIX_Allreduce_intra_release_gather_id;
+    else
+        MPIDI_POSIX_Allreduce_algo_choice = MPIDI_POSIX_Allreduce_intra_auto_id;
+
   fn_exit:
     return mpi_errno;
   fn_fail:
