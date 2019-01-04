@@ -612,16 +612,19 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_64;
         MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_64;
         MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_64;
+        MPIDI_Global.rma_context_bits = MPIDI_OFI_MAX_CONTEXT_BITS_64;
     } else if (MPIDI_Global.max_mr_key_size >= 4) {
         MPIDI_Global.max_rma_key_bits = MPIDI_OFI_MAX_KEY_BITS_32;
         MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_32;
         MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_32;
         MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_32;
+        MPIDI_Global.rma_context_bits = MPIDI_OFI_MAX_CONTEXT_BITS_32;
     } else if (MPIDI_Global.max_mr_key_size >= 2) {
         MPIDI_Global.max_rma_key_bits = MPIDI_OFI_MAX_KEY_BITS_16;
         MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_16;
         MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_16;
         MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_16;
+        MPIDI_Global.rma_context_bits = MPIDI_OFI_MAX_CONTEXT_BITS_16;
     } else {
         MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
                                   MPI_ERR_OTHER,

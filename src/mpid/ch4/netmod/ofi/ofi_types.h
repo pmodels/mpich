@@ -367,6 +367,7 @@ typedef struct {
     uint64_t max_rma_key_bits;
     uint64_t max_huge_rmas;
     int rma_key_type_bits;
+    int rma_context_bits;
     int context_shift;
     size_t tx_iov_limit;
     size_t rx_iov_limit;
