@@ -559,17 +559,20 @@ AC_ARG_ENABLE(multi-aliases,
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
-AC_ARG_ENABLE([wrapper-rpath],
-              [AC_HELP_STRING([--enable-wrapper-rpath],
-                              [Determine whether the rpath is set when programs
-                               are linked by mpicc compiler wrappers.  This only
-                               applies when shared libraries are built.  The
-                               default is yes; use --disable-wrapper-rpath to
-                               turn this feature off.  In that case, shared
-                               libraries will be found according to the rules
-                               for your system (e.g., in LD_LIBRARY_PATH)])],
-              [],[enable_wrapper_rpath=yes])
-AC_SUBST([enable_wrapper_rpath])
+AC_ARG_WITH([wrapper-dl-type],
+            [AC_HELP_STRING([--enable-wrapper-dl-type],
+                            [Dynamic loading model for alternate MPI
+                             libraries, used when programs are linked
+                             by mpicc compiler wrappers.  This only
+                             applies when shared libraries are built.
+                             The default is "runpath"; use
+                             --with-wrapper-dl-type=rpath to force
+                             rpath; use --with-wrapper-dl-type=none to
+                             find shared libraries according to the
+                             rules for your system (e.g., in
+                             LD_LIBRARY_PATH)])],
+              [],[with_wrapper_dl_type=runpath])
+AC_SUBST([with_wrapper_dl_type])
 
 AC_ARG_ENABLE([long-double],
               [AC_HELP_STRING([--disable-long-double],
@@ -643,10 +646,11 @@ LT_INIT()
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# Disable rpath in the compiler wrappers if shared libraries are disabled, since
-# rpath makes no sense in the context of static libraries.
+# Disable rpath/runpath-related linkflags in the compiler wrappers if
+# shared libraries are disabled, since rpath/runpath makes no sense in
+# the context of static libraries.
 if test "X$enable_shared" = "Xno" ; then
-    enable_wrapper_rpath=no
+    with_wrapper_dl_type=no
 fi
 
 INTERLIB_DEPS=yes
@@ -2051,18 +2055,26 @@ if test -n "$MPI_DEFAULT_COPTS" ; then
 fi
 
 # ---------------------------------------------------------------------------
-# determine rpath and other shared library flags for CC
+# determine shared library flags for CC
 # src/env may not exist yet in a vpath build
 $MKDIR_P src/env
 cc_shlib_conf=src/env/cc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
-# output rpath flags in a usable format for mpich.pc (pkg-config)
-if test "X$enable_wrapper_rpath" = "Xyes"; then
-    eval WRAPPER_RPATH_LDFLAGS=\"$hardcode_libdir_flag_spec\"
+$cc_shlib_conf
+
+# Attempt to construct dynamic loading info, based on the user
+# preference of rpath, runpath or none and on the detected libdir
+# flags.
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+   eval WRAPPER_C_DYNAMIC_LOADING_FLAGS=\"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+   eval WRAPPER_C_DYNAMIC_LOADING_FLAGS=\"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"
+else
+   WRAPPER_C_DYNAMIC_LOADING_FLAGS=""
 fi
-AC_SUBST(WRAPPER_RPATH_LDFLAGS)
+AC_SUBST(WRAPPER_C_DYNAMIC_LOADING_FLAGS)
 
 # ---------------------------------------------------------------------------
 # Support for MPI_T performance variables
@@ -2357,7 +2369,7 @@ fi
 # Now test for Fortran compiler characteristics
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = "yes" ; then
-    # determine rpath and other shared library flags for F77
+    # determine shared library flags for F77
     f77_shlib_conf=src/env/f77_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
     AC_SUBST_FILE([f77_shlib_conf])
@@ -2486,7 +2498,7 @@ MPI_C_INTERFACE_TYPES_NAME=mpi_c_interface_types
 MPI_C_INTERFACE_CDESC_NAME=mpi_c_interface_cdesc
 
 if test "$enable_fc" = "yes" ; then
-    # determine rpath and other shared library flags for FC
+    # determine shared library flags for FC
     fc_shlib_conf=src/env/fc_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
     AC_SUBST_FILE([fc_shlib_conf])
@@ -2771,7 +2783,7 @@ int main() {
     AC_SUBST(MPIR_CXX_DOUBLE_COMPLEX)
     AC_SUBST(MPIR_CXX_LONG_DOUBLE_COMPLEX)
 
-    # determine rpath and other shared library flags for CXX
+    # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])

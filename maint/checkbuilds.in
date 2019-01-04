@@ -69,7 +69,6 @@ $hasDemon   = 0;
                   'refcount;lock;lock-free;none',
                   'mutex-timing',
                   'multi-aliases',
-                  'wrapper-rpath',
                   'predefined-refcount',
                   'alloca',
                   'yield;sched_yield;yield;select;usleep;sleep',
@@ -83,6 +82,7 @@ $hasDemon   = 0;
 	       'pm;gforker', #;remshell
 	       'namepublisher;no;file', #;ldap:ldapserver',
 	       'device;ch3;ch3:sock',
+	       'wrapper-dl-type;runpath;rpath;none',
 );
 %chosenWith = ();
 @env_array = (
