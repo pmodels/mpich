@@ -232,8 +232,15 @@ typedef struct {
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
-#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+/* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
+ * the operations are enqueued with trylock/handoff models. */
+#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req && ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS))
+#else
+#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
+#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
