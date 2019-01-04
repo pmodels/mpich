@@ -95,8 +95,8 @@ typedef struct MPIDIG_rreq_t {
 
     uint64_t ignore;
     uint64_t peer_req_ptr;
-    uint64_t match_req;
-    uint64_t request;
+    MPIR_Request *match_req;
+    MPIR_Request *request;
 
     struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;

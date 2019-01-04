@@ -120,7 +120,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
 
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
-        match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        match_req = MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (unlikely(match_req && MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req))) {
