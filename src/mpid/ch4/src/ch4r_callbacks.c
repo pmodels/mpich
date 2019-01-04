@@ -361,6 +361,19 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+    if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_LONG_RTS) &&
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
+        /* This block is executed only when the receive is enqueued (trylock/handoff) &&
+         * receive was matched with an unexpected long RTS message.
+         * `rreq` is the unexpected message received and `sigreq` is the message
+         * that came from CH4 (e.g. MPIDI_recv_safe) */
+        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        sigreq->status = rreq->status;
+        MPIR_Request_add_ref(sigreq);
+        MPID_Request_complete(sigreq);
+        /* Free the unexpected request on behalf of the user */
+        MPIR_Request_free(rreq);
+    }
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDIG_progress_compl_list();
@@ -596,6 +609,9 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+        /* Mark `match_req` as NULL so that we know nothing else to complete when
+         * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_REQUEST(rreq, is_local))
