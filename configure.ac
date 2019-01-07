@@ -1132,7 +1132,7 @@ AC_ARG_ENABLE([izem],
                           atomic   - use the Izem interface for CPU atomics
                           yes/all  - all of the above features are enabled
                           no/none  - none of the above features are enabled],,
-[enable_izem=no])
+[enable_izem=atomic])
 
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
@@ -1187,7 +1187,7 @@ AC_ARG_WITH([zm-prefix],
                           system       - search system paths for an Izem installation
                           no           - disable Izem
                           <PATH>       - use the Izem at PATH],,
-[with_zm_prefix=no])
+[with_zm_prefix=yes])
 
 zmsrcdir=""
 AC_SUBST([zmsrcdir])
