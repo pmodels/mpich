@@ -76,14 +76,11 @@ enum MPIDI_workq_op { SEND, ISEND, SSEND, ISSEND, RSEND, IRSEND, RECV, IRECV, IM
     IMPROBE, PUT, GET, ACC, CAS, FAO, GACC
 };
 
-typedef struct MPIDI_workq_elemt MPIDI_workq_elemt_t;
-typedef struct MPIDI_workq_list MPIDI_workq_list_t;
-
-typedef struct MPIDI_av_entry MPIDI_av_entry_t;
+struct MPIDI_av_entry;
 
 /* Structure to encapsulate MPI operations that are delegated to another thread
  * Can be allocated from an MPI object pool or embedded in another object (e.g. request) */
-struct MPIDI_workq_elemt {
+typedef struct MPIDI_workq_elemt {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIDI_workq_op_t op;
     OPA_int_t *processed;       /* set to true by the progress thread when
@@ -98,7 +95,7 @@ struct MPIDI_workq_elemt {
                 int tag;
                 MPIR_Comm *comm_ptr;
                 int context_offset;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
                 MPIR_Request *request;
             } send;             /* also for ISEND SSEND ISSEND RSEND IRSEND */
             struct MPIDI_workq_recv {
@@ -109,7 +106,7 @@ struct MPIDI_workq_elemt {
                 int tag;
                 MPIR_Comm *comm_ptr;
                 int context_offset;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
                 MPI_Status *status;
                 MPIR_Request *request;
             } recv;
@@ -121,7 +118,7 @@ struct MPIDI_workq_elemt {
                 int tag;
                 MPIR_Comm *comm_ptr;
                 int context_offset;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
                 MPIR_Request *request;
             } irecv;
             struct MPIDI_workq_iprobe {
@@ -131,7 +128,7 @@ struct MPIDI_workq_elemt {
                 int tag;
                 MPIR_Comm *comm_ptr;
                 int context_offset;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
                 MPI_Status *status;
                 MPIR_Request *request;
                 int *flag;
@@ -143,7 +140,7 @@ struct MPIDI_workq_elemt {
                 int tag;
                 MPIR_Comm *comm_ptr;
                 int context_offset;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
                 MPI_Status *status;
                 MPIR_Request *request;
                 int *flag;
@@ -167,7 +164,7 @@ struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
             } put;
             struct MPIDI_workq_get {
                 void *origin_addr;
@@ -178,16 +175,16 @@ struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                MPIDI_av_entry_t *addr;
+                struct MPIDI_av_entry *addr;
             } get;
         } rma;
     } params;
-};
+} MPIDI_workq_elemt_t;
 
 /* List structure to implement per-object (e.g. per-communicator, per-window) work queues */
 struct MPIDI_workq_list {
     MPIDI_workq_t pend_ops;
-    MPIDI_workq_list_t *next, *prev;
+    struct MPIDI_workq_list *next, *prev;
 };
 
 #endif /* CH4I_WORKQ_TYPES_H_INCLUDED */
