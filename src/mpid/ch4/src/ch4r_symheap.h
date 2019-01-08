@@ -391,12 +391,13 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
                                              MPIR_Comm * comm, MPIR_Win * win, int *fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
     unsigned any_mapfail_flag = 1;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
 
 #ifdef USE_SYM_HEAP
+    int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
     MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDI_CH4U_WIN(win, shm_segment_handle);
     void **base_ptr = &MPIDI_CH4U_WIN(win, mmap_addr);
 
