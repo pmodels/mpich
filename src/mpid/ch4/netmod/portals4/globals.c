@@ -11,4 +11,6 @@
 #include "ptl_impl.h"
 #include "ptl_types.h"
 
-MPIDI_PTL_global_t MPIDI_PTL_global = { 0 };
+/* *INDENT-OFF* */
+MPIDI_PTL_global_t MPIDI_PTL_global = { {0} };
+/* *INDENT-ON* */
