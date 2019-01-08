@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_close as PMPI_File_close
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_close(MPI_File * fh) __attribute__ ((weak, alias("PMPI_File_close")));
+int MPI_File_close(MPI_File * fh) __attribute__((weak, alias("PMPI_File_close")));
 #endif
 
 /* Include mapping from MPI->PMPI */

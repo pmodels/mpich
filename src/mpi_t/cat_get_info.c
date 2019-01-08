@@ -16,7 +16,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len,
                             int *num_cvars, int *num_pvars, int *num_categories)
-    __attribute__ ((weak, alias("PMPI_T_category_get_info")));
+    __attribute__((weak, alias("PMPI_T_category_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 

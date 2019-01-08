@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Unpack as PMPI_Unpack
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int outcount,
-               MPI_Datatype datatype, MPI_Comm comm) __attribute__ ((weak, alias("PMPI_Unpack")));
+               MPI_Datatype datatype, MPI_Comm comm) __attribute__((weak, alias("PMPI_Unpack")));
 #endif
 /* -- End Profiling Symbol Block */
 

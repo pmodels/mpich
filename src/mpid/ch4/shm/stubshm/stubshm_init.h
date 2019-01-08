@@ -104,7 +104,7 @@ static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+static inline int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t **local_upid_size,
                                                 char **local_upids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_LOCAL_UPIDS);
@@ -117,7 +117,7 @@ static inline int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** loca
 }
 
 static inline int MPIDI_STUBSHM_upids_to_lupids(int size,
-                                                size_t * remote_upid_size,
+                                                size_t *remote_upid_size,
                                                 char *remote_upids, int **remote_lupids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_UPIDS_TO_LUPIDS);

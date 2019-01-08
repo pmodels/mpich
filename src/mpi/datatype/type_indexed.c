@@ -18,7 +18,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_indexed(int count, const int *array_of_blocklengths,
                      const int *array_of_displacements, MPI_Datatype oldtype,
-                     MPI_Datatype * newtype) __attribute__ ((weak, alias("PMPI_Type_indexed")));
+                     MPI_Datatype * newtype) __attribute__((weak, alias("PMPI_Type_indexed")));
 #endif
 /* -- End Profiling Symbol Block */
 

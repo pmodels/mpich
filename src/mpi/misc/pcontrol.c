@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Pcontrol as PMPI_Pcontrol
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Pcontrol(const int level, ...) __attribute__ ((weak, alias("PMPI_Pcontrol")));
+int MPI_Pcontrol(const int level, ...) __attribute__((weak, alias("PMPI_Pcontrol")));
 #endif
 /* -- End Profiling Symbol Block */
 

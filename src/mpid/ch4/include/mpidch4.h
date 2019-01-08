@@ -57,7 +57,7 @@ MPIDI_CH4I_API(int, Progress_poke, void);
 MPIDI_CH4I_API(void, Progress_start, MPID_Progress_state *);
 MPIDI_CH4I_API(void, Progress_end, MPID_Progress_state *);
 MPIDI_CH4I_API(int, Progress_wait, MPID_Progress_state *);
-MPIDI_CH4I_API(int, Progress_register, int (*progress_fn) (int *), int *id);
+MPIDI_CH4I_API(int, Progress_register, int (*progress_fn)(int *), int *id);
 MPIDI_CH4I_API(int, Progress_deregister, int id);
 MPIDI_CH4I_API(int, Progress_activate, int id);
 MPIDI_CH4I_API(int, Progress_deactivate, int id);

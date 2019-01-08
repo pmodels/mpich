@@ -18,7 +18,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader, MPI_Comm peer_comm,
                          int remote_leader, int tag, MPI_Comm * newintercomm)
-    __attribute__ ((weak, alias("PMPI_Intercomm_create")));
+    __attribute__((weak, alias("PMPI_Intercomm_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

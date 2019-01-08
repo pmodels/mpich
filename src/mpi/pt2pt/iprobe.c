@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Iprobe as PMPI_Iprobe
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_Iprobe")));
+    __attribute__((weak, alias("PMPI_Iprobe")));
 #endif
 /* -- End Profiling Symbol Block */
 

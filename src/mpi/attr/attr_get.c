@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Attr_get as PMPI_Attr_get
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
-    __attribute__ ((weak, alias("PMPI_Attr_get")));
+    __attribute__((weak, alias("PMPI_Attr_get")));
 #endif
 /* -- End Profiling Symbol Block */
 

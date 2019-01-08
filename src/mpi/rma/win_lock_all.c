@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_lock_all as PMPI_Win_lock_all
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_lock_all(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_lock_all")));
+int MPI_Win_lock_all(int assert, MPI_Win win) __attribute__((weak, alias("PMPI_Win_lock_all")));
 #endif
 /* -- End Profiling Symbol Block */
 

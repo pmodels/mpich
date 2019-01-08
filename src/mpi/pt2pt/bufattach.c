@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Buffer_attach as PMPI_Buffer_attach
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Buffer_attach(void *buffer, int size) __attribute__ ((weak, alias("PMPI_Buffer_attach")));
+int MPI_Buffer_attach(void *buffer, int size) __attribute__((weak, alias("PMPI_Buffer_attach")));
 #endif
 /* -- End Profiling Symbol Block */
 

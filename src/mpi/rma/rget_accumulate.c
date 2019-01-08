@@ -20,7 +20,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
                         MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Rget_accumulate")));
+    __attribute__((weak, alias("PMPI_Rget_accumulate")));
 #endif
 /* -- End Profiling Symbol Block */
 

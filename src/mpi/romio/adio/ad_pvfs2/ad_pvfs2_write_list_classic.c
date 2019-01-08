@@ -268,7 +268,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
                 }
             }
         }       /* while (!flag) */
-    } /* if (file_ptr_type == ADIO_INDIVIDUAL) */
+    }   /* if (file_ptr_type == ADIO_INDIVIDUAL) */
     else {
         n_etypes_in_filetype = filetype_size / etype_size;
         n_filetypes = (int) (offset / n_etypes_in_filetype);

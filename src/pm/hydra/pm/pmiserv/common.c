@@ -120,7 +120,7 @@ char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, c
     return NULL;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
     char hostname[MAX_HOSTNAME_LEN];

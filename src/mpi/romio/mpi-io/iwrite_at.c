@@ -19,7 +19,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                        MPI_Datatype datatype, MPIO_Request * request)
-    __attribute__ ((weak, alias("PMPI_File_iwrite_at")));
+    __attribute__((weak, alias("PMPI_File_iwrite_at")));
 #endif
 
 /* Include mapping from MPI->PMPI */

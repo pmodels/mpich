@@ -138,8 +138,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 0, GPFSMPIO_CIO_T_MPIO_CRW, GPFSMPIO_CIO_LAST)
         GPFSMPIO_T_CIO_SET_GET(w, 1, 0, GPFSMPIO_CIO_T_LCOMP, GPFSMPIO_CIO_LAST)
-
-
         /* only check for interleaving if cb_write isn't disabled */
         if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
         /* For this process's request, calculate the list of offsets and
@@ -153,7 +151,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                               &end_offset, &contig_access_count);
 
         GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_GATHER, GPFSMPIO_CIO_T_LCOMP)
-
             /* each process communicates its start and end offsets to other
              * processes. The result is an array each of start and end offsets stored
              * in order of process rank. */
@@ -220,7 +217,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         }
 
         GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER)
-
             /* are the accesses of different processes interleaved? */
             for (i = 1; i < nprocs; i++)
             if ((st_offsets[i] < end_offsets[i - 1]) && (st_offsets[i] <= end_offsets[i]))
@@ -259,7 +255,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     }
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_FD_PART, GPFSMPIO_CIO_T_PATANA)
-
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
    process may directly access only its own file domain. */
@@ -396,7 +391,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                                             error_code, st_offsets, end_offsets, fd_start, fd_end);
             /* NOTE: we are skipping the rest of two-phase in this path */
             GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs)
-
                 ADIOI_Free(offset_list);
             ADIOI_Free(len_list);
             ADIOI_Free(st_offsets);
@@ -422,7 +416,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                           nprocs, &count_my_req_procs, &count_my_req_per_proc, &my_req, &buf_idx);
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ)
-
 /* based on everyone's my_req, calculate what requests of other
    processes lie in this process's file domain.
    count_others_req_procs = number of processes whose requests lie in
@@ -439,7 +432,6 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                               nprocs, myrank, &count_others_req_procs, &others_req);
 
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ)
-
         ADIOI_Free(count_my_req_per_proc);
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
@@ -456,9 +448,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET(w, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_DEXCH)
         GPFSMPIO_T_CIO_SET_GET(w, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_MPIO_CRW)
-
         GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs)
-
 /* free all memory allocated for collective I/O */
         for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {

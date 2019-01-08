@@ -18,7 +18,7 @@
 int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[], const int degrees[],
                           const int destinations[], const int weights[], MPI_Info info,
                           int reorder, MPI_Comm * comm_dist_graph)
-    __attribute__ ((weak, alias("PMPI_Dist_graph_create")));
+    __attribute__((weak, alias("PMPI_Dist_graph_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

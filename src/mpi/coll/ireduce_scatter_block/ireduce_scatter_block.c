@@ -76,7 +76,7 @@ cvars:
 int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm,
                               MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ireduce_scatter_block")));
+    __attribute__((weak, alias("PMPI_Ireduce_scatter_block")));
 #endif
 /* -- End Profiling Symbol Block */
 

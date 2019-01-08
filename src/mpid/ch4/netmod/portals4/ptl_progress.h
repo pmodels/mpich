@@ -155,7 +155,7 @@ static inline int MPIDI_NM_progress_wait(MPID_Progress_state * state)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_register(int (*progress_fn) (int *), int *id)
+static inline int MPIDI_NM_progress_register(int (*progress_fn)(int *), int *id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

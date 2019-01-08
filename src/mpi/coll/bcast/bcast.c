@@ -145,7 +145,7 @@ cvars:
 #pragma _CRI duplicate MPI_Bcast as PMPI_Bcast
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
-    __attribute__ ((weak, alias("PMPI_Bcast")));
+    __attribute__((weak, alias("PMPI_Bcast")));
 #endif
 /* -- End Profiling Symbol Block */
 

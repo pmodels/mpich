@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Graphdims_get as PMPI_Graphdims_get
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
-    __attribute__ ((weak, alias("PMPI_Graphdims_get")));
+    __attribute__((weak, alias("PMPI_Graphdims_get")));
 #endif
 /* -- End Profiling Symbol Block */
 

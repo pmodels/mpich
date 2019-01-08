@@ -90,7 +90,8 @@ static int test_barriers_sanity(void)
     struct {
         int i;
     } obj = {
-    0xabcdef};
+        0xabcdef
+    };
 
     TESTING("memory barrier sanity", 0);
 

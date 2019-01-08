@@ -17,7 +17,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Info_dup as PMPI_Info_dup
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo) __attribute__ ((weak, alias("PMPI_Info_dup")));
+int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo) __attribute__((weak, alias("PMPI_Info_dup")));
 #endif
 /* -- End Profiling Symbol Block */
 

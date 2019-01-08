@@ -71,7 +71,8 @@ static struct BsendBuffer {
     MPII_Bsend_data_t *active;  /* Pointer to the first active (sending)
                                  * message */
 } BsendBuffer = {
-0, 0, 0, 0, 0, 0, 0};
+    0, 0, 0, 0, 0, 0, 0
+};
 
 static int initialized = 0;     /* keep track of the first call to any
                                  * bsend routine */
@@ -191,7 +192,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
         }
     }
 
-/* Note that this works even when the buffer does not exist */
+    /* Note that this works even when the buffer does not exist */
     *(void **) bufferp = BsendBuffer.origbuffer;
     /* This cast to int will work because the user must use an int to describe
      * the buffer size */

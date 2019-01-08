@@ -113,7 +113,7 @@ struct ADIOI_Iexch_and_write_vars {
     int coll_bufsize;
 
     /* next function to be called */
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 };
 
 /* ADIOI_W_Iexchange_data */
@@ -167,7 +167,7 @@ struct ADIOI_W_Iexchange_data_vars {
     ADIO_Offset *srt_off;
 
     /* next function to be called */
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 };
 
 
@@ -988,7 +988,7 @@ static void ADIOI_Iexch_and_write_l2_end(ADIOI_NBC_Request * nbc_req, int *error
 static void ADIOI_Iexch_and_write_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_Iexch_and_write_vars *vars = nbc_req->data.wr.eaw_vars;
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 
     ADIOI_Free(vars->curr_offlen_ptr);
     ADIOI_Free(vars->count);
@@ -1277,7 +1277,7 @@ static void ADIOI_W_Iexchange_data_wait(ADIOI_NBC_Request * nbc_req, int *error_
 static void ADIOI_W_Iexchange_data_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_W_Iexchange_data_vars *vars = nbc_req->data.wr.wed_vars;
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
     ADIO_File fd = vars->fd;
     int *send_size = vars->send_size;
     int nprocs = vars->nprocs;

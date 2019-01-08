@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_delete(const char *filename, MPI_Info info)
-    __attribute__ ((weak, alias("PMPI_File_delete")));
+    __attribute__((weak, alias("PMPI_File_delete")));
 #endif
 
 /* Include mapping from MPI->PMPI */

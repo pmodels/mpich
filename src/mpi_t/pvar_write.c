@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_pvar_write as PMPI_T_pvar_write
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
-    __attribute__ ((weak, alias("PMPI_T_pvar_write")));
+    __attribute__((weak, alias("PMPI_T_pvar_write")));
 #endif
 /* -- End Profiling Symbol Block */
 

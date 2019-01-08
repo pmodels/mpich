@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_write_ordered_end(MPI_File fh, const void *buf, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_File_write_ordered_end")));
+    __attribute__((weak, alias("PMPI_File_write_ordered_end")));
 #endif
 
 /* Include mapping from MPI->PMPI */

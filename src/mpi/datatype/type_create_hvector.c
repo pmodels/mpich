@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
                             MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_hvector")));
+    __attribute__((weak, alias("PMPI_Type_create_hvector")));
 #endif
 /* -- End Profiling Symbol Block */
 

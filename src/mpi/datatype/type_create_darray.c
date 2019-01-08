@@ -19,7 +19,7 @@ int MPI_Type_create_darray(int size, int rank, int ndims, const int array_of_gsi
                            const int array_of_distribs[], const int array_of_dargs[],
                            const int array_of_psizes[], int order, MPI_Datatype oldtype,
                            MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_darray")));
+    __attribute__((weak, alias("PMPI_Type_create_darray")));
 #endif
 /* -- End Profiling Symbol Block */
 

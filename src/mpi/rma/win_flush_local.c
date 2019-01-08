@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Win_flush_local as PMPI_Win_flush_local
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_flush_local(int rank, MPI_Win win)
-    __attribute__ ((weak, alias("PMPI_Win_flush_local")));
+    __attribute__((weak, alias("PMPI_Win_flush_local")));
 #endif
 /* -- End Profiling Symbol Block */
 

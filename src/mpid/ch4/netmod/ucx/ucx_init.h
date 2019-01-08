@@ -253,7 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
 #define FUNCNAME MPIDI_NM_get_local_upids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t **local_upid_size,
                                                       char **local_upids)
 {
     MPIR_Assert(0);
@@ -265,7 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t *
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size,
-                                                      size_t * remote_upid_size,
+                                                      size_t *remote_upid_size,
                                                       char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);

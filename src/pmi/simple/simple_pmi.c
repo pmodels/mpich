@@ -179,8 +179,8 @@ int PMI_Init(int *spawned)
          * was set */
     }
 
-/* FIXME: Why does this depend on their being a port??? */
-/* FIXME: What is this for? */
+    /* FIXME: Why does this depend on their being a port??? */
+    /* FIXME: What is this for? */
 #ifdef USE_PMI_PORT
     if ((p = getenv("PMI_TOTALVIEW")))
         PMI_totalview = atoi(p);

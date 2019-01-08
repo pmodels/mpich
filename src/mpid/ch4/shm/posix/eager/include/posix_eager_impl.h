@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
-                                                    struct iovec **iov, size_t * iov_num)
+                                                    struct iovec **iov, size_t *iov_num)
 {
     return MPIDI_POSIX_eager_func->send(grank, msg_hdr, iov, iov_num);
 }

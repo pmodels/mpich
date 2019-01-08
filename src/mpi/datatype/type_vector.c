@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Type_vector as PMPI_Type_vector
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                    MPI_Datatype * newtype) __attribute__ ((weak, alias("PMPI_Type_vector")));
+                    MPI_Datatype * newtype) __attribute__((weak, alias("PMPI_Type_vector")));
 #endif
 /* -- End Profiling Symbol Block */
 

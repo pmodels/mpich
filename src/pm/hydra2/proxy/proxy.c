@@ -541,7 +541,6 @@ static int populate_ids_from_mapping(char *mapping, int sz, int *out_nodemap)
     if (status)
         HYD_ERR_POP(status, "error parsing node mapping");
     HYD_ASSERT(mt == VECTOR_MAPPING, status)
-
         /* allocate nodes to ranks */
         found_wrap = 0;
     for (rank = 0;;) {

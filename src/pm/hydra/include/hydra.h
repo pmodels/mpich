@@ -268,7 +268,7 @@ typedef unsigned short HYD_event_t;
 struct HYD_arg_match_table {
     const char *arg;
      HYD_status(*handler_fn) (char *arg, char ***argv_p);
-    void (*help_fn) (void);
+    void (*help_fn)(void);
 };
 
 
@@ -581,8 +581,8 @@ void HYDU_delay(unsigned long delay);
 extern char *strsignal(int);
 #endif
 
-HYD_status HYDU_set_signal(int signum, void (*handler) (int));
-HYD_status HYDU_set_common_signals(void (*handler) (int));
+HYD_status HYDU_set_signal(int signum, void (*handler)(int));
+HYD_status HYDU_set_common_signals(void (*handler)(int));
 
 /* Sock utilities */
 enum HYDU_sock_comm_flag {

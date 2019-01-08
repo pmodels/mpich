@@ -66,7 +66,7 @@ cvars:
 #define FUNCNAME MPIDI_CH4R_get_mapsize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
+static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t *psz)
 {
     size_t page_sz, mapsize;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
@@ -323,7 +323,7 @@ static inline void MPIDI_CH4I_ull_maxloc_op_func(void *invec, void *inoutvec,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm,
-                                              size_t * maxsz, int *maxsz_loc)
+                                              size_t *maxsz, int *maxsz_loc)
 {
     int mpi_errno = MPI_SUCCESS;
     int blocks[2] = { 1, 1 };

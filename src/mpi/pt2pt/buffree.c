@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Buffer_detach as PMPI_Buffer_detach
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Buffer_detach(void *buffer_addr, int *size)
-    __attribute__ ((weak, alias("PMPI_Buffer_detach")));
+    __attribute__((weak, alias("PMPI_Buffer_detach")));
 #endif
 /* -- End Profiling Symbol Block */
 

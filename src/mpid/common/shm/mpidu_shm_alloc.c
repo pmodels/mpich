@@ -41,7 +41,8 @@ typedef struct alloc_elem {
 static struct {
     alloc_elem_t *head, *tail;
 } allocq = {
-0};
+    0
+};
 
 static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
                        int num_local, int local_rank);

@@ -95,8 +95,8 @@ D*/
 
 @*/
     typedef struct PMI2_Connect_comm {
-        int (*read) (void *buf, int maxlen, void *ctx);
-        int (*write) (const void *buf, int len, void *ctx);
+        int (*read)(void *buf, int maxlen, void *ctx);
+        int (*write)(const void *buf, int len, void *ctx);
         void *ctx;
         int isMaster;
     } PMI2_Connect_comm_t;

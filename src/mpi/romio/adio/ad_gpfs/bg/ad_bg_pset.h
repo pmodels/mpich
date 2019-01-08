@@ -34,7 +34,7 @@ typedef struct {
     unsigned nodeRank;          /* torus coords converted to an integer for use with gpfsmpio_bridgeringagg */
     unsigned numNodesInPartition;       /* number of physical nodes in the job partition */
     unsigned manhattanDistanceToBridge; /* number of hops between this rank and the bridge node */
-} ADIOI_BG_ProcInfo_t __attribute__ ((aligned(16)));
+} ADIOI_BG_ProcInfo_t __attribute__((aligned(16)));
 
 /* Keeps general information for the whole communicator, only on process 0 */
 typedef struct {
@@ -48,7 +48,7 @@ typedef struct {
     int cpuIDsize;              /* num ppn */
     float aggRatio;
 
-} ADIOI_BG_ConfInfo_t __attribute__ ((aligned(16)));
+} ADIOI_BG_ConfInfo_t __attribute__((aligned(16)));
 
 
 

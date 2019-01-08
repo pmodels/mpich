@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Wtick as PMPI_Wtick
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
+double MPI_Wtick(void) __attribute__((weak, alias("PMPI_Wtick")));
 #endif
 /* -- End Profiling Symbol Block */
 

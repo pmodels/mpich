@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_category_get_num as PMPI_T_category_get_num
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_category_get_num(int *num_cat) __attribute__ ((weak, alias("PMPI_T_category_get_num")));
+int MPI_T_category_get_num(int *num_cat) __attribute__((weak, alias("PMPI_T_category_get_num")));
 #endif
 /* -- End Profiling Symbol Block */
 

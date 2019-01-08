@@ -23,7 +23,6 @@ static char THIS_FILE[] = __FILE__;
 // CRimshotDoc
 
 IMPLEMENT_DYNCREATE(CRimshotDoc, CDocument)
-
     BEGIN_MESSAGE_MAP(CRimshotDoc, CDocument)
     //{{AFX_MSG_MAP(CRimshotDoc)
     ON_COMMAND(ID_FILE_OPEN, OnFileOpen)

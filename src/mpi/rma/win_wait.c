@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_wait as PMPI_Win_wait
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_wait(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_wait")));
+int MPI_Win_wait(MPI_Win win) __attribute__((weak, alias("PMPI_Win_wait")));
 #endif
 /* -- End Profiling Symbol Block */
 

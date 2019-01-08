@@ -21,7 +21,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                  int array_of_indices[], MPI_Status array_of_statuses[])
-    __attribute__ ((weak, alias("PMPI_Testsome")));
+    __attribute__((weak, alias("PMPI_Testsome")));
 #endif
 /* -- End Profiling Symbol Block */
 

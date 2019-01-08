@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_finalize as PMPI_T_finalize
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_finalize(void) __attribute__ ((weak, alias("PMPI_T_finalize")));
+int MPI_T_finalize(void) __attribute__((weak, alias("PMPI_T_finalize")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,23 +14,22 @@
 
 #define MPIDI_MAX_POSIX_EAGER_STRING_LEN 64
 
-typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
-typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
+typedef int (*MPIDI_POSIX_eager_init_t)(int rank, int size);
+typedef int (*MPIDI_POSIX_eager_finalize_t)(void);
 
-typedef int (*MPIDI_POSIX_eager_send_t) (int grank,
-                                         MPIDI_POSIX_am_header_t ** msg_hdr,
-                                         struct iovec ** iov, size_t * iov_num);
+typedef int (*MPIDI_POSIX_eager_send_t)(int grank,
+                                        MPIDI_POSIX_am_header_t ** msg_hdr,
+                                        struct iovec ** iov, size_t *iov_num);
 
-typedef int (*MPIDI_POSIX_eager_recv_begin_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction);
+typedef int (*MPIDI_POSIX_eager_recv_begin_t)(MPIDI_POSIX_eager_recv_transaction_t * transaction);
 
-typedef void (*MPIDI_POSIX_eager_recv_memcpy_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction,
-                                                 void *dst, const void *src, size_t size);
+typedef void (*MPIDI_POSIX_eager_recv_memcpy_t)(MPIDI_POSIX_eager_recv_transaction_t * transaction,
+                                                void *dst, const void *src, size_t size);
 
-typedef void (*MPIDI_POSIX_eager_recv_commit_t) (MPIDI_POSIX_eager_recv_transaction_t *
-                                                 transaction);
+typedef void (*MPIDI_POSIX_eager_recv_commit_t)(MPIDI_POSIX_eager_recv_transaction_t * transaction);
 
-typedef void (*MPIDI_POSIX_eager_recv_posted_hook_t) (int grank);
-typedef void (*MPIDI_POSIX_eager_recv_completed_hook_t) (int grank);
+typedef void (*MPIDI_POSIX_eager_recv_posted_hook_t)(int grank);
+typedef void (*MPIDI_POSIX_eager_recv_completed_hook_t)(int grank);
 
 typedef struct {
     MPIDI_POSIX_eager_init_t init;
@@ -57,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize(void) MPL_STATIC_INLINE_
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
                                                     struct iovec **iov,
-                                                    size_t * iov_num) MPL_STATIC_INLINE_SUFFIX;
+                                                    size_t *iov_num) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
                                                           transaction) MPL_STATIC_INLINE_SUFFIX;

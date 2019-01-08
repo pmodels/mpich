@@ -102,7 +102,7 @@ HYD_status HYD_env_free(struct HYD_env *env)
 
 
 HYD_status HYD_env_append_to_list(const char *env_name, const char *env_value,
-                                  struct HYD_env ** env_list)
+                                  struct HYD_env **env_list)
 {
     struct HYD_env *run, *tenv;
     HYD_status status = HYD_SUCCESS;

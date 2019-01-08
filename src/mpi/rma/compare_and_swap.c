@@ -18,7 +18,7 @@
 int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                          void *result_addr, MPI_Datatype datatype, int target_rank,
                          MPI_Aint target_disp, MPI_Win win)
-    __attribute__ ((weak, alias("PMPI_Compare_and_swap")));
+    __attribute__((weak, alias("PMPI_Compare_and_swap")));
 #endif
 /* -- End Profiling Symbol Block */
 

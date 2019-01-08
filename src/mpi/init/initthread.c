@@ -80,7 +80,7 @@ cvars:
 #pragma _CRI duplicate MPI_Init_thread as PMPI_Init_thread
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
-    __attribute__ ((weak, alias("PMPI_Init_thread")));
+    __attribute__((weak, alias("PMPI_Init_thread")));
 #endif
 /* -- End Profiling Symbol Block */
 

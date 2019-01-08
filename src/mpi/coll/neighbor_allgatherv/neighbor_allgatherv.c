@@ -62,7 +62,7 @@ cvars:
 int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                             void *recvbuf, const int recvcounts[], const int displs[],
                             MPI_Datatype recvtype, MPI_Comm comm)
-    __attribute__ ((weak, alias("PMPI_Neighbor_allgatherv")));
+    __attribute__((weak, alias("PMPI_Neighbor_allgatherv")));
 #endif
 /* -- End Profiling Symbol Block */
 

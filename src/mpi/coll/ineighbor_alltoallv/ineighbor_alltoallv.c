@@ -63,7 +63,7 @@ int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const i
                             MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                             const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
                             MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ineighbor_alltoallv")));
+    __attribute__((weak, alias("PMPI_Ineighbor_alltoallv")));
 #endif
 /* -- End Profiling Symbol Block */
 

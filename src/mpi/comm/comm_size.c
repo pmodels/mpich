@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_size as PMPI_Comm_size
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_size(MPI_Comm comm, int *size) __attribute__ ((weak, alias("PMPI_Comm_size")));
+int MPI_Comm_size(MPI_Comm comm, int *size) __attribute__((weak, alias("PMPI_Comm_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

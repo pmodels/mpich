@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
                             MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_resized")));
+    __attribute__((weak, alias("PMPI_Type_create_resized")));
 #endif
 /* -- End Profiling Symbol Block */
 

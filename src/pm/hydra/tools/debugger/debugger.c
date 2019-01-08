@@ -17,14 +17,14 @@ char *MPIR_debug_abort_string = 0;
 
 volatile int MPIR_being_debugged = 0;
 
-int (*MPIR_breakpointFn) (void) = MPIR_Breakpoint;
+int (*MPIR_breakpointFn)(void) = MPIR_Breakpoint;
 
 int MPIR_Breakpoint(void)
 {
     return 0;
 }
 
-HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
+HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg *pg)
 {
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;

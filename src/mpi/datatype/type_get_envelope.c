@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_addresses,
                           int *num_datatypes, int *combiner)
-    __attribute__ ((weak, alias("PMPI_Type_get_envelope")));
+    __attribute__((weak, alias("PMPI_Type_get_envelope")));
 #endif
 /* -- End Profiling Symbol Block */
 

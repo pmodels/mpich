@@ -642,7 +642,7 @@ Input Parameters:
 
 @*/
 DLOOP_Offset
-MPIR_Dataloop_stream_size(struct DLOOP_Dataloop * dl_p, DLOOP_Offset(*sizefn) (DLOOP_Type el_type))
+MPIR_Dataloop_stream_size(struct DLOOP_Dataloop *dl_p, DLOOP_Offset(*sizefn) (DLOOP_Type el_type))
 {
     DLOOP_Offset tmp_sz, tmp_ct = 1;
 

@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag,
                   MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Recv_init")));
+    __attribute__((weak, alias("PMPI_Recv_init")));
 #endif
 /* -- End Profiling Symbol Block */
 

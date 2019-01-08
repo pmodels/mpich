@@ -62,7 +62,7 @@ cvars:
 int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                  const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
                  MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Igatherv")));
+    __attribute__((weak, alias("PMPI_Igatherv")));
 #endif
 /* -- End Profiling Symbol Block */
 

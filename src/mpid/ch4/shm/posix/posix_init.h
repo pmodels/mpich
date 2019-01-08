@@ -187,7 +187,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, int *
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm,
-                                                         size_t ** local_upid_size,
+                                                         size_t **local_upid_size,
                                                          char **local_upids)
 {
     MPIR_Assert(0);
@@ -195,7 +195,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_upids_to_lupids(int size,
-                                                         size_t * remote_upid_size,
+                                                         size_t *remote_upid_size,
                                                          char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);

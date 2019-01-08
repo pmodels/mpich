@@ -100,7 +100,7 @@ Output Parameters:
   if this routine detects an erroneous argument specification.
  @*/
 int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
-              int (*ProcessArg) (int, char *[], void *), void *extraData)
+              int (*ProcessArg)(int, char *[], void *), void *extraData)
 {
     int i;
     int appnum = 0;
@@ -358,7 +358,7 @@ Output Parameters:
 
   @*/
 int MPIE_CheckEnv(ProcessUniverse * mypUniv,
-                  int (*processEnv) (ProcessUniverse *, void *), void *extraData)
+                  int (*processEnv)(ProcessUniverse *, void *), void *extraData)
 {
     int rc = 0;
     const char *s;

@@ -28,7 +28,7 @@
 int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
                           MPI_Win_delete_attr_function * win_delete_attr_fn, int *win_keyval,
                           void *extra_state)
-    __attribute__ ((weak, alias("PMPI_Win_create_keyval")));
+    __attribute__((weak, alias("PMPI_Win_create_keyval")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -49,7 +49,7 @@ cvars:
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Finalize as PMPI_Finalize
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Finalize(void) __attribute__ ((weak, alias("PMPI_Finalize")));
+int MPI_Finalize(void) __attribute__((weak, alias("PMPI_Finalize")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -69,7 +69,7 @@ int MPI_Finalize(void) __attribute__ ((weak, alias("PMPI_Finalize")));
  */
 PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 typedef struct Finalize_func_t {
-    int (*f) (void *);          /* The function to call */
+    int (*f)(void *);           /* The function to call */
     void *extra_data;           /* Data for the function */
     int priority;               /* priority is used to control the order
                                  * in which the callbacks are invoked */
@@ -81,7 +81,7 @@ static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
 static int fstack_max_priority = 0;
 
-void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
+void MPIR_Add_finalize(int (*f)(void *), void *extra_data, int priority)
 {
     /* --BEGIN ERROR HANDLING-- */
     if (fstack_sp >= MAX_FINALIZE_FUNC) {

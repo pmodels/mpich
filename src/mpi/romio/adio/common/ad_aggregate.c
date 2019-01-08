@@ -606,7 +606,7 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
 void ADIOI_Icalc_others_req_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_Icalc_others_req_vars *vars = nbc_req->cor_vars;
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 
     ADIOI_Free(vars->req2);
     ADIOI_Free(vars->count_others_req_per_proc);

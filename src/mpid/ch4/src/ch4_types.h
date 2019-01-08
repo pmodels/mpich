@@ -30,7 +30,7 @@ enum {
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
 #define MPIDI_CH4I_BUF_POOL_SZ (256)
 
-typedef int (*progress_func_ptr_t) (int *made_progress);
+typedef int (*progress_func_ptr_t)(int *made_progress);
 typedef struct progress_hook_slot {
     progress_func_ptr_t func_ptr;
     int active;
@@ -296,7 +296,7 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t nxt_seq_no;
     MPIU_buf_pool_t *buf_pool;
 #ifdef HAVE_SIGNAL
-    void (*prev_sighandler) (int);
+    void (*prev_sighandler)(int);
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif

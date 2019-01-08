@@ -19,7 +19,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
-    __attribute__ ((weak, alias("PMPI_File_get_byte_offset")));
+    __attribute__((weak, alias("PMPI_File_get_byte_offset")));
 #endif
 
 /* Include mapping from MPI->PMPI */

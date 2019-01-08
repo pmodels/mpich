@@ -834,7 +834,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
 #define FUNCNAME MPIDI_handle_acc_data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_handle_acc_data(void **data, size_t * p_data_sz, int *is_contig,
+static inline void MPIDI_handle_acc_data(void **data, size_t *p_data_sz, int *is_contig,
                                          MPIR_Request * rreq)
 {
     void *p_data = NULL;
@@ -1340,7 +1340,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz, int is_local, int *is_contig,
+                                              size_t *p_data_sz, int is_local, int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
@@ -1380,7 +1380,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz, int is_local, int *is_contig,
+                                              size_t *p_data_sz, int is_local, int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
@@ -1421,7 +1421,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
-                                                  size_t * p_data_sz, int is_local, int *is_contig,
+                                                  size_t *p_data_sz, int is_local, int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
@@ -1493,7 +1493,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                 void **data,
-                                                size_t * p_data_sz, int is_local, int *is_contig,
+                                                size_t *p_data_sz, int is_local, int *is_contig,
                                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                 MPIR_Request ** req)
 {
@@ -1528,7 +1528,7 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
-                                               size_t * p_data_sz, int is_local, int *is_contig,
+                                               size_t *p_data_sz, int is_local, int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
 {
@@ -1595,7 +1595,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
-                                          size_t * p_data_sz,
+                                          size_t *p_data_sz,
                                           int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1702,7 +1702,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz,
+                                              size_t *p_data_sz,
                                               int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1762,7 +1762,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
-                                                  size_t * p_data_sz,
+                                                  size_t *p_data_sz,
                                                   int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1829,7 +1829,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
-                                                  size_t * p_data_sz,
+                                                  size_t *p_data_sz,
                                                   int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1896,7 +1896,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                       void **data,
-                                                      size_t * p_data_sz,
+                                                      size_t *p_data_sz,
                                                       int is_local,
                                                       int *is_contig,
                                                       MPIDIG_am_target_cmpl_cb *
@@ -1963,7 +1963,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
-                                               size_t * p_data_sz,
+                                               size_t *p_data_sz,
                                                int is_local,
                                                int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2007,7 +2007,7 @@ static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
-                                               size_t * p_data_sz,
+                                               size_t *p_data_sz,
                                                int is_local,
                                                int *is_contig,
                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2038,7 +2038,7 @@ static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                    void **data,
-                                                   size_t * p_data_sz,
+                                                   size_t *p_data_sz,
                                                    int is_local,
                                                    int *is_contig,
                                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2069,7 +2069,7 @@ static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
                                             void **data,
-                                            size_t * p_data_sz,
+                                            size_t *p_data_sz,
                                             int is_local,
                                             int *is_contig,
                                             MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2137,7 +2137,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
-                                          size_t * p_data_sz,
+                                          size_t *p_data_sz,
                                           int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2229,7 +2229,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz,
+                                              size_t *p_data_sz,
                                               int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2259,7 +2259,7 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz,
+                                              size_t *p_data_sz,
                                               int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2329,7 +2329,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
-                                                  size_t * p_data_sz,
+                                                  size_t *p_data_sz,
                                                   int is_local,
                                                   int *is_contig,
                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2358,7 +2358,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
-                                          size_t * p_data_sz,
+                                          size_t *p_data_sz,
                                           int is_local,
                                           int *is_contig,
                                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -2425,7 +2425,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
-                                              size_t * p_data_sz,
+                                              size_t *p_data_sz,
                                               int is_local,
                                               int *is_contig,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,

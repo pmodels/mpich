@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_set_atomicity(MPI_File fh, int flag)
-    __attribute__ ((weak, alias("PMPI_File_set_atomicity")));
+    __attribute__((weak, alias("PMPI_File_set_atomicity")));
 #endif
 
 /* Include mapping from MPI->PMPI */

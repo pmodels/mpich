@@ -339,7 +339,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                                  MPIR_Comm * comm_ptr,
                                                  int *out_root,
                                                  int *remote_size,
-                                                 size_t ** remote_upid_size,
+                                                 size_t **remote_upid_size,
                                                  char **remote_upids, int **remote_node_ids)
 {
     int i, mpi_errno = MPI_SUCCESS;

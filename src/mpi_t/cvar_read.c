@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_cvar_read as PMPI_T_cvar_read
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
-    __attribute__ ((weak, alias("PMPI_T_cvar_read")));
+    __attribute__((weak, alias("PMPI_T_cvar_read")));
 #endif
 /* -- End Profiling Symbol Block */
 

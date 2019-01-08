@@ -17,7 +17,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                   MPI_Status * status) __attribute__ ((weak, alias("PMPI_File_write")));
+                   MPI_Status * status) __attribute__((weak, alias("PMPI_File_write")));
 #endif
 
 /* Include mapping from MPI->PMPI */

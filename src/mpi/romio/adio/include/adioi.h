@@ -161,60 +161,59 @@ typedef struct ADIOI_AIO_req_str {
 } ADIOI_AIO_Request;
 
 struct ADIOI_Fns_struct {
-    void (*ADIOI_xxx_Open) (ADIO_File fd, int *error_code);
-    void (*ADIOI_xxx_OpenColl) (ADIO_File fd, int rank, int access_mode, int *error_code);
-    void (*ADIOI_xxx_ReadContig) (ADIO_File fd, void *buf, int count,
+    void (*ADIOI_xxx_Open)(ADIO_File fd, int *error_code);
+    void (*ADIOI_xxx_OpenColl)(ADIO_File fd, int rank, int access_mode, int *error_code);
+    void (*ADIOI_xxx_ReadContig)(ADIO_File fd, void *buf, int count,
+                                 MPI_Datatype datatype, int file_ptr_type,
+                                 ADIO_Offset offset, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_WriteContig)(ADIO_File fd, const void *buf, int count,
                                   MPI_Datatype datatype, int file_ptr_type,
                                   ADIO_Offset offset, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_WriteContig) (ADIO_File fd, const void *buf, int count,
-                                   MPI_Datatype datatype, int file_ptr_type,
-                                   ADIO_Offset offset, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_ReadStridedColl) (ADIO_File fd, void *buf, int count,
+    void (*ADIOI_xxx_ReadStridedColl)(ADIO_File fd, void *buf, int count,
+                                      MPI_Datatype datatype, int file_ptr_type,
+                                      ADIO_Offset offset, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_WriteStridedColl)(ADIO_File fd, const void *buf, int count,
                                        MPI_Datatype datatype, int file_ptr_type,
                                        ADIO_Offset offset, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_WriteStridedColl) (ADIO_File fd, const void *buf, int count,
-                                        MPI_Datatype datatype, int file_ptr_type,
-                                        ADIO_Offset offset, ADIO_Status * status, int *error_code);
      ADIO_Offset(*ADIOI_xxx_SeekIndividual) (ADIO_File fd, ADIO_Offset offset,
                                              int whence, int *error_code);
-    void (*ADIOI_xxx_Fcntl) (ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *error_code);
-    void (*ADIOI_xxx_SetInfo) (ADIO_File fd, MPI_Info users_info, int *error_code);
-    void (*ADIOI_xxx_ReadStrided) (ADIO_File fd, void *buf, int count,
+    void (*ADIOI_xxx_Fcntl)(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *error_code);
+    void (*ADIOI_xxx_SetInfo)(ADIO_File fd, MPI_Info users_info, int *error_code);
+    void (*ADIOI_xxx_ReadStrided)(ADIO_File fd, void *buf, int count,
+                                  MPI_Datatype datatype, int file_ptr_type,
+                                  ADIO_Offset offset, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_WriteStrided)(ADIO_File fd, const void *buf, int count,
                                    MPI_Datatype datatype, int file_ptr_type,
                                    ADIO_Offset offset, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_WriteStrided) (ADIO_File fd, const void *buf, int count,
-                                    MPI_Datatype datatype, int file_ptr_type,
-                                    ADIO_Offset offset, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_Close) (ADIO_File fd, int *error_code);
-    void (*ADIOI_xxx_IreadContig) (ADIO_File fd, void *buf, int count,
+    void (*ADIOI_xxx_Close)(ADIO_File fd, int *error_code);
+    void (*ADIOI_xxx_IreadContig)(ADIO_File fd, void *buf, int count,
+                                  MPI_Datatype datatype, int file_ptr_type,
+                                  ADIO_Offset offset, ADIO_Request * request, int *error_code);
+    void (*ADIOI_xxx_IwriteContig)(ADIO_File fd, const void *buf, int count,
                                    MPI_Datatype datatype, int file_ptr_type,
                                    ADIO_Offset offset, ADIO_Request * request, int *error_code);
-    void (*ADIOI_xxx_IwriteContig) (ADIO_File fd, const void *buf, int count,
+    int (*ADIOI_xxx_ReadDone)(ADIO_Request * request, ADIO_Status * status, int *error_code);
+    int (*ADIOI_xxx_WriteDone)(ADIO_Request * request, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_ReadComplete)(ADIO_Request * request, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_WriteComplete)(ADIO_Request * request, ADIO_Status * status, int *error_code);
+    void (*ADIOI_xxx_IreadStrided)(ADIO_File fd, void *buf, int count,
+                                   MPI_Datatype datatype, int file_ptr_type,
+                                   ADIO_Offset offset, ADIO_Request * request, int *error_code);
+    void (*ADIOI_xxx_IwriteStrided)(ADIO_File fd, const void *buf, int count,
                                     MPI_Datatype datatype, int file_ptr_type,
                                     ADIO_Offset offset, ADIO_Request * request, int *error_code);
-    int (*ADIOI_xxx_ReadDone) (ADIO_Request * request, ADIO_Status * status, int *error_code);
-    int (*ADIOI_xxx_WriteDone) (ADIO_Request * request, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_ReadComplete) (ADIO_Request * request, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_WriteComplete) (ADIO_Request * request, ADIO_Status * status, int *error_code);
-    void (*ADIOI_xxx_IreadStrided) (ADIO_File fd, void *buf, int count,
-                                    MPI_Datatype datatype, int file_ptr_type,
-                                    ADIO_Offset offset, ADIO_Request * request, int *error_code);
-    void (*ADIOI_xxx_IwriteStrided) (ADIO_File fd, const void *buf, int count,
-                                     MPI_Datatype datatype, int file_ptr_type,
-                                     ADIO_Offset offset, ADIO_Request * request, int *error_code);
-    void (*ADIOI_xxx_Flush) (ADIO_File fd, int *error_code);
-    void (*ADIOI_xxx_Resize) (ADIO_File fd, ADIO_Offset size, int *error_code);
-    void (*ADIOI_xxx_Delete) (const char *filename, int *error_code);
-    int (*ADIOI_xxx_Feature) (ADIO_File fd, int flag);
+    void (*ADIOI_xxx_Flush)(ADIO_File fd, int *error_code);
+    void (*ADIOI_xxx_Resize)(ADIO_File fd, ADIO_Offset size, int *error_code);
+    void (*ADIOI_xxx_Delete)(const char *filename, int *error_code);
+    int (*ADIOI_xxx_Feature)(ADIO_File fd, int flag);
     const char *fsname;
-    void (*ADIOI_xxx_IreadStridedColl) (ADIO_File fd, void *buf, int count,
+    void (*ADIOI_xxx_IreadStridedColl)(ADIO_File fd, void *buf, int count,
+                                       MPI_Datatype datatype, int file_ptr_type,
+                                       ADIO_Offset offset, ADIO_Request * request, int *error_code);
+    void (*ADIOI_xxx_IwriteStridedColl)(ADIO_File fd, const void *buf, int count,
                                         MPI_Datatype datatype, int file_ptr_type,
                                         ADIO_Offset offset, ADIO_Request * request,
                                         int *error_code);
-    void (*ADIOI_xxx_IwriteStridedColl) (ADIO_File fd, const void *buf, int count,
-                                         MPI_Datatype datatype, int file_ptr_type,
-                                         ADIO_Offset offset, ADIO_Request * request,
-                                         int *error_code);
 };
 
 /* optypes for ADIO_RequestD */
@@ -532,7 +531,7 @@ typedef struct ADIOI_Icalc_others_req_vars {
     ADIOI_Access *others_req;
 
     /* next function to be called */
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 } ADIOI_Icalc_others_req_vars;
 
 struct ADIOI_NBC_Request {

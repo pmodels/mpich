@@ -63,7 +63,7 @@ cvars:
 int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
                    MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                    const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ialltoallv")));
+    __attribute__((weak, alias("PMPI_Ialltoallv")));
 #endif
 /* -- End Profiling Symbol Block */
 

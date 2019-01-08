@@ -19,7 +19,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                           MPIO_Request * request)
-    __attribute__ ((weak, alias("PMPI_File_iread_shared")));
+    __attribute__((weak, alias("PMPI_File_iread_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */

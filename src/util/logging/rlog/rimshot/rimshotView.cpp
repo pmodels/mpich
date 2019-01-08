@@ -26,7 +26,6 @@ static char THIS_FILE[] = __FILE__;
 // CRimshotView
 
 IMPLEMENT_DYNCREATE(CRimshotView, CView)
-
     BEGIN_MESSAGE_MAP(CRimshotView, CView)
     //{{AFX_MSG_MAP(CRimshotView)
     ON_COMMAND(ID_NEXT, OnNext)

@@ -46,7 +46,7 @@ int MPIR_Err_is_fatal(int);
 void MPIR_Get_file_error_routine(MPI_Errhandler, void (**)(MPI_File *, int *, ...), int *);
 int MPIR_File_call_cxx_errhandler(MPI_File *, int *, void (*)(MPI_File *, int *, ...));
 
-typedef int (*MPIR_Err_get_class_string_func_t) (int error, char *str, int length);
+typedef int (*MPIR_Err_get_class_string_func_t)(int error, char *str, int length);
 void MPIR_Err_get_string(int, char *, int, MPIR_Err_get_class_string_func_t);
 
 struct MPIR_Comm;

@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Comm_create_group as PMPI_Comm_create_group
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
-    __attribute__ ((weak, alias("PMPI_Comm_create_group")));
+    __attribute__((weak, alias("PMPI_Comm_create_group")));
 #endif
 /* -- End Profiling Symbol Block */
 

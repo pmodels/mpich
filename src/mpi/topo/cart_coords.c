@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Cart_coords as PMPI_Cart_coords
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
-    __attribute__ ((weak, alias("PMPI_Cart_coords")));
+    __attribute__((weak, alias("PMPI_Cart_coords")));
 #endif
 /* -- End Profiling Symbol Block */
 

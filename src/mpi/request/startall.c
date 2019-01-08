@@ -20,7 +20,7 @@
 #pragma _CRI duplicate MPI_Startall as PMPI_Startall
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Startall(int count, MPI_Request array_of_requests[])
-    __attribute__ ((weak, alias("PMPI_Startall")));
+    __attribute__((weak, alias("PMPI_Startall")));
 #endif
 /* -- End Profiling Symbol Block */
 

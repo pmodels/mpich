@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Op_commutative as PMPI_Op_commutative
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Op_commutative(MPI_Op op, int *commute)
-    __attribute__ ((weak, alias("PMPI_Op_commutative")));
+    __attribute__((weak, alias("PMPI_Op_commutative")));
 #endif
 /* -- End Profiling Symbol Block */
 

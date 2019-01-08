@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
-    __attribute__ ((weak, alias("PMPI_File_read_ordered_begin")));
+    __attribute__((weak, alias("PMPI_File_read_ordered_begin")));
 #endif
 
 /* Include mapping from MPI->PMPI */

@@ -19,7 +19,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_upids_to_lupids(int size,
-                                                    size_t * remote_upid_size,
+                                                    size_t *remote_upid_size,
                                                     char *remote_upids,
                                                     int **remote_lupids, int *remote_node_ids)
 {
@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_
                                                               int *remote_size,
                                                               int *is_low_group,
                                                               int pure_intracomm,
-                                                              size_t * remote_upid_size,
+                                                              size_t *remote_upid_size,
                                                               char *remote_upids,
                                                               int **remote_lupids,
                                                               int *remote_node_ids)

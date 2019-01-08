@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Info_delete as PMPI_Info_delete
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Info_delete(MPI_Info info, const char *key)
-    __attribute__ ((weak, alias("PMPI_Info_delete")));
+    __attribute__((weak, alias("PMPI_Info_delete")));
 #endif
 /* -- End Profiling Symbol Block */
 

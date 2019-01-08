@@ -10,11 +10,11 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__DEVICE
 
-int (*MPL_wtime_fn) (MPL_time_t * timeval) = NULL;
-int (*MPL_wtime_diff_fn) (MPL_time_t * t1, MPL_time_t * t2, double *diff) = NULL;
-int (*MPL_wtime_acc_fn) (MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3) = NULL;
-int (*MPL_wtime_todouble_fn) (MPL_time_t * timeval, double *seconds) = NULL;
-int (*MPL_wtick_fn) (double *tick) = NULL;
+int (*MPL_wtime_fn)(MPL_time_t * timeval) = NULL;
+int (*MPL_wtime_diff_fn)(MPL_time_t * t1, MPL_time_t * t2, double *diff) = NULL;
+int (*MPL_wtime_acc_fn)(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3) = NULL;
+int (*MPL_wtime_todouble_fn)(MPL_time_t * timeval, double *seconds) = NULL;
+int (*MPL_wtick_fn)(double *tick) = NULL;
 
 int MPL_wtime(MPL_time_t * timeval)
 {

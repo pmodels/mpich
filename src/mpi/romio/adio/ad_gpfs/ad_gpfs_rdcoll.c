@@ -144,7 +144,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_MPIO_CRW, GPFSMPIO_CIO_LAST)
         GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_LCOMP, GPFSMPIO_CIO_LAST)
-
         /* only check for interleaving if cb_read isn't disabled */
         if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
         /* For this process's request, calculate the list of offsets and
@@ -230,7 +229,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         }
 
         GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER)
-
             /* are the accesses of different processes interleaved? */
             for (i = 1; i < nprocs; i++)
             if ((st_offsets[i] < end_offsets[i - 1]) && (st_offsets[i] <= end_offsets[i]))
@@ -268,7 +266,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     }
 
     GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_FD_PART, GPFSMPIO_CIO_T_PATANA)
-
         /* We're going to perform aggregation of I/O.  Here we call
          * ADIOI_Calc_file_domains() to determine what processes will handle I/O
          * to what regions.  We pass nprocs_for_coll into this function; it is
@@ -367,7 +364,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
             /* NOTE: we are skipping the rest of two-phase in this path */
             GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs)
-
                 ADIOI_Free(offset_list);
             ADIOI_Free(len_list);
             ADIOI_Free(st_offsets);
@@ -402,7 +398,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                           nprocs, &count_my_req_procs, &count_my_req_per_proc, &my_req, &buf_idx);
 
     GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ)
-
         /* perform a collective communication in order to distribute the
          * data calculated above.  fills in the following:
          * count_others_req_procs - number of processes (including this
@@ -421,7 +416,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                               nprocs, myrank, &count_others_req_procs, &others_req);
 
     GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ)
-
         /* my_req[] and count_my_req_per_proc aren't needed at this point, so
          * let's free the memory
          */
@@ -444,10 +438,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_DEXCH)
         GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_MPIO_CRW)
-
         GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs)
-
-
         /* free all memory allocated for collective I/O */
         for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {

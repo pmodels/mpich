@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Topo_test as PMPI_Topo_test
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__ ((weak, alias("PMPI_Topo_test")));
+int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__((weak, alias("PMPI_Topo_test")));
 #endif
 /* -- End Profiling Symbol Block */
 

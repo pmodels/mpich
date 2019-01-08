@@ -76,7 +76,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                 int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
-    __attribute__ ((weak, alias("PMPI_Scatter")));
+    __attribute__((weak, alias("PMPI_Scatter")));
 #endif
 /* -- End Profiling Symbol Block */
 

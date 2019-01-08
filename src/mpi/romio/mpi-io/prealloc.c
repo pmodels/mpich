@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
-    __attribute__ ((weak, alias("PMPI_File_preallocate")));
+    __attribute__((weak, alias("PMPI_File_preallocate")));
 #endif
 
 /* Include mapping from MPI->PMPI */

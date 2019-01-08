@@ -74,7 +74,7 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
                                  void *array_of_addresses, void *array_of_datatypes);
 static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type);
 static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type);
-static int get_mpi_constants(size_t * mpi_datatype_size,
+static int get_mpi_constants(size_t *mpi_datatype_size,
                              int *mpi_order_c, int *mpi_order_fortran,
                              int *mpi_distribute_block,
                              int *mpi_distribute_cyclic,
@@ -472,7 +472,7 @@ static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type)
     return HCOLL_SUCCESS;
 }
 
-static int get_mpi_constants(size_t * mpi_datatype_size,
+static int get_mpi_constants(size_t *mpi_datatype_size,
                              int *mpi_order_c, int *mpi_order_fortran,
                              int *mpi_distribute_block,
                              int *mpi_distribute_cyclic,

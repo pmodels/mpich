@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_free_keyval as PMPI_Type_free_keyval
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Type_free_keyval(int *type_keyval) __attribute__ ((weak, alias("PMPI_Type_free_keyval")));
+int MPI_Type_free_keyval(int *type_keyval) __attribute__((weak, alias("PMPI_Type_free_keyval")));
 #endif
 /* -- End Profiling Symbol Block */
 

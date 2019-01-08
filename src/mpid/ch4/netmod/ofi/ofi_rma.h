@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX
                                int result_count,
                                MPI_Datatype origin_datatype,
                                MPI_Datatype target_datatype,
-                               MPI_Datatype result_datatype, size_t max_pipe, size_t * countp)
+                               MPI_Datatype result_datatype, size_t max_pipe, size_t *countp)
 {
     /* Count the max number of iovecs that will be generated, given the iovs    */
     /* and maximum data size.  The code adds the iovecs from all three lists    */
@@ -105,8 +105,8 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
                                                       MPI_Op op,
                                                       MPIR_Win * win,
                                                       enum fi_datatype *fi_dt,
-                                                      enum fi_op *fi_op, size_t * count,
-                                                      size_t * dtsize)
+                                                      enum fi_op *fi_op, size_t *count,
+                                                      size_t *dtsize)
 {
     MPIR_Datatype *dt_ptr;
     int op_index, dt_index;

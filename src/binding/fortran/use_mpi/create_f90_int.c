@@ -23,7 +23,7 @@
 #pragma _CRI duplicate MPI_Type_create_f90_integer as PMPI_Type_create_f90_integer
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_f90_integer")));
+    __attribute__((weak, alias("PMPI_Type_create_f90_integer")));
 #endif
 /* -- End Profiling Symbol Block */
 

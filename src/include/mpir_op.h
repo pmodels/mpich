@@ -78,8 +78,8 @@ typedef enum MPIR_Op_kind {
   Collective-DS
   S*/
 typedef union MPIR_User_function {
-    void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
-    void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
+    void (*c_function)(const void *, void *, const int *, const MPI_Datatype *);
+    void (*f77_function)(const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g.,
    (*c_function)(const void restrict * , void restrict *, ...)? */

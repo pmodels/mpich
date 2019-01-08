@@ -101,7 +101,7 @@ static inline int MPIDI_STUBSHM_progress_wait(MPID_Progress_state * state)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_register(int (*progress_fn) (int *))
+static inline int MPIDI_STUBSHM_progress_register(int (*progress_fn)(int *))
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_REGISTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_REGISTER);

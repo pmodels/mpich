@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_cvar_handle_free as PMPI_T_cvar_handle_free
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_cvar_handle_free(MPI_T_cvar_handle * handle)
-    __attribute__ ((weak, alias("PMPI_T_cvar_handle_free")));
+    __attribute__((weak, alias("PMPI_T_cvar_handle_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

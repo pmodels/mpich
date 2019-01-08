@@ -142,7 +142,7 @@ HYD_status HYDU_env_free(struct HYD_env *env)
 }
 
 
-HYD_status HYDU_env_free_list(struct HYD_env * env)
+HYD_status HYDU_env_free_list(struct HYD_env *env)
 {
     struct HYD_env *run, *tmp;
     HYD_status status = HYD_SUCCESS;
@@ -181,7 +181,7 @@ struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list)
 }
 
 HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
-                                   struct HYD_env ** env_list)
+                                   struct HYD_env **env_list)
 {
     struct HYD_env *run, *tenv;
     HYD_status status = HYD_SUCCESS;

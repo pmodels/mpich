@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Comm_remote_group as PMPI_Comm_remote_group
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
-    __attribute__ ((weak, alias("PMPI_Comm_remote_group")));
+    __attribute__((weak, alias("PMPI_Comm_remote_group")));
 #endif
 /* -- End Profiling Symbol Block */
 

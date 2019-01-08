@@ -74,7 +74,7 @@ cvars:
 int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                 int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm,
                 MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Igather")));
+    __attribute__((weak, alias("PMPI_Igather")));
 #endif
 /* -- End Profiling Symbol Block */
 

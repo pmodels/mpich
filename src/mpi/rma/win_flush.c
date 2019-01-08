@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_flush as PMPI_Win_flush
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_flush(int rank, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_flush")));
+int MPI_Win_flush(int rank, MPI_Win win) __attribute__((weak, alias("PMPI_Win_flush")));
 #endif
 /* -- End Profiling Symbol Block */
 

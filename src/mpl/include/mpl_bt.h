@@ -15,7 +15,7 @@ extern "C" {
 
 #if !MPL_HAVE_DECL_BACKTRACE_CREATE_STATE
     struct backtrace_state;
-    typedef void (*backtrace_error_callback) (void *data, const char *msg, int errnum);
+    typedef void (*backtrace_error_callback)(void *data, const char *msg, int errnum);
 
     extern struct backtrace_state *backtrace_create_state(const char *filename, int threaded,
                                                           backtrace_error_callback error_callback,

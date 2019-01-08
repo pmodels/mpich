@@ -75,7 +75,7 @@ Notes:
   a higher priority execute before 'MPID_Finalize' is called; those with
   a lower priority after 'MPID_Finalize' is called.
 @*/
-void MPIR_Add_finalize(int (*routine) (void *), void *extra, int priority);
+void MPIR_Add_finalize(int (*routine)(void *), void *extra, int priority);
 
 /* Routines for determining local and remote processes */
 int MPIR_Find_local_and_external(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p,

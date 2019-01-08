@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPIX_Comm_failure_get_acked as PMPIX_Comm_failure_get_acked
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
-    __attribute__ ((weak, alias("PMPIX_Comm_failure_get_acked")));
+    __attribute__((weak, alias("PMPIX_Comm_failure_get_acked")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
                          int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_Sendrecv_replace")));
+    __attribute__((weak, alias("PMPI_Sendrecv_replace")));
 #endif
 /* -- End Profiling Symbol Block */
 

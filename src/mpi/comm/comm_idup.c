@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_Comm_idup as PMPI_Comm_idup
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Comm_idup")));
+    __attribute__((weak, alias("PMPI_Comm_idup")));
 #endif
 /* -- End Profiling Symbol Block */
 

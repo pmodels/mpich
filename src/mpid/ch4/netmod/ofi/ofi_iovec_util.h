@@ -230,8 +230,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                       uintptr_t * origin_addr_next,
-                                                      uintptr_t * target_addr_next,
-                                                      size_t * buf_len)
+                                                      uintptr_t * target_addr_next, size_t *buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0)) {
         uintptr_t buf_size = MPL_MIN(MPL_MIN(seg_state->target_iov_len, seg_state->origin_iov_len),
@@ -251,7 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state2(MPIDI_OFI_seg_state_t * s
                                                        uintptr_t * origin_addr_next,
                                                        uintptr_t * result_addr_next,
                                                        uintptr_t * target_addr_next,
-                                                       size_t * buf_len)
+                                                       size_t *buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0) &&
         (seg_state->result_iov_len != 0)) {
@@ -278,8 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state2(MPIDI_OFI_seg_state_t * s
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                       uintptr_t * next_origin_addr,
-                                                      uintptr_t * next_target_addr,
-                                                      size_t * buf_len)
+                                                      uintptr_t * next_target_addr, size_t *buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0)) {
         *next_origin_addr = seg_state->origin_addr;
@@ -304,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state2(MPIDI_OFI_seg_state_t * s
                                                        uintptr_t * next_origin_addr,
                                                        uintptr_t * next_result_addr,
                                                        uintptr_t * next_target_addr,
-                                                       size_t * buf_len)
+                                                       size_t *buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0) &&
         (seg_state->result_iov_len != 0)) {
@@ -328,8 +326,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment(MPIDI_OFI_seg_state_t * seg
                                                      size_t origin_max_iovs,
                                                      struct fi_rma_iov *target_iov,
                                                      size_t target_max_iovs,
-                                                     size_t * origin_iovs_nout,
-                                                     size_t * target_iovs_nout)
+                                                     size_t *origin_iovs_nout,
+                                                     size_t *target_iovs_nout)
 {
     int rc;
     uintptr_t origin_addr = (uintptr_t) NULL, target_addr = (uintptr_t) NULL;
@@ -404,9 +402,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment2(MPIDI_OFI_seg_state_t * se
                                                       size_t result_max_iovs,
                                                       struct fi_rma_iov *target_iov,
                                                       size_t target_max_iovs,
-                                                      size_t * origin_iovs_nout,
-                                                      size_t * result_iovs_nout,
-                                                      size_t * target_iovs_nout)
+                                                      size_t *origin_iovs_nout,
+                                                      size_t *result_iovs_nout,
+                                                      size_t *target_iovs_nout)
 {
     int rc;
     uintptr_t origin_addr = (uintptr_t) NULL, result_addr = (uintptr_t) NULL, target_addr =

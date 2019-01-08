@@ -261,7 +261,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
 /* Communicator info hint functions */
-typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, MPIR_Info *, void *);
+typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPIR_Info *, void *);
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
 
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
@@ -325,7 +325,7 @@ extern MPIR_Comm MPIR_Comm_direct[];
 #define MPIR_ICOMM_WORLD  ((MPI_Comm)0x44000002)
 
 typedef struct MPIR_Commops {
-    int (*split_type) (MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
+    int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
 } MPIR_Commops;
 extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functions */
 

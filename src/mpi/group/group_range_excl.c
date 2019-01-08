@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Group_range_excl as PMPI_Group_range_excl
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group * newgroup)
-    __attribute__ ((weak, alias("PMPI_Group_range_excl")));
+    __attribute__((weak, alias("PMPI_Group_range_excl")));
 #endif
 /* -- End Profiling Symbol Block */
 

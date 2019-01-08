@@ -28,7 +28,7 @@
 int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
                            MPI_Comm_delete_attr_function * comm_delete_attr_fn, int *comm_keyval,
                            void *extra_state)
-    __attribute__ ((weak, alias("PMPI_Comm_create_keyval")));
+    __attribute__((weak, alias("PMPI_Comm_create_keyval")));
 #endif
 /* -- End Profiling Symbol Block */
 

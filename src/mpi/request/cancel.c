@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Cancel as PMPI_Cancel
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Cancel(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Cancel")));
+int MPI_Cancel(MPI_Request * request) __attribute__((weak, alias("PMPI_Cancel")));
 #endif
 /* -- End Profiling Symbol Block */
 

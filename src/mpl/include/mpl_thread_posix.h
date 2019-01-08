@@ -25,7 +25,7 @@ typedef pthread_key_t MPL_thread_tls_t;
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 #endif /* MPL_NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL */
 
-typedef void (*MPL_thread_func_t) (void *data);
+typedef void (*MPL_thread_func_t)(void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
 
 #define MPL_thread_exit()                       \

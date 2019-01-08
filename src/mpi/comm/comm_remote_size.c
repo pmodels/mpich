@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Comm_remote_size as PMPI_Comm_remote_size
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_remote_size(MPI_Comm comm, int *size)
-    __attribute__ ((weak, alias("PMPI_Comm_remote_size")));
+    __attribute__((weak, alias("PMPI_Comm_remote_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

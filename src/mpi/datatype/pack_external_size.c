@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datatype,
                            MPI_Aint * size)
-    __attribute__ ((weak, alias("PMPI_Pack_external_size")));
+    __attribute__((weak, alias("PMPI_Pack_external_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

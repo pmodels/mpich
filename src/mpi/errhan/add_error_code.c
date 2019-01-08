@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Add_error_code as PMPI_Add_error_code
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Add_error_code(int errorclass, int *errorcode)
-    __attribute__ ((weak, alias("PMPI_Add_error_code")));
+    __attribute__((weak, alias("PMPI_Add_error_code")));
 #endif
 /* -- End Profiling Symbol Block */
 

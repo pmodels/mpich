@@ -112,36 +112,36 @@
 void MPIR_Segment_manipulate(struct DLOOP_Segment *segp,
                              DLOOP_Offset first,
                              DLOOP_Offset * lastp,
-                             int (*contigfn) (DLOOP_Offset * blocks_p,
-                                              DLOOP_Type el_type,
-                                              DLOOP_Offset rel_off,
-                                              DLOOP_Buffer bufp,
-                                              void *v_paramp),
-                             int (*vectorfn) (DLOOP_Offset * blocks_p,
-                                              DLOOP_Count count,
-                                              DLOOP_Count blklen,
-                                              DLOOP_Offset stride,
-                                              DLOOP_Type el_type,
-                                              DLOOP_Offset rel_off,
-                                              DLOOP_Buffer bufp,
-                                              void *v_paramp),
-                             int (*blkidxfn) (DLOOP_Offset * blocks_p,
-                                              DLOOP_Count count,
-                                              DLOOP_Count blklen,
-                                              DLOOP_Offset * offsetarray,
-                                              DLOOP_Type el_type,
-                                              DLOOP_Offset rel_off,
-                                              DLOOP_Buffer bufp,
-                                              void *v_paramp),
-                             int (*indexfn) (DLOOP_Offset * blocks_p,
+                             int (*contigfn)(DLOOP_Offset * blocks_p,
+                                             DLOOP_Type el_type,
+                                             DLOOP_Offset rel_off,
+                                             DLOOP_Buffer bufp,
+                                             void *v_paramp),
+                             int (*vectorfn)(DLOOP_Offset * blocks_p,
                                              DLOOP_Count count,
-                                             DLOOP_Count * blockarray,
+                                             DLOOP_Count blklen,
+                                             DLOOP_Offset stride,
+                                             DLOOP_Type el_type,
+                                             DLOOP_Offset rel_off,
+                                             DLOOP_Buffer bufp,
+                                             void *v_paramp),
+                             int (*blkidxfn)(DLOOP_Offset * blocks_p,
+                                             DLOOP_Count count,
+                                             DLOOP_Count blklen,
                                              DLOOP_Offset * offsetarray,
                                              DLOOP_Type el_type,
                                              DLOOP_Offset rel_off,
                                              DLOOP_Buffer bufp,
                                              void *v_paramp),
-                             DLOOP_Offset(*sizefn) (DLOOP_Type el_type), void *pieceparams)
+                             int (*indexfn)(DLOOP_Offset * blocks_p,
+                                            DLOOP_Count count,
+                                            DLOOP_Count * blockarray,
+                                            DLOOP_Offset * offsetarray,
+                                            DLOOP_Type el_type,
+                                            DLOOP_Offset rel_off,
+                                            DLOOP_Buffer bufp,
+                                            void *v_paramp),
+                             DLOOP_Offset(*sizefn)(DLOOP_Type el_type), void *pieceparams)
 {
     /* these four are the "local values": cur_sp, valid_sp, last, stream_off */
     int cur_sp, valid_sp;
@@ -449,7 +449,7 @@ void MPIR_Segment_manipulate(struct DLOOP_Segment *segp,
                 DLOOP_SEGMENT_SAVE_LOCAL_VALUES;
                 return;
             }
-        } /* end of if leaf */
+        }       /* end of if leaf */
         else if (cur_elmp->curblock == 0) {
 #ifdef DLOOP_DEBUG_MANIPULATE
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
@@ -642,7 +642,7 @@ void MPIR_Segment_manipulate(struct DLOOP_Segment *segp,
  * before this is called!
  *
  */
-DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm * elmp)
+DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp)
 {
     struct DLOOP_Dataloop *dlp = elmp->loop_p;
 
@@ -685,7 +685,7 @@ DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm * elmp)
  * (all the time for indexed) at the moment.
  *
  */
-DLOOP_Offset DLOOP_Stackelm_offset(struct DLOOP_Dataloop_stackelm * elmp)
+DLOOP_Offset DLOOP_Stackelm_offset(struct DLOOP_Dataloop_stackelm *elmp)
 {
     struct DLOOP_Dataloop *dlp = elmp->loop_p;
 

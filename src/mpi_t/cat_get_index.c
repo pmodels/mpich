@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_category_get_index as PMPI_T_category_get_index
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_category_get_index(const char *name, int *cat_index)
-    __attribute__ ((weak, alias("PMPI_T_category_get_index")));
+    __attribute__((weak, alias("PMPI_T_category_get_index")));
 #endif
 /* -- End Profiling Symbol Block */
 

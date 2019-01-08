@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Unpublish_name as PMPI_Unpublish_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port_name)
-    __attribute__ ((weak, alias("PMPI_Unpublish_name")));
+    __attribute__((weak, alias("PMPI_Unpublish_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

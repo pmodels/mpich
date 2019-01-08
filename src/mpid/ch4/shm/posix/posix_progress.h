@@ -360,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_wait(MPID_Progress_state * sta
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_register(int (*progress_fn)(int *))
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

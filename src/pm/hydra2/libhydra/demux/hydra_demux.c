@@ -92,5 +92,5 @@ int HYD_dmx_query_fd_registration(int fd)
 
     HYD_FUNC_EXIT();
 
-    return ! !run;
+    return !!run;
 }

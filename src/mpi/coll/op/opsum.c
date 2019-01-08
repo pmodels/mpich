@@ -33,7 +33,6 @@ void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
                 MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
-
                 /* complex addition is slightly different than scalar addition */
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) \
@@ -92,7 +91,6 @@ int MPIR_SUM_check_dtype(MPI_Datatype type)
                 MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
-
                 MPIR_OP_TYPE_GROUP(COMPLEX)
                 MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
 #undef MPIR_OP_TYPE_MACRO

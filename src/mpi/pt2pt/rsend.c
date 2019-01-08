@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Rsend as PMPI_Rsend
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-              MPI_Comm comm) __attribute__ ((weak, alias("PMPI_Rsend")));
+              MPI_Comm comm) __attribute__((weak, alias("PMPI_Rsend")));
 #endif
 /* -- End Profiling Symbol Block */
 

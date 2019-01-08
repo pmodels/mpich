@@ -300,48 +300,48 @@ typedef struct {
  */
 
 /* Hang information on the image */
-typedef void (*mqs_put_image_info_ft) (mqs_image *, mqs_image_info *);
+typedef void (*mqs_put_image_info_ft)(mqs_image *, mqs_image_info *);
 /* Get it back */
-typedef mqs_image_info *(*mqs_get_image_info_ft) (mqs_image *);
+typedef mqs_image_info *(*mqs_get_image_info_ft)(mqs_image *);
 
 #if defined(FOR_MPI2)
 /* Given a job and an index return the process object */
-typedef mqs_process *(*mqs_get_process_ft) (mqs_job *, int);
+typedef mqs_process *(*mqs_get_process_ft)(mqs_job *, int);
 
 /* Hang information on the job */
-typedef void (*mqs_put_job_info_ft) (mqs_job *, mqs_job_info *);
+typedef void (*mqs_put_job_info_ft)(mqs_job *, mqs_job_info *);
 /* Get it back */
-typedef mqs_job_info *(*mqs_get_job_info_ft) (mqs_job *);
+typedef mqs_job_info *(*mqs_get_job_info_ft)(mqs_job *);
 #endif
 
 /* Given a process return the image it is an instance of */
-typedef mqs_image *(*mqs_get_image_ft) (mqs_process *);
+typedef mqs_image *(*mqs_get_image_ft)(mqs_process *);
 
 /* Given a process return its rank in comm_world */
-typedef int (*mqs_get_global_rank_ft) (mqs_process *);
+typedef int (*mqs_get_global_rank_ft)(mqs_process *);
 
 /* Given an image look up the specified function */
-typedef int (*mqs_find_function_ft) (mqs_image *, char *, mqs_lang_code, mqs_taddr_t *);
+typedef int (*mqs_find_function_ft)(mqs_image *, char *, mqs_lang_code, mqs_taddr_t *);
 
 /* Given an image look up the specified symbol */
-typedef int (*mqs_find_symbol_ft) (mqs_image *, char *, mqs_taddr_t *);
+typedef int (*mqs_find_symbol_ft)(mqs_image *, char *, mqs_taddr_t *);
 
 /* Hang information on the process */
-typedef void (*mqs_put_process_info_ft) (mqs_process *, mqs_process_info *);
+typedef void (*mqs_put_process_info_ft)(mqs_process *, mqs_process_info *);
 /* Get it back */
-typedef mqs_process_info *(*mqs_get_process_info_ft) (mqs_process *);
+typedef mqs_process_info *(*mqs_get_process_info_ft)(mqs_process *);
 
 #if defined(FOR_MPI2)
 /* Given a process, return the job it belongs to */
-typedef mqs_job *(*mqs_get_process_job_ft) (mqs_process *);
+typedef mqs_job *(*mqs_get_process_job_ft)(mqs_process *);
 /* Given a process, return its identity (index in the job's universe of processes) */
-typedef int (*mqs_get_process_identity_ft) (mqs_job *);
+typedef int (*mqs_get_process_identity_ft)(mqs_job *);
 #endif
 
 /* Allocate store */
-typedef void *(*mqs_malloc_ft) (size_t);
+typedef void *(*mqs_malloc_ft)(size_t);
 /* Free it again */
-typedef void (*mqs_free_ft) (void *);
+typedef void (*mqs_free_ft)(void *);
 
 /***********************************************************************
  * Type access functions
@@ -355,21 +355,21 @@ typedef void (*mqs_free_ft) (void *);
  * been loaded, for instance by placing them in the same file as the
  * startup breakpoint function.
  */
-typedef mqs_type *(*mqs_find_type_ft) (mqs_image *, char *, mqs_lang_code);
+typedef mqs_type *(*mqs_find_type_ft)(mqs_image *, char *, mqs_lang_code);
 
 /* Given the handle for a type (assumed to be a structure) return the
  * byte offset of the named field. If the field cannot be found
  * the result will be -1.
  */
-typedef int (*mqs_field_offset_ft) (mqs_type *, char *);
+typedef int (*mqs_field_offset_ft)(mqs_type *, char *);
 
 /* Given the handle for a type return the size of the type in bytes.
  * (Just like sizeof ())
  */
-typedef int (*mqs_sizeof_ft) (mqs_type *);
+typedef int (*mqs_sizeof_ft)(mqs_type *);
 
 /* Fill in the sizes of target types for this process */
-typedef void (*mqs_get_type_sizes_ft) (mqs_process *, mqs_target_type_sizes *);
+typedef void (*mqs_get_type_sizes_ft)(mqs_process *, mqs_target_type_sizes *);
 
 /***********************************************************************
  * Target store access functions
@@ -382,18 +382,18 @@ typedef void (*mqs_get_type_sizes_ft) (mqs_process *, mqs_target_type_sizes *);
  * necessary byte flipping if you want to look at it at larger
  * granularity.
  */
-typedef int (*mqs_fetch_data_ft) (mqs_process *, mqs_taddr_t, int, void *);
+typedef int (*mqs_fetch_data_ft)(mqs_process *, mqs_taddr_t, int, void *);
 
 /* Convert data into host format */
-typedef void (*mqs_target_to_host_ft) (mqs_process *, const void *, void *, int);
+typedef void (*mqs_target_to_host_ft)(mqs_process *, const void *, void *, int);
 
 /***********************************************************************
  * Miscellaneous functions.
  */
 /* Print a message (intended for debugging use *ONLY*). */
-typedef void (*mqs_dprints_ft) (const char *);
+typedef void (*mqs_dprints_ft)(const char *);
 /* Convert an error code from the debugger into an error message */
-typedef char *(*mqs_errorstring_ft) (int);
+typedef char *(*mqs_errorstring_ft)(int);
 
 /***********************************************************************
  * Call back tables

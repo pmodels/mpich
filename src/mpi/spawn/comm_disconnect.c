@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_disconnect as PMPI_Comm_disconnect
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_disconnect")));
+int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__((weak, alias("PMPI_Comm_disconnect")));
 #endif
 /* -- End Profiling Symbol Block */
 

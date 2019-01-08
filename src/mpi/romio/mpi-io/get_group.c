@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_get_group(MPI_File fh, MPI_Group * group)
-    __attribute__ ((weak, alias("PMPI_File_get_group")));
+    __attribute__((weak, alias("PMPI_File_get_group")));
 #endif
 
 /* Include mapping from MPI->PMPI */

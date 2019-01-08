@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Win_create as PMPI_Win_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
-                   MPI_Win * win) __attribute__ ((weak, alias("PMPI_Win_create")));
+                   MPI_Win * win) __attribute__((weak, alias("PMPI_Win_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -54,7 +54,7 @@ int MPIE_Debug = 0;
 static int UniqId = 0;
 
 /* Local, forward references */
-static void MPIE_InstallSigHandler(int sig, void (*handler) (int));
+static void MPIE_InstallSigHandler(int sig, void (*handler)(int));
 
 /*
   Fork numprocs processes, with the current PMI groupid and kvsname
@@ -94,11 +94,11 @@ Input Parameters:
 
   @*/
 int MPIE_ForkProcesses(ProcessWorld * pWorld, char *envp[],
-                       int (*preamble) (void *, ProcessState *),
+                       int (*preamble)(void *, ProcessState *),
                        void *preambleData,
-                       int (*postfork) (void *, void *, ProcessState *),
+                       int (*postfork)(void *, void *, ProcessState *),
                        void *postforkData,
-                       int (*postamble) (void *, void *, ProcessState *), void *postambleData)
+                       int (*postamble)(void *, void *, ProcessState *), void *postambleData)
 {
     pid_t pid;
     ProcessApp *app;
@@ -924,7 +924,7 @@ int MPIE_ForwardCommonSignals(void)
 /*
   Install a signal handler
 */
-static void MPIE_InstallSigHandler(int sig, void (*handler) (int))
+static void MPIE_InstallSigHandler(int sig, void (*handler)(int))
 {
 #ifdef USE_SIGACTION
     struct sigaction oldact;

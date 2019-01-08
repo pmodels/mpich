@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_init_thread as PMPI_T_init_thread
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_init_thread(int required, int *provided)
-    __attribute__ ((weak, alias("PMPI_T_init_thread")));
+    __attribute__((weak, alias("PMPI_T_init_thread")));
 #endif
 /* -- End Profiling Symbol Block */
 

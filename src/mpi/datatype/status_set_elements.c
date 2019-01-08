@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Status_set_elements as PMPI_Status_set_elements
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int count)
-    __attribute__ ((weak, alias("PMPI_Status_set_elements")));
+    __attribute__((weak, alias("PMPI_Status_set_elements")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Type_set_name as PMPI_Type_set_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
-    __attribute__ ((weak, alias("PMPI_Type_set_name")));
+    __attribute__((weak, alias("PMPI_Type_set_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

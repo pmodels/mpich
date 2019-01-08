@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Intercomm_merge as PMPI_Intercomm_merge
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
-    __attribute__ ((weak, alias("PMPI_Intercomm_merge")));
+    __attribute__((weak, alias("PMPI_Intercomm_merge")));
 #endif
 /* -- End Profiling Symbol Block */
 

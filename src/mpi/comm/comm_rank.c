@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_rank as PMPI_Comm_rank
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__ ((weak, alias("PMPI_Comm_rank")));
+int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__((weak, alias("PMPI_Comm_rank")));
 #endif
 /* -- End Profiling Symbol Block */
 

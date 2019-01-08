@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Start as PMPI_Start
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Start(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Start")));
+int MPI_Start(MPI_Request * request) __attribute__((weak, alias("PMPI_Start")));
 #endif
 /* -- End Profiling Symbol Block */
 

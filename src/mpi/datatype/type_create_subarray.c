@@ -17,7 +17,7 @@
 int MPI_Type_create_subarray(int ndims, const int array_of_sizes[],
                              const int array_of_subsizes[], const int array_of_starts[],
                              int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_create_subarray")));
+    __attribute__((weak, alias("PMPI_Type_create_subarray")));
 #endif
 /* -- End Profiling Symbol Block */
 

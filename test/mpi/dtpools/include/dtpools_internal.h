@@ -277,9 +277,9 @@ struct DTPI_Par {
     } core;
 };
 
-typedef int (*DTPI_Creator) (struct DTPI_Par * par, DTP_t dtp);
-typedef int (*DTPI_Destructor) (DTP_t dtp, int obj_idx);
-typedef int (*DTPI_Checker) (struct DTPI_Par * par, DTP_t dtp);
+typedef int (*DTPI_Creator)(struct DTPI_Par * par, DTP_t dtp);
+typedef int (*DTPI_Destructor)(DTP_t dtp, int obj_idx);
+typedef int (*DTPI_Checker)(struct DTPI_Par * par, DTP_t dtp);
 
 int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp);

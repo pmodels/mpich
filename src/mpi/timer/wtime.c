@@ -13,7 +13,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Wtime as PMPI_Wtime
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
+double MPI_Wtime(void) __attribute__((weak, alias("PMPI_Wtime")));
 #endif
 /* -- End Profiling Symbol Block */
 

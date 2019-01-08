@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_Grequest_complete as PMPI_Grequest_complete
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Grequest_complete(MPI_Request request)
-    __attribute__ ((weak, alias("PMPI_Grequest_complete")));
+    __attribute__((weak, alias("PMPI_Grequest_complete")));
 #endif
 /* -- End Profiling Symbol Block */
 

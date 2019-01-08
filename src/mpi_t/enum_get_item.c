@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_enum_get_item as PMPI_T_enum_get_item
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
-    __attribute__ ((weak, alias("PMPI_T_enum_get_item")));
+    __attribute__((weak, alias("PMPI_T_enum_get_item")));
 #endif
 /* -- End Profiling Symbol Block */
 

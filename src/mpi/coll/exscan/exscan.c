@@ -51,7 +51,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPI_Comm comm)
-    __attribute__ ((weak, alias("PMPI_Exscan")));
+    __attribute__((weak, alias("PMPI_Exscan")));
 #endif
 /* -- End Profiling Symbol Block */
 

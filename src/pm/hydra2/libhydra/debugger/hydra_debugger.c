@@ -18,15 +18,15 @@ char *MPIR_debug_abort_string = 0;
 
 volatile int MPIR_being_debugged = 0;
 
-int (*MPIR_breakpointFn) (void) = MPIR_Breakpoint;
+int (*MPIR_breakpointFn)(void) = MPIR_Breakpoint;
 
 int MPIR_Breakpoint(void)
 {
     return 0;
 }
 
-HYD_status HYD_dbg_setup_procdesc(int process_count, struct HYD_exec * exec_list, int *pid,
-                                  int node_count, struct HYD_node * node_list)
+HYD_status HYD_dbg_setup_procdesc(int process_count, struct HYD_exec *exec_list, int *pid,
+                                  int node_count, struct HYD_node *node_list)
 {
     struct HYD_exec *exec;
     int i, exec_proc_count, node_id, node_core_count;

@@ -7,7 +7,7 @@
 #include "hydra_signal.h"
 #include "hydra_err.h"
 
-HYD_status HYD_signal_set(int signum, void (*handler) (int))
+HYD_status HYD_signal_set(int signum, void (*handler)(int))
 {
     HYD_status status = HYD_SUCCESS;
 #if defined HAVE_SIGACTION
@@ -39,7 +39,7 @@ HYD_status HYD_signal_set(int signum, void (*handler) (int))
 }
 
 
-HYD_status HYD_signal_set_common(void (*handler) (int))
+HYD_status HYD_signal_set_common(void (*handler)(int))
 {
     HYD_status status = HYD_SUCCESS;
 

@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                      MPIO_Request * request) __attribute__ ((weak, alias("PMPI_File_iread_at")));
+                      MPIO_Request * request) __attribute__((weak, alias("PMPI_File_iread_at")));
 #endif
 
 /* Include mapping from MPI->PMPI */

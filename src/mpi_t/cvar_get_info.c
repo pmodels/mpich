@@ -17,7 +17,7 @@
 int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity,
                         MPI_Datatype * datatype, MPI_T_enum * enumtype, char *desc, int *desc_len,
                         int *binding, int *scope)
-    __attribute__ ((weak, alias("PMPI_T_cvar_get_info")));
+    __attribute__((weak, alias("PMPI_T_cvar_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 

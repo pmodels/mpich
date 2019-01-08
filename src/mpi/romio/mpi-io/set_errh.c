@@ -19,7 +19,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
-    __attribute__ ((weak, alias("PMPI_File_set_errhandler")));
+    __attribute__((weak, alias("PMPI_File_set_errhandler")));
 #endif
 
 /* Include mapping from MPI->PMPI */

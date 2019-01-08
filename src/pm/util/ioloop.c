@@ -60,7 +60,7 @@ Input Parameters:
   Notes:
   Keeps track of the largest fd seen (in 'maxFD').
   @*/
-int MPIE_IORegister(int fd, int rdwr, int (*handler) (int, int, void *), void *extra_data)
+int MPIE_IORegister(int fd, int rdwr, int (*handler)(int, int, void *), void *extra_data)
 {
     int i;
 
@@ -139,7 +139,7 @@ int MPIE_IOLoop(int timeoutSeconds)
 {
     int i, maxfd, fd, nfds, rc = 0, rc2;
     fd_set readfds, writefds;
-    int (*handler) (int, int, void *);
+    int (*handler)(int, int, void *);
     struct timeval tv;
 
     /* Loop on the fds, with the timeout */

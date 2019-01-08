@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Keyval_create(MPI_Copy_function * copy_fn, MPI_Delete_function * delete_fn,
                       int *keyval, void *extra_state)
-    __attribute__ ((weak, alias("PMPI_Keyval_create")));
+    __attribute__((weak, alias("PMPI_Keyval_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

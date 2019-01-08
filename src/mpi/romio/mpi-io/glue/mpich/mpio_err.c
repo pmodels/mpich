@@ -32,7 +32,7 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 {
     MPI_Errhandler e;
-    void (*c_errhandler) (MPI_File *, int *, ...);
+    void (*c_errhandler)(MPI_File *, int *, ...);
     int kind;                   /* Error handler kind (see below) */
     char error_msg[4096];
     int len;

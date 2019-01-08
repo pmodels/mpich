@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_free as PMPI_Comm_free
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_free(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_free")));
+int MPI_Comm_free(MPI_Comm * comm) __attribute__((weak, alias("PMPI_Comm_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

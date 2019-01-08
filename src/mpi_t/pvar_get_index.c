@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_pvar_get_index as PMPI_T_pvar_get_index
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index)
-    __attribute__ ((weak, alias("PMPI_T_pvar_get_index")));
+    __attribute__((weak, alias("PMPI_T_pvar_get_index")));
 #endif
 /* -- End Profiling Symbol Block */
 

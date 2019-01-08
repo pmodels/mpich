@@ -61,7 +61,7 @@ static PMIMaster pmimaster = { 0, 0, 0 };
 
 /* Allow the user to register a routine to be used for the PMI spawn
    command */
-static int (*userSpawner) (ProcessWorld *, void *) = 0;
+static int (*userSpawner)(ProcessWorld *, void *) = 0;
 static void *userSpawnerData = 0;
 static int pmidebug = 0;
 
@@ -96,7 +96,7 @@ static int PMIUBufferedReadLine(PMIProcess *, char *, int);
  */
 typedef struct {
     const char *cmdName;
-    int (*handler) (PMIProcess *);
+    int (*handler)(PMIProcess *);
 } PMICmdMap;
 
 static PMICmdMap pmiCommands[] = {
@@ -346,7 +346,7 @@ int PMIServHandleInput(int fd, int rdwr, void *extra)
  *   spawner - A routine to spawn processes
  *   spawnerData - data passed to spawner
  */
-int PMIServInit(int (*spawner) (ProcessWorld *, void *), void *spawnerData)
+int PMIServInit(int (*spawner)(ProcessWorld *, void *), void *spawnerData)
 {
     userSpawner = spawner;
     userSpawnerData = spawnerData;

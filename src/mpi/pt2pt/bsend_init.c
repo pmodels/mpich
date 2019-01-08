@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                    MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Bsend_init")));
+    __attribute__((weak, alias("PMPI_Bsend_init")));
 #endif
 /* -- End Profiling Symbol Block */
 

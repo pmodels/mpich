@@ -19,12 +19,18 @@ static struct {
     MPI_Datatype atype, ptype;
     char name[32];
 } pairtypes[] = { {
-MPI_FLOAT, MPI_FLOAT_INT, "MPI_FLOAT_INT"}, {
-MPI_DOUBLE, MPI_DOUBLE_INT, "MPI_DOUBLE_INT"}, {
-MPI_LONG, MPI_LONG_INT, "MPI_LONG_INT"}, {
-MPI_SHORT, MPI_SHORT_INT, "MPI_SHORT_INT"}, {
-MPI_LONG_DOUBLE, MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT"}, {
-(MPI_Datatype) - 1, (MPI_Datatype) - 1, "end"}
+                   MPI_FLOAT, MPI_FLOAT_INT, "MPI_FLOAT_INT"}, {
+                                                                MPI_DOUBLE, MPI_DOUBLE_INT,
+                                                                "MPI_DOUBLE_INT"}, {
+                                                                                    MPI_LONG,
+                                                                                    MPI_LONG_INT,
+                                                                                    "MPI_LONG_INT"},
+{
+ MPI_SHORT, MPI_SHORT_INT, "MPI_SHORT_INT"}, {
+                                              MPI_LONG_DOUBLE, MPI_LONG_DOUBLE_INT,
+                                              "MPI_LONG_DOUBLE_INT"}, {
+                                                                       (MPI_Datatype) - 1,
+                                                                       (MPI_Datatype) - 1, "end"}
 };
 
 int parse_args(int argc, char **argv);

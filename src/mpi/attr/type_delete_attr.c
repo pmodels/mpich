@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Type_delete_attr as PMPI_Type_delete_attr
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
-    __attribute__ ((weak, alias("PMPI_Type_delete_attr")));
+    __attribute__((weak, alias("PMPI_Type_delete_attr")));
 #endif
 /* -- End Profiling Symbol Block */
 

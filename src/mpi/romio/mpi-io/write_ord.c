@@ -20,7 +20,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_write_ordered(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
                            MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_File_write_ordered")));
+    __attribute__((weak, alias("PMPI_File_write_ordered")));
 #endif
 
 /* Include mapping from MPI->PMPI */

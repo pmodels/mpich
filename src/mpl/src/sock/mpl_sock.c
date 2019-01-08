@@ -66,7 +66,7 @@ ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
 }
 
 
-ssize_t MPL_large_readv(int fd, const struct iovec * iov, int iovcnt)
+ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
 {
     ssize_t total_size, tmp;
     struct iovec dummy;

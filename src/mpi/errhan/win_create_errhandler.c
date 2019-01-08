@@ -17,7 +17,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
                               MPI_Errhandler * errhandler)
-    __attribute__ ((weak, alias("PMPI_Win_create_errhandler")));
+    __attribute__((weak, alias("PMPI_Win_create_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 

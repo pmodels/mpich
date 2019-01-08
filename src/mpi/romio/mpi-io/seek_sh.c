@@ -17,7 +17,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
-    __attribute__ ((weak, alias("PMPI_File_seek_shared")));
+    __attribute__((weak, alias("PMPI_File_seek_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */

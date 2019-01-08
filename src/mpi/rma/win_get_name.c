@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Win_get_name as PMPI_Win_get_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
-    __attribute__ ((weak, alias("PMPI_Win_get_name")));
+    __attribute__((weak, alias("PMPI_Win_get_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

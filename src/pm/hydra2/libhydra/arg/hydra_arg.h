@@ -12,7 +12,7 @@
 struct HYD_arg_match_table {
     const char *arg;
      HYD_status(*handler_fn) (char *arg, char ***argv_p);
-    void (*help_fn) (void);
+    void (*help_fn)(void);
 };
 
 HYD_status HYD_arg_parse_array(char ***argv, struct HYD_arg_match_table *match_table);

@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Type_ub as PMPI_Type_ub
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement)
-    __attribute__ ((weak, alias("PMPI_Type_ub")));
+    __attribute__((weak, alias("PMPI_Type_ub")));
 #endif
 /* -- End Profiling Symbol Block */
 

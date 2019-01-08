@@ -45,7 +45,7 @@ int MPIDU_bc_table_destroy(void *bc_table)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
-                       void **bc_table, size_t ** bc_indices)
+                       void **bc_table, size_t **bc_indices)
 {
     int mpi_errno = MPI_SUCCESS;
     int local_rank = -1, local_leader = -1;
@@ -102,7 +102,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t **bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
@@ -222,7 +222,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t **bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
@@ -321,7 +321,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t **bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;

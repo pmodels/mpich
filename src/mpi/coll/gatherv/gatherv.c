@@ -65,7 +65,7 @@ cvars:
 int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                 const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root,
                 MPI_Comm comm)
-    __attribute__ ((weak, alias("PMPI_Gatherv")));
+    __attribute__((weak, alias("PMPI_Gatherv")));
 #endif
 /* -- End Profiling Symbol Block */
 

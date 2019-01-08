@@ -17,7 +17,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_File_read_all")));
+    __attribute__((weak, alias("PMPI_File_read_all")));
 #endif
 
 /* Include mapping from MPI->PMPI */

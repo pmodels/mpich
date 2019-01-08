@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_failure_ack as PMPIX_Comm_failure_ack
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Comm_failure_ack(MPI_Comm comm) __attribute__ ((weak, alias("PMPIX_Comm_failure_ack")));
+int MPIX_Comm_failure_ack(MPI_Comm comm) __attribute__((weak, alias("PMPIX_Comm_failure_ack")));
 #endif
 /* -- End Profiling Symbol Block */
 

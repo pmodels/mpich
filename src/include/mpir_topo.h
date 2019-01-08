@@ -17,10 +17,10 @@
  */
 
 typedef struct MPII_Topo_ops {
-    int (*cartCreate) (const MPIR_Comm *, int, const int[], const int[], int, MPI_Comm *);
-    int (*cartMap) (const MPIR_Comm *, int, const int[], const int[], int *);
-    int (*graphCreate) (const MPIR_Comm *, int, const int[], const int[], int, MPI_Comm *);
-    int (*graphMap) (const MPIR_Comm *, int, const int[], const int[], int *);
+    int (*cartCreate)(const MPIR_Comm *, int, const int[], const int[], int, MPI_Comm *);
+    int (*cartMap)(const MPIR_Comm *, int, const int[], const int[], int *);
+    int (*graphCreate)(const MPIR_Comm *, int, const int[], const int[], int, MPI_Comm *);
+    int (*graphMap)(const MPIR_Comm *, int, const int[], const int[], int *);
 } MPII_Topo_ops;
 
 

@@ -31,7 +31,7 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
+HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish *publish)
 {
     int i;
     HYD_status status = HYD_SUCCESS;

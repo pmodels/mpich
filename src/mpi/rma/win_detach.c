@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_detach as PMPI_Win_detach
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("PMPI_Win_detach")));
+int MPI_Win_detach(MPI_Win win, const void *base) __attribute__((weak, alias("PMPI_Win_detach")));
 #endif
 /* -- End Profiling Symbol Block */
 

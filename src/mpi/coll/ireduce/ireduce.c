@@ -124,7 +124,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, int root, MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ireduce")));
+    __attribute__((weak, alias("PMPI_Ireduce")));
 #endif
 /* -- End Profiling Symbol Block */
 

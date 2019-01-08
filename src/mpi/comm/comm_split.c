@@ -38,7 +38,7 @@ cvars:
 #pragma _CRI duplicate MPI_Comm_split as PMPI_Comm_split
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
-    __attribute__ ((weak, alias("PMPI_Comm_split")));
+    __attribute__((weak, alias("PMPI_Comm_split")));
 #endif
 /* -- End Profiling Symbol Block */
 

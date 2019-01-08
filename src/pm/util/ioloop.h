@@ -10,7 +10,7 @@
 typedef struct {
     int fd;
     int rdwr;
-    int (*handler) (int, int, void *);
+    int (*handler)(int, int, void *);
     void *extra_data;
 } IOHandle;
 

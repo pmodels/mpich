@@ -68,7 +68,7 @@ int MPIR_Breakpoint(void);
    risk whole-program analysis removal), we use a globally visable
    function pointer.
 */
-int (*MPIR_breakpointFn) (void) = MPIR_Breakpoint;
+int (*MPIR_breakpointFn)(void) = MPIR_Breakpoint;
 
 int MPIE_InitForDebugger(ProcessWorld * pWorld)
 {

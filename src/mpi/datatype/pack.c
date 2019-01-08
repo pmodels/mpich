@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Pack as PMPI_Pack
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf,
-             int outsize, int *position, MPI_Comm comm) __attribute__ ((weak, alias("PMPI_Pack")));
+             int outsize, int *position, MPI_Comm comm) __attribute__((weak, alias("PMPI_Pack")));
 #endif
 /* -- End Profiling Symbol Block */
 

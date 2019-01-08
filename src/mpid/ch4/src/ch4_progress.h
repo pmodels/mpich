@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 #define FUNCNAME MPID_Progress_register
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), int *id)
+MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn)(int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

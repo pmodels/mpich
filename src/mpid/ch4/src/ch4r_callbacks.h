@@ -274,7 +274,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_do_send_target(void **data,
-                                       size_t * p_data_sz,
+                                       size_t *p_data_sz,
                                        int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request * rreq)
@@ -453,7 +453,7 @@ static inline int MPIDI_ssend_ack_origin_cb(MPIR_Request * req)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
                                            void **data,
-                                           size_t * p_data_sz,
+                                           size_t *p_data_sz,
                                            int is_local,
                                            int *is_contig,
                                            MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -569,7 +569,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
-                                                    size_t * p_data_sz,
+                                                    size_t *p_data_sz,
                                                     int is_local,
                                                     int *is_contig,
                                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -691,7 +691,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
-                                                    size_t * p_data_sz,
+                                                    size_t *p_data_sz,
                                                     int is_local,
                                                     int *is_contig,
                                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -720,7 +720,7 @@ static inline int MPIDI_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_ssend_target_msg_cb(int handler_id, void *am_hdr,
                                             void **data,
-                                            size_t * p_data_sz,
+                                            size_t *p_data_sz,
                                             int is_local,
                                             int *is_contig,
                                             MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -754,7 +754,7 @@ static inline int MPIDI_ssend_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_ssend_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                 void **data,
-                                                size_t * p_data_sz, int is_local, int *is_contig,
+                                                size_t *p_data_sz, int is_local, int *is_contig,
                                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                 MPIR_Request ** req)
 {
@@ -782,7 +782,7 @@ static inline int MPIDI_ssend_ack_target_msg_cb(int handler_id, void *am_hdr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
-                                                    size_t * p_data_sz, int is_local,
+                                                    size_t *p_data_sz, int is_local,
                                                     int *is_contig,
                                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                     MPIR_Request ** req)
@@ -853,7 +853,7 @@ static inline int MPIDI_comm_abort_origin_cb(MPIR_Request * sreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_comm_abort_target_msg_cb(int handler_id, void *am_hdr,
                                                  void **data,
-                                                 size_t * p_data_sz,
+                                                 size_t *p_data_sz,
                                                  int is_local,
                                                  int *is_contig,
                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,

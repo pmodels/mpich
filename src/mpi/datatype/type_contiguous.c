@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Type_contiguous as PMPI_Type_contiguous
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
-    __attribute__ ((weak, alias("PMPI_Type_contiguous")));
+    __attribute__((weak, alias("PMPI_Type_contiguous")));
 #endif
 /* -- End Profiling Symbol Block */
 

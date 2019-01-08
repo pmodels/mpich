@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_T_cvar_handle_alloc as PMPI_T_cvar_handle_alloc
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle * handle,
-                            int *count) __attribute__ ((weak, alias("PMPI_T_cvar_handle_alloc")));
+                            int *count) __attribute__((weak, alias("PMPI_T_cvar_handle_alloc")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -15,7 +15,7 @@
 #pragma _CRI duplicate MPI_Comm_connect as PMPI_Comm_connect
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm,
-                     MPI_Comm * newcomm) __attribute__ ((weak, alias("PMPI_Comm_connect")));
+                     MPI_Comm * newcomm) __attribute__((weak, alias("PMPI_Comm_connect")));
 #endif
 /* -- End Profiling Symbol Block */
 

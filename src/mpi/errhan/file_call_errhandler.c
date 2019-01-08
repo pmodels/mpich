@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_File_call_errhandler as PMPI_File_call_errhandler
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_call_errhandler(MPI_File fh, int errorcode)
-    __attribute__ ((weak, alias("PMPI_File_call_errhandler")));
+    __attribute__((weak, alias("PMPI_File_call_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -151,7 +151,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_File_call_cxx_errhandler(MPI_File * fh, int *errorcode,
-                                  void (*c_errhandler) (MPI_File *, int *, ...))
+                                  void (*c_errhandler)(MPI_File *, int *, ...))
 {
     /* ROMIO will contain a reference to this routine, so if there is
      * no C++ support, it will never be called but it must be availavle. */

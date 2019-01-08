@@ -104,12 +104,12 @@ typedef struct mpif_cmblk1_t_ mpif_cmblk1_t;
 /* *INDENT-OFF* */
 mpif_cmblk1_t mpifcmb1r @CMB_STATUS_ALIGNMENT@ = {{0}};
 /* *INDENT-ON* */
-extern mpif_cmblk1_t _CMPIFCMB1 __attribute__ ((alias("mpifcmb1r")));
-extern mpif_cmblk1_t MPIFCMB1 __attribute__ ((alias("mpifcmb1r")));
-extern mpif_cmblk1_t MPIFCMB1_ __attribute__ ((alias("mpifcmb1r")));
-extern mpif_cmblk1_t _Cmpifcmb1 __attribute__ ((alias("mpifcmb1r")));
-extern mpif_cmblk1_t mpifcmb1 __attribute__ ((alias("mpifcmb1r")));
-extern mpif_cmblk1_t mpifcmb1_ __attribute__ ((alias("mpifcmb1r")));
+extern mpif_cmblk1_t _CMPIFCMB1 __attribute__((alias("mpifcmb1r")));
+extern mpif_cmblk1_t MPIFCMB1 __attribute__((alias("mpifcmb1r")));
+extern mpif_cmblk1_t MPIFCMB1_ __attribute__((alias("mpifcmb1r")));
+extern mpif_cmblk1_t _Cmpifcmb1 __attribute__((alias("mpifcmb1r")));
+extern mpif_cmblk1_t mpifcmb1 __attribute__((alias("mpifcmb1r")));
+extern mpif_cmblk1_t mpifcmb1_ __attribute__((alias("mpifcmb1r")));
 
 struct mpif_cmblk2_t_ {
     MPI_Fint MPIF_STATUSES_IGNORE[1][MPIF_STATUS_SIZE];
@@ -118,12 +118,12 @@ typedef struct mpif_cmblk2_t_ mpif_cmblk2_t;
 /* *INDENT-OFF* */
 mpif_cmblk2_t mpifcmb2r @CMB_STATUS_ALIGNMENT@ = {{{0}}};
 /* *INDENT-ON* */
-extern mpif_cmblk2_t _CMPIFCMB2 __attribute__ ((alias("mpifcmb2r")));
-extern mpif_cmblk2_t MPIFCMB2 __attribute__ ((alias("mpifcmb2r")));
-extern mpif_cmblk2_t MPIFCMB2_ __attribute__ ((alias("mpifcmb2r")));
-extern mpif_cmblk2_t _Cmpifcmb2 __attribute__ ((alias("mpifcmb2r")));
-extern mpif_cmblk2_t mpifcmb2 __attribute__ ((alias("mpifcmb2r")));
-extern mpif_cmblk2_t mpifcmb2_ __attribute__ ((alias("mpifcmb2r")));
+extern mpif_cmblk2_t _CMPIFCMB2 __attribute__((alias("mpifcmb2r")));
+extern mpif_cmblk2_t MPIFCMB2 __attribute__((alias("mpifcmb2r")));
+extern mpif_cmblk2_t MPIFCMB2_ __attribute__((alias("mpifcmb2r")));
+extern mpif_cmblk2_t _Cmpifcmb2 __attribute__((alias("mpifcmb2r")));
+extern mpif_cmblk2_t mpifcmb2 __attribute__((alias("mpifcmb2r")));
+extern mpif_cmblk2_t mpifcmb2_ __attribute__((alias("mpifcmb2r")));
 
 struct mpif_cmblk3_t_ {
     MPI_Fint MPIF_BOTTOM;
@@ -132,12 +132,12 @@ typedef struct mpif_cmblk3_t_ mpif_cmblk3_t;
 /* *INDENT-OFF* */
 mpif_cmblk3_t mpifcmb3r @CMB_1INT_ALIGNMENT@ = {0};
 /* *INDENT-ON* */
-extern mpif_cmblk3_t _CMPIFCMB3 __attribute__ ((alias("mpifcmb3r")));
-extern mpif_cmblk3_t MPIFCMB3 __attribute__ ((alias("mpifcmb3r")));
-extern mpif_cmblk3_t MPIFCMB3_ __attribute__ ((alias("mpifcmb3r")));
-extern mpif_cmblk3_t _Cmpifcmb3 __attribute__ ((alias("mpifcmb3r")));
-extern mpif_cmblk3_t mpifcmb3 __attribute__ ((alias("mpifcmb3r")));
-extern mpif_cmblk3_t mpifcmb3_ __attribute__ ((alias("mpifcmb3r")));
+extern mpif_cmblk3_t _CMPIFCMB3 __attribute__((alias("mpifcmb3r")));
+extern mpif_cmblk3_t MPIFCMB3 __attribute__((alias("mpifcmb3r")));
+extern mpif_cmblk3_t MPIFCMB3_ __attribute__((alias("mpifcmb3r")));
+extern mpif_cmblk3_t _Cmpifcmb3 __attribute__((alias("mpifcmb3r")));
+extern mpif_cmblk3_t mpifcmb3 __attribute__((alias("mpifcmb3r")));
+extern mpif_cmblk3_t mpifcmb3_ __attribute__((alias("mpifcmb3r")));
 
 struct mpif_cmblk4_t_ {
     MPI_Fint MPIF_IN_PLACE;
@@ -146,12 +146,12 @@ typedef struct mpif_cmblk4_t_ mpif_cmblk4_t;
 /* *INDENT-OFF* */
 mpif_cmblk4_t mpifcmb4r @CMB_1INT_ALIGNMENT@ = {0};
 /* *INDENT-ON* */
-extern mpif_cmblk4_t _CMPIFCMB4 __attribute__ ((alias("mpifcmb4r")));
-extern mpif_cmblk4_t MPIFCMB4 __attribute__ ((alias("mpifcmb4r")));
-extern mpif_cmblk4_t MPIFCMB4_ __attribute__ ((alias("mpifcmb4r")));
-extern mpif_cmblk4_t _Cmpifcmb4 __attribute__ ((alias("mpifcmb4r")));
-extern mpif_cmblk4_t mpifcmb4 __attribute__ ((alias("mpifcmb4r")));
-extern mpif_cmblk4_t mpifcmb4_ __attribute__ ((alias("mpifcmb4r")));
+extern mpif_cmblk4_t _CMPIFCMB4 __attribute__((alias("mpifcmb4r")));
+extern mpif_cmblk4_t MPIFCMB4 __attribute__((alias("mpifcmb4r")));
+extern mpif_cmblk4_t MPIFCMB4_ __attribute__((alias("mpifcmb4r")));
+extern mpif_cmblk4_t _Cmpifcmb4 __attribute__((alias("mpifcmb4r")));
+extern mpif_cmblk4_t mpifcmb4 __attribute__((alias("mpifcmb4r")));
+extern mpif_cmblk4_t mpifcmb4_ __attribute__((alias("mpifcmb4r")));
 
 struct mpif_cmblk5_t_ {
     MPI_Fint MPIF_UNWEIGHTED;
@@ -160,12 +160,12 @@ typedef struct mpif_cmblk5_t_ mpif_cmblk5_t;
 /* *INDENT-OFF* */
 FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5r @CMB_1INT_ALIGNMENT@ = {0};
 /* *INDENT-ON* */
-extern FORT_DLL_SPEC mpif_cmblk5_t _CMPIFCMB5 __attribute__ ((alias("mpifcmb5r")));
-extern FORT_DLL_SPEC mpif_cmblk5_t MPIFCMB5 __attribute__ ((alias("mpifcmb5r")));
-extern FORT_DLL_SPEC mpif_cmblk5_t MPIFCMB5_ __attribute__ ((alias("mpifcmb5r")));
-extern FORT_DLL_SPEC mpif_cmblk5_t _Cmpifcmb5 __attribute__ ((alias("mpifcmb5r")));
-extern FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5 __attribute__ ((alias("mpifcmb5r")));
-extern FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5_ __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t _CMPIFCMB5 __attribute__((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t MPIFCMB5 __attribute__((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t MPIFCMB5_ __attribute__((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t _Cmpifcmb5 __attribute__((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5 __attribute__((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5_ __attribute__((alias("mpifcmb5r")));
 
 struct mpif_cmblk6_t_ {
     MPI_Fint MPIF_ERRCODES_IGNORE[1];
@@ -174,12 +174,12 @@ typedef struct mpif_cmblk6_t_ mpif_cmblk6_t;
 /* *INDENT-OFF* */
 mpif_cmblk6_t mpifcmb6r @CMB_1INT_ALIGNMENT@ = {{0}};
 /* *INDENT-ON* */
-extern mpif_cmblk6_t _CMPIFCMB6 __attribute__ ((alias("mpifcmb6r")));
-extern mpif_cmblk6_t MPIFCMB6 __attribute__ ((alias("mpifcmb6r")));
-extern mpif_cmblk6_t MPIFCMB6_ __attribute__ ((alias("mpifcmb6r")));
-extern mpif_cmblk6_t _Cmpifcmb6 __attribute__ ((alias("mpifcmb6r")));
-extern mpif_cmblk6_t mpifcmb6 __attribute__ ((alias("mpifcmb6r")));
-extern mpif_cmblk6_t mpifcmb6_ __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t _CMPIFCMB6 __attribute__((alias("mpifcmb6r")));
+extern mpif_cmblk6_t MPIFCMB6 __attribute__((alias("mpifcmb6r")));
+extern mpif_cmblk6_t MPIFCMB6_ __attribute__((alias("mpifcmb6r")));
+extern mpif_cmblk6_t _Cmpifcmb6 __attribute__((alias("mpifcmb6r")));
+extern mpif_cmblk6_t mpifcmb6 __attribute__((alias("mpifcmb6r")));
+extern mpif_cmblk6_t mpifcmb6_ __attribute__((alias("mpifcmb6r")));
 
 struct mpif_cmblk7_t_ {
     char MPIF_ARGVS_NULL[1][1];
@@ -189,12 +189,12 @@ typedef struct mpif_cmblk7_t_ mpif_cmblk7_t;
 /* *INDENT-OFF* */
 mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {{{0}}};
 /* *INDENT-ON* */
-extern mpif_cmblk7_t _CMPIFCMB7 __attribute__ ((alias("mpifcmb7r")));
-extern mpif_cmblk7_t MPIFCMB7 __attribute__ ((alias("mpifcmb7r")));
-extern mpif_cmblk7_t MPIFCMB7_ __attribute__ ((alias("mpifcmb7r")));
-extern mpif_cmblk7_t _Cmpifcmb7 __attribute__ ((alias("mpifcmb7r")));
-extern mpif_cmblk7_t mpifcmb7 __attribute__ ((alias("mpifcmb7r")));
-extern mpif_cmblk7_t mpifcmb7_ __attribute__ ((alias("mpifcmb7r")));
+extern mpif_cmblk7_t _CMPIFCMB7 __attribute__((alias("mpifcmb7r")));
+extern mpif_cmblk7_t MPIFCMB7 __attribute__((alias("mpifcmb7r")));
+extern mpif_cmblk7_t MPIFCMB7_ __attribute__((alias("mpifcmb7r")));
+extern mpif_cmblk7_t _Cmpifcmb7 __attribute__((alias("mpifcmb7r")));
+extern mpif_cmblk7_t mpifcmb7 __attribute__((alias("mpifcmb7r")));
+extern mpif_cmblk7_t mpifcmb7_ __attribute__((alias("mpifcmb7r")));
 
 struct mpif_cmblk8_t_ {
     char MPIF_ARGV_NULL[1];
@@ -204,12 +204,12 @@ typedef struct mpif_cmblk8_t_ mpif_cmblk8_t;
 /* *INDENT-OFF* */
 mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {{0}};
 /* *INDENT-ON* */
-extern mpif_cmblk8_t _CMPIFCMB8 __attribute__ ((alias("mpifcmb8r")));
-extern mpif_cmblk8_t MPIFCMB8 __attribute__ ((alias("mpifcmb8r")));
-extern mpif_cmblk8_t MPIFCMB8_ __attribute__ ((alias("mpifcmb8r")));
-extern mpif_cmblk8_t _Cmpifcmb8 __attribute__ ((alias("mpifcmb8r")));
-extern mpif_cmblk8_t mpifcmb8 __attribute__ ((alias("mpifcmb8r")));
-extern mpif_cmblk8_t mpifcmb8_ __attribute__ ((alias("mpifcmb8r")));
+extern mpif_cmblk8_t _CMPIFCMB8 __attribute__((alias("mpifcmb8r")));
+extern mpif_cmblk8_t MPIFCMB8 __attribute__((alias("mpifcmb8r")));
+extern mpif_cmblk8_t MPIFCMB8_ __attribute__((alias("mpifcmb8r")));
+extern mpif_cmblk8_t _Cmpifcmb8 __attribute__((alias("mpifcmb8r")));
+extern mpif_cmblk8_t mpifcmb8 __attribute__((alias("mpifcmb8r")));
+extern mpif_cmblk8_t mpifcmb8_ __attribute__((alias("mpifcmb8r")));
 
 struct mpif_cmblk9_t_ {
     MPI_Fint MPIF_WEIGHTS_EMPTY;
@@ -218,11 +218,11 @@ typedef struct mpif_cmblk9_t_ mpif_cmblk9_t;
 /* *INDENT-OFF* */
 FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9r @CMB_1INT_ALIGNMENT@ = {0};
 /* *INDENT-ON* */
-extern FORT_DLL_SPEC mpif_cmblk9_t _CMPIFCMB9 __attribute__ ((alias("mpifcmb9r")));
-extern FORT_DLL_SPEC mpif_cmblk9_t MPIFCMB9 __attribute__ ((alias("mpifcmb9r")));
-extern FORT_DLL_SPEC mpif_cmblk9_t MPIFCMB9_ __attribute__ ((alias("mpifcmb9r")));
-extern FORT_DLL_SPEC mpif_cmblk9_t _Cmpifcmb9 __attribute__ ((alias("mpifcmb9r")));
-extern FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9 __attribute__ ((alias("mpifcmb9r")));
-extern FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9_ __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t _CMPIFCMB9 __attribute__((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t MPIFCMB9 __attribute__((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t MPIFCMB9_ __attribute__((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t _Cmpifcmb9 __attribute__((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9 __attribute__((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9_ __attribute__((alias("mpifcmb9r")));
 
 #endif

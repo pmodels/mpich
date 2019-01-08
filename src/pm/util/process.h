@@ -129,7 +129,7 @@ typedef struct ProcessUniverse {
     int nWorlds;                /* Number of worlds */
     int size;                   /* Universe size */
     int nLive;                  /* Number of live processes */
-    int (*OnNone) (void);       /* Routine to call when nLive == 0 */
+    int (*OnNone)(void);        /* Routine to call when nLive == 0 */
     int timeout;                /* Timeout in seconds (-1 for none) */
     int giveExitInfo;           /* True if info on error exit
                                  * should be printed to stderr */

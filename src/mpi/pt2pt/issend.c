@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Issend as PMPI_Issend
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-               MPI_Comm comm, MPI_Request * request) __attribute__ ((weak, alias("PMPI_Issend")));
+               MPI_Comm comm, MPI_Request * request) __attribute__((weak, alias("PMPI_Issend")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -111,7 +111,7 @@ struct ADIOI_Iread_and_exch_vars {
     int coll_bufsize;
 
     /* next function to be called */
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 };
 
 /* ADIOI_R_Iexchange_data */
@@ -151,7 +151,7 @@ struct ADIOI_R_Iexchange_data_vars {
     char **recv_buf;
 
     /* next function to be called */
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 };
 
 
@@ -950,7 +950,7 @@ static void ADIOI_Iread_and_exch_l2_end(ADIOI_NBC_Request * nbc_req, int *error_
 static void ADIOI_Iread_and_exch_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_Iread_and_exch_vars *vars = nbc_req->data.rd.rae_vars;
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
 
     ADIOI_Free(vars->curr_offlen_ptr);
     ADIOI_Free(vars->count);
@@ -1112,7 +1112,7 @@ static void ADIOI_R_Iexchange_data_fill(ADIOI_NBC_Request * nbc_req, int *error_
 static void ADIOI_R_Iexchange_data_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_R_Iexchange_data_vars *vars = nbc_req->data.rd.red_vars;
-    void (*next_fn) (ADIOI_NBC_Request *, int *);
+    void (*next_fn)(ADIOI_NBC_Request *, int *);
     int i;
 
     ADIOI_Free(vars->req2);

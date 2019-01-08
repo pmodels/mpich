@@ -22,13 +22,11 @@ static char THIS_FILE[] = __FILE__;
 // CMainFrame
 
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
-
     BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
     //{{AFX_MSG_MAP(CMainFrame)
     ON_WM_CREATE()
     //}}AFX_MSG_MAP
     END_MESSAGE_MAP()
-
 static UINT indicators[] = {
     ID_SEPARATOR,       // status line indicator
     ID_INDICATOR_CAPS,

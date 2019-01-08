@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Recv as PMPI_Recv
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-             MPI_Comm comm, MPI_Status * status) __attribute__ ((weak, alias("PMPI_Recv")));
+             MPI_Comm comm, MPI_Status * status) __attribute__((weak, alias("PMPI_Recv")));
 #endif
 /* -- End Profiling Symbol Block */
 

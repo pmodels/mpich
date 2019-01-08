@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Win_set_errhandler as PMPI_Win_set_errhandler
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
-    __attribute__ ((weak, alias("PMPI_Win_set_errhandler")));
+    __attribute__((weak, alias("PMPI_Win_set_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 

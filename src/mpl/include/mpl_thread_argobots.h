@@ -26,7 +26,7 @@ typedef ABT_key MPL_thread_tls_t;
  * ======================================================================*/
 
 /* MPL_thread_create() defined in mpiu_thread_argobots.c */
-typedef void (*MPL_thread_func_t) (void *data);
+typedef void (*MPL_thread_func_t)(void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp);
 
 #define MPL_thread_exit()

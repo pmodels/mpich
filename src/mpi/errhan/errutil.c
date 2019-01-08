@@ -178,7 +178,7 @@ void MPIR_Err_init(void)
 /* This routine is used to install a callback used by the C++ binding
  to invoke the (C++) error handler.  The callback routine is a C routine,
  defined in the C++ binding. */
-void MPII_Errhandler_set_cxx(MPI_Errhandler errhand, void (*errcall) (void))
+void MPII_Errhandler_set_cxx(MPI_Errhandler errhand, void (*errcall)(void))
 {
     MPIR_Errhandler *errhand_ptr;
 

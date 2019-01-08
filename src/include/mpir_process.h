@@ -65,26 +65,26 @@ typedef struct MPIR_Process_t {
 
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */
-    int (*dimsCreate) (int, int, int *);
+    int (*dimsCreate)(int, int, int *);
 
     /* Attribute dup functions.  Here for lazy initialization */
-    int (*attr_dup) (int, MPIR_Attribute *, MPIR_Attribute **);
-    int (*attr_free) (int, MPIR_Attribute **);
+    int (*attr_dup)(int, MPIR_Attribute *, MPIR_Attribute **);
+    int (*attr_free)(int, MPIR_Attribute **);
     /* There is no win_attr_dup function because there can be no MPI_Win_dup
      * function */
     /* Routine to get the messages corresponding to dynamically created
      * error messages */
-    const char *(*errcode_to_string) (int);
+    const char *(*errcode_to_string)(int);
 #ifdef HAVE_CXX_BINDING
     /* Routines to call C++ functions from the C implementation of the
      * MPI reduction and attribute routines */
-    void (*cxx_call_op_fn) (const void *, void *, int, MPI_Datatype, MPI_User_function *);
+    void (*cxx_call_op_fn)(const void *, void *, int, MPI_Datatype, MPI_User_function *);
     /* Error handling functions.  As for the attribute functions,
      * we pass the integer file/comm/win, the address of the error code,
      * and the C function to call (itself a function defined by the
      * C++ interface and exported to C).  The first argument is used
      * to specify the kind (comm,file,win) */
-    void (*cxx_call_errfn) (int, int *, int *, void (*)(void));
+    void (*cxx_call_errfn)(int, int *, int *, void (*)(void));
 #endif                          /* HAVE_CXX_BINDING */
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;

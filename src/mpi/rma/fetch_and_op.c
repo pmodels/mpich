@@ -18,7 +18,7 @@
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
                      MPI_Op op, MPI_Win win)
-    __attribute__ ((weak, alias("PMPI_Fetch_and_op")));
+    __attribute__((weak, alias("PMPI_Fetch_and_op")));
 #endif
 /* -- End Profiling Symbol Block */
 

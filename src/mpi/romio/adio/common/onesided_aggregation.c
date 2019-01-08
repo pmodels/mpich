@@ -2373,7 +2373,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                     }
                 }       /* useIOBuffer */
-            } /* IAmUsedAgg */
+            }   /* IAmUsedAgg */
             else if (useIOBuffer) {
                 if (roundIter < (numberOfRounds - 1)) {
                     if (currentReadBuf == 0) {

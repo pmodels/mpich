@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File * fh)
-    __attribute__ ((weak, alias("PMPI_File_open")));
+    __attribute__((weak, alias("PMPI_File_open")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -140,7 +140,7 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
         filename = tmp + 1;
     }
 
-/* use default values for disp, etype, filetype */
+    /* use default values for disp, etype, filetype */
 
     *fh = ADIO_Open(comm, dupcomm, filename, file_system, fsops, amode, 0,
                     MPI_BYTE, MPI_BYTE, info, ADIO_PERM_NULL, &error_code);

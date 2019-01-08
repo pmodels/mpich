@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_get_amode(MPI_File fh, int *amode)
-    __attribute__ ((weak, alias("PMPI_File_get_amode")));
+    __attribute__((weak, alias("PMPI_File_get_amode")));
 #endif
 
 /* Include mapping from MPI->PMPI */

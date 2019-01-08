@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Get_elements as PMPI_Get_elements
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *count)
-    __attribute__ ((weak, alias("PMPI_Get_elements")));
+    __attribute__((weak, alias("PMPI_Get_elements")));
 #endif
 /* -- End Profiling Symbol Block */
 

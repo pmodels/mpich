@@ -1054,9 +1054,9 @@ void complex_points_to_image(complex_t in_julia_coord_set[],
             x_min = in_julia_coord_set[i].real;
         if (in_julia_coord_set[i].real > x_max)
             x_max = in_julia_coord_set[i].real;
-        if (in_julia_coord_set[i].imaginary < y_min)
+        if (in_julia_coord_set[i].imaginary <y_min)
             y_min = in_julia_coord_set[i].imaginary;
-        if (in_julia_coord_set[i].imaginary > y_max)
+        if (in_julia_coord_set[i].imaginary >y_max)
             y_max = in_julia_coord_set[i].imaginary;
     }
 
@@ -1082,7 +1082,7 @@ void complex_points_to_image(complex_t in_julia_coord_set[],
     for (i = 0; i < in_julia_set_size; ++i) {
         temp_quantize =
             (in_julia_coord_set[i].real - x_min) / x_resolution_element +
-            (y_max - in_julia_coord_set[i].imaginary) / y_resolution_element *
+            (y_max - in_julia_coord_set[i].imaginary) /y_resolution_element *
             (double) i_pixels_across;
         i_temp_quantize = (int) temp_quantize;
         if (i_temp_quantize > i_pixels_across * i_pixels_down)
@@ -1123,9 +1123,10 @@ complex_t multiply_complex(complex_t in_one_complex, complex_t in_two_complex)
     complex_t out_complex;
     /* multiplying complex variables-- (x+iy) * (a+ib) = xa - yb + i(xb + ya) */
     out_complex.real = in_one_complex.real * in_two_complex.real -
-        in_one_complex.imaginary * in_two_complex.imaginary;
-    out_complex.imaginary = in_one_complex.real * in_two_complex.imaginary +
-        in_one_complex.imaginary * in_two_complex.real;
+        in_one_complex.imaginary *in_two_complex.imaginary;
+    out_complex.imaginary =
+        in_one_complex.real *
+        in_two_complex.imaginary +in_one_complex.imaginary *in_two_complex.real;
     return out_complex;
 }
 
@@ -1136,11 +1137,11 @@ complex_t divide_complex(complex_t in_one_complex, complex_t in_two_complex)
     /* dividing complex variables-- (x+iy)/(a+ib) = (xa - yb)/(a^2+b^2)
      * + i (y*a-x*b)/(a^2+b^2) */
     divider = (in_two_complex.real * in_two_complex.real -
-               in_two_complex.imaginary * in_two_complex.imaginary);
+               in_two_complex.imaginary *in_two_complex.imaginary);
     out_complex.real = (in_one_complex.real * in_two_complex.real -
-                        in_one_complex.imaginary * in_two_complex.imaginary) / divider;
-    out_complex.imaginary = (in_one_complex.imaginary * in_two_complex.real -
-                             in_one_complex.real * in_two_complex.imaginary) / divider;
+                        in_one_complex.imaginary *in_two_complex.imaginary) /divider;
+    out_complex.imaginary = (in_one_complex.imaginary *in_two_complex.real -
+                             in_one_complex.real * in_two_complex.imaginary) /divider;
     return out_complex;
 }
 
@@ -1149,9 +1150,9 @@ complex_t inverse_complex(complex_t in_complex)
     complex_t out_complex;
     double divider;
     /* inverting a complex variable: 1/(x+iy) */
-    divider = (in_complex.real * in_complex.real - in_complex.imaginary * in_complex.imaginary);
-    out_complex.real = (in_complex.real - in_complex.imaginary) / divider;
-    out_complex.imaginary = (in_complex.real - in_complex.imaginary) / divider;
+    divider = (in_complex.real * in_complex.real - in_complex.imaginary *in_complex.imaginary);
+    out_complex.real = (in_complex.real - in_complex.imaginary) /divider;
+    out_complex.imaginary = (in_complex.real - in_complex.imaginary) /divider;
     return out_complex;
 }
 
@@ -1160,7 +1161,7 @@ complex_t add_complex(complex_t in_one_complex, complex_t in_two_complex)
     complex_t out_complex;
     /* adding complex variables-- do by component */
     out_complex.real = in_one_complex.real + in_two_complex.real;
-    out_complex.imaginary = in_one_complex.imaginary + in_two_complex.imaginary;
+    out_complex.imaginary = in_one_complex.imaginary +in_two_complex.imaginary;
     return out_complex;
 }
 
@@ -1169,7 +1170,7 @@ complex_t subtract_complex(complex_t in_one_complex, complex_t in_two_complex)
     complex_t out_complex;
     /* subtracting complex variables-- do by component */
     out_complex.real = in_one_complex.real - in_two_complex.real;
-    out_complex.imaginary = in_one_complex.imaginary - in_two_complex.imaginary;
+    out_complex.imaginary = in_one_complex.imaginary -in_two_complex.imaginary;
     return out_complex;
 }
 
@@ -1178,7 +1179,7 @@ double absolute_complex(complex_t in_complex)
     double out_double;
     /* absolute value is (for x+yi)  sqrt(x^2 + y^2) */
     out_double =
-        sqrt(in_complex.real * in_complex.real + in_complex.imaginary * in_complex.imaginary);
+        sqrt(in_complex.real * in_complex.real + in_complex.imaginary *in_complex.imaginary);
     return out_double;
 }
 

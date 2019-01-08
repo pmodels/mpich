@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Pack_size as PMPI_Pack_size
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
-    __attribute__ ((weak, alias("PMPI_Pack_size")));
+    __attribute__((weak, alias("PMPI_Pack_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

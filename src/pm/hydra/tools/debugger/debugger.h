@@ -50,7 +50,7 @@ extern int MPIR_partial_attach_ok;
  * inlining of this call.  Rather than place it in a separate file
  * (and still risk whole-program analysis removal), we use a globally
  * visable function pointer. */
-extern int (*MPIR_breakpointFn) (void);
+extern int (*MPIR_breakpointFn)(void);
 int MPIR_Breakpoint(void);
 
 HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg *pg);

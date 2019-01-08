@@ -129,7 +129,7 @@ void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err)
     }
 }
 
-void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err, int prio __attribute__ ((unused)))
+void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err, int prio __attribute__((unused)))
 {
     DWORD result;
 

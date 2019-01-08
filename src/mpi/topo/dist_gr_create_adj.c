@@ -19,7 +19,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int so
                                    const int sourceweights[], int outdegree,
                                    const int destinations[], const int destweights[],
                                    MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
-    __attribute__ ((weak, alias("PMPI_Dist_graph_create_adjacent")));
+    __attribute__((weak, alias("PMPI_Dist_graph_create_adjacent")));
 #endif
 /* -- End Profiling Symbol Block */
 

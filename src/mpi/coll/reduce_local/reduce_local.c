@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Reduce_local as PMPI_Reduce_local
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
-    __attribute__ ((weak, alias("PMPI_Reduce_local")));
+    __attribute__((weak, alias("PMPI_Reduce_local")));
 #endif
 /* -- End Profiling Symbol Block */
 

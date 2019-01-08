@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_T_pvar_reset as PMPI_T_pvar_reset
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
-    __attribute__ ((weak, alias("PMPI_T_pvar_reset")));
+    __attribute__((weak, alias("PMPI_T_pvar_reset")));
 #endif
 /* -- End Profiling Symbol Block */
 

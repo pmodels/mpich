@@ -71,7 +71,7 @@ cvars:
 #pragma _CRI duplicate MPI_Ibarrier as PMPI_Ibarrier
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ibarrier")));
+    __attribute__((weak, alias("PMPI_Ibarrier")));
 #endif
 /* -- End Profiling Symbol Block */
 

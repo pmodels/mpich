@@ -144,7 +144,7 @@ HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_pr
 #endif
 }
 
-HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env * envlist, int num_ranks,
+HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks,
                                 int ranks[], int *in, int *out, int *err, int *pid,
                                 const char *user_ckpoint_prefix)
 {

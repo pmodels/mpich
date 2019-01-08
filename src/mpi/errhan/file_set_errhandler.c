@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_set_errhandler as PMPI_File_set_errhandler
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
-    __attribute__ ((weak, alias("PMPI_File_set_errhandler")));
+    __attribute__((weak, alias("PMPI_File_set_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -163,7 +163,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #define FUNCNAME MPIR_Get_file_error_routine
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
+void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c)(MPI_File *, int *, ...), int *kind)
 {
     MPIR_Errhandler *e_ptr = 0;
     int mpi_errno = MPI_SUCCESS;

@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Aint_diff as PMPI_Aint_diff
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
-    __attribute__ ((weak, alias("PMPI_Aint_diff")));
+    __attribute__((weak, alias("PMPI_Aint_diff")));
 #endif
 /* -- End Profiling Symbol Block */
 

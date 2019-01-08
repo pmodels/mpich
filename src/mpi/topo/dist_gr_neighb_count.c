@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Dist_graph_neighbors_count as PMPI_Dist_graph_neighbors_count
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted)
-    __attribute__ ((weak, alias("PMPI_Dist_graph_neighbors_count")));
+    __attribute__((weak, alias("PMPI_Dist_graph_neighbors_count")));
 #endif
 /* -- End Profiling Symbol Block */
 

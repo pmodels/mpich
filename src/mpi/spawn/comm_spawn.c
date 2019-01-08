@@ -16,7 +16,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info, int root,
                    MPI_Comm comm, MPI_Comm * intercomm, int array_of_errcodes[])
-    __attribute__ ((weak, alias("PMPI_Comm_spawn")));
+    __attribute__((weak, alias("PMPI_Comm_spawn")));
 #endif
 /* -- End Profiling Symbol Block */
 

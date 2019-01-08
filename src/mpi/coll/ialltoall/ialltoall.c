@@ -64,7 +64,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                   int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Ialltoall")));
+    __attribute__((weak, alias("PMPI_Ialltoall")));
 #endif
 /* -- End Profiling Symbol Block */
 
