@@ -7,10 +7,10 @@ else
 fi
 
 indent_version=$($indent --version)
-if echo "$indent_version" | grep -q "GNU indent"; then
+if echo "$indent_version" | grep -q "GNU indent 2.2.12"; then
     :
 else
-    echo "This script requires GNU indent."
+    echo "This script requires GNU indent version 2.2.12."
     exit
 fi
 
