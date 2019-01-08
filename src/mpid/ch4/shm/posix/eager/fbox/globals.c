@@ -12,7 +12,9 @@
 #include "fbox_impl.h"
 #include "fbox_types.h"
 
-MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { 0 };
+/* *INDENT-OFF* */
+MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { {0} };
+/* *INDENT-ON* */
 
 #ifdef MPL_USE_DBG_LOGGING
 MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
