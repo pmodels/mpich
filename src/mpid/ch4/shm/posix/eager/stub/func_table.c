@@ -9,6 +9,8 @@
  */
 
 #ifndef POSIX_EAGER_INLINE
+
+#ifndef POSIX_EAGER_DISABLE_INLINES
 #define POSIX_EAGER_DISABLE_INLINES
 
 #include <mpidimpl.h>
@@ -29,4 +31,5 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_stub_funcs = {
     MPIDI_POSIX_eager_recv_completed_hook
 };
 
+#endif /* POSIX_EAGER_DIABLE_INLINES */
 #endif /* POSIX_EAGER_INLINE */
