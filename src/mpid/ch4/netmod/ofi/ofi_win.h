@@ -527,9 +527,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
     MPIR_ERR_CHKANDSTMT(window_instance >= MPIDI_Global.max_huge_rmas, mpi_errno,
                         MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
 
-    assert(MPIDI_Global.max_rma_key_bits > MPIDI_Global.context_shift);
-    max_contexts_allowed =
-        (uint64_t) 1 << (MPIDI_Global.max_rma_key_bits - MPIDI_Global.context_shift);
+    max_contexts_allowed = (uint64_t) 1 << MPIDI_Global.context_bits;
     MPIR_ERR_CHKANDSTMT(MPIR_CONTEXT_READ_FIELD(PREFIX, win->comm_ptr->context_id)
                         >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
                         goto fn_fail, "**ofid_mr_reg");
