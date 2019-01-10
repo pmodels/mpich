@@ -111,6 +111,10 @@ int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t sched, int n_in_vtcs, int *in
 /* Transport function to allocate memory required for schedule execution */
 void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t sched);
 
+/* Transport function to schedule a sub-schedule */
+int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t sched, MPIR_TSP_sched_t subsched,
+                             int n_in_vtcs, int *in_vtcs, int *vtx_id);
+
 /* Transport function to enqueue and kick start a non-blocking
  * collective */
 int MPIR_TSP_sched_start(MPIR_TSP_sched_t sched, MPIR_Comm * comm, MPIR_Request ** request);

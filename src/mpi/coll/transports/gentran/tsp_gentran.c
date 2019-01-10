@@ -93,7 +93,12 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
                 MPIR_Datatype_release_if_not_builtin(vtx->u.localcopy.recvtype);
                 break;
             case MPII_GENUTIL_VTX_KIND__SCHED:
-                /* sub schedule is free'ed when it is done */
+                /* In normal case, sub schedule is free'ed when it is done
+                 * only when the sub-scheduler is persistent */
+                if (vtx->u.sched.is_persistent) {
+                    mpi_errno = MPIR_TSP_sched_free(vtx->u.sched.sched);
+                    MPIR_ERR_CHECK(mpi_errno);
+                }
                 break;
             default:
                 if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
@@ -543,6 +548,29 @@ void *MPIR_TSP_sched_malloc(size_t size, MPIR_TSP_sched_t s)
     return addr;
 }
 
+int MPIR_TSP_sched_sub_sched(MPIR_TSP_sched_t s, MPIR_TSP_sched_t subs,
+                             int n_in_vtcs, int *in_vtcs, int *vtx_id)
+{
+    MPII_Genutil_sched_t *sched = s;
+    MPII_Genutil_sched_t *subsched = subs;
+    int mpi_errno = MPI_SUCCESS;
+    vtx_t *vtxp;
+
+    /* assign a new vertex */
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SCHED;
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
+    vtxp->u.sched.sched = subsched;
+    vtxp->u.sched.req = NULL;
+    vtxp->u.sched.is_persistent = subsched->is_persistent;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] sub-schedule", *vtx_id));
+
+    return mpi_errno;
+}
+
 int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** req)
 {
     MPII_Genutil_sched_t *sched = s;
@@ -597,19 +625,30 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
     int mpi_errno = MPI_SUCCESS;
+    vtx_t *vtx;
     int i;
 
     MPIR_FUNC_ENTER;
 
+    MPIR_Assert(sched->is_persistent);
+
     sched->completed_vtcs = 0;
     sched->issued_head = sched->issued_tail = NULL;
-    for (i = 0; i < sched->total_vtcs; i++) {
-        MPII_Genutil_vtx_t *vtx = (MPII_Genutil_vtx_t *) utarray_eltptr(&sched->vtcs, i);
+
+    vtx = ut_type_array(&sched->vtcs, vtx_t *);
+    for (i = 0; i < sched->total_vtcs; i++, vtx++) {
         MPIR_ERR_CHKANDJUMP(!vtx, mpi_errno, MPI_ERR_OTHER, "**nomem");
         vtx->pending_dependencies = vtx->num_dependencies;
         vtx->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
-        if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
-            vtx->u.imcast.last_complete = -1;
+        switch (vtx->vtx_kind) {
+            case MPII_GENUTIL_VTX_KIND__IMCAST:
+                vtx->u.imcast.last_complete = -1;
+                break;
+            case MPII_GENUTIL_VTX_KIND__SCHED:
+                MPIR_TSP_sched_reset(vtx->u.sched.sched);
+                break;
+            default:
+                break;
         }
     }
   fn_exit:
