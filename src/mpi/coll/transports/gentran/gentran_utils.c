@@ -219,6 +219,15 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                     vtx_record_completion(vtxp, sched, 0);
                 }
                 break;
+            case MPII_GENUTIL_VTX_KIND__SCHED:{
+                    mpi_errno = MPIR_TSP_sched_start(vtxp->u.sched.sched, NULL, &vtxp->u.sched.req);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (subsched) issued"));
+                    vtx_record_issue(vtxp, sched);
+                }
+                break;
             case MPII_GENUTIL_VTX_KIND__CB:{
                     /* ignore communicator and tag */
                     int ret_errno = vtxp->u.cb.cb_p(NULL, -1, vtxp->u.cb.cb_data);
@@ -610,6 +619,22 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                         (MPL_DBG_FDEST, "data recvd: %d",
                                          *(int *) (vtxp->u.irecv_status.buf)));
+#endif
+                    vtx_record_completion(vtxp, sched, 1);
+                    if (made_progress)
+                        *made_progress = TRUE;
+                }
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__SCHED:
+                if (MPIR_Request_is_complete(vtxp->u.sched.req)) {
+                    MPIR_Request_free(vtxp->u.sched.req);
+                    vtxp->u.sched.req = NULL;
+#ifdef MPL_USE_DBG_LOGGING
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (vtx_kind=%d) complete",
+                                     vtxp->vtx_kind));
 #endif
                     vtx_record_completion(vtxp, sched, 1);
                     if (made_progress)
