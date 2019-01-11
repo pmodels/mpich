@@ -424,7 +424,7 @@ ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
     if (fd->is_open <= 0)
         goto out;
 
-    daos_sync_ranks(fd->comm);
+    adio_daos_sync_ranks(fd->comm);
 
     if (rank == 0) {
         rc = dfs_sync(cont->dfs);

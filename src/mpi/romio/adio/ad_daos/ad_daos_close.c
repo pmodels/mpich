@@ -24,7 +24,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     int rc;
 
     if (cont->amode == DAOS_COO_RW)
-        daos_sync_ranks(fd->comm);
+        adio_daos_sync_ranks(fd->comm);
     else
         MPI_Barrier(fd->comm);
 

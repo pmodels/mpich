@@ -25,14 +25,14 @@ void ADIOI_DAOS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     *error_code = MPI_SUCCESS;
 
     MPI_Comm_rank(fd->comm, &rank);
-    daos_sync_ranks(fd->comm);
-
+    adio_daos_sync_ranks(fd->comm);
     if (rank == fd->hints->ranklist[0]) {
 	ret = daos_array_set_size(cont->oh, DAOS_TX_NONE, size, NULL);
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     } else  {
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     }
+    adio_daos_sync_ranks(fd->comm);
 
     /* --BEGIN ERROR HANDLING-- */
     if (ret != 0) {

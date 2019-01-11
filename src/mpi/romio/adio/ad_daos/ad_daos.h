@@ -81,7 +81,7 @@ struct ADIO_DAOS_req {
 };
 
 static inline void
-daos_sync_ranks(MPI_Comm comm)
+adio_daos_sync_ranks(MPI_Comm comm)
 {
 	daos_epoch_t e = daos_ts2epoch();
 	daos_epoch_t ge;
