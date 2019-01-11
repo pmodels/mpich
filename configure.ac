@@ -2449,8 +2449,7 @@ enable_fc=$enable_fc
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
 includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
+libbuild_dir=$libbuild_dir)
 
 if test "$enable_fc" = "yes" ; then
     if test "$enable_f77" != "yes" ; then
@@ -2864,39 +2863,6 @@ dnl PAC_PROG_INSTALL_BREAKS_LIBS
 # We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
-
-#
-# Check for bash to allow more robust shell scripts
-AC_PATH_PROG(BASH_SHELL,bash)
-#
-# Confirm that bash has working arrays.  We can use this to 
-# build more robust versions of the scripts (particularly the 
-# compliation scripts) by taking advantage of the array features in 
-# bash.
-bashWorks=no
-if test -x "$BASH_SHELL" ; then
-changequote(%%,::)dnl
-    cat >>conftest <<EOF
-#! $BASH_SHELL
-A[0]="b"
-A[1]="c"
-rc=1
-if test \${A[1]} != "c" ; then rc=2 ; else rc=0 ; fi
-exit \$rc
-EOF
-changequote([,])dnl
-    AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
-    chmod +x conftest
-    if ./conftest 2>&1 >/dev/null ; then
-        bashWorks=yes
-    else
-        bashWorks=no
-    fi
-    rm -f conftest*
-    AC_MSG_RESULT($bashWorks)
-fi
-dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
-AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
 
 # ----------------------------------------------------------------------------
 # At this point, we've finally settled on the value of PMPILIBNAME.  We
@@ -5886,13 +5852,9 @@ AC_OUTPUT(Makefile \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
           src/env/mpicc.sh \
-	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
-	  src/env/mpicxx.bash \
 	  src/env/mpif77.sh \
-	  src/env/mpif77.bash \
 	  src/env/mpifort.sh \
-	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
           doc/design/Makefile \
