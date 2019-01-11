@@ -560,16 +560,16 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
 
-    mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     /* Create complete request to return in the event of immediately complete
      * operations. Use a SEND request to cover all possible use-cases. */
     MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
+
+    mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();
