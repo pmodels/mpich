@@ -890,9 +890,6 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_TARGET_CMPL_CB);
 
-    if (!MPIDI_check_cmpl_order(req, MPIDI_get_target_cmpl_cb))
-        return mpi_errno;
-
     base = MPIDI_CH4U_REQUEST(req, req->greq.addr);
 
     MPIR_cc_incr(req->cc_ptr, &c);
@@ -965,7 +962,6 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
     MPID_Request_complete(req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    MPIDI_progress_cmpl_list();
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_TARGET_CMPL_CB);
     return mpi_errno;
@@ -984,9 +980,6 @@ static inline int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
 
-    if (!MPIDI_check_cmpl_order(rreq, MPIDI_put_target_cmpl_cb))
-        return mpi_errno;
-
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_RCV_NON_CONTIG) {
         MPL_free(MPIDI_CH4U_REQUEST(rreq, req->iov));
     }
@@ -1000,7 +993,6 @@ static inline int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_ERR_POP(mpi_errno);
 
     MPID_Request_complete(rreq);
-    MPIDI_progress_cmpl_list();
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
     return mpi_errno;
@@ -1261,9 +1253,6 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACK_TARGET_CMPL_CB);
 
-    if (!MPIDI_check_cmpl_order(rreq, MPIDI_get_ack_target_cmpl_cb))
-        return mpi_errno;
-
     greq = (MPIR_Request *) MPIDI_CH4U_REQUEST(rreq, req->greq.greq_ptr);
     if (MPIDI_CH4U_REQUEST(greq, req->status) & MPIDI_CH4U_REQ_RCV_NON_CONTIG) {
         MPL_free(MPIDI_CH4U_REQUEST(greq, req->iov));
@@ -1274,7 +1263,6 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
 
     MPID_Request_complete(greq);
     MPID_Request_complete(rreq);
-    MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACK_TARGET_CMPL_CB);
     return mpi_errno;
 }
@@ -1292,9 +1280,6 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
 
-    if (!MPIDI_check_cmpl_order(areq, MPIDI_get_acc_ack_target_cmpl_cb))
-        return mpi_errno;
-
     if (MPIDI_CH4U_REQUEST(areq, req->status) & MPIDI_CH4U_REQ_RCV_NON_CONTIG) {
         MPL_free(MPIDI_CH4U_REQUEST(areq, req->iov));
     }
@@ -1306,7 +1291,6 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPID_Request_complete(areq);
 
-    MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
     return mpi_errno;
 }
@@ -1323,9 +1307,6 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
 
-    if (!MPIDI_check_cmpl_order(rreq, MPIDI_cswap_ack_target_cmpl_cb))
-        return mpi_errno;
-
     win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
     MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
@@ -1333,7 +1314,6 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
     MPID_Request_complete(rreq);
 
-    MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
     return mpi_errno;
 }
@@ -1484,7 +1464,6 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     *req = areq;
     *target_cmpl_cb = MPIDI_get_acc_ack_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(areq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
@@ -1518,7 +1497,6 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     *req = creq;
     *target_cmpl_cb = MPIDI_cswap_ack_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(creq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_MSG_CB);
@@ -1637,7 +1615,6 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr) = win;
 
     *target_cmpl_cb = MPIDI_put_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -1735,7 +1712,6 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr) = win;
 
     *target_cmpl_cb = MPIDI_put_iov_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2385,7 +2361,6 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
 
     *req = rreq;
     *target_cmpl_cb = MPIDI_get_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2462,7 +2437,6 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     *target_cmpl_cb = MPIDI_get_ack_target_cmpl_cb;
-    MPIDI_CH4U_REQUEST(greq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST(greq, is_local) = is_local;
 #endif
