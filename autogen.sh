@@ -957,6 +957,17 @@ if [ "$do_build_configure" = "yes" ] ; then
                 oracle_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
+                sys_lib_dlsearch_path_patch_requires_rebuild=no
+                echo_n "Patching libtool.m4 for system dynamic library search path..."
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch
+                if [ $? -eq 0 ] ; then
+                    sys_lib_dlsearch_path_patch_requires_rebuild=yes
+                    # Remove possible leftovers, which don't imply a failure
+                    rm -f $amdir/confdb/libtool.m4.orig
+                    echo "done"
+                else
+                    echo "failed"
+                fi
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
                     patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch
@@ -1001,7 +1012,8 @@ if [ "$do_build_configure" = "yes" ] ; then
                 fi
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
-                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ]; then
+                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
+                    [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
