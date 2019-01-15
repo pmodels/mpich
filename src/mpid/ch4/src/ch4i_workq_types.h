@@ -67,7 +67,7 @@ typedef enum MPIDI_workq_op MPIDI_workq_op_t;
 
 /* Indentifies the delegated operation */
 enum MPIDI_workq_op { SEND, ISEND, SSEND, ISSEND, RSEND, IRSEND, RECV, IRECV, IMRECV, IPROBE,
-    IMPROBE, PUT, GET, ACC, CAS, FAO, GACC
+    IMPROBE, CSEND, ICSEND, PUT, GET, ACC, CAS, FAO, GACC
 };
 
 struct MPIDI_av_entry;
@@ -92,6 +92,18 @@ typedef struct MPIDI_workq_elemt {
                 struct MPIDI_av_entry *addr;
                 MPIR_Request *request;
             } send;             /* also for ISEND SSEND ISSEND RSEND IRSEND */
+            struct MPIDI_workq_csend {
+                const void *send_buf;
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                struct MPIDI_av_entry *addr;
+                MPIR_Request *request;
+                MPIR_Errflag_t errflag;
+            } csend;            /* also for ICSEND */
             struct MPIDI_workq_recv {
                 void *recv_buf;
                 MPI_Aint count;
