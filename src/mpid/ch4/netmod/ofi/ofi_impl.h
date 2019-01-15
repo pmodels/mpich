@@ -391,7 +391,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+                                                         int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -403,8 +403,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                         MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+                                                         MPIR_Context_id_t contextid, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;

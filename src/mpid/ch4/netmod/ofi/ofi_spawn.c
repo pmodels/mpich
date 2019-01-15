@@ -236,7 +236,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     if (phase == 0) {
         req.done = MPIDI_OFI_PEEK_START;
         req.event_id = MPIDI_OFI_EVENT_ACCEPT_PROBE;
-        match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_SOURCE, MPI_ANY_TAG);
+        match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_TAG);
         match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
         msg.msg_iov = NULL;
@@ -313,7 +313,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     if (phase == 1) {
         int tag = root;
 
-        match_bits = MPIDI_OFI_init_sendtag(port_id, comm_ptr->rank, tag, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(port_id, tag, MPIDI_OFI_DYNPROC_SEND);
 
         req.done = 0;
         req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
@@ -359,7 +359,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
 
     req[0].done = MPIDI_OFI_PEEK_START;
     req[0].event_id = MPIDI_OFI_EVENT_ACCEPT_PROBE;
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_SOURCE, MPI_ANY_TAG);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id, MPI_ANY_TAG);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (phase == 0) {
@@ -460,7 +460,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
         for (i = 0; i < comm_ptr->local_size; i++)
             MPIDIU_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
-        match_bits = MPIDI_OFI_init_sendtag(port_id, comm_ptr->rank, tag, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(port_id, tag, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
         /* we need to get this connection from the sockname     */
