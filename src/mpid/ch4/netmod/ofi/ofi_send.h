@@ -42,6 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
                                                                 size_t data_sz,
                                                                 int dst_rank,
+                                                                int rank,
                                                                 int tag,
                                                                 MPIR_Comm * comm,
                                                                 int context_offset,
@@ -359,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
          * in the MPIDI_OFI_get_huge code where we start the offset at
          * MPIDI_OFI_global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
-        MPIDI_OFI_REQUEST(sreq, util_id) = dst_rank;
+        MPIDI_OFI_REQUEST(sreq, util_id) = rank;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf,
                                            MPIDI_OFI_global.max_msg_size,
                                            NULL,
@@ -376,7 +377,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq, FALSE));
+                               (&ctrl, send_buf, data_sz, rank, comm, sreq, FALSE));
     }
 
   fn_exit:
@@ -387,8 +388,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                            int dst_rank, int tag, MPIR_Comm * comm,
-                                            int context_offset,
+                                            int rank, int tag, MPIR_Comm * comm, int context_offset,
                                             MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                             int noreq, uint64_t syncflag)
 {
@@ -419,6 +419,68 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_send_coll
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/*@
+    MPIDI_OFI_send_coll - OFI_send function for collectives which rolls the error flag into the
+    source rank.
+Input Parameters:
+    buf - starting address of buffer to send
+    count - number of elements to send
+    datatype - data type of each send buffer element
+    dst_rank - rank of destination rank
+    tag - message tag
+    comm - handle to communicator
+    context_offset - offset into context object
+    addr - address vector entry for destination
+    request - handle to request pointer
+    noreq - set when the request object in null
+    syncflag - set for a SYNC_SEND
+    errflag - the error flag to be passed along with the message
+@*/
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, int dst_rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                 int noreq, uint64_t syncflag,
+                                                 MPIR_Errflag_t * errflag)
+{
+    int dt_contig, mpi_errno;
+    size_t data_sz;
+    MPI_Aint dt_true_lb;
+    MPIR_Datatype *dt_ptr;
+    uint64_t src_rank;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_COLL);
+
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    src_rank = comm->rank;
+    MPIDI_OFI_idata_set_error_bits(&src_rank, *errflag);
+
+    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
+        if (noreq)
+            mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, src_rank,
+                                                   dst_rank, tag, comm, context_offset, addr);
+        else
+            mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
+                                                           src_rank, dst_rank, tag,
+                                                           comm, context_offset, addr, request);
+    else
+        mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, src_rank, dst_rank,
+                                          tag, comm, context_offset, addr, request, dt_contig,
+                                          data_sz, dt_ptr, dt_true_lb, syncflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_COLL);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_send
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
@@ -443,6 +505,54 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
+/*@
+    MPIDI_NM_send_coll - NM_mpi_send function for collectives which takes an additional error
+    flag argument.
+Input Parameters:
+    buf - starting address of buffer to send
+    count - number of elements to send
+    datatype - data type of each send buffer element
+    dst_rank - rank of destination rank
+    tag - message tag
+    comm - handle to communicator
+    context_offset - offset into context object
+    addr - address vector entry for destination
+    request - handle to request pointer
+    errflag - the error flag to be passed along with the message
+@*/
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
+                                                MPI_Datatype datatype, int d_rank, int tag,
+                                                MPIR_Comm * comm, int context_offset,
+                                                MPIDI_av_entry_t * addr,
+                                                MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_SEND_COLL);
+
+#ifdef MPIDI_ENABLE_LEGACY_OFI
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno =
+            MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
+                             errflag);
+        goto fn_exit;
+    }
+#endif
+
+    mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, d_rank, tag, comm,
+                                    context_offset, addr, request, (*request == NULL), 0ULL,
+                                    errflag);
+
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_SEND_COLL);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_ssend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
@@ -492,6 +602,54 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
+/*@
+    MPIDI_NM_isend_coll - NM_mpi_isend function for collectives which takes an additional error
+    flag argument.
+Input Parameters:
+    buf - starting address of buffer to send
+    count - number of elements to send
+    datatype - data type of each send buffer element
+    dst_rank - rank of destination rank
+    tag - message tag
+    comm - handle to communicator
+    context_offset - offset into context object
+    addr - address vector entry for destination
+    request - handle to request pointer
+    errflag - the error flag to be passed along with the message
+@*/
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, int rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr,
+                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_ISEND_COLL);
+
+#ifdef MPIDI_ENABLE_LEGACY_OFI
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno =
+            MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                              request, errflag);
+        goto fn_exit;
+    }
+#endif
+
+    mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, rank, tag, comm,
+                                    context_offset, addr, request, 0, 0ULL, errflag);
+
+#ifdef MPIDI_ENABLE_LEGACY_OFI
+  fn_exit:
+#endif
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_issend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
