@@ -212,21 +212,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
-#ifndef HAVE_DEBUGGER_SUPPORT
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
-    do {                                                                \
-        (req) = MPIDI_Global.lw_send_req;                               \
-        MPIR_Request_add_ref((req));                                    \
-    } while (0)
-#else
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
-    do {                                                                \
-        (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
-        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
-        MPIR_cc_set(&(req)->cc, 0);                                     \
-    } while (0)
-#endif
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
 {
     if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
@@ -279,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
     do {                                                                \
         if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
-            MPIDI_OFI_SEND_REQUEST_CREATE_LW(req);                      \
+            (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
         } else {                                                        \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
