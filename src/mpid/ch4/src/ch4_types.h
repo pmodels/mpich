@@ -126,6 +126,7 @@ typedef struct MPIDIG_hdr_t {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int error_bits;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_long_req_mst_t {
