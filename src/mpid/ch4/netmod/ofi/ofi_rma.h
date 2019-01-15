@@ -498,13 +498,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     goto fn_exit;
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
-    if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
-    }
+    if (sigreq)
+        *sigreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     goto fn_exit;
 }
 
@@ -679,13 +674,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     goto fn_exit;
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
-    if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
-    }
+    if (sigreq)
+        *sigreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     goto fn_exit;
 }
 
@@ -1011,13 +1001,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                      win);
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
-    if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
-    }
+    if (sigreq)
+        *sigreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     goto fn_exit;
 }
 
