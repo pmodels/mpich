@@ -105,14 +105,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
-#ifndef HAVE_DEBUGGER_SUPPORT
-    MPIDI_UCX_global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-    if (MPIDI_UCX_global.lw_send_req == NULL) {
-        MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-    MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
-#endif
-
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
@@ -205,10 +197,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Comm_release_always(comm);
 
     MPIDIG_finalize();
-
-#ifndef HAVE_DEBUGGER_SUPPORT
-    MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
-#endif
 
   fn_exit:
     MPL_free(pending);

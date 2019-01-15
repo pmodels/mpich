@@ -103,13 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
     } else if (have_request) {
-#ifndef HAVE_DEBUGGER_SUPPORT
-        req = MPIDI_UCX_global.lw_send_req;
-        MPIR_Request_add_ref(req);
-#else
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_cc_set(&req->cc, 0);
-#endif
+        req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     }
     *request = req;
 
