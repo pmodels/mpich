@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_EVENT);
 
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    rreq->status.MPI_ERROR = MPI_SUCCESS;
+    rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);

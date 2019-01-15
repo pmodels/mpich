@@ -487,6 +487,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
     }
 
+    rreq->status.MPI_ERROR = hdr->error_bits;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
     *req = rreq;
