@@ -771,14 +771,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rput(const void *origin_addr,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (sreq == NULL) {
+    if (sreq == NULL)
         /* create a completed request for user if issuing is completed immediately. */
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-    }
+        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     *request = sreq;
@@ -845,14 +840,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget(void *origin_addr,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (sreq == NULL) {
+    if (sreq == NULL)
         /* create a completed request for user if issuing is completed immediately. */
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-    }
+        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     *request = sreq;
@@ -888,14 +878,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_raccumulate(const void *origin_addr,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (sreq == NULL) {
+    if (sreq == NULL)
         /* create a completed request for user if issuing is completed immediately. */
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-    }
+        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     *request = sreq;
@@ -970,14 +955,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget_accumulate(const void *origin_a
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (sreq == NULL) {
+    if (sreq == NULL)
         /* create a completed request for user if issuing is completed immediately. */
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-        MPIR_Request_add_ref(sreq);
-        MPID_Request_complete(sreq);
-    }
+        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     *request = sreq;
