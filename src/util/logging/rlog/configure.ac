@@ -66,8 +66,6 @@ dnl
 dnl AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
-dnl On Mac OS/X, install breaks libraries unless used with the -p switch
-PAC_PROG_INSTALL_BREAKS_LIBS
 dnl We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
