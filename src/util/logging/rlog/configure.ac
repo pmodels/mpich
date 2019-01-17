@@ -59,9 +59,6 @@ dnl Find a C compiler
 PAC_PROG_CC
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)
-# Note that we set RANLIB to true if we don't find it (some systems neither
-# need it nor provide it)
-AC_CHECK_PROGS(RANLIB,ranlib,true)
 dnl
 dnl AC_PROG_MAKE_SET
 AC_PROG_INSTALL
