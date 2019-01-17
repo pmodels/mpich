@@ -803,8 +803,6 @@ dnl To be clear, without these exports any variable values determined by this
 dnl configure script will not be seen by child scripts.  Instead they will dnl
 dnl receive the only the original inherited environment and configure args used
 dnl when this configure script was invoked.
-export AR
-export AR_FLAGS
 export CC
 export CFLAGS
 export CPPFLAGS
@@ -818,7 +816,6 @@ export LDFLAGS
 export LIBS
 export MPILIBNAME
 export PMPILIBNAME
-export RANLIB
 export OPALIBNAME
 export MPLLIBNAME
 # ----------------------------------------------------------------------------
@@ -2822,26 +2819,6 @@ AC_LANG_C
 # We need the full path to perl since we'll use it as the interpreter for
 # a shell script.
 AC_PATH_PROG(PERL,perl)
-# Look for ar.  If we fail, abort
-AC_CHECK_PROGS(AR,ar)
-if test -z "$AR" ; then
-    AC_MSG_ERROR([The program ar is required for building MPICH.  Make sure that your path includes ar])
-fi
-
-# FIXME: this is probably unnecessary now that we only do one "ar" at the end
-# (via libtool).  If anything, it's likely to cause problems instead.
-# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
-AR_FLAGS=cr
-# this logic is lame, should really write a real test at some point
-AS_CASE([$host],
-    # Barry proposes AR_FLAGS="Scq" in trac#754, but that won't work correctly for re-builds
-    [*-*-darwin*], [AR_FLAGS=Scr]
-)
-AC_ARG_VAR(AR_FLAGS,[AR command flags]) # causes AC_SUBST too
-
-# Note that we set RANLIB to true if we don't find it (some systems neither
-# need it nor provide it)
-AC_CHECK_PROGS(RANLIB,ranlib,true)
 
 # Check for the killall program; this can be used in some of the tests
 # in test/commands
@@ -5586,11 +5563,10 @@ EXTERNAL_SETUPS="$EXTERNAL_SETUPS"
 LIBDIR="$libbuild_dir"
 MPILIBNAME="$MPILIBNAME"
 PMPILIBNAME="$PMPILIBNAME"
-AR="$AR"
 CC="$CC"
 CPPFLAGS="$CPPFLAGS"
 CFLAGS="$CFLAGS"
-export LIBDIR ; export MPILIBNAME ; export AR ; export CC ; export CPPFLAGS 
+export LIBDIR ; export MPILIBNAME ; export CC ; export CPPFLAGS
 export PMPILIBNAME 
 export CFLAGS
 # For test/mpi/configure
