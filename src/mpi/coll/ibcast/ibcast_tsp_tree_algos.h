@@ -113,8 +113,8 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
-                               MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
-                               int maxbytes)
+                               MPIR_Comm * comm, int tree_type, int k, int maxbytes,
+                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

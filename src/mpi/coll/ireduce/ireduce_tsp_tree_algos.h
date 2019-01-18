@@ -264,7 +264,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
-                                MPIR_Request ** req, int tree_type, int k, int maxbytes)
+                                int tree_type, int k, int maxbytes, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

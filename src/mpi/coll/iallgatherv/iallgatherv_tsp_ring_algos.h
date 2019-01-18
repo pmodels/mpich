@@ -24,8 +24,8 @@
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
-                                          MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
-                                          MPIR_TSP_sched_t * sched)
+                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                          int tag, MPIR_TSP_sched_t * sched)
 {
     size_t extent;
     MPI_Aint lb, true_extent;
@@ -174,7 +174,7 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
 
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                              displs, recvtype, tag, comm, sched);
+                                              displs, recvtype, comm, tag, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

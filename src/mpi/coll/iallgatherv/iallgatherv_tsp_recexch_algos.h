@@ -243,8 +243,9 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int *step1_
 int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const int *recvcounts, const int *displs,
-                                             MPI_Datatype recvtype, int tag, MPIR_Comm * comm,
-                                             int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
+                                             MPI_Datatype recvtype, MPIR_Comm * comm,
+                                             int tag, int is_dist_halving, int k,
+                                             MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -350,8 +351,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, const int *recvcounts, const int *displs,
-                                       MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req,
-                                       int algo_type, int k)
+                                       MPI_Datatype recvtype, MPIR_Comm * comm,
+                                       int is_dist_halving, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -375,7 +376,8 @@ int MPIR_TSP_Iallgatherv_intra_recexch(const void *sendbuf, int sendcount, MPI_D
 
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                 displs, recvtype, tag, comm, algo_type, k, sched);
+                                                 displs, recvtype, comm, is_dist_halving, k, tag,
+                                                 sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

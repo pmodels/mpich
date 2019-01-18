@@ -23,9 +23,9 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, int count,
-                                            MPI_Datatype datatype, MPI_Op op, int tag,
+                                            MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, int per_nbr_buffer, int k,
-                                            MPIR_TSP_sched_t * sched)
+                                            int tag, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -364,7 +364,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                      MPIR_Request ** req, int recexch_type, int k)
+                                      int recexch_type, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -387,8 +387,8 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
         MPIR_ERR_POP(mpi_errno);
 
     mpi_errno =
-        MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, tag, comm,
-                                                recexch_type, k, sched);
+        MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,
+                                                recexch_type, k, tag, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

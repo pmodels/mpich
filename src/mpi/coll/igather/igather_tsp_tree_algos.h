@@ -72,11 +72,13 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     }
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
+    MPIR_Type_get_true_extent_impl(sendtype, (MPI_Aint *) & sendtype_lb,
+                                   (MPI_Aint *) & sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
+    MPIR_Type_get_true_extent_impl(recvtype, (MPI_Aint *) & recvtype_lb,
+                                   (MPI_Aint *) & recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     num_children = my_tree.num_children;
@@ -209,7 +211,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                MPIR_Request ** req, int k)
+                                int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

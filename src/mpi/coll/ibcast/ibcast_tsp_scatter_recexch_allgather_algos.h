@@ -15,8 +15,6 @@
 
 #include "algo_common.h"
 #include "tsp_namespace_def.h"
-#include "../iscatter/iscatter_tsp_tree_algos_prototypes.h"
-#include "../iallgather/iallgather_tsp_recexch_algos_prototypes.h"
 
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 #undef FUNCNAME

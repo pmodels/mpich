@@ -333,8 +333,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      MPIR_Comm * comm, MPIR_Request ** req, int allgather_type,
-                                      int k)
+                                      MPIR_Comm * comm, int allgather_type,
+                                      int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;

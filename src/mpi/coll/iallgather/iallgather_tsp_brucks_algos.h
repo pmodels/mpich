@@ -24,7 +24,7 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k)
+                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -67,12 +67,14 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     /* get datatype info of sendtype and recvtype */
     MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
+    MPIR_Type_get_true_extent_impl(sendtype, (MPI_Aint *) & sendtype_lb,
+                                   (MPI_Aint *) & sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
+    MPIR_Type_get_true_extent_impl(recvtype, (MPI_Aint *) & recvtype_lb,
+                                   (MPI_Aint *) & recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
@@ -191,7 +193,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                     MPIR_Comm * comm_ptr, MPIR_Request ** req, int k)
+                                     MPIR_Comm * comm_ptr, int k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -207,7 +209,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Dat
     MPIR_TSP_sched_create(sched);
 
     mpi_errno = MPIR_TSP_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, comm_ptr, sched, k);
+                                                       recvcount, recvtype, comm_ptr, k, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
