@@ -66,7 +66,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
 
 mpi_core_sources += \
     src/mpi/coll/helper_fns.c     \
-    src/mpi/coll/nbcutil.c
+    src/mpi/coll/nbcutil.c        \
+    src/mpi/coll/tsp_algos.c      \
+    src/mpi/coll/icoll_tsp_algos.c
 
-noinst_HEADERS +=                    \
-    src/mpi/coll/include/coll_impl.h
+noinst_HEADERS += \
+    src/mpi/coll/include/coll_impl.h \
+    src/mpi/coll/include/coll_tsp_algos.h
