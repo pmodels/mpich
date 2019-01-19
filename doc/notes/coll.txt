@@ -1,0 +1,118 @@
+-- updated 2019-01-19 Hui Zhou
+
+ref: coll/collective.txt is a discussion log during MPI-2 devlopment
+
+ref: https://wiki.mpich.org/mpich/index.php/Collectives_framework is a design document prepared along with PR#2663 - TSP Collective framework (2017)
+
+NOTE: Both seem to be written once and never updated and thus contains inconsistencies.
+
+------------------------------------------------------------
+# Code that consolidates all collective functions
+
+* ordering: collective function shall be ordered according to MPI standards. 
+    The original convention is to order by alphabet, which only helps in searching. All code editor can search so the alphabetical ordering has little value.
+    Order by by semantics makes checking for overviewing much easier.
+
+* src/include/mpir_coll.h 
+    ** included in mpiimpl.h and thus included in nearly everywhere
+
+    ** #defines PARAMS_BARRIER, PARAMS_BCAST, ...
+        There are (17+5)*2 MPI-level collectives -- 5 Neighbor_ and each with I-version
+        18 PARAMS_Xxx are defined, PARAMS_NEIGHBOR_ALLTOALLW uses MPI_Aint* for displs while the rest uses int* -- FIXME: what's the reason for this inconsistency?
+
+    ** MPIC_{Wait,Waitall,Probe,Send,Recv,Ssend,Sendrecv,Sendrecv_replace,Isend,Issend,Irecv} 
+        These are building blocks of collective algorithms.
+
+    ** MPIR_ level collective functions, e.g.:
+        int MPIR_Barrier(PARAMS_BARRIER, ...)
+        int MPIR_Barrier_impl(PARAMS_BARRIER, ...)
+        int MPIR_Barrier_intra_auto(PARAMS_BARRIER, ...)
+        ...
+        int MPIR_Barrier_inter_auto(PARAMS_BARRIER, ...)
+        ...
+        int MPIR_Barrier_allcomm_nb(PARAMS_BARRIER, ...)
+        ... ...
+
+* src/mpi/coll/include/coll_impl.h
+    ** defines CVAR enums such as `MPIR_BCAST_INTRA_ALGO_t`
+
+* src/mpi/coll/src/coll_impl.c
+    ** global variables `xxx_algo_choice` such as `MPIR_BCAST_INTRA_ALGO_choice`
+    ** `MPII_Coll_init(...)` translates various CVAR string values into int values in `xxx_algo_choice`
+
+------------------------------------------------------------
+# Function structure
+
+* Using Bcast as example (ref bcast/bcast.c):
+    MPI_Bcast -> MPIR_Bcast --> MPIR_Bcast_impl --> intra/inter algos
+                            |-> MPID_Bcast
+
+* Using Ibcast as example (ref ibcast/ibcast.c):
+    MPI_Ibcast -> MPIR_Ibcast --> MPIR_Ibcast_impl -->
+                              |-> MPID_Ibcast
+
+    --> MPIR_Ibcast_sched -> MPIR_Ibcast_sched_impl -->
+    |-> MPIR_Ibcast_intra_gentran_{tree,ring,...)
+
+    --> MPIR_Ibcast_sched_impl --> intra --> intra_{flat,binomial,scatter_..._allgather}
+    |-> MPID_Ibcast_sched      |-> inter --> inter_{flat}
+
+    There are (17+5)*2 collectives all with the same boilerplate. They should be grouped together and potentially be generated with template/script.
+
+    The is no performance concern but there is no reason not to inline them.
+
+* When MPIR_CVAR_BCAST_INTRA_ALGORITHM == "nb", it calls MPIR_Bcast_allcomm_nb, which -> MPIR_Ibcast + MPIR_Wait, it makes writing tests easier.
+
+* The default algo_choice is "auto" or 0, which typically dispatches algo functions based on message size and communicator size.
+
+------------------------------------------------------------
+# I-collective TSP based framework 
+
+src/mpi/coll/{include/tsp_algos.h,coll_tsp_algos.c}
+    * provide tsp based algorithm functions such as 
+        MPIR_TSP_ibcast_intra_tree(...)
+      when tsp namespace header (e.g. tsp_gentran.h) is pre-included, all `MPIR_TSP_` become `MPII_Gentran_`  
+
+src/mpi/coll/icoll_tsp_algos.c
+    * all functions declared in mpir_coll.h and calls MPII_Gentran_... directly. When more tsp is added, new functions will added here as well
+        Eg. we may have MPIR_Ibcast_intra_gentran_tree, MPIR_Ibcast_intra_atran_tree, etc.
+
+src/mpi/coll/i*/i*_tsp_*_algos.h
+    * individual tsp based algorithms. NOTE: they are code, not really headers.
+
+------------------------------------------------------------
+# Algorithms
+
+* nb: non-blocking, calls MPIR_Ixxx followed by MPIR_Wait
+* auto: selects algo based on message size, comm size, smp, etc.
+
+* Intercomm algorithms are straight forward
+    ** linear: for i=0:n do root <-> remote
+    ** flat/remote_send_local_bcast etc.: root <-> 0 + local/remote collective
+    ** alltoall uses pair_wise_exchange 
+    ** allgather/allreduce uses collect <-> collect
+
+* Intracomm
+    ** bruck's algorithm (ref: IEEE TPDS vol.8 1143, 1997)
+        alltoall is essentially a matrix transpose
+            phase1: local rotate up
+            phase2: node-to-node rotate
+            phase3: local rotate down
+        The algorithm uses parameter k for phase2:
+            k = n: each node sends individual payload to dst -- n-1 rounds, long message case
+            k = 2: each node maximally combines payload to reduce number of rounds, short message case
+        with k==2
+        round 1: each send 1 data: 0->1, 1->2, 2->3, ...
+        round 2: each send 2 data: 0->2, 1->3, 2->4, ...
+        round 3: each send 4 data: 0->4, 1->5, 2->6, ...
+        ...
+
+    ** _recursive_doubling (applies when comm_size is power of 2)
+        round 1: exchange 1 data between 0-1, 2-3, ...
+        round 2: exchange 2 data between 0-2, 1-3, ...
+        round 3: exchange 4 data between 0-4, 1-5, ...
+        ...
+
+    ** _ring (applies when message size is big)
+        send/relay single payload to next neighbor n-1 rounds
+
