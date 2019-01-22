@@ -256,7 +256,6 @@ int MPIR_Datatype_builtin_fillin(void)
 
             /* dptr will point into MPIR_Datatype_builtin */
             dptr->handle = d;
-            dptr->is_permanent = 1;
             dptr->is_contig = 1;
             MPIR_Object_set_ref(dptr, 1);
             MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
@@ -349,16 +348,13 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     new_dtp->size = 0;
     new_dtp->has_sticky_ub = 0;

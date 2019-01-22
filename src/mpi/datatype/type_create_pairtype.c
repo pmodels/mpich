@@ -70,16 +70,13 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 1;
     new_dtp->is_committed = 1;  /* predefined types are pre-committed */
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -170,9 +167,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
      * type and then committing it, then the dataloop will be missing.
      */
 
-    err = MPIR_Dataloop_create_pairtype(type,
-                                        &(new_dtp->dataloop),
-                                        &(new_dtp->dataloop_size), &(new_dtp->dataloop_depth));
+    err = MPIR_Dataloop_create_pairtype(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
 
 #ifdef MPID_Type_commit_hook
     if (!err) {

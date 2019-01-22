@@ -18,7 +18,6 @@
 .  MPI_Datatype oldtype
 .  DLOOP_Dataloop **dlp_p
 .  int *dlsz_p
-.  int *dldepth_p
 
    Returns 0 on success, -1 on failure.
 
@@ -27,12 +26,10 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
                                 DLOOP_Size iblocklength,
                                 MPI_Aint astride,
                                 int strideinbytes,
-                                DLOOP_Type oldtype,
-                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
+                                DLOOP_Type oldtype, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
 {
     int err, is_builtin;
     DLOOP_Size new_loop_sz;
-    int new_loop_depth;
 
     DLOOP_Count count, blocklength;
     DLOOP_Offset stride;
@@ -47,7 +44,7 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
      */
     if (count == 0 || blocklength == 0) {
 
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -56,7 +53,7 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
      * if count == 1, store as a contiguous rather than a vector dataloop.
      */
     if (count == 1) {
-        err = MPIR_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p, dlsz_p);
         return err;
     }
 
@@ -64,17 +61,13 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
 
     if (is_builtin) {
         new_loop_sz = sizeof(DLOOP_Dataloop);
-        new_loop_depth = 1;
     } else {
         MPI_Aint old_loop_sz = 0;
-        int old_loop_depth = 0;
 
         DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
 
         /* TODO: ACCOUNT FOR PADDING IN LOOP_SZ HERE */
         new_loop_sz = sizeof(DLOOP_Dataloop) + old_loop_sz;
-        new_loop_depth = old_loop_depth + 1;
     }
 
 
@@ -124,7 +117,6 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
 
     *dlp_p = new_dlp;
     *dlsz_p = new_loop_sz;
-    *dldepth_p = new_loop_depth;
 
     return 0;
 }

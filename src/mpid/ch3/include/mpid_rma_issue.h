@@ -80,7 +80,6 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
     dtype_info->size = dtp->size;
     dtype_info->extent = dtp->extent;
     dtype_info->dataloop_size = dtp->dataloop_size;
-    dtype_info->dataloop_depth = dtp->dataloop_depth;
     dtype_info->basic_type = dtp->basic_type;
     dtype_info->dataloop = dtp->dataloop;
     dtype_info->ub = dtp->ub;
