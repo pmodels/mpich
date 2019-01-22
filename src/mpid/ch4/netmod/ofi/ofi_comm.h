@@ -28,8 +28,6 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 
     MPIDI_CH4U_map_create(&MPIDI_OFI_COMM(comm).huge_send_counters, MPL_MEM_COMM);
     MPIDI_CH4U_map_create(&MPIDI_OFI_COMM(comm).huge_recv_counters, MPL_MEM_COMM);
-    MPIDI_OFI_index_allocator_create(&MPIDI_OFI_COMM(comm).win_id_allocator, MPL_MEM_RMA);
-    MPIDI_OFI_index_allocator_create(&MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
 
     mpi_errno = MPIDI_CH4U_init_comm(comm);
 
@@ -95,8 +93,6 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_CH4U_destroy_comm(comm);
     MPIDI_CH4U_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDI_CH4U_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
-    MPIDI_OFI_index_allocator_destroy(MPIDI_OFI_COMM(comm).win_id_allocator);
-    MPIDI_OFI_index_allocator_destroy(MPIDI_OFI_COMM(comm).rma_id_allocator);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
     return mpi_errno;

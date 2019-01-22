@@ -332,8 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
             MPIR_Assert(type == MPIDI_OFI_KEY_TYPE_HUGE_RMA);
             MPIR_Assert(contextid == MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id));
 
-            MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator,
-                                           (uint64_t) key_back);
+            MPIDI_OFI_index_allocator_free(MPIDI_Global.mr_key_allocator, (uint64_t) key_back);
         }
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 

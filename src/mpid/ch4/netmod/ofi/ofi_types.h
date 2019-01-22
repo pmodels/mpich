@@ -388,6 +388,7 @@ typedef struct {
     /* Window/RMA Globals */
     void *win_map;
     uint64_t rma_issued_cntr;
+    void *mr_key_allocator;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];

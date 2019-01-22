@@ -911,6 +911,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
 
+    /* Create RMA keys allocator */
+    MPIDI_OFI_index_allocator_create(&MPIDI_Global.mr_key_allocator, MPL_MEM_RMA);
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
     /* -------------------------------- */
@@ -971,6 +973,9 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     /* Progress until we drain all inflight RMA send long buffers */
     while (OPA_load_int(&MPIDI_Global.am_inflight_rma_send_mrs) > 0)
         MPIDI_OFI_PROGRESS();
+
+    /* Destroy RMA key allocator */
+    MPIDI_OFI_index_allocator_destroy(MPIDI_Global.mr_key_allocator);
 
     /* Barrier over allreduce, but force non-immediate send */
     MPIDI_Global.max_buffered_send = 0;

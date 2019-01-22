@@ -521,9 +521,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
     memset(&MPIDI_OFI_WIN(win), 0, sizeof(MPIDI_OFI_win_t));
 
     /* context id lower bits, window instance upper bits */
-    window_instance =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
-                                        MPL_MEM_RMA);
+    window_instance = MPIDI_OFI_index_allocator_alloc(MPIDI_Global.mr_key_allocator, MPL_MEM_RMA);
     MPIR_ERR_CHKANDSTMT(window_instance >= MPIDI_Global.max_huge_rmas, mpi_errno,
                         MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
 
@@ -1244,8 +1242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
         MPIDI_OFI_rma_key_unpack(MPIDI_OFI_WIN(win).win_id, NULL, &key_type, &window_instance);
         MPIR_Assert(key_type == MPIDI_OFI_KEY_TYPE_WINDOW);
 
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
-                                       (uint64_t) window_instance);
+        MPIDI_OFI_index_allocator_free(MPIDI_Global.mr_key_allocator, (uint64_t) window_instance);
         MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
         if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {

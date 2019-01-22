@@ -350,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* Set up a memory region for the lmt data transfer */
             ctrl.rma_key =
-                MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
+                MPIDI_OFI_index_allocator_alloc(MPIDI_Global.mr_key_allocator, MPL_MEM_RMA);
             MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
             rma_key = MPIDI_OFI_rma_key_pack(comm->context_id, MPIDI_OFI_KEY_TYPE_HUGE_RMA,
                                              ctrl.rma_key);

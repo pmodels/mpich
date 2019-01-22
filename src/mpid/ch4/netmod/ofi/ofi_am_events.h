@@ -341,8 +341,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
         MPIDI_OFI_rma_key_unpack(mr_key, NULL, &key_type, &idx_back);
         MPIR_Assert(MPIDI_OFI_KEY_TYPE_HUGE_RMA == key_type);
 
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
-                                       (uint64_t) idx_back);
+        MPIDI_OFI_index_allocator_free(MPIDI_Global.mr_key_allocator, (uint64_t) idx_back);
     }
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
