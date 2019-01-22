@@ -48,19 +48,9 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
     if (datatype_ptr->is_committed == 0) {
         datatype_ptr->is_committed = 1;
 
-#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
-        /* If MPID implementation needs use to reduce everything to
-         * a byte stream, do that. */
         MPIR_Dataloop_create(*datatype_p,
                              &datatype_ptr->dataloop,
-                             &datatype_ptr->dataloop_size,
-                             &datatype_ptr->dataloop_depth, MPIDU_DATALOOP_ALL_BYTES);
-#else
-        MPIR_Dataloop_create(*datatype_p,
-                             &datatype_ptr->dataloop,
-                             &datatype_ptr->dataloop_size,
-                             &datatype_ptr->dataloop_depth, MPIR_DATALOOP_DEFAULT);
-#endif
+                             &datatype_ptr->dataloop_size, &datatype_ptr->dataloop_depth);
 
         MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
                       (int) datatype_ptr->max_contig_blocks);

@@ -14,7 +14,6 @@
    Input Parameters:
 +  int icount,
 .  DLOOP_Type oldtype
--  int flag
 
    Output Parameters:
 +  DLOOP_Dataloop **dlp_p,
@@ -27,8 +26,7 @@
 @*/
 int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
                                     DLOOP_Type oldtype,
-                                    DLOOP_Dataloop ** dlp_p,
-                                    DLOOP_Size * dlsz_p, int *dldepth_p, int flag)
+                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
 {
     DLOOP_Count count;
     int is_builtin, apply_contig_coalescing = 0;
@@ -76,16 +74,9 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
         DLOOP_Handle_get_size_macro(oldtype, basic_sz);
         new_dlp->kind = DLOOP_KIND_CONTIG | DLOOP_FINAL_MASK;
 
-        if (flag == DLOOP_DATALOOP_ALL_BYTES) {
-            count *= basic_sz;
-            new_dlp->el_size = 1;
-            new_dlp->el_extent = 1;
-            new_dlp->el_type = MPI_BYTE;
-        } else {
-            new_dlp->el_size = basic_sz;
-            new_dlp->el_extent = new_dlp->el_size;
-            new_dlp->el_type = oldtype;
-        }
+        new_dlp->el_size = basic_sz;
+        new_dlp->el_extent = new_dlp->el_size;
+        new_dlp->el_type = oldtype;
 
         new_dlp->loop_params.c_t.count = count;
     } else {
