@@ -65,7 +65,7 @@ typedef struct MPIR_Datatype_contents {
   efficiency was outweighed by the added complexity of the implementation.
 
   A number of fields contain only boolean inforation ('is_contig',
-  'has_sticky_ub', 'has_sticky_lb', 'is_permanent', 'is_committed').  These
+  'has_sticky_ub', 'has_sticky_lb', 'is_committed').  These
   could be combined and stored in a single bit vector.
 
   'MPI_Type_dup' could be implemented with a shallow copy, where most of the
@@ -103,7 +103,6 @@ struct MPIR_Datatype {
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;
     int has_sticky_ub, has_sticky_lb;
-    int is_permanent;           /* non-zero if datatype is a predefined type */
     int is_committed;
 
     /* element information; used for accumulate and get elements
@@ -140,12 +139,6 @@ struct MPIR_Datatype {
      */
     struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
     MPI_Aint dataloop_size;
-    int dataloop_depth;
-
-    /* not yet used; will be used to track what processes have cached
-     * copies of this type.
-     */
-    int32_t cache_id;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
@@ -318,28 +311,6 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
 #define MPIR_Datatype_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
 
-#define MPIR_Datatype_get_loopdepth_macro(a,depth_) do {            \
-    void *ptr;                                                      \
-    switch (HANDLE_GET_KIND(a)) {                                   \
-        case HANDLE_KIND_DIRECT:                                    \
-            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
-            ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_GET_FIELD(depth_,_depth);                 \
-            break;                                                  \
-        case HANDLE_KIND_INDIRECT:                                  \
-            ptr = ((MPIR_Datatype *)                                \
-             MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_GET_FIELD(depth_,_depth);                 \
-            break;                                                  \
-        case HANDLE_KIND_INVALID:                                   \
-        case HANDLE_KIND_BUILTIN:                                   \
-        default:                                                    \
-            depth_ = 0;                                             \
-            break;                                                  \
-    }                                                               \
-} while (0)
-
-
 #define MPIR_Datatype_get_loopptr_macro(a,lptr_) do {         \
     void *ptr;                                    \
     switch (HANDLE_GET_KIND(a)) {                      \
@@ -373,27 +344,6 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
             ptr = ((MPIR_Datatype *)                                \
              MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
             MPIR_DATALOOP_GET_FIELD(depth_,_size);                  \
-            break;                                                  \
-        case HANDLE_KIND_INVALID:                                   \
-        case HANDLE_KIND_BUILTIN:                                   \
-        default:                                                    \
-            depth_ = 0;                                             \
-            break;                                                  \
-    }                                                               \
-} while (0)
-
-#define MPIR_Datatype_set_loopdepth_macro(a,depth_) do {            \
-    void *ptr;                                                      \
-    switch (HANDLE_GET_KIND(a)) {                                   \
-        case HANDLE_KIND_DIRECT:                                    \
-            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
-            ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            MPIR_DATALOOP_SET_FIELD(depth_,_depth);                 \
-            break;                                                  \
-        case HANDLE_KIND_INDIRECT:                                  \
-            ptr = ((MPIR_Datatype *)                                \
-             MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            MPIR_DATALOOP_SET_FIELD(depth_,_depth);                 \
             break;                                                  \
         case HANDLE_KIND_INVALID:                                   \
         case HANDLE_KIND_BUILTIN:                                   \

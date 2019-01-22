@@ -26,11 +26,10 @@
 @*/
 int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
                                     DLOOP_Type oldtype,
-                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
+                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
 {
     DLOOP_Count count;
     int is_builtin, apply_contig_coalescing = 0;
-    int new_loop_depth;
     DLOOP_Size new_loop_sz;
 
     DLOOP_Dataloop *new_dlp;
@@ -39,14 +38,10 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
 
     is_builtin = (DLOOP_Handle_hasloop_macro(oldtype)) ? 0 : 1;
 
-    if (is_builtin) {
-        new_loop_depth = 1;
-    } else {
-        int old_loop_depth = 0;
+    if (!is_builtin) {
         DLOOP_Offset old_size = 0, old_extent = 0;
         DLOOP_Dataloop *old_loop_ptr;
 
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
         DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
         DLOOP_Handle_get_size_macro(oldtype, old_size);
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
@@ -56,9 +51,6 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
             && (old_size == old_extent)) {
             /* will just copy contig and multiply count */
             apply_contig_coalescing = 1;
-            new_loop_depth = old_loop_depth;
-        } else {
-            new_loop_depth = old_loop_depth + 1;
         }
     }
 
@@ -98,7 +90,6 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
             new_dlp->loop_params.c_t.count *= count;
 
             new_loop_sz = old_loop_sz;
-            DLOOP_Handle_get_loopdepth_macro(oldtype, new_loop_depth);
         } else {
             /* allocate space for new loop including copy of old */
             MPIR_Dataloop_alloc_and_copy(DLOOP_KIND_CONTIG,
@@ -119,7 +110,6 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
 
     *dlp_p = new_dlp;
     *dlsz_p = new_loop_sz;
-    *dldepth_p = new_loop_depth;
 
     return 0;
 }

@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#undef DEBUG_DLOOP_SIZE
 #undef DLOOP_DEBUG_MEMORY
 
 /* Dataloops
