@@ -145,9 +145,6 @@ struct MPIR_Datatype {
      * copies of this type.
      */
     int32_t cache_id;
-    /* MPID_Lpidmask mask; */
-
-    /* int (*free_fn)(struct MPIR_Datatype *); *//* Function to free this datatype */
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
