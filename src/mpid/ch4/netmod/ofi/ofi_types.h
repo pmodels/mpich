@@ -67,53 +67,6 @@
 #endif
 #endif
 
-/* RMA Key Space division
- *    |                  |                   |                        |
- *    ...     Context ID | key type flag bit |  Key/window instance   |
- *    |                  |                   |                        |
- */
-/* 64-bit key space                         */
-/* 2147483648 window instances per comm           */
-/* 2147483648 outstanding huge RMAS per comm      */
-/* 4294967296 communicators                       */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_64 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_64  (32)
-#define MPIDI_OFI_MAX_KEY_BITS_64      (64-(MPIDI_OFI_MAX_KEY_TYPE_BITS_64+MPIDI_OFI_MAX_CONTEXT_BITS_64))
-#define MPIDI_OFI_MAX_HUGE_RMAS_64     (1<<(MPIDI_OFI_MAX_KEY_BITS_64))
-#define MPIDI_OFI_MAX_WINDOWS_64       MPIDI_OFI_MAX_HUGE_RMAS_64
-
-#define MPIDI_OFI_CONTEXT_SHIFT_64     (MPIDI_OFI_MAX_KEY_BITS_64+MPIDI_OFI_MAX_KEY_TYPE_BITS_64)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_64 (MPIDI_OFI_MAX_KEY_BITS_64)
-
-/* 32-bit key space                         */
-/* 32K window instances per comm           */
-/* 32K outstanding huge RMAS per comm      */
-/* 64K communicators                       */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_32 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_32  (16)
-#define MPIDI_OFI_MAX_KEY_BITS_32      (32-(MPIDI_OFI_MAX_KEY_TYPE_BITS_32+MPIDI_OFI_MAX_CONTEXT_BITS_32))
-#define MPIDI_OFI_MAX_HUGE_RMAS_32     (1<<(MPIDI_OFI_MAX_KEY_BITS_32))
-#define MPIDI_OFI_MAX_WINDOWS_32       MPIDI_OFI_MAX_HUGE_RMAS_32
-
-#define MPIDI_OFI_CONTEXT_SHIFT_32     (MPIDI_OFI_MAX_KEY_BITS_32+MPIDI_OFI_MAX_KEY_TYPE_BITS_32)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_32 (MPIDI_OFI_MAX_KEY_BITS_32)
-
-/* 16-bit key space                         */
-/* 128 window instances per comm             */
-/* 128 outstanding huge RMAS per comm        */
-/* 256 communicators                          */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_16 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_16  (8)
-#define MPIDI_OFI_MAX_KEY_BITS_16      (16-(MPIDI_OFI_MAX_KEY_TYPE_BITS_16+MPIDI_OFI_MAX_CONTEXT_BITS_16))
-#define MPIDI_OFI_MAX_HUGE_RMAS_16     (1<<(MPIDI_OFI_MAX_KEY_BITS_16))
-#define MPIDI_OFI_MAX_WINDOWS_16       MPIDI_OFI_MAX_HUGE_RMAS_16
-
-#define MPIDI_OFI_CONTEXT_SHIFT_16     (MPIDI_OFI_MAX_KEY_BITS_16+MPIDI_OFI_MAX_KEY_TYPE_BITS_16)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_16 (MPIDI_OFI_MAX_KEY_BITS_16)
-
-#define MPIDI_OFI_KEY_TYPE_HUGE_RMA (0)
-#define MPIDI_OFI_KEY_TYPE_WINDOW (1)
-
 
 #ifdef HAVE_FORTRAN_BINDING
 #ifdef MPICH_DEFINE_2COMPLEX
@@ -571,38 +524,5 @@ extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
 
 extern int MPIR_Datatype_init_names(void);
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
-
-/* Build uniform mr_key using contextid, key type and uniq ID passed */
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_rma_key_pack(MPIR_Context_id_t ctx, int key_type,
-                                                         uint64_t key_id)
-{
-    uint64_t rma_key = 0;
-
-    /* place context_id into mr_key */
-    rma_key = ((uint64_t) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctx))) << (MPIDI_Global.context_shift);
-
-    /* set key type bits */
-    rma_key |= (((uint64_t) key_type) & (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1))
-        << MPIDI_Global.max_rma_key_bits;
-
-    /* place Key/window instance-ID into mr_key */
-    rma_key |= ((uint64_t) key_id) & (MPIDI_Global.max_huge_rmas - 1);
-
-    return rma_key;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_rma_key_unpack(uint64_t key, MPIR_Context_id_t * ctx,
-                                                       int *key_type, uint32_t * key_id)
-{
-    if (ctx) {
-        (*ctx) = (MPIR_Context_id_t) (key >> MPIDI_Global.context_shift);
-    }
-
-    (*key_type) =
-        (int) ((key >> MPIDI_Global.max_rma_key_bits) &
-               (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1));
-
-    (*key_id) = (uint32_t) (key & (MPIDI_Global.max_huge_rmas - 1));
-}
 
 #endif /* OFI_TYPES_H_INCLUDED */

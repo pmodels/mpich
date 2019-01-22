@@ -351,10 +351,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             /* Set up a memory region for the lmt data transfer */
             ctrl.rma_key =
                 MPIDI_OFI_index_allocator_alloc(MPIDI_Global.mr_key_allocator, MPL_MEM_RMA);
-            MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
-            rma_key = MPIDI_OFI_rma_key_pack(comm->context_id, MPIDI_OFI_KEY_TYPE_HUGE_RMA,
-                                             ctrl.rma_key);
-            ctrl.rma_key = rma_key;
+            MPIR_ERR_CHKANDSTMT(ctrl.rma_key >=
+                                (((uint64_t) 1) << (MPIDI_Global.max_mr_key_size * 8)), mpi_errno,
+                                MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
+            rma_key = ctrl.rma_key;
         }
 
         MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,    /* In:  Domain Object       */

@@ -297,11 +297,11 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
          * is not available here */
-        uint64_t index =
+        lmt_info->rma_key =
             MPIDI_OFI_index_allocator_alloc(MPIDI_Global.mr_key_allocator, MPL_MEM_RMA);
-        MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
-        lmt_info->rma_key = MPIDI_OFI_rma_key_pack(comm->context_id,
-                                                   MPIDI_OFI_KEY_TYPE_HUGE_RMA, index);
+        MPIR_ERR_CHKANDSTMT(lmt_info->rma_key >=
+                            (((uint64_t) 1) << (MPIDI_Global.max_mr_key_size * 8)), mpi_errno,
+                            MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
     } else {
         lmt_info->rma_key = 0;
     }
