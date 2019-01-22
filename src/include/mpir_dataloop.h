@@ -114,12 +114,6 @@
 #define DLOOP_Segment               MPIR_Segment
 #define DLOOP_Dataloop_stackelm     MPIR_Dataloop_stackelm
 
-/* These flags are used at creation time to specify what types of
- * optimizations may be applied.
- */
-#define DLOOP_DATALOOP_DEFAULT       0
-#define DLOOP_DATALOOP_ALL_BYTES     1
-
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */
 #define SEGMENT_IGNORE_LAST ((DLOOP_Offset) -1)
 /*
@@ -481,25 +475,22 @@ int MPIR_Segment_index_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count, DLOOP_Cou
 
 /* Dataloop construction functions */
 void MPIR_Dataloop_create(MPI_Datatype type,
-                          DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                          DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 int MPIR_Dataloop_create_contiguous(DLOOP_Count count,
                                     MPI_Datatype oldtype,
-                                    DLOOP_Dataloop ** dlp_p,
-                                    DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 int MPIR_Dataloop_create_vector(DLOOP_Count count,
                                 DLOOP_Size blocklength,
                                 MPI_Aint stride,
                                 int strideinbytes,
                                 MPI_Datatype oldtype,
-                                DLOOP_Dataloop ** dlp_p,
-                                DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 int MPIR_Dataloop_create_blockindexed(DLOOP_Count count,
                                       DLOOP_Size blklen,
                                       const void *disp_array,
                                       int dispinbytes,
                                       MPI_Datatype oldtype,
-                                      DLOOP_Dataloop ** dlp_p,
-                                      DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
  * request of a large blocklength. */
@@ -508,17 +499,14 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count count,
                                  const void *displacement_array,
                                  int dispinbytes,
                                  MPI_Datatype oldtype,
-                                 DLOOP_Dataloop ** dlp_p,
-                                 DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 int MPIR_Dataloop_create_struct(DLOOP_Count count,
                                 const int *blklen_array,
                                 const MPI_Aint * disp_array,
                                 const MPI_Datatype * oldtype_array,
-                                DLOOP_Dataloop ** dlp_p,
-                                DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 int MPIR_Dataloop_create_pairtype(MPI_Datatype type,
-                                  DLOOP_Dataloop ** dlp_p,
-                                  DLOOP_Size * dlsz_p, int *dldepth_p, int flag);
+                                  DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
 
 /* Helper functions for dataloop construction */
 int MPIR_Type_convert_subarray(int ndims,
@@ -572,14 +560,6 @@ void MPIR_Segment_pack_external32(struct DLOOP_Segment *segp,
 void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
                                     DLOOP_Offset first,
                                     DLOOP_Offset * lastp, DLOOP_Buffer unpack_buffer);
-
-/* These values are defined by DLOOP code.
- *
- * Note: DLOOP_DATALOOP_ALL_BYTES is used only when the device
- * defines MPID_NEEDS_DLOOP_ALL_BYTES.
- */
-#define MPIR_DATALOOP_DEFAULT       DLOOP_DATALOOP_DEFAULT
-#define MPIR_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
 DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp);
 DLOOP_Offset DLOOP_Stackelm_offset(struct DLOOP_Dataloop_stackelm *elmp);

@@ -29,7 +29,6 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 .  DLOOP_Dataloop **dlp_p
 .  int *dlsz_p
 .  int *dldepth_p
--  int flag
 
 .N Errors
 .N Returns 0 on success, -1 on error.
@@ -40,8 +39,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
                                  const void *displacement_array,
                                  int dispinbytes,
                                  MPI_Datatype oldtype,
-                                 DLOOP_Dataloop ** dlp_p,
-                                 DLOOP_Size * dlsz_p, int *dldepth_p, int flag)
+                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
 {
     int err, is_builtin;
     int old_loop_depth;
@@ -58,7 +56,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     /* if count is zero, handle with contig code, call it an int */
     if (count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p, flag);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
         return err;
     }
 
@@ -88,7 +86,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p, flag);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
         return err;
     }
 
@@ -100,8 +98,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
          (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0))) {
-        err = MPIR_Dataloop_create_contiguous(old_type_count,
-                                              oldtype, dlp_p, dlsz_p, dldepth_p, flag);
+        err = MPIR_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p, dlsz_p, dldepth_p);
         return err;
     }
 
@@ -120,8 +117,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
         err = MPIR_Dataloop_create_blockindexed(1,
                                                 old_type_count,
                                                 disp_arr_tmp,
-                                                dispinbytes,
-                                                oldtype, dlp_p, dlsz_p, dldepth_p, flag);
+                                                dispinbytes, oldtype, dlp_p, dlsz_p, dldepth_p);
 
         return err;
     }
@@ -147,8 +143,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
         err = MPIR_Dataloop_create_blockindexed(icount - first,
                                                 blksz,
                                                 disp_arr_tmp,
-                                                dispinbytes,
-                                                oldtype, dlp_p, dlsz_p, dldepth_p, flag);
+                                                dispinbytes, oldtype, dlp_p, dlsz_p, dldepth_p);
 
         return err;
     }
@@ -172,16 +167,9 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
         new_dlp->kind = DLOOP_KIND_INDEXED | DLOOP_FINAL_MASK;
 
-        if (flag == DLOOP_DATALOOP_ALL_BYTES) {
-            /* blocklengths are modified below */
-            new_dlp->el_size = 1;
-            new_dlp->el_extent = 1;
-            new_dlp->el_type = MPI_BYTE;
-        } else {
-            new_dlp->el_size = old_extent;
-            new_dlp->el_extent = old_extent;
-            new_dlp->el_type = oldtype;
-        }
+        new_dlp->el_size = old_extent;
+        new_dlp->el_extent = old_extent;
+        new_dlp->el_type = oldtype;
     } else {
         DLOOP_Dataloop *old_loop_ptr = NULL;
         MPI_Aint old_loop_sz = 0;
@@ -217,17 +205,6 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
                                   displacement_array,
                                   new_dlp->loop_params.i_t.blocksize_array,
                                   new_dlp->loop_params.i_t.offset_array, dispinbytes, old_extent);
-
-    if (is_builtin && (flag == DLOOP_DATALOOP_ALL_BYTES)) {
-        DLOOP_Count *tmp_blklen_array = new_dlp->loop_params.i_t.blocksize_array;
-
-        for (i = 0; i < contig_count; i++) {
-            /* increase block lengths so they are in bytes */
-            tmp_blklen_array[i] *= old_extent;
-        }
-
-        new_dlp->loop_params.i_t.total_blocks *= old_extent;
-    }
 
     *dlp_p = new_dlp;
     *dlsz_p = new_loop_sz;
