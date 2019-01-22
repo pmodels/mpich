@@ -19,7 +19,6 @@
 .  DLOOP_Dataloop **dlp_p
 .  int *dlsz_p
 .  int *dldepth_p
--  int flag
 
    Returns 0 on success, -1 on failure.
 
@@ -29,8 +28,7 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
                                 MPI_Aint astride,
                                 int strideinbytes,
                                 DLOOP_Type oldtype,
-                                DLOOP_Dataloop ** dlp_p,
-                                DLOOP_Size * dlsz_p, int *dldepth_p, int flag)
+                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
 {
     int err, is_builtin;
     DLOOP_Size new_loop_sz;
@@ -49,7 +47,7 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
      */
     if (count == 0 || blocklength == 0) {
 
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p, flag);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
         return err;
     }
 
@@ -58,8 +56,7 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
      * if count == 1, store as a contiguous rather than a vector dataloop.
      */
     if (count == 1) {
-        err = MPIR_Dataloop_create_contiguous(iblocklength,
-                                              oldtype, dlp_p, dlsz_p, dldepth_p, flag);
+        err = MPIR_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p, dlsz_p, dldepth_p);
         return err;
     }
 
@@ -93,23 +90,9 @@ int MPIR_Dataloop_create_vector(DLOOP_Count icount,
         DLOOP_Handle_get_size_macro(oldtype, basic_sz);
         new_dlp->kind = DLOOP_KIND_VECTOR | DLOOP_FINAL_MASK;
 
-        if (flag == DLOOP_DATALOOP_ALL_BYTES) {
-
-            blocklength *= basic_sz;
-            new_dlp->el_size = 1;
-            new_dlp->el_extent = 1;
-            new_dlp->el_type = MPI_BYTE;
-
-            if (!strideinbytes)
-                /* the stride was specified in units of oldtype, now
-                 * that we're using bytes, rather than oldtype, we
-                 * need to update stride. */
-                stride *= basic_sz;
-        } else {
-            new_dlp->el_size = basic_sz;
-            new_dlp->el_extent = new_dlp->el_size;
-            new_dlp->el_type = oldtype;
-        }
+        new_dlp->el_size = basic_sz;
+        new_dlp->el_extent = new_dlp->el_size;
+        new_dlp->el_type = oldtype;
     } else {    /* user-defined base type (oldtype) */
 
         DLOOP_Dataloop *old_loop_ptr;
