@@ -38,21 +38,19 @@ int MPIDI_OFI_retry_progress()
 }
 
 typedef struct MPIDI_OFI_index_allocator_t {
-    int chunk_size;
-    int num_ints;
-    int start;
-    int last_free_index;
+    uint64_t chunk_size;
+    uint64_t num_ints;
+    uint64_t last_free_index;
     uint64_t *bitmask;
 } MPIDI_OFI_index_allocator_t;
 
-void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_class class)
+void MPIDI_OFI_index_allocator_create(void **indexmap, MPL_memory_class class)
 {
     MPIDI_OFI_index_allocator_t *allocator;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t), class);
     allocator->chunk_size = 128;
     allocator->num_ints = allocator->chunk_size;
-    allocator->start = start;
     allocator->last_free_index = 0;
     allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints, class);
     memset(allocator->bitmask, 0xFF, sizeof(uint64_t) * allocator->num_ints);
@@ -66,9 +64,9 @@ void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_cla
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
+uint64_t MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
 {
-    int i;
+    uint64_t i;
     MPIDI_OFI_index_allocator_t *allocator = indexmap;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     for (i = allocator->last_free_index; i < allocator->num_ints; i++) {
@@ -85,7 +83,7 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
             allocator->bitmask[i] &= ~(0x1ULL << (nval - 1));
             allocator->last_free_index = i;
             MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-            return i * sizeof(uint64_t) * 8 + (nval - 1) + allocator->start;
+            return i * sizeof(uint64_t) * 8 + (nval - 1);
         }
         if (i == allocator->num_ints - 1) {
             allocator->num_ints += allocator->chunk_size;
@@ -99,14 +97,14 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
     return -1;
 }
 
-void MPIDI_OFI_index_allocator_free(void *indexmap, int index)
+void MPIDI_OFI_index_allocator_free(void *indexmap, uint64_t index)
 {
-    int int_index, bitpos, numbits;
+    uint64_t int_index, bitpos, numbits;
     MPIDI_OFI_index_allocator_t *allocator = indexmap;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     numbits = sizeof(uint64_t) * 8;
-    int_index = (index + 1 - allocator->start) / numbits;
-    bitpos = (index - allocator->start) % numbits;
+    int_index = (index + 1) / numbits;
+    bitpos = index % numbits;
 
     allocator->last_free_index = MPL_MIN(int_index, allocator->last_free_index);
     allocator->bitmask[int_index] |= (0x1ULL << bitpos);

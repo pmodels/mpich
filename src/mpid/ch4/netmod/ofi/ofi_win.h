@@ -1245,7 +1245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
         MPIR_Assert(key_type == MPIDI_OFI_KEY_TYPE_WINDOW);
 
         MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
-                                       window_instance);
+                                       (uint64_t) window_instance);
         MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
         if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
