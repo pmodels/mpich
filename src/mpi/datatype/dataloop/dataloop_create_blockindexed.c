@@ -25,7 +25,6 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 .  MPI_Datatype old_type
 .  DLOOP_Dataloop **output_dataloop_ptr
 .  int output_dataloop_size
-.  int output_dataloop_depth
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
@@ -35,10 +34,10 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
                                       const void *disp_array,
                                       int dispinbytes,
                                       DLOOP_Type oldtype,
-                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
+                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
 {
     int err, is_builtin, is_vectorizable = 1;
-    int i, old_loop_depth;
+    int i;
     DLOOP_Size new_loop_sz;
 
     DLOOP_Count contig_count, count, blklen;
@@ -50,7 +49,7 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -58,10 +57,8 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
 
     if (is_builtin) {
         DLOOP_Handle_get_size_macro(oldtype, old_extent);
-        old_loop_depth = 0;
     } else {
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
     }
 
     contig_count = MPIR_Type_blockindexed_count_contig(count,
@@ -75,7 +72,7 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) disp_array)[0] == 0) ||
          (dispinbytes && ((MPI_Aint *) disp_array)[0] == 0))) {
-        err = MPIR_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p, dlsz_p);
         return err;
     }
 
@@ -118,7 +115,7 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
         }
         if (is_vectorizable) {
             err = MPIR_Dataloop_create_vector(count, blklen, last_stride, 1,    /* strideinbytes */
-                                              oldtype, dlp_p, dlsz_p, dldepth_p);
+                                              oldtype, dlp_p, dlsz_p);
             return err;
         }
     }
@@ -188,7 +185,6 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
 
     *dlp_p = new_dlp;
     *dlsz_p = new_loop_sz;
-    *dldepth_p = old_loop_depth + 1;
 
     return 0;
 }

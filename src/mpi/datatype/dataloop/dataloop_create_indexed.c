@@ -28,7 +28,6 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 .  MPI_Datatype oldtype
 .  DLOOP_Dataloop **dlp_p
 .  int *dlsz_p
-.  int *dldepth_p
 
 .N Errors
 .N Returns 0 on success, -1 on error.
@@ -38,11 +37,9 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
                                  const DLOOP_Size * blocklength_array,
                                  const void *displacement_array,
                                  int dispinbytes,
-                                 MPI_Datatype oldtype,
-                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p)
+                                 MPI_Datatype oldtype, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
 {
     int err, is_builtin;
-    int old_loop_depth;
     MPI_Aint i;
     DLOOP_Size new_loop_sz, blksz;
     DLOOP_Count first;
@@ -56,7 +53,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     /* if count is zero, handle with contig code, call it an int */
     if (count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -70,10 +67,8 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     if (is_builtin) {
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
-        old_loop_depth = 0;
     } else {
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
     }
 
     for (i = first; i < count; i++) {
@@ -86,7 +81,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -98,7 +93,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
          (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0))) {
-        err = MPIR_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p, dlsz_p, dldepth_p);
+        err = MPIR_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p, dlsz_p);
         return err;
     }
 
@@ -116,8 +111,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPIR_Dataloop_create_blockindexed(1,
                                                 old_type_count,
-                                                disp_arr_tmp,
-                                                dispinbytes, oldtype, dlp_p, dlsz_p, dldepth_p);
+                                                disp_arr_tmp, dispinbytes, oldtype, dlp_p, dlsz_p);
 
         return err;
     }
@@ -142,8 +136,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPIR_Dataloop_create_blockindexed(icount - first,
                                                 blksz,
-                                                disp_arr_tmp,
-                                                dispinbytes, oldtype, dlp_p, dlsz_p, dldepth_p);
+                                                disp_arr_tmp, dispinbytes, oldtype, dlp_p, dlsz_p);
 
         return err;
     }
@@ -208,7 +201,6 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
 
     *dlp_p = new_dlp;
     *dlsz_p = new_loop_sz;
-    *dldepth_p = old_loop_depth + 1;
 
     return MPI_SUCCESS;
 }
