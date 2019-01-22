@@ -41,7 +41,6 @@
  * DLOOP_Handle_extent()
  * DLOOP_Handle_size()
  * DLOOP_Handle_loopptr()
- * DLOOP_Handle_loopdepth()
  * DLOOP_Handle_hasloop()
  *
  */
@@ -51,9 +50,6 @@
 /* NOTE: put get size into mpiimpl.h; the others go here until such time
  * as we see that we need them elsewhere.
  */
-#define DLOOP_Handle_get_loopdepth_macro(handle_,depth_) \
-    MPIR_Datatype_get_loopdepth_macro(handle_,depth_)
-
 #define DLOOP_Handle_get_loopsize_macro(handle_,size_) \
     MPIR_Datatype_get_loopsize_macro(handle_,size_)
 
@@ -62,9 +58,6 @@
 
 #define DLOOP_Handle_set_loopptr_macro(handle_,lptr_) \
     MPIR_Datatype_set_loopptr_macro(handle_,lptr_)
-
-#define DLOOP_Handle_set_loopdepth_macro(handle_,depth_) \
-    MPIR_Datatype_set_loopdepth_macro(handle_,depth_)
 
 #define DLOOP_Handle_set_loopsize_macro(handle_,size_) \
     MPIR_Datatype_set_loopsize_macro(handle_,size_)
@@ -474,23 +467,21 @@ int MPIR_Segment_index_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count, DLOOP_Cou
                            void *v_paramp);
 
 /* Dataloop construction functions */
-void MPIR_Dataloop_create(MPI_Datatype type,
-                          DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 int MPIR_Dataloop_create_contiguous(DLOOP_Count count,
                                     MPI_Datatype oldtype,
-                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 int MPIR_Dataloop_create_vector(DLOOP_Count count,
                                 DLOOP_Size blocklength,
                                 MPI_Aint stride,
                                 int strideinbytes,
-                                MPI_Datatype oldtype,
-                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+                                MPI_Datatype oldtype, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 int MPIR_Dataloop_create_blockindexed(DLOOP_Count count,
                                       DLOOP_Size blklen,
                                       const void *disp_array,
                                       int dispinbytes,
                                       MPI_Datatype oldtype,
-                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
  * request of a large blocklength. */
@@ -499,14 +490,13 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count count,
                                  const void *displacement_array,
                                  int dispinbytes,
                                  MPI_Datatype oldtype,
-                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 int MPIR_Dataloop_create_struct(DLOOP_Count count,
                                 const int *blklen_array,
                                 const MPI_Aint * disp_array,
                                 const MPI_Datatype * oldtype_array,
-                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
-int MPIR_Dataloop_create_pairtype(MPI_Datatype type,
-                                  DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p, int *dldepth_p);
+                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
+int MPIR_Dataloop_create_pairtype(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
 
 /* Helper functions for dataloop construction */
 int MPIR_Type_convert_subarray(int ndims,

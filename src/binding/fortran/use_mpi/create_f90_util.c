@@ -106,9 +106,6 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        /* FIXME should we be setting type->is_permanent=TRUE here too?  If so,
-         * will the cleanup code handle it correctly and not freak out? */
-
 #ifndef NDEBUG
         {
             MPI_Datatype old_basic = MPI_DATATYPE_NULL;

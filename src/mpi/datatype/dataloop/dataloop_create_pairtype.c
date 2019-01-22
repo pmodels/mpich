@@ -23,7 +23,6 @@
 +  MPI_Datatype type - the pairtype
 .  DLOOP_Dataloop **output_dataloop_ptr
 .  int output_dataloop_size
-.  int output_dataloop_depth
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
@@ -35,8 +34,7 @@
    This same function could be used to create dataloops for any type
    that actually consists of two distinct elements.
 @*/
-int MPIR_Dataloop_create_pairtype(MPI_Datatype type,
-                                  DLOOP_Dataloop ** dlp_p, MPI_Aint * dlsz_p, int *dldepth_p)
+int MPIR_Dataloop_create_pairtype(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
@@ -59,5 +57,5 @@ int MPIR_Dataloop_create_pairtype(MPI_Datatype type,
     if (type == MPI_2INT)
         PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
 
-    return MPIR_Dataloop_create_struct(2, blocks, disps, types, dlp_p, dlsz_p, dldepth_p);
+    return MPIR_Dataloop_create_struct(2, blocks, disps, types, dlp_p, dlsz_p);
 }
