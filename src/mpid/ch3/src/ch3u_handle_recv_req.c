@@ -1098,17 +1098,14 @@ static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dt
 
     /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 1;
     new_dtp->attributes = 0;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->is_contig = dtype_info->is_contig;
     new_dtp->max_contig_blocks = dtype_info->max_contig_blocks;
     new_dtp->size = dtype_info->size;
     new_dtp->extent = dtype_info->extent;
     new_dtp->dataloop_size = dtype_info->dataloop_size;
-    new_dtp->dataloop_depth = dtype_info->dataloop_depth;
     new_dtp->basic_type = dtype_info->basic_type;
     /* set dataloop pointer */
     new_dtp->dataloop = req->dev.dataloop;
