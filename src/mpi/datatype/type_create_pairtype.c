@@ -170,19 +170,9 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
      * type and then committing it, then the dataloop will be missing.
      */
 
-#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
-    /* If MPID implementation needs use to reduce everything to
-     * a byte stream, do that. */
     err = MPIR_Dataloop_create_pairtype(type,
                                         &(new_dtp->dataloop),
-                                        &(new_dtp->dataloop_size),
-                                        &(new_dtp->dataloop_depth), MPIDU_DATALOOP_ALL_BYTES);
-#else
-    err = MPIR_Dataloop_create_pairtype(type,
-                                        &(new_dtp->dataloop),
-                                        &(new_dtp->dataloop_size),
-                                        &(new_dtp->dataloop_depth), MPIR_DATALOOP_DEFAULT);
-#endif
+                                        &(new_dtp->dataloop_size), &(new_dtp->dataloop_depth));
 
 #ifdef MPID_Type_commit_hook
     if (!err) {
