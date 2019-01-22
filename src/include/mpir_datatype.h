@@ -92,10 +92,14 @@ struct MPIR_Datatype {
     /* handle and ref_count are filled in by MPIR_Handle_obj_alloc() */
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
 
-    /* basic parameters for datatype, accessible via MPI calls */
+    /* user-visible parameters */
     MPI_Aint size;              /* MPI_Count could be 128 bits, so use MPI_Aint */
     MPI_Aint extent, ub, lb, true_ub, true_lb;
+    struct MPIR_Attribute *attributes;
+    char name[MPI_MAX_OBJECT_NAME];
 
+
+    /* private fields */
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;
     int has_sticky_ub, has_sticky_lb;
@@ -137,9 +141,6 @@ struct MPIR_Datatype {
     struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
     MPI_Aint dataloop_size;
     int dataloop_depth;
-    /* MPI-2 attributes and name */
-    struct MPIR_Attribute *attributes;
-    char name[MPI_MAX_OBJECT_NAME];
 
     /* not yet used; will be used to track what processes have cached
      * copies of this type.
