@@ -325,7 +325,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
                 if (err)
                     return err;
 
-                bytes = SEGMENT_IGNORE_LAST;
+                bytes = MPIR_SEGMENT_IGNORE_LAST;
 
                 MPIR_Segment_count_contig_blocks(segp, 0, &bytes, &tmp_nr_blks);
 
@@ -391,7 +391,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
                 return err;
 
             last_ind = nr_blks - first_ind;
-            bytes = SEGMENT_IGNORE_LAST;
+            bytes = MPIR_SEGMENT_IGNORE_LAST;
             MPIR_Segment_mpi_flatten(segp,
                                      0,
                                      &bytes,
