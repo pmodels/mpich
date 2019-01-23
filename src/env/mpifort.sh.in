@@ -361,16 +361,7 @@ if [ "$linking" = yes ] ; then
         if [ "$static_mpi" = no ] ; then
           $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         else
-          fabric_dep=""
-          if [ "@ofi_embedded@" = yes ] ; then
-              fabric_dep=`pkg-config --static --libs $libdir/pkgconfig/libfabric.pc`
-              fabric_dep=`echo $fabric_dep | sed 's/-lfabric//'`
-          elif [ -f @with_libfabric@/lib/pkgconfig/libfabric.pc ] ; then
-              fabric_dep=`pkg-config --static --libs @with_libfabric@/lib/pkgconfig/libfabric.pc`
-          else
-              fabric_dep=`pkg-config --static --libs libfabric`
-          fi
-          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/libmpi.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@ ${fabric_dep}
+          $Show $FC $PROFILE_INCPATHS ${final_fcflags} ${final_ldflags} "${allargs[@]}" $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @FC_OTHER_LIBS@
         fi
         rc=$?
     fi
