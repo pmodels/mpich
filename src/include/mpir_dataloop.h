@@ -77,10 +77,6 @@
 #define DLOOP_Ensure_Offset_fits_in_pointer(value_) \
     MPIR_Ensure_Aint_fits_in_pointer(value_)
 
-/* allocate and free functions must also be defined. */
-#define DLOOP_Malloc MPL_malloc
-#define DLOOP_Free   MPL_free
-
 /* assert function */
 #define DLOOP_Assert MPIR_Assert
 
