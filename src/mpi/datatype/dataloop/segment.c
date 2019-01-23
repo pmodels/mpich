@@ -289,7 +289,8 @@ void MPIR_Segment_manipulate(struct MPIR_Segment *segp,
 #endif
 
             /* enforce the last parameter if necessary by reducing myblocks */
-            if (last != SEGMENT_IGNORE_LAST && (stream_off + (myblocks * stream_el_size) > last)) {
+            if (last != MPIR_SEGMENT_IGNORE_LAST &&
+                (stream_off + (myblocks * stream_el_size) > last)) {
                 myblocks = ((last - stream_off) / stream_el_size);
 #ifdef DLOOP_DEBUG_MANIPULATE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,

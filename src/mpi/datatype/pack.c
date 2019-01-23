@@ -81,7 +81,7 @@ int MPIR_Pack_impl(const void *inbuf,
      * MPIR_Segment_pack are quite different.  See code or docs or something.
      */
     first = 0;
-    last = SEGMENT_IGNORE_LAST;
+    last = MPIR_SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
