@@ -11,13 +11,13 @@
 #define DLOOP_Type_footprint MPIDU_Type_footprint
 
 typedef struct MPIDU_Type_footprint_s {
-    DLOOP_Offset size, extent;
+    MPI_Aint size, extent;
 
     /* these are only needed for calculating footprint of types
      * built using this type. no reason to expose these.
      */
-    DLOOP_Offset lb, ub, alignsz;
-    DLOOP_Offset true_lb, true_ub;
+    MPI_Aint lb, ub, alignsz;
+    MPI_Aint true_lb, true_ub;
     int has_sticky_lb;
     int has_sticky_ub;
 } DLOOP_Type_footprint;
