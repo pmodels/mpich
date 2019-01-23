@@ -133,7 +133,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTSOME);
 
     /* Check the arguments */
@@ -251,7 +251,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     }
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTSOME);
-    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:
