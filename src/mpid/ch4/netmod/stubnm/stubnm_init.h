@@ -18,7 +18,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int appnum,
                                          int *tag_bits,
                                          MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
+                                         MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -34,7 +34,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_get_vni_attr(int vni)
+static inline int MPIDI_NM_get_vci_attr(int vci)
 {
     MPIR_Assert(0);
     return 0;

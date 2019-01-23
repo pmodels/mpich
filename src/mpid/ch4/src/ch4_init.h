@@ -134,7 +134,7 @@ static inline int MPIDI_choose_netmod(void)
 
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI)
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
@@ -207,9 +207,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_nm_vnis_provided;
+    int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vnis_provided;
+    int n_shm_vcis_provided;
 #endif
 #ifndef USE_PMI2_API
     int max_pmi_name_length;
@@ -327,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
 
-    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vni_lock, &mpi_errno);
+    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vci_lock, &mpi_errno);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
@@ -432,7 +432,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
@@ -441,7 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
                                            MPIR_Process.comm_world,
-                                           MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
+                                           MPIR_Process.comm_self, has_parent, &n_nm_vcis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -565,7 +565,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vci_lock, &thr_err);
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
