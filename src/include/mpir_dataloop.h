@@ -58,114 +58,6 @@
 struct MPIR_Dataloop;
 
 /*S
-  MPIR_Dataloop_contig - Description of a contiguous dataloop
-
-  Fields:
-+ count - Number of elements
-- dataloop - Dataloop of the elements
-
-  Module:
-  Datatype
-  S*/
-typedef struct MPIR_Dataloop_contig {
-    MPI_Aint count;
-    struct MPIR_Dataloop *dataloop;
-} MPIR_Dataloop_contig;
-
-/*S
-  MPIR_Dataloop_vector - Description of a vector or strided dataloop
-
-  Fields:
-+ count - Number of elements
-. blocksize - Number of dataloops in each element
-. stride - Stride (in bytes) between each block
-- dataloop - Dataloop of each element
-
-  Module:
-  Datatype
-  S*/
-typedef struct MPIR_Dataloop_vector {
-    MPI_Aint count;
-    struct MPIR_Dataloop *dataloop;
-    MPI_Aint blocksize;
-    MPI_Aint stride;
-} MPIR_Dataloop_vector;
-
-/*S
-  MPIR_Dataloop_blockindexed - Description of a block-indexed dataloop
-
-  Fields:
-+ count - Number of blocks
-. blocksize - Number of elements in each block
-. offset_array - Array of offsets (in bytes) to each block
-- dataloop - Dataloop of each element
-
-  Module:
-  Datatype
-
-  S*/
-typedef struct MPIR_Dataloop_blockindexed {
-    MPI_Aint count;
-    struct MPIR_Dataloop *dataloop;
-    MPI_Aint blocksize;
-    MPI_Aint *offset_array;
-} MPIR_Dataloop_blockindexed;
-
-/*S
-  MPIR_Dataloop_indexed - Description of an indexed dataloop
-
-  Fields:
-+ count - Number of blocks
-. blocksize_array - Array giving the number of elements in each block
-. offset_array - Array of offsets (in bytes) to each block
-. total_blocks - count of total blocks in the array (cached value)
-- dataloop - Dataloop of each element
-
-  Module:
-  Datatype
-
-  S*/
-typedef struct MPIR_Dataloop_indexed {
-    MPI_Aint count;
-    struct MPIR_Dataloop *dataloop;
-    MPI_Aint *blocksize_array;
-    MPI_Aint *offset_array;
-    MPI_Aint total_blocks;
-} MPIR_Dataloop_indexed;
-
-/*S
-  MPIR_Dataloop_struct - Description of a structure dataloop
-
-  Fields:
-+ count - Number of blocks
-. blocksize_array - Array giving the number of elements in each block
-. offset_array - Array of offsets (in bytes) to each block
-- dataloop_array - Array of dataloops describing the elements of each block
-
-  Module:
-  Datatype
-
-  S*/
-typedef struct MPIR_Dataloop_struct {
-    MPI_Aint count;
-    struct MPIR_Dataloop **dataloop_array;
-    MPI_Aint *blocksize_array;
-    MPI_Aint *offset_array;
-    MPI_Aint *el_extent_array;  /* need more than one */
-} MPIR_Dataloop_struct;
-
-/* In many cases, we need the count and the next dataloop item. This
-   common structure gives a quick access to both.  Note that all other
-   structures must use the same ordering of elements.
-   Question: should we put the pointer first in case
-   sizeof(pointer)>sizeof(int) ?
-*/
-typedef struct MPIR_Dataloop_common {
-    MPI_Aint count;
-    struct MPIR_Dataloop *dataloop;
-} MPIR_Dataloop_common;
-
-/*S
   MPIR_Dataloop - Description of the structure used to hold a dataloop
   description
 
@@ -182,10 +74,7 @@ typedef struct MPIR_Dataloop_common {
         2   - Elements are in units of 4 bytes
         3   - Elements are in units of 8 bytes
 .ve
-  The dataloop type is one of 'DLOOP_CONTIG', 'MPL_IOV',
-  'DLOOP_BLOCKINDEXED', 'DLOOP_INDEXED', or 'DLOOP_STRUCT'.
-. loop_parms - A union containing the 5 dataloop structures, e.g.,
-  'MPIR_Dataloop_contig', 'MPIR_Dataloop_vector', etc.  A sixth element in
+. loop_parms - A union containing the 5 dataloop structures.  A sixth element in
   this union, 'count', allows quick access to the shared 'count' field in the
   five dataloop structure.
 . extent - The extent of the dataloop
@@ -201,12 +90,46 @@ typedef struct MPIR_Dataloop {
                                  * whether the dataloop is a leaf type. */
     union {
         MPI_Aint count;
-        MPIR_Dataloop_contig c_t;
-        MPIR_Dataloop_vector v_t;
-        MPIR_Dataloop_blockindexed bi_t;
-        MPIR_Dataloop_indexed i_t;
-        MPIR_Dataloop_struct s_t;
-        MPIR_Dataloop_common cm_t;
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop *dataloop;
+        } c_t;
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop *dataloop;
+            MPI_Aint blocksize;
+            MPI_Aint stride;
+        } v_t;
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop *dataloop;
+            MPI_Aint blocksize;
+            MPI_Aint *offset_array;
+        } bi_t;
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop *dataloop;
+            MPI_Aint *blocksize_array;
+            MPI_Aint *offset_array;
+            MPI_Aint total_blocks;
+        } i_t;
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop **dataloop_array;
+            MPI_Aint *blocksize_array;
+            MPI_Aint *offset_array;
+            MPI_Aint *el_extent_array;  /* need more than one */
+        } s_t;
+
+        /* In many cases, we need the count and the next dataloop
+         * item. This common structure gives a quick access to both.
+         * Note that all other structures must use the same ordering
+         * of elements.  Question: should we put the pointer first in
+         * case sizeof(pointer)>sizeof(int) ? */
+        struct {
+            MPI_Aint count;
+            struct MPIR_Dataloop *dataloop;
+        } cm_t;
     } loop_params;
     MPI_Aint el_size;
     MPI_Aint el_extent;
