@@ -161,7 +161,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                                               dlp_p, dlsz_p);
             break;
         case MPI_COMBINER_HINDEXED_BLOCK:
-            disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+            disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 disps[i] = aints[i];
             MPIR_Dataloop_create_blockindexed(ints[0] /* count */ ,
@@ -170,10 +170,10 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                                               1 /* disp is bytes */ ,
                                               types[0] /* oldtype */ ,
                                               dlp_p, dlsz_p);
-            DLOOP_Free(disps);
+            MPL_free(disps);
             break;
         case MPI_COMBINER_INDEXED:
-            blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
+            blklen = (DLOOP_Size *) MPL_malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 blklen[i] = ints[1 + i];
             MPIR_Dataloop_create_indexed(ints[0] /* count */ ,
@@ -182,12 +182,12 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                                          0 /* disp not in bytes */ ,
                                          types[0] /* oldtype */ ,
                                          dlp_p, dlsz_p);
-            DLOOP_Free(blklen);
+            MPL_free(blklen);
             break;
         case MPI_COMBINER_HINDEXED_INTEGER:
         case MPI_COMBINER_HINDEXED:
             if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
-                disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
                 for (i = 0; i < ints[0]; i++) {
                     disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];
@@ -196,7 +196,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                 disps = aints;
             }
 
-            blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
+            blklen = (DLOOP_Size *) MPL_malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 blklen[i] = (DLOOP_Size) ints[1 + i];
             MPIR_Dataloop_create_indexed(ints[0] /* count */ ,
@@ -206,9 +206,9 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                                          dlp_p, dlsz_p);
 
             if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
-                DLOOP_Free(disps);
+                MPL_free(disps);
             }
-            DLOOP_Free(blklen);
+            MPL_free(blklen);
 
             break;
         case MPI_COMBINER_STRUCT_INTEGER:
@@ -228,7 +228,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
                 }
             }
             if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
-                disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+                disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
                 for (i = 0; i < ints[0]; i++) {
                     disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];
@@ -246,7 +246,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint *
             /* if (err) return err; */
 
             if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
-                DLOOP_Free(disps);
+                MPL_free(disps);
             }
             break;
         case MPI_COMBINER_SUBARRAY:
