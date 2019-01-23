@@ -193,7 +193,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     DLOOP_Offset *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
+    tmp_blklens = (DLOOP_Size *) MPL_malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
         /* TODO: ??? */
@@ -202,10 +202,10 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     /* --END ERROR HANDLING-- */
 
     tmp_disps = (DLOOP_Offset *)
-        DLOOP_Malloc(count * sizeof(DLOOP_Offset), MPL_MEM_DATATYPE);
+        MPL_malloc(count * sizeof(DLOOP_Offset), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
-        DLOOP_Free(tmp_blklens);
+        MPL_free(tmp_blklens);
         /* TODO: ??? */
         return DLOOP_Dataloop_create_struct_memory_error();
     }
@@ -222,8 +222,8 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        oldtypes[type_pos], dlp_p, dlsz_p);
 
-    DLOOP_Free(tmp_blklens);
-    DLOOP_Free(tmp_disps);
+    MPL_free(tmp_blklens);
+    MPL_free(tmp_disps);
 
     return err;
 
@@ -240,7 +240,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(DLOOP_Count count,
     MPI_Aint *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
+    tmp_blklens = (DLOOP_Size *) MPL_malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
@@ -248,11 +248,11 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(DLOOP_Count count,
     }
     /* --END ERROR HANDLING-- */
 
-    tmp_disps = (MPI_Aint *) DLOOP_Malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_disps = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
-        DLOOP_Free(tmp_blklens);
+        MPL_free(tmp_blklens);
         return DLOOP_Dataloop_create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
@@ -270,8 +270,8 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(DLOOP_Count count,
     err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        MPI_BYTE, dlp_p, dlsz_p);
 
-    DLOOP_Free(tmp_blklens);
-    DLOOP_Free(tmp_disps);
+    MPL_free(tmp_blklens);
+    MPL_free(tmp_disps);
 
     return err;
 }
@@ -347,7 +347,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
 
     nr_blks += 2;       /* safety measure */
 
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(nr_blks * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
+    tmp_blklens = (DLOOP_Size *) MPL_malloc(nr_blks * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
         MPIR_Segment_free(segp);
@@ -356,10 +356,10 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     /* --END ERROR HANDLING-- */
 
 
-    tmp_disps = (MPI_Aint *) DLOOP_Malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_disps = (MPI_Aint *) MPL_malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
-        DLOOP_Free(tmp_blklens);
+        MPL_free(tmp_blklens);
         MPIR_Segment_free(segp);
         return DLOOP_Dataloop_create_struct_memory_error();
     }
@@ -418,8 +418,8 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     err = MPIR_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        MPI_BYTE, dlp_p, dlsz_p);
 
-    DLOOP_Free(tmp_blklens);
-    DLOOP_Free(tmp_disps);
+    MPL_free(tmp_blklens);
+    MPL_free(tmp_disps);
 
     return err;
 }
