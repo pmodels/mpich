@@ -102,3 +102,17 @@ AC_DEFUN([PAC_CHECK_PREFIX],[
             [with_$1_prefix="embedded"])
 	]
 )
+
+dnl PAC_LIB_DEPS(library_name, library_pc_path)
+dnl library_pc_path is the path to the library pkg-config directory
+AC_DEFUN([PAC_LIB_DEPS],[
+if test "x$2" != "x"; then
+    ac_lib$1_deps=`pkg-config --static --libs $2/lib$1.pc 2>/dev/null`
+    # remove the library itself in case it is embedded
+    ac_lib$1_deps=`echo $ac_lib$1_deps | sed 's/-l$1//'`
+else
+    # use system default
+    ac_lib$1_deps=`pkg-config --static --libs lib$1 2>/dev/null`
+fi
+])
+
