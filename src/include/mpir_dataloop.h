@@ -120,12 +120,6 @@ typedef struct MPIR_Dataloop {
             MPI_Aint *offset_array;
             MPI_Aint *el_extent_array;  /* need more than one */
         } s_t;
-
-        /* In many cases, we need the count and the next dataloop
-         * item. This common structure gives a quick access to both.
-         * Note that all other structures must use the same ordering
-         * of elements.  Question: should we put the pointer first in
-         * case sizeof(pointer)>sizeof(int) ? */
         struct {
             MPI_Aint count;
             struct MPIR_Dataloop *dataloop;
