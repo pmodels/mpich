@@ -628,9 +628,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
 
 struct MPIDI_OFI_contig_blocks_params {
     size_t max_pipe;
-    DLOOP_Count count;
-    DLOOP_Offset last_loc;
-    DLOOP_Offset start_loc;
+    MPI_Aint count;
+    MPI_Aint last_loc;
+    MPI_Aint start_loc;
     size_t last_chunk;
 };
 
@@ -639,20 +639,20 @@ struct MPIDI_OFI_contig_blocks_params {
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
-                                     DLOOP_Type el_type,
-                                     DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
+    int MPIDI_OFI_contig_count_block(MPI_Aint * blocks_p,
+                                     MPI_Datatype el_type,
+                                     MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
-    DLOOP_Offset size, el_size;
+    MPI_Aint size, el_size;
     size_t rem, num;
     struct MPIDI_OFI_contig_blocks_params *paramp = v_paramp;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
 
-    DLOOP_Assert(*blocks_p > 0);
+    MPIR_Assert(*blocks_p > 0);
 
-    DLOOP_Handle_get_size_macro(el_type, el_size);
+    MPIR_Datatype_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
     if (paramp->count > 0 && rel_off == paramp->last_loc) {
         /* this region is adjacent to the last */

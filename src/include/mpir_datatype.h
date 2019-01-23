@@ -658,7 +658,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addr
                            int max_datatypes, int array_of_integers[],
                            MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
-int MPIR_Type_flatten(MPI_Datatype type, MPI_Aint * off_array, DLOOP_Size * size_array,
+int MPIR_Type_flatten(MPI_Datatype type, MPI_Aint * off_array, MPI_Aint * size_array,
                       MPI_Aint * array_len_p);
 
 /* debugging helper functions */

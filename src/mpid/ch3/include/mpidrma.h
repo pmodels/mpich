@@ -938,7 +938,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     else {
         /* derived datatype */
         MPIR_Segment *segp;
-        DLOOP_VECTOR *dloop_vec;
+        MPL_IOV *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
@@ -965,8 +965,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        dloop_vec = (DLOOP_VECTOR *)
-            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_DATATYPE);
+        dloop_vec = (MPL_IOV *)
+            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_DATATYPE);
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
@@ -994,14 +994,14 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             src_type_stride = type_extent;
 
         i = 0;
-        curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
-        curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+        curr_loc = dloop_vec[0].MPL_IOV_BUF;
+        curr_len = dloop_vec[0].MPL_IOV_LEN;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                curr_len += dloop_vec[i].MPL_IOV_LEN;
                 continue;
             }
 
@@ -1013,8 +1013,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
-                    curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                    curr_loc = dloop_vec[i].MPL_IOV_BUF;
+                    curr_len = dloop_vec[i].MPL_IOV_LEN;
                 }
             }
             else {
