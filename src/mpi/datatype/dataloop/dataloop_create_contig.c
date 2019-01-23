@@ -13,38 +13,37 @@
 
    Input Parameters:
 +  int icount,
-.  DLOOP_Type oldtype
+.  MPI_Datatype oldtype
 
    Output Parameters:
-+  DLOOP_Dataloop **dlp_p,
-.  DLOOP_Size *dlsz_p,
++  MPIR_Dataloop **dlp_p,
+.  MPI_Aint *dlsz_p,
 -  int *dldepth_p,
 
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
-                                    DLOOP_Type oldtype,
-                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
+int MPIR_Dataloop_create_contiguous(MPI_Aint icount,
+                                    MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
-    DLOOP_Count count;
+    MPI_Aint count;
     int is_builtin, apply_contig_coalescing = 0;
-    DLOOP_Size new_loop_sz;
+    MPI_Aint new_loop_sz;
 
-    DLOOP_Dataloop *new_dlp;
+    MPIR_Dataloop *new_dlp;
 
     count = icount;
 
     is_builtin = (DLOOP_Handle_hasloop_macro(oldtype)) ? 0 : 1;
 
     if (!is_builtin) {
-        DLOOP_Offset old_size = 0, old_extent = 0;
-        DLOOP_Dataloop *old_loop_ptr;
+        MPI_Aint old_size = 0, old_extent = 0;
+        MPIR_Dataloop *old_loop_ptr;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
-        DLOOP_Handle_get_size_macro(oldtype, old_size);
-        DLOOP_Handle_get_extent_macro(oldtype, old_extent);
+        MPIR_Datatype_get_loopptr_macro(oldtype, old_loop_ptr);
+        MPIR_Datatype_get_size_macro(oldtype, old_size);
+        MPIR_Datatype_get_extent_macro(oldtype, old_extent);
 
         /* if we have a simple combination of contigs, coalesce */
         if (((old_loop_ptr->kind & DLOOP_KIND_MASK) == DLOOP_KIND_CONTIG)
@@ -55,7 +54,7 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
     }
 
     if (is_builtin) {
-        DLOOP_Offset basic_sz = 0;
+        MPI_Aint basic_sz = 0;
 
         MPIR_Dataloop_alloc(DLOOP_KIND_CONTIG, count, &new_dlp, &new_loop_sz);
         /* --BEGIN ERROR HANDLING-- */
@@ -63,7 +62,7 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
             return -1;
         /* --END ERROR HANDLING-- */
 
-        DLOOP_Handle_get_size_macro(oldtype, basic_sz);
+        MPIR_Datatype_get_size_macro(oldtype, basic_sz);
         new_dlp->kind = DLOOP_KIND_CONTIG | DLOOP_FINAL_MASK;
 
         new_dlp->el_size = basic_sz;
@@ -73,11 +72,11 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
         new_dlp->loop_params.c_t.count = count;
     } else {
         /* user-defined base type (oldtype) */
-        DLOOP_Dataloop *old_loop_ptr;
+        MPIR_Dataloop *old_loop_ptr;
         MPI_Aint old_loop_sz = 0;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
+        MPIR_Datatype_get_loopptr_macro(oldtype, old_loop_ptr);
+        MPIR_Datatype_get_loopsize_macro(oldtype, old_loop_sz);
 
         if (apply_contig_coalescing) {
             /* make a copy of the old loop and multiply the count */
@@ -100,9 +99,9 @@ int MPIR_Dataloop_create_contiguous(DLOOP_Count icount,
             /* --END ERROR HANDLING-- */
 
             new_dlp->kind = DLOOP_KIND_CONTIG;
-            DLOOP_Handle_get_size_macro(oldtype, new_dlp->el_size);
-            DLOOP_Handle_get_extent_macro(oldtype, new_dlp->el_extent);
-            DLOOP_Handle_get_basic_type_macro(oldtype, new_dlp->el_type);
+            MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
+            MPIR_Datatype_get_extent_macro(oldtype, new_dlp->el_extent);
+            MPIR_Datatype_get_basic_type(oldtype, new_dlp->el_type);
 
             new_dlp->loop_params.c_t.count = count;
         }
