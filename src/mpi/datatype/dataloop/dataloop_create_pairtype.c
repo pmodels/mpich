@@ -11,7 +11,7 @@
     {                                                                   \
         struct { ut1_ a; ut2_ b; } foo;                                 \
         disps[0] = 0;                                                   \
-        disps[1] = DLOOP_VOID_PTR_CAST_TO_OFFSET ((char *) &foo.b - (char *) &foo.a); \
+        disps[1] = MPIR_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b - (char *) &foo.a); \
         types[0] = mt1_;                                                \
         types[1] = mt2_;                                                \
     }
@@ -21,7 +21,7 @@
 
    Arguments:
 +  MPI_Datatype type - the pairtype
-.  DLOOP_Dataloop **output_dataloop_ptr
+.  MPIR_Dataloop **output_dataloop_ptr
 .  int output_dataloop_size
 
 .N Errors
@@ -34,15 +34,15 @@
    This same function could be used to create dataloops for any type
    that actually consists of two distinct elements.
 @*/
-int MPIR_Dataloop_create_pairtype(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+int MPIR_Dataloop_create_pairtype(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
     MPI_Datatype types[2];
 
-    DLOOP_Assert(type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
-                 type == MPI_LONG_INT || type == MPI_SHORT_INT ||
-                 type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
+    MPIR_Assert(type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
+                type == MPI_LONG_INT || type == MPI_SHORT_INT ||
+                type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
 
     if (type == MPI_FLOAT_INT)
         PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);

@@ -1100,7 +1100,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
     } else {
         /* derived datatype */
         MPIR_Segment *segp;
-        DLOOP_VECTOR *dloop_vec;
+        MPL_IOV *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
@@ -1127,8 +1127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         MPIR_Assert(dtp != NULL);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        dloop_vec = (DLOOP_VECTOR *)
-            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_RMA);
+        dloop_vec = (MPL_IOV *)
+            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_RMA);
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
@@ -1155,14 +1155,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
             src_type_stride = source_dtp_extent;
 
         i = 0;
-        curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
-        curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+        curr_loc = dloop_vec[0].MPL_IOV_BUF;
+        curr_len = dloop_vec[0].MPL_IOV_LEN;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                curr_len += dloop_vec[i].MPL_IOV_LEN;
                 continue;
             }
 
@@ -1174,8 +1174,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
-                    curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                    curr_loc = dloop_vec[i].MPL_IOV_BUF;
+                    curr_len = dloop_vec[i].MPL_IOV_LEN;
                 }
             } else {
                 curr_loc = (void *) ((char *) curr_loc + type_extent * count);

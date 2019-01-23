@@ -10,42 +10,42 @@
 #include <stdio.h>
 
 
-static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
+static void DLOOP_Type_blockindexed_array_copy(MPI_Aint count,
                                                const void *disp_array,
-                                               DLOOP_Offset * out_disp_array,
-                                               int dispinbytes, DLOOP_Offset old_extent);
+                                               MPI_Aint * out_disp_array,
+                                               int dispinbytes, MPI_Aint old_extent);
 
 /*@
    Dataloop_create_blockindexed - create blockindexed dataloop
 
    Arguments:
-+  DLOOP_Count count
++  MPI_Aint count
 .  void *displacement_array (array of either MPI_Aints or ints)
 .  int displacement_in_bytes (boolean)
 .  MPI_Datatype old_type
-.  DLOOP_Dataloop **output_dataloop_ptr
+.  MPIR_Dataloop **output_dataloop_ptr
 .  int output_dataloop_size
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
-                                      DLOOP_Count iblklen,
+int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
+                                      MPI_Aint iblklen,
                                       const void *disp_array,
                                       int dispinbytes,
-                                      DLOOP_Type oldtype,
-                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p)
+                                      MPI_Datatype oldtype,
+                                      MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     int err, is_builtin, is_vectorizable = 1;
     int i;
-    DLOOP_Size new_loop_sz;
+    MPI_Aint new_loop_sz;
 
-    DLOOP_Count contig_count, count, blklen;
-    DLOOP_Offset old_extent, eff_disp0, eff_disp1, last_stride;
-    DLOOP_Dataloop *new_dlp;
+    MPI_Aint contig_count, count, blklen;
+    MPI_Aint old_extent, eff_disp0, eff_disp1, last_stride;
+    MPIR_Dataloop *new_dlp;
 
-    count = (DLOOP_Count) icount;       /* avoid subsequent casting */
-    blklen = (DLOOP_Count) iblklen;
+    count = (MPI_Aint) icount;  /* avoid subsequent casting */
+    blklen = (MPI_Aint) iblklen;
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
@@ -56,9 +56,9 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
     is_builtin = (DLOOP_Handle_hasloop_macro(oldtype)) ? 0 : 1;
 
     if (is_builtin) {
-        DLOOP_Handle_get_size_macro(oldtype, old_extent);
+        MPIR_Datatype_get_size_macro(oldtype, old_extent);
     } else {
-        DLOOP_Handle_get_extent_macro(oldtype, old_extent);
+        MPIR_Datatype_get_extent_macro(oldtype, old_extent);
     }
 
     contig_count = MPIR_Type_blockindexed_count_contig(count,
@@ -94,20 +94,20 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
      * if displacements start at zero and result in a fixed stride,
      * store it as a vector rather than a blockindexed dataloop.
      */
-    eff_disp0 = (dispinbytes) ? ((DLOOP_Offset) ((MPI_Aint *) disp_array)[0]) :
-        (((DLOOP_Offset) ((int *) disp_array)[0]) * old_extent);
+    eff_disp0 = (dispinbytes) ? ((MPI_Aint) ((MPI_Aint *) disp_array)[0]) :
+        (((MPI_Aint) ((int *) disp_array)[0]) * old_extent);
 
-    if (count > 1 && eff_disp0 == (DLOOP_Offset) 0) {
+    if (count > 1 && eff_disp0 == (MPI_Aint) 0) {
         eff_disp1 = (dispinbytes) ?
-            ((DLOOP_Offset) ((MPI_Aint *) disp_array)[1]) :
-            (((DLOOP_Offset) ((int *) disp_array)[1]) * old_extent);
+            ((MPI_Aint) ((MPI_Aint *) disp_array)[1]) :
+            (((MPI_Aint) ((int *) disp_array)[1]) * old_extent);
         last_stride = eff_disp1 - eff_disp0;
 
         for (i = 2; i < count; i++) {
             eff_disp0 = eff_disp1;
             eff_disp1 = (dispinbytes) ?
-                ((DLOOP_Offset) ((MPI_Aint *) disp_array)[i]) :
-                (((DLOOP_Offset) ((int *) disp_array)[i]) * old_extent);
+                ((MPI_Aint) ((MPI_Aint *) disp_array)[i]) :
+                (((MPI_Aint) ((int *) disp_array)[i]) * old_extent);
             if (eff_disp1 - eff_disp0 != last_stride) {
                 is_vectorizable = 0;
                 break;
@@ -151,11 +151,11 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
         new_dlp->el_extent = old_extent;
         new_dlp->el_type = oldtype;
     } else {
-        DLOOP_Dataloop *old_loop_ptr = NULL;
+        MPIR_Dataloop *old_loop_ptr = NULL;
         MPI_Aint old_loop_sz = 0;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
+        MPIR_Datatype_get_loopptr_macro(oldtype, old_loop_ptr);
+        MPIR_Datatype_get_loopsize_macro(oldtype, old_loop_sz);
 
         MPIR_Dataloop_alloc_and_copy(DLOOP_KIND_BLOCKINDEXED,
                                      count, old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);
@@ -166,9 +166,9 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
 
         new_dlp->kind = DLOOP_KIND_BLOCKINDEXED;
 
-        DLOOP_Handle_get_size_macro(oldtype, new_dlp->el_size);
-        DLOOP_Handle_get_extent_macro(oldtype, new_dlp->el_extent);
-        DLOOP_Handle_get_basic_type_macro(oldtype, new_dlp->el_type);
+        MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
+        MPIR_Datatype_get_extent_macro(oldtype, new_dlp->el_extent);
+        MPIR_Datatype_get_basic_type(oldtype, new_dlp->el_type);
     }
 
     new_dlp->loop_params.bi_t.count = count;
@@ -194,51 +194,51 @@ int MPIR_Dataloop_create_blockindexed(DLOOP_Count icount,
  * Unlike the indexed version, this one does not compact adjacent
  * blocks, because that would really mess up the blockindexed type!
  */
-static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
+static void DLOOP_Type_blockindexed_array_copy(MPI_Aint count,
                                                const void *in_disp_array,
-                                               DLOOP_Offset * out_disp_array,
-                                               int dispinbytes, DLOOP_Offset old_extent)
+                                               MPI_Aint * out_disp_array,
+                                               int dispinbytes, MPI_Aint old_extent)
 {
     int i;
     if (!dispinbytes) {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((DLOOP_Offset) ((int *) in_disp_array)[i]) * old_extent;
+            out_disp_array[i] = ((MPI_Aint) ((int *) in_disp_array)[i]) * old_extent;
         }
     } else {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((DLOOP_Offset) ((MPI_Aint *) in_disp_array)[i]);
+            out_disp_array[i] = ((MPI_Aint) ((MPI_Aint *) in_disp_array)[i]);
         }
     }
     return;
 }
 
-DLOOP_Count MPIR_Type_blockindexed_count_contig(DLOOP_Count count,
-                                                DLOOP_Count blklen,
-                                                const void *disp_array,
-                                                int dispinbytes, DLOOP_Offset old_extent)
+MPI_Aint MPIR_Type_blockindexed_count_contig(MPI_Aint count,
+                                             MPI_Aint blklen,
+                                             const void *disp_array,
+                                             int dispinbytes, MPI_Aint old_extent)
 {
     int i, contig_count = 1;
 
     if (!dispinbytes) {
         /* this is from the MPI type, is of type int */
-        DLOOP_Offset cur_tdisp = (DLOOP_Offset) ((int *) disp_array)[0];
+        MPI_Aint cur_tdisp = (MPI_Aint) ((int *) disp_array)[0];
 
         for (i = 1; i < count; i++) {
-            DLOOP_Offset next_tdisp = (DLOOP_Offset) ((int *) disp_array)[i];
+            MPI_Aint next_tdisp = (MPI_Aint) ((int *) disp_array)[i];
 
-            if (cur_tdisp + (DLOOP_Offset) blklen != next_tdisp) {
+            if (cur_tdisp + (MPI_Aint) blklen != next_tdisp) {
                 contig_count++;
             }
             cur_tdisp = next_tdisp;
         }
     } else {
         /* this is from the MPI type, is of type MPI_Aint */
-        DLOOP_Offset cur_bdisp = (DLOOP_Offset) ((MPI_Aint *) disp_array)[0];
+        MPI_Aint cur_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[0];
 
         for (i = 1; i < count; i++) {
-            DLOOP_Offset next_bdisp = (DLOOP_Offset) ((MPI_Aint *) disp_array)[i];
+            MPI_Aint next_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[i];
 
-            if (cur_bdisp + (DLOOP_Offset) blklen * old_extent != next_bdisp) {
+            if (cur_bdisp + (MPI_Aint) blklen * old_extent != next_bdisp) {
                 contig_count++;
             }
             cur_bdisp = next_bdisp;

@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
 
     map_size = dt_ptr->max_contig_blocks * count + 1;
     num_contig = map_size;      /* map_size is the maximum number of iovecs that can be generated */
-    DLOOP_Offset last = dt_ptr->size * count;
+    MPI_Aint last = dt_ptr->size * count;
 
     size = o_size * num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
 
