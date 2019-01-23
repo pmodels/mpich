@@ -41,7 +41,7 @@
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
 
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */
-#define SEGMENT_IGNORE_LAST ((MPI_Aint) -1)
+#define MPIR_SEGMENT_IGNORE_LAST ((MPI_Aint) -1)
 /*
  * Each of the MPI datatypes can be mapped into one of 5 very simple
  * loops.  This loop has the following parameters:
