@@ -48,12 +48,59 @@ static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
     }
 }
 
+static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
+{
+    switch (e->type) {
+        case MPIDU_SCHED_ENTRY_SEND:
+            {
+                struct MPIDU_Sched_send *s = &(e->u.send);
+                fprintf(fh, "\t\tSend: %llu of type %x from %d\n", s->count, s->datatype, s->dest);
+                fprintf(fh, "\t\t from buff: %p\n", s->buf);
+            }
+            break;
+        case MPIDU_SCHED_ENTRY_RECV:
+            {
+                struct MPIDU_Sched_recv *r = &(e->u.recv);
+                fprintf(fh, "\t\tRecv: %llu of type %x from %d\n", r->count, r->datatype, r->src);
+                fprintf(fh, "\t\t Into buff: %p\n", r->buf);
+            }
+            break;
+        case MPIDU_SCHED_ENTRY_REDUCE:
+            {
+                struct MPIDU_Sched_reduce *rd = &(e->u.reduce);
+                fprintf(fh, "\t\tReduce: %p -> %p\n", rd->inbuf, rd->inoutbuf);
+                fprintf(fh, "\t\t  %llu elements of type %x\n", rd->count, rd->datatype);
+                fprintf(fh, "\t\t Op: %x\n", rd->op);
+            }
+            break;
+        case MPIDU_SCHED_ENTRY_COPY:
+            {
+                struct MPIDU_Sched_copy *cp = &(e->u.copy);
+                fprintf(fh, "\t\tFrom: %p %llu of type %x\n", cp->inbuf, cp->incount, cp->intype);
+                fprintf(fh, "\t\tTo:   %p %llu of type %x\n", cp->outbuf, cp->outcount,
+                        cp->outtype);
+            }
+            break;
+        case MPIDU_SCHED_ENTRY_NOP:
+            break;
+        case MPIDU_SCHED_ENTRY_CB:
+            {
+                struct MPIDU_Sched_cb *cb = &(e->u.cb);
+                fprintf(fh, "\t\tcb_type=%d\n", cb->cb_type);
+                fprintf(fh, "\t\tcb_addr: %p\n", cb->u.cb_p);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
 /* utility function for debugging, dumps the given schedule object to fh */
 static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
 {
     int i;
 
-    fprintf(fh, "--------------------------------\n");
+    fprintf(fh, "================================\n");
     fprintf(fh, "s=%p\n", s);
     if (s) {
         fprintf(fh, "s->size=%zd\n", s->size);
@@ -63,14 +110,16 @@ static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
         fprintf(fh, "s->req=%p\n", s->req);
         fprintf(fh, "s->entries=%p\n", s->entries);
         for (i = 0; i < s->num_entries; ++i) {
+            fprintf(fh, "--------------------------------\n");
             fprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
-            fprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
-            fprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
-            fprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
+            fprintf(fh, "\ts->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
+            fprintf(fh, "\ts->entries[%d].status=%d\n", i, s->entries[i].status);
+            fprintf(fh, "\ts->entries[%d].is_barrier=%s\n", i,
                     (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
+            entry_dump(fh, &(s->entries[i]));
         }
     }
-    fprintf(fh, "--------------------------------\n");
+    fprintf(fh, "================================\n");
     /*
      * fprintf(fh, "s->next=%p\n", s->next);
      * fprintf(fh, "s->prev=%p\n", s->prev);
