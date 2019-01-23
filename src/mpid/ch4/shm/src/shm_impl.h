@@ -19,7 +19,7 @@
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vnis_provided,
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided,
                                                      int *tag_bits)
 {
     int ret;
@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
 
-    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, n_vnis_provided, tag_bits);
+    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, n_vcis_provided, tag_bits);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     return ret;
@@ -46,27 +46,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_vni_attr(int vni)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_vci_attr(int vci)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VNI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VCI);
 
-    ret = MPIDI_SHM_src_funcs.get_vni_attr(vni);
+    ret = MPIDI_SHM_src_funcs.get_vci_attr(vci);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vni, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
 
-    ret = MPIDI_SHM_src_funcs.progress(vni, blocking);
+    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
     return ret;

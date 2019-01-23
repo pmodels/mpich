@@ -136,22 +136,22 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL    MPIDUI_THREAD_CS_ENTER_REC
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
-#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_NREC(mutex)
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL MPIDUI_THREAD_CS_ENTER_REC
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -159,8 +159,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -191,22 +191,22 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL    MPIDUI_THREAD_CS_ENTER_ST
 #define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_ST(mutex)
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL MPIDUI_THREAD_CS_ENTER_ST
 #define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) MPIDUI_THREAD_CS_ENTER_ST(mutex)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) MPIDUI_THREAD_CS_ENTER_ST(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -214,8 +214,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -271,22 +271,22 @@ M*/
 
 #define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -294,8 +294,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex, cs_acq)
 #define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex, cs_acq)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -343,22 +343,22 @@ M*/
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL    MPIDUI_THREAD_CS_EXIT_REC
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
-#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_EXIT_POBJ      MPIDUI_THREAD_CS_EXIT_NREC
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL MPIDUI_THREAD_CS_EXIT_REC
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
+#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -366,8 +366,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -399,22 +399,22 @@ M*/
 
 #define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL    MPIDUI_THREAD_CS_EXIT_ST
 #define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) do {} while (0)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex)  MPIDUI_THREAD_CS_EXIT_ST(mutex)
 #define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) do {} while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL MPIDUI_THREAD_CS_EXIT_ST
 #define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VNI(mutex) MPIDUI_THREAD_CS_EXIT_ST(mutex)
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) MPIDUI_THREAD_CS_EXIT_ST(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -422,8 +422,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VNI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -453,7 +453,7 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
+#define MPIDUI_THREAD_CS_YIELD_VCI_GLOBAL(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
@@ -469,7 +469,7 @@ M*/
     } while (0)
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)                            \
     do {                                                                \
@@ -487,8 +487,8 @@ M*/
             }                                                           \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_YIELD_VNI(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
-#define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
+#define MPIDUI_THREAD_CS_YIELD_VCI_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 #endif /* MPICH_THREAD_GRANULARITY */

@@ -13,7 +13,7 @@
 
 #include "ofi_impl.h"
 
-static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
+static inline int MPIDI_OFI_progress_do_queue(int vci_idx);
 
 /*
   Per-object lock for OFI
@@ -43,7 +43,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
                                    FCNAME,                              \
                                    fi_strerror(-_ret));                 \
             if (LOCK) MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
-            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
+            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
             if (LOCK) MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_POP(mpi_errno);                                \
@@ -141,7 +141,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 #define FUNCNAME MPIDI_OFI_progress_do_queue
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
+static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
 {
     int mpi_errno = MPI_SUCCESS, ret;
     struct fi_cq_tagged_entry cq_entry;
@@ -151,13 +151,13 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
-    ret = fi_cq_read(MPIDI_Global.ctx[vni_idx].cq, &cq_entry, 1);
+    ret = fi_cq_read(MPIDI_Global.ctx[vci_idx].cq, &cq_entry, 1);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
 
     if (ret < 0) {
-        mpi_errno = MPIDI_OFI_handle_cq_error_util(vni_idx, ret);
+        mpi_errno = MPIDI_OFI_handle_cq_error_util(vci_idx, ret);
         goto fn_fail;
     }
 

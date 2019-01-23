@@ -21,10 +21,10 @@
 
 #define MAX_PROGRESS_HOOKS 4
 
-/* VNI attributes */
+/* VCI attributes */
 enum {
-    MPIDI_VNI_TX = 0x1,         /* Can send */
-    MPIDI_VNI_RX = 0x2, /* Can receive */
+    MPIDI_VCI_TX = 0x1,         /* Can send */
+    MPIDI_VCI_RX = 0x2, /* Can receive */
 };
 
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
@@ -308,7 +308,7 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     OPA_int_t progress_count;
 
-    MPID_Thread_mutex_t vni_lock;
+    MPID_Thread_mutex_t vci_lock;
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif
