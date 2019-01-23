@@ -370,7 +370,7 @@ int MPIR_Segment_init(const DLOOP_Buffer buf,
  */
 struct DLOOP_Segment *MPIR_Segment_alloc(void)
 {
-    return (struct DLOOP_Segment *) DLOOP_Malloc(sizeof(struct DLOOP_Segment), MPL_MEM_DATATYPE);
+    return (struct DLOOP_Segment *) MPL_malloc(sizeof(struct DLOOP_Segment), MPL_MEM_DATATYPE);
 }
 
 /* Segment_free
@@ -380,7 +380,7 @@ struct DLOOP_Segment *MPIR_Segment_alloc(void)
  */
 void MPIR_Segment_free(struct DLOOP_Segment *segp)
 {
-    DLOOP_Free(segp);
+    MPL_free(segp);
     return;
 }
 

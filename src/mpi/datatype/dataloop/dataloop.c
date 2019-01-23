@@ -68,7 +68,7 @@ void MPIR_Dataloop_free(DLOOP_Dataloop ** dataloop)
 #endif
 
     memset(*dataloop, 0, sizeof(DLOOP_Dataloop_common));
-    DLOOP_Free(*dataloop);
+    MPL_free(*dataloop);
     *dataloop = NULL;
     return;
 }
@@ -405,7 +405,7 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
     new_loop_sz += loop_sz + off_sz + blk_sz + ptr_sz + extent_sz + old_loop_sz;
 
     /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (DLOOP_Dataloop *) MPL_malloc(new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
@@ -576,7 +576,7 @@ void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
         extent_sz + (basic_ct * basic_sz) + old_loop_sz;
 
     /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (DLOOP_Dataloop *) MPL_malloc(new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
@@ -620,7 +620,7 @@ void MPIR_Dataloop_dup(DLOOP_Dataloop * old_loop,
     DLOOP_Assert(old_loop != NULL);
     DLOOP_Assert(old_loop_sz > 0);
 
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(old_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (DLOOP_Dataloop *) MPL_malloc(old_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
