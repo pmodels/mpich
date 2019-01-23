@@ -67,7 +67,6 @@ void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop)
                   (int) *dataloop);
 #endif
 
-    memset(*dataloop, 0, sizeof(MPIR_Dataloop_common));
     MPL_free(*dataloop);
     *dataloop = NULL;
     return;
