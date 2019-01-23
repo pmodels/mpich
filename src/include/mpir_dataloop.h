@@ -23,19 +23,6 @@
 #define MPIR_DATALOOP_SET_FIELD(value_,fieldname_) \
     ((MPIR_Datatype *)ptr)->dataloop##fieldname_ = value_
 
-/* These following dataloop-specific types will be used throughout the DLOOP
- * instance:
- */
-#define DLOOP_Offset     MPI_Aint
-#define DLOOP_Count      MPI_Aint
-#define DLOOP_Handle     MPI_Datatype
-#define DLOOP_Type       MPI_Datatype
-#define DLOOP_Buffer     void *
-#define DLOOP_VECTOR     MPL_IOV
-#define DLOOP_VECTOR_LEN MPL_IOV_LEN
-#define DLOOP_VECTOR_BUF MPL_IOV_BUF
-#define DLOOP_Size       MPI_Aint
-
 /* The following accessor functions must also be defined:
  *
  * DLOOP_Handle_extent()
@@ -50,61 +37,11 @@
 /* NOTE: put get size into mpiimpl.h; the others go here until such time
  * as we see that we need them elsewhere.
  */
-#define DLOOP_Handle_get_loopsize_macro(handle_,size_) \
-    MPIR_Datatype_get_loopsize_macro(handle_,size_)
-
-#define DLOOP_Handle_get_loopptr_macro(handle_,lptr_) \
-    MPIR_Datatype_get_loopptr_macro(handle_,lptr_)
-
-#define DLOOP_Handle_set_loopptr_macro(handle_,lptr_) \
-    MPIR_Datatype_set_loopptr_macro(handle_,lptr_)
-
-#define DLOOP_Handle_set_loopsize_macro(handle_,size_) \
-    MPIR_Datatype_set_loopsize_macro(handle_,size_)
-
-#define DLOOP_Handle_get_size_macro(handle_,size_) \
-    MPIR_Datatype_get_size_macro(handle_,size_)
-
-#define DLOOP_Handle_get_basic_type_macro(handle_,basic_type_) \
-    MPIR_Datatype_get_basic_type(handle_, basic_type_)
-
-#define DLOOP_Handle_get_extent_macro(handle_,extent_) \
-    MPIR_Datatype_get_extent_macro(handle_,extent_)
-
 #define DLOOP_Handle_hasloop_macro(handle_)                           \
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
 
-#define DLOOP_Ensure_Offset_fits_in_pointer(value_) \
-    MPIR_Ensure_Aint_fits_in_pointer(value_)
-
-/* assert function */
-#define DLOOP_Assert MPIR_Assert
-
-/* memory copy function */
-#define DLOOP_Memcpy MPIR_Memcpy
-
-/* casting macros */
-#define DLOOP_OFFSET_CAST_TO_VOID_PTR MPIR_AINT_CAST_TO_VOID_PTR
-#define DLOOP_VOID_PTR_CAST_TO_OFFSET MPIR_VOID_PTR_CAST_TO_MPI_AINT
-#define DLOOP_PTR_DISP_CAST_TO_OFFSET MPIR_PTR_DISP_CAST_TO_MPI_AINT
-
-/* printing macros */
-#define DLOOP_OFFSET_FMT_DEC_SPEC MPI_AINT_FMT_DEC_SPEC
-#define DLOOP_OFFSET_FMT_HEX_SPEC MPI_AINT_FMT_HEX_SPEC
-
-/* Redefine all of the internal structures in terms of the prefix */
-#define DLOOP_Dataloop              MPIR_Dataloop
-#define DLOOP_Dataloop_contig       MPIR_Dataloop_contig
-#define DLOOP_Dataloop_vector       MPIR_Dataloop_vector
-#define DLOOP_Dataloop_blockindexed MPIR_Dataloop_blockindexed
-#define DLOOP_Dataloop_indexed      MPIR_Dataloop_indexed
-#define DLOOP_Dataloop_struct       MPIR_Dataloop_struct
-#define DLOOP_Dataloop_common       MPIR_Dataloop_common
-#define DLOOP_Segment               MPIR_Segment
-#define DLOOP_Dataloop_stackelm     MPIR_Dataloop_stackelm
-
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */
-#define SEGMENT_IGNORE_LAST ((DLOOP_Offset) -1)
+#define SEGMENT_IGNORE_LAST ((MPI_Aint) -1)
 /*
  * Each of the MPI datatypes can be mapped into one of 5 very simple
  * loops.  This loop has the following parameters:
@@ -118,8 +55,10 @@
  * For each such type, we define a struct that describes these parameters
  */
 
+struct MPIR_Dataloop;
+
 /*S
-  DLOOP_Dataloop_contig - Description of a contiguous dataloop
+  MPIR_Dataloop_contig - Description of a contiguous dataloop
 
   Fields:
 + count - Number of elements
@@ -128,13 +67,13 @@
   Module:
   Datatype
   S*/
-typedef struct DLOOP_Dataloop_contig {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop *dataloop;
-} DLOOP_Dataloop_contig;
+typedef struct MPIR_Dataloop_contig {
+    MPI_Aint count;
+    struct MPIR_Dataloop *dataloop;
+} MPIR_Dataloop_contig;
 
 /*S
-  DLOOP_Dataloop_vector - Description of a vector or strided dataloop
+  MPIR_Dataloop_vector - Description of a vector or strided dataloop
 
   Fields:
 + count - Number of elements
@@ -145,15 +84,15 @@ typedef struct DLOOP_Dataloop_contig {
   Module:
   Datatype
   S*/
-typedef struct DLOOP_Dataloop_vector {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop *dataloop;
-    DLOOP_Count blocksize;
-    DLOOP_Offset stride;
-} DLOOP_Dataloop_vector;
+typedef struct MPIR_Dataloop_vector {
+    MPI_Aint count;
+    struct MPIR_Dataloop *dataloop;
+    MPI_Aint blocksize;
+    MPI_Aint stride;
+} MPIR_Dataloop_vector;
 
 /*S
-  DLOOP_Dataloop_blockindexed - Description of a block-indexed dataloop
+  MPIR_Dataloop_blockindexed - Description of a block-indexed dataloop
 
   Fields:
 + count - Number of blocks
@@ -165,15 +104,15 @@ typedef struct DLOOP_Dataloop_vector {
   Datatype
 
   S*/
-typedef struct DLOOP_Dataloop_blockindexed {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop *dataloop;
-    DLOOP_Count blocksize;
-    DLOOP_Offset *offset_array;
-} DLOOP_Dataloop_blockindexed;
+typedef struct MPIR_Dataloop_blockindexed {
+    MPI_Aint count;
+    struct MPIR_Dataloop *dataloop;
+    MPI_Aint blocksize;
+    MPI_Aint *offset_array;
+} MPIR_Dataloop_blockindexed;
 
 /*S
-  DLOOP_Dataloop_indexed - Description of an indexed dataloop
+  MPIR_Dataloop_indexed - Description of an indexed dataloop
 
   Fields:
 + count - Number of blocks
@@ -186,16 +125,16 @@ typedef struct DLOOP_Dataloop_blockindexed {
   Datatype
 
   S*/
-typedef struct DLOOP_Dataloop_indexed {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop *dataloop;
-    DLOOP_Count *blocksize_array;
-    DLOOP_Offset *offset_array;
-    DLOOP_Count total_blocks;
-} DLOOP_Dataloop_indexed;
+typedef struct MPIR_Dataloop_indexed {
+    MPI_Aint count;
+    struct MPIR_Dataloop *dataloop;
+    MPI_Aint *blocksize_array;
+    MPI_Aint *offset_array;
+    MPI_Aint total_blocks;
+} MPIR_Dataloop_indexed;
 
 /*S
-  DLOOP_Dataloop_struct - Description of a structure dataloop
+  MPIR_Dataloop_struct - Description of a structure dataloop
 
   Fields:
 + count - Number of blocks
@@ -207,13 +146,13 @@ typedef struct DLOOP_Dataloop_indexed {
   Datatype
 
   S*/
-typedef struct DLOOP_Dataloop_struct {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop **dataloop_array;
-    DLOOP_Count *blocksize_array;
-    DLOOP_Offset *offset_array;
-    DLOOP_Offset *el_extent_array;      /* need more than one */
-} DLOOP_Dataloop_struct;
+typedef struct MPIR_Dataloop_struct {
+    MPI_Aint count;
+    struct MPIR_Dataloop **dataloop_array;
+    MPI_Aint *blocksize_array;
+    MPI_Aint *offset_array;
+    MPI_Aint *el_extent_array;  /* need more than one */
+} MPIR_Dataloop_struct;
 
 /* In many cases, we need the count and the next dataloop item. This
    common structure gives a quick access to both.  Note that all other
@@ -221,13 +160,13 @@ typedef struct DLOOP_Dataloop_struct {
    Question: should we put the pointer first in case
    sizeof(pointer)>sizeof(int) ?
 */
-typedef struct DLOOP_Dataloop_common {
-    DLOOP_Count count;
-    struct DLOOP_Dataloop *dataloop;
-} DLOOP_Dataloop_common;
+typedef struct MPIR_Dataloop_common {
+    MPI_Aint count;
+    struct MPIR_Dataloop *dataloop;
+} MPIR_Dataloop_common;
 
 /*S
-  DLOOP_Dataloop - Description of the structure used to hold a dataloop
+  MPIR_Dataloop - Description of the structure used to hold a dataloop
   description
 
   Fields:
@@ -243,10 +182,10 @@ typedef struct DLOOP_Dataloop_common {
         2   - Elements are in units of 4 bytes
         3   - Elements are in units of 8 bytes
 .ve
-  The dataloop type is one of 'DLOOP_CONTIG', 'DLOOP_VECTOR',
+  The dataloop type is one of 'DLOOP_CONTIG', 'MPL_IOV',
   'DLOOP_BLOCKINDEXED', 'DLOOP_INDEXED', or 'DLOOP_STRUCT'.
 . loop_parms - A union containing the 5 dataloop structures, e.g.,
-  'DLOOP_Dataloop_contig', 'DLOOP_Dataloop_vector', etc.  A sixth element in
+  'MPIR_Dataloop_contig', 'MPIR_Dataloop_vector', etc.  A sixth element in
   this union, 'count', allows quick access to the shared 'count' field in the
   five dataloop structure.
 . extent - The extent of the dataloop
@@ -255,24 +194,24 @@ typedef struct DLOOP_Dataloop_common {
   Datatype
 
   S*/
-typedef struct DLOOP_Dataloop {
+typedef struct MPIR_Dataloop {
     int kind;                   /* Contains both the loop type
                                  * (contig, vector, blockindexed, indexed,
                                  * or struct) and a bit that indicates
                                  * whether the dataloop is a leaf type. */
     union {
-        DLOOP_Count count;
-        DLOOP_Dataloop_contig c_t;
-        DLOOP_Dataloop_vector v_t;
-        DLOOP_Dataloop_blockindexed bi_t;
-        DLOOP_Dataloop_indexed i_t;
-        DLOOP_Dataloop_struct s_t;
-        DLOOP_Dataloop_common cm_t;
+        MPI_Aint count;
+        MPIR_Dataloop_contig c_t;
+        MPIR_Dataloop_vector v_t;
+        MPIR_Dataloop_blockindexed bi_t;
+        MPIR_Dataloop_indexed i_t;
+        MPIR_Dataloop_struct s_t;
+        MPIR_Dataloop_common cm_t;
     } loop_params;
-    DLOOP_Offset el_size;
-    DLOOP_Offset el_extent;
-    DLOOP_Type el_type;
-} DLOOP_Dataloop;
+    MPI_Aint el_size;
+    MPI_Aint el_extent;
+    MPI_Datatype el_type;
+} MPIR_Dataloop;
 
 #define DLOOP_FINAL_MASK  0x00000008
 #define DLOOP_KIND_MASK   0x00000007
@@ -289,7 +228,7 @@ typedef struct DLOOP_Dataloop {
 #define DLOOP_MAX_DATATYPE_DEPTH 16
 
 /*S
-  DLOOP_Dataloop_stackelm - Structure for an element of the stack used
+  MPIR_Dataloop_stackelm - Structure for an element of the stack used
   to process dataloops
 
   Fields:
@@ -309,24 +248,24 @@ typedef struct DLOOP_Dataloop {
 - loop_p  - pointer to Loop-based description of the dataloop
 
 S*/
-typedef struct DLOOP_Dataloop_stackelm {
+typedef struct MPIR_Dataloop_stackelm {
     int may_require_reloading;  /* indicates that items below might
                                  * need reloading (e.g. this is a struct)
                                  */
 
-    DLOOP_Count curcount;
-    DLOOP_Offset curoffset;
-    DLOOP_Count curblock;
+    MPI_Aint curcount;
+    MPI_Aint curoffset;
+    MPI_Aint curblock;
 
-    DLOOP_Count orig_count;
-    DLOOP_Offset orig_offset;
-    DLOOP_Count orig_block;
+    MPI_Aint orig_count;
+    MPI_Aint orig_offset;
+    MPI_Aint orig_block;
 
-    struct DLOOP_Dataloop *loop_p;
-} DLOOP_Dataloop_stackelm;
+    struct MPIR_Dataloop *loop_p;
+} MPIR_Dataloop_stackelm;
 
 /*S
-  DLOOP_Segment - Description of the Segment datatype
+  MPIR_Segment - Description of the Segment datatype
 
   Notes:
   This has no corresponding MPI datatype.
@@ -337,105 +276,100 @@ typedef struct DLOOP_Dataloop_stackelm {
   Questions:
   Should this have an id for allocation and similarity purposes?
   S*/
-typedef struct DLOOP_Segment {
+typedef struct MPIR_Segment {
     void *ptr;                  /* pointer to datatype buffer */
-    DLOOP_Handle handle;
-    DLOOP_Offset stream_off;    /* next offset into data stream resulting from datatype
+    MPI_Datatype handle;
+    MPI_Aint stream_off;        /* next offset into data stream resulting from datatype
                                  * processing.  in other words, how many bytes have
                                  * we created/used by parsing so far?  that amount + 1.
                                  */
-    DLOOP_Dataloop_stackelm stackelm[DLOOP_MAX_DATATYPE_DEPTH];
+    MPIR_Dataloop_stackelm stackelm[DLOOP_MAX_DATATYPE_DEPTH];
     int cur_sp;                 /* Current stack pointer when using dataloop */
     int valid_sp;               /* maximum valid stack pointer.  This is used to
                                  * maintain information on the stack after it has
                                  * been placed there by following the datatype field
                                  * in a DLOOP_Dataloop_st for any type except struct */
 
-    struct DLOOP_Dataloop builtin_loop; /* used for both predefined types (which
+    struct MPIR_Dataloop builtin_loop;  /* used for both predefined types (which
                                          * won't have a loop already) and for
                                          * situations where a count is passed in
                                          * and we need to create a contig loop
                                          * to handle it
                                          */
     /* other, device-specific information */
-} DLOOP_Segment;
+} MPIR_Segment;
 
 /* Dataloop functions (dataloop.c) */
-void MPIR_Dataloop_copy(void *dest, void *src, DLOOP_Size size);
-void MPIR_Dataloop_update(DLOOP_Dataloop * dataloop, DLOOP_Offset ptrdiff);
-DLOOP_Offset
-MPIR_Dataloop_stream_size(DLOOP_Dataloop * dl_p, DLOOP_Offset(*sizefn) (DLOOP_Type el_type));
-void MPIR_Dataloop_print(DLOOP_Dataloop * dataloop, int depth);
+void MPIR_Dataloop_copy(void *dest, void *src, MPI_Aint size);
+void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff);
+MPI_Aint MPIR_Dataloop_stream_size(MPIR_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type));
+void MPIR_Dataloop_print(MPIR_Dataloop * dataloop, int depth);
 
 void MPIR_Dataloop_alloc(int kind,
-                         DLOOP_Count count,
-                         DLOOP_Dataloop ** new_loop_p, DLOOP_Size * new_loop_sz_p);
+                         MPI_Aint count, MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p);
 void MPIR_Dataloop_alloc_and_copy(int kind,
-                                  DLOOP_Count count,
-                                  DLOOP_Dataloop * old_loop,
-                                  DLOOP_Size old_loop_sz,
-                                  DLOOP_Dataloop ** new_loop_p, DLOOP_Size * new_loop_sz_p);
-void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
-                                DLOOP_Size old_loop_sz,
+                                  MPI_Aint count,
+                                  MPIR_Dataloop * old_loop,
+                                  MPI_Aint old_loop_sz,
+                                  MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p);
+void MPIR_Dataloop_struct_alloc(MPI_Aint count,
+                                MPI_Aint old_loop_sz,
                                 int basic_ct,
-                                DLOOP_Dataloop ** old_loop_p,
-                                DLOOP_Dataloop ** new_loop_p, DLOOP_Size * new_loop_sz_p);
-void MPIR_Dataloop_dup(DLOOP_Dataloop * old_loop,
-                       DLOOP_Size old_loop_sz, DLOOP_Dataloop ** new_loop_p);
+                                MPIR_Dataloop ** old_loop_p,
+                                MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p);
+void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPI_Aint old_loop_sz, MPIR_Dataloop ** new_loop_p);
 
-void MPIR_Dataloop_free(DLOOP_Dataloop ** dataloop);
+void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop);
 
 /* Segment functions (segment.c) */
-DLOOP_Segment *MPIR_Segment_alloc(void);
+MPIR_Segment *MPIR_Segment_alloc(void);
 
-void MPIR_Segment_free(DLOOP_Segment * segp);
+void MPIR_Segment_free(MPIR_Segment * segp);
 
-int MPIR_Segment_init(const DLOOP_Buffer buf,
-                      DLOOP_Count count, DLOOP_Handle handle, DLOOP_Segment * segp);
+int MPIR_Segment_init(const void *buf, MPI_Aint count, MPI_Datatype handle, MPIR_Segment * segp);
 
 void
-MPIR_Segment_manipulate(DLOOP_Segment * segp,
-                        DLOOP_Offset first,
-                        DLOOP_Offset * lastp,
-                        int (*piecefn) (DLOOP_Offset * blocks_p,
-                                        DLOOP_Type el_type,
-                                        DLOOP_Offset rel_off,
-                                        DLOOP_Buffer bufp,
+MPIR_Segment_manipulate(MPIR_Segment * segp,
+                        MPI_Aint first,
+                        MPI_Aint * lastp,
+                        int (*piecefn) (MPI_Aint * blocks_p,
+                                        MPI_Datatype el_type,
+                                        MPI_Aint rel_off,
+                                        void *bufp,
                                         void *v_paramp),
-                        int (*vectorfn) (DLOOP_Offset * blocks_p,
-                                         DLOOP_Count count,
-                                         DLOOP_Count blklen,
-                                         DLOOP_Offset stride,
-                                         DLOOP_Type el_type,
-                                         DLOOP_Offset rel_off,
-                                         DLOOP_Buffer bufp,
+                        int (*vectorfn) (MPI_Aint * blocks_p,
+                                         MPI_Aint count,
+                                         MPI_Aint blklen,
+                                         MPI_Aint stride,
+                                         MPI_Datatype el_type,
+                                         MPI_Aint rel_off,
+                                         void *bufp,
                                          void *v_paramp),
-                        int (*blkidxfn) (DLOOP_Offset * blocks_p,
-                                         DLOOP_Count count,
-                                         DLOOP_Count blklen,
-                                         DLOOP_Offset * offsetarray,
-                                         DLOOP_Type el_type,
-                                         DLOOP_Offset rel_off,
-                                         DLOOP_Buffer bufp,
+                        int (*blkidxfn) (MPI_Aint * blocks_p,
+                                         MPI_Aint count,
+                                         MPI_Aint blklen,
+                                         MPI_Aint * offsetarray,
+                                         MPI_Datatype el_type,
+                                         MPI_Aint rel_off,
+                                         void *bufp,
                                          void *v_paramp),
-                        int (*indexfn) (DLOOP_Offset * blocks_p,
-                                        DLOOP_Count count,
-                                        DLOOP_Count * blockarray,
-                                        DLOOP_Offset * offsetarray,
-                                        DLOOP_Type el_type,
-                                        DLOOP_Offset rel_off,
-                                        DLOOP_Buffer bufp,
+                        int (*indexfn) (MPI_Aint * blocks_p,
+                                        MPI_Aint count,
+                                        MPI_Aint * blockarray,
+                                        MPI_Aint * offsetarray,
+                                        MPI_Datatype el_type,
+                                        MPI_Aint rel_off,
+                                        void *bufp,
                                         void *v_paramp),
-                        DLOOP_Offset(*sizefn) (DLOOP_Type el_type), void *pieceparams);
+                        MPI_Aint(*sizefn) (MPI_Datatype el_type), void *pieceparams);
 
 /* Common segment operations (segment_ops.c) */
-void MPIR_Segment_count_contig_blocks(DLOOP_Segment * segp,
-                                      DLOOP_Offset first,
-                                      DLOOP_Offset * lastp, DLOOP_Count * countp);
-void MPIR_Segment_mpi_flatten(DLOOP_Segment * segp,
-                              DLOOP_Offset first,
-                              DLOOP_Offset * lastp,
-                              DLOOP_Size * blklens, MPI_Aint * disps, DLOOP_Size * lengthp);
+void MPIR_Segment_count_contig_blocks(MPIR_Segment * segp,
+                                      MPI_Aint first, MPI_Aint * lastp, MPI_Aint * countp);
+void MPIR_Segment_mpi_flatten(MPIR_Segment * segp,
+                              MPI_Aint first,
+                              MPI_Aint * lastp,
+                              MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp);
 
 #define DLOOP_M2M_TO_USERBUF   0
 #define DLOOP_M2M_FROM_USERBUF 1
@@ -446,53 +380,52 @@ struct MPIR_m2m_params {
     char *userbuf;
 };
 
-void MPIR_Segment_pack(struct DLOOP_Segment *segp,
-                       DLOOP_Offset first, DLOOP_Offset * lastp, void *streambuf);
-void MPIR_Segment_unpack(struct DLOOP_Segment *segp,
-                         DLOOP_Offset first, DLOOP_Offset * lastp, void *streambuf);
+void MPIR_Segment_pack(struct MPIR_Segment *segp,
+                       MPI_Aint first, MPI_Aint * lastp, void *streambuf);
+void MPIR_Segment_unpack(struct MPIR_Segment *segp,
+                         MPI_Aint first, MPI_Aint * lastp, void *streambuf);
 
 /* Segment piece functions that are used in specific cases elsewhere */
-int MPIR_Segment_contig_m2m(DLOOP_Offset * blocks_p, DLOOP_Type el_type, DLOOP_Offset rel_off, void *bufp,      /* unused */
+int MPIR_Segment_contig_m2m(MPI_Aint * blocks_p, MPI_Datatype el_type, MPI_Aint rel_off, void *bufp,    /* unused */
                             void *v_paramp);
-int MPIR_Segment_vector_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count, /* unused */
-                            DLOOP_Count blksz, DLOOP_Offset stride, DLOOP_Type el_type, DLOOP_Offset rel_off, void *bufp,       /* unused */
+int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p, MPI_Aint count,        /* unused */
+                            MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, void *bufp,        /* unused */
                             void *v_paramp);
-int MPIR_Segment_blkidx_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count, DLOOP_Count blocklen, DLOOP_Offset * offsetarray, DLOOP_Type el_type, DLOOP_Offset rel_off, void *bufp, /*unused */
+int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blocklen, MPI_Aint * offsetarray, MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, /*unused */
                             void *v_paramp);
-int MPIR_Segment_index_m2m(DLOOP_Offset * blocks_p, DLOOP_Count count, DLOOP_Count * blockarray, DLOOP_Offset * offsetarray, DLOOP_Type el_type, DLOOP_Offset rel_off, void *bufp,      /*unused */
+int MPIR_Segment_index_m2m(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint * blockarray, MPI_Aint * offsetarray, MPI_Datatype el_type, MPI_Aint rel_off, void *bufp,      /*unused */
                            void *v_paramp);
 
 /* Dataloop construction functions */
-void MPIR_Dataloop_create(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
-int MPIR_Dataloop_create_contiguous(DLOOP_Count count,
+void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPIR_Dataloop_create_contiguous(MPI_Aint count,
                                     MPI_Datatype oldtype,
-                                    DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
-int MPIR_Dataloop_create_vector(DLOOP_Count count,
-                                DLOOP_Size blocklength,
+                                    MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPIR_Dataloop_create_vector(MPI_Aint count,
+                                MPI_Aint blocklength,
                                 MPI_Aint stride,
                                 int strideinbytes,
-                                MPI_Datatype oldtype, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
-int MPIR_Dataloop_create_blockindexed(DLOOP_Count count,
-                                      DLOOP_Size blklen,
+                                MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPIR_Dataloop_create_blockindexed(MPI_Aint count,
+                                      MPI_Aint blklen,
                                       const void *disp_array,
                                       int dispinbytes,
                                       MPI_Datatype oldtype,
-                                      DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
+                                      MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
  * request of a large blocklength. */
-int MPIR_Dataloop_create_indexed(DLOOP_Count count,
-                                 const DLOOP_Size * blocklength_array,
+int MPIR_Dataloop_create_indexed(MPI_Aint count,
+                                 const MPI_Aint * blocklength_array,
                                  const void *displacement_array,
                                  int dispinbytes,
-                                 MPI_Datatype oldtype,
-                                 DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
-int MPIR_Dataloop_create_struct(DLOOP_Count count,
+                                 MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPIR_Dataloop_create_struct(MPI_Aint count,
                                 const int *blklen_array,
                                 const MPI_Aint * disp_array,
                                 const MPI_Datatype * oldtype_array,
-                                DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
-int MPIR_Dataloop_create_pairtype(MPI_Datatype type, DLOOP_Dataloop ** dlp_p, DLOOP_Size * dlsz_p);
+                                MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPIR_Dataloop_create_pairtype(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
 
 /* Helper functions for dataloop construction */
 int MPIR_Type_convert_subarray(int ndims,
@@ -509,15 +442,15 @@ int MPIR_Type_convert_darray(int size,
                              int *array_of_psizes,
                              int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
-DLOOP_Count MPIR_Type_indexed_count_contig(DLOOP_Count count,
-                                           const DLOOP_Count * blocklength_array,
-                                           const void *displacement_array,
-                                           int dispinbytes, DLOOP_Offset old_extent);
+MPI_Aint MPIR_Type_indexed_count_contig(MPI_Aint count,
+                                        const MPI_Aint * blocklength_array,
+                                        const void *displacement_array,
+                                        int dispinbytes, MPI_Aint old_extent);
 
-DLOOP_Count MPIR_Type_blockindexed_count_contig(DLOOP_Count count,
-                                                DLOOP_Count blklen,
-                                                const void *disp_array,
-                                                int dispinbytes, DLOOP_Offset old_extent);
+MPI_Aint MPIR_Type_blockindexed_count_contig(MPI_Aint count,
+                                             MPI_Aint blklen,
+                                             const void *disp_array,
+                                             int dispinbytes, MPI_Aint old_extent);
 
 int MPIR_Type_blockindexed(int count,
                            int blocklength,
@@ -527,29 +460,25 @@ int MPIR_Type_blockindexed(int count,
 int MPIR_Type_commit(MPI_Datatype * type);
 
 /* Segment functions specific to MPICH */
-void MPIR_Segment_pack_vector(struct DLOOP_Segment *segp,
-                              DLOOP_Offset first,
-                              DLOOP_Offset * lastp, DLOOP_VECTOR * vector, int *lengthp);
+void MPIR_Segment_pack_vector(struct MPIR_Segment *segp,
+                              MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
 
-void MPIR_Segment_unpack_vector(struct DLOOP_Segment *segp,
-                                DLOOP_Offset first,
-                                DLOOP_Offset * lastp, DLOOP_VECTOR * vector, int *lengthp);
+void MPIR_Segment_unpack_vector(struct MPIR_Segment *segp,
+                                MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
 
-void MPIR_Segment_flatten(struct DLOOP_Segment *segp,
-                          DLOOP_Offset first,
-                          DLOOP_Offset * lastp,
-                          DLOOP_Offset * offp, DLOOP_Size * sizep, DLOOP_Offset * lengthp);
+void MPIR_Segment_flatten(struct MPIR_Segment *segp,
+                          MPI_Aint first,
+                          MPI_Aint * lastp, MPI_Aint * offp, MPI_Aint * sizep, MPI_Aint * lengthp);
 
-void MPIR_Segment_pack_external32(struct DLOOP_Segment *segp,
-                                  DLOOP_Offset first, DLOOP_Offset * lastp, void *pack_buffer);
+void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
+                                  MPI_Aint first, MPI_Aint * lastp, void *pack_buffer);
 
-void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
-                                    DLOOP_Offset first,
-                                    DLOOP_Offset * lastp, DLOOP_Buffer unpack_buffer);
+void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
+                                    MPI_Aint first, MPI_Aint * lastp, void *unpack_buffer);
 
-DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp);
-DLOOP_Offset DLOOP_Stackelm_offset(struct DLOOP_Dataloop_stackelm *elmp);
-void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
-                         struct DLOOP_Dataloop *dlp, int branch_flag);
+MPI_Aint DLOOP_Stackelm_blocksize(struct MPIR_Dataloop_stackelm *elmp);
+MPI_Aint DLOOP_Stackelm_offset(struct MPIR_Dataloop_stackelm *elmp);
+void DLOOP_Stackelm_load(struct MPIR_Dataloop_stackelm *elmp,
+                         struct MPIR_Dataloop *dlp, int branch_flag);
 
 #endif /* MPIR_DATALOOP_H_INCLUDED */

@@ -143,18 +143,18 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
     MPI_Datatype *types;
 
     /* used to store parameters for constituent types */
-    DLOOP_Offset size = 0, lb = 0, ub = 0, true_lb = 0, true_ub = 0;
-    DLOOP_Offset extent = 0, alignsz;
+    MPI_Aint size = 0, lb = 0, ub = 0, true_lb = 0, true_ub = 0;
+    MPI_Aint extent = 0, alignsz;
     int has_sticky_lb, has_sticky_ub;
 
     /* used for vector/hvector/hvector_integer calculations */
-    DLOOP_Offset stride;
+    MPI_Aint stride;
 
     /* used for indexed/hindexed calculations */
-    DLOOP_Offset disp;
+    MPI_Aint disp;
 
     /* used for calculations on types with more than one block of data */
-    DLOOP_Offset i, min_lb, max_ub, ntypes, tmp_lb, tmp_ub;
+    MPI_Aint i, min_lb, max_ub, ntypes, tmp_lb, tmp_ub;
 
     /* used for processing subarray and darray types */
     int ndims;
@@ -168,12 +168,12 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
 
         MPIR_Datatype_get_size_macro(type, mpisize);
         MPIR_Datatype_get_extent_macro(type, mpiextent);
-        tfp->size = (DLOOP_Offset) mpisize;
+        tfp->size = (MPI_Aint) mpisize;
         tfp->lb = 0;
-        tfp->ub = (DLOOP_Offset) mpiextent;
+        tfp->ub = (MPI_Aint) mpiextent;
         tfp->true_lb = 0;
-        tfp->true_ub = (DLOOP_Offset) mpiextent;
-        tfp->extent = (DLOOP_Offset) mpiextent;
+        tfp->true_ub = (MPI_Aint) mpiextent;
+        tfp->extent = (MPI_Aint) mpiextent;
         tfp->alignsz = DLOOP_Named_type_alignsize(type, (MPI_Aint) 0);
         tfp->has_sticky_lb = (type == MPI_LB) ? 1 : 0;
         tfp->has_sticky_ub = (type == MPI_UB) ? 1 : 0;
@@ -248,18 +248,18 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
                                         lb, ub, extent, tfp->lb, tfp->ub);
             tfp->true_lb = tfp->lb + (true_lb - lb);
             tfp->true_ub = tfp->ub + (true_ub - ub);
-            tfp->size = (DLOOP_Offset) ints[0] * size;
+            tfp->size = (MPI_Aint) ints[0] * size;
             tfp->extent = tfp->ub - tfp->lb;
             break;
         case MPI_COMBINER_VECTOR:
         case MPI_COMBINER_HVECTOR:
         case MPI_COMBINER_HVECTOR_INTEGER:
             if (combiner == MPI_COMBINER_VECTOR)
-                stride = (DLOOP_Offset) ints[2] * extent;
+                stride = (MPI_Aint) ints[2] * extent;
             else if (combiner == MPI_COMBINER_HVECTOR)
                 stride = aints[0];
             else        /* HVECTOR_INTEGER */
-                stride = (DLOOP_Offset) ints[2];
+                stride = (MPI_Aint) ints[2];
 
             DLOOP_DATATYPE_VECTOR_LB_UB(ints[0] /* count */ ,
                                         stride /* stride in bytes */ ,
@@ -267,25 +267,25 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
                                         lb, ub, extent, tfp->lb, tfp->ub);
             tfp->true_lb = tfp->lb + (true_lb - lb);
             tfp->true_ub = tfp->ub + (true_ub - ub);
-            tfp->size = (DLOOP_Offset) ints[0] * (DLOOP_Offset) ints[1] * size;
+            tfp->size = (MPI_Aint) ints[0] * (MPI_Aint) ints[1] * size;
             tfp->extent = tfp->ub - tfp->lb;
             break;
         case MPI_COMBINER_INDEXED_BLOCK:
             /* prime min_lb and max_ub */
             DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */ ,
-                                       (DLOOP_Offset) ints[2] * extent /* disp */ ,
+                                       (MPI_Aint) ints[2] * extent /* disp */ ,
                                        lb, ub, extent, min_lb, max_ub);
 
             for (i = 1; i < ints[0]; i++) {
                 DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */ ,
-                                           (DLOOP_Offset) ints[i + 2] * extent /* disp */ ,
+                                           (MPI_Aint) ints[i + 2] * extent /* disp */ ,
                                            lb, ub, extent, tmp_lb, tmp_ub);
                 if (tmp_lb < min_lb)
                     min_lb = tmp_lb;
                 if (tmp_ub > max_ub)
                     max_ub = tmp_ub;
             }
-            tfp->size = (DLOOP_Offset) ints[0] * (DLOOP_Offset) ints[1] * size;
+            tfp->size = (MPI_Aint) ints[0] * (MPI_Aint) ints[1] * size;
             tfp->lb = min_lb;
             tfp->ub = max_ub;
             tfp->true_lb = min_lb + (true_lb - lb);
@@ -295,19 +295,19 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
         case MPI_COMBINER_HINDEXED_BLOCK:
             /* prime min_lb and max_ub */
             DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */ ,
-                                       (DLOOP_Offset) ints[2] /* disp */ ,
+                                       (MPI_Aint) ints[2] /* disp */ ,
                                        lb, ub, extent, min_lb, max_ub);
 
             for (i = 1; i < ints[0]; i++) {
                 DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */ ,
-                                           (DLOOP_Offset) ints[i + 2] /* disp */ ,
+                                           (MPI_Aint) ints[i + 2] /* disp */ ,
                                            lb, ub, extent, tmp_lb, tmp_ub);
                 if (tmp_lb < min_lb)
                     min_lb = tmp_lb;
                 if (tmp_ub > max_ub)
                     max_ub = tmp_ub;
             }
-            tfp->size = (DLOOP_Offset) ints[0] * (DLOOP_Offset) ints[1] * size;
+            tfp->size = (MPI_Aint) ints[0] * (MPI_Aint) ints[1] * size;
             tfp->lb = min_lb;
             tfp->ub = max_ub;
             tfp->true_lb = min_lb + (true_lb - lb);
@@ -327,9 +327,9 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
                 /* prime min_lb, max_ub, count */
                 ntypes = ints[i + 1];
                 if (combiner == MPI_COMBINER_INDEXED)
-                    disp = (DLOOP_Offset) ints[ints[0] + i + 1] * extent;
+                    disp = (MPI_Aint) ints[ints[0] + i + 1] * extent;
                 else if (combiner == MPI_COMBINER_HINDEXED_INTEGER)
-                    disp = (DLOOP_Offset) ints[ints[0] + i + 1];
+                    disp = (MPI_Aint) ints[ints[0] + i + 1];
                 else    /* MPI_COMBINER_HINDEXED */
                     disp = aints[i];
 
@@ -343,9 +343,9 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
 
                     ntypes += ints[i + 1];
                     if (combiner == MPI_COMBINER_INDEXED)
-                        disp = (DLOOP_Offset) ints[ints[0] + i + 1] * extent;
+                        disp = (MPI_Aint) ints[ints[0] + i + 1] * extent;
                     else if (combiner == MPI_COMBINER_HINDEXED_INTEGER)
-                        disp = (DLOOP_Offset) ints[ints[0] + i + 1];
+                        disp = (MPI_Aint) ints[ints[0] + i + 1];
                     else        /* MPI_COMBINER_HINDEXED */
                         disp = aints[i];
 
@@ -364,7 +364,7 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
             }
             break;
         case MPI_COMBINER_STRUCT_INTEGER:
-            DLOOP_Assert(combiner != MPI_COMBINER_STRUCT_INTEGER);
+            MPIR_Assert(combiner != MPI_COMBINER_STRUCT_INTEGER);
             break;
         case MPI_COMBINER_STRUCT:
             /* sufficiently complicated to pull out into separate fn */
@@ -399,7 +399,7 @@ void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp)
         case MPI_COMBINER_F90_COMPLEX:
         case MPI_COMBINER_F90_INTEGER:
         default:
-            DLOOP_Assert(0);
+            MPIR_Assert(0);
             break;
     }
 
@@ -419,15 +419,15 @@ static void DLOOP_Type_calc_footprint_struct(MPI_Datatype type,
                                              MPI_Datatype * types, DLOOP_Type_footprint * tfp)
 {
     int i, found_sticky_lb = 0, found_sticky_ub = 0, first_iter = 1;
-    DLOOP_Offset tmp_lb, tmp_ub, tmp_extent, tmp_true_lb, tmp_true_ub;
-    DLOOP_Offset max_alignsz = 0, tmp_size = 0, min_lb = 0, max_ub = 0;
-    DLOOP_Offset min_true_lb = 0, max_true_ub = 0;
+    MPI_Aint tmp_lb, tmp_ub, tmp_extent, tmp_true_lb, tmp_true_ub;
+    MPI_Aint max_alignsz = 0, tmp_size = 0, min_lb = 0, max_ub = 0;
+    MPI_Aint min_true_lb = 0, max_true_ub = 0;
 
     int nr_ints, nr_aints, nr_types, combiner;
 
     /* used to store parameters for constituent types */
     DLOOP_Type_footprint cfp;
-    DLOOP_Offset size, lb, ub, true_lb, true_ub, extent, alignsz;
+    MPI_Aint size, lb, ub, true_lb, true_ub, extent, alignsz;
     int sticky_lb, sticky_ub;
 
     /* find first non-zero blocklength element */
@@ -465,7 +465,7 @@ static void DLOOP_Type_calc_footprint_struct(MPI_Datatype type,
 
         tmp_true_lb = tmp_lb + (true_lb - lb);
         tmp_true_ub = tmp_ub + (true_ub - ub);
-        tmp_size += size * (DLOOP_Offset) ints[i + 1];
+        tmp_size += size * (MPI_Aint) ints[i + 1];
 
         if (combiner == MPI_COMBINER_NAMED) {
             /* NOTE: This is a special case. If a user creates a struct
@@ -520,7 +520,7 @@ static void DLOOP_Type_calc_footprint_struct(MPI_Datatype type,
 
     /* account for padding if no sticky LB/UB is found */
     if ((!found_sticky_lb) && (!found_sticky_ub)) {
-        DLOOP_Offset epsilon;
+        MPI_Aint epsilon;
 
         epsilon = (max_alignsz > 0) ? tmp_extent % max_alignsz : 0;
 
@@ -743,7 +743,7 @@ static int DLOOP_Structalign_integer_max()
     if (is_four)
         is_two = 0;
 
-    DLOOP_Assert(is_packed + is_two + is_four + is_eight == 1);
+    MPIR_Assert(is_packed + is_two + is_four + is_eight == 1);
 
     if (is_packed)
         return 1;
@@ -803,7 +803,7 @@ static int DLOOP_Structalign_float_max()
     if (is_four)
         is_two = 0;
 
-    DLOOP_Assert(is_packed + is_two + is_four + is_eight + is_sixteen == 1);
+    MPIR_Assert(is_packed + is_two + is_four + is_eight + is_sixteen == 1);
 
     if (is_packed)
         return 1;
@@ -857,7 +857,7 @@ static int DLOOP_Structalign_double_max()
     if (is_four)
         is_two = 0;
 
-    DLOOP_Assert(is_packed + is_two + is_four + is_eight == 1);
+    MPIR_Assert(is_packed + is_two + is_four + is_eight == 1);
 
     if (is_packed)
         return 1;
@@ -932,7 +932,7 @@ static int DLOOP_Structalign_long_double_max()
     if (is_four)
         is_two = 0;
 
-    DLOOP_Assert(is_packed + is_two + is_four + is_eight + is_sixteen == 1);
+    MPIR_Assert(is_packed + is_two + is_four + is_eight + is_sixteen == 1);
 
     if (is_packed)
         return 1;

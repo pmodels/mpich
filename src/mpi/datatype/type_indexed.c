@@ -69,7 +69,7 @@ int MPIR_Type_indexed(int count,
 
     /* sanity check that blocklens are all non-negative */
     for (i = 0; i < count; ++i) {
-        DLOOP_Assert(blocklength_array[i] >= 0);
+        MPIR_Assert(blocklength_array[i] >= 0);
     }
 
     /* allocate new datatype object and handle */

@@ -113,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     size_t l = 0;
     size_t countp_huge = 0;
     MPIR_Segment seg;
-    DLOOP_Offset last_byte = dt_ptr->size * count;
+    MPI_Aint last_byte = dt_ptr->size * count;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
