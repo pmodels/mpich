@@ -272,6 +272,18 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         fi
     fi
 
+    # check for libfabric depedence libs
+    pcdir=""
+    if test "${ofi_embedded}" = "yes" ; then
+        pcdir="${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric"
+    elif [ -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ] ; then
+        pcdir="${with_libfabric}/lib/pkgconfig"
+    fi
+    PAC_LIB_DEPS(fabric, $pcdir)
+    if test "x$ac_libfabric_deps" != "x"; then
+        PAC_APPEND_FLAG([${ac_libfabric_deps}],[WRAPPER_LIBS])
+    fi
+
     # Check for required functions
 
     # Does MPL provide MPL_aligned_malloc?
