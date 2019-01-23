@@ -50,7 +50,7 @@ int MPIR_Type_flatten(MPI_Datatype type,
         return err;
 
     first = 0;
-    last = SEGMENT_IGNORE_LAST;
+    last = MPIR_SEGMENT_IGNORE_LAST;
 
     MPIR_Segment_flatten(segp, first, &last, off_array, size_array, array_len_p);
 
