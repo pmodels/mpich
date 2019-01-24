@@ -908,10 +908,10 @@ void MPIR_Type_release_contents(MPI_Datatype type,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Segment_pack_vector
+#define FUNCNAME MPIR_Segment_to_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPIR_Segment_pack_vector
+/* MPIR_Segment_to_iov
 *
 * Parameters:
 * segp    - pointer to segment structure
@@ -923,13 +923,13 @@ void MPIR_Type_release_contents(MPI_Datatype type,
 * lengthp - in/out parameter describing length of array (and afterwards
 *           the amount of the array that has actual data)
 */
-void MPIR_Segment_pack_vector(struct MPIR_Segment *segp,
-                              MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
+void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
+                         MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
 {
     struct MPIR_Segment_piece_params packvec_params;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_PACK_VECTOR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_TO_IOV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_PACK_VECTOR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_TO_IOV);
 
     packvec_params.u.pack_vector.vectorp = vectorp;
     packvec_params.u.pack_vector.index = 0;
@@ -943,28 +943,28 @@ void MPIR_Segment_pack_vector(struct MPIR_Segment *segp,
 
     /* last value already handled by MPIR_Segment_manipulate */
     *lengthp = packvec_params.u.pack_vector.index;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_PACK_VECTOR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_TO_IOV);
     return;
 }
 
 
-/* MPIR_Segment_unpack_vector
+/* MPIR_Segment_from_iov
 *
 * Q: Should this be any different from pack vector?
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Segment_unpack_vector
+#define FUNCNAME MPIR_Segment_from_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Segment_unpack_vector(struct MPIR_Segment *segp,
-                                MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
+void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
+                           MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_UNPACK_VECTOR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_UNPACK_VECTOR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
 
-    MPIR_Segment_pack_vector(segp, first, lastp, vectorp, lengthp);
+    MPIR_Segment_to_iov(segp, first, lastp, vectorp, lengthp);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_UNPACK_VECTOR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
     return;
 }
 
@@ -1242,8 +1242,8 @@ static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
  * Notes:
  * - this is only called when the starting position is at the beginning
  *   of a whole block in a vector type.
- * - this was a virtual copy of MPIR_Segment_pack_to_iov; now it has improvements
- *   that MPIR_Segment_pack_to_iov needs.
+ * - this was a virtual copy of MPIR_Segment_to_iov; now it has improvements
+ *   that MPIR_Segment_to_iov needs.
  * - we return the number of blocks that we did process in region pointed to by
  *   blocks_p.
  */

@@ -103,7 +103,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_Assert(sreq->dev.segment_first < last);
     MPIR_Assert(last > 0);
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
-    MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, 
+    MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, 
 			     &last, iov, iov_n);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
     "post-pv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
@@ -269,7 +269,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 			  rreq->dev.segment_first, last, rreq->dev.iov_count));
 	MPIR_Assert(rreq->dev.segment_first < last);
 	MPIR_Assert(last > 0);
-	MPIR_Segment_unpack_vector(rreq->dev.segment_ptr, 
+	MPIR_Segment_from_iov(rreq->dev.segment_ptr, 
 				   rreq->dev.segment_first,
 				   &last, &rreq->dev.iov[0], &rreq->dev.iov_count);
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
