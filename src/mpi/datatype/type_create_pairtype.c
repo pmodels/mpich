@@ -64,7 +64,7 @@ Input Parameters:
 @*/
 int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 {
-    int err, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int type_size, alignsize;
     MPI_Aint type_extent, true_ub, el_size;
 
@@ -167,24 +167,22 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
      * type and then committing it, then the dataloop will be missing.
      */
 
-    err = MPIR_Dataloop_create_pairtype(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
+    MPIR_Dataloop_create(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
 
 #ifdef MPID_Type_commit_hook
-    if (!err) {
-        err = MPID_Type_commit_hook(new_dtp);
-    }
-#endif /* MPID_Type_commit_hook */
+    int err = MPID_Type_commit_hook(new_dtp);
 
     /* --BEGIN ERROR HANDLING-- */
     if (err) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                          MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Dataloop_create_pairtype",
+                                         "MPID_Type_commit_hook",
                                          __LINE__, MPI_ERR_OTHER, "**nomem", 0);
         return mpi_errno;
 
     }
     /* --END ERROR HANDLING-- */
+#endif /* MPID_Type_commit_hook */
 
     return mpi_errno;
 }
