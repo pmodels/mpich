@@ -376,11 +376,11 @@ int MPIR_Type_blockindexed(int count,
 int MPIR_Type_commit(MPI_Datatype * type);
 
 /* Segment functions specific to MPICH */
-void MPIR_Segment_pack_vector(struct MPIR_Segment *segp,
-                              MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
+void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
+                         MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
 
-void MPIR_Segment_unpack_vector(struct MPIR_Segment *segp,
-                                MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
+void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
+                           MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
 
 void MPIR_Segment_flatten(struct MPIR_Segment *segp,
                           MPI_Aint first,

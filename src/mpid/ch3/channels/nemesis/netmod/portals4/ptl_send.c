@@ -169,7 +169,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
         last = sreq->dev.segment_size;
         sreq->dev.iov_count = MPL_IOV_LIMIT;
-        MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
+        MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
         if (last == sreq->dev.segment_size) {
             /* IOV is able to describe entire message */
@@ -234,7 +234,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
     last = PTL_LARGE_THRESHOLD;
     sreq->dev.iov_count = MPL_IOV_LIMIT;
-    MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
+    MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
     initial_iov_count = sreq->dev.iov_count;
     sreq->dev.segment_first = last;
@@ -247,7 +247,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             sreq->dev.iov_count = MPL_IOV_LIMIT - sreq->dev.iov_count;
             last = sreq->dev.segment_size;
                     
-            MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
+            MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
                                      &sreq->dev.iov[initial_iov_count], &sreq->dev.iov_count);
             remaining_iov_count = sreq->dev.iov_count;
 

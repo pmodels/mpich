@@ -311,7 +311,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
                     iov[index].MPL_IOV_LEN = iov_buf[index].length;
                 }
 
-                MPIR_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
+                MPIR_Segment_from_iov(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
                                            &n_iov);
                 MPL_free(iov);
             }
@@ -464,7 +464,7 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
     MPIR_Assert(iov);
 
     last = rreq->dev.segment_size;
-    MPIR_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
+    MPIR_Segment_from_iov(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
     MPIR_Assert(last == rreq->dev.segment_size);
 
 #if defined(MXM_DEBUG) && (MXM_DEBUG > 0)

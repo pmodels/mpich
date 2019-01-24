@@ -328,7 +328,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     
     last = rreq->dev.segment_size;
     rreq->dev.iov_count = MPL_IOV_LIMIT;
-    MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+    MPIR_Segment_to_iov(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
     if (last == rreq->dev.segment_size && rreq->dev.segment_size <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
         /* Rest of message fits in one IOV */
@@ -496,7 +496,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
 
             last = rreq->dev.segment_size;
             rreq->dev.iov_count = MPL_IOV_LIMIT;
-            MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+            MPIR_Segment_to_iov(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == rreq->dev.segment_size) {
                 /* entire message fits in IOV */
@@ -534,7 +534,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
 
             last = PTL_LARGE_THRESHOLD;
             rreq->dev.iov_count = MPL_IOV_LIMIT;
-            MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+            MPIR_Segment_to_iov(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == PTL_LARGE_THRESHOLD) {
                 /* first chunk fits in IOV */
@@ -741,7 +741,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_c
         rreq->dev.segment_first = PTL_LARGE_THRESHOLD;
         last = rreq->dev.segment_size;
         rreq->dev.iov_count = MPL_IOV_LIMIT;
-        MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov,
+        MPIR_Segment_to_iov(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov,
                                  &rreq->dev.iov_count);
         if (last == rreq->dev.segment_size && last <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
             /* Rest of message fits in one IOV */

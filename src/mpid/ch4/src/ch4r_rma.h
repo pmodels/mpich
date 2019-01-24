@@ -124,7 +124,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
@@ -297,7 +297,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -453,7 +453,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
@@ -652,7 +652,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
