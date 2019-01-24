@@ -10,7 +10,6 @@
 #ifdef ROMIO_DAOS
 #include "../ad_daos/ad_daos.h"
 
-extern daos_handle_t daos_pool_oh;
 extern bool daos_initialized;
 #endif /* ROMIO_DAOS */
 
@@ -49,6 +48,7 @@ void ADIO_End(int *error_code)
 
 #ifdef ROMIO_DAOS
     if (daos_initialized) {
+        adio_daos_hash_finalize();
         daos_fini();
         daos_initialized = false;
     }
@@ -65,20 +65,6 @@ int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void
                    *extra_state)
 {
     int error_code;
-#ifdef ROMIO_DAOS
-    int comm_world_rank;
-
-    adio_daos_coh_hash_finalize();
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
-    if (comm_world_rank == 0 && !daos_handle_is_inval(daos_pool_oh))
-        daos_pool_disconnect(daos_pool_oh, NULL);
-
-    if (daos_initialized) {
-        daos_fini();
-        daos_initialized = false;
-    }
-#endif
 
     MPL_UNREFERENCED_ARG(comm);
     MPL_UNREFERENCED_ARG(attribute_val);

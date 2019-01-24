@@ -14,13 +14,11 @@
  * portions thereof marked with this legend must also reproduce the markings.
  */
 
-#include <libgen.h>
 #include "ad_daos.h"
+#include <libgen.h>
 #include <uuid/uuid.h>
 
 #define OID_SEED 5731
-
-extern daos_handle_t daos_pool_oh;
 
 #  define UINT64ENCODE(p, n) {						      \
    uint64_t _n = (n);							      \
@@ -224,13 +222,42 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_OPEN";
     int perm, old_mask, amode;
+    char *uuid_str = NULL;
+    uuid_t puuid;
     int rc;
 
     *error_code = MPI_SUCCESS;
 
-    rc = adio_daos_cont_lookup_create(cont->uuid,
+    uuid_str = getenv ("DAOS_POOL");
+    if (uuid_str != NULL) {
+        if (uuid_parse(uuid_str, puuid) < 0) {
+            PRINT_MSG(stderr, "Failed to parse pool uuid\n");
+            rc = -1;
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Failed to connect to pool", 0);
+            return;
+        }
+    }
+
+    rc = adio_daos_poh_lookup_connect(puuid, &cont->p);
+    if (rc) {
+        PRINT_MSG(stderr, "pool lookup failed (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "Failed to connect to pool", 0);
+        return;
+    }
+
+    cont->poh = cont->p->open_hdl;
+
+    rc = adio_daos_cont_lookup_create(cont->poh, cont->uuid,
                                       (fd->access_mode & ADIO_CREATE),
-                                      &cont->hdl);
+                                      &cont->c);
     if (rc) {
         PRINT_MSG(stderr, "container lookup failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -238,17 +265,17 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
                                            "Failed to create container", 0);
-        goto out;
+        goto err_pool;
     }
 
-    cont->coh = cont->hdl->co_coh;
+    cont->coh = cont->c->open_hdl;
     if (cont->amode == DAOS_COO_RW)
         amode = O_RDWR;
     else
         amode = O_RDONLY;
 
     /* Mount a DFS namespace on the container */
-    rc = dfs_mount(daos_pool_oh, cont->coh, amode, &cont->dfs);
+    rc = dfs_mount(cont->p->open_hdl, cont->coh, amode, &cont->dfs);
     if (rc) {
         PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
         goto err_cont;
@@ -309,7 +336,11 @@ err_obj:
 err_dfs:
     dfs_umount(cont->dfs);
 err_cont:
-    adio_daos_cont_release(cont->hdl);
+    adio_daos_cont_release(cont->c);
+    cont->c = NULL;
+err_pool:
+    adio_daos_poh_release(cont->p);
+    cont->p = NULL;
     goto out;
 }
 
@@ -354,7 +385,8 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     duuid_hash128(cont->cont_name, &cont->uuid, NULL, NULL);
 
     cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
-    cont->hdl = NULL;
+    cont->p = NULL;
+    cont->c = NULL;
     fd->fs_ptr = cont;
 
 #if 0
@@ -391,7 +423,8 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
         goto err_free;
 
     if (mpi_size > 1) {
-        handle_share(&cont->coh, HANDLE_CO, rank, daos_pool_oh, comm);
+        handle_share(&cont->poh, HANDLE_POOL, rank, cont->poh, comm);
+        handle_share(&cont->coh, HANDLE_CO, rank, cont->poh, comm);
         handle_share(&cont->oh, HANDLE_OBJ, rank, cont->coh, comm);
     }
 
@@ -452,26 +485,42 @@ out:
 void
 ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
-    struct adio_daos_co_hdl *co_hdl;
-    uuid_t uuid;
+    struct adio_daos_hdl *p, *c;
+    uuid_t puuid, cuuid;
     dfs_t *dfs;
     char *obj_name, *cont_name;
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
 
+    char *uuid_str = NULL;
+
+    uuid_str = getenv ("DAOS_POOL");
+    if (uuid_str != NULL) {
+        if (uuid_parse(uuid_str, puuid) < 0) {
+            fprintf(stderr, "Failed to parse pool UUID env\n");
+            return;
+        }
+    }
+
+    rc = adio_daos_poh_lookup_connect(puuid, &p);
+    if (rc || p == NULL) {
+        fprintf(stderr, "Failed to connect to pool\n");
+        return;
+    }
+
     parse_filename(filename, &obj_name, &cont_name);
 
     /* Hash container name to container uuid */
-    duuid_hash128(cont_name, &uuid, NULL, NULL);
+    duuid_hash128(cont_name, &cuuid, NULL, NULL);
 
-    rc = adio_daos_cont_lookup_create(uuid, false, &co_hdl);
-    if (rc || co_hdl == NULL) {
+    rc = adio_daos_cont_lookup_create(p->open_hdl, cuuid, false, &c);
+    if (rc || c == NULL) {
         *error_code = MPI_SUCCESS;
-        goto out_free;
+        goto out_pool;
     }
 
     /* Mount a flat namespace on the container */
-    rc = dfs_mount(daos_pool_oh, co_hdl->co_coh, O_RDWR, &dfs);
+    rc = dfs_mount(p->open_hdl, c->open_hdl, O_RDWR, &dfs);
     if (rc) {
         PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -498,7 +547,9 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
 out_dfs:
     dfs_umount(dfs);
 out_cont:
-    adio_daos_cont_release(co_hdl);
+    adio_daos_cont_release(c);
+out_pool:
+    adio_daos_poh_release(p);
 out_free:
     free(obj_name);
     free(cont_name);

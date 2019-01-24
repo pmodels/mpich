@@ -42,7 +42,7 @@ char compare_buf[XLEN * 4][YLEN * 4] = {
 /* set this if you want a dump of the global array
 #define VERBOSE 1
 */
-#define VERBOSE 1
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -149,7 +149,6 @@ int main(int argc, char **argv)
         MPI_File_close(&fh);
         free(wr_buf);
     }
-
     /* open the file -------------------------------------------------------- */
     err = MPI_File_open(MPI_COMM_WORLD, filename,
                         MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);

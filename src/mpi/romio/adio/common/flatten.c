@@ -26,7 +26,6 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
 
     flat->blocklens = (ADIO_Offset *) ADIOI_Calloc(flat->count * 2, sizeof(ADIO_Offset));
     flat->indices = flat->blocklens + flat->count;
-
     return flat;
 }
 

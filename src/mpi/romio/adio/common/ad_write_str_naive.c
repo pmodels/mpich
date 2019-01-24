@@ -53,8 +53,6 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                  ((ADIO_Offset) (unsigned) buftype_size * (ADIO_Offset) count));
     bufsize = buftype_size * count;
 
-    int mpi_rank;
-    MPI_Comm_rank(fd->comm, &mpi_rank);
     /* contiguous in buftype and filetype is handled elsewhere */
 
     if (!buftype_is_contig && filetype_is_contig) {

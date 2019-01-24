@@ -73,8 +73,9 @@ bcast_rc:
 
     /* close the container handle if it's created with l2g,g2l, 
        otherwise just decrement ref count on the container info in the hashtable. */
-    if (cont->hdl) {
-        adio_daos_cont_release(cont->hdl);
+    if (cont->c) {
+        adio_daos_cont_release(cont->c);
+        cont->c = NULL;
     } else {
         rc = daos_cont_close(cont->coh, NULL);
         if (rc != 0) {
@@ -84,6 +85,22 @@ bcast_rc:
                                                myname, __LINE__,
                                                ADIOI_DAOS_error_convert(rc),
                                                "Container Close failed", 0);
+            return;
+        }
+    }
+
+    if (cont->p) {
+        adio_daos_poh_release(cont->p);
+        cont->p = NULL;
+    } else {
+        rc = daos_pool_disconnect(cont->poh, NULL);
+        if (rc != 0) {
+            PRINT_MSG(stderr, "daos_pool_disconnect() failed (%d)\n", rc);
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Pool Disconnect failed", 0);
             return;
         }
     }

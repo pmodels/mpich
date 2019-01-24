@@ -11,7 +11,6 @@
 #ifdef ROMIO_DAOS
 #include "../ad_daos/ad_daos.h"
 
-daos_handle_t daos_pool_oh;
 bool daos_initialized = false;
 #endif /* ROMIO_DAOS */
 
@@ -56,12 +55,6 @@ static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype * d
 
 void ADIO_Init(int *argc, char ***argv, int *error_code)
 {
-    int comm_world_rank;
-    int comm_world_size;
-
-    MPI_Comm_rank( MPI_COMM_WORLD, &comm_world_rank );
-    MPI_Comm_size( MPI_COMM_WORLD, &comm_world_size );
-
 #if defined(ROMIO_XFS) || defined(ROMIO_LUSTRE)
     char *c;
 #endif
@@ -87,75 +80,21 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
 #endif
 
 #ifdef ROMIO_DAOS
-    char *uuid_str = NULL;
-    char *svcl_str = NULL;
-    char *group = NULL;
-    uuid_t pool_uuid;
-    daos_pool_info_t pool_info;
-    d_rank_list_t *svcl = NULL;
     int rc;
 
-    daos_pool_oh = DAOS_HDL_INVAL;
     rc = daos_init();
     if (rc) {
-        printf("daos_init() failed with %d\n", rc);
+        fprintf(stderr, "daos_init() failed with %d\n", rc);
         return;
     }
-    daos_initialized = true;
 
-    if (comm_world_rank == 0) {
-        uuid_str = getenv ("DAOS_POOL");
-        if (uuid_str != NULL) {
-            if (uuid_parse(uuid_str, pool_uuid) < 0) {
-                fprintf(stderr, "Failed to parse pool UUID env\n");
-                rc = -1;
-                goto bcast;
-            }
-        }
-        printf("POOL UUID = %s\n", uuid_str);
-
-        svcl_str = getenv ("DAOS_SVCL");
-        if (svcl_str != NULL) {
-            svcl = daos_rank_list_parse(svcl_str, ":");
-            if (svcl == NULL) {
-                fprintf(stderr, "Failed to parse SVC list env\n");
-                rc = -1;
-                goto bcast;
-            }
-        }
-        printf("SVC LIST = %s\n", svcl_str);
-
-        group = getenv ("DAOS_GROUP");
-        if (group != NULL)
-            printf("GROUP = %s\n", group);
-
-        rc = daos_pool_connect(pool_uuid, group, svcl, DAOS_PC_RW,
-                               &daos_pool_oh, &pool_info, NULL);
-        if (rc < 0) {
-            fprintf(stderr, "Failed to connect to pool (%d)\n", rc);
-            goto bcast;
-        }
-    }
-
-bcast:
-    if (comm_world_size > 1) {
-        MPI_Bcast(&rc, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        if (rc == 0) {
-            MPI_Bcast(&pool_info, sizeof(pool_info), MPI_CHAR, 0, MPI_COMM_WORLD);
-            handle_share(&daos_pool_oh, HANDLE_POOL, comm_world_rank,
-                         daos_pool_oh, MPI_COMM_WORLD);
-        } else {
-            daos_pool_oh = DAOS_HDL_INVAL;
-        }
-    }
-
-    if (comm_world_rank == 0)
-        daos_rank_list_free(svcl);
-
-    rc = adio_daos_coh_hash_init();
+    rc = adio_daos_hash_init();
     if (rc < 0) {
         fprintf(stderr, "Failed to init daos handle hash table\n");
+        return;
     }
+
+    daos_initialized = true;
 #endif /* ROMIO_DAOS */
 
 #ifdef ADIOI_MPE_LOGGING
@@ -173,6 +112,9 @@ bcast:
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_stat_a, &ADIOI_MPE_stat_b);
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_iread_a, &ADIOI_MPE_iread_b);
         MPE_Log_get_state_eventIDs(&ADIOI_MPE_iwrite_a, &ADIOI_MPE_iwrite_b);
+
+        int comm_world_rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
 
         if (comm_world_rank == 0) {
             MPE_Describe_state(ADIOI_MPE_open_a, ADIOI_MPE_open_b, "open", "orange");

@@ -14,16 +14,15 @@
  * portions thereof marked with this legend must also reproduce the markings.
  */
 
-#ifndef AD_DAOS_INCLUDE
-#define AD_DAOS_INCLUDE
+#ifndef AD_DAOS_H_INCLUDED
+#define AD_DAOS_H_INCLUDED
 
+#include "adio.h"
 #include <daos_types.h>
 #include <daos_api.h>
 #include <daos_addons.h>
 #include <daos_fs.h>
 #include <daos_event.h>
-
-#include "adio.h"
 
 /* #define D_PRINT_IO */
 /* #define D_PRINT_IO_MEM */
@@ -34,11 +33,12 @@
                 __FILE__, __LINE__, __func__, ##__VA_ARGS__);                         \
     } while (0)
 
-struct adio_daos_co_hdl {
-	d_list_t	co_entry;
-	uuid_t		co_uuid;
-	daos_handle_t	co_coh;
-	int		co_ref;
+struct adio_daos_hdl {
+    d_list_t		entry;
+    uuid_t		uuid;
+    daos_handle_t	open_hdl;
+    int			ref;
+    int			type;
 };
 
 struct ADIO_DAOS_cont {
@@ -48,7 +48,9 @@ struct ADIO_DAOS_cont {
     char		*cont_name;
     /** Object name (File name) */
     char		*obj_name;
-    /** container daos OH */
+    /** pool open handle */
+    daos_handle_t	poh;
+    /** container open handle */
     daos_handle_t	coh;
     /** flat namespace mount */
     dfs_t		*dfs;
@@ -64,8 +66,10 @@ struct ADIO_DAOS_cont {
     unsigned int	amode;
     /** Event queue to store all async requests on file */
     daos_handle_t	eqh;
+    /** pool handle for directory holding the file object */
+    struct adio_daos_hdl *p;
     /** container handle for directory holding the file object */
-    struct adio_daos_co_hdl *hdl;
+    struct adio_daos_hdl *c;
 };
 
 struct ADIO_DAOS_req {
@@ -98,13 +102,80 @@ adio_daos_sync_ranks(MPI_Comm comm)
 	}
 }
 
-/** Container Handle Hash functions */
-int adio_daos_coh_hash_init(void);
-void adio_daos_coh_hash_finalize(void);
-struct adio_daos_co_hdl *adio_daos_cont_lookup(const uuid_t uuid);
-int adio_daos_cont_lookup_create(uuid_t uuid, bool create,
-                                 struct adio_daos_co_hdl **hdl);
-void adio_daos_cont_release(struct adio_daos_co_hdl *hdl);
+enum {
+	HANDLE_POOL,
+	HANDLE_CO,
+        HANDLE_OBJ
+};
+
+static inline void
+handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
+             MPI_Comm comm)
+{
+    daos_iov_t	ghdl = { NULL, 0, 0 };
+    int		rc;
+
+    if (rank == 0) {
+        /** fetch size of global handle */
+        if (type == HANDLE_POOL)
+            rc = daos_pool_local2global(*hdl, &ghdl);
+        else if (type == HANDLE_CO)
+            rc = daos_cont_local2global(*hdl, &ghdl);
+        else {
+            assert (type == HANDLE_OBJ);
+            rc = daos_array_local2global(*hdl, &ghdl);
+        }
+        assert(rc == 0);
+    }
+
+    /** broadcast size of global handle to all peers */
+    rc = MPI_Bcast(&ghdl.iov_buf_len, 1, MPI_UINT64_T, 0, comm);
+    assert(rc == MPI_SUCCESS);
+
+    /** allocate buffer for global pool handle */
+    ghdl.iov_buf = malloc(ghdl.iov_buf_len);
+    ghdl.iov_len = ghdl.iov_buf_len;
+
+    if (rank == 0) {
+        /** generate actual global handle to share with peer tasks */
+        if (type == HANDLE_POOL)
+            rc = daos_pool_local2global(*hdl, &ghdl);
+        else if (type == HANDLE_CO)
+            rc = daos_cont_local2global(*hdl, &ghdl);
+        else
+            rc = daos_array_local2global(*hdl, &ghdl);
+        assert(rc == 0);
+    }
+
+    /** broadcast global handle to all peers */
+    rc = MPI_Bcast(ghdl.iov_buf, ghdl.iov_len, MPI_BYTE, 0, comm);
+    assert(rc == MPI_SUCCESS);
+
+    if (rank != 0) {
+        /** unpack global handle */
+        if (type == HANDLE_POOL)
+            rc = daos_pool_global2local(ghdl, hdl);
+        else if (type == HANDLE_CO)
+            rc = daos_cont_global2local(parent, ghdl, hdl);
+        else
+            rc = daos_array_global2local(parent, ghdl, hdl);
+        assert(rc == 0);
+    }
+
+    free(ghdl.iov_buf);
+    MPI_Barrier(comm);
+}
+
+/** Container/Pool Handle Hash functions */
+int adio_daos_hash_init(void);
+void adio_daos_hash_finalize(void);
+struct adio_daos_hdl *adio_daos_poh_lookup(const uuid_t uuid);
+int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl);
+void adio_daos_poh_release(struct adio_daos_hdl *hdl);
+struct adio_daos_hdl *adio_daos_cont_lookup(const uuid_t uuid);
+int adio_daos_cont_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
+                                 struct adio_daos_hdl **hdl);
+void adio_daos_cont_release(struct adio_daos_hdl *hdl);
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state);
 int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status);
@@ -171,4 +242,4 @@ void ADIOI_DAOS_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
                                   MPI_Datatype datatype, int file_ptr_type,
                                   ADIO_Offset offset, MPI_Request *request,
                                   int *error_code);
-#endif
+#endif /* AD_DAOS_H_INCLUDED */
