@@ -79,6 +79,8 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_reduce_scatter_allgather,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_single_buffer,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_single_buffer_without_dtcopy,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer_without_dtcopy,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_tree,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_ring,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_reduce_scatter_recexch_allgatherv,
@@ -225,6 +227,12 @@ typedef struct {
             struct {
                 int k;
             } intra_tsp_recexch_multiple_buffer;
+            struct {
+                int k;
+            } intra_tsp_recexch_single_buffer_without_dtcopy;
+            struct {
+                int k;
+            } intra_tsp_recexch_multiple_buffer_without_dtcopy;
             struct {
                 int tree_type;
                 int k;
