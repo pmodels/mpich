@@ -301,8 +301,7 @@ int indexed_contig_test(void)
 }
 
 /* very similar to indexed_zeroblock_first_test, but only has a single contig in
- * order to catch a particular optimization path in MPICH's
- * Dataloop_create_indexed routine */
+ * order to catch a particular optimization path in MPICH */
 int indexed_contig_leading_zero_test(void)
 {
     int err, errs = 0;
@@ -348,8 +347,7 @@ int indexed_contig_leading_zero_test(void)
 
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the indexed type.  Use a hard-to-optimize struct
-     * type to force a more complicated datatype processing path
-     * (MPIR_Segment_manipulate in MPICH) */
+     * type to force a more complicated datatype processing path */
     len[0] = 1;
     len[1] = 1;
     adisp[0] = 0;
@@ -438,8 +436,7 @@ int indexed_contig_leading_zero_test(void)
 
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the hindexed type.  Use a hard-to-optimize struct
-     * type to force a more complicated datatype processing path
-     * (MPIR_Segment_manipulate in MPICH) */
+     * type to force a more complicated datatype processing path */
     len[0] = 1;
     len[1] = 1;
     adisp[0] = 0;
