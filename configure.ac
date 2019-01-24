@@ -2037,12 +2037,11 @@ for this_pm_name in $pm_names ; do
 done
 
 # Check for whether the compiler defines a symbol that contains the
-# function name.  The MPICH code, for greater portability, defines
-# its own symbols, FCNAME (a string) and FUNCNAME (a token that is not a
-# string).  Code should use these symbols where possible.  However,
-# some debugging macros may want to use a compiler-provided symbol
-# for the function name, and this check makes it possible to
-# define such macros in a way that is always correct.
+# function name. The MPICH code uses this for debugging purposes.
+
+# NOTE: C99, C11 defines __func__. If not supported, it will only
+# break debugging, not the main code.
+
 PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Check if $MPI_DEFAULT_COPTS is valid with $CC
