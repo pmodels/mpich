@@ -814,7 +814,7 @@ static int _mxm_process_sdtype(MPIR_Request ** sreq_p, MPI_Datatype datatype,
     MPIR_Assert(iov);
 
     last = sreq->dev.segment_size;
-    MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, iov, &n_iov);
+    MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, iov, &n_iov);
     MPIR_Assert(last == sreq->dev.segment_size);
 
 #if defined(MXM_DEBUG) && (MXM_DEBUG > 0)

@@ -137,8 +137,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
     MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg);
-    MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack),
-                             &num_contig);
+    MPIR_Segment_to_iov(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack),
+                        &num_contig);
 
     originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
     oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
