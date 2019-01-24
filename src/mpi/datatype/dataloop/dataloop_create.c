@@ -34,6 +34,13 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
     MPI_Aint *disps;
     MPI_Aint *blklen;
 
+    if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
+        type == MPI_LONG_INT || type == MPI_SHORT_INT ||
+        type == MPI_LONG_DOUBLE_INT || type == MPI_2INT) {
+        MPIR_Dataloop_create_pairtype(type, dlp_p, dlsz_p);
+        return;
+    }
+
     MPIR_Type_get_envelope(type, &nr_ints, &nr_aints, &nr_types, &combiner);
 
     /* some named types do need dataloops; handle separately. */
