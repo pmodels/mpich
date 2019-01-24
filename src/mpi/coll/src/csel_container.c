@@ -135,6 +135,30 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_single_buffer_without_dtcopy:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "k=", strlen("k=")))
+                        cnt->u.iallreduce.intra_tsp_recexch_single_buffer_without_dtcopy.k =
+                            atoi(ckey + strlen("k="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer_without_dtcopy:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "k=", strlen("k=")))
+                        cnt->u.iallreduce.intra_tsp_recexch_multiple_buffer_without_dtcopy.k =
+                            atoi(ckey + strlen("k="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_reduce_scatter_recexch_allgatherv:
             {
                 json_object_object_foreach(obj, key, val) {
