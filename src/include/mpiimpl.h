@@ -97,6 +97,10 @@ int usleep(useconds_t usec);
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
+/* Just in case __func__ is not supported won't break code */
+#ifndef HAVE__FUNC__
+#define __func__ "__func__"
+#endif
 
 /*****************************************************************************
  * We use the following ordering of information in this file:
