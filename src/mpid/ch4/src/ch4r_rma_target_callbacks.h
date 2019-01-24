@@ -1454,7 +1454,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(areq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov), &n_iov);
+        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(areq, req->iov);
         *p_data_sz = n_iov;
@@ -1661,7 +1661,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
+        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;
@@ -2466,7 +2466,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
+        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;

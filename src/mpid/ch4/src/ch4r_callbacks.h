@@ -323,7 +323,7 @@ static inline int MPIDI_do_send_target(void **data,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = *p_data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
+        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         if (last != (MPI_Aint) * p_data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
