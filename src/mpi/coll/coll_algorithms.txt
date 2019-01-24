@@ -334,6 +334,16 @@ iallreduce-intra:
         extra_const_params: recexch_type=MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
         extra_params: k
         cvar_params: RECEXCH_KVAL
+    tsp_recexch_single_buffer_without_dtcopy
+        func_name: single_buffer_without_dtcopy_recexch
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+        restrictions: commutative
+    tsp_recexch_multiple_buffer_without_dtcopy
+        func_name: multiple_buffer_without_dtcopy_recexch
+        extra_params: k
+        cvar_params: RECEXCH_KVAL
+        restrictions: commutative
     tsp_tree
         extra_params: tree_type, k, chunk_size, buffer_per_child
         cvar_params: TREE_TYPE, TREE_KVAL, TREE_PIPELINE_CHUNK_SIZE, TREE_BUFFER_PER_CHILD
