@@ -179,13 +179,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
 
     seg_state->origin_cursor = 0;
     MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    seg_state->origin_seg = MPIR_Segment_alloc();
-    MPIR_Segment_init(origin, origin_count, origin_type, seg_state->origin_seg);
+    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
     MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    seg_state->target_seg = MPIR_Segment_alloc();
-    MPIR_Segment_init((const void *) target, target_count, target_type, seg_state->target_seg);
+    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);
@@ -221,18 +219,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
 
     seg_state->origin_cursor = 0;
     MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    seg_state->origin_seg = MPIR_Segment_alloc();
-    MPIR_Segment_init(origin, origin_count, origin_type, seg_state->origin_seg);
+    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
     MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    seg_state->target_seg = MPIR_Segment_alloc();
-    MPIR_Segment_init((const void *) target, target_count, target_type, seg_state->target_seg);
+    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     seg_state->result_cursor = 0;
     MPIDI_Datatype_check_size(result_type, result_count, seg_state->result_end);
-    seg_state->result_seg = MPIR_Segment_alloc();
-    MPIR_Segment_init(result, result_count, result_type, seg_state->result_seg);
+    seg_state->result_seg = MPIR_Segment_alloc(result, result_count, result_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);

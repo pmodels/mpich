@@ -108,12 +108,9 @@ int MPI_Unpack_external(const char datarep[],
         goto fn_exit;
     }
 
-    segp = MPIR_Segment_alloc();
+    segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
     MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPIR_Segment_alloc");
-    mpi_errno = MPIR_Segment_init(outbuf, outcount, datatype, segp);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 
     /* NOTE: buffer values and positions in MPI_Unpack_external are used very
      * differently from use in MPIR_Segment_unpack_external...

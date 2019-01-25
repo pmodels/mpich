@@ -1438,12 +1438,10 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) MPIDI_CH4U_REQUEST(areq, req->areq.result_addr) + dt_true_lb;
     } else {
-        segment_ptr = MPIR_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
+                                         MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
+                                         MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
         MPIR_Assert(segment_ptr);
-
-        MPIR_Segment_init(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
-                          MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
-                          MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr);
 
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
@@ -1648,10 +1646,10 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) (offset + base + dt_true_lb);
     } else {
-        segment_ptr = MPIR_Segment_alloc();
+        segment_ptr =
+            MPIR_Segment_alloc((void *) (offset + base), msg_hdr->count, msg_hdr->datatype);
         MPIR_Assert(segment_ptr);
 
-        MPIR_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype, segment_ptr);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
@@ -2451,12 +2449,11 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) (MPIDI_CH4U_REQUEST(rreq, req->greq.addr) + dt_true_lb);
     } else {
-        segment_ptr = MPIR_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
+                                         MPIDI_CH4U_REQUEST(rreq, req->greq.count),
+                                         MPIDI_CH4U_REQUEST(rreq, req->greq.datatype));
         MPIR_Assert(segment_ptr);
 
-        MPIR_Segment_init((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
-                          MPIDI_CH4U_REQUEST(rreq, req->greq.count),
-                          MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;

@@ -1110,7 +1110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         void *curr_loc;
         int accumulated_count;
 
-        segp = MPIR_Segment_alloc();
+        segp = MPIR_Segment_alloc(NULL, target_count, target_dtp);
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
@@ -1119,7 +1119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
             goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
-        MPIR_Segment_init(NULL, target_count, target_dtp, segp);
         first = 0;
         last = first + source_count * source_dtp_size;
 

@@ -26,7 +26,6 @@ Output Parameters:
 int MPIR_Type_flatten(MPI_Datatype type,
                       MPI_Aint * off_array, MPI_Aint * size_array, MPI_Aint * array_len_p)
 {
-    int err;
     MPI_Aint first, last;
     MPIR_Datatype *datatype_ptr ATTRIBUTE((unused));
     MPIR_Segment *segp;
@@ -42,12 +41,9 @@ int MPIR_Type_flatten(MPI_Datatype type,
     MPIR_Assert(datatype_ptr->is_committed);
     MPIR_Assert(*array_len_p >= datatype_ptr->max_contig_blocks);
 
-    segp = MPIR_Segment_alloc();
-    err = MPIR_Segment_init(0, 1, type, segp);  /* first 0 is bufptr,
+    segp = MPIR_Segment_alloc(0, 1, type);      /* first 0 is bufptr,
                                                  * 1 is count
                                                  */
-    if (err)
-        return err;
 
     first = 0;
     last = MPIR_SEGMENT_IGNORE_LAST;

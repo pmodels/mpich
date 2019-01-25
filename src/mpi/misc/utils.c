@@ -74,8 +74,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Segment *seg;
         MPI_Aint last;
 
-        seg = MPIR_Segment_alloc();
-        MPIR_Segment_init(recvbuf, recvcount, recvtype, seg);
+        seg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
         last = copy_sz;
         MPIR_Segment_unpack(seg, 0, &last, (char *) sendbuf + sendtype_true_lb);
         MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
@@ -84,8 +83,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Segment *seg;
         MPI_Aint last;
 
-        seg = MPIR_Segment_alloc();
-        MPIR_Segment_init(sendbuf, sendcount, sendtype, seg);
+        seg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
         last = copy_sz;
         MPIR_Segment_pack(seg, 0, &last, (char *) recvbuf + recvtype_true_lb);
         MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
@@ -100,10 +98,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
         MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
 
-        sseg = MPIR_Segment_alloc();
-        MPIR_Segment_init(sendbuf, sendcount, sendtype, sseg);
-        rseg = MPIR_Segment_alloc();
-        MPIR_Segment_init(recvbuf, recvcount, recvtype, rseg);
+        sseg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
+        rseg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
 
         sfirst = 0;
         rfirst = 0;

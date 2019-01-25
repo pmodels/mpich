@@ -203,7 +203,7 @@ static int external32_float_convert(char *dest_buf,
     return 0;
 }
 
-/* Segment_init
+/* segment_init
  *
  * buf    - datatype buffer location
  * count  - number of instances of the datatype in the buffer
@@ -214,8 +214,8 @@ static int external32_float_convert(char *dest_buf,
  * - Assumes that the segment has been allocated.
  *
  */
-int MPIR_Segment_init(const void *buf,
-                      MPI_Aint count, MPI_Datatype handle, struct MPIR_Segment *segp)
+static int segment_init(const void *buf,
+                        MPI_Aint count, MPI_Datatype handle, struct MPIR_Segment *segp)
 {
     MPI_Aint elmsize = 0;
     int i, depth = 0;
@@ -226,7 +226,7 @@ int MPIR_Segment_init(const void *buf,
 
 #ifdef DLOOP_DEBUG_MANIPULATE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                    (MPL_DBG_FDEST, "DLOOP_Segment_init: count = %d, buf = %x\n", count, buf));
+                    (MPL_DBG_FDEST, "segment_init: count = %d, buf = %x\n", count, buf));
 #endif
 
     if (!DLOOP_Handle_hasloop_macro(handle)) {
@@ -365,12 +365,17 @@ int MPIR_Segment_init(const void *buf,
     return 0;
 }
 
-/* Segment_alloc
+/* MPIR_Segment_alloc
  *
  */
-struct MPIR_Segment *MPIR_Segment_alloc(void)
+struct MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle)
 {
-    return (struct MPIR_Segment *) MPL_malloc(sizeof(struct MPIR_Segment), MPL_MEM_DATATYPE);
+    struct MPIR_Segment *segp =
+        (struct MPIR_Segment *) MPL_malloc(sizeof(struct MPIR_Segment), MPL_MEM_DATATYPE);
+
+    segment_init(buf, count, handle, segp);
+
+    return segp;
 }
 
 /* Segment_free
