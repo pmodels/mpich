@@ -150,10 +150,10 @@ int MPIR_Type_blockindexed(int count,
      */
     new_dtp->is_contig = 0;
     if (old_is_contig) {
-        contig_count = MPIR_Type_blockindexed_count_contig(count,
-                                                           blocklength,
-                                                           displacement_array,
-                                                           dispinbytes, old_extent);
+        contig_count = MPII_Datatype_blockindexed_count_contig(count,
+                                                               blocklength,
+                                                               displacement_array,
+                                                               dispinbytes, old_extent);
         new_dtp->max_contig_blocks = contig_count;
         if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;

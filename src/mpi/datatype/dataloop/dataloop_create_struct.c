@@ -6,24 +6,24 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 
-static int DLOOP_Dataloop_create_struct_memory_error(void);
-static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
-                                                    const int *blklens,
-                                                    const MPI_Aint * disps,
-                                                    const MPI_Datatype * oldtypes,
-                                                    int type_pos,
-                                                    MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
-static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
-                                                        const int *blklens,
-                                                        const MPI_Aint * disps,
-                                                        const MPI_Datatype * oldtypes,
-                                                        MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
-static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
-                                                  const int *blklens,
-                                                  const MPI_Aint * disps,
-                                                  const MPI_Datatype * oldtypes,
-                                                  MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+static int create_struct_memory_error(void);
+static int create_unique_type_struct(MPI_Aint count,
+                                     const int *blklens,
+                                     const MPI_Aint * disps,
+                                     const MPI_Datatype * oldtypes,
+                                     int type_pos, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+static int create_basic_all_bytes_struct(MPI_Aint count,
+                                         const int *blklens,
+                                         const MPI_Aint * disps,
+                                         const MPI_Datatype * oldtypes,
+                                         MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+static int create_flattened_struct(MPI_Aint count,
+                                   const int *blklens,
+                                   const MPI_Aint * disps,
+                                   const MPI_Datatype * oldtypes,
+                                   MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
 
 /*@
   Dataloop_create_struct - create the dataloop representation for a
@@ -50,7 +50,7 @@ Output Parameters:
   or corrected in this code at this time.
 
 @*/
-int MPIR_Dataloop_create_struct(MPI_Aint count,
+int MPII_Dataloop_create_struct(MPI_Aint count,
                                 const int *blklens,
                                 const MPI_Aint * disps,
                                 const MPI_Datatype * oldtypes,
@@ -62,7 +62,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
 
     /* if count is zero, handle with contig code, call it a int */
     if (count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -75,7 +75,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
         if (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB) {
             int is_builtin;
 
-            is_builtin = (DLOOP_Handle_hasloop_macro(oldtypes[i])) ? 0 : 1;
+            is_builtin = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
 
             if (is_builtin) {
                 if (nr_basics == 0) {
@@ -111,7 +111,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      * treat it as a zero-element contiguous (just as count == 0).
      */
     if (nr_basics == 0 && nr_derived == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
     }
 
@@ -127,7 +127,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      */
     if (nr_basics + nr_derived == 1) {
         /* type_pos is index to only real type in array */
-        err = MPIR_Dataloop_create_blockindexed(1,      /* count */
+        err = MPII_Dataloop_create_blockindexed(1,      /* count */
                                                 blklens[type_pos], &disps[type_pos], 1, /* displacement in bytes */
                                                 oldtypes[type_pos], dlp_p, dlsz_p);
 
@@ -147,9 +147,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      */
     if (((nr_derived == 0) && (first_basic != MPI_DATATYPE_NULL)) ||
         ((nr_basics == 0) && (first_derived != MPI_DATATYPE_NULL))) {
-        return DLOOP_Dataloop_create_unique_type_struct(count,
-                                                        blklens,
-                                                        disps, oldtypes, type_pos, dlp_p, dlsz_p);
+        return create_unique_type_struct(count, blklens, disps, oldtypes, type_pos, dlp_p, dlsz_p);
     }
 
     /* optimization:
@@ -158,32 +156,29 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      * everything to bytes and use an indexed type.
      */
     if (nr_derived == 0) {
-        return DLOOP_Dataloop_create_basic_all_bytes_struct(count,
-                                                            blklens,
-                                                            disps, oldtypes, dlp_p, dlsz_p);
+        return create_basic_all_bytes_struct(count, blklens, disps, oldtypes, dlp_p, dlsz_p);
     }
 
     /* optimization:
      * flatten the type and store it as an indexed type so that
      * there are no branches in the dataloop tree.
      */
-    return DLOOP_Dataloop_create_flattened_struct(count, blklens, disps, oldtypes, dlp_p, dlsz_p);
+    return create_flattened_struct(count, blklens, disps, oldtypes, dlp_p, dlsz_p);
 }
 
 /* --BEGIN ERROR HANDLING-- */
-static int DLOOP_Dataloop_create_struct_memory_error(void)
+static int create_struct_memory_error(void)
 {
     return -1;
 }
 
 /* --END ERROR HANDLING-- */
 
-static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
-                                                    const int *blklens,
-                                                    const MPI_Aint * disps,
-                                                    const MPI_Datatype * oldtypes,
-                                                    int type_pos,
-                                                    MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+static int create_unique_type_struct(MPI_Aint count,
+                                     const int *blklens,
+                                     const MPI_Aint * disps,
+                                     const MPI_Datatype * oldtypes,
+                                     int type_pos, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     /* the same type used more than once in the array; type_pos
      * indexes to the first of these.
@@ -197,7 +192,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
         /* TODO: ??? */
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -207,7 +202,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
         /* TODO: ??? */
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -219,7 +214,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
         }
     }
 
-    err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+    err = MPII_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        oldtypes[type_pos], dlp_p, dlsz_p);
 
     MPL_free(tmp_blklens);
@@ -229,11 +224,11 @@ static int DLOOP_Dataloop_create_unique_type_struct(MPI_Aint count,
 
 }
 
-static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
-                                                        const int *blklens,
-                                                        const MPI_Aint * disps,
-                                                        const MPI_Datatype * oldtypes,
-                                                        MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+static int create_basic_all_bytes_struct(MPI_Aint count,
+                                         const int *blklens,
+                                         const MPI_Aint * disps,
+                                         const MPI_Datatype * oldtypes,
+                                         MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     int i, err, cur_pos = 0;
     MPI_Aint *tmp_blklens;
@@ -244,7 +239,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -253,7 +248,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -267,7 +262,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
             cur_pos++;
         }
     }
-    err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+    err = MPII_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        MPI_BYTE, dlp_p, dlsz_p);
 
     MPL_free(tmp_blklens);
@@ -276,11 +271,11 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(MPI_Aint count,
     return err;
 }
 
-static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
-                                                  const int *blklens,
-                                                  const MPI_Aint * disps,
-                                                  const MPI_Datatype * oldtypes,
-                                                  MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+static int create_flattened_struct(MPI_Aint count,
+                                   const int *blklens,
+                                   const MPI_Aint * disps,
+                                   const MPI_Datatype * oldtypes,
+                                   MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
 {
     /* arbitrary types, convert to bytes and use indexed */
     int i, err, nr_blks = 0;
@@ -301,7 +296,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
         if (blklens[i] == 0)
             continue;
 
-        is_basic = (DLOOP_Handle_hasloop_macro(oldtypes[i])) ? 0 : 1;
+        is_basic = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
 
         if (is_basic && (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB)) {
             nr_blks++;
@@ -331,7 +326,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
      * do: store a simple contig of zero ints and call it done.
      */
     if (nr_blks == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
 
     }
@@ -341,7 +336,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     tmp_blklens = (MPI_Aint *) MPL_malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -350,7 +345,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
-        return DLOOP_Dataloop_create_struct_memory_error();
+        return create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
 
@@ -360,7 +355,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
         int is_basic;
         MPI_Aint sz = -1;
 
-        is_basic = (DLOOP_Handle_hasloop_macro(oldtypes[i])) ? 0 : 1;
+        is_basic = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
         if (!is_basic)
             MPIR_Datatype_get_size_macro(oldtypes[i], sz);
 
@@ -379,10 +374,11 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
 
             last_ind = nr_blks - first_ind;
             bytes = MPIR_SEGMENT_IGNORE_LAST;
-            MPIR_Segment_mpi_flatten(segp,
-                                     0,
-                                     &bytes,
-                                     &tmp_blklens[first_ind], &tmp_disps[first_ind], &last_ind);
+            MPII_Dataloop_segment_flatten(segp,
+                                          0,
+                                          &bytes,
+                                          &tmp_blklens[first_ind], &tmp_disps[first_ind],
+                                          &last_ind);
             MPIR_Segment_free(segp);
             first_ind += last_ind;
         }
@@ -401,7 +397,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     }
 #endif
 
-    err = MPIR_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+    err = MPII_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        MPI_BYTE, dlp_p, dlsz_p);
 
     MPL_free(tmp_blklens);
