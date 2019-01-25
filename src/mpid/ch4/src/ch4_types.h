@@ -27,6 +27,22 @@ enum {
     MPIDI_VCI_RX = 0x2, /* Can receive */
 };
 
+/* VCI types */
+enum {
+    MPIDI_VCI_SHARED = 0x1,     /* Multiple objects will share this VCI */
+    MPIDI_VCI_EXCLUSIVE = 0x2,  /* Only one object will use this VCI */
+};
+
+/* VCI properties */
+enum {
+    MPIDI_VCI_TAGGED_ORDERED = 0x1,
+    MPIDI_VCI_TAGGED_UNORDERED = 0x2,
+    MPIDI_VCI_RAR = 0x4,
+    MPIDI_VCI_WAR = 0x8,
+    MPIDI_VCI_RAW = 0x10,
+    MPIDI_VCI_WAW = 0x20,
+};
+
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
 #define MPIDI_CH4I_BUF_POOL_SZ (256)
 
