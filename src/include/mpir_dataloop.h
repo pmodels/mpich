@@ -213,7 +213,6 @@ typedef struct MPIR_Segment {
                                          * and we need to create a contig loop
                                          * to handle it
                                          */
-    /* other, device-specific information */
 } MPIR_Segment;
 
 /* Dataloop functions (dataloop.c) */
