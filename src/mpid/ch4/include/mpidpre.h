@@ -366,10 +366,11 @@ typedef struct MPIDI_CH4U_win_target {
 
 typedef struct MPIDI_CH4U_win_t {
     uint64_t win_id;
-    void *mmap_addr;
-    int64_t mmap_sz;
+    void **mmap_addr;
+    int64_t *mmap_sz;
+    int num_seg;
 
-    MPL_shm_hnd_t shm_segment_handle;
+    MPL_shm_hnd_t *shm_segment_handle;
 
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */

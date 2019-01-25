@@ -388,7 +388,8 @@ static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets,
-                                             MPIR_Comm * comm, MPIR_Win * win, int *fail_flag)
+                                             MPIR_Comm * comm, MPIR_Win * win, int seg_num,
+                                             int *fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned any_mapfail_flag = 1;
@@ -398,8 +399,8 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
 
 #ifdef USE_SYM_HEAP
     int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
-    MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDI_CH4U_WIN(win, shm_segment_handle);
-    void **base_ptr = &MPIDI_CH4U_WIN(win, mmap_addr);
+    MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDI_CH4U_WIN(win, shm_segment_handle[seg_num]);
+    void **base_ptr = &MPIDI_CH4U_WIN(win, mmap_addr[seg_num]);
 
     size_t mapsize = 0, page_sz = 0, maxsz = 0;
     int maxsz_loc = 0;
@@ -503,6 +504,30 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4R_release_shm_symheap
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_release_shm_symheap(MPI_Aint shm_size, MPIR_Win * win, int seg_num)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef USE_SYM_HEAP
+    MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDI_CH4U_WIN(win, shm_segment_handle[seg_num]);
+    void *base_ptr = MPIDI_CH4U_WIN(win, mmap_addr[seg_num]);
+
+    /* destroy successful shm segment */
+    mpi_errno = MPIDI_CH4U_destroy_shm_segment(shm_size, shm_segment_hdl_ptr, base_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* CH4R_SYMHEAP_H_INCLUDED */
