@@ -446,6 +446,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 
+        MPIDI_CH4_Global.n_nm_vcis_provided = n_nm_vcis_provided;
+
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }

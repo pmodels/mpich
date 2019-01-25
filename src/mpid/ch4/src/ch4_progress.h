@@ -19,7 +19,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
-    int mpi_errno, made_progress, i;
+    int mpi_errno, made_progress, i, vci;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -64,9 +64,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
 
     if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_NM_progress(0, 0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
+        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+            mpi_errno = MPIDI_NM_progress(vci, 0);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
         }
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
