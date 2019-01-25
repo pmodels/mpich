@@ -8,7 +8,7 @@
 
 #include "dataloop.h"
 
-#define DLOOP_Type_footprint MPIDU_Type_footprint
+#define MPII_Dataloop_type_footprint MPIDU_Type_footprint
 
 typedef struct MPIDU_Type_footprint_s {
     MPI_Aint size, extent;
@@ -20,8 +20,8 @@ typedef struct MPIDU_Type_footprint_s {
     MPI_Aint true_lb, true_ub;
     int has_sticky_lb;
     int has_sticky_ub;
-} DLOOP_Type_footprint;
+} MPII_Dataloop_type_footprint;
 
-void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp);
+void MPIDU_Type_calc_footprint(MPI_Datatype type, MPII_Dataloop_type_footprint * tfp);
 
 #endif /* TYPESIZE_SUPPORT_H_INCLUDED */
