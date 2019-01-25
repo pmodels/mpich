@@ -471,6 +471,8 @@ typedef int (*MPIDI_NM_mpi_type_commit_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_op_commit_hook_t) (MPIR_Op * op_p);
 typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
+typedef void (*MPIDI_NM_vci_alloc_t) (int resource, int type, int properties, int *vci);
+typedef void (*MPIDI_NM_vci_free_t) (int vci);
 
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
@@ -514,6 +516,9 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_isend_reply_t am_isend_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_NM_am_recv_t am_recv;
+    /* VCI pool API */
+    MPIDI_NM_vci_alloc_t vci_alloc;
+    MPIDI_NM_vci_free_t vci_free;
 } MPIDI_NM_funcs_t;
 
 typedef struct MPIDI_NM_native_funcs {
@@ -1351,5 +1356,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype *
                                                          datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+void MPIDI_NM_vci_alloc(int resource, int type, int properties, int *vci);
+void MPIDI_NM_vci_free(int vci);
 
 #endif /* NETMOD_H_INCLUDED */

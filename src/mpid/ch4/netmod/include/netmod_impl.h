@@ -2630,6 +2630,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
     return ret;
 }
 
+void MPIDI_NM_vci_alloc(int resource, int type, int properties, int *vci)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_VCI_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_VCI_ALLOC);
+
+    ret = MPIDI_NM_func->vci_alloc(resource, type, properties, vci);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_VCI_ALLOC);
+    return ret;
+}
+
+void MPIDI_NM_vci_free(int vci)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_VCI_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_VCI_FREE);
+
+    ret = MPIDI_NM_func->vci_free(vci);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_VCI_FREE);
+    return ret;
+}
+
 #endif /* NETMOD_DISABLE_INLINES  */
 
 #else
