@@ -494,6 +494,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                               fi_writemsg(ep, &msg, flags), rdma_write);
     }
 
+    MPIDI_OFI_finalize_seg_state(p);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
     return mpi_errno;
@@ -669,6 +671,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
                               fi_readmsg(ep, &msg, flags), rdma_write);
     }
+
+    MPIDI_OFI_finalize_seg_state(p);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
@@ -987,6 +991,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                               fi_atomicmsg(ep, &msg, flags), rdma_atomicto);
     }
 
+    MPIDI_OFI_finalize_seg_state(p);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
     return mpi_errno;
@@ -1159,6 +1165,11 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                               fi_fetch_atomicmsg(ep, &msg, resultv,
                                                  NULL, rout, flags), rdma_readfrom);
     }
+
+    if (op != MPI_NO_OP)
+        MPIDI_OFI_finalize_seg_state2(p);
+    else
+        MPIDI_OFI_finalize_seg_state(p);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);

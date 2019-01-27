@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     size_t countp_huge = 0;
     size_t oout = 0;
     size_t cur_o = 0;
-    MPIR_Segment seg;
+    MPIR_Segment *seg;
     struct fi_msg_tagged msg;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -73,8 +73,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), &seg);
-    MPIR_Segment_to_iov(&seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack), &num_contig);
+    seg = MPIR_Segment_alloc();
+    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), seg);
+    MPIR_Segment_to_iov(seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack), &num_contig);
+    MPIR_Segment_free(seg);
 
     originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
     oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
@@ -238,12 +240,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment), MPL_MEM_BUFFER);
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment *), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer) == NULL,
                              mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer);
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment));
+        MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment) = MPIR_Segment_alloc();
+        MPIR_Segment_init(buf, count, datatype, MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment));
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) = NULL;
         MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
