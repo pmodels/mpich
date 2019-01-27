@@ -309,8 +309,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         segment_first = 0;
         last = data_sz;
 
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
-        MPIR_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
+        MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment) = MPIR_Segment_alloc();
+        MPIR_Segment_init(buf, count, datatype, MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
+        MPIR_Segment_pack(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer));
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);
     } else {
