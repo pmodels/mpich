@@ -1495,8 +1495,8 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set ** sock_setp)
 #define FUNCNAME MPIDI_CH3I_Sock_close_open_sockets
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Sock_close_open_sockets(struct MPIDI_CH3I_Sock_set * sock_set, void** user_ptr ){
-
+int MPIDI_CH3I_Sock_close_open_sockets(struct MPIDI_CH3I_Sock_set * sock_set, void** user_ptr )
+{
     int i;
     int mpi_errno = MPI_SUCCESS;
     struct pollinfo * pollinfos = NULL;

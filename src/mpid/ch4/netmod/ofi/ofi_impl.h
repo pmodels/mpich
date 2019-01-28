@@ -638,10 +638,10 @@ struct MPIDI_OFI_contig_blocks_params {
 #define FUNCNAME MPIDI_OFI_contig_count_block
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
-                                     DLOOP_Type el_type,
-                                     DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
+MPL_STATIC_INLINE_PREFIX int
+MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
+                             DLOOP_Type el_type,
+                             DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
 {
     DLOOP_Offset size, el_size;
     size_t rem, num;
@@ -687,8 +687,8 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_OFI_count_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
+MPL_STATIC_INLINE_PREFIX size_t
+MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
     struct MPIDI_OFI_contig_blocks_params params;
     MPIR_Segment dt_seg;

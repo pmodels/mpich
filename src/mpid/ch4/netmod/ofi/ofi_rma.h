@@ -75,13 +75,13 @@ static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
 #define FUNCNAME MPIDI_OFI_count_iovecs
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_count_iovecs(int origin_count,
-                               int target_count,
-                               int result_count,
-                               MPI_Datatype origin_datatype,
-                               MPI_Datatype target_datatype,
-                               MPI_Datatype result_datatype, size_t max_pipe, size_t * countp)
+MPL_STATIC_INLINE_PREFIX int
+MPIDI_OFI_count_iovecs(int origin_count,
+                       int target_count,
+                       int result_count,
+                       MPI_Datatype origin_datatype,
+                       MPI_Datatype target_datatype,
+                       MPI_Datatype result_datatype, size_t max_pipe, size_t * countp)
 {
     /* Count the max number of iovecs that will be generated, given the iovs    */
     /* and maximum data size.  The code adds the iovecs from all three lists    */
