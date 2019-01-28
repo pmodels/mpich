@@ -53,12 +53,11 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 #define FUNCNAME MPIC_Wait
 #undef FCNAME
 #define FCNAME "MPIC_Wait"
+/* F: log=VERBOSE-PT2PT */
 int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_WAIT);
 
-    MPIR_FUNC_VERBOSE_PT2PT_ENTER(MPID_STATE_MPIC_WAIT);
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 
@@ -76,7 +75,6 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
 
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_PT2PT_EXIT(MPID_STATE_MPIC_WAIT);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -111,15 +109,14 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
 #define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPIR_Request *request_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_SEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SEND);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -151,7 +148,6 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SEND);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -174,6 +170,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 #define FUNCNAME MPIC_Recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
               MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t * errflag)
 {
@@ -181,9 +178,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     int context_id;
     MPI_Status mystatus;
     MPIR_Request *request_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_RECV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_RECV);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -220,7 +215,6 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_RECV);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -236,15 +230,14 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 #define FUNCNAME MPIC_Ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPIR_Request *request_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_SSEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SSEND);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -276,7 +269,6 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SSEND);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -299,6 +291,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
@@ -308,9 +301,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     int context_id;
     MPI_Status mystatus;
     MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_SENDRECV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SENDRECV);
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 
@@ -366,7 +357,6 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -385,6 +375,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
 #define FUNCNAME MPIC_Sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
                           int source, int recvtag,
@@ -399,9 +390,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint tmpbuf_count = 0;
     MPIR_CHKLMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -472,7 +461,6 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE);
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -488,14 +476,13 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 #define FUNCNAME MPIC_Isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_ISEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_ISEND);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -520,7 +507,6 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISEND);
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -532,14 +518,13 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 #define FUNCNAME MPIC_Issend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                 MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_ISSEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_ISSEND);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -564,7 +549,6 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISSEND);
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -576,14 +560,13 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
 #define FUNCNAME MPIC_Irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_IRECV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_IRECV);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -596,7 +579,6 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_IRECV);
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -609,6 +591,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 #define FUNCNAME MPIC_Waitall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
                  MPIR_Errflag_t * errflag)
 {
@@ -618,10 +601,8 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
     MPI_Request *request_ptrs = request_ptr_array;
     MPI_Status status_static_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
     MPI_Status *status_array = statuses;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_WAITALL);
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_WAITALL);
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 
@@ -663,7 +644,6 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
         MPIR_CHKLMEM_FREEALL();
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_WAITALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -280,18 +280,17 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
+/* F: log=TERSE-COLL */
 int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_SCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -415,7 +414,6 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_SCATTER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

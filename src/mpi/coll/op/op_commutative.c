@@ -98,16 +98,15 @@ Output Parameters:
 
 .seealso: MPI_Op_create
 @*/
+/* F: log=TERSE */
 int MPI_Op_commutative(MPI_Op op, int *commute)
 {
     MPIR_Op *op_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_COMMUTATIVE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_COMMUTATIVE);
 
     MPIR_Op_get_ptr(op, op_ptr);
 
@@ -132,7 +131,6 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_COMMUTATIVE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

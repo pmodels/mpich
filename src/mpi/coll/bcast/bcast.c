@@ -159,6 +159,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #define FUNCNAME MPIR_Bcast_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=TERSE */
 int MPIR_Bcast_intra_auto(void *buffer,
                           int count,
                           MPI_Datatype datatype,
@@ -169,9 +170,7 @@ int MPIR_Bcast_intra_auto(void *buffer,
     int comm_size;
     MPI_Aint nbytes = 0;
     MPI_Aint type_size;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST);
 
     if (count == 0)
         goto fn_exit;
@@ -225,7 +224,6 @@ int MPIR_Bcast_intra_auto(void *buffer,
     }
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST);
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
@@ -366,17 +364,16 @@ Input Parameters:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_ROOT
 @*/
+/* F: log=TERSE-COLL */
 int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BCAST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_BCAST);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -436,7 +433,6 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_BCAST);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

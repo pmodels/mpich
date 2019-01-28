@@ -22,6 +22,7 @@
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_sched_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const int *recvcounts, MPI_Datatype datatype,
                                                  MPI_Op op, int tag, MPIR_Comm * comm, int k,
@@ -44,8 +45,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int *displs;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -216,7 +215,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPL_free(step1_recvfrom);
     MPL_free(displs);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
 }
@@ -227,6 +225,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
                                            const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
                                            MPIR_Comm * comm, MPIR_Request ** req, int k)
@@ -235,8 +234,6 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
     int tag;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
 
     *req = NULL;
 
@@ -263,7 +260,6 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

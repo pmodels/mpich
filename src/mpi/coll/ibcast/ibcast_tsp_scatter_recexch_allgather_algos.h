@@ -23,6 +23,7 @@
 #define FUNCNAME MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int count,
                                                           MPI_Datatype datatype, int root,
                                                           MPIR_Comm * comm,
@@ -38,8 +39,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     int scatter_k = MPIR_CVAR_IBCAST_SCATTER_KVAL;
     int allgather_k = MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
@@ -101,7 +100,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -113,14 +111,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 #define FUNCNAME MPIR_TSP_Ibcast_intra_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
                                                     int root, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
 
     *req = NULL;
 
@@ -142,7 +139,6 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -76,16 +76,15 @@ Input Parameters:
 
 .seealso: MPI_Op_create
 @*/
+/* F: log=TERSE */
 int MPI_Op_free(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_FREE);
 
     MPIR_Op_get_ptr(*op, op_ptr);
 #ifdef HAVE_ERROR_CHECKING
@@ -116,7 +115,6 @@ int MPI_Op_free(MPI_Op * op)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -380,18 +380,17 @@ Output Parameters:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
+/* F: log=TERSE-COLL */
 int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                        MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_REDUCE_SCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -473,7 +472,6 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_REDUCE_SCATTER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

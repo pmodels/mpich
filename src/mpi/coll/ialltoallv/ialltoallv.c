@@ -286,6 +286,7 @@ Output Parameters:
 
 .N Errors
 @*/
+/* F: log=TERSE */
 int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
                    MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                    const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
@@ -293,10 +294,8 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLTOALLV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLTOALLV);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -381,7 +380,6 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLTOALLV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

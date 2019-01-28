@@ -21,6 +21,7 @@
 #define FUNCNAME MPIR_TSP_Iallgatherv_sched_intra_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
@@ -37,8 +38,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     void *data_buf, *buf1, *buf2, *sbuf, *rbuf;
     int max_count;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -138,7 +137,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     MPIR_TSP_sched_fence(sched);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
     return mpi_errno;
 }
 
@@ -148,6 +146,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
 #define FUNCNAME MPIR_TSP_Iallgatherv_intra_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
+/* F: log=VERBOSE */
 int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, const int *recvcounts, const int *displs,
                                     MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
@@ -156,8 +155,6 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
     int tag;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
 
     *req = NULL;
 
@@ -184,7 +181,6 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_INTRA_RING);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
