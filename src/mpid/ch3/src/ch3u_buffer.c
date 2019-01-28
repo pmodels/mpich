@@ -146,9 +146,9 @@ void MPIDI_CH3U_Buffer_copy(
 	/* --END ERROR HANDLING-- */
 
         sseg = MPIR_Segment_alloc();
-	MPIR_Segment_init(sbuf, scount, sdt, &sseg);
+	MPIR_Segment_init(sbuf, scount, sdt, sseg);
         rseg = MPIR_Segment_alloc();
-	MPIR_Segment_init(rbuf, rcount, rdt, &rseg);
+	MPIR_Segment_init(rbuf, rcount, rdt, rseg);
 
 	sfirst = 0;
 	rfirst = 0;
