@@ -313,8 +313,7 @@ typedef struct {
     /* Queryable limits */
     uint64_t max_buffered_send;
     uint64_t max_buffered_write;
-    uint64_t max_send;
-    uint64_t max_write;
+    uint64_t max_msg_size;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
