@@ -185,7 +185,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 
     /* Check that the sender didn't underflow the message by sending less than
      * the huge message threshold. */
-    if (wc->len < MPIDI_Global.max_send) {
+    if (wc->len < MPIDI_Global.max_msg_size) {
         return MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
     }
 
@@ -394,11 +394,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
     if (recv->localreq && recv->cur_offset != 0) {      /* If this is true, then the message has a posted
                                                          * receive already and we'll be able to find the
                                                          * struct describing the transfer. */
-        /* Subtract one max_send because we send the first chunk via a regular message instead of the memory region */
-        size_t bytesSent = recv->cur_offset - MPIDI_Global.max_send;
-        size_t bytesLeft = recv->remote_info.msgsize - bytesSent - MPIDI_Global.max_send;
+        /* Subtract one max_msg_size because we send the first chunk via a regular message instead of the memory region */
+        size_t bytesSent = recv->cur_offset - MPIDI_Global.max_msg_size;
+        size_t bytesLeft = recv->remote_info.msgsize - bytesSent - MPIDI_Global.max_msg_size;
         size_t bytesToGet =
-            (bytesLeft <= MPIDI_Global.max_send) ? bytesLeft : MPIDI_Global.max_send;
+            (bytesLeft <= MPIDI_Global.max_msg_size) ? bytesLeft : MPIDI_Global.max_msg_size;
 
         if (bytesToGet == 0ULL) {
             MPIDI_OFI_send_control_t ctrl;

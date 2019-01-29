@@ -142,7 +142,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     rem = data_sz;
 
     while (done != data_sz) {
-        curr_len = MPL_MIN(rem, MPIDI_Global.max_send);
+        curr_len = MPL_MIN(rem, MPIDI_Global.max_msg_size);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_BUF_POOL_SIZE);
         am_req = (MPIDI_OFI_am_request_t *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
@@ -241,7 +241,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = ((data_sz - 1) / MPIDI_Global.max_send) + 1;
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = ((data_sz - 1) / MPIDI_Global.max_msg_size) + 1;
         MPIDI_OFI_do_rdma_read(p_data,
                                lmt_msg->src_offset,
                                data_sz, lmt_msg->context_id, lmt_msg->src_rank, rreq);
@@ -259,7 +259,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
         for (i = 0; i < iov_len && rem > 0; i++) {
             curr_len = MPL_MIN(rem, iov[i].iov_len);
-            num_reads = ((curr_len - 1) / MPIDI_Global.max_send) + 1;
+            num_reads = ((curr_len - 1) / MPIDI_Global.max_msg_size) + 1;
             MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
             rem -= curr_len;
         }

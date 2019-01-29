@@ -597,8 +597,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDI_Global.max_buffered_send = prov_use->tx_attr->inject_size;
     MPIDI_Global.max_buffered_write = prov_use->tx_attr->inject_size;
-    MPIDI_Global.max_send = prov_use->ep_attr->max_msg_size;
-    MPIDI_Global.max_write = prov_use->ep_attr->max_msg_size;
+    MPIDI_Global.max_msg_size = prov_use->ep_attr->max_msg_size;
     MPIDI_Global.max_order_raw = prov_use->ep_attr->max_order_raw_size;
     MPIDI_Global.max_order_war = prov_use->ep_attr->max_order_war_size;
     MPIDI_Global.max_order_waw = prov_use->ep_attr->max_order_waw_size;
@@ -872,7 +871,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
-        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_msg_size);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
 
