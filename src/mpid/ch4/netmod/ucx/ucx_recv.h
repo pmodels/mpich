@@ -116,6 +116,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                             MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vci;
     size_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -130,17 +131,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    vci = 0;
 
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker[vci],
                                                         (char *) buf + dt_true_lb, data_sz,
                                                         ucp_dt_make_contig(1),
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker[vci],
                                                         buf, count,
                                                         dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
@@ -167,6 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
+        MPIDI_UCX_REQ(req).vci = vci;
         ucp_request->req = req;
     }
     *request = req;
@@ -187,6 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vci;
     size_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -194,9 +198,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIR_Datatype *dt_ptr;
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    vci = MPIDI_UCX_REQ(message).vci;
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker[vci],
                                                             (char *) buf + dt_true_lb,
                                                             data_sz,
                                                             ucp_dt_make_contig(1),
@@ -206,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker[vci],
                                                             buf, count,
                                                             dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                             MPIDI_UCX_REQ(message).
@@ -295,8 +300,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
+    int vci;
+
+    vci = MPIDI_UCX_REQ(rreq).vci;
     if (!MPIR_Request_is_complete(rreq)) {
-        ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(rreq).a.ucp_request);
+        ucp_request_cancel(MPIDI_UCX_global.worker[vci], MPIDI_UCX_REQ(rreq).a.ucp_request);
     }
 
     return MPI_SUCCESS;

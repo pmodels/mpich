@@ -26,6 +26,7 @@ typedef struct {
         ucp_tag_message_h message_handler;
         MPIDI_UCX_ucp_request_t *ucp_request;
     } a;
+    int vci;
 } MPIDI_UCX_request_t;
 
 typedef struct {
@@ -62,7 +63,7 @@ typedef struct {
 } MPIDI_UCX_win_t;
 
 typedef struct {
-    ucp_ep_h dest;
+    ucp_ep_h *dest;
 } MPIDI_UCX_addr_t;
 
 typedef struct {

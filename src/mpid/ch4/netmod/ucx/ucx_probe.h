@@ -24,6 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
                                                   MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vci;
     uint64_t ucp_tag, tag_mask;
     MPI_Aint count;
     ucp_tag_recv_info_t info;
@@ -32,8 +33,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
+    vci = 0;
 
-    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker, ucp_tag, tag_mask, 1, &info);
+    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker[vci], ucp_tag, tag_mask, 1, &info);
 
     if (message_h) {
         *flag = 1;
@@ -41,6 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.message_handler = message_h;
+        MPIDI_UCX_REQ(req).vci = vci;
 
         if (status != MPI_STATUS_IGNORE) {
             status->MPI_SOURCE = MPIDI_UCX_get_source(info.sender_tag);
@@ -72,6 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
                                                  MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vci;
     uint64_t ucp_tag, tag_mask;
     MPI_Aint count;
     ucp_tag_recv_info_t info;
@@ -79,8 +83,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
+    vci = 0;
 
-    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker, ucp_tag, tag_mask, 0, &info);
+    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker[vci], ucp_tag, tag_mask, 0, &info);
 
     if (message_h) {
         *flag = 1;

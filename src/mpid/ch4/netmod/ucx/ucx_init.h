@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
-    int i;
+    int i, vci;
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
@@ -50,11 +50,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
     ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
+    ucp_params.estimated_num_eps = size * (*n_vcis_provided);
+    ucp_params.mt_workers_shared = 1;   /* multiple threads could share the same worker */
 
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
         UCP_PARAM_FIELD_REQUEST_SIZE |
-        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
+        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT |
+        UCP_PARAM_FIELD_MT_WORKERS_SHARED;
 
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -63,42 +65,70 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
     worker_params.thread_mode = UCS_THREAD_MODE_SERIALIZED;
 
-    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
-                                   &MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucx_status =
-        ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
-                               &MPIDI_UCX_global.addrname_len);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
+    MPIDI_UCX_global.worker = MPL_malloc((*n_vcis_provided) * sizeof *MPIDI_UCX_global.worker,
+                                         MPL_MEM_OTHER);
+    MPIDI_UCX_global.if_address =
+        MPL_malloc((*n_vcis_provided) * sizeof *MPIDI_UCX_global.if_address, MPL_MEM_OTHER);
+    MPIDI_UCX_global.addrname_len =
+        MPL_malloc((*n_vcis_provided) * sizeof *MPIDI_UCX_global.addrname_len, MPL_MEM_OTHER);
 
-    MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0], MPIDI_UCX_global.if_address,
-                          (int) MPIDI_UCX_global.addrname_len, FALSE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                          (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    for (vci = 0; vci < *n_vcis_provided; vci++) {
+        ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
+                                       &MPIDI_UCX_global.worker[vci]);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+
+        ucx_status =
+            ucp_worker_get_address(MPIDI_UCX_global.worker[vci],
+                                   &MPIDI_UCX_global.if_address[vci],
+                                   &MPIDI_UCX_global.addrname_len[vci]);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+        MPIR_Assert(MPIDI_UCX_global.addrname_len[vci] <= INT_MAX);
+    }
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         int *node_roots, num_nodes;
 
         MPIR_NODEMAP_get_node_roots(MPIDI_CH4_Global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
+            for (vci = 0; vci < *n_vcis_provided; vci++) {
+                MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
+                                      MPIDI_UCX_global.if_address[vci],
+                                      (int) MPIDI_UCX_global.addrname_len[vci], FALSE, TRUE,
+                                      (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address =
+                    (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+                ucx_status =
+                    ucp_ep_create(MPIDI_UCX_global.worker[vci], &ep_params,
+                                  &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[vci]);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
         }
         MPL_free(node_roots);
     } else {
         for (i = 0; i < size; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
+            MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest = MPL_malloc((*n_vcis_provided) *
+                                                                 sizeof
+                                                                 *MPIDI_UCX_AV(&MPIDIU_get_av
+                                                                               (0, i)).dest,
+                                                                 MPL_MEM_OTHER);
+            for (vci = 0; vci < *n_vcis_provided; vci++) {
+                MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
+                                      MPIDI_UCX_global.if_address[vci],
+                                      (int) MPIDI_UCX_global.addrname_len[vci], FALSE, FALSE,
+                                      (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address =
+                    (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+                ucx_status =
+                    ucp_ep_create(MPIDI_UCX_global.worker[vci], &ep_params,
+                                  &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[vci]);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
         }
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
@@ -111,9 +141,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
-
+    for (vci = 0; vci < *n_vcis_provided; vci++) {
+        if (MPIDI_UCX_global.worker[vci] != NULL)
+            ucp_worker_destroy(MPIDI_UCX_global.worker[vci]);
+    }
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
 
@@ -128,20 +159,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
-    int i, p = 0, completed;
+    int i, vci, p = 0, completed;
     MPIR_Comm *comm;
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
     comm = MPIR_Process.comm_world;
     pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size, MPL_MEM_OTHER);
+    pending =
+        MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size *
+                   MPIDI_CH4_Global.n_nm_vcis_provided, MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
-        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-        MPIDI_UCX_CHK_REQUEST(ucp_request);
-        if (ucp_request != UCS_OK) {
-            pending[p] = ucp_request;
-            p++;
+        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+            ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[vci]);
+            MPIDI_UCX_CHK_REQUEST(ucp_request);
+            if (ucp_request != UCS_OK) {
+                pending[p] = ucp_request;
+                p++;
+            }
         }
     }
 
@@ -149,7 +185,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
      * deadlock! */
     completed = p;
     while (completed != 0) {
-        ucp_worker_progress(MPIDI_UCX_global.worker);
+        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+            ucp_worker_progress(MPIDI_UCX_global.worker[vci]);
+        }
         completed = p;
         for (i = 0; i < p; i++) {
             if (ucp_request_is_completed(pending[i]) != 0)
@@ -185,8 +223,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 #endif
 
 
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+        if (MPIDI_UCX_global.worker[vci] != NULL)
+            ucp_worker_destroy(MPIDI_UCX_global.worker[vci]);
+    }
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
