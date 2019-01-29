@@ -8,7 +8,8 @@ if BUILD_CH4_NETMOD_UCX
 
 noinst_HEADERS     +=
 mpi_core_sources   += src/mpid/ch4/netmod/ucx/func_table.c\
-                      src/mpid/ch4/netmod/ucx/globals.c
+                      src/mpid/ch4/netmod/ucx/globals.c\
+                      src/mpid/ch4/netmod/ucx/ucx_vci.c
 
 errnames_txt_files += src/mpid/ch4/netmod/ucx/errnames.txt
 
