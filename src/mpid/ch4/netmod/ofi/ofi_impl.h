@@ -635,114 +635,38 @@ struct MPIDI_OFI_contig_blocks_params {
 };
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_contig_count_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_contig_count_block(MPI_Aint * blocks_p,
-                                     MPI_Datatype el_type,
-                                     MPI_Aint rel_off, void *bufp, void *v_paramp)
-{
-    MPI_Aint size, el_size;
-    size_t rem, num;
-    struct MPIDI_OFI_contig_blocks_params *paramp = v_paramp;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-
-    MPIR_Assert(*blocks_p > 0);
-
-    MPIR_Datatype_get_size_macro(el_type, el_size);
-    size = *blocks_p * el_size;
-    if (paramp->count > 0 && rel_off == paramp->last_loc) {
-        /* this region is adjacent to the last */
-        paramp->last_loc += size;
-        /* If necessary, recalculate the number of chunks in this block */
-        if (paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
-            paramp->count -= paramp->last_chunk;
-            num = (paramp->last_loc - paramp->start_loc) / paramp->max_pipe;
-            rem = (paramp->last_loc - paramp->start_loc) % paramp->max_pipe;
-            if (rem)
-                num++;
-            paramp->last_chunk = num;
-            paramp->count += num;
-        }
-    } else {
-        /* new region */
-        num = size / paramp->max_pipe;
-        rem = size % paramp->max_pipe;
-        if (rem)
-            num++;
-
-        paramp->last_chunk = num;
-        paramp->last_loc = rel_off + size;
-        paramp->start_loc = rel_off;
-        paramp->count += num;
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-    return 0;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_count_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
     size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
-    struct MPIDI_OFI_contig_blocks_params params;
     MPIR_Segment *dt_seg;
-    ssize_t dt_size, num, rem;
-    size_t dtc, count, count1, count2;;
+    ssize_t rem_size;
+    size_t num_iov, total_iov = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
 
-    count = 0;
-    dtc = MPL_MIN(2, dt_count);
-    params.max_pipe = max_pipe;
-    MPIDI_Datatype_check_size(dt_datatype, dtc, dt_size);
-    if (dtc) {
-        params.count = 0;
-        params.last_loc = 0;
-        params.start_loc = 0;
-        params.last_chunk = 0;
-        dt_seg = MPIR_Segment_alloc(NULL, 1, dt_datatype);
-        MPIR_Segment_manipulate(dt_seg, 0, &dt_size,
-                                MPIDI_OFI_contig_count_block,
-                                NULL, NULL, NULL, NULL, (void *) &params);
-        MPIR_Segment_free(dt_seg);
-        count1 = params.count;
+    if (dt_datatype == MPI_DATATYPE_NULL)
+        goto fn_exit;
 
-        params.count = 0;
-        params.last_loc = 0;
-        params.start_loc = 0;
-        params.last_chunk = 0;
-        dt_seg = MPIR_Segment_alloc(NULL, dtc, dt_datatype);
-        MPIR_Segment_manipulate(dt_seg, 0, &dt_size,
-                                MPIDI_OFI_contig_count_block,
-                                NULL, NULL, NULL, NULL, (void *) &params);
-        MPIR_Segment_free(dt_seg);
-        count2 = params.count;
+    dt_seg = MPIR_Segment_alloc(NULL, dt_count, dt_datatype);
+    MPIDI_Datatype_check_size(dt_datatype, dt_count, rem_size);
 
-        if (count2 == 1) {      /* Contiguous */
-            num = (dt_size * dt_count) / max_pipe;
-            rem = (dt_size * dt_count) % max_pipe;
-            if (rem)
-                num++;
-            count += num;
-        } else if (count2 < count1 * 2)
-            /* The commented calculation assumes merged blocks  */
-            /* The iov processor will not merge adjacent blocks */
-            /* When the iov state machine adds this capability  */
-            /* we should switch to use the optimized calcultion */
-            /* count += (count1*dt_count) - (dt_count-1);       */
-            count += count1 * dt_count;
-        else
-            count += count1 * dt_count;
-    }
+    do {
+        size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
+
+        MPIR_Segment_count_contig_blocks(dt_seg, 0, &tmp_size, &num_iov);
+        total_iov += num_iov;
+
+        rem_size -= tmp_size;
+    } while (rem_size);
+    MPIR_Segment_free(dt_seg);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
-    return count;
+    return total_iov;
 }
 
 /* Find the nearest length of iov that meets alignment requirement */
