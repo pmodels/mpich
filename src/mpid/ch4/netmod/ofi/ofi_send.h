@@ -151,10 +151,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
      * and calculate the total number of iovecs */
     for (j = 0; j < num_contig; j++) {
-        if (originv[j].iov_len > MPIDI_Global.max_send) {
+        if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
             huge = 1;
-            countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
-            if (originv[j].iov_len % MPIDI_Global.max_send) {
+            countp_huge += originv[j].iov_len / MPIDI_Global.max_msg_size;
+            if (originv[j].iov_len % MPIDI_Global.max_msg_size) {
                 countp_huge++;
             }
         } else {
@@ -174,11 +174,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
         for (j = 0; j < num_contig; j++) {
             l = 0;
-            if (originv[j].iov_len > MPIDI_Global.max_send) {
+            if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
                 while (l < originv[j].iov_len) {
                     length = originv[j].iov_len - l;
-                    if (length > MPIDI_Global.max_send)
-                        length = MPIDI_Global.max_send;
+                    if (length > MPIDI_Global.max_msg_size)
+                        length = MPIDI_Global.max_msg_size;
                     originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                     originv_huge[k].iov_len = length;
                     k++;
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_msg_size) {
             mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, addr, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
@@ -327,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz <= MPIDI_Global.max_send) {
+    } else if (data_sz <= MPIDI_Global.max_msg_size) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
@@ -375,11 +375,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Send the maximum amount of data that we can here to get things
          * started, then do the rest using the MR below. This can be confirmed
          * in the MPIDI_OFI_get_huge code where we start the offset at
-         * MPIDI_Global.max_send */
+         * MPIDI_Global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
         MPIDI_OFI_REQUEST(sreq, util_id) = rank;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, send_buf,
-                                           MPIDI_Global.max_send,
+                                           MPIDI_Global.max_msg_size,
                                            NULL,
                                            comm->rank,
                                            MPIDI_OFI_av_to_phys(addr),

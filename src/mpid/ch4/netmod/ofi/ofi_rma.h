@@ -449,7 +449,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                   target_rank,
                                                                   origin_datatype,
                                                                   target_datatype,
-                                                                  MPIDI_Global.max_write,
+                                                                  MPIDI_Global.max_msg_size,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -466,7 +466,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             MPIDI_Global.max_write, origin_datatype, target_datatype);
+                             MPIDI_Global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
     size_t cur_o = 0, cur_t = 0;
@@ -623,7 +623,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count,
                                                                   target_rank,
                                                                   origin_datatype, target_datatype,
-                                                                  MPIDI_Global.max_write,
+                                                                  MPIDI_Global.max_msg_size,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -639,7 +639,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             MPIDI_Global.max_write, origin_datatype, target_datatype);
+                             MPIDI_Global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
     size_t cur_o = 0, cur_t = 0;
@@ -921,7 +921,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (max_count == 0)
         goto am_fallback;
     max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
-    max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
+    max_size = MPL_MIN(max_size, MPIDI_Global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
     /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
@@ -1063,7 +1063,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
 
     max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
-    max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
+    max_size = MPL_MIN(max_size, MPIDI_Global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
     /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
