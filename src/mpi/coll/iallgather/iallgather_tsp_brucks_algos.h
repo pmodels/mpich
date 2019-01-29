@@ -20,13 +20,14 @@
 #define FUNCNAME MPIR_TSP_Iallgather_sched_intra_brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm, MPIR_TSP_sched_t * sched, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
     int mpi_errno = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
@@ -176,6 +177,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     MPL_free(recv_id);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_BRUCKS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -187,11 +189,12 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
 #define FUNCNAME MPIR_TSP_Iallgather_intra_brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Request ** req, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
@@ -214,6 +217,7 @@ int MPIR_TSP_Iallgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Dat
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_BRUCKS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

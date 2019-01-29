@@ -379,10 +379,11 @@ Output Parameters:
 .N MPI_ERR_BUFFER_ALIAS
 
 @*/
-/* F: log=TERSE-COLL */
 int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, int root, MPI_Comm comm)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REDUCE);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_REDUCE);
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -511,6 +512,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_REDUCE);
     return mpi_errno;
 
   fn_fail:

@@ -393,10 +393,11 @@ Output Parameters:
 
 .N Errors
 @*/
-/* F: log=TERSE */
 int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                    MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLREDUCE);
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
@@ -484,6 +485,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLREDUCE);
     return mpi_errno;
 
   fn_fail:

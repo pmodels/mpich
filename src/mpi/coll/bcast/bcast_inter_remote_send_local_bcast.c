@@ -17,13 +17,14 @@
 #define FUNCNAME MPIR_Bcast_inter_remote_send_local_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=TERSE */
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
                                              int count,
                                              MPI_Datatype datatype,
                                              int root,
                                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER_REMOTE_SEND_LOCAL_BCAST);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST_INTER_REMOTE_SEND_LOCAL_BCAST);
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
@@ -97,5 +98,6 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     /* --END ERROR HANDLING-- */
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST_INTER_REMOTE_SEND_LOCAL_BCAST);
     return mpi_errno;
 }

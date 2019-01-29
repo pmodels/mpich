@@ -22,11 +22,12 @@
 #define FUNCNAME MPIR_TSP_Ibcast_sched_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, int tree_type, int k, int maxbytes,
                                      MPIR_TSP_sched_t * sched)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     int i;
     int num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -99,6 +100,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     MPII_Treealgo_tree_free(&my_tree);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -110,11 +112,12 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 #define FUNCNAME MPIR_TSP_Ibcast_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
                                int maxbytes)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
@@ -138,6 +141,7 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

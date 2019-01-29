@@ -22,12 +22,13 @@
 #define FUNCNAME MPIR_TSP_Ireduce_sched_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, int tree_type, int k, int maxbytes,
                                       MPIR_TSP_sched_t * sched)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
     int num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -249,6 +250,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     MPL_free(vtcs);
     MPL_free(reduce_id);
     MPL_free(recv_id);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -260,11 +262,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 #define FUNCNAME MPIR_TSP_Ireduce_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
                                 MPIR_Request ** req, int tree_type, int k, int maxbytes)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
@@ -289,6 +292,7 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

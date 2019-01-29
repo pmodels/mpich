@@ -283,12 +283,13 @@ Output Parameters:
 
 .N Errors
 @*/
-/* F: log=TERSE */
 int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
                    const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                    const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
                    MPI_Request * request)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLTOALLW);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLTOALLW);
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
@@ -359,6 +360,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLTOALLW);
     return mpi_errno;
 
   fn_fail:

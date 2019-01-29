@@ -22,12 +22,13 @@
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_sched_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const int *recvcounts, MPI_Datatype datatype,
                                                  MPI_Op op, int tag, MPIR_Comm * comm, int k,
                                                  MPIR_TSP_sched_t * sched)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
     size_t extent;
@@ -62,6 +63,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     }
 
     if (total_count == 0) {
+        MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
         return mpi_errno;
     }
 
@@ -76,6 +78,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         if (!is_inplace)
             MPIR_TSP_sched_localcopy(sendbuf, total_count, datatype, recvbuf, total_count,
                                      datatype, sched, 0, NULL);
+        MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
         return mpi_errno;
     }
 
@@ -216,6 +219,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPL_free(displs);
 
 
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_SCHED_INTRA_RECEXCH);
     return mpi_errno;
 }
 
@@ -225,11 +229,12 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
 #define FUNCNAME MPIR_TSP_Ireduce_scatter_intra_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
                                            const int *recvcounts, MPI_Datatype datatype, MPI_Op op,
                                            MPIR_Comm * comm, MPIR_Request ** req, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPIR_TSP_sched_t *sched;
@@ -260,6 +265,7 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_INTRA_RECEXCH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

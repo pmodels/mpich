@@ -22,12 +22,13 @@
 #define FUNCNAME MPIR_TSP_Igathert_sched_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                       int k, MPIR_TSP_sched_t * sched)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
@@ -193,6 +194,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     MPL_free(child_subtree_size);
     MPL_free(child_data_offset);
     MPL_free(recv_id);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHER_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -204,12 +206,13 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 #define FUNCNAME MPIR_TSP_Igather_intra_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                 MPIR_Request ** req, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
@@ -234,6 +237,7 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHER_INTRA_TREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

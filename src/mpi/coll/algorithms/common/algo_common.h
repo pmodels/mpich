@@ -33,12 +33,13 @@ static int MPII_Algo_compare_int(const void *a, const void *b)
 static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes, int type_size, int count,
                                                    int *num_segments, int *segsize_floor,
                                                    int *segsize_ceil) ATTRIBUTE((unused));
-/* F: log=VERBOSE */
 static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
                                                    int type_size, int count,
                                                    int *num_segments,
                                                    int *segsize_floor, int *segsize_ceil)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
     int maxelems;
     int mpi_errno = MPI_SUCCESS;
 
@@ -66,6 +67,7 @@ static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
 
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_ALGO_CALCULATE_PIPELINE_CHUNK_INFO);
     return mpi_errno;
 }
 

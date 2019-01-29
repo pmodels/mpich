@@ -269,9 +269,10 @@ group have called MPI_Ibarrier.
 
 .N Errors
 @*/
-/* F: log=TERSE */
 int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IBARRIER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IBARRIER);
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
@@ -325,6 +326,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IBARRIER);
     return mpi_errno;
 
   fn_fail:

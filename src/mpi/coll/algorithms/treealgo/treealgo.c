@@ -39,10 +39,11 @@ int MPII_Treealgo_comm_cleanup(MPIR_Comm * comm)
 #define FUNCNAME MPII_Treealgo_tree_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int root,
                               MPII_Treealgo_tree_t * ct)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TREEALGO_TREE_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TREEALGO_TREE_CREATE);
     int mpi_errno = MPI_SUCCESS;
 
 
@@ -73,6 +74,7 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TREEALGO_TREE_CREATE);
     return mpi_errno;
 
   fn_fail:

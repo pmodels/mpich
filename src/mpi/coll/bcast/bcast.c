@@ -159,12 +159,13 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #define FUNCNAME MPIR_Bcast_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=TERSE */
 int MPIR_Bcast_intra_auto(void *buffer,
                           int count,
                           MPI_Datatype datatype,
                           int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST_INTRA_AUTO);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST_INTRA_AUTO);
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size;
@@ -231,6 +232,7 @@ int MPIR_Bcast_intra_auto(void *buffer,
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     /* --END ERROR HANDLING-- */
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST_INTRA_AUTO);
     return mpi_errno;
 }
 
@@ -364,9 +366,10 @@ Input Parameters:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_ROOT
 @*/
-/* F: log=TERSE-COLL */
 int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BCAST);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_BCAST);
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -434,6 +437,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_BCAST);
     return mpi_errno;
 
   fn_fail:

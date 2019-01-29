@@ -49,11 +49,12 @@ int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
 #define FUNCNAME MPII_Recexchalgo_get_neighbors
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
                                    int *step1_sendto, int **step1_recvfrom_, int *step1_nrecvs,
                                    int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_GET_NEIGHBORS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_GET_NEIGHBORS);
     int mpi_errno = MPI_SUCCESS;
     int i, j, k;
     int p_of_k = 1, log_p_of_k = 0, rem, T, newrank;
@@ -190,6 +191,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     }
 
 
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_GET_NEIGHBORS);
     return mpi_errno;
 }
 
@@ -198,15 +200,17 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
 #define FUNCNAME MPII_Recexchalgo_origrank_to_step2rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
     int step2rank;
 
 
     step2rank = (rank < T) ? rank / k : rank - rem;
 
 
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
     return step2rank;
 }
 
@@ -215,15 +219,17 @@ int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 #define FUNCNAME MPII_Recexchalgo_step2rank_to_origrank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
     int orig_rank;
 
 
     orig_rank = (rank < rem / (k - 1)) ? (rank * k) + (k - 1) : rank + rem;
 
 
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
     return orig_rank;
 }
 
@@ -236,10 +242,11 @@ int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
 #define FUNCNAME MPII_Recexchalgo_get_count_and_offset
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks, int *count,
                                           int *offset)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
     int mpi_errno = MPI_SUCCESS;
     int step2rank, min, max, orig_max, orig_min;
     int k_power_phase = 1;
@@ -273,6 +280,7 @@ int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks
     *offset = orig_min + 1;
 
 
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
     return mpi_errno;
 }
 
@@ -286,9 +294,10 @@ int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks
 #define FUNCNAME MPII_Recexchalgo_reverse_digits_step2
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
     int i, T, rem, power, step2rank, step2_reverse_rank = 0;
     int pofk = 1, log_pofk = 0;
     int *digit, *digit_reverse;
@@ -345,6 +354,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
     return step2_reverse_rank;
   fn_fail:
     goto fn_exit;

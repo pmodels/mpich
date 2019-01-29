@@ -321,9 +321,10 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
 #define FUNCNAME MPII_Genutil_sched_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* F: log=VERBOSE */
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPIR_Request ** req)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_START);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
     int mpi_errno = MPI_SUCCESS;
     int is_complete;
     int made_progress;
@@ -352,6 +353,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
 
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

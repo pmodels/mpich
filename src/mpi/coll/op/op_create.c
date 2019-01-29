@@ -141,9 +141,10 @@ Output Parameters:
 
 .seealso: MPI_Op_free
 @*/
-/* F: log=TERSE */
 int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_CREATE);
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -160,6 +161,7 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_CREATE);
     return mpi_errno;
 
   fn_fail:
