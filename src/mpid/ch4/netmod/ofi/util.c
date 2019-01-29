@@ -174,7 +174,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv->cur_offset = MPIDI_Global.max_send;
+    recv->cur_offset = MPIDI_Global.max_msg_size;
     recv->remote_info = *info;
     recv->comm_ptr = comm_ptr;
     recv->next = NULL;
