@@ -16,8 +16,6 @@
 /* Receive done callback                                                    */
 /* Handle an incoming receive completion event                              */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_recv_callback)
 static inline
 int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
@@ -26,7 +24,8 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
     intptr_t sz;
     MPIDI_VC_t *vc;
     MPIR_Request *sync_req;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_RECV_CALLBACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_RECV_CALLBACK);
     /* ---------------------------------------------------- */
     /* Populate the MPI Status and unpack noncontig buffer  */
     /* ---------------------------------------------------- */
@@ -101,11 +100,13 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
         MPIDI_CH3U_Recvq_DP(rreq);
         MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
     }
-    END_FUNC_RC(FCNAME);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_RECV_CALLBACK);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(send_normal)
 static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
                               const void *buf, int count, MPI_Datatype datatype,
                               int dest, int tag, MPIR_Comm *comm,
@@ -218,8 +219,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(send_lightweight)
 static inline int
 ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
                              const void *buf,
@@ -258,8 +257,6 @@ ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
 }
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(do_isend)
 static inline int
 ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
          const void *buf,
@@ -277,7 +274,8 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
     MPI_Aint dt_true_lb;
     intptr_t data_sz;
     MPIR_Datatype *dt_ptr;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DO_ISEND);
 
     VC_READY_CHECK(vc);
     *request = NULL;
@@ -299,11 +297,13 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
                                 context_offset, request, dt_contig,
                                 data_sz, dt_ptr, dt_true_lb, send_type);
 
-    END_FUNC_RC(MPID_STATE_DO_ISEND);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ISEND);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_send)
 int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
                       const void *buf,
                       MPI_Aint count,
@@ -313,15 +313,14 @@ int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SEND);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest, tag,
                          comm, context_offset, request, MPID_DONT_CREATE_REQ, MPID_NORMAL_SEND);
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SEND);
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_isend)
 int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        const void *buf,
                        MPI_Aint count,
@@ -330,15 +329,14 @@ int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        int tag, MPIR_Comm * comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISEND);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
                          tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_NORMAL_SEND);
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISEND);
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_ssend)
 int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        const void *buf,
                        MPI_Aint count,
@@ -347,15 +345,14 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        int tag, MPIR_Comm * comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SSEND);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
                          tag, comm, context_offset, request, MPID_CREATE_REQ, MPIDI_OFI_SYNC_SEND);
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SSEND);
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_issend)
 int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
                         const void *buf,
                         MPI_Aint count,
@@ -365,16 +362,15 @@ int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
                         MPIR_Comm * comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISSEND);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
                          tag, comm, context_offset, request, MPID_CREATE_REQ, MPIDI_OFI_SYNC_SEND);
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISSEND);
     return mpi_errno;
 }
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_recv_posted)
 int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS, dt_contig, src, tag;
@@ -385,7 +381,8 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     MPIR_Datatype*dt_ptr;
     MPIR_Context_id_t context_id;
     char *recv_buffer;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_RECV_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_RECV_POSTED);
 
     /* ------------------------ */
     /* Initialize the request   */
@@ -445,17 +442,20 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     msg.context   = (void *) &(REQ_OFI(rreq)->ofi_context);
     msg.data      = 0;
     FI_RC_RETRY(fi_trecvmsg(gl_data.endpoint,&msg,msgflags), trecv);
-    END_FUNC_RC(FCNAME);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_RECV_POSTED);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_posted)
 void ADD_SUFFIX(MPID_nem_ofi_anysource_posted)(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_POSTED);
     mpi_errno = ADD_SUFFIX(MPID_nem_ofi_recv_posted)(NULL, rreq);
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_POSTED);
 }

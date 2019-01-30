@@ -35,44 +35,51 @@ MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
 /* ------------------------------------------------------------------------ */
 /* Receive callback called after sending a syncronous send acknowledgement. */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_sync_recv_callback)
 static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                                   MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SYNC_RECV_CALLBACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SYNC_RECV_CALLBACK);
 
     MPIDI_CH3U_Recvq_DP(REQ_OFI(rreq)->parent);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(REQ_OFI(rreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
-    END_FUNC_RC(FCNAME);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SYNC_RECV_CALLBACK);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
 
 /* ------------------------------------------------------------------------ */
 /* Send done callback                                                       */
 /* Free any temporary/pack buffers and complete the send request            */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_send_callback)
 static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                              MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
     if (REQ_OFI(sreq)->pack_buffer)
         MPL_free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
-    END_FUNC_RC(FCNAME);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
 
-#define DO_CANCEL(req)                                  \
-({                                                      \
+/* Use macro as the two functions share common body */
+#define DO_CANCEL(req, _FCID)                           \
   int mpi_errno = MPI_SUCCESS;                          \
   int ret;                                              \
-  BEGIN_FUNC(FCNAME);                                   \
+  MPIR_FUNC_VERBOSE_STATE_DECL(_FCID);                  \
+  MPIR_FUNC_VERBOSE_ENTER(_FCID);                       \
   MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);             \
   ret = fi_cancel((fid_t)gl_data.endpoint,              \
                   &(REQ_OFI(req)->ofi_context));        \
@@ -88,32 +95,26 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
   } else {                                              \
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);     \
   }                                                     \
-  END_FUNC(FCNAME);                                     \
-  return mpi_errno;                                     \
-})
+  MPIR_FUNC_VERBOSE_EXIT(_FCID);                        \
+  return mpi_errno;
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_send)
 int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *sreq)
 {
-    DO_CANCEL(sreq);
+    DO_CANCEL(sreq, MPID_NEM_OFI_CANCEL_SEND);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_recv)
 int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *rreq)
 {
-    DO_CANCEL(rreq);
+    DO_CANCEL(rreq, MPID_NEM_OFI_CANCEL_RECV);
 }
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_matched)
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;
     int ret;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_MATCHED);
     /* ----------------------------------------------------- */
     /* Netmod has notified us that it has matched an any     */
     /* source request on another device.  We have the chance */
@@ -138,6 +139,6 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
          */
         matched = TRUE;
     }
-    END_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_MATCHED);
     return matched;
 }
