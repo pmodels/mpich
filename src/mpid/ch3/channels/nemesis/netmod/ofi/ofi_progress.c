@@ -31,8 +31,6 @@ static inline MPIR_Request *context_to_req(void *ofi_context)
 #include "ofi_probe_template.c"
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_poll)
 int MPID_nem_ofi_poll(int in_blocking_poll)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
@@ -42,7 +40,8 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
     MPIDI_VC_t *vc;
     MPIR_Request *req;
     req_fn reqFn;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_POLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_POLL);
     do {
         /* ----------------------------------------------------- */
         /* Poll the completion queue                             */
@@ -121,9 +120,13 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
             else {
                 MPIR_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
                                      "**ofi_poll %s %d %s %s", __SHORT_FILE__,
-                                     __LINE__, FCNAME, fi_strerror(-ret));
+                                     __LINE__, __func__, fi_strerror(-ret));
             }
         }
     } while (in_blocking_poll && (ret > 0));
-    END_FUNC_RC(FCNAME);
+    fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_POLL);
+    return mpi_errno;
+    fn_fail:
+    goto fn_exit;
 }
