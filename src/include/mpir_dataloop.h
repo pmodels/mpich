@@ -25,6 +25,9 @@ void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop);
 void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
 
 void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header);
+int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void **flattened_dataloop,
+                          int *flattened_dataloop_size);
+int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop);
 
 /* Segment functions */
 MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle);
@@ -43,10 +46,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 
 void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
                            MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
-
-void MPIR_Segment_flatten(struct MPIR_Segment *segp,
-                          MPI_Aint first,
-                          MPI_Aint * lastp, MPI_Aint * offp, MPI_Aint * sizep, MPI_Aint * lengthp);
 
 void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer);

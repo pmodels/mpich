@@ -580,8 +580,10 @@ int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addr
                            int max_datatypes, int array_of_integers[],
                            MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
-int MPIR_Type_flatten(MPI_Datatype type, MPI_Aint * off_array, MPI_Aint * size_array,
-                      MPI_Aint * array_len_p);
+int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void **flattened_type,
+                      int *flattened_type_size);
+int MPIR_Type_unflatten(void *flattened_type, int flattened_type_size,
+                        MPIR_Datatype ** datatype_ptr);
 
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
