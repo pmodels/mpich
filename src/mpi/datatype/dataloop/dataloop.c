@@ -73,6 +73,58 @@ void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop)
     return;
 }
 
+struct dloop_flatten_hdr {
+    MPI_Aint dataloop_size;
+    MPIR_Dataloop *dataloop_local_addr;
+};
+
+int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_dataloop_size)
+{
+    *flattened_dataloop_size = sizeof(struct dloop_flatten_hdr) + dtp->dataloop_size;
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void *flattened_dataloop)
+{
+    struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
+    int mpi_errno = MPI_SUCCESS;
+
+    /*
+     * Our flattened layout contains three elements:
+     *    - The size of the dataloop
+     *    - The local address of the dataloop (needed to update the dataloop pointers when we unflatten)
+     *    - The actual dataloop itself
+     */
+
+    dloop_flatten_hdr->dataloop_size = dtp->dataloop_size;
+    dloop_flatten_hdr->dataloop_local_addr = dtp->dataloop;
+
+    MPIR_Memcpy(((char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr)),
+                dtp->dataloop, dtp->dataloop_size);
+
+    return mpi_errno;
+}
+
+int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
+{
+    struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
+    MPI_Aint ptrdiff;
+    int mpi_errno = MPI_SUCCESS;
+
+    dtp->dataloop = MPL_malloc(dloop_flatten_hdr->dataloop_size, MPL_MEM_DATATYPE);
+    MPIR_Memcpy(dtp->dataloop, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
+                dloop_flatten_hdr->dataloop_size);
+    dtp->dataloop_size = dloop_flatten_hdr->dataloop_size;
+
+    ptrdiff =
+        (MPI_Aint) ((char *) (dtp->dataloop) - (char *) dloop_flatten_hdr->dataloop_local_addr);
+    MPIR_Dataloop_update(dtp->dataloop, ptrdiff);
+
+    return mpi_errno;
+}
+
+
 /*@
   Dataloop_copy - Copy an arbitrary dataloop structure, updating
   pointers as necessary

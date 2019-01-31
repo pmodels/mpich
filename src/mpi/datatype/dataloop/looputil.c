@@ -103,13 +103,6 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p,
 static int contig_pack_to_iov(MPI_Aint * blocks_p,
                               MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
 
-static int contig_flatten(MPI_Aint * blocks_p,
-                          MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-
-static int vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
-                          void *bufp,   /* start of buffer */
-                          void *v_paramp);
-
 static inline int is_float_type(MPI_Datatype el_type)
 {
     return ((el_type == MPI_FLOAT) || (el_type == MPI_DOUBLE) ||
@@ -969,45 +962,6 @@ void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPIR_Segment_flatten
-*
-* offp    - pointer to array to fill in with offsets
-* sizep   - pointer to array to fill in with sizes
-* lengthp - pointer to value holding size of arrays; # used is returned
-*
-* Internally, index is used to store the index of next array value to fill in.
-*
-* TODO: MAKE SIZES Aints IN ROMIO, CHANGE THIS TO USE INTS TOO.
-*/
-void MPIR_Segment_flatten(struct MPIR_Segment *segp,
-                          MPI_Aint first,
-                          MPI_Aint * lastp, MPI_Aint * offp, MPI_Aint * sizep, MPI_Aint * lengthp)
-{
-    struct piece_params packvec_params;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_FLATTEN);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_FLATTEN);
-
-    packvec_params.u.flatten.offp = (int64_t *) offp;
-    packvec_params.u.flatten.sizep = sizep;
-    packvec_params.u.flatten.index = 0;
-    packvec_params.u.flatten.length = *lengthp;
-
-    MPIR_Assert(*lengthp > 0);
-
-    MPII_Segment_manipulate(segp, first, lastp, contig_flatten, vector_flatten, NULL,   /* blkidx fn */
-                            NULL, NULL, &packvec_params);
-
-    /* last value already handled by MPII_Segment_manipulate */
-    *lengthp = packvec_params.u.flatten.index;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_FLATTEN);
-    return;
-}
-
 /*
 * EVERYTHING BELOW HERE IS USED ONLY WITHIN THIS FILE
 */
@@ -1173,122 +1127,5 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
      */
     MPIR_Assert(blocks_left == 0);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
-    return 0;
-}
-
-/********** FUNCTIONS FOR FLATTENING A TYPE **********/
-
-#undef FUNCNAME
-#define FUNCNAME contig_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int contig_flatten(MPI_Aint * blocks_p,
-                          MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp)
-{
-    int idx, el_size;
-    MPI_Aint size;
-    struct piece_params *paramp = v_paramp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
-
-    el_size = MPIR_Datatype_get_basic_size(el_type);
-    size = *blocks_p * (MPI_Aint) el_size;
-    idx = paramp->u.flatten.index;
-
-#ifdef MPID_SP_VERBOSE
-    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "\t[contig flatten: idx = %d, loc = (" MPI_AINT_FMT_HEX_SPEC " + "
-                     MPI_AINT_FMT_HEX_SPEC ") = " MPI_AINT_FMT_HEX_SPEC ", size = "
-                     MPI_AINT_FMT_DEC_SPEC "]\n", idx, MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp,
-                     (MPI_Aint) rel_off, MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off,
-                     (MPI_Aint) size));
-#endif
-
-    if (idx > 0 && ((MPI_Aint) MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off) ==
-        ((paramp->u.flatten.offp[idx - 1]) + (MPI_Aint) paramp->u.flatten.sizep[idx - 1])) {
-        /* add this size to the last vector rather than using up another one */
-        paramp->u.flatten.sizep[idx - 1] += size;
-    } else {
-        paramp->u.flatten.offp[idx] =
-            ((int64_t) MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp) + (int64_t) rel_off;
-        paramp->u.flatten.sizep[idx] = size;
-
-        paramp->u.flatten.index++;
-        /* check to see if we have used our entire vector buffer, and if so
-         * return 1 to stop processing
-         */
-        if (paramp->u.flatten.index == paramp->u.flatten.length) {
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
-            return 1;
-        }
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
-    return 0;
-}
-
-#undef FUNCNAME
-#define FUNCNAME vector_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-/* vector_flatten
- *
- * Notes:
- * - this is only called when the starting position is at the beginning
- *   of a whole block in a vector type.
- * - this was a virtual copy of MPIR_Segment_to_iov; now it has improvements
- *   that MPIR_Segment_to_iov needs.
- * - we return the number of blocks that we did process in region pointed to by
- *   blocks_p.
- */
-static int vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
-                          void *bufp,   /* start of buffer */
-                          void *v_paramp)
-{
-    int i;
-    MPI_Aint size, blocks_left, basic_size;
-    struct piece_params *paramp = v_paramp;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
-
-    basic_size = (MPI_Aint) MPIR_Datatype_get_basic_size(el_type);
-    blocks_left = *blocks_p;
-
-    for (i = 0; i < count && blocks_left > 0; i++) {
-        int idx = paramp->u.flatten.index;
-
-        if (blocks_left > (MPI_Aint) blksz) {
-            size = ((MPI_Aint) blksz) * basic_size;
-            blocks_left -= (MPI_Aint) blksz;
-        } else {
-            /* last pass */
-            size = blocks_left * basic_size;
-            blocks_left = 0;
-        }
-
-        if (idx > 0 && ((MPI_Aint) MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off) ==
-            ((paramp->u.flatten.offp[idx - 1]) + (MPI_Aint) paramp->u.flatten.sizep[idx - 1])) {
-            /* add this size to the last region rather than using up another one */
-            paramp->u.flatten.sizep[idx - 1] += size;
-        } else if (idx < paramp->u.flatten.length) {
-            /* take up another region */
-            paramp->u.flatten.offp[idx] = (MPI_Aint) MPIR_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off;
-            paramp->u.flatten.sizep[idx] = size;
-            paramp->u.flatten.index++;
-        } else {
-            /* we tried to add to the end of the last region and failed; add blocks back in */
-            *blocks_p = *blocks_p - blocks_left + (size / basic_size);
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
-            return 1;
-        }
-        rel_off += stride;
-
-    }
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_Assert(blocks_left == 0);
-    /* --END ERROR HANDLING-- */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
     return 0;
 }
