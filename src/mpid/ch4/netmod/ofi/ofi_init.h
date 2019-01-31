@@ -607,29 +607,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_Global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_Global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
 
-    if (MPIDI_Global.max_mr_key_size >= 8) {
-        MPIDI_Global.max_rma_key_bits = MPIDI_OFI_MAX_KEY_BITS_64;
-        MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_64;
-        MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_64;
-        MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_64;
-    } else if (MPIDI_Global.max_mr_key_size >= 4) {
-        MPIDI_Global.max_rma_key_bits = MPIDI_OFI_MAX_KEY_BITS_32;
-        MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_32;
-        MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_32;
-        MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_32;
-    } else if (MPIDI_Global.max_mr_key_size >= 2) {
-        MPIDI_Global.max_rma_key_bits = MPIDI_OFI_MAX_KEY_BITS_16;
-        MPIDI_Global.max_huge_rmas = MPIDI_OFI_MAX_HUGE_RMAS_16;
-        MPIDI_Global.context_shift = MPIDI_OFI_CONTEXT_SHIFT_16;
-        MPIDI_Global.rma_key_type_bits = MPIDI_OFI_MAX_KEY_TYPE_BITS_16;
-    } else {
-        MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
-                                  MPI_ERR_OTHER,
-                                  "**ofid_rma_init",
-                                  "**ofid_rma_init %s %d %s %s",
-                                  __SHORT_FILE__, __LINE__, FCNAME, "Key space too small");
-    }
-
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
     /* The getinfo struct returns a fabric attribute struct that can be used to */
@@ -911,6 +888,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
 
+    /* Initalize RMA keys allocator */
+    MPIDI_OFI_mr_key_allocator_init();
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
     /* -------------------------------- */
@@ -974,6 +953,9 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     /* Progress until we drain all inflight RMA send long buffers */
     while (OPA_load_int(&MPIDI_Global.am_inflight_rma_send_mrs) > 0)
         MPIDI_OFI_PROGRESS();
+
+    /* Destroy RMA key allocator */
+    MPIDI_OFI_mr_key_allocator_destroy();
 
     /* Barrier over allreduce, but force non-immediate send */
     MPIDI_Global.max_buffered_send = 0;

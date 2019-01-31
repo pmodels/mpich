@@ -515,7 +515,6 @@ static inline int MPIDI_OFI_win_init_global(MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    uint64_t window_instance, max_contexts_allowed;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT);
@@ -528,22 +527,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
 
     memset(&MPIDI_OFI_WIN(win), 0, sizeof(MPIDI_OFI_win_t));
 
-    /* context id lower bits, window instance upper bits */
-    window_instance =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
-                                        MPL_MEM_RMA);
-    MPIR_ERR_CHKANDSTMT(window_instance >= MPIDI_Global.max_huge_rmas, mpi_errno,
-                        MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
-
-    assert(MPIDI_Global.max_rma_key_bits > MPIDI_Global.context_shift);
-    max_contexts_allowed =
-        (uint64_t) 1 << (MPIDI_Global.max_rma_key_bits - MPIDI_Global.context_shift);
-    MPIR_ERR_CHKANDSTMT(MPIR_CONTEXT_READ_FIELD(PREFIX, win->comm_ptr->context_id)
-                        >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
-                        goto fn_fail, "**ofid_mr_reg");
-
-    MPIDI_OFI_WIN(win).win_id = MPIDI_OFI_rma_key_pack(win->comm_ptr->context_id,
-                                                       MPIDI_OFI_KEY_TYPE_WINDOW, window_instance);
+    MPIDI_OFI_WIN(win).win_id = MPIDI_OFI_mr_key_alloc();
 
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
@@ -1243,17 +1227,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win, const 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    uint32_t window_instance;
-    int key_type;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FREE_HOOK);
 
     if (MPIDI_OFI_ENABLE_RMA) {
-        MPIDI_OFI_rma_key_unpack(MPIDI_OFI_WIN(win).win_id, NULL, &key_type, &window_instance);
-        MPIR_Assert(key_type == MPIDI_OFI_KEY_TYPE_WINDOW);
-
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
-                                       window_instance);
+        MPIDI_OFI_mr_key_free(MPIDI_OFI_WIN(win).win_id);
         MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
         if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {

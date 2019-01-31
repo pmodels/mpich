@@ -42,8 +42,6 @@ struct MPIR_Request;
 typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;
-    void *win_id_allocator;
-    void *rma_id_allocator;
     /* support for connection */
     int conn_id;
     int eagain;
