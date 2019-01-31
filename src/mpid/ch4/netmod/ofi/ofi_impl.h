@@ -327,10 +327,10 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_index_allocator_create(void **_indexmap, int start, MPL_memory_class class);
-int MPIDI_OFI_index_allocator_alloc(void *_indexmap, MPL_memory_class class);
-void MPIDI_OFI_index_allocator_free(void *_indexmap, int index);
-void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
+void MPIDI_OFI_mr_key_allocator_init();
+uint64_t MPIDI_OFI_mr_key_alloc();
+void MPIDI_OFI_mr_key_free(uint64_t index);
+void MPIDI_OFI_mr_key_allocator_destroy();
 
 /* Common Utility functions used by the
  * C and C++ components
