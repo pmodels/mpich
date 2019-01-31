@@ -37,27 +37,24 @@ int MPIDI_OFI_retry_progress()
     return MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM);
 }
 
-typedef struct MPIDI_OFI_index_allocator_t {
-    int chunk_size;
-    int num_ints;
-    int start;
-    int last_free_index;
+typedef struct MPIDI_OFI_mr_key_allocator_t {
+    uint64_t chunk_size;
+    uint64_t num_ints;
+    uint64_t last_free_mr_key;
     uint64_t *bitmask;
-} MPIDI_OFI_index_allocator_t;
+} MPIDI_OFI_mr_key_allocator_t;
 
-void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_class class)
+static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
+
+void MPIDI_OFI_mr_key_allocator_init()
 {
-    MPIDI_OFI_index_allocator_t *allocator;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t), class);
-    allocator->chunk_size = 128;
-    allocator->num_ints = allocator->chunk_size;
-    allocator->start = start;
-    allocator->last_free_index = 0;
-    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints, class);
-    memset(allocator->bitmask, 0xFF, sizeof(uint64_t) * allocator->num_ints);
-    assert(allocator != NULL);
-    *indexmap = allocator;
+    mr_key_allocator.chunk_size = 128;
+    mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
+    mr_key_allocator.last_free_mr_key = 0;
+    mr_key_allocator.bitmask = MPL_malloc(sizeof(uint64_t) * mr_key_allocator.num_ints,
+                                          MPL_MEM_RMA);
+    memset(mr_key_allocator.bitmask, 0xFF, sizeof(uint64_t) * mr_key_allocator.num_ints);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
@@ -66,15 +63,14 @@ void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_cla
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
+uint64_t MPIDI_OFI_mr_key_alloc()
 {
-    int i;
-    MPIDI_OFI_index_allocator_t *allocator = indexmap;
+    uint64_t i;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    for (i = allocator->last_free_index; i < allocator->num_ints; i++) {
-        if (allocator->bitmask[i]) {
+    for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
+        if (mr_key_allocator.bitmask[i]) {
             register uint64_t val, nval;
-            val = allocator->bitmask[i];
+            val = mr_key_allocator.bitmask[i];
             nval = 2;
             MPIDI_OFI_INDEX_CALC(val, nval, 32, 0xFFFFFFFFULL);
             MPIDI_OFI_INDEX_CALC(val, nval, 16, 0xFFFFULL);
@@ -82,44 +78,42 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
             MPIDI_OFI_INDEX_CALC(val, nval, 4, 0xFULL);
             MPIDI_OFI_INDEX_CALC(val, nval, 2, 0x3ULL);
             nval -= val & 0x1ULL;
-            allocator->bitmask[i] &= ~(0x1ULL << (nval - 1));
-            allocator->last_free_index = i;
+            mr_key_allocator.bitmask[i] &= ~(0x1ULL << (nval - 1));
+            mr_key_allocator.last_free_mr_key = i;
             MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-            return i * sizeof(uint64_t) * 8 + (nval - 1) + allocator->start;
+            return i * sizeof(uint64_t) * 8 + (nval - 1);
         }
-        if (i == allocator->num_ints - 1) {
-            allocator->num_ints += allocator->chunk_size;
-            allocator->bitmask = MPL_realloc(allocator->bitmask,
-                                             sizeof(uint64_t) * allocator->num_ints, class);
-            MPIR_Assert(allocator->bitmask);
-            memset(&allocator->bitmask[i + 1], 0xFF, sizeof(uint64_t) * allocator->chunk_size);
+        if (i == mr_key_allocator.num_ints - 1) {
+            mr_key_allocator.num_ints += mr_key_allocator.chunk_size;
+            mr_key_allocator.bitmask = MPL_realloc(mr_key_allocator.bitmask,
+                                                   sizeof(uint64_t) * mr_key_allocator.num_ints,
+                                                   MPL_MEM_RMA);
+            MPIR_Assert(mr_key_allocator.bitmask);
+            memset(&mr_key_allocator.bitmask[i + 1], 0xFF,
+                   sizeof(uint64_t) * mr_key_allocator.chunk_size);
         }
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     return -1;
 }
 
-void MPIDI_OFI_index_allocator_free(void *indexmap, int index)
+void MPIDI_OFI_mr_key_free(uint64_t index)
 {
-    int int_index, bitpos, numbits;
-    MPIDI_OFI_index_allocator_t *allocator = indexmap;
+    uint64_t int_index, bitpos, numbits;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     numbits = sizeof(uint64_t) * 8;
-    int_index = (index + 1 - allocator->start) / numbits;
-    bitpos = (index - allocator->start) % numbits;
+    int_index = (index + 1) / numbits;
+    bitpos = index % numbits;
 
-    allocator->last_free_index = MPL_MIN(int_index, allocator->last_free_index);
-    allocator->bitmask[int_index] |= (0x1ULL << bitpos);
+    mr_key_allocator.last_free_mr_key = MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
+    mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
-void MPIDI_OFI_index_allocator_destroy(void *indexmap)
+void MPIDI_OFI_mr_key_allocator_destroy()
 {
-    MPIDI_OFI_index_allocator_t *allocator;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = (MPIDI_OFI_index_allocator_t *) indexmap;
-    MPL_free(allocator->bitmask);
-    MPL_free(allocator);
+    MPL_free(mr_key_allocator.bitmask);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
