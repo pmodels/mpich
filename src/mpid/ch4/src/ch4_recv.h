@@ -197,12 +197,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
         mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMRECV_UNSAFE);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

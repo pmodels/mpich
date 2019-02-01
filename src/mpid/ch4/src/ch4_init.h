@@ -194,7 +194,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
-  fn_fail:
     return mpi_errno;
 }
 
@@ -574,7 +573,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
     return mpi_errno;
 }
