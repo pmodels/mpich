@@ -487,6 +487,11 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
             }
         }
     }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 #endif
 
     if (any_mapfail_flag) {
@@ -496,11 +501,8 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
         *fail_flag = 1;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* CH4R_SYMHEAP_H_INCLUDED */

@@ -85,7 +85,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4I_am_request_init(MPIR_Request *
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
     MPIDI_CH4U_REQUEST(req, req->status) = 0;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_INIT);
     return req;
 }
@@ -115,7 +114,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_copy(MPIR_Request * dest, MP
     MPIDI_CH4U_REQUEST(dest, context_id) = MPIDI_CH4U_REQUEST(src, context_id);
     MPIDI_CH4U_REQUEST(dest, req->status) = MPIDI_CH4U_REQUEST(src, req->status);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_COPY);
     return;
 }
