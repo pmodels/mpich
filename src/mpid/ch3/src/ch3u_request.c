@@ -44,7 +44,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.target_win_handle = MPI_WIN_NULL;
     req->dev.source_win_handle = MPI_WIN_NULL;
     req->dev.target_lock_queue_entry = NULL;
-    req->dev.dataloop	   = NULL;
+    req->dev.flattened_type = NULL;
     req->dev.iov_offset        = 0;
     req->dev.flags             = MPIDI_CH3_PKT_FLAG_NONE;
     req->dev.resp_request_handle = MPI_REQUEST_NULL;
@@ -617,5 +617,9 @@ void MPID_Request_destroy_hook(MPIR_Request *req)
 
     if (req->dev.ext_hdr_ptr != NULL) {
         MPL_free(req->dev.ext_hdr_ptr);
+    }
+
+    if (req->dev.flattened_type != NULL) {
+        MPL_free(req->dev.flattened_type);
     }
 }

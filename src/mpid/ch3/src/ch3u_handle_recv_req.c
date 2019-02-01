@@ -7,9 +7,6 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dtype_info,
-                                   MPIR_Datatype** dtp);
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_recv_req
 #undef FCNAME
@@ -564,15 +561,12 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPIDI_RMA_dtype_info *dtype_info = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTDERIVEDDTRECVCOMPLETE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTDERIVEDDTRECVCOMPLETE);
 
     /* get data from extended header */
-    dtype_info = &((MPIDI_CH3_Ext_pkt_put_derived_t *) rreq->dev.ext_hdr_ptr)->dtype_info;
-    /* create derived datatype */
-    create_derived_datatype(rreq, dtype_info, &new_dtp);
+    MPIR_Type_unflatten(rreq->dev.flattened_type, rreq->dev.flattened_type_size, &new_dtp);
 
     /* update request to get the data */
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_PUT_RECV);
@@ -611,7 +605,6 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPIDI_RMA_dtype_info *dtype_info = NULL;
     MPI_Aint basic_type_extent, basic_type_size;
     MPI_Aint total_len, rest_len, stream_elem_count;
     MPI_Aint stream_offset;
@@ -622,24 +615,17 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
 
     stream_offset = 0;
-    MPIR_Assert(rreq->dev.ext_hdr_ptr != NULL);
+
+    /* get stream offset */
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIDI_CH3_Ext_pkt_accum_stream_derived_t *ext_hdr = NULL;
+        MPIR_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        ext_hdr = ((MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) rreq->dev.ext_hdr_ptr);
+        stream_offset = ext_hdr->stream_offset;
+    }
 
     if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV_DERIVED_DT) {
-        /* get data from extended header */
-        if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-            MPIDI_CH3_Ext_pkt_accum_stream_derived_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) rreq->dev.ext_hdr_ptr);
-            stream_offset = ext_hdr->stream_offset;
-            dtype_info = &ext_hdr->dtype_info;
-        }
-        else {
-            MPIDI_CH3_Ext_pkt_accum_derived_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_accum_derived_t *) rreq->dev.ext_hdr_ptr);
-            dtype_info = &ext_hdr->dtype_info;
-        }
-
-        /* create derived datatype */
-        create_derived_datatype(rreq, dtype_info, &new_dtp);
+        MPIR_Type_unflatten(rreq->dev.flattened_type, rreq->dev.flattened_type_size, &new_dtp);
 
         /* update new request to get the data */
         MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
@@ -655,13 +641,6 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     else {
         MPIR_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV);
         MPIR_Assert(rreq->dev.datatype != MPI_DATATYPE_NULL);
-
-        /* get data from extended header */
-        if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-            MPIDI_CH3_Ext_pkt_accum_stream_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_accum_stream_t *) rreq->dev.ext_hdr_ptr);
-            stream_offset = ext_hdr->stream_offset;
-        }
 
         MPIR_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
@@ -725,7 +704,6 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPIDI_RMA_dtype_info *dtype_info = NULL;
     MPI_Aint basic_type_extent, basic_type_size;
     MPI_Aint total_len, rest_len, stream_elem_count;
     MPI_Aint stream_offset;
@@ -742,24 +720,17 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
     }
 
     stream_offset = 0;
-    MPIR_Assert(rreq->dev.ext_hdr_ptr != NULL);
+
+    /* get stream offset */
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIDI_CH3_Ext_pkt_get_accum_stream_t *ext_hdr = NULL;
+        MPIR_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        ext_hdr = ((MPIDI_CH3_Ext_pkt_get_accum_stream_t *) rreq->dev.ext_hdr_ptr);
+        stream_offset = ext_hdr->stream_offset;
+    }
 
     if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT) {
-        /* get data from extended header */
-        if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-            MPIDI_CH3_Ext_pkt_get_accum_stream_derived_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_get_accum_stream_derived_t *) rreq->dev.ext_hdr_ptr);
-            stream_offset = ext_hdr->stream_offset;
-            dtype_info = &ext_hdr->dtype_info;
-        }
-        else {
-            MPIDI_CH3_Ext_pkt_get_accum_derived_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_get_accum_derived_t *) rreq->dev.ext_hdr_ptr);
-            dtype_info = &ext_hdr->dtype_info;
-        }
-
-        /* create derived datatype */
-        create_derived_datatype(rreq, dtype_info, &new_dtp);
+        MPIR_Type_unflatten(rreq->dev.flattened_type, rreq->dev.flattened_type_size, &new_dtp);
 
         /* update new request to get the data */
         MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
@@ -775,13 +746,6 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
     else {
         MPIR_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
         MPIR_Assert(rreq->dev.datatype != MPI_DATATYPE_NULL);
-
-        /* get data from extended header */
-        if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-            MPIDI_CH3_Ext_pkt_get_accum_stream_t *ext_hdr = NULL;
-            ext_hdr = ((MPIDI_CH3_Ext_pkt_get_accum_stream_t *) rreq->dev.ext_hdr_ptr);
-            stream_offset = ext_hdr->stream_offset;
-        }
 
         MPIR_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
@@ -857,7 +821,6 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPIDI_RMA_dtype_info *dtype_info = NULL;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPIR_Request *sreq;
@@ -871,9 +834,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     MPIR_Assert(!(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP));
 
     /* get data from extended header */
-    dtype_info = &((MPIDI_CH3_Ext_pkt_get_derived_t *) rreq->dev.ext_hdr_ptr)->dtype_info;
-    /* create derived datatype */
-    create_derived_datatype(rreq, dtype_info, &new_dtp);
+    MPIR_Type_unflatten(rreq->dev.flattened_type, rreq->dev.flattened_type_size, &new_dtp);
 
     /* create request for sending data */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
@@ -1068,64 +1029,6 @@ int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
 /* ----------------------------------------------------------------------- */
 /* ----------------------------------------------------------------------- */
-
-#undef FUNCNAME
-#define FUNCNAME create_derived_datatype
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dtype_info,
-                                   MPIR_Datatype** dtp)
-{
-    MPIR_Datatype*new_dtp;
-    int mpi_errno = MPI_SUCCESS;
-    MPI_Aint ptrdiff;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_DERIVED_DATATYPE);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_DERIVED_DATATYPE);
-
-    /* allocate new datatype object and handle */
-    new_dtp = (MPIR_Datatype*) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    if (!new_dtp) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Datatype_mem");
-    }
-
-    *dtp = new_dtp;
-
-    /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
-    MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 1;
-    new_dtp->attributes = 0;
-    new_dtp->name[0] = 0;
-    new_dtp->is_contig = dtype_info->is_contig;
-    new_dtp->max_contig_blocks = dtype_info->max_contig_blocks;
-    new_dtp->size = dtype_info->size;
-    new_dtp->extent = dtype_info->extent;
-    new_dtp->dataloop_size = dtype_info->dataloop_size;
-    new_dtp->basic_type = dtype_info->basic_type;
-    /* set dataloop pointer */
-    new_dtp->dataloop = req->dev.dataloop;
-
-    new_dtp->ub = dtype_info->ub;
-    new_dtp->lb = dtype_info->lb;
-    new_dtp->true_ub = dtype_info->true_ub;
-    new_dtp->true_lb = dtype_info->true_lb;
-    new_dtp->has_sticky_ub = dtype_info->has_sticky_ub;
-    new_dtp->has_sticky_lb = dtype_info->has_sticky_lb;
-    /* update pointers in dataloop */
-    ptrdiff = (MPI_Aint) ((char *) (new_dtp->dataloop) - (char *)
-                          (dtype_info->dataloop));
-
-    MPIR_Dataloop_update(new_dtp->dataloop, ptrdiff);
-
-    new_dtp->contents = NULL;
-
-  fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_DERIVED_DATATYPE);
-
-    return mpi_errno;
-}
-
 
 static inline int perform_put_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
