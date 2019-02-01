@@ -18,6 +18,8 @@
 #include "shm_misc.h"
 #include "shm_p2p.h"
 #include "shm_rma.h"
+#include "shm_types.h"
+#include "shm_control.h"
 
 /* Not-inlined shm functions */
 #include "shm_noinline.h"
