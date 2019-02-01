@@ -81,6 +81,12 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #endif
 /* -- End Profiling Symbol Block */
 
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Iallgatherv
+#define MPI_Iallgatherv PMPI_Iallgatherv
+
 /* This function checks whether the displacements are in increasing order and
  * that there is no overlap or gap between the data of successive ranks. Some
  * algorithms can only handle ordered array of data and hence this function for
@@ -96,12 +102,6 @@ static int is_ordered(int comm_size, const int recvcounts[], const int displs[])
     }
     return 1;
 }
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Iallgatherv
-#define MPI_Iallgatherv PMPI_Iallgatherv
 
 /* This is the machine-independent implementation of allgatherv. The algorithm is:
 
