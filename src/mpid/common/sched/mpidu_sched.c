@@ -54,14 +54,16 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
         case MPIDU_SCHED_ENTRY_SEND:
             {
                 struct MPIDU_Sched_send *s = &(e->u.send);
-                fprintf(fh, "\t\tSend: %llu of type %x from %d\n", s->count, s->datatype, s->dest);
+                fprintf(fh, "\t\tSend: " MPI_AINT_FMT_DEC_SPEC " of type %x from %d\n", s->count,
+                        s->datatype, s->dest);
                 fprintf(fh, "\t\t from buff: %p\n", s->buf);
             }
             break;
         case MPIDU_SCHED_ENTRY_RECV:
             {
                 struct MPIDU_Sched_recv *r = &(e->u.recv);
-                fprintf(fh, "\t\tRecv: %llu of type %x from %d\n", r->count, r->datatype, r->src);
+                fprintf(fh, "\t\tRecv: " MPI_AINT_FMT_DEC_SPEC " of type %x from %d\n", r->count,
+                        r->datatype, r->src);
                 fprintf(fh, "\t\t Into buff: %p\n", r->buf);
             }
             break;
@@ -69,16 +71,18 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
             {
                 struct MPIDU_Sched_reduce *rd = &(e->u.reduce);
                 fprintf(fh, "\t\tReduce: %p -> %p\n", rd->inbuf, rd->inoutbuf);
-                fprintf(fh, "\t\t  %llu elements of type %x\n", rd->count, rd->datatype);
+                fprintf(fh, "\t\t  " MPI_AINT_FMT_DEC_SPEC " elements of type %x\n", rd->count,
+                        rd->datatype);
                 fprintf(fh, "\t\t Op: %x\n", rd->op);
             }
             break;
         case MPIDU_SCHED_ENTRY_COPY:
             {
                 struct MPIDU_Sched_copy *cp = &(e->u.copy);
-                fprintf(fh, "\t\tFrom: %p %llu of type %x\n", cp->inbuf, cp->incount, cp->intype);
-                fprintf(fh, "\t\tTo:   %p %llu of type %x\n", cp->outbuf, cp->outcount,
-                        cp->outtype);
+                fprintf(fh, "\t\tFrom: %p " MPI_AINT_FMT_DEC_SPEC " of type %x\n", cp->inbuf,
+                        cp->incount, cp->intype);
+                fprintf(fh, "\t\tTo:   %p " MPI_AINT_FMT_DEC_SPEC " of type %x\n", cp->outbuf,
+                        cp->outcount, cp->outtype);
             }
             break;
         case MPIDU_SCHED_ENTRY_NOP:
