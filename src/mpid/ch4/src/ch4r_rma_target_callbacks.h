@@ -1417,7 +1417,6 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPIR_Segment *segment_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
@@ -1438,34 +1437,43 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) MPIDI_CH4U_REQUEST(areq, req->areq.result_addr) + dt_true_lb;
     } else {
-        segment_ptr = MPIR_Segment_alloc(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
-                                         MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
-                                         MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
-        MPIR_Assert(segment_ptr);
+        MPI_Aint actual_data_sz;
 
-        last = data_sz;
-        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+        mpi_errno = MPIR_Type_to_iov_len(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype),
+                                         MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
+                                         0, data_sz, NULL, &num_iov);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
+
         MPIDI_CH4U_REQUEST(areq, req->iov) =
             (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(areq, req->iov));
 
-        last = data_sz;
-        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov), &n_iov);
-        MPIR_Assert(last == (MPI_Aint) data_sz);
+        mpi_errno = MPIR_Type_to_iov(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
+                                     MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype),
+                                     MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
+                                     0, data_sz, &actual_data_sz,
+                                     n_iov, NULL, MPIDI_CH4U_REQUEST(areq, req->iov));
+
+        MPIR_Assert(actual_data_sz == (MPI_Aint) data_sz);
+
         *data = MPIDI_CH4U_REQUEST(areq, req->iov);
         *p_data_sz = n_iov;
         MPIDI_CH4U_REQUEST(areq, req->status) |= MPIDI_CH4U_REQ_RCV_NON_CONTIG;
-        MPL_free(segment_ptr);
     }
 
     *req = areq;
     *target_cmpl_cb = MPIDI_get_acc_ack_target_cmpl_cb;
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -1591,7 +1599,6 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPIR_Segment *segment_ptr;
     MPIR_Win *win;
     MPIDI_CH4U_put_msg_t *msg_hdr = (MPIDI_CH4U_put_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
@@ -1646,25 +1653,23 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) (offset + base + dt_true_lb);
     } else {
-        segment_ptr =
-            MPIR_Segment_alloc((void *) (offset + base), msg_hdr->count, msg_hdr->datatype);
-        MPIR_Assert(segment_ptr);
+        mpi_errno = MPIR_Type_to_iov_len(msg_hdr->datatype, msg_hdr->count, 0, data_sz, NULL, &num_iov);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-        last = data_sz;
-        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
+
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
             (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
-        last = data_sz;
-        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
-        MPIR_Assert(last == (MPI_Aint) data_sz);
+        mpi_errno = MPIR_Type_to_iov((void *) (offset + base), msg_hdr->datatype, msg_hdr->count, 0,
+                                     data_sz, NULL, n_iov, NULL, MPIDI_CH4U_REQUEST(rreq, req->iov));
+
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_RCV_NON_CONTIG;
-        MPL_free(segment_ptr);
     }
 
   fn_exit:
@@ -2415,7 +2420,6 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPIR_Segment *segment_ptr;
 
     MPIDI_CH4U_get_ack_msg_t *msg_hdr = (MPIDI_CH4U_get_ack_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
@@ -2449,26 +2453,28 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         *p_data_sz = data_sz;
         *data = (char *) (MPIDI_CH4U_REQUEST(rreq, req->greq.addr) + dt_true_lb);
     } else {
-        segment_ptr = MPIR_Segment_alloc((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
+        mpi_errno = MPIR_Type_to_iov_len(MPIDI_CH4U_REQUEST(rreq, req->greq.datatype),
                                          MPIDI_CH4U_REQUEST(rreq, req->greq.count),
-                                         MPIDI_CH4U_REQUEST(rreq, req->greq.datatype));
-        MPIR_Assert(segment_ptr);
+                                         0, data_sz, NULL, &num_iov);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-        last = data_sz;
-        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
             (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
-        last = data_sz;
-        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
+        MPIR_Type_to_iov((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
+                         MPIDI_CH4U_REQUEST(rreq, req->greq.datatype),
+                         MPIDI_CH4U_REQUEST(rreq, req->greq.count),
+                         0, data_sz, NULL, n_iov, NULL,
+                         MPIDI_CH4U_REQUEST(rreq, req->iov));
         MPIR_Assert(last == (MPI_Aint) data_sz);
+
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_RCV_NON_CONTIG;
-        MPL_free(segment_ptr);
     }
 
   fn_exit:
