@@ -644,6 +644,7 @@ MPL_STATIC_INLINE_PREFIX
     MPIR_Segment *dt_seg;
     ssize_t rem_size;
     size_t num_iov, total_iov = 0;
+    size_t start, end;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
@@ -654,10 +655,15 @@ MPL_STATIC_INLINE_PREFIX
     dt_seg = MPIR_Segment_alloc(NULL, dt_count, dt_datatype);
     MPIDI_Datatype_check_size(dt_datatype, dt_count, rem_size);
 
+    start = 0;
+    end = 0;
     do {
         size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
 
-        MPIR_Segment_count_contig_blocks(dt_seg, 0, &tmp_size, &num_iov);
+        tmp_size += start;
+        MPIR_Segment_count_contig_blocks(dt_seg, start, &tmp_size, &num_iov);
+
+        start += tmp_size;
         total_iov += num_iov;
 
         rem_size -= tmp_size;
