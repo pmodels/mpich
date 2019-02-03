@@ -31,9 +31,14 @@ int MPIR_Type_to_iov_len(MPI_Datatype datatype, int count, MPI_Aint offset,
     MPIR_Datatype *datatype_ptr;
     int mpi_errno = MPI_SUCCESS;
 
+    MPIR_Assert(max_bytes > 0);
+
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
-    if (datatype_ptr->is_contig) {
+    if (datatype_ptr->size == 0) {
+        *actual_bytes = 0;
+        *iov_len = 0;
+    } else if (datatype_ptr->is_contig) {
         *actual_bytes = count * datatype_ptr->size;
         if (*actual_bytes > max_bytes)
             *actual_bytes = max_bytes;
@@ -84,9 +89,15 @@ int MPIR_Type_to_iov(void *buf, MPI_Datatype datatype, int count, MPI_Aint offse
     MPIR_Datatype *datatype_ptr;
     int mpi_errno = MPI_SUCCESS;
 
+    MPIR_Assert(max_bytes > 0);
+    MPIR_Assert(max_iov_len > 0);
+
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
-    if (datatype_ptr->is_contig) {
+    if (datatype_ptr->size == 0) {
+        *actual_bytes = 0;
+        *actual_iov_len = 0;
+    } else if (datatype_ptr->is_contig) {
         *actual_bytes = count * datatype_ptr->size;
         if (*actual_bytes > max_bytes)
             *actual_bytes = max_bytes;
