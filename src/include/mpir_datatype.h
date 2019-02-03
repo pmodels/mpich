@@ -581,6 +581,12 @@ int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addr
                            MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
+int MPIR_Type_to_iov_len(MPI_Datatype datatype, int count, MPI_Aint offset,
+                         MPI_Aint max_bytes, MPI_Aint * actual_bytes, MPI_Aint * iov_len);
+int MPIR_Type_to_iov(void *buf, MPI_Datatype datatype, int count, MPI_Aint offset,
+                     MPI_Aint max_bytes, MPI_Aint * actual_bytes,
+                     int max_iov_len, int *actual_iov_len, MPL_IOV * iov);
+
 int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size);
 int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
 int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
