@@ -32,16 +32,20 @@ int MPIR_Type_to_iov_len(MPI_Datatype datatype, int count, MPI_Aint offset,
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Assert(max_bytes > 0);
+    MPIR_Assert(iov_len);
 
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     if (datatype_ptr->size == 0) {
-        *actual_bytes = 0;
+        if (actual_bytes)
+            *actual_bytes = 0;
         *iov_len = 0;
     } else if (datatype_ptr->is_contig) {
+        if (actual_bytes) {
         *actual_bytes = count * datatype_ptr->size;
         if (*actual_bytes > max_bytes)
             *actual_bytes = max_bytes;
+        }
         *iov_len = 1;
     } else {
         seg = MPIR_Segment_alloc(NULL, count, datatype);
@@ -49,6 +53,7 @@ int MPIR_Type_to_iov_len(MPI_Datatype datatype, int count, MPI_Aint offset,
 
         total_bytes = max_bytes;
         MPIR_Segment_count_contig_blocks(seg, offset, &total_bytes, iov_len);
+        if (actual_bytes)
         *actual_bytes = total_bytes;
 
         MPIR_Segment_free(seg);
@@ -91,17 +96,23 @@ int MPIR_Type_to_iov(void *buf, MPI_Datatype datatype, int count, MPI_Aint offse
 
     MPIR_Assert(max_bytes > 0);
     MPIR_Assert(max_iov_len > 0);
+    MPIR_Assert(iov);
 
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     if (datatype_ptr->size == 0) {
+        if (actual_bytes)
         *actual_bytes = 0;
+        if (actual_iov_len)
         *actual_iov_len = 0;
     } else if (datatype_ptr->is_contig) {
+        if (actual_bytes) {
         *actual_bytes = count * datatype_ptr->size;
         if (*actual_bytes > max_bytes)
             *actual_bytes = max_bytes;
+        }
 
+        if (actual_iov_len)
         *actual_iov_len = 1;
 
         iov[0].MPL_IOV_BUF = buf;
@@ -115,7 +126,9 @@ int MPIR_Type_to_iov(void *buf, MPI_Datatype datatype, int count, MPI_Aint offse
 
         MPIR_Segment_to_iov(seg, offset, &last, iov, &iov_len);
 
+        if (actual_bytes)
         *actual_bytes = last - offset;
+        if (actual_iov_len)
         *actual_iov_len = iov_len;
 
         MPIR_Segment_free(seg);
