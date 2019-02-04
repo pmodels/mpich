@@ -17,6 +17,7 @@
 #define MPL_THREAD_PACKAGE_WIN     4
 #define MPL_THREAD_PACKAGE_UTI     5
 #define MPL_THREAD_PACKAGE_ARGOBOTS 6
+#define MPL_THREAD_PACKAGE_QTHREADS 7
 
 #define MPL_THREAD_PRIO_HIGH 0
 #define MPL_THREAD_PRIO_LOW 1
@@ -29,6 +30,8 @@
 #include "mpl_thread_win.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
 #include "mpl_thread_argobots.h"
+#elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_QTHREADS)
+#include "mpl_thread_qthread.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE)
 typedef int MPL_thread_mutex_t;
 typedef int MPL_thread_cond_t;

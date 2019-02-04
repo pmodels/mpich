@@ -669,6 +669,16 @@ case $with_thread_package in
         PAC_CHECK_HEADER_LIB_FATAL([argobots], [abt.h], [abt], [ABT_key_create])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
+    qt|qthreads)
+        with_thread_package=qthreads
+        AC_CHECK_HEADERS(qthreads/qthreads.h)
+        AC_CHECK_LIB([qthread],[qthread_fork],have_qt=yes)
+        if test "$have_qt" = "yes"; then
+           PAC_PREPEND_FLAG([-lqthread],[LIBS])
+        fi
+        AC_CHECK_FUNC([qthread_fork],[],[AC_MSG_ERROR([unable to find Qthreads library])])
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_QTHREADS
+        ;;
     no|none)
 	with_thread_package=none
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_NONE
@@ -683,7 +693,7 @@ esac
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 # check for compiler-support for thread-local storage (MPL_TLS)
-if test "${with_thread_package}" != "argobots" ; then
+if test "${with_thread_package}" != "argobots" -a  "${with_thread_package}" != "qthreads" ; then
     PAC_CC_CHECK_TLS
 fi
 
