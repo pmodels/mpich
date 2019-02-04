@@ -717,14 +717,9 @@ void f1(void *a) { return; }],
         ;;
     abt|argobots)
         with_thread_package=argobots
-        AC_CHECK_HEADERS(abt.h)
-        AC_CHECK_LIB([abt],[abt_key_create],have_abt=yes)
-        if test "$have_abt" = "yes"; then
-           PAC_PREPEND_FLAG([-labt],[LIBS])
-        fi
-        AC_CHECK_FUNCS(ABT_thread_yield)
-        AC_CHECK_FUNC([abt_key_create],[],[AC_MSG_ERROR([unable to find Argobots library])])
-        AC_CHECK_FUNCS(abt_cleanup_push)
+        AC_CHECK_HEADER([abt.h],[],AC_MSG_ERROR([unable to find Argobots header file]))
+        AC_CHECK_LIB([abt],[ABT_key_create],[],AC_MSG_ERROR([unable to find Argobots library]))
+        PAC_PREPEND_FLAG([-labt],[LIBS])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
     no|none)
