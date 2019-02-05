@@ -103,8 +103,8 @@ int main(int argc, char *argv[])
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided != MPI_THREAD_MULTIPLE) {
-        printf("Error\n");
-        MPI_Abort(911, MPI_COMM_WORLD);
+        fprintf(stderr, "MPI_THREAD_MULTIPLE not supported by the MPI implementation\n");
+        MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
     MPI_Buffer_attach(buffer, BUFSIZE);
