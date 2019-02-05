@@ -201,6 +201,9 @@ static int set_runtime_configurations(void)
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+  fn_fail:
+#endif
     return mpi_errno;
 }
 
