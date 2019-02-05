@@ -37,7 +37,7 @@ static MTEST_THREAD_HANDLE threads[MTEST_MAX_THREADS];
  * speculative loading/storing */
 static volatile int nthreads = 0;
 
-#ifdef HAVE_WINDOWS_H
+#if defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_WIN)
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
     int errs = 0;
@@ -120,7 +120,10 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     return MTestReturnValue(errs);
 }
 
-#else
+/* FIXME: We currently assume Solaris threads and Pthreads are interoperable.
+ * We need to use Solaris threads explicitly to avoid potential interoperability issues.*/
+#elif defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_POSIX ||   \
+                                       THREAD_PACKAGE_NAME == THREAD_PACKAGE_SOLARIS)
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
     int err;
@@ -191,9 +194,14 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     }
     return err;
 }
+
+#else
+#error "thread package (THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
 
-#if defined(HAVE_PTHREAD_H) && defined(HAVE_PTHREAD_BARRIER_INIT)
+#if defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_POSIX ||     \
+                                     THREAD_PACKAGE_NAME == THREAD_PACKAGE_SOLARIS) &&  \
+                                     defined(HAVE_PTHREAD_BARRIER_INIT)
 static MTEST_THREAD_LOCK_TYPE barrierLock;
 static pthread_barrier_t barrier;
 static int bcount = -1;
