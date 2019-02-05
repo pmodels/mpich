@@ -53,7 +53,15 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
     int *local_ranks;
     int *local_procs;
 
-    int next_poll_local_rank;
+    /* A small cache of local ranks that have posted receives that we use to poll fastboxes more
+     * efficiently. The last entry in this array is a counter to keep track of the most recently
+     * checked fastbox so we can make sure we don't starve the fastboxes where receives haven't been
+     * posted (for unexpected messages). Ideally this array should remain small. By default, it has
+     * three entries for the cache and one entry for the counter, which (at 16 bits per entry)
+     * stays under a 64 byte cache line size. 16 bits should be plenty for storing local ranks (2^16
+     * is much bigger than any currently immaginable single-node without something like wildly
+     * oversubscribed ranks as threads). */
+    int16_t *first_poll_local_ranks;
 
 } MPIDI_POSIX_eager_fbox_control_t;
 
