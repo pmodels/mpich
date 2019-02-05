@@ -35,7 +35,7 @@
 
 int rank, size;
 
-void *receiver(void *ptr)
+MTEST_THREAD_RETURN_TYPE receiver(void *ptr)
 {
     int k;
     char buf[MSGSIZE];
@@ -48,7 +48,7 @@ void *receiver(void *ptr)
 }
 
 
-void *sender_bsend(void *ptr)
+MTEST_THREAD_RETURN_TYPE sender_bsend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -59,7 +59,7 @@ void *sender_bsend(void *ptr)
     return NULL;
 }
 
-void *sender_ibsend(void *ptr)
+MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -72,7 +72,7 @@ void *sender_ibsend(void *ptr)
     return NULL;
 }
 
-void *sender_isend(void *ptr)
+MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -85,7 +85,7 @@ void *sender_isend(void *ptr)
     return NULL;
 }
 
-void *sender_send(void *ptr)
+MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
 {
     char buffer[MSGSIZE];
     int i;
@@ -104,8 +104,6 @@ int main(int argc, char *argv[])
     buffer = (char *) malloc(BUFSIZE * sizeof(char));
     MTEST_VG_MEM_INIT(buffer, BUFSIZE * sizeof(char));
     MPI_Status status;
-    pthread_t receiver_thread, sender_thread[NUMTHREADS];
-    pthread_attr_t attr;
     MPI_Comm communicator;
     int bs;
 
@@ -124,44 +122,29 @@ int main(int argc, char *argv[])
                                                          * with this call, the problem appears more reliably.
                                                          * If the MPI_Comm_dup() call is commented out, it is still
                                                          * evident but does not appear that often (don't know why) */
-
-    /* Initialize and set thread detached attribute */
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-    pthread_create(&receiver_thread, &attr, &receiver, NULL);
+    MTest_Start_thread(receiver, NULL);
     for (k = 0; k < NUMTHREADS; k++)
-        pthread_create(&sender_thread[k], &attr, &sender_bsend, NULL);
-    pthread_join(receiver_thread, NULL);
-    for (k = 0; k < NUMTHREADS; k++)
-        pthread_join(sender_thread[k], NULL);
+        MTest_Start_thread(sender_bsend, NULL);
+    MTest_Join_threads();
     MPI_Barrier(MPI_COMM_WORLD);
 
-    pthread_create(&receiver_thread, &attr, &receiver, NULL);
+    MTest_Start_thread(receiver, NULL);
     for (k = 0; k < NUMTHREADS; k++)
-        pthread_create(&sender_thread[k], &attr, &sender_ibsend, NULL);
-    pthread_join(receiver_thread, NULL);
-    for (k = 0; k < NUMTHREADS; k++)
-        pthread_join(sender_thread[k], NULL);
+        MTest_Start_thread(sender_ibsend, NULL);
+    MTest_Join_threads();
     MPI_Barrier(MPI_COMM_WORLD);
 
-    pthread_create(&receiver_thread, &attr, &receiver, NULL);
+    MTest_Start_thread(receiver, NULL);
     for (k = 0; k < NUMTHREADS; k++)
-        pthread_create(&sender_thread[k], &attr, &sender_isend, NULL);
-    pthread_join(receiver_thread, NULL);
-    for (k = 0; k < NUMTHREADS; k++)
-        pthread_join(sender_thread[k], NULL);
+        MTest_Start_thread(sender_isend, NULL);
+    MTest_Join_threads();
     MPI_Barrier(MPI_COMM_WORLD);
 
-    pthread_create(&receiver_thread, &attr, &receiver, NULL);
+    MTest_Start_thread(receiver, NULL);
     for (k = 0; k < NUMTHREADS; k++)
-        pthread_create(&sender_thread[k], &attr, &sender_send, NULL);
-    pthread_join(receiver_thread, NULL);
-    for (k = 0; k < NUMTHREADS; k++)
-        pthread_join(sender_thread[k], NULL);
+        MTest_Start_thread(sender_send, NULL);
+    MTest_Join_threads();
     MPI_Barrier(MPI_COMM_WORLD);
-
-    pthread_attr_destroy(&attr);
 
     MPI_Comm_free(&communicator);
     MPI_Buffer_detach(&ptr_dt, &bs);
