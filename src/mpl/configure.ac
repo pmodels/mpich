@@ -664,30 +664,6 @@ case $with_thread_package in
         # this check should come after the AC_CHECK_LIB for -lpthread
         AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
 
-	# Check for a routine that specify a routine to call on
-	# thread exit.  We can use this to release memory that may
-	# be allocated by the MPL library in the thread.
-	# A complication: pthread_cleanup_push may be a macro; in that
-	# case, check_funcs will fail to find it.
-	# Under OSX, pthread_cleanup_push and pop are macros that must
-	# appear together in the same lexical scope, and hence are
-	# really useless in libraries that may allocate data within
-	# a user-managed thread.
-	AC_CHECK_FUNCS(pthread_cleanup_push)
-	if test "$ac_cv_func_pthread_cleanup_push" = "no" ; then
-            AC_CACHE_CHECK([whether pthread_cleanup_push is available (may be a macro in pthread.h)],pac_cv_func_pthread_cleanup_push,[
-	    AC_TRY_LINK([
-#include <pthread.h>
-void f1(void *a) { return; }],
-[pthread_cleanup_push( f1, (void *)0 );],
-            pac_cv_func_pthread_cleanup_push=yes,
-            pac_cv_func_pthread_cleanup_push=no)])
-            if test "$pac_cv_func_pthread_cleanup_push" = yes ; then
-	        AC_DEFINE(HAVE_PTHREAD_CLEANUP_PUSH_MACRO,1,[Define if pthread_cleanup_push is available, even as a macro])
-            fi
-
-        fi
-
 	if test "${with_thread_package}" = "uti" ; then
 	    PAC_CHECK_HEADER_LIB(uti.h,uti,uti_attr_init,have_uti=yes,have_uti=no)
 	    if test "${have_uti}" = "yes" ; then
