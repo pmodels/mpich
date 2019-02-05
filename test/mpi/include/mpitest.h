@@ -10,6 +10,7 @@
 #include <string.h>
 #include <mpi.h>
 #include "mpitestconf.h"
+#include "mpithreadtest.h"
 
 /*
  * Init and finalize test
