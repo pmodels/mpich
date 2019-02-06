@@ -290,6 +290,7 @@ typedef struct MPIDI_CH4U_map_t {
 
 typedef struct {
     unsigned mt_model;
+    unsigned vci_hash_type;
 } MPIDI_CH4_configurations_t;
 
 typedef struct MPIDI_CH4_Global_t {

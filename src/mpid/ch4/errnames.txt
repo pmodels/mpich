@@ -41,6 +41,8 @@
 **ch4|invalid_locality %s:Invalid locality usage (%s)
 **ch4|invalid_mt_model:Invalid multi-threading model
 **ch4|invalid_mt_model %s:Invalid multi-threading model (%s)
+**ch4|invalid_vci_hash_type:Invalid VCI selection type
+**ch4|invalid_vci_hash_type %s:Invalid VCI selection type (%s)
 #
 # RMA errors
 #

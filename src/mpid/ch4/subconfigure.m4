@@ -467,6 +467,42 @@ case $enable_ch4_mt in
         ;;
 esac
 
+AC_ARG_ENABLE(ch4-vci-selection,
+    [--enable-ch4-vci-selection=option
+       Select a type of hash between operations and VCIs
+         comm-only       - Use only the communicator to select a VCI. (Default)
+         comm-rank       - Use the communicator and rank to select a VCI.
+         comm-tag        - Use the communicator and tag to select a VCI.
+         comm-rank-tag   - Use the communicator, rank, and tag to select a VCI.
+         runtime         - Determing one of the options above at runtime through a CVAR.
+    ],,enable_ch4_vci_selection=comm-only)
+
+case $enable_ch4_vci_selection in
+     comm-only)
+         AC_DEFINE([MPIDI_CH4_VCI_HASH_TYPE__COMM_ONLY], [1],
+            [Define if CH4 will use only the communicator to select a VCI])
+        ;;
+     comm-rank)
+         AC_DEFINE([MPIDI_CH4_VCI_HASH_TYPE__COMM_RANK], [1],
+            [Define if CH4 will use the communicator, and rank to select a VCI])
+        ;;
+     comm-tag)
+         AC_DEFINE([MPIDI_CH4_VCI_HASH_TYPE__COMM_TAG], [1],
+            [Define if CH4 will use the communicator, and tag to select a VCI])
+        ;;
+     comm-rank-tag)
+         AC_DEFINE([MPIDI_CH4_VCI_HASH_TYPE__COMM_RANK_TAG], [1],
+            [Define if CH4 will use the communicator, rank, and tag to select a VCI])
+        ;;
+     runtime)
+         AC_DEFINE([MPIDI_CH4_VCI_HASH_TYPE__RUNTIME], [1],
+            [Define if CH4 will use the VCI selection type at runtime])
+        ;;
+     *)
+        AC_MSG_ERROR([Selection type ${enable_ch4_vci_selection} is unknown])
+        ;;
+esac
+
 #
 # Dependency checks for CH4 MT modes
 # Currently, "handoff", "trylock", and "runtime" require the followings:

@@ -91,6 +91,20 @@ cvars:
         handoff
         trylock
 
+    - name        : MPIR_CVAR_CH4_VCI_HASH_TYPE
+      category    : CH4
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the CH4 VCI selection type. Possible values are:
+        comm-only (default)
+        comm-rank
+        comm-tag
+        comm-rank-tag
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -154,11 +168,21 @@ MPL_STATIC_INLINE_PREFIX const char *MPIDI_get_mt_model_name(int mt)
     return MPIDI_CH4_mt_model_names[mt];
 }
 
+MPL_STATIC_INLINE_PREFIX const char *MPIDI_get_vci_hash_type(int vct)
+{
+    if (vct < 0 || vct >= MPIDI_CH4_NUM_VCI_HASH_TYPES)
+        return "(invalid)";
+
+    return MPIDI_CH4_vci_hash_types[vct];
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_print_runtime_configurations(void)
 {
     printf("==== CH4 runtime configurations ====\n");
     printf("MPIDI_CH4_MT_MODEL: %d (%s)\n",
            MPIDI_CH4_MT_MODEL, MPIDI_get_mt_model_name(MPIDI_CH4_MT_MODEL));
+    printf("MPIDI_CH4_VCI_HASH_TYPE: %d (%s)\n",
+           MPIDI_CH4_VCI_HASH_TYPE, MPIDI_get_vci_hash_type(MPIDI_CH4_VCI_HASH_TYPE));
     printf("================================\n");
 }
 
@@ -171,6 +195,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_parse_mt_model(const char *name)
 
     for (i = 0; i < MPIDI_CH4_NUM_MT_MODELS; i++) {
         if (!strcasecmp(name, MPIDI_CH4_mt_model_names[i]))
+            return i;
+    }
+    return -1;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_parse_vci_hash_type(const char *name)
+{
+    int i;
+
+    if (!strcmp("", name))
+        return 0;       /* default */
+
+    for (i = 0; i < MPIDI_CH4_NUM_VCI_HASH_TYPES; i++) {
+        if (!strcasecmp(name, MPIDI_CH4_vci_hash_types[i]))
             return i;
     }
     return -1;
@@ -193,6 +231,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
         printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+
+#ifdef MPIDI_CH4_VCI_HASH_TYPE__RUNTIME
+    int vci_hash_type = MPIDI_parse_vci_hash_type(MPIR_CVAR_CH4_VCI_HASH_TYPE);
+    if (vci_hash_type < 0)
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**ch4|invalid_vci_hash_type", "**ch4|invalid_vci_hash_type %s",
+                             MPIR_CVAR_CH4_VCI_HASH_TYPE);
+    MPIDI_CH4_Global.settings.vci_hash_type = vci_hash_type;
+#else
+    /* Static configuration - no runtime selection */
+    if (strcmp(MPIR_CVAR_CH4_VCI_HASH_TYPE, "") != 0)
+        printf("Warning: MPIR_CVAR_CH4_VCI_HASH_TYPE will be ignored "
+               "unless --enable-ch4-vci-selection=runtime is given at configure-time.\n");
+#endif /* #ifdef MPIDI_CH4_VCI_HASH_TYPE__RUNTIME */
 
     return mpi_errno;
 }
