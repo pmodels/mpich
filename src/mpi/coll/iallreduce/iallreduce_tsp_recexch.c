@@ -103,7 +103,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     for (phase = 0; phase < step2_nphases && step1_sendto == -1; phase++) {
         if (!is_commutative) {
             /* sort the neighbor list so that receives can be posted in order */
-            qsort(step2_nbrs[phase], k - 1, sizeof(int), MPII_Algo_compare_int);
+            MPL_sort_int_array(step2_nbrs[phase], k - 1);
         }
         /* copy the data to a temporary buffer so that sends ands recvs
          * can be posted simultaneously */
