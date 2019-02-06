@@ -151,10 +151,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         } while (err__ == EINTR);                                               \
         *(int *)(err_ptr_) = err__;                                             \
         if (unlikely(err__))                                                    \
-            MPL_internal_sys_err_printf("ABT_cond_free", err__,                 \
+            MPL_internal_sys_error_printf("ABT_cond_free", err__,                 \
                    "    %s:%d error in cond_wait on cond=%p mutex=%p err__=%d", \
-                   __FILE__, __LINE__, (cond_ptr_),(mutex_ptr_), err__));       \
-        }                                                                       \
+                   __FILE__, __LINE__);       \
         MPL_DBG_MSG_FMT(THREAD,TYPICAL,(MPL_DBG_FDEST,                          \
                                         "Exit cond_wait on cond=%p mutex=%p",   \
                                         (cond_ptr_),(mutex_ptr_)));             \
