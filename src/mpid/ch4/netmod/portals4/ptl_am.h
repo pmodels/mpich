@@ -139,7 +139,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM);
 
-    use_comm = MPIDI_CH4U_context_id_to_comm(context_id);
+    use_comm = MPIDIG_context_id_to_comm(context_id);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     match_bits = MPIDI_PTL_init_tag(use_comm->context_id, MPIDI_PTL_AM_TAG);
@@ -253,7 +253,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM);
 
-    use_comm = MPIDI_CH4U_context_id_to_comm(context_id);
+    use_comm = MPIDIG_context_id_to_comm(context_id);
 
     ptl_hdr = MPIDI_PTL_init_am_hdr(handler_id, 0);
     match_bits = MPIDI_PTL_init_tag(use_comm->context_id, MPIDI_PTL_AM_TAG);

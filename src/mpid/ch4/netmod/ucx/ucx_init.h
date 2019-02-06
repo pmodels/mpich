@@ -276,7 +276,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * ne
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_mpi_free_mem(ptr);
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 #undef FUNCNAME
@@ -285,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 #endif /* UCX_INIT_H_INCLUDED */

@@ -24,14 +24,14 @@ typedef MPIDU_Thread_func_t MPID_Thread_func_t;
 #ifdef MPIDI_CH4_USE_TICKET_LOCK
 #include "mpid_ticketlock.h"
 typedef MPIDI_CH4_Ticket_lock MPID_Thread_mutex_t;
-#define MPID_THREAD_CS_ENTER       MPIDI_CH4I_THREAD_CS_ENTER
-#define MPID_THREAD_CS_EXIT        MPIDI_CH4I_THREAD_CS_EXIT
-#define MPID_THREAD_CS_YIELD       MPIDI_CH4I_THREAD_CS_YIELD
-#define MPID_Thread_mutex_create   MPIDI_CH4I_Thread_mutex_create
-#define MPID_Thread_mutex_destroy  MPIDI_CH4I_Thread_mutex_destroy
-#define MPID_Thread_mutex_lock     MPIDI_CH4I_Thread_mutex_lock
-#define MPID_Thread_mutex_unlock   MPIDI_CH4I_Thread_mutex_unlock
-#define MPID_Thread_cond_wait      MPIDI_CH4I_Thread_cond_wait
+#define MPID_THREAD_CS_ENTER       MPIDIU_THREAD_CS_ENTER
+#define MPID_THREAD_CS_EXIT        MPIDIU_THREAD_CS_EXIT
+#define MPID_THREAD_CS_YIELD       MPIDIU_THREAD_CS_YIELD
+#define MPID_Thread_mutex_create   MPIDIU_Thread_mutex_create
+#define MPID_Thread_mutex_destroy  MPIDIU_Thread_mutex_destroy
+#define MPID_Thread_mutex_lock     MPIDIU_Thread_mutex_lock
+#define MPID_Thread_mutex_unlock   MPIDIU_Thread_mutex_unlock
+#define MPID_Thread_cond_wait      MPIDIU_Thread_cond_wait
 #else
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 typedef MPIDU_thread_mutex_state_t MPID_Thread_mutex_state_t;

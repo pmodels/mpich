@@ -379,7 +379,7 @@ static void coll_handle_complete(void *handle)
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
 #ifdef MPIDCH4_H_INCLUDED
-    return MPIDI_CH4U_rank_to_lpid(ec.rank, (MPIR_Comm *) grp_h);
+    return MPIDIU_rank_to_lpid(ec.rank, (MPIR_Comm *) grp_h);
 #else
     return ((struct MPIDI_VC *) ec.handle)->pg_rank;
 #endif

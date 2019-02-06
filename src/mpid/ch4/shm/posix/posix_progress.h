@@ -84,8 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
             if ((p_data_sz == 0) && (in_total_data_sz == 0)) {
 
                 MPIR_STATUS_SET_COUNT(rreq->status, 0);
-                rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-                rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+                rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
+                rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
                 rreq->status.MPI_ERROR = MPI_SUCCESS;
 
                 if (target_cmpl_cb) {
@@ -109,8 +109,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
                 recv_data_sz = MPL_MIN(p_data_sz, in_total_data_sz);
 
                 MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-                rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-                rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+                rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
+                rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
                 MPIDI_POSIX_eager_recv_memcpy(&transaction, p_data, payload, recv_data_sz);
 
@@ -165,8 +165,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
             recv_data_sz = MPL_MIN(recv_data_sz, in_total_data_sz);
 
             MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-            rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-            rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+            rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
+            rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
             curr_rreq_hdr->is_contig = is_contig;
             curr_rreq_hdr->in_total_data_sz = in_total_data_sz;

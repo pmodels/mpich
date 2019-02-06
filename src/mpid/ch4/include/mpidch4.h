@@ -239,8 +239,8 @@ int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char 
 /* This function is not exposed to the upper layers but functions in a way
  * similar to the functions above. Other CH4-level functions should call this
  * function to query locality. This function will determine whether to call the
- * netmod or CH4U locality functions. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
+ * netmod or MPIDIU locality functions. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm);
 MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 
 /* Include netmod prototypes */
