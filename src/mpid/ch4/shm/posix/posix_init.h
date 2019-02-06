@@ -86,7 +86,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_prov
 #endif /* MPL_USE_DBG_LOGGING */
 
     MPIDI_POSIX_global.am_buf_pool =
-        MPIDI_CH4U_create_buf_pool(MPIDI_POSIX_BUF_POOL_NUM, MPIDI_POSIX_BUF_POOL_SIZE);
+        MPIDIU_create_buf_pool(MPIDI_POSIX_BUF_POOL_NUM, MPIDI_POSIX_BUF_POOL_SIZE);
 
     MPIR_CHKPMEM_DECL(3);
 
@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_finalize_hook(void)
 
     mpi_errno = MPIDI_POSIX_eager_finalize();
 
-    MPIDI_CH4R_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
+    MPIDIU_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 

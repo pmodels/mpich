@@ -323,7 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, *wd->message, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-                if (!MPIDI_CH4I_REQUEST(*wd->message, is_local))
+                if (!MPIDI_REQUEST(*wd->message, is_local))
 #endif
                     MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);

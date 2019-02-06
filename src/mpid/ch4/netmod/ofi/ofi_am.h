@@ -79,7 +79,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
         am_hdr_buf = (char *) MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (char *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+        am_hdr_buf = (char *) MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         is_allocated = 0;
     }
 
@@ -97,7 +97,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDI_CH4R_release_buf(am_hdr_buf);
+        MPIDIU_release_buf(am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AMV);
     return mpi_errno;
@@ -120,13 +120,11 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_REPLY);
     if (count)
-        mpi_errno = MPIDI_OFI_do_am_isend(src_rank,
-                                          MPIDI_CH4U_context_id_to_comm(context_id),
-                                          handler_id,
-                                          am_hdr, am_hdr_sz, data, count, datatype, sreq, TRUE);
+        mpi_errno = MPIDI_OFI_do_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id),
+                                          handler_id, am_hdr, am_hdr_sz, data, count, datatype,
+                                          sreq, TRUE);
     else
-        mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank,
-                                                 MPIDI_CH4U_context_id_to_comm(context_id),
+        mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank, MPIDIG_context_id_to_comm(context_id),
                                                  handler_id, am_hdr, am_hdr_sz, sreq, TRUE);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_REPLY);
     return mpi_errno;
@@ -171,8 +169,8 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR_REPLY);
 
-    mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDI_CH4U_context_id_to_comm(context_id),
-                                    handler_id, am_hdr, am_hdr_sz, TRUE, TRUE, FALSE);
+    mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
+                                    am_hdr, am_hdr_sz, TRUE, TRUE, FALSE);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -187,17 +185,17 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
 static inline int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH4U_send_long_ack_msg_t msg;
+    MPIDIG_send_long_ack_msg_t msg;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_MATCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_MATCHED);
 
-    msg.sreq_ptr = (MPIDI_CH4U_REQUEST(req, req->rreq.peer_req_ptr));
+    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = (uint64_t) req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
     mpi_errno =
-        MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_REQUEST(req, context_id),
-                                   MPIDI_CH4U_REQUEST(req, rank), MPIDI_CH4U_SEND_LONG_ACK, &msg,
+        MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
+                                   MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
                                    sizeof(msg));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

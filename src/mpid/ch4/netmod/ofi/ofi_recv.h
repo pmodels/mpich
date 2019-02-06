@@ -450,7 +450,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
         if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
             MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
             MPIR_STATUS_SET_COUNT(rreq->status, 0);
-            MPIDI_CH4U_request_complete(rreq);
+            MPIDIU_request_complete(rreq);
         }
     }
 

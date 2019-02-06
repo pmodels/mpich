@@ -71,12 +71,12 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 
 static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_mpi_free_mem(ptr);
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 
