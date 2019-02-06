@@ -1114,6 +1114,7 @@
 /pt2pt/greq1
 /pt2pt/huge_anysrc
 /pt2pt/huge_dupcomm
+/pt2pt/huge_ssend
 /pt2pt/huge_underflow
 /pt2pt/icsend
 /pt2pt/inactivereq
