@@ -98,9 +98,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         if (req->completion_notification)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
-        if (MPIDI_CH4U_REQUEST(req, req)) {
-            MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
-            MPIDI_CH4U_REQUEST(req, req) = NULL;
+        if (MPIDIG_REQUEST(req, req)) {
+            MPIDIU_release_buf(MPIDIG_REQUEST(req, req));
+            MPIDIG_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             MPIDI_SHM_am_request_finalize(req);
@@ -131,13 +131,13 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_NM_prequest_free_hook(req);
 #else
-    if (unlikely(NULL != MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))) {
+    if (unlikely(NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))) {
         /* `req` is created by Recv_init(MPI_ANY_SOURCE).
          * Need to clean up both shmmod and netmod. */
         MPIDI_SHM_prequest_free_hook(req);
-        MPIDI_NM_prequest_free_hook(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+        MPIDI_NM_prequest_free_hook(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
     } else {
-        if (MPIDI_CH4I_REQUEST(req, is_local))
+        if (MPIDI_REQUEST(req, is_local))
             MPIDI_SHM_prequest_free_hook(req);
         else
             MPIDI_NM_prequest_free_hook(req);

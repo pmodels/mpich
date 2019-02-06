@@ -27,7 +27,7 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     int dest;
     int size = 0;
     MPIR_Request *sreq = NULL;
-    MPIDI_CH4U_hdr_t am_hdr;
+    MPIDIG_hdr_t am_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT);
@@ -47,10 +47,10 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
             continue;
 
         mpi_errno = MPI_SUCCESS;
-        sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
-        mpi_errno = MPIDI_NM_am_isend(dest, comm, MPIDI_CH4U_COMM_ABORT, &am_hdr,
+        mpi_errno = MPIDI_NM_am_isend(dest, comm, MPIDIG_COMM_ABORT, &am_hdr,
                                       sizeof(am_hdr), NULL, 0, MPI_INT, sreq);
         if (mpi_errno)
             continue;

@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
 
     if (unlikely(status == UCS_ERR_CANCELED))
         MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
-    MPIDI_CH4U_request_complete(req);
+    MPIDIU_request_complete(req);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 

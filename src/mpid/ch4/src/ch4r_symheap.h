@@ -63,14 +63,14 @@ cvars:
  * be always initialized to 0 or a previously returned value. If page size
  * is set, we can reuse the value and skip sysconf. */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_mapsize
+#define FUNCNAME MPIDIU_get_mapsize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
+static inline size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 {
     size_t page_sz, mapsize;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAPSIZE);
 
     if (*psz == 0)
         page_sz = (size_t) sysconf(_SC_PAGESIZE);
@@ -80,34 +80,34 @@ static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
     mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
     *psz = page_sz;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAPSIZE);
     return mapsize;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_is_valid_mapaddr
+#define FUNCNAME MPIDIU_is_valid_mapaddr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4R_is_valid_mapaddr(void *start)
+static inline int MPIDIU_is_valid_mapaddr(void *start)
 {
     return ((uintptr_t) start == -1ULL) ? 0 : 1;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_check_maprange_ok
+#define FUNCNAME MPIDIU_check_maprange_ok
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
+static inline int MPIDIU_check_maprange_ok(void *start, size_t size)
 {
     int rc = 0;
     int ret = 0;
     size_t page_sz = 0;
-    size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
+    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
     size_t i, num_pages = mapsize / page_sz;
     char *ptr = (char *) start;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
 
     for (i = 0; i < num_pages; i++) {
         rc = msync(ptr, page_sz, 0);
@@ -123,35 +123,35 @@ static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
   fn_fail:
     ret = 1;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_CHECK_MAPRANGE_OK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
     return ret;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_generate_random_addr
+#define FUNCNAME MPIDIU_generate_random_addr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
+static inline void *MPIDIU_generate_random_addr(size_t size)
 {
     /* starting position for pointer to map
      * This is not generic, probably only works properly on Linux
      * but it's not fatal since we bail after a fixed number of iterations
      */
-#define MPIDI_CH4I_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
+#define MPIDIU_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
 #ifdef USE_SYM_HEAP
     char random_state[256];
     size_t page_sz = 0;
     uint64_t random_unsigned;
-    size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
+    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
     struct timeval ts;
     int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
     int32_t rh, rl;
     struct random_data rbuf;
 #endif
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
 
 #ifndef USE_SYM_HEAP
     map_pointer = -1ULL;
@@ -168,13 +168,13 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
     random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-    map_pointer = MPIDI_CH4I_MAP_POINTER;
+    map_pointer = MPIDIU_MAP_POINTER;
 
-    while (MPIDI_CH4R_check_maprange_ok((void *) map_pointer, mapsize) == 0) {
+    while (MPIDIU_check_maprange_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
         random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
-        map_pointer = MPIDI_CH4I_MAP_POINTER;
+        map_pointer = MPIDIU_MAP_POINTER;
         iter--;
 
         if (iter == 0) {
@@ -186,7 +186,7 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GENERATE_RANDOM_ADDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
     return (void *) map_pointer;
 }
 
@@ -198,19 +198,19 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
  *
  * mapfail_flag is set to 1 if it is a mapping failure, otherwise it is 0. */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_allocate_symshm_segment
+#define FUNCNAME MPIDIU_allocate_symshm_segment
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_allocate_symshm_segment(MPIR_Comm * shm_comm_ptr,
-                                                     MPI_Aint shm_segment_len,
-                                                     MPL_shm_hnd_t * shm_segment_hdl_ptr,
-                                                     void **base_ptr, int *mapfail_flag)
+static inline int MPIDIU_allocate_symshm_segment(MPIR_Comm * shm_comm_ptr,
+                                                 MPI_Aint shm_segment_len,
+                                                 MPL_shm_hnd_t * shm_segment_hdl_ptr,
+                                                 void **base_ptr, int *mapfail_flag)
 {
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_ALLOCATE_SYMSHM_SEGMENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_ALLOCATE_SYMSHM_SEGMENT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOCATE_SYMSHM_SEGMENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOCATE_SYMSHM_SEGMENT);
 
     mpl_err = MPL_shm_hnd_init(shm_segment_hdl_ptr);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SHM_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -285,7 +285,7 @@ static inline int MPIDI_CH4I_allocate_symshm_segment(MPIR_Comm * shm_comm_ptr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_ALLOCATE_SYMSHM_SEGMENT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOCATE_SYMSHM_SEGMENT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -294,15 +294,15 @@ static inline int MPIDI_CH4I_allocate_symshm_segment(MPIR_Comm * shm_comm_ptr,
 typedef struct {
     unsigned long long sz;
     int loc;
-} MPIDI_CH4I_ull_maxloc_t;
+} MPIDIU_ull_maxloc_t;
 
 /* Compute maxloc for unsigned long long type.
  * If more than one max value exists, the loc with lower rank is returned. */
-static inline void MPIDI_CH4I_ull_maxloc_op_func(void *invec, void *inoutvec,
-                                                 int *len, MPI_Datatype * datatype)
+static inline void MPIDIU_ull_maxloc_op_func(void *invec, void *inoutvec, int *len,
+                                             MPI_Datatype * datatype)
 {
-    MPIDI_CH4I_ull_maxloc_t *inmaxloc = (MPIDI_CH4I_ull_maxloc_t *) invec;
-    MPIDI_CH4I_ull_maxloc_t *outmaxloc = (MPIDI_CH4I_ull_maxloc_t *) inoutvec;
+    MPIDIU_ull_maxloc_t *inmaxloc = (MPIDIU_ull_maxloc_t *) invec;
+    MPIDIU_ull_maxloc_t *outmaxloc = (MPIDIU_ull_maxloc_t *) inoutvec;
     int i;
     for (i = 0; i < *len; i++) {
         if (inmaxloc->sz > outmaxloc->sz) {
@@ -319,22 +319,22 @@ static inline void MPIDI_CH4I_ull_maxloc_op_func(void *invec, void *inoutvec,
  * cast size_t to unsigned long long which is large enough to hold size type
  * and matches an MPI basic datatype. */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_allreduce_maxloc
+#define FUNCNAME MPIDIU_allreduce_maxloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm,
-                                              size_t * maxsz, int *maxsz_loc)
+static inline int MPIDIU_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
+                                          int *maxsz_loc)
 {
     int mpi_errno = MPI_SUCCESS;
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
     MPI_Datatype types[2], maxloc_type = MPI_DATATYPE_NULL;
     MPI_Op maxloc_op = MPI_OP_NULL;
-    MPIDI_CH4I_ull_maxloc_t maxloc, maxloc_result;
+    MPIDIU_ull_maxloc_t maxloc, maxloc_result;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_ALLREDUCE_MAXLOC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_ALLREDUCE_MAXLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLREDUCE_MAXLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLREDUCE_MAXLOC);
 
     types[0] = MPI_UNSIGNED_LONG_LONG;
     types[1] = MPI_INT;
@@ -349,7 +349,7 @@ static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Op_create_impl(MPIDI_CH4I_ull_maxloc_op_func, 0, &maxloc_op);
+    mpi_errno = MPIR_Op_create_impl(MPIDIU_ull_maxloc_op_func, 0, &maxloc_op);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -368,7 +368,7 @@ static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm 
         MPIR_Type_free_impl(&maxloc_type);
     if (maxloc_op != MPI_OP_NULL)
         MPIR_Op_free_impl(&maxloc_op);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_ALLREDUCE_MAXLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLREDUCE_MAXLOC);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -384,22 +384,22 @@ static inline int MPIDI_CH4I_allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm 
  * shm_offsets presents the expected offset of local process's start address in
  * the mapped shared memory. */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_shm_symheap
+#define FUNCNAME MPIDIU_get_shm_symheap
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets,
-                                             MPIR_Comm * comm, MPIR_Win * win, int *fail_flag)
+static inline int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets,
+                                         MPIR_Comm * comm, MPIR_Win * win, int *fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned any_mapfail_flag = 1;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
 
 #ifdef USE_SYM_HEAP
     int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
-    MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDI_CH4U_WIN(win, shm_segment_handle);
-    void **base_ptr = &MPIDI_CH4U_WIN(win, mmap_addr);
+    MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDIG_WIN(win, shm_segment_handle);
+    void **base_ptr = &MPIDIG_WIN(win, mmap_addr);
 
     size_t mapsize = 0, page_sz = 0, maxsz = 0;
     int maxsz_loc = 0;
@@ -407,10 +407,10 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
     MPIR_Comm *shm_comm_ptr = comm->node_comm;
 
     *fail_flag = 0;
-    mapsize = MPIDI_CH4R_get_mapsize(shm_size, &page_sz);
+    mapsize = MPIDIU_get_mapsize(shm_size, &page_sz);
 
     /* figure out leading process in win */
-    mpi_errno = MPIDI_CH4I_allreduce_maxloc(mapsize, comm->rank, comm, &maxsz, &maxsz_loc);
+    mpi_errno = MPIDIU_allreduce_maxloc(mapsize, comm->rank, comm, &maxsz, &maxsz_loc);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
@@ -424,7 +424,7 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
 
         /* the leading process in win get a random address */
         if (comm->rank == maxsz_loc)
-            map_pointer = MPIDI_CH4R_generate_random_addr(mapsize);
+            map_pointer = MPIDIU_generate_random_addr(mapsize);
 
         /* broadcast fixed address to the other processes in win */
         mpi_errno = MPIR_Bcast(&map_pointer, sizeof(map_pointer),
@@ -445,13 +445,13 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
                 MPIR_Assert(shm_offsets != NULL);
 
                 *base_ptr = (void *) ((char *) map_pointer - shm_offsets[shm_comm_ptr->rank]);
-                mpi_errno = MPIDI_CH4I_allocate_symshm_segment(shm_comm_ptr, mapsize,
-                                                               shm_segment_hdl_ptr, base_ptr,
-                                                               &mapfail_flag);
+                mpi_errno = MPIDIU_allocate_symshm_segment(shm_comm_ptr, mapsize,
+                                                           shm_segment_hdl_ptr, base_ptr,
+                                                           &mapfail_flag);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_fail;
             } else {
-                int rc = MPIDI_CH4R_check_maprange_ok(map_pointer, mapsize);
+                int rc = MPIDIU_check_maprange_ok(map_pointer, mapsize);
                 if (rc) {
                     *base_ptr = MPL_mmap(map_pointer, mapsize,
                                          PROT_READ | PROT_WRITE,
@@ -477,8 +477,7 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
                     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
                 } else {
                     /* destroy successful shm segment */
-                    mpi_errno = MPIDI_CH4U_destroy_shm_segment(mapsize, shm_segment_hdl_ptr,
-                                                               base_ptr);
+                    mpi_errno = MPIDIU_destroy_shm_segment(mapsize, shm_segment_hdl_ptr, base_ptr);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }
@@ -488,7 +487,7 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
         }
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -501,7 +500,7 @@ static inline int MPIDI_CH4R_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_o
         *fail_flag = 1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_SHM_SYMHEAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
     return mpi_errno;
 }
 

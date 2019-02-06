@@ -128,7 +128,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
 
     /* Look up the communicator */
-    comm_ptr = MPIDI_CH4U_context_id_to_comm(info->comm_id);
+    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
@@ -150,8 +150,8 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv = (MPIDI_OFI_huge_recv_t *)
-                    MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                          list_ptr->rreq->handle);
+                    MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                                      list_ptr->rreq->handle);
 
                 MPL_free(list_ptr);
                 break;

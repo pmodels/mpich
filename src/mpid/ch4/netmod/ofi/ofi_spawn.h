@@ -455,7 +455,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
             local_upid_sendsize += local_upid_size[i];
         local_node_ids = (int *) MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
         for (i = 0; i < comm_ptr->local_size; i++)
-            MPIDI_CH4U_get_node_id(comm_ptr, i, &local_node_ids[i]);
+            MPIDIU_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
 
         match_bits = MPIDI_OFI_init_sendtag(port_id, comm_ptr->rank, tag, MPIDI_OFI_DYNPROC_SEND);

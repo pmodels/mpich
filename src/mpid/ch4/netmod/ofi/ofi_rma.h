@@ -163,7 +163,7 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
      * all processes as long as the hint correctly contains the local op.*/
     MPIR_Assert(*count >= (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index]);
 
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ops == MPIDI_CH4I_ACCU_SAME_OP_NO_OP)
+    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
         *count = (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
@@ -387,7 +387,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
@@ -526,9 +526,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
-                                       target_rank, target_disp, target_count,
-                                       target_datatype, win);
+        mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win);
         goto fn_exit;
     }
 
@@ -577,7 +576,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
@@ -704,9 +703,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
-                                       target_rank, target_disp, target_count,
-                                       target_datatype, win);
+        mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win);
         goto fn_exit;
     }
 
@@ -741,9 +739,8 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
-                                        target_rank, target_disp, target_count,
-                                        target_datatype, win, request);
+        mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
     }
 
@@ -791,19 +788,18 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr,
-                                                    result_addr, datatype,
-                                                    target_rank, target_disp, win);
+        mpi_errno = MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
+                                                target_rank, target_disp, win);
         goto fn_exit;
     }
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto fn_exit;
 
@@ -829,9 +825,8 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
     /* Compare_and_swap is READ and WRITE. */
-    MPIDI_CH4U_wait_am_acc(win, target_rank,
-                           (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                            MPIDI_CH4I_ACCU_ORDER_WAW));
+    MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR |
+                                          MPIDIG_ACCU_ORDER_WAW));
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -865,14 +860,14 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
+        (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR)) {
         /* Wait for OFI cas to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
     }
-    return MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                           datatype, target_rank, target_disp, win);
+    return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
+                                       target_rank, target_disp, win);
 }
 
 #undef FUNCNAME
@@ -906,7 +901,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
@@ -933,8 +928,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
-    MPIDI_CH4U_wait_am_acc(win, target_rank,
-                           (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR));
+    MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR));
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
                             target_datatype, max_size, &req, &flags, &ep, sigreq));
@@ -999,15 +993,14 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-        (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
+        (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR)) {
         /* Wait for OFI acc to complete.
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
     }
-    return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
-                                     target_rank, target_disp, target_count, target_datatype, op,
-                                     win);
+    return MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                 target_disp, target_count, target_datatype, op, win);
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq)
@@ -1049,7 +1042,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto null_op_exit;
 
@@ -1078,11 +1071,10 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {
         /* Get_accumulate is READ and WRITE, except NO_OP (it is READ only). */
-        MPIDI_CH4U_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+        MPIDIG_wait_am_acc(win, target_rank, MPIDIG_ACCU_ORDER_RAW);
     } else {
-        MPIDI_CH4U_wait_am_acc(win, target_rank,
-                               (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                                MPIDI_CH4I_ACCU_ORDER_WAW));
+        MPIDIG_wait_am_acc(win, target_rank,
+                           (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW));
     }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
@@ -1178,21 +1170,20 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) {
             /* Wait for OFI acc to complete.
              * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
             MPIDI_OFI_win_progress_fence(win);
         }
     } else {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering &
+            (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW)) {
             MPIDI_OFI_win_progress_fence(win);
         }
     }
-    return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                         result_addr, result_count, result_datatype,
-                                         target_rank, target_disp, target_count,
-                                         target_datatype, op, win);
+    return MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
+                                     result_count, result_datatype, target_rank, target_disp,
+                                     target_count, target_datatype, op, win);
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
@@ -1200,7 +1191,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
-        MPIDI_CH4U_request_complete(*sigreq);
+        MPIDIU_request_complete(*sigreq);
     }
     goto fn_exit;
 }
@@ -1231,12 +1222,12 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
-                                               target_rank, target_disp, target_count,
-                                               target_datatype, op, win, request);
+        mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                           target_disp, target_count, target_datatype, op, win,
+                                           request);
         goto fn_exit;
     }
 
@@ -1280,13 +1271,13 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
-                                                   result_addr, result_count, result_datatype,
-                                                   target_rank, target_disp, target_count,
-                                                   target_datatype, op, win, request);
+        mpi_errno = MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
+                                               result_addr, result_count, result_datatype,
+                                               target_rank, target_disp, target_count,
+                                               target_datatype, op, win, request);
         goto fn_exit;
     }
 
@@ -1331,15 +1322,15 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
-                                                target_rank, target_disp, op, win);
+        mpi_errno = MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
+                                            target_disp, op, win);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win);
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     if (unlikely(target_rank == MPI_PROC_NULL))
         goto fn_exit;
 
@@ -1366,11 +1357,10 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
 
     if (unlikely(op == MPI_NO_OP)) {
         /* Fetch_and_op is READ and WRITE, except NO_OP (it is READ only). */
-        MPIDI_CH4U_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+        MPIDIG_wait_am_acc(win, target_rank, MPIDIG_ACCU_ORDER_RAW);
     } else {
-        MPIDI_CH4U_wait_am_acc(win, target_rank,
-                               (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR |
-                                MPIDI_CH4I_ACCU_ORDER_WAW));
+        MPIDIG_wait_am_acc(win, target_rank,
+                           (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW));
     }
 
     originv.addr = (void *) buffer;
@@ -1404,19 +1394,19 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     goto fn_exit;
   am_fallback:
     if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) {
             /* Wait for OFI fetch_and_op to complete.
              * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
             MPIDI_OFI_win_progress_fence(win);
         }
     } else {
-        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
-            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+        if (MPIDIG_WIN(win, info_args).accumulate_ordering &
+            (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW)) {
             MPIDI_OFI_win_progress_fence(win);
         }
     }
-    return MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
-                                       target_rank, target_disp, op, win);
+    return MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op,
+                                   win);
 }
 
 #undef FUNCNAME
@@ -1437,9 +1427,8 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
-                                        target_rank, target_disp, target_count, target_datatype,
-                                        win, request);
+        mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
     }
 
@@ -1484,13 +1473,13 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                                  result_addr, result_count, result_datatype,
-                                                  target_rank, target_disp, target_count,
-                                                  target_datatype, op, win);
+        mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                              result_addr, result_count, result_datatype,
+                                              target_rank, target_disp, target_count,
+                                              target_datatype, op, win);
         goto fn_exit;
     }
 
@@ -1528,12 +1517,11 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
             * over shared memory, or op issues to process-self.
             * If disable_shm_accumulate == TRUE is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDI_CH4U_WIN(win, info_args).disable_shm_accumulate ||
+           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS) {
-        mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
-                                              target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
+        mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                          target_disp, target_count, target_datatype, op, win);
         goto fn_exit;
     }
 
