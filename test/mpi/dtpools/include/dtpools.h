@@ -95,7 +95,6 @@ int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI
     {"MPI_2INT", MPI_2INT},                             \
     {"MPI_SHORT_INT", MPI_SHORT_INT},                   \
     {"MPI_LONG_DOUBLE_INT", MPI_LONG_DOUBLE_INT},       \
-    {"MPIX_C_FLOAT16", MPIX_C_FLOAT16},                 \
     {"MPI_DATATYPE_NULL", MPI_DATATYPE_NULL}
 
 #endif /* DTPOOLS_H_INCLUDED */
