@@ -63,11 +63,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
             ucx_embedded="yes"
         else
             ucx_embedded="no"
-            PAC_SET_HEADER_LIB_PATH(ucx)
         fi
     else
         ucx_embedded="no"
-        PAC_SET_HEADER_LIB_PATH(ucx)
     fi
 
     if test "${ucx_embedded}" = "yes" ; then

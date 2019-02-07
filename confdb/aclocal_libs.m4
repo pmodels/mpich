@@ -71,6 +71,7 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB],[
 dnl PAC_CHECK_HEADER_LIB_FATAL(with_option, header.h, libname, function)
 dnl Similar to PAC_CHECK_HEADER_LIB, but errors out on failure
 AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
+	PAC_SET_HEADER_LIB_PATH($1)
 	PAC_CHECK_HEADER_LIB($2,$3,$4,success=yes,success=no)
 	if test "$success" = "no" ; then
 	   AC_MSG_ERROR(['$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?'])
