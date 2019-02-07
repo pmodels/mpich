@@ -1875,7 +1875,6 @@ else
     # Make device_name available to subdirs
 fi
 
-PAC_SET_HEADER_LIB_PATH(pmix)
 if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
     # disable built-in PMI and process managers
     with_pmi="no"
@@ -5141,7 +5140,6 @@ fi
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
-        PAC_SET_HEADER_LIB_PATH(blcr)
 	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
 	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])

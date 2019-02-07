@@ -75,7 +75,6 @@ AC_ARG_ENABLE([ftb],
   [AS_HELP_STRING([[--enable-ftb]],
     [Enable FTB support (default is no)])],
   [AC_DEFINE([ENABLE_FTB], 1, [Define if FTB is enabled])
-   PAC_SET_HEADER_LIB_PATH([ftb])
    PAC_PUSH_FLAG(LIBS)
    PAC_CHECK_HEADER_LIB_FATAL([ftb], [libftb.h], [ftb], [FTB_Connect])
    PAC_APPEND_FLAG([-lftb],[WRAPPER_LIBS])
