@@ -84,6 +84,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Alltoall_intra_composition_alpha_id,
+    MPIDI_Alltoall_intra_composition_beta_id,
     MPIDI_Alltoall_inter_composition_alpha_id
 } MPIDI_Alltoall_id_t;
 
@@ -91,6 +92,9 @@ typedef union {
     struct MPIDI_Alltoall_alpha {
         int alltoall;
     } ch4_alltoall_alpha;
+    struct MPIDI_Alltoall_beta {
+        int alltoall;
+    } ch4_alltoall_beta;
 } MPIDI_Alltoall_params_t;
 
 typedef enum {

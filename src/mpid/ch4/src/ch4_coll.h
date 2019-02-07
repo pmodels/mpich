@@ -396,6 +396,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                                        comm, errflag,
                                                        ch4_algo_parameters_container);
             break;
+        case MPIDI_Alltoall_intra_composition_beta_id:
+            mpi_errno =
+                MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype,
+                                                      recvbuf, recvcount, recvtype,
+                                                      comm, errflag, ch4_algo_parameters_container);
+            break;
         case MPIDI_Alltoall_inter_composition_alpha_id:
             mpi_errno =
                 MPIDI_Alltoall_inter_composition_alpha(sendbuf, sendcount, sendtype,

@@ -493,10 +493,22 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        struct MPIR_Comm *multi_leads_comm;
+        int spanned_num_nodes;  /* comm spans over these number of nodes */
+        struct MPIDI_Multileads_comp_info_t *alltoall_comp_info;
     } ch4;
 } MPIDI_Devcomm_t;
+
+typedef struct MPIDI_Multileads_comp_info_t {
+    int use_multi_leads;        /* if multi-leaders based composition can be used for comm */
+    MPL_shm_hnd_t shm_handle;
+    int shm_size;
+    void *shm_addr;
+} MPIDI_Multileads_comp_info_t;
+
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_COMM_ALLTOALL(comm,field) ((comm)->dev.ch4.alltoall_comp_info)->field
 
 typedef struct {
     union {

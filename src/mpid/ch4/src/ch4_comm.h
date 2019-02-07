@@ -13,6 +13,7 @@
 
 #include "ch4_impl.h"
 
+int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm);
 int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                           MPIR_Comm ** newcomm_ptr);
 

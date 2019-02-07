@@ -8,6 +8,23 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ENABLE_MULTI_LEADS_ALLTOALL
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : Enable multi-leaders based node aware Alltoall implementation
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef CH4_COLL_SELECT_H_INCLUDED
 #define CH4_COLL_SELECT_H_INCLUDED
 
@@ -223,11 +240,53 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoall_select(const void *sendbuf,
                                                    MPI_Datatype recvtype,
                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
+    int node_comm_size = 0, num_nodes;
+    MPI_Aint type_size;
+    bool node_balanced = false;
+
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return &MPIDI_Alltoall_inter_composition_alpha_cnt;
     }
 
-    return &MPIDI_Alltoall_intra_composition_alpha_cnt;
+    if (MPIR_CVAR_ENABLE_MULTI_LEADS_ALLTOALL == 1) {
+        if (MPIDI_COMM(comm, alltoall_comp_info) == NULL) {
+            MPIDI_COMM(comm, alltoall_comp_info) =
+                MPL_malloc(sizeof(MPIDI_Multileads_comp_info_t), MPL_MEM_OTHER);
+            MPIR_Assert(MPIDI_COMM(comm, alltoall_comp_info));
+            MPIDI_COMM_ALLTOALL(comm, use_multi_leads) = -1;
+            MPIDI_COMM_ALLTOALL(comm, shm_addr) = NULL;
+        }
+        /* Find if the comm meets the contraints and store that info in the data structure */
+        if (MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == -1) {
+            if (comm->node_comm)
+                node_comm_size = MPIR_Comm_size(comm->node_comm);
+            /* Get number of nodes it spans over and if it has equal number of ranks per node */
+            MPII_Comm_is_node_balanced(comm, &num_nodes, &node_balanced);
+            MPIDI_COMM(comm, spanned_num_nodes) = num_nodes;
+
+            if (num_nodes > 1 && node_comm_size > 1 && node_balanced &&
+                MPII_Comm_is_node_consecutive(comm))
+                MPIDI_COMM_ALLTOALL(comm, use_multi_leads) = 1;
+            else
+                MPIDI_COMM_ALLTOALL(comm, use_multi_leads) = 0;
+        }
+
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_Datatype_get_size_macro(sendtype, type_size);
+        } else {
+            MPIR_Datatype_get_size_macro(recvtype, type_size);
+        }
+
+        if (MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1 &&
+            (MPL_MAX(sendcount, recvcount) * type_size <= MPIR_CVAR_ALLTOALL_SHM_PER_RANK)) {
+            /* Multi-leaders based composition can only be used if the comm is spanned over more than
+             * 1 node, has equal number of ranks on each node, ranks on a node are consecutive and
+             * the combined msg from all the ranks on a node fits the allocated shared memory buffer
+             */
+            return &MPIDI_Alltoall_intra_composition_alpha_cnt;
+        }
+    }
+    return &MPIDI_Alltoall_intra_composition_beta_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const
