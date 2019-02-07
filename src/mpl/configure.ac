@@ -615,7 +615,6 @@ AS_CASE([$enable_yield],
 #######################################################################
 ## START OF THREADS CODE
 #######################################################################
-PAC_SET_HEADER_LIB_PATH(uti)
 
 AC_ARG_WITH([thread-package],
 [  --with-thread-package=package     Thread package to use. Supported thread packages include:
@@ -665,12 +664,7 @@ case $with_thread_package in
         AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
 
 	if test "${with_thread_package}" = "uti" ; then
-	    PAC_CHECK_HEADER_LIB(uti.h,uti,uti_attr_init,have_uti=yes,have_uti=no)
-	    if test "${have_uti}" = "yes" ; then
-		AC_MSG_NOTICE([Using POSIX and Utility Thread Offloading library for thread package])
-	    else
-		AC_MSG_ERROR([Unable to find Utility Thread Offloading library])
-	    fi
+	    PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
 	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
 	else
 	    AC_MSG_NOTICE([POSIX will be used for thread package.])
@@ -694,9 +688,7 @@ case $with_thread_package in
         ;;
     abt|argobots)
         with_thread_package=argobots
-        AC_CHECK_HEADER([abt.h],[],AC_MSG_ERROR([unable to find Argobots header file]))
-        AC_CHECK_LIB([abt],[ABT_key_create],[],AC_MSG_ERROR([unable to find Argobots library]))
-        PAC_PREPEND_FLAG([-labt],[LIBS])
+        PAC_CHECK_HEADER_LIB_FATAL([argobots], [abt.h], [abt], [ABT_key_create])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
     no|none)
