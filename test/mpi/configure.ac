@@ -747,23 +747,39 @@ if test "$spawndir" = "spawn" ; then
     AC_SUBST(nslib)
 fi
 
+PAC_ARG_THREAD_PACKAGE
+
+THREAD_PACKAGE_NAME=THREAD_PACKAGE_INVALID
 threadlib=""
-# Headers needed for threads tests
-if test "$threadsdir" = "threads" ; then
-    # Check for needed threads headers and needed and optional routines
-    AC_CHECK_HEADERS(pthread.h)
+case $with_thread_package in
+    yes|posix|pthreads|solaris)
+        AC_CHECK_HEADERS(pthread.h)
+        AC_CHECK_LIB([pthread],[pthread_key_create],[threadlib="-lpthread"])
+        THREAD_PACKAGE_NAME=THREAD_PACKAGE_POSIX
+        ;;
+    win|windows)
+        with_thread_package=win
+        THREAD_PACKAGE_NAME=THREAD_PACKAGE_WIN
+        AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
+        ;;
+    abt|argobots)
+        with_thread_package=argobots
+        PAC_CHECK_HEADER_LIB_FATAL([argobots], [abt.h], [abt], [ABT_key_create])
+        threadlib="-labt"
+        THREAD_PACKAGE_NAME=THREAD_PACKAGE_ARGOBOTS
+        ;;
+    no|none)
+        with_thread_package=none
+        THREAD_PACKAGE_NAME=THREAD_PACKAGE_NONE
+        ;;
+    *)
+	AC_MSG_ERROR([The specified thread package, $with_thread_package, is not supported.])
+        ;;
+esac
 
-    # we shouldn't actually need to do this, but we are dodging the chicken/egg
-    # problem b/c we don't have a working mpicc yet and we temporarily discarded
-    # the MPICH-set LIBS (probably the wrong thing to do)
-    AC_SEARCH_LIBS([pthread_create],[pthread],[threadlib="-lpthread"])
-    AC_SEARCH_LIBS([pthread_barrier_init],[pthread])
-
-    AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
-    if test "$FROM_MPICH" != yes ; then
-        AC_CHECK_FUNCS(MPI_Init_thread)
-    fi    
-fi
+# Define and export the selected thread library so that other packages
+# know what's used
+AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 AC_SUBST(threadlib)
 
 # Check for h_addr or h_addr_list.  This is needed for the singjoin test
