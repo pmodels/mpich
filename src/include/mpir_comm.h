@@ -329,6 +329,7 @@ extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functio
 int MPII_Comm_init(MPIR_Comm *);
 
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
+int MPII_Comm_is_node_balanced(MPIR_Comm *, int *, bool *);
 
 /* applies the specified info chain to the specified communicator */
 int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
