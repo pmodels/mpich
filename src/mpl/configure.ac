@@ -626,24 +626,9 @@ AC_ARG_WITH([thread-package],
         none - no threads
 ],,with_thread_package=posix)
 
-if test "${thread_pkg_required}" = "no" -o "${with_thread_package}" = "no" ; then
-   with_thread_package=none
-fi
-
-if test "${with_thread_package}" = "yes" ; then
-   with_thread_package=posix
-fi
-
-if test "${thread_pkg_required}" = "yes" -a "${with_thread_package}" = "none" ; then
-   AC_ERROR([if no thread package is available, use --enable-threads=single or funneled])
-fi
-
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
-    posix|pthreads|uti)
-	if test "${with_thread_package}" = "pthreads" ; then
-	    with_thread_package=posix
-	fi
+    yes|posix|pthreads|uti)
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
