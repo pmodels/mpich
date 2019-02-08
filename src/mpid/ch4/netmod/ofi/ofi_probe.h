@@ -162,14 +162,13 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno =
+            MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
+    }
 
-    mpi_errno =
-        MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     return mpi_errno;
 }

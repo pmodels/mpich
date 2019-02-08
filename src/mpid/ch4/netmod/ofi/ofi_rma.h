@@ -540,8 +540,6 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -717,8 +715,6 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -753,8 +749,6 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1441,8 +1435,6 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
