@@ -52,15 +52,16 @@
 #define MPL_FALLTHROUGH
 #endif
 
-#ifdef MPL_HAVE_VAR_ATTRIBUTE_PACKED
-#define MPL_ATTR_PACKED(x) ATTRIBUTE((packed(x)))
-#else
-#define MPL_ATTR_PACKED(x)
-#endif
-
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_ALIGNED
+#ifdef MPL_HAVE_VAR_ATTRIBUTE_PACKED
+#define MPL_ATTR_ALIGNED_PACKED(x) ATTRIBUTE((aligned(x), packed))
 #define MPL_ATTR_ALIGNED(x) ATTRIBUTE((aligned(x)))
 #else
+#define MPL_ATTR_ALIGNED_PACKED(x) ATTRIBUTE((aligned(x)))
+#define MPL_ATTR_ALIGNED(x) ATTRIBUTE((aligned(x)))
+#endif
+#else
+#define MPL_ATTR_ALIGNED_PACKED(x)
 #define MPL_ATTR_ALIGNED(x)
 #endif
 

@@ -115,7 +115,7 @@ typedef struct {
     struct iovec iov[3];
 #else
     /* need bigger alignment */
-    struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct iovec iov[3] MPL_ATTR_ALIGNED_PACKED(MPIDI_OFI_IOVEC_ALIGN);
 #endif
 } MPIDI_OFI_am_request_header_t;
 

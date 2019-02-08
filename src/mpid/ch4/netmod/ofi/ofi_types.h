@@ -370,7 +370,8 @@ typedef struct {
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
 #else
     /* need bigger alignment */
-    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS]
+        MPL_ATTR_ALIGNED_PACKED(MPIDI_OFI_IOVEC_ALIGN);
 #endif
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
