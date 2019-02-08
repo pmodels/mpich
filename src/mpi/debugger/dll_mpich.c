@@ -159,9 +159,9 @@ int mqs_version_compatibility(void)
     return MQS_INTERFACE_COMPATIBILITY;
 }
 
-char *mqs_version_string(void)
+const char *mqs_version_string(void)
 {
-    return (char *) "MPICH message queue support for MPICH " MPICH_VERSION " compiled on " __DATE__;
+    return "MPICH message queue support for MPICH " MPICH_VERSION " compiled on " __DATE__;
 }
 
 /* Allow the debugger to discover the size of an address type */
@@ -244,12 +244,12 @@ int mqs_setup_image(mqs_image * image, const mqs_image_callbacks * icb)
  * dbgr_find_function (?) or by having the queue implementation provide a
  * separate file that can be included here to get the necessary information.
  */
-int mqs_image_has_queues(mqs_image * image, char **message)
+int mqs_image_has_queues(mqs_image * image, const char **message)
 {
     mpich_image_info *i_info = (mpich_image_info *) dbgr_get_image_info(image);
 
     /* Default failure message ! */
-    *message = (char *) "The symbols and types in the MPICH library used by TotalView\n"
+    *message = "The symbols and types in the MPICH library used by TotalView\n"
         "to extract the message queues are not as expected in\n"
         "the image '%s'\n"
         "No message queue display is possible.\n"
@@ -431,26 +431,26 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
 
 /* This routine is called by the debugger to map an error code into a
    printable string */
-char *mqs_dll_error_string(int errcode)
+const char *mqs_dll_error_string(int errcode)
 {
     switch (errcode) {
         case err_silent_failure:
-            return (char *) "";
+            return "";
         case err_no_current_communicator:
-            return (char *) "No current communicator in the communicator iterator";
+            return "No current communicator in the communicator iterator";
         case err_bad_request:
-            return (char *) "Attempting to setup to iterate over an unknown queue of operations";
+            return "Attempting to setup to iterate over an unknown queue of operations";
         case err_no_store:
-            return (char *) "Unable to allocate store";
+            return "Unable to allocate store";
         case err_group_corrupt:
-            return (char *)
+            return
                 "Could not read a communicator's group from the process (probably a store corruption)";
         case err_unexpected:
-            return (char *) "Failed to find symbol MPID_Recvq_unexpected_head_ptr";
+            return "Failed to find symbol MPID_Recvq_unexpected_head_ptr";
         case err_posted:
-            return (char *) "Failed to find symbol MPID_Recvq_posted_head_ptr";
+            return "Failed to find symbol MPID_Recvq_posted_head_ptr";
     }
-    return (char *) "Unknown error code";
+    return "Unknown error code";
 }
 
 /* ------------------------------------------------------------------------ */

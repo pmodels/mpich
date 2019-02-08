@@ -120,8 +120,8 @@ struct mqs_image_ {
 int init_dbr(void)
 {
     int hasQ = 0;
-    char *version = mqs_version_string();
-    char *msg;
+    const char *version = mqs_version_string();
+    const char *msg;
 
     if (mqs_version_compatibility() != MQS_INTERFACE_COMPATIBILITY) {
         fprintf(stderr, "Unexpected value of version\n");
