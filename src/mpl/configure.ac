@@ -1000,6 +1000,7 @@ dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 AX_GCC_VAR_ATTRIBUTE(aligned)
 AX_GCC_VAR_ATTRIBUTE(used)
+AX_GCC_VAR_ATTRIBUTE(packed)
 
 dnl Check for fallthrough attribute
 PAC_PUSH_ALL_FLAGS
