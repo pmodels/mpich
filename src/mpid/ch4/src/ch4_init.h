@@ -13,7 +13,6 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
-#include "ch4r_vci_hash_types.h"
 #include "ch4i_comm.h"
 #include "ch4_comm.h"
 #include "strings.h"

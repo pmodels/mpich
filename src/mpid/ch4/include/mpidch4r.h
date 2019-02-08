@@ -23,6 +23,7 @@
 #include "ch4r_win.h"
 #include "ch4r_buf.h"
 #include "ch4r_request.h"
+#include "ch4r_vci.h"
 #include "mpidig_startall.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */
