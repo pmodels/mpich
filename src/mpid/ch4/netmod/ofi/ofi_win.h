@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_accu_op_hint_get_index(MPIDIG_win_info_ac
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
-    MPIDIG_win_info_accu_op_shift_t hint_shift = 0;
+    MPIDIG_win_info_accu_op_shift_t hint_shift = MPIDIG_ACCU_OP_SHIFT_FIRST;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_LOAD_ATOMIC_INFO);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_LOAD_ATOMIC_INFO);
@@ -97,7 +97,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_acc_hint(MPIR_Win * win)
         MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = 0;
         bool first_valid_op = true;
 
-        for (hint_shift = 0; hint_shift < MPIDIG_ACCU_OP_SHIFT_LAST; hint_shift++) {
+        for (hint_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; hint_shift < MPIDIG_ACCU_OP_SHIFT_LAST;
+             hint_shift++) {
             uint64_t max_count = 0;
             /* Calculate the max count of all possible atomics if this op is enabled.
              * If the op is disabled for the datatype, the max counts are set to 0 (see util.c).*/
