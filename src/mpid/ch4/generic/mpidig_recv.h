@@ -54,10 +54,14 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
 
     if (in_data_sz > dt_sz * count) {
-        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                      MPIR_ERR_RECOVERABLE, __FUNCTION__, __LINE__,
+                                                      MPI_ERR_TRUNCATE, "**truncate",
+                                                      "**truncate %d %d %d %d",
+                                                      rreq->status.MPI_SOURCE, rreq->status.MPI_TAG,
+                                                      dt_sz * count, in_data_sz);
         nbytes = dt_sz * count;
     } else {
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
         nbytes = in_data_sz;
     }
     MPIR_STATUS_SET_COUNT(rreq->status, nbytes);

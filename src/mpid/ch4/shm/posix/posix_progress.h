@@ -97,9 +97,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
             if (is_contig && (in_total_data_sz == payload_left)) {
 
                 if (in_total_data_sz > p_data_sz) {
-                    rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-                } else {
-                    rreq->status.MPI_ERROR = MPI_SUCCESS;
+                    rreq->status.MPI_ERROR =
+                        MPIR_Err_create_code(rreq->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, FCNAME,
+                                             __LINE__, MPI_ERR_TRUNCATE, "**truncate",
+                                             "**truncate %d %d %d %d", rreq->status.MPI_SOURCE,
+                                             rreq->status.MPI_TAG, p_data_sz, in_total_data_sz);
                 }
 
                 recv_data_sz = MPL_MIN(p_data_sz, in_total_data_sz);
@@ -153,9 +155,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
             /* Set final request status */
 
             if (in_total_data_sz > recv_data_sz) {
-                rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-            } else {
-                rreq->status.MPI_ERROR = MPI_SUCCESS;
+                rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                              MPIR_ERR_RECOVERABLE,
+                                                              FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+                                                              "**truncate",
+                                                              "**truncate %d %d %d %d",
+                                                              rreq->status.MPI_SOURCE,
+                                                              rreq->status.MPI_TAG, recv_data_sz,
+                                                              in_total_data_sz);
             }
 
             recv_data_sz = MPL_MIN(recv_data_sz, in_total_data_sz);
