@@ -244,6 +244,7 @@ typedef enum {
 } MPIDIG_win_info_accumulate_ops;
 
 typedef enum {
+    MPIDIG_ACCU_OP_SHIFT_FIRST = 0,
     MPIDIG_ACCU_MAX_SHIFT = 0,  /* 1<<0 */
     MPIDIG_ACCU_MIN_SHIFT = 1,
     MPIDIG_ACCU_SUM_SHIFT = 2,

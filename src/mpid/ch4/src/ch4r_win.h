@@ -65,7 +65,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_parse_info_accu_ops_str(const char *str, ui
     } else if (!strncmp(value, "any_op", strlen("any_op"))) {
         MPIDIG_win_info_accu_op_shift_t op_shift;
         /* add all ops */
-        for (op_shift = 0; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST; op_shift++)
+        for (op_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST;
+             op_shift++)
             ops |= (1 << op_shift);
         *ops_ptr = ops;
         return;
@@ -402,7 +403,7 @@ static inline int MPIDIG_win_init(MPI_Aint length, int disp_unit, MPIR_Win ** wi
 
     /* default any op */
     MPIDIG_WIN(win, info_args).which_accumulate_ops = 0;
-    for (op_shift = 0; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST; op_shift++)
+    for (op_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; op_shift < MPIDIG_ACCU_OP_SHIFT_LAST; op_shift++)
         MPIDIG_WIN(win, info_args).which_accumulate_ops |= (1 << op_shift);
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
