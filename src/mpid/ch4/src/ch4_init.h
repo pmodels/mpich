@@ -13,6 +13,7 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
+#include "ch4r_vci_hash_types.h"
 #include "ch4i_comm.h"
 #include "ch4_comm.h"
 #include "strings.h"
@@ -260,6 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
     int n_nm_vcis_provided;
+    int vci;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vcis_provided;
 #endif
@@ -500,6 +502,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         MPIDI_CH4_Global.n_nm_vcis_provided = n_nm_vcis_provided;
 
+        /* Allocate a shared, generic VCI */
+        MPIDI_NM_vci_alloc(MPIDI_VCI_TX | MPIDI_VCI_RX, MPIDI_VCI_SHARED,
+                           MPIDI_VCI_TAGGED_ORDERED, &vci);
+        MPIDI_CH4_Global.shared_generic_nm_vci = vci;
+
+        if (MPIDI_CH4_VCI_HASH_TYPE == MPIDI_CH4_VCI_HASH_COMM_ONLY) {
+            MPIDI_COMM(MPIR_Process.comm_world, hash).u.single.nm_vci = vci;
+        }
+
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
@@ -570,9 +581,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 {
     int mpi_errno;
+    int vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
+    MPIDI_NM_vci_free(MPIDI_CH4_Global.shared_generic_nm_vci);
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

@@ -326,6 +326,7 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t progress_count;
 
     int n_nm_vcis_provided;
+    int shared_generic_nm_vci;
     MPID_Thread_mutex_t vci_lock;
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;

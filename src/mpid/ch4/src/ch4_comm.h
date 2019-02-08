@@ -165,6 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
+    int resource, type, properties;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
 
@@ -208,6 +209,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
                 break;
             default:
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
+        }
+
+        /* translate info hints here */
+        resource = properties = 0;
+        if (MPIDI_CH4_VCI_HASH_TYPE == MPIDI_CH4_VCI_HASH_COMM_ONLY) {
+            int vci;
+
+            /* for now, always ask for exclusive first */
+            type = MPIDI_VCI_EXCLUSIVE;
+            MPIDI_NM_vci_alloc(resource, type, properties, &vci);
+            if (vci < 0) {
+                /* request a shared, generic VCI */
+                MPIDI_NM_vci_alloc(MPIDI_VCI_TX | MPIDI_VCI_RX, MPIDI_VCI_SHARED,
+                                   MPIDI_VCI_TAGGED_ORDERED, &vci);
+            }
+            MPIDI_COMM(comm, hash).u.single.nm_vci = vci;
         }
     }
 
@@ -292,6 +309,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     }
     if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
+    }
+
+    if (MPIDI_CH4_VCI_HASH_TYPE == MPIDI_CH4_VCI_HASH_COMM_ONLY) {
+        MPIDI_NM_vci_free(MPIDI_COMM(comm, hash).u.single.nm_vci);
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
