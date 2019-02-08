@@ -131,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    vci = 0;
+    vci = MPIDI_vci_nm_get(comm, rank, tag);
 
     if (dt_contig) {
         ucp_request =

@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
-    vci = 0;
+    vci = MPIDI_vci_nm_get(comm, source, tag);
 
     message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker[vci], ucp_tag, tag_mask, 1, &info);
 
@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
 
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
-    vci = 0;
+    vci = MPIDI_vci_nm_get(comm, source, tag);
 
     message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker[vci], ucp_tag, tag_mask, 0, &info);
 

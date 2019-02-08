@@ -61,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_SEND);
 
-    vci = 0;
+    vci = MPIDI_vci_nm_get(comm, rank, tag);
     ep = MPIDI_UCX_AV_TO_EP(addr, vci);
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
