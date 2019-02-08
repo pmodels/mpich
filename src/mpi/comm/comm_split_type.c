@@ -944,7 +944,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
 #endif
-  fn_exit:
     return mpi_errno;
 }
 

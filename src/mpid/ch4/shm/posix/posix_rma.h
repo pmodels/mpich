@@ -340,17 +340,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
     if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_disp, target_count, target_datatype, win);
     }
 
-    mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_PUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -374,17 +370,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
     if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_disp, target_count, target_datatype, win);
     }
 
-    mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -753,19 +745,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
+                                                  result_addr, result_count, result_datatype,
+                                                  target_rank, target_disp, target_count,
+                                                  target_datatype, op, win);
     }
 
-    mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
-                                              result_addr, result_count, result_datatype,
-                                              target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -791,18 +779,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
         mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win);
-        goto fn_exit;
+    } else {
+        mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
+                                              target_rank, target_disp, target_count,
+                                              target_datatype, op, win);
     }
 
-    mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
-                                          target_rank, target_disp, target_count,
-                                          target_datatype, op, win);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* POSIX_RMA_H_INCLUDED */

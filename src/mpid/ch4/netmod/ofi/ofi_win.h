@@ -554,8 +554,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -664,11 +662,8 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 
     mpi_errno = MPIDIG_mpi_win_complete(win);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_COMPLETE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -752,11 +747,8 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
 
     mpi_errno = MPIDIG_mpi_win_unlock(rank, win);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 
 }
 
@@ -805,11 +797,8 @@ static inline int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
 
     mpi_errno = MPIDIG_mpi_win_fence(massert, win);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FENCE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -936,11 +925,9 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entr
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
 
     mpi_errno = MPIDIG_mpi_win_flush(rank, win);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -954,11 +941,9 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
 
     mpi_errno = MPIDIG_mpi_win_flush_local_all(win);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -973,11 +958,8 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 
     mpi_errno = MPIDIG_mpi_win_unlock_all(win);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -1008,11 +990,9 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_a
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
 
     mpi_errno = MPIDIG_mpi_win_flush_local(rank, win);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
