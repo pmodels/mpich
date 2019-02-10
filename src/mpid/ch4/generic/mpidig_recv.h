@@ -17,26 +17,7 @@
 #include "ch4r_recv.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIG_prepare_recv_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIG_prepare_recv_req(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                          MPIR_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
-
-    MPIDIG_REQUEST(rreq, datatype) = datatype;
-    MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
-    MPIDIG_REQUEST(rreq, count) = count;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_handle_unexpected
+#define FUNCNAME MPIDI_handle_unexpected
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -217,11 +198,8 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     MPIDIG_REQUEST(rreq, tag) = tag;
     MPIDIG_REQUEST(rreq, context_id) = context_id;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
-
-    mpi_errno = MPIDIG_prepare_recv_req(buf, count, datatype, rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
+    MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
+    MPIDIG_REQUEST(rreq, count) = count;
 
     if (!unexp_req) {
         /* MPIDI_CS_ENTER(); */
