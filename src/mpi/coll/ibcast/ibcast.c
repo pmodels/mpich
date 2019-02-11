@@ -274,10 +274,6 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
-    size_t type_size, nbytes;
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -297,8 +293,6 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_scatter_recexch_allgather:
-                if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
-                    break;
                 mpi_errno =
                     MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(buffer, count, datatype,
                                                                         root, comm_ptr, request);
