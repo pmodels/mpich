@@ -226,7 +226,7 @@ adio_daos_cont_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
                             NULL, NULL);
 	/* If fails with NOEXIST we can create it then reopen if create mode */
 	if (rc == -DER_NONEXIST && create) {
-		rc = daos_cont_create(poh, uuid, NULL);
+            rc = daos_cont_create(poh, uuid, NULL, NULL);
 		if (rc == 0)
 			rc = daos_cont_open(poh, uuid, DAOS_COO_RW,
 					    &co_hdl->open_hdl, NULL, NULL);
