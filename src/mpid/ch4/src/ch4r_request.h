@@ -79,31 +79,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     return req;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_request_copy(MPIR_Request * dest, MPIR_Request * src)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_REQUEST_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_REQUEST_COPY);
-
-    MPIR_Assert(dest != NULL && src != NULL);
-    MPIDI_NM_am_request_init(dest);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_SHM_am_request_init(dest);
-#endif
-
-    MPIDIG_REQUEST(dest, req) = MPIDIG_REQUEST(src, req);;
-    MPIDIG_REQUEST(dest, req->rreq.request) = dest;
-    MPIDIG_REQUEST(dest, datatype) = MPIDIG_REQUEST(src, datatype);
-    MPIDIG_REQUEST(dest, buffer) = MPIDIG_REQUEST(src, buffer);
-    MPIDIG_REQUEST(dest, count) = MPIDIG_REQUEST(src, count);
-    MPIDIG_REQUEST(dest, rank) = MPIDIG_REQUEST(src, rank);
-    MPIDIG_REQUEST(dest, tag) = MPIDIG_REQUEST(src, tag);
-    MPIDIG_REQUEST(dest, context_id) = MPIDIG_REQUEST(src, context_id);
-    MPIDIG_REQUEST(dest, req->status) = MPIDIG_REQUEST(src, req->status);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_REQUEST_COPY);
-    return;
-}
-
 /* This function should be called any time an anysource request is matched so
  * the upper layer will have a chance to arbitrate who wins the race between
  * the netmod and the shmod. This will cancel the request of the other side and
