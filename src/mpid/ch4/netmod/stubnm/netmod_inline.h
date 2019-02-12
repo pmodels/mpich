@@ -10,7 +10,6 @@
  */
 #ifndef NETMOD_INLINE_H_INCLUDED
 #define NETMOD_INLINE_H_INCLUDED
-#include "stubnm_init.h"
 #include "stubnm_probe.h"
 #include "stubnm_progress.h"
 #include "stubnm_recv.h"
@@ -20,11 +19,11 @@
 #include "stubnm_win.h"
 #include "stubnm_rma.h"
 #include "stubnm_am.h"
-#include "stubnm_spawn.h"
-#include "stubnm_comm.h"
 #include "stubnm_unimpl.h"
 #include "stubnm_proc.h"
 #include "stubnm_coll.h"
-#include "stubnm_datatype.h"
-#include "stubnm_op.h"
+
+/* Not-inlined STUBNM netmod functions */
+#include "stubnm_noinline.h"
+
 #endif /* NETMOD_INLINE_H_INCLUDED */

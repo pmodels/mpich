@@ -535,8 +535,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Progress_deactivate_hook(id_) MPID_Progress_deactivate(id_)
 
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Comm_create_hook   MPIDI_Comm_create_hook
-#define MPID_Comm_free_hook     MPIDI_Comm_free_hook
 
 /*
  * operation for (avtid, lpid) to/from "lupid"

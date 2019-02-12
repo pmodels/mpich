@@ -13,13 +13,14 @@
 
 #include "shm_am.h"
 #include "shm_coll.h"
-#include "shm_dpm.h"
 #include "shm_hooks.h"
 #include "shm_init.h"
-#include "shm_mem.h"
 #include "shm_misc.h"
 #include "shm_p2p.h"
 #include "shm_startall.h"
 #include "shm_rma.h"
+
+/* Not-inlined shm functions */
+#include "shm_noinline.h"
 
 #endif /* SHM_INLINE_H_INCLUDED */
