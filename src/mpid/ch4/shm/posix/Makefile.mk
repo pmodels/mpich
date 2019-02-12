@@ -15,13 +15,11 @@ if BUILD_SHM_POSIX
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
                   src/mpid/ch4/shm/posix/shm_inline.h      \
-                  src/mpid/ch4/shm/posix/posix_init.h      \
+                  src/mpid/ch4/shm/posix/posix_noinline.h  \
                   src/mpid/ch4/shm/posix/posix_progress.h  \
                   src/mpid/ch4/shm/posix/posix_recv.h      \
                   src/mpid/ch4/shm/posix/posix_rma.h       \
-                  src/mpid/ch4/shm/posix/posix_spawn.h     \
                   src/mpid/ch4/shm/posix/posix_win.h       \
-                  src/mpid/ch4/shm/posix/posix_comm.h      \
                   src/mpid/ch4/shm/posix/posix_impl.h      \
                   src/mpid/ch4/shm/posix/posix_probe.h     \
                   src/mpid/ch4/shm/posix/posix_request.h   \
@@ -31,11 +29,15 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_am_impl.h   \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
                   src/mpid/ch4/shm/posix/posix_proc.h      \
-                  src/mpid/ch4/shm/posix/posix_datatype.h  \
-                  src/mpid/ch4/shm/posix/posix_op.h        \
                   src/mpid/ch4/shm/posix/posix_types.h
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
+                    src/mpid/ch4/shm/posix/posix_comm.c \
+                    src/mpid/ch4/shm/posix/posix_init.c \
+                    src/mpid/ch4/shm/posix/posix_op.c \
+                    src/mpid/ch4/shm/posix/posix_datatype.c \
+                    src/mpid/ch4/shm/posix/posix_spawn.c \
+                    src/mpid/ch4/shm/posix/posix_win.c \
                     src/mpid/ch4/shm/posix/posix_eager_array.c
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/Makefile.mk

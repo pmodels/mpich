@@ -30,16 +30,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
     /* MPIR_Request_free(req); */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_Request_init_callback
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Request_init_callback(void *request)
-{
-
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    ucp_request->req = NULL;
-
-}
-
 #endif /* UCX_REQUEST_H_INCLUDED */

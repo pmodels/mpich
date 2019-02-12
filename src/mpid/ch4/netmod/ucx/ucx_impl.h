@@ -151,4 +151,5 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
     return MPIDI_UCX_is_reachable_win(win) && rank != MPI_PROC_NULL &&
         MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
 }
+
 #endif /* UCX_IMPL_H_INCLUDED */

@@ -38,4 +38,12 @@ static inline int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AV_IS_LOCAL);
     return ret;
 }
+
+static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
+                                         bool is_remote)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 #endif /* STUBNM_PROC_H_INCLUDED */
