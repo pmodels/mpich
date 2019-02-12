@@ -11,6 +11,7 @@
 #ifndef POSIX_AM_IMPL_H_INCLUDED
 #define POSIX_AM_IMPL_H_INCLUDED
 
+#include "posix_types.h"
 #include "posix_impl.h"
 
 #undef FUNCNAME

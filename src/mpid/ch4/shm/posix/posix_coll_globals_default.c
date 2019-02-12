@@ -1,3 +1,8 @@
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* Barrier default POSIX containers initialization*/
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Barrier_intra_dissemination_cnt = {
     .id = MPIDI_POSIX_Barrier_intra_dissemination_id
