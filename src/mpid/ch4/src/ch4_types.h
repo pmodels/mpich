@@ -287,7 +287,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_ch4u_initialized;
     int **node_map, max_node_id;
     MPIDI_CH4U_comm_req_list_t *comm_req_lists;
-    OPA_int_t active_progress_hooks;
+    OPA_int_t registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[3];

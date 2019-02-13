@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     }
 #endif
 
-    if (OPA_load_int(&MPIDI_CH4_Global.active_progress_hooks) && (flags & MPIDI_PROGRESS_HOOKS)) {
+    if (OPA_load_int(&MPIDI_CH4_Global.registered_progress_hooks) && (flags & MPIDI_PROGRESS_HOOKS)) {
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             progress_func_ptr_t func_ptr = NULL;
             MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
@@ -184,7 +184,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), 
     if (i >= MAX_PROGRESS_HOOKS)
         goto fn_fail;
 
-    OPA_incr_int(&MPIDI_CH4_Global.active_progress_hooks);
+    OPA_incr_int(&MPIDI_CH4_Global.registered_progress_hooks);
 
     (*id) = i;
 
@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
     MPIDI_CH4_Global.progress_hooks[id].func_ptr = NULL;
     MPIDI_CH4_Global.progress_hooks[id].active = FALSE;
 
-    OPA_decr_int(&MPIDI_CH4_Global.active_progress_hooks);
+    OPA_decr_int(&MPIDI_CH4_Global.registered_progress_hooks);
     MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_DEREGISTER);
