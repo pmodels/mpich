@@ -28,23 +28,22 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
                                               MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int src, dst, copy_dst;
+    int src, dst;
     int i, j, ww, index = 0;
-    int invtcs, nvtcs;
+    int invtcs;
     int tag;
     int *vtcs, *recv_id, *send_id;
     MPIR_CHKLMEM_DECL(3);
 
-    int is_inplace = (sendbuf == MPI_IN_PLACE);
-    MPIR_Assert(!is_inplace);
+    MPIR_Assert(!(sendbuf == MPI_IN_PLACE));
 
     int size = MPIR_Comm_size(comm);
     int rank = MPIR_Comm_rank(comm);
     int batch_size = MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE;
     int bblock = MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS;
 
-    size_t recvtype_lb, recvtype_extent, recvtype_size;
-    size_t sendtype_lb, sendtype_extent, sendtype_size;
+    size_t recvtype_lb, recvtype_extent;
+    size_t sendtype_lb, sendtype_extent;
     size_t sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
@@ -63,12 +62,10 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPIR_CHKLMEM_MALLOC(send_id, int *, bblock * sizeof(int), mpi_errno, "send_id", MPL_MEM_COLL);
 
     /* Get datatype info of sendtype and recvtype */
-    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
@@ -134,7 +131,6 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
                                         MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
