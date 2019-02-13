@@ -138,7 +138,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     int nphases, max;
     int p_of_k;                 /* largest power of k that is (strictly) smaller than 'size' */
     int is_inplace;
-    size_t s_type_size, s_extent, s_lb, r_extent, r_lb;
+    size_t s_extent, s_lb, r_extent, r_lb;
     size_t s_true_extent, r_true_extent;
     int delta, src, dst;
     void ***tmp_sbuf = NULL, ***tmp_rbuf = NULL;
@@ -198,7 +198,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
         sendtype = recvtype;
     }
 
-    MPIR_Datatype_get_size_macro(sendtype, s_type_size);
     MPIR_Datatype_get_extent_macro(sendtype, s_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &s_lb, &s_true_extent);
     s_extent = MPL_MAX(s_extent, s_true_extent);
@@ -207,9 +206,16 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     MPIR_Type_get_true_extent_impl(recvtype, &r_lb, &r_true_extent);
     r_extent = MPL_MAX(r_extent, r_true_extent);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "send_type_size: %ld, send_type_extent: %ld, send_count: %d\n",
-                     s_type_size, s_extent, sendcount));
+#ifdef MPL_USE_DBG_LOGGING
+    {
+        size_t s_type_size;
+        MPIR_Datatype_get_size_macro(sendtype, s_type_size);
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                        (MPL_DBG_FDEST,
+                         "send_type_size: %ld, send_type_extent: %ld, send_count: %d\n",
+                         s_type_size, s_extent, sendcount));
+    }
+#endif
     tmp_buf = (void *) MPIR_TSP_sched_malloc(recvcount * size * r_extent, sched);       /* temporary buffer used for rotation
                                                                                          * also used as sendbuf when inplace is true */
     MPIR_Assert(tmp_buf != NULL);
