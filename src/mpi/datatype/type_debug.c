@@ -303,7 +303,9 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 {
     int is_builtin;
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     const char *string;
+#endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
 
     is_builtin = (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN);
@@ -316,12 +318,13 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                         (MPL_DBG_FDEST, "# MPIU_Datatype_debug: MPI_Datatype = MPI_DATATYPE_NULL"));
         return;
     }
-
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(type);
     MPIR_Assert(string != NULL);
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                         "# MPIU_Datatype_debug: MPI_Datatype = 0x%0x (%s)", type,
                                         (is_builtin) ? string : "derived"));
+#endif
 
     if (is_builtin)
         return;
@@ -329,6 +332,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPIR_Datatype_get_ptr(type, dtp);
     MPIR_Assert(dtp != NULL);
 
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(dtp->basic_type);
     MPIR_Assert(string != NULL);
 
@@ -347,6 +351,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         -1 ? "multiple types" :
                                         string,
                                         dtp->is_contig ? "is N contig" : "is not N contig"));
+#endif
 
     MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Contents:");
     contents_printf(type, 0, array_ct);
@@ -395,15 +400,16 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
     MPI_Aint *aints = NULL;
     MPI_Datatype *types = NULL;
     int *ints = NULL;
-    const char *string;
 
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-        string = MPIR_Datatype_builtin_to_string(type);
+        const char *string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
         MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %stype: %s\n",
                                             depth_spacing(depth), string));
         return;
     }
+#endif
 
     MPIR_Datatype_get_ptr(type, dtp);
     cp = dtp->contents;
@@ -430,12 +436,14 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
         MPIR_Assert(types != NULL);
         MPII_Datatype_get_contents_types(cp, types);
     }
-
-
-    string = MPIR_Datatype_combiner_to_string(cp->combiner);
-    MPIR_Assert(string != NULL);
-    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scombiner: %s",
-                                        depth_spacing(depth), string));
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+    {
+        const char *string = MPIR_Datatype_combiner_to_string(cp->combiner);
+        MPIR_Assert(string != NULL);
+        MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scombiner: %s",
+                                            depth_spacing(depth), string));
+    }
+#endif
 
     switch (cp->combiner) {
         case MPI_COMBINER_NAMED:
