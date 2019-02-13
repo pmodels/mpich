@@ -550,7 +550,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t new_context_id, new_recvcontext_id;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_Comm_map_t *map;
+    MPIR_Comm_map_t *map = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COPY);
