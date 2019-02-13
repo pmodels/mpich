@@ -926,7 +926,6 @@ static void ADIOI_Iexch_and_write_reset(ADIOI_NBC_Request * nbc_req, int *error_
 static void ADIOI_Iexch_and_write_l2_begin(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_Iexch_and_write_vars *vars = nbc_req->data.wr.eaw_vars;
-    ADIO_Offset size = vars->size;
     ADIOI_W_Iexchange_data_vars *wed_vars = NULL;
 
     /* loop exit condition */
@@ -935,7 +934,7 @@ static void ADIOI_Iexch_and_write_l2_begin(ADIOI_NBC_Request * nbc_req, int *err
         return;
     }
 
-    ADIOI_Assert(size == (int) size);
+    ADIOI_Assert(vars->size == (int) vars->size);
 
     /* create a struct for ADIOI_W_Iexchange_data() */
     wed_vars = (ADIOI_W_Iexchange_data_vars *) ADIOI_Calloc(1, sizeof(ADIOI_W_Iexchange_data_vars));
