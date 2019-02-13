@@ -35,7 +35,7 @@ typedef struct MPIDI_POSIX_fbox_arrays {
 
 typedef struct MPIDI_POSIX_eager_fbox_control {
 
-    MPIDU_shm_seg_t memory;
+    MPIDU_shm_seg_t *memory;
     MPIDU_shm_seg_info_t *seg;
 
     int num_seg;
@@ -44,7 +44,7 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
                                                  * of mailboxes */
 
     MPIDU_shm_barrier_t *barrier;
-    void *barrier_region;
+    void **barrier_region;
 
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */

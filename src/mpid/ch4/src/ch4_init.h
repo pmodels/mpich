@@ -430,6 +430,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #endif
 
     {
+        MPIDU_shm_numa_info_init(rank, size, MPIDI_CH4_Global.node_map[0]);
+
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_bits);
@@ -527,6 +529,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
+
+    MPIDU_shm_numa_info_finalize();
 
     int i;
     int max_n_avts;
