@@ -78,7 +78,6 @@ Input Parameters:
 @*/
 int MPI_Op_free(MPI_Op * op)
 {
-    MPIR_Op *op_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
@@ -87,11 +86,12 @@ int MPI_Op_free(MPI_Op * op)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_FREE);
 
-    MPIR_Op_get_ptr(*op, op_ptr);
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPIR_Op *op_ptr = NULL;
+            MPIR_Op_get_ptr(*op, op_ptr);
             MPIR_Op_valid_ptr(op_ptr, mpi_errno);
             if (!mpi_errno) {
                 if (op_ptr->kind < MPIR_OP_KIND__USER_NONCOMMUTE) {
