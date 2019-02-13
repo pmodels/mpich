@@ -19,7 +19,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
-    int mpi_errno, made_progress, i;
+    int mpi_errno, made_progress, num_of_hooks, i;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -34,8 +34,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     }
 #endif
 
-    if (OPA_load_int(&MPIDI_CH4_Global.registered_progress_hooks) && (flags & MPIDI_PROGRESS_HOOKS)) {
-        for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+    num_of_hooks = OPA_load_int(&MPIDI_CH4_Global.registered_progress_hooks);
+    if (num_of_hooks && (flags & MPIDI_PROGRESS_HOOKS)) {
+        for (i = 0; i < num_of_hooks; i++) {
             progress_func_ptr_t func_ptr = NULL;
             MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
             MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
