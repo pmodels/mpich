@@ -250,6 +250,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                               (void **) &(memory->base_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
+            if (sibling_segment_len > 0)
+                MPIDU_shm_numa_bind_set(memory->base_addr + default_segment_len + padding,
+                                        sibling_segment_len, node_id, NULL, object);
+            else
+                MPIDU_shm_numa_bind_set(memory->base_addr, default_segment_len, node_id, NULL,
+                                        object);
+
             /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
 
@@ -367,6 +374,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                 MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
                                               (void **) &(memory->base_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+            if (sibling_segment_len > 0)
+                MPIDU_shm_numa_bind_set(memory->base_addr + default_segment_len + padding,
+                                        sibling_segment_len, node_id, NULL, object);
+            else
+                MPIDU_shm_numa_bind_set(memory->base_addr, default_segment_len, node_id, NULL,
+                                        object);
 
             /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
@@ -519,6 +533,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                 MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
                                               (void **) &(memory->base_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+            if (sibling_segment_len > 0)
+                MPIDU_shm_numa_bind_set(memory->base_addr + default_segment_len + padding,
+                                        sibling_segment_len, node_id, NULL, object);
+            else
+                MPIDU_shm_numa_bind_set(memory->base_addr, default_segment_len, node_id, NULL,
+                                        object);
 
             /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
