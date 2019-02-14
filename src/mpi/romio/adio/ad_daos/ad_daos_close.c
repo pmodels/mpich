@@ -49,11 +49,7 @@ bcast_rc:
     /* bcast the return code to the other ranks */
     MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
     if (rc != 0) {
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "Failed DFS umount", 0);
+        *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
         return;
     }
 
@@ -62,48 +58,16 @@ bcast_rc:
         rc = daos_array_close(cont->oh, NULL);
         if (rc != 0) {
             PRINT_MSG(stderr, "daos_array_close() failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Array Close failed", 0);
+            *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
             return;
         }
     }
 
-    /* close the container handle if it's created with l2g,g2l, 
-       otherwise just decrement ref count on the container info in the hashtable. */
-    if (cont->c) {
-        adio_daos_cont_release(cont->c);
-        cont->c = NULL;
-    } else {
-        rc = daos_cont_close(cont->coh, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "daos_cont_close() failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Container Close failed", 0);
-            return;
-        }
-    }
-
-    if (cont->p) {
-        adio_daos_poh_release(cont->p);
-        cont->p = NULL;
-    } else {
-        rc = daos_pool_disconnect(cont->poh, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "daos_pool_disconnect() failed (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Pool Disconnect failed", 0);
-            return;
-        }
-    }
+    /* decrement ref count on the container and pool in the hashtable. */
+    adio_daos_coh_release(cont->c);
+    cont->c = NULL;
+    adio_daos_poh_release(cont->p);
+    cont->p = NULL;
 
     free(cont->obj_name);
     free(cont->cont_name);

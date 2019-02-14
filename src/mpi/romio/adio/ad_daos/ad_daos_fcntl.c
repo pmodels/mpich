@@ -19,7 +19,7 @@
 void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
                       int *error_code)
 {
-    int ret;
+    int rc;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_FCNTL";
 
@@ -28,20 +28,12 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
     {
         daos_size_t fsize;
 
-	ret = daos_array_get_size(cont->oh, DAOS_TX_NONE, &fsize, NULL);
-	if (ret != 0 ) {
-	    /* --BEGIN ERROR HANDLING-- */
-	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					       MPIR_ERR_RECOVERABLE,
-					       myname, __LINE__,
-					       ADIOI_DAOS_error_convert(ret),
-					       "Error in daos_array_get_size",
-                                               0);
-	    /* --END ERROR HANDLING-- */
+	rc = daos_array_get_size(cont->oh, DAOS_TX_NONE, &fsize, NULL);
+	if (rc != 0) {
+            *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
+            break;
 	}
-        else {
-            *error_code = MPI_SUCCESS;
-        }
+        *error_code = MPI_SUCCESS;
         fcntl_struct->fsize = (ADIO_Offset)fsize;
         break;
     }

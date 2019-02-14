@@ -374,11 +374,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(ret),
-                                               "Error in daos_array_write", 0);
+            *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
     }
@@ -387,11 +383,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(ret),
-                                               "Error in daos_array_read", 0);
+            *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
     }

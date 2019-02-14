@@ -27,10 +27,10 @@
 /* #define D_PRINT_IO */
 /* #define D_PRINT_IO_MEM */
 
-#define PRINT_MSG(str, fmt, ...)                                            \
+#define PRINT_MSG(str, fmt, ...)                                        \
     do {                                                                \
         fprintf(str, "%s:%d %s() - " fmt"\n" ,                          \
-                __FILE__, __LINE__, __func__, ##__VA_ARGS__);                         \
+                __FILE__, __LINE__, __func__, ##__VA_ARGS__);           \
     } while (0)
 
 struct adio_daos_hdl {
@@ -43,7 +43,9 @@ struct adio_daos_hdl {
 
 struct ADIO_DAOS_cont {
     /** container uuid */
-    uuid_t		uuid;
+    uuid_t		cuuid;
+    /** pool uuid */
+    uuid_t		puuid;
     /** Container name (Path to the file opened) */
     char		*cont_name;
     /** Object name (File name) */
@@ -170,18 +172,22 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
 int adio_daos_hash_init(void);
 void adio_daos_hash_finalize(void);
 struct adio_daos_hdl *adio_daos_poh_lookup(const uuid_t uuid);
+int adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh,
+                         struct adio_daos_hdl **hdl);
 int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl);
 void adio_daos_poh_release(struct adio_daos_hdl *hdl);
-struct adio_daos_hdl *adio_daos_cont_lookup(const uuid_t uuid);
-int adio_daos_cont_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
+struct adio_daos_hdl *adio_daos_coh_lookup(const uuid_t uuid);
+int adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh,
+                         struct adio_daos_hdl **hdl);
+int adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
                                  struct adio_daos_hdl **hdl);
-void adio_daos_cont_release(struct adio_daos_hdl *hdl);
+void adio_daos_coh_release(struct adio_daos_hdl *hdl);
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state);
 int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status);
 int ADIOI_DAOS_aio_wait_fn(int count, void ** array_of_states,
                            double timeout, MPI_Status *status);
-int ADIOI_DAOS_error_convert(int error);
+int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc);
 
 void ADIOI_DAOS_Open(ADIO_File fd, int *error_code);
 void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,

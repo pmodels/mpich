@@ -26,22 +26,16 @@ void ADIOI_DAOS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 
     MPI_Comm_rank(fd->comm, &rank);
     adio_daos_sync_ranks(fd->comm);
+
     if (rank == fd->hints->ranklist[0]) {
 	ret = daos_array_set_size(cont->oh, DAOS_TX_NONE, size, NULL);
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     } else  {
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     }
+
     adio_daos_sync_ranks(fd->comm);
 
-    /* --BEGIN ERROR HANDLING-- */
-    if (ret != 0) {
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					   MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__,
-					   ADIOI_DAOS_error_convert(ret),
-					   "Error in daos_array_set_size", 0);
-	return;
-    }
-    /* --END ERROR HANDLING-- */
+    if (ret != 0)
+        *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
 }

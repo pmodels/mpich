@@ -45,3 +45,77 @@ int ADIOI_DAOS_error_convert(int error)
 	    return MPI_UNDEFINED;
     }
 }
+
+int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)
+{
+    int error_code = MPI_SUCCESS;
+
+    if (rc == 0)
+        return MPI_SUCCESS;
+
+    switch (rc) {
+    case -DER_NO_PERM:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE, myname,
+                                          line, MPI_ERR_ACCESS,
+                                          "**fileaccess", "**fileaccess %s",
+                                          filename);
+        break;
+    case -DER_ENOENT:
+    case -DER_NONEXIST:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE, myname,
+                                          line, MPI_ERR_NO_SUCH_FILE,
+                                          "**filenoexist", "**filenoexist %s",
+                                          filename);
+        break;
+    case -DER_IO:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, line, MPI_ERR_IO, "**io",
+                                          "**io %s", filename);
+        break;
+    case -DER_EXIST:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE, myname,
+                                          line, MPI_ERR_FILE_EXISTS,
+                                          "**fileexist", "**fileexist %s",
+                                          filename);
+        break;
+    case -DER_NOTDIR:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE,
+                                          myname, line,
+                                          MPI_ERR_BAD_FILE,
+                                          "**filenamedir", "**filenamedir %s",
+                                          filename);
+        break;
+    case -DER_NOSPACE:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE, myname, line,
+                                          MPI_ERR_NO_SPACE, "**filenospace", 0);
+        break;
+    case -DER_INVAL:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE, myname, line,
+                                          MPI_ERR_ARG, "**arg", 0);
+        break;
+    case -DER_NOSYS:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, line,
+                                          MPI_ERR_UNSUPPORTED_OPERATION,
+                                          "**fileopunsupported", 0);
+        break;
+    case -DER_NOMEM:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, line, MPI_ERR_NO_MEM,
+                                          "**allocmem", 0);
+        break;
+    default:
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, line, MPI_ERR_IO, "**io",
+                                          "**io %s", filename);
+        break;
+    }
+
+    return error_code;
+}

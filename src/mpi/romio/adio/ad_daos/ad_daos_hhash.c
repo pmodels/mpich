@@ -64,6 +64,7 @@ rec_free(struct d_hash_table *htable, d_list_t *rlink)
 
     assert(d_hash_rec_unlinked(&hdl->entry));
     assert(hdl->ref == 0);
+
     if (hdl->type == DAOS_POOL)
         daos_pool_disconnect(hdl->open_hdl, NULL);
     else if (hdl->type == DAOS_CONT)
@@ -118,6 +119,38 @@ adio_daos_poh_release(struct adio_daos_hdl *hdl)
 }
 
 int
+adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh, struct adio_daos_hdl **hdl)
+{
+    struct adio_daos_hdl *phdl;
+    int rc;
+
+    phdl = (struct adio_daos_hdl *)ADIOI_Calloc
+        (1, sizeof(struct adio_daos_hdl));
+    if (phdl == NULL)
+        return -1;
+
+    phdl->type = DAOS_POOL;
+    uuid_copy(phdl->uuid, uuid);
+    phdl->open_hdl.cookie = poh.cookie;
+
+    rc = d_hash_rec_insert(poh_hash, phdl->uuid, sizeof(uuid_t), &phdl->entry,
+                           true);
+    if (rc) {
+        PRINT_MSG(stderr, "Failed to add phdl to hashtable\n", rc);
+        goto free_hdl;
+    }
+
+    d_hash_rec_addref(poh_hash, &phdl->entry);
+    *hdl = phdl;
+
+    return 0;
+
+free_hdl:
+    ADIOI_Free(phdl);
+    return rc;
+}
+
+int
 adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
 {
     struct adio_daos_hdl *phdl;
@@ -148,7 +181,7 @@ adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
     if (svcl_str != NULL) {
         svcl = daos_rank_list_parse(svcl_str, ":");
         if (svcl == NULL) {
-            fprintf(stderr, "Failed to parse SVC list env\n");
+            PRINT_MSG(stderr, "Failed to parse SVC list env\n");
             rc = -1;
             goto free_hdl;
         }
@@ -159,7 +192,7 @@ adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
                            &pool_info, NULL);
     daos_rank_list_free(svcl);
     if (rc < 0) {
-        fprintf(stderr, "Failed to connect to pool (%d)\n", rc);
+        PRINT_MSG(stderr, "Failed to connect to pool (%d)\n", rc);
         goto free_hdl;
     }
 
@@ -183,7 +216,7 @@ free_hdl:
 }
 
 struct adio_daos_hdl *
-adio_daos_cont_lookup(const uuid_t uuid)
+adio_daos_coh_lookup(const uuid_t uuid)
 {
 	d_list_t *rlink;
 
@@ -195,19 +228,51 @@ adio_daos_cont_lookup(const uuid_t uuid)
 }
 
 void
-adio_daos_cont_release(struct adio_daos_hdl *hdl)
+adio_daos_coh_release(struct adio_daos_hdl *hdl)
 {
 	d_hash_rec_decref(coh_hash, &hdl->entry);
 }
 
 int
-adio_daos_cont_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
+adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **hdl)
+{
+	struct adio_daos_hdl *co_hdl;
+	int rc;
+
+	co_hdl = (struct adio_daos_hdl *)ADIOI_Calloc
+            (1, sizeof(struct adio_daos_hdl));
+	if (co_hdl == NULL)
+		return -1;
+
+        co_hdl->type = DAOS_CONT;
+	uuid_copy(co_hdl->uuid, uuid);
+        co_hdl->open_hdl.cookie = coh.cookie;
+
+        rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
+                               &co_hdl->entry, true);
+	if (rc) {
+		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable\n", rc);
+		goto err_coh;
+	}
+
+        d_hash_rec_addref(coh_hash, &co_hdl->entry);
+        *hdl = co_hdl;
+
+	return 0;
+
+err_coh:
+	ADIOI_Free(co_hdl);
+	return rc;
+}
+
+int
+adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
                              struct adio_daos_hdl **hdl)
 {
 	struct adio_daos_hdl *co_hdl;
 	int rc;
 
-	co_hdl = adio_daos_cont_lookup(uuid);
+	co_hdl = adio_daos_coh_lookup(uuid);
 	if (co_hdl != NULL) {
             *hdl = co_hdl;
             return 0;
@@ -232,11 +297,8 @@ adio_daos_cont_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
 					    &co_hdl->open_hdl, NULL, NULL);
 	}
 
-	if (rc != 0) {
-		PRINT_MSG(stderr, "failed to open/create DAOS container (%d)\n",
-                          rc);
+	if (rc != 0)
 		goto free_coh;
-	}
 
         rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
                                &co_hdl->entry, true);
