@@ -37,8 +37,7 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
                              void *data, intptr_t data_sz);
 int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
                                  intptr_t data_sz, MPIR_Request ** sreq_ptr);
-int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header,
-                               intptr_t hdr_sz);
+int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz);
 
 /* direct interface */
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq);
@@ -253,19 +252,19 @@ static inline void _mxm_barrier(void)
 static inline void _mxm_to_mpi_status(mxm_error_t mxm_error, MPI_Status * mpi_status)
 {
     switch (mxm_error) {
-    case MXM_OK:
-        mpi_status->MPI_ERROR = MPI_SUCCESS;
-        break;
-    case MXM_ERR_CANCELED:
-        MPIR_STATUS_SET_CANCEL_BIT(*mpi_status, TRUE);
-        mpi_status->MPI_ERROR = MPI_SUCCESS;
-        break;
-    case MXM_ERR_MESSAGE_TRUNCATED:
-        mpi_status->MPI_ERROR = MPI_ERR_TRUNCATE;
-        break;
-    default:
-        mpi_status->MPI_ERROR = MPI_ERR_INTERN;
-        break;
+        case MXM_OK:
+            mpi_status->MPI_ERROR = MPI_SUCCESS;
+            break;
+        case MXM_ERR_CANCELED:
+            MPIR_STATUS_SET_CANCEL_BIT(*mpi_status, TRUE);
+            mpi_status->MPI_ERROR = MPI_SUCCESS;
+            break;
+        case MXM_ERR_MESSAGE_TRUNCATED:
+            mpi_status->MPI_ERROR = MPI_ERR_TRUNCATE;
+            break;
+        default:
+            mpi_status->MPI_ERROR = MPI_ERR_INTERN;
+            break;
     }
 }
 
@@ -319,7 +318,8 @@ static inline int _mxm_tag_mxm2mpi(mxm_tag_t mxm_tag)
 
 static inline mxm_tag_t _mxm_tag_mask(int mpi_tag)
 {
-    return (mpi_tag == MPI_ANY_TAG ? 0x80000000U : ~(MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_ERROR_BIT));
+    return (mpi_tag ==
+            MPI_ANY_TAG ? 0x80000000U : ~(MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_ERROR_BIT));
 }
 
 /*
@@ -353,8 +353,7 @@ static inline void _dbg_mxm_out(int level,
             ret =
                 fprintf(output_id, "[%s #%d] %s", MXM_DEBUG_PREFIX, MPIR_Process.comm_world->rank,
                         str);
-        }
-        else {
+        } else {
             ret = fprintf(output_id, "%s", str);
         }
         assert(-1 != ret);
@@ -388,7 +387,7 @@ static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
             if (i + j < buflen)
                 cur_len +=
                     MPL_snprintf(str + cur_len, len - cur_len, "%c",
-                                  isprint(buf[i + j]) ? buf[i + j] : '.');
+                                 isprint(buf[i + j]) ? buf[i + j] : '.');
         cur_len += MPL_snprintf(str + cur_len, len - cur_len, "\n");
     }
     _dbg_mxm_out(8, NULL, 1, NULL, NULL, -1, "%s", str);
@@ -399,8 +398,7 @@ static inline char *_tag_val_to_str(int tag, char *out, int max)
 {
     if (tag == MPI_ANY_TAG) {
         MPL_strncpy(out, "MPI_ANY_TAG", max);
-    }
-    else {
+    } else {
         MPL_snprintf(out, max, "%d", tag);
     }
     return out;
@@ -410,8 +408,7 @@ static inline char *_rank_val_to_str(int rank, char *out, int max)
 {
     if (rank == MPI_ANY_SOURCE) {
         MPL_strncpy(out, "MPI_ANY_SOURCE", max);
-    }
-    else {
+    } else {
         MPL_snprintf(out, max, "%d", rank);
     }
     return out;
