@@ -181,9 +181,9 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
                                                    ptl_pt_index_t local_data_pt,
                                                    ptl_pt_index_t * target_data_pt,
                                                    ptl_pt_index_t * target_control_pt));
-int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq);
-int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handle, ptl_pt_index_t data_pt,
-                             ptl_pt_index_t control_pt);
+int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t * eq);
+int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handle,
+                             ptl_pt_index_t data_pt, ptl_pt_index_t control_pt);
 int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index);
 int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
                               ptl_handle_me_t * me_handle);
