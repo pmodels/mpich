@@ -365,9 +365,6 @@ int MPIR_Segment_init(const void *buf,
     return 0;
 }
 
-/* Segment_alloc
- *
- */
 struct MPIR_Segment *MPIR_Segment_alloc(void)
 {
     return (struct MPIR_Segment *) MPL_malloc(sizeof(struct MPIR_Segment), MPL_MEM_DATATYPE);
@@ -570,8 +567,6 @@ int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unuse
     return 0;
 }
 
-/* MPIR_Segment_blkidx_m2m
- */
 int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
                             MPI_Aint count,
                             MPI_Aint blocklen,
@@ -640,8 +635,6 @@ int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
     return 0;
 }
 
-/* MPIR_Segment_index_m2m
- */
 int MPIR_Segment_index_m2m(MPI_Aint * blocks_p,
                            MPI_Aint count,
                            MPI_Aint * blockarray,
@@ -1184,8 +1177,6 @@ static int MPII_Segment_vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, 
 #define FUNCNAME MPII_Segment_contig_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPII_Segment_contig_flatten
- */
 static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
                                        MPI_Datatype el_type,
                                        MPI_Aint rel_off, void *bufp, void *v_paramp)
