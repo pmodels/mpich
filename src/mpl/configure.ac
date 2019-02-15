@@ -732,9 +732,6 @@ case $with_proc_mutex_package in
     AC_CHECK_FUNC([pthread_mutex_init],[],[AC_MSG_ERROR([unable to find pthreads library])])
     # pthread_mutexattr_setpshared is first released in Issue 5
     AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
-    if test "$ac_cv_func_pthread_mutexattr_setpshared" = "no" ; then
-      AC_DEFINE(HAVE_PTHREAD_MUTEXATTR_SETPSHARED,1, [Define if pthread_mutexattr_setpshared is available.])
-    fi
 
     AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
     PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_POSIX
