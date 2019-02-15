@@ -826,14 +826,15 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                          * pkt->data_sz is sender's request size.
                          */
                         intptr_t unpack_sz = events[0].side.initiator.length;
-                        MPIR_Segment seg;
+                        MPIR_Segment *seg;
                         MPI_Aint last;
 
                         /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
+			seg = MPIR_Segment_alloc();
                         MPIR_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
-                                          &seg);
+                                          seg);
                         last = unpack_sz;
-                        MPIR_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
+                        MPIR_Segment_unpack(seg, 0, &last, REQ_FIELD(req, pack_buf));
                         if (last != unpack_sz) {
                             /* --BEGIN ERROR HANDLING-- */
                             /* received data was not entirely consumed by unpack()
@@ -848,6 +849,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                         dprintf("llc_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
                                 REQ_FIELD(req, pack_buf));
                         MPL_free(REQ_FIELD(req, pack_buf));
+			MPIR_Segment_free(seg);
                     }
 
                     req->status.MPI_TAG = events[0].side.initiator.tag & 0xffffffff;;
