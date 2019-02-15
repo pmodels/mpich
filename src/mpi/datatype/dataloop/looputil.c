@@ -6,18 +6,22 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 #include "datatype.h"
 #include "mpir_dataloop.h"
 #include "looputil.h"
 #include "veccpy.h"
 
-/* MPIR_Segment_piece_params
+#define M2M_TO_USERBUF   0
+#define M2M_FROM_USERBUF 1
+
+/* piece_params
  *
  * This structure is used to pass function-specific parameters into our
  * segment processing function.  This allows us to get additional parameters
  * to the functions it calls without changing the prototype.
  */
-struct MPIR_Segment_piece_params {
+struct piece_params {
     union {
         struct {
             char *pack_buffer;
@@ -71,43 +75,40 @@ static void setPrint(void)
 
 /* NOTE: bufp values are unused, ripe for removal */
 
-int MPIR_Segment_contig_m2m(MPI_Aint * blocks_p,
-                            MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p,
-                            MPI_Aint count,
-                            MPI_Aint blksz,
-                            MPI_Aint stride,
-                            MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
-                            MPI_Aint count,
-                            MPI_Aint blocklen,
-                            MPI_Aint * offsetarray,
-                            MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-int MPIR_Segment_index_m2m(MPI_Aint * blocks_p,
-                           MPI_Aint count,
-                           MPI_Aint * blockarray,
-                           MPI_Aint * offsetarray,
-                           MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int contig_m2m(MPI_Aint * blocks_p,
+                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int vector_m2m(MPI_Aint * blocks_p,
+                      MPI_Aint count,
+                      MPI_Aint blksz,
+                      MPI_Aint stride,
+                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int blkidx_m2m(MPI_Aint * blocks_p,
+                      MPI_Aint count,
+                      MPI_Aint blocklen,
+                      MPI_Aint * offsetarray,
+                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int index_m2m(MPI_Aint * blocks_p,
+                     MPI_Aint count,
+                     MPI_Aint * blockarray,
+                     MPI_Aint * offsetarray,
+                     MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
 
 /* prototypes of internal functions */
-static int MPII_Segment_vector_pack_to_iov(MPI_Aint * blocks_p,
-                                           MPI_Aint count,
-                                           MPI_Aint blksz,
-                                           MPI_Aint stride,
-                                           MPI_Datatype el_type,
-                                           MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int vector_pack_to_iov(MPI_Aint * blocks_p,
+                              MPI_Aint count,
+                              MPI_Aint blksz,
+                              MPI_Aint stride,
+                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
 
-static int MPII_Segment_contig_pack_to_iov(MPI_Aint * blocks_p,
-                                           MPI_Datatype el_type,
-                                           MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int contig_pack_to_iov(MPI_Aint * blocks_p,
+                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
 
-static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
-                                       MPI_Datatype el_type,
-                                       MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int contig_flatten(MPI_Aint * blocks_p,
+                          MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
 
-static int MPII_Segment_vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,    /* offset into buffer */
-                                       void *bufp,      /* start of buffer */
-                                       void *v_paramp);
+static int vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
+                          void *bufp,   /* start of buffer */
+                          void *v_paramp);
 
 static inline int is_float_type(MPI_Datatype el_type)
 {
@@ -221,20 +222,20 @@ static inline void segment_init(const void *buf,
     int i, depth = 0;
     int branch_detected = 0;
 
-    struct MPIR_Dataloop_stackelm *elmp;
+    struct MPII_Dataloop_stackelm *elmp;
     struct MPIR_Dataloop *dlp = 0, *sblp = &segp->builtin_loop;
 
-#ifdef DLOOP_DEBUG_MANIPULATE
+#ifdef MPII_DATALOOP_DEBUG_MANIPULATE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST, "segment_init: count = %d, buf = %x\n", count, buf));
 #endif
 
-    if (!DLOOP_Handle_hasloop_macro(handle)) {
+    if (!MPII_DATALOOP_HANDLE_HASLOOP(handle)) {
         /* simplest case; datatype has no loop (basic) */
 
         MPIR_Datatype_get_size_macro(handle, elmsize);
 
-        sblp->kind = DLOOP_KIND_CONTIG | DLOOP_FINAL_MASK;
+        sblp->kind = MPII_DATALOOP_KIND_CONTIG | MPII_DATALOOP_FINAL_MASK;
         sblp->loop_params.c_t.count = count;
         sblp->loop_params.c_t.dataloop = 0;
         sblp->el_size = elmsize;
@@ -245,7 +246,7 @@ static inline void segment_init(const void *buf,
         depth = 1;
     } else if (count == 0) {
         /* only use the builtin */
-        sblp->kind = DLOOP_KIND_CONTIG | DLOOP_FINAL_MASK;
+        sblp->kind = MPII_DATALOOP_KIND_CONTIG | MPII_DATALOOP_FINAL_MASK;
         sblp->loop_params.c_t.count = 0;
         sblp->loop_params.c_t.dataloop = 0;
         sblp->el_size = 0;
@@ -255,7 +256,7 @@ static inline void segment_init(const void *buf,
         depth = 1;
     } else if (count == 1) {
         /* don't use the builtin */
-        MPIR_Datatype_get_loopptr_macro(handle, dlp);
+        MPII_DATALOOP_GET_LOOPPTR(handle, dlp);
     } else {
         /* default: need to use builtin to handle contig; must check
          * loop depth first
@@ -264,16 +265,16 @@ static inline void segment_init(const void *buf,
         MPI_Aint type_size, type_extent;
         MPI_Datatype el_type;
 
-        MPIR_Datatype_get_loopptr_macro(handle, oldloop);
+        MPII_DATALOOP_GET_LOOPPTR(handle, oldloop);
         MPIR_Assert(oldloop != NULL);
         MPIR_Datatype_get_size_macro(handle, type_size);
         MPIR_Datatype_get_extent_macro(handle, type_extent);
         MPIR_Datatype_get_basic_type(handle, el_type);
 
-        if (depth == 1 && ((oldloop->kind & DLOOP_KIND_MASK) == DLOOP_KIND_CONTIG)) {
+        if (depth == 1 && ((oldloop->kind & MPII_DATALOOP_KIND_MASK) == MPII_DATALOOP_KIND_CONTIG)) {
             if (type_size == type_extent) {
                 /* use a contig */
-                sblp->kind = DLOOP_KIND_CONTIG | DLOOP_FINAL_MASK;
+                sblp->kind = MPII_DATALOOP_KIND_CONTIG | MPII_DATALOOP_FINAL_MASK;
                 sblp->loop_params.c_t.count = count * oldloop->loop_params.c_t.count;
                 sblp->loop_params.c_t.dataloop = NULL;
                 sblp->el_size = oldloop->el_size;
@@ -281,7 +282,7 @@ static inline void segment_init(const void *buf,
                 sblp->el_type = oldloop->el_type;
             } else {
                 /* use a vector, with extent of original type becoming the stride */
-                sblp->kind = DLOOP_KIND_VECTOR | DLOOP_FINAL_MASK;
+                sblp->kind = MPII_DATALOOP_KIND_VECTOR | MPII_DATALOOP_FINAL_MASK;
                 sblp->loop_params.v_t.count = count;
                 sblp->loop_params.v_t.blocksize = oldloop->loop_params.c_t.count;
                 sblp->loop_params.v_t.stride = type_extent;
@@ -292,7 +293,7 @@ static inline void segment_init(const void *buf,
             }
         } else {
             /* general case */
-            sblp->kind = DLOOP_KIND_CONTIG;
+            sblp->kind = MPII_DATALOOP_KIND_CONTIG;
             sblp->loop_params.c_t.count = count;
             sblp->loop_params.c_t.dataloop = oldloop;
             sblp->el_size = type_size;
@@ -300,14 +301,14 @@ static inline void segment_init(const void *buf,
             sblp->el_type = el_type;
 
             depth++;    /* we're adding to the depth with the builtin */
-            MPIR_Assert(depth < (DLOOP_MAX_DATATYPE_DEPTH));
+            MPIR_Assert(depth < (MPII_DATALOOP_MAX_DATATYPE_DEPTH));
         }
 
         dlp = sblp;
     }
 
     /* assert instead of return b/c dtype/dloop errorhandling code is inconsistent */
-    MPIR_Assert(depth < (DLOOP_MAX_DATATYPE_DEPTH));
+    MPIR_Assert(depth < (MPII_DATALOOP_MAX_DATATYPE_DEPTH));
 
     /* initialize the rest of the segment values */
     segp->handle = handle;
@@ -318,26 +319,26 @@ static inline void segment_init(const void *buf,
 
     /* initialize the first stackelm in its entirety */
     elmp = &(segp->stackelm[0]);
-    DLOOP_Stackelm_load(elmp, dlp, 0);
+    MPII_Dataloop_stackelm_load(elmp, dlp, 0);
     branch_detected = elmp->may_require_reloading;
 
-    /* Fill in parameters not set by DLOOP_Stackelm_load */
+    /* Fill in parameters not set by MPII_Dataloop_stackelm_load */
     elmp->orig_offset = 0;
     elmp->curblock = elmp->orig_block;
-    /* DLOOP_Stackelm_offset assumes correct orig_count, curcount, loop_p */
-    elmp->curoffset = /* elmp->orig_offset + */ DLOOP_Stackelm_offset(elmp);
+    /* MPII_Dataloop_stackelm_offset assumes correct orig_count, curcount, loop_p */
+    elmp->curoffset = /* elmp->orig_offset + */ MPII_Dataloop_stackelm_offset(elmp);
 
     i = 1;
-    while (!(dlp->kind & DLOOP_FINAL_MASK)) {
+    while (!(dlp->kind & MPII_DATALOOP_FINAL_MASK)) {
         /* get pointer to next dataloop */
-        switch (dlp->kind & DLOOP_KIND_MASK) {
-            case DLOOP_KIND_CONTIG:
-            case DLOOP_KIND_VECTOR:
-            case DLOOP_KIND_BLOCKINDEXED:
-            case DLOOP_KIND_INDEXED:
+        switch (dlp->kind & MPII_DATALOOP_KIND_MASK) {
+            case MPII_DATALOOP_KIND_CONTIG:
+            case MPII_DATALOOP_KIND_VECTOR:
+            case MPII_DATALOOP_KIND_BLOCKINDEXED:
+            case MPII_DATALOOP_KIND_INDEXED:
                 dlp = dlp->loop_params.cm_t.dataloop;
                 break;
-            case DLOOP_KIND_STRUCT:
+            case MPII_DATALOOP_KIND_STRUCT:
                 dlp = dlp->loop_params.s_t.dataloop_array[0];
                 break;
             default:
@@ -347,14 +348,14 @@ static inline void segment_init(const void *buf,
                 /* --END ERROR HANDLING-- */
         }
 
-        MPIR_Assert(i < DLOOP_MAX_DATATYPE_DEPTH);
+        MPIR_Assert(i < MPII_DATALOOP_MAX_DATATYPE_DEPTH);
 
         /* loop_p, orig_count, orig_block, and curcount are all filled by us now.
          * the rest are filled in at processing time.
          */
         elmp = &(segp->stackelm[i]);
 
-        DLOOP_Stackelm_load(elmp, dlp, branch_detected);
+        MPII_Dataloop_stackelm_load(elmp, dlp, branch_detected);
         branch_detected = elmp->may_require_reloading;
         i++;
 
@@ -365,9 +366,9 @@ static inline void segment_init(const void *buf,
 
 struct MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle)
 {
-    struct MPIR_Segment *segp =
-        (struct MPIR_Segment *) MPL_malloc(sizeof(struct MPIR_Segment), MPL_MEM_DATATYPE);
+    struct MPIR_Segment *segp;
 
+    segp = (struct MPIR_Segment *) MPL_malloc(sizeof(struct MPIR_Segment), MPL_MEM_DATATYPE);
     if (segp)
         segment_init(buf, count, handle, segp);
 
@@ -387,7 +388,7 @@ void MPIR_Segment_free(struct MPIR_Segment *segp)
 
 void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, void *streambuf)
 {
-    struct MPIR_m2m_params params;      /* defined in dataloop_parts.h */
+    struct MPII_Dataloop_m2m_params params;     /* defined in dataloop_parts.h */
 
     DBG_SEGMENT(printf("Segment_pack...\n"));
     /* experimenting with discarding buf value in the segment, keeping in
@@ -396,16 +397,16 @@ void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, vo
      */
     params.userbuf = segp->ptr;
     params.streambuf = streambuf;
-    params.direction = DLOOP_M2M_FROM_USERBUF;
+    params.direction = M2M_FROM_USERBUF;
 
-    MPIR_Segment_manipulate(segp, first, lastp, MPIR_Segment_contig_m2m, MPIR_Segment_vector_m2m, MPIR_Segment_blkidx_m2m, MPIR_Segment_index_m2m, NULL,        /* size fn */
+    MPII_Segment_manipulate(segp, first, lastp, contig_m2m, vector_m2m, blkidx_m2m, index_m2m, NULL,    /* size fn */
                             &params);
     return;
 }
 
 void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, void *streambuf)
 {
-    struct MPIR_m2m_params params;
+    struct MPII_Dataloop_m2m_params params;
 
     DBG_SEGMENT(printf("Segment_unpack...\n"));
     /* experimenting with discarding buf value in the segment, keeping in
@@ -414,22 +415,22 @@ void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, 
      */
     params.userbuf = segp->ptr;
     params.streambuf = streambuf;
-    params.direction = DLOOP_M2M_TO_USERBUF;
+    params.direction = M2M_TO_USERBUF;
 
-    MPIR_Segment_manipulate(segp, first, lastp, MPIR_Segment_contig_m2m, MPIR_Segment_vector_m2m, MPIR_Segment_blkidx_m2m, MPIR_Segment_index_m2m, NULL,        /* size fn */
+    MPII_Segment_manipulate(segp, first, lastp, contig_m2m, vector_m2m, blkidx_m2m, index_m2m, NULL,    /* size fn */
                             &params);
     return;
 }
 
 /* PIECE FUNCTIONS BELOW */
 
-int MPIR_Segment_contig_m2m(MPI_Aint * blocks_p,
-                            MPI_Datatype el_type,
-                            MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int contig_m2m(MPI_Aint * blocks_p,
+                      MPI_Datatype el_type,
+                      MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint el_size;           /* MPI_Aint? */
     MPI_Aint size;
-    struct MPIR_m2m_params *paramp = v_paramp;
+    struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
@@ -442,7 +443,7 @@ int MPIR_Segment_contig_m2m(MPI_Aint * blocks_p,
                (unsigned) bufp, (unsigned) paramp->u.unpack.unpack_buffer, el_size, *blocks_p);
 #endif
 
-    if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
+    if (paramp->direction == M2M_TO_USERBUF) {
         /* Ensure that pointer increment fits in a pointer */
         /* userbuf is a pointer (not a displacement) since it is being
          * used on a memcpy */
@@ -470,12 +471,12 @@ int MPIR_Segment_contig_m2m(MPI_Aint * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,   /* offset into buffer */
-                            void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
+                      void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint i;
     MPI_Aint el_size, whole_count, blocks_left;
-    struct MPIR_m2m_params *paramp = v_paramp;
+    struct MPII_Dataloop_m2m_params *paramp = v_paramp;
     char *cbufp;
 
     /* Ensure that pointer increment fits in a pointer */
@@ -490,7 +491,7 @@ int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unuse
     whole_count = (MPI_Aint) ((blksz > 0) ? (*blocks_p / (MPI_Aint) blksz) : 0);
     blocks_left = (MPI_Aint) ((blksz > 0) ? (*blocks_p % (MPI_Aint) blksz) : 0);
 
-    if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
+    if (paramp->direction == M2M_TO_USERBUF) {
         if (el_size == 8 MPIR_ALIGN8_TEST(paramp->streambuf, cbufp)) {
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, stride, int64_t, blksz, whole_count);
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, 0, int64_t, blocks_left, 1);
@@ -571,18 +572,18 @@ int MPIR_Segment_vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unuse
     return 0;
 }
 
-int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
-                            MPI_Aint count,
-                            MPI_Aint blocklen,
-                            MPI_Aint * offsetarray,
-                            MPI_Datatype el_type,
-                            MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int blkidx_m2m(MPI_Aint * blocks_p,
+                      MPI_Aint count,
+                      MPI_Aint blocklen,
+                      MPI_Aint * offsetarray,
+                      MPI_Datatype el_type,
+                      MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint curblock = 0;
     MPI_Aint el_size;
     MPI_Aint blocks_left = *blocks_p;
     char *cbufp;
-    struct MPIR_m2m_params *paramp = v_paramp;
+    struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     DBG_SEGMENT(printf("blkidx m2m: elsize = %ld, count = %ld, blocklen = %ld,"
@@ -605,7 +606,7 @@ int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
         if (blocklen > blocks_left)
             blocklen = blocks_left;
 
-        if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
+        if (paramp->direction == M2M_TO_USERBUF) {
             src = paramp->streambuf;
             dest = cbufp;
         } else {
@@ -639,18 +640,18 @@ int MPIR_Segment_blkidx_m2m(MPI_Aint * blocks_p,
     return 0;
 }
 
-int MPIR_Segment_index_m2m(MPI_Aint * blocks_p,
-                           MPI_Aint count,
-                           MPI_Aint * blockarray,
-                           MPI_Aint * offsetarray,
-                           MPI_Datatype el_type,
-                           MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int index_m2m(MPI_Aint * blocks_p,
+                     MPI_Aint count,
+                     MPI_Aint * blockarray,
+                     MPI_Aint * offsetarray,
+                     MPI_Datatype el_type,
+                     MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     int curblock = 0;
     MPI_Aint el_size;
     MPI_Aint cur_block_sz, blocks_left = *blocks_p;
     char *cbufp;
-    struct MPIR_m2m_params *paramp = v_paramp;
+    struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     DBG_SEGMENT(printf("index m2m: elsize = %d, count = %d\n", (int) el_size, (int) count));
@@ -671,7 +672,7 @@ int MPIR_Segment_index_m2m(MPI_Aint * blocks_p,
         if (cur_block_sz > blocks_left)
             cur_block_sz = blocks_left;
 
-        if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
+        if (paramp->direction == M2M_TO_USERBUF) {
             src = paramp->streambuf;
             dest = cbufp;
         } else {
@@ -704,15 +705,15 @@ int MPIR_Segment_index_m2m(MPI_Aint * blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_pack_external32_to_buf
+#define FUNCNAME contig_pack_external32_to_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPII_Segment_contig_pack_external32_to_buf(MPI_Aint * blocks_p,
-                                                      MPI_Datatype el_type,
-                                                      MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
+                                         MPI_Datatype el_type,
+                                         MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int src_el_size, dest_el_size;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
@@ -754,16 +755,15 @@ static int MPII_Segment_contig_pack_external32_to_buf(MPI_Aint * blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_unpack_external32_to_buf
+#define FUNCNAME contig_unpack_external32_to_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPII_Segment_contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
-                                                        MPI_Datatype el_type,
-                                                        MPI_Aint rel_off,
-                                                        void *bufp, void *v_paramp)
+static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
+                                           MPI_Datatype el_type,
+                                           MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int src_el_size, dest_el_size;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
@@ -814,13 +814,13 @@ static int MPII_Segment_contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer)
 {
-    struct MPIR_Segment_piece_params pack_params;
+    struct piece_params pack_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_PACK_EXTERNAL);
 
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_PACK_EXTERNAL);
 
     pack_params.u.pack.pack_buffer = (void *) pack_buffer;
-    MPIR_Segment_manipulate(segp, first, lastp, MPII_Segment_contig_pack_external32_to_buf, NULL,       /* MPIR_Segment_vector_pack_external32_to_buf, */
+    MPII_Segment_manipulate(segp, first, lastp, contig_pack_external32_to_buf, NULL,    /* MPIR_Segment_vector_pack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_pack_external32_to_buf, */
                             MPII_Datatype_get_basic_size_external32, &pack_params);
@@ -836,13 +836,13 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
 void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
                                     MPI_Aint first, MPI_Aint * lastp, void *unpack_buffer)
 {
-    struct MPIR_Segment_piece_params pack_params;
+    struct piece_params pack_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
 
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
 
     pack_params.u.unpack.unpack_buffer = unpack_buffer;
-    MPIR_Segment_manipulate(segp, first, lastp, MPII_Segment_contig_unpack_external32_to_buf, NULL,     /* MPIR_Segment_vector_unpack_external32_to_buf, */
+    MPII_Segment_manipulate(segp, first, lastp, contig_unpack_external32_to_buf, NULL,  /* MPIR_Segment_vector_unpack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_unpack_external32_to_buf, */
                             MPII_Datatype_get_basic_size_external32, &pack_params);
@@ -923,7 +923,7 @@ void MPIR_Type_release_contents(MPI_Datatype type,
 void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
                          MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
 {
-    struct MPIR_Segment_piece_params packvec_params;
+    struct piece_params packvec_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_TO_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_TO_IOV);
@@ -934,11 +934,11 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 
     MPIR_Assert(*lengthp > 0);
 
-    MPIR_Segment_manipulate(segp, first, lastp, MPII_Segment_contig_pack_to_iov, MPII_Segment_vector_pack_to_iov, NULL, /* blkidx fn */
+    MPII_Segment_manipulate(segp, first, lastp, contig_pack_to_iov, vector_pack_to_iov, NULL,   /* blkidx fn */
                             NULL,       /* index fn */
                             NULL, &packvec_params);
 
-    /* last value already handled by MPIR_Segment_manipulate */
+    /* last value already handled by MPII_Segment_manipulate */
     *lengthp = packvec_params.u.pack_vector.index;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_TO_IOV);
     return;
@@ -983,7 +983,7 @@ void MPIR_Segment_flatten(struct MPIR_Segment *segp,
                           MPI_Aint first,
                           MPI_Aint * lastp, MPI_Aint * offp, MPI_Aint * sizep, MPI_Aint * lengthp)
 {
-    struct MPIR_Segment_piece_params packvec_params;
+    struct piece_params packvec_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_FLATTEN);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_FLATTEN);
@@ -995,10 +995,10 @@ void MPIR_Segment_flatten(struct MPIR_Segment *segp,
 
     MPIR_Assert(*lengthp > 0);
 
-    MPIR_Segment_manipulate(segp, first, lastp, MPII_Segment_contig_flatten, MPII_Segment_vector_flatten, NULL, /* blkidx fn */
+    MPII_Segment_manipulate(segp, first, lastp, contig_flatten, vector_flatten, NULL,   /* blkidx fn */
                             NULL, NULL, &packvec_params);
 
-    /* last value already handled by MPIR_Segment_manipulate */
+    /* last value already handled by MPII_Segment_manipulate */
     *lengthp = packvec_params.u.flatten.index;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_FLATTEN);
     return;
@@ -1011,19 +1011,16 @@ void MPIR_Segment_flatten(struct MPIR_Segment *segp,
 /********** FUNCTIONS FOR CREATING AN IOV DESCRIBING BUFFER **********/
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_pack_to_iov
+#define FUNCNAME contig_pack_to_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPII_Segment_contig_pack_to_iov
-*/
-static int MPII_Segment_contig_pack_to_iov(MPI_Aint * blocks_p,
-                                           MPI_Datatype el_type,
-                                           MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int contig_pack_to_iov(MPI_Aint * blocks_p,
+                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int el_size, last_idx;
     MPI_Aint size;
     char *last_end = NULL;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_CONTIG_PACK_TO_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_CONTIG_PACK_TO_IOV);
@@ -1066,10 +1063,10 @@ static int MPII_Segment_contig_pack_to_iov(MPI_Aint * blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_vector_pack_to_iov
+#define FUNCNAME vector_pack_to_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPII_Segment_vector_pack_to_iov
+/* vector_pack_to_iov
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -1082,13 +1079,13 @@ static int MPII_Segment_contig_pack_to_iov(MPI_Aint * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int MPII_Segment_vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,        /* offset into buffer */
-                                           void *bufp,  /* start of buffer */
-                                           void *v_paramp)
+static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,     /* offset into buffer */
+                              void *bufp,       /* start of buffer */
+                              void *v_paramp)
 {
     int i;
     MPI_Aint size, blocks_left, basic_size;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
@@ -1178,16 +1175,15 @@ static int MPII_Segment_vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, 
 /********** FUNCTIONS FOR FLATTENING A TYPE **********/
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_flatten
+#define FUNCNAME contig_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
-                                       MPI_Datatype el_type,
-                                       MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int contig_flatten(MPI_Aint * blocks_p,
+                          MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int idx, el_size;
     MPI_Aint size;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_CONTIG_FLATTEN);
@@ -1229,10 +1225,10 @@ static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Segment_vector_flatten
+#define FUNCNAME vector_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPII_Segment_vector_flatten
+/* vector_flatten
  *
  * Notes:
  * - this is only called when the starting position is at the beginning
@@ -1242,13 +1238,13 @@ static int MPII_Segment_contig_flatten(MPI_Aint * blocks_p,
  * - we return the number of blocks that we did process in region pointed to by
  *   blocks_p.
  */
-static int MPII_Segment_vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,    /* offset into buffer */
-                                       void *bufp,      /* start of buffer */
-                                       void *v_paramp)
+static int vector_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
+                          void *bufp,   /* start of buffer */
+                          void *v_paramp)
 {
     int i;
     MPI_Aint size, blocks_left, basic_size;
-    struct MPIR_Segment_piece_params *paramp = v_paramp;
+    struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_VECTOR_FLATTEN);
