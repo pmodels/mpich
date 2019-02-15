@@ -214,8 +214,8 @@ static int external32_float_convert(char *dest_buf,
  * - Assumes that the segment has been allocated.
  *
  */
-static inline int segment_init(const void *buf,
-                               MPI_Aint count, MPI_Datatype handle, struct MPIR_Segment *segp)
+static inline void segment_init(const void *buf,
+                                MPI_Aint count, MPI_Datatype handle, struct MPIR_Segment *segp)
 {
     MPI_Aint elmsize = 0;
     int i, depth = 0;
@@ -361,8 +361,6 @@ static inline int segment_init(const void *buf,
     }
 
     segp->valid_sp = depth - 1;
-
-    return 0;
 }
 
 struct MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle)
