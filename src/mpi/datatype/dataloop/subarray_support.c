@@ -8,16 +8,17 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Type_convert_subarray
+#define FUNCNAME MPII_Dataloop_convert_subarray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Type_convert_subarray(int ndims,
-                               int *array_of_sizes,
-                               int *array_of_subsizes,
-                               int *array_of_starts,
-                               int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPII_Dataloop_convert_subarray(int ndims,
+                                   int *array_of_sizes,
+                                   int *array_of_subsizes,
+                                   int *array_of_starts,
+                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent, disps[3], size;

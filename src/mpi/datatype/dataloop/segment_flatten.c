@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,29 +15,7 @@
 
 /* NOTE: I don't think I've removed the need for bufp in here yet! -- RobR */
 
-static int DLOOP_Leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_vector_mpi_flatten(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint stride,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint * offsetarray,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_index_mpi_flatten(MPI_Aint * blocks_p,
-                                        MPI_Aint count,
-                                        MPI_Aint * blockarray,
-                                        MPI_Aint * offsetarray,
-                                        MPI_Datatype el_type,
-                                        MPI_Aint rel_off, void *bufp, void *v_paramp);
-
-struct MPIDU_mpi_flatten_params {
+struct flatten_params {
     int index;
     MPI_Aint length;
     MPI_Aint last_end;
@@ -44,7 +23,29 @@ struct MPIDU_mpi_flatten_params {
     MPI_Aint *disps;
 };
 
-/* MPIR_Segment_mpi_flatten - flatten a type into a representation
+static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint stride,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint * offsetarray,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
+                                  MPI_Aint count,
+                                  MPI_Aint * blockarray,
+                                  MPI_Aint * offsetarray,
+                                  MPI_Datatype el_type,
+                                  MPI_Aint rel_off, void *bufp, void *v_paramp);
+
+/* MPII_Dataloop_segment_flatten - flatten a type into a representation
  *                            appropriate for passing to hindexed create.
  *
  * NOTE: blocks will be in units of bytes when returned.
@@ -62,12 +63,12 @@ struct MPIDU_mpi_flatten_params {
  * lengthp - in/out parameter describing length of array (and afterwards
  *           the amount of the array that has actual data)
  */
-void MPIR_Segment_mpi_flatten(MPIR_Segment * segp,
-                              MPI_Aint first,
-                              MPI_Aint * lastp,
-                              MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp)
+void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
+                                   MPI_Aint first,
+                                   MPI_Aint * lastp,
+                                   MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp)
 {
-    struct MPIDU_mpi_flatten_params params;
+    struct flatten_params params;
 
     MPIR_Assert(*lengthp > 0);
 
@@ -76,33 +77,32 @@ void MPIR_Segment_mpi_flatten(MPIR_Segment * segp,
     params.blklens = blklens;
     params.disps = disps;
 
-    MPIR_Segment_manipulate(segp,
+    MPII_Segment_manipulate(segp,
                             first,
                             lastp,
-                            DLOOP_Leaf_contig_mpi_flatten,
-                            DLOOP_Leaf_vector_mpi_flatten,
-                            DLOOP_Leaf_blkidx_mpi_flatten,
-                            DLOOP_Leaf_index_mpi_flatten, NULL, &params);
+                            leaf_contig_mpi_flatten,
+                            leaf_vector_mpi_flatten,
+                            leaf_blkidx_mpi_flatten, leaf_index_mpi_flatten, NULL, &params);
 
-    /* last value already handled by MPIR_Segment_manipulate */
+    /* last value already handled by MPII_Segment_manipulate */
     *lengthp = params.index;
     return;
 }
 
 /* PIECE FUNCTIONS BELOW */
 
-/* DLOOP_Leaf_contig_mpi_flatten
+/* leaf_contig_mpi_flatten
  *
  */
-static int DLOOP_Leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int last_idx;
     MPI_Aint size;
     MPI_Aint el_size;
     char *last_end = NULL;
-    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
+    struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
@@ -144,7 +144,7 @@ static int DLOOP_Leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
     return 0;
 }
 
-/* DLOOP_Leaf_vector_mpi_flatten
+/* leaf_vector_mpi_flatten
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -160,14 +160,14 @@ static int DLOOP_Leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
  * TODO: MAKE THIS CODE SMARTER, USING THE SAME GENERAL APPROACH AS IN THE
  *       COUNT BLOCK CODE ABOVE.
  */
-static int DLOOP_Leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,  /* offset into buffer */
-                                         void *bufp,    /* start of buffer */
-                                         void *v_paramp)
+static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,        /* offset into buffer */
+                                   void *bufp,  /* start of buffer */
+                                   void *v_paramp)
 {
     int i;
     MPI_Aint size, blocks_left;
     MPI_Aint el_size;
-    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
+    struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
@@ -248,17 +248,17 @@ static int DLOOP_Leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MP
     return 0;
 }
 
-static int DLOOP_Leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint * offsetarray,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint * offsetarray,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int i;
     MPI_Aint blocks_left, size;
     MPI_Aint el_size;
-    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
+    struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
@@ -324,17 +324,17 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
     return 0;
 }
 
-static int DLOOP_Leaf_index_mpi_flatten(MPI_Aint * blocks_p,
-                                        MPI_Aint count,
-                                        MPI_Aint * blockarray,
-                                        MPI_Aint * offsetarray,
-                                        MPI_Datatype el_type,
-                                        MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
+                                  MPI_Aint count,
+                                  MPI_Aint * blockarray,
+                                  MPI_Aint * offsetarray,
+                                  MPI_Datatype el_type,
+                                  MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
     int i;
     MPI_Aint size, blocks_left;
     MPI_Aint el_size;
-    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
+    struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
