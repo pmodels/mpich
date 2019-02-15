@@ -15,12 +15,10 @@
 #define MPID_DONT_CREATE_REQ 1
 
 static inline int
-MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                MPIR_Request * rreq);
+MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)), MPIR_Request * rreq);
 
 static inline int
-MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                           MPIR_Request * sreq);
+MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)), MPIR_Request * sreq);
 
 #define ADD_SUFFIX(name) name
 #undef API_SET
@@ -47,10 +45,10 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(REQ_OFI(rreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
-    fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SYNC_RECV_CALLBACK);
     return mpi_errno;
-    fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -67,10 +65,10 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
     if (REQ_OFI(sreq)->pack_buffer)
         MPL_free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
-    fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
     return mpi_errno;
-    fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -133,7 +131,7 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
             MPL_free(REQ_OFI(rreq)->pack_buffer);
         }
         matched = FALSE;
-    }else{
+    } else {
         /* Cancel failed. We can only fail in the case of the message
          *  being already actually received via ofi fabric. return TRUE.
          */
