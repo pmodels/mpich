@@ -61,8 +61,7 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
     if (tag == MPI_ANY_TAG) {
         *(int32_t *) ((uint8_t *) & _tag) = LLC_ANY_TAG;
         *(int32_t *) ((uint8_t *) & mask.tag) = 0;
-    }
-    else {
+    } else {
         *(int32_t *) ((uint8_t *) & _tag) = tag;
     }
 
@@ -74,8 +73,7 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
     if (source == MPI_ANY_SOURCE) {
         rank = LLC_ANY_SOURCE;
         mask.rank = 0;
-    }
-    else {
+    } else {
         MPIR_Assert(vc);
         rank = VC_FIELD(vc, remote_endpoint_addr);
     }
@@ -86,16 +84,14 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
         status->MPI_ERROR = MPI_SUCCESS;
         if (source != MPI_ANY_SOURCE) {
             status->MPI_SOURCE = source;
-        }
-        else {
+        } else {
             int found = 0;
             found = convert_rank_llc2mpi(comm, probe.rank, &status->MPI_SOURCE);
             MPIR_Assert(found);
         }
         status->MPI_TAG = probe.tag & 0xffffffff;
         MPIR_STATUS_SET_COUNT(*status, probe.len);
-    }
-    else {
+    } else {
         *flag = 0;
 
         MPID_Progress_poke();   /* do LLC_poll */
@@ -132,8 +128,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
     if (tag == MPI_ANY_TAG) {
         *(int32_t *) ((uint8_t *) & _tag) = LLC_ANY_TAG;
         *(int32_t *) ((uint8_t *) & mask.tag) = 0;
-    }
-    else {
+    } else {
         *(int32_t *) ((uint8_t *) & _tag) = tag;
     }
 
@@ -145,8 +140,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
     if (source == MPI_ANY_SOURCE) {
         rank = LLC_ANY_SOURCE;
         mask.rank = 0;
-    }
-    else {
+    } else {
         MPIR_Assert(vc);
         rank = VC_FIELD(vc, remote_endpoint_addr);
     }
@@ -168,8 +162,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         req->status.MPI_ERROR = MPI_SUCCESS;
         if (source != MPI_ANY_SOURCE) {
             req->status.MPI_SOURCE = source;
-        }
-        else {
+        } else {
             int found = 0;
             found = convert_rank_llc2mpi(comm, probe.rank, &req->status.MPI_SOURCE);
             MPIR_Assert(found);
@@ -200,8 +193,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         ((struct llc_cmd_area *) cmd[0].usr_area)->cbarg = req;
         if (source == MPI_ANY_SOURCE) {
             ((struct llc_cmd_area *) cmd[0].usr_area)->raddr = MPI_ANY_SOURCE;
-        }
-        else {
+        } else {
             ((struct llc_cmd_area *) cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
         }
 
@@ -221,8 +213,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         status->MPI_SOURCE = req->status.MPI_SOURCE;
         status->MPI_TAG = req->status.MPI_TAG;
         MPIR_STATUS_SET_COUNT(*status, req->dev.recv_data_sz);
-    }
-    else {
+    } else {
         *flag = 0;
         *message = NULL;
 
