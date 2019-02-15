@@ -18,7 +18,7 @@ static void _mxm_recv_completion_cb(void *context);
 static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int id, mxm_mq_h mxm_mq,
                       mxm_tag_t mxm_tag);
 static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
-                               MPIR_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
+                               MPIR_Datatype * dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count);
 
 #undef FUNCNAME
@@ -158,7 +158,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq)
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIR_Datatype*dt_ptr;
+    MPIR_Datatype *dt_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MXM_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MXM_RECV);
@@ -199,8 +199,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq)
             req_area->iov_count = 1;
             req_area->iov_buf[0].ptr = (char *) (rreq->dev.user_buf) + dt_true_lb;
             req_area->iov_buf[0].length = data_sz;
-        }
-        else {
+        } else {
             rreq->ch.noncontig = TRUE;
             mpi_errno = _mxm_process_rdtype(&rreq, rreq->dev.datatype, dt_ptr, data_sz,
                                             rreq->dev.user_buf, rreq->dev.user_count,
@@ -234,7 +233,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
     int dt_contig;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t userbuf_sz;
-    MPIR_Datatype*dt_ptr;
+    MPIR_Datatype *dt_ptr;
     intptr_t data_sz;
     MPID_nem_mxm_vc_area *vc_area ATTRIBUTE((unused)) = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
@@ -269,14 +268,13 @@ static int _mxm_handle_rreq(MPIR_Request * req)
                                                          req->status.MPI_TAG, req->dev.recv_data_sz,
                                                          userbuf_sz);
         }
-    }
-    else {
+    } else {
         data_sz = userbuf_sz;
         MPIR_STATUS_SET_COUNT(req->status, userbuf_sz);
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST,
-                                              "receive buffer too small; message truncated, msg_sz="
-                                              PRIdPTR ", userbuf_sz="
-                                              PRIdPTR, req->dev.recv_data_sz, userbuf_sz));
+                                                       "receive buffer too small; message truncated, msg_sz="
+                                                       PRIdPTR ", userbuf_sz="
+                                                       PRIdPTR, req->dev.recv_data_sz, userbuf_sz));
         req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                                      MPI_ERR_TRUNCATE, "**truncate",
@@ -292,8 +290,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
             last = req->dev.recv_data_sz;
             MPIR_Segment_unpack(req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
             tmp_buf = req->dev.tmpbuf;
-        }
-        else {
+        } else {
             mxm_req_buffer_t *iov_buf;
             MPL_IOV *iov;
             int n_iov = 0;
@@ -312,7 +309,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
                 }
 
                 MPIR_Segment_from_iov(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
-                                           &n_iov);
+                                      &n_iov);
                 MPL_free(iov);
             }
             if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
@@ -364,8 +361,7 @@ static void _mxm_recv_completion_cb(void *context)
     if (req->ch.vc) {
         MPID_nem_mxm_vc_area *vc_area = VC_BASE(req->ch.vc);
         list_enqueue(&vc_area->mxm_ep->free_queue, &req_area->mxm_req->queue);
-    }
-    else {
+    } else {
         list_enqueue(&mxm_obj->free_queue, &req_area->mxm_req->queue);
     }
 
@@ -415,8 +411,7 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
         mxm_rreq->base.data_type = MXM_REQ_DATA_BUFFER;
         mxm_rreq->base.data.buffer.ptr = req->iov_buf[0].ptr;
         mxm_rreq->base.data.buffer.length = req->iov_buf[0].length;
-    }
-    else {
+    } else {
         mxm_rreq->base.data_type = MXM_REQ_DATA_IOV;
         mxm_rreq->base.data.iov.vector = req->iov_buf;
         mxm_rreq->base.data.iov.count = req->iov_count;
@@ -437,7 +432,7 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
 
 
 static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
-                               MPIR_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
+                               MPIR_Datatype * dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -491,8 +486,7 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
         rreq->dev.tmpbuf = NULL;
         rreq->dev.tmpbuf_sz = 0;
         *iov_count = n_iov;
-    }
-    else {
+    } else {
         MPI_Aint packsize = 0;
         MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, &packsize);
         rreq->dev.tmpbuf = MPL_malloc((size_t) packsize, MPL_MEM_BUFFER);
