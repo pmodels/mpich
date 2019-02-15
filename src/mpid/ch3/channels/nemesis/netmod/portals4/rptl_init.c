@@ -86,7 +86,7 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
 #define FUNCNAME MPID_nem_ptl_rptl_drain_eq
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
+int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t * eq)
 {
     int ret = PTL_OK;
     ptl_event_t event;
@@ -137,8 +137,8 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
 #define FUNCNAME MPID_nem_ptl_rptl_ptinit
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handle, ptl_pt_index_t data_pt,
-                             ptl_pt_index_t control_pt)
+int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handle,
+                             ptl_pt_index_t data_pt, ptl_pt_index_t control_pt)
 {
     int ret = PTL_OK;
     struct rptl *rptl;
@@ -153,7 +153,8 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
 
     /* setup the parts of rptls that can be done before world size or
      * target information */
-    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl",
+                        MPL_MEM_ADDRESS);
     DL_APPEND(rptl_info.rptl_list, rptl);
 
     rptl->local_state = RPTL_LOCAL_STATE_ACTIVE;
