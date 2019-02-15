@@ -413,9 +413,8 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* Check to see if we've already allocated a seg for this req.
            This can happen if both sides allocated copy buffers, and
            we decided to use the remote side's buffer. */
-        req->dev.segment_ptr = MPIR_Segment_alloc();
+        req->dev.segment_ptr = MPIR_Segment_alloc(req->dev.user_buf, req->dev.user_count, req->dev.datatype);
         MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-        MPIR_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, req->dev.segment_ptr);
         req->dev.segment_first = 0;
     }
     vc_ch->lmt_buf_num = 0;

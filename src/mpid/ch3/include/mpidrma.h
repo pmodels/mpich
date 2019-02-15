@@ -948,7 +948,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         void *curr_loc;
         int accumulated_count;
 
-        segp = MPIR_Segment_alloc();
+        segp = MPIR_Segment_alloc(NULL, target_count, target_dtp);
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
@@ -958,7 +958,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             return mpi_errno;
         }
         /* --END ERROR HANDLING-- */
-        MPIR_Segment_init(NULL, target_count, target_dtp, segp);
         first = stream_offset;
         last = first + source_count * source_dtp_size;
 

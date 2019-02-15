@@ -75,10 +75,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     packed_buf = MPL_malloc(total_len, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(packed_buf == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
 
-    seg = MPIR_Segment_alloc();
+    seg = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
     MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPIR_Segment");
-    MPIR_Segment_init(origin_addr, origin_count, origin_datatype, seg);
     MPIR_Segment_pack(seg, first, &last, packed_buf);
     MPIR_Segment_free(seg);
 

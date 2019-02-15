@@ -447,12 +447,14 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
     int n_iov = 0;
     int index;
 
-    if (rreq->dev.segment_ptr == NULL) {
-        rreq->dev.segment_ptr = MPIR_Segment_alloc();
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIR_Segment_alloc");
+    if (rreq->dev.segment_ptr) {
+        MPIR_Segment_free(rreq->dev.segment_ptr);
     }
-    MPIR_Segment_init(buf, count, datatype, rreq->dev.segment_ptr);
+    /* FIXME: we never seem to be freeing this segment */
+    rreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
+    MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPIR_Segment_alloc");
+
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = data_sz;
 

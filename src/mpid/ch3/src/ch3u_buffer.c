@@ -83,8 +83,7 @@ void MPIDI_CH3U_Buffer_copy(
 	MPIR_Segment *seg;
 	MPI_Aint last;
 
-        seg = MPIR_Segment_alloc();
-	MPIR_Segment_init(rbuf, rcount, rdt, seg);
+	seg = MPIR_Segment_alloc(rbuf, rcount, rdt);
 	last = sdata_sz;
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                           "pre-unpack last=%" PRIdPTR, last ));
@@ -106,8 +105,7 @@ void MPIDI_CH3U_Buffer_copy(
 	MPIR_Segment *seg;
 	MPI_Aint last;
 
-        seg = MPIR_Segment_alloc();
-	MPIR_Segment_init(sbuf, scount, sdt, seg);
+	seg = MPIR_Segment_alloc(sbuf, scount, sdt);
 	last = sdata_sz;
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			       "pre-pack last=%" PRIdPTR, last ));
@@ -145,10 +143,8 @@ void MPIDI_CH3U_Buffer_copy(
 	}
 	/* --END ERROR HANDLING-- */
 
-        sseg = MPIR_Segment_alloc();
-	MPIR_Segment_init(sbuf, scount, sdt, sseg);
-        rseg = MPIR_Segment_alloc();
-	MPIR_Segment_init(rbuf, rcount, rdt, rseg);
+	sseg = MPIR_Segment_alloc(sbuf, scount, sdt);
+	rseg = MPIR_Segment_alloc(rbuf, rcount, rdt);
 
 	sfirst = 0;
 	rfirst = 0;
