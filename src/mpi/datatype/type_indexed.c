@@ -213,9 +213,10 @@ int MPIR_Type_indexed(int count,
         MPIR_Assert(blklens != NULL);
         for (i = 0; i < count; i++)
             blklens[i] = blocklength_array[i];
-        contig_count = MPIR_Type_indexed_count_contig(count,
-                                                      blklens,
-                                                      displacement_array, dispinbytes, old_extent);
+        contig_count = MPII_Datatype_indexed_count_contig(count,
+                                                          blklens,
+                                                          displacement_array, dispinbytes,
+                                                          old_extent);
         new_dtp->max_contig_blocks = contig_count;
         if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;

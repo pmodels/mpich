@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,34 +15,34 @@
 
 /* NOTE: bufp values are unused, ripe for removal */
 
-static int DLOOP_Leaf_contig_count_block(MPI_Aint * blocks_p,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_vector_count_block(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint stride,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_blkidx_count_block(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint * offsetarray,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int DLOOP_Leaf_index_count_block(MPI_Aint * blocks_p,
-                                        MPI_Aint count,
-                                        MPI_Aint * blockarray,
-                                        MPI_Aint * offsetarray,
-                                        MPI_Datatype el_type,
-                                        MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_contig_count_block(MPI_Aint * blocks_p,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_vector_count_block(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint stride,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_blkidx_count_block(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint * offsetarray,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int leaf_index_count_block(MPI_Aint * blocks_p,
+                                  MPI_Aint count,
+                                  MPI_Aint * blockarray,
+                                  MPI_Aint * offsetarray,
+                                  MPI_Datatype el_type,
+                                  MPI_Aint rel_off, void *bufp, void *v_paramp);
 
 struct MPIR_contig_blocks_params {
     MPI_Aint count;
     MPI_Aint last_loc;
 };
 
-/* DLOOP_Segment_count_contig_blocks()
+/* MPIR_Segment_count_contig_blocks()
  *
  * Count number of contiguous regions in segment between first and last.
  */
@@ -57,7 +58,7 @@ void MPIR_Segment_count_contig_blocks(MPIR_Segment * segp,
      * optimize the count by coalescing contiguous segments, while
      * functions using the count do not optimize in the same way
      * (e.g., flatten code) */
-    MPIR_Segment_manipulate(segp, first, lastp, DLOOP_Leaf_contig_count_block, DLOOP_Leaf_vector_count_block, DLOOP_Leaf_blkidx_count_block, DLOOP_Leaf_index_count_block, NULL,        /* size fn */
+    MPII_Segment_manipulate(segp, first, lastp, leaf_contig_count_block, leaf_vector_count_block, leaf_blkidx_count_block, leaf_index_count_block, NULL,        /* size fn */
                             (void *) &params);
 
     *countp = params.count;
@@ -71,10 +72,9 @@ void MPIR_Segment_count_contig_blocks(MPIR_Segment * segp,
  * Note: because bufp is just an offset, we can ignore it in our
  *       calculations of # of contig regions.
  */
-static int DLOOP_Leaf_contig_count_block(MPI_Aint * blocks_p,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off,
-                                         void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int leaf_contig_count_block(MPI_Aint * blocks_p,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint size, el_size;
     struct MPIR_contig_blocks_params *paramp = v_paramp;
@@ -103,7 +103,7 @@ static int DLOOP_Leaf_contig_count_block(MPI_Aint * blocks_p,
     return 0;
 }
 
-/* DLOOP_Leaf_vector_count_block
+/* leaf_vector_count_block
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -116,8 +116,8 @@ static int DLOOP_Leaf_contig_count_block(MPI_Aint * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int DLOOP_Leaf_vector_count_block(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,  /* offset into buffer */
-                                         void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int leaf_vector_count_block(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,        /* offset into buffer */
+                                   void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint new_blk_count;
     MPI_Aint size, el_size;
@@ -143,18 +143,17 @@ static int DLOOP_Leaf_vector_count_block(MPI_Aint * blocks_p, MPI_Aint count, MP
     return 0;
 }
 
-/* DLOOP_Leaf_blkidx_count_block
+/* leaf_blkidx_count_block
  *
  * Note: this is only called when the starting position is at the
  * beginning of a whole block in a blockindexed type.
  */
-static int DLOOP_Leaf_blkidx_count_block(MPI_Aint * blocks_p,
-                                         MPI_Aint count,
-                                         MPI_Aint blksz,
-                                         MPI_Aint * offsetarray,
-                                         MPI_Datatype el_type,
-                                         MPI_Aint rel_off,
-                                         void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int leaf_blkidx_count_block(MPI_Aint * blocks_p,
+                                   MPI_Aint count,
+                                   MPI_Aint blksz,
+                                   MPI_Aint * offsetarray,
+                                   MPI_Datatype el_type,
+                                   MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint i, new_blk_count;
     MPI_Aint size, el_size, last_loc;
@@ -184,18 +183,17 @@ static int DLOOP_Leaf_blkidx_count_block(MPI_Aint * blocks_p,
     return 0;
 }
 
-/* DLOOP_Leaf_index_count_block
+/* leaf_index_count_block
  *
  * Note: this is only called when the starting position is at the
  * beginning of a whole block in an indexed type.
  */
-static int DLOOP_Leaf_index_count_block(MPI_Aint * blocks_p,
-                                        MPI_Aint count,
-                                        MPI_Aint * blockarray,
-                                        MPI_Aint * offsetarray,
-                                        MPI_Datatype el_type,
-                                        MPI_Aint rel_off,
-                                        void *bufp ATTRIBUTE((unused)), void *v_paramp)
+static int leaf_index_count_block(MPI_Aint * blocks_p,
+                                  MPI_Aint count,
+                                  MPI_Aint * blockarray,
+                                  MPI_Aint * offsetarray,
+                                  MPI_Datatype el_type,
+                                  MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint new_blk_count;
     MPI_Aint el_size, last_loc;
