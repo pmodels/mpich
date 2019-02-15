@@ -116,8 +116,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack))) {
         last = count;
-        MPIR_Segment_unpack(&MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment), 0, &last,
+        MPIR_Segment_unpack(MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment), 0, &last,
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer));
+        MPIR_Segment_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment));
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack));
         if (last != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =
@@ -275,10 +276,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
     MPIR_cc_decr(sreq->cc_ptr, &c);
 
     if (c == 0) {
-        if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) && (MPIDI_OFI_REQUEST(sreq, noncontig.pack)))
+        if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) && (MPIDI_OFI_REQUEST(sreq, noncontig.pack))) {
+            MPIR_Segment_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
-        else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK) &&
-                 MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
+        } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK) &&
+                   MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
@@ -328,8 +330,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         }
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 
-        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack))
+        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack)) {
+            MPIR_Segment_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
+        }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);

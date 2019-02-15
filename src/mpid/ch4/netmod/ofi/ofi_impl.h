@@ -691,7 +691,7 @@ MPL_STATIC_INLINE_PREFIX
     size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
     struct MPIDI_OFI_contig_blocks_params params;
-    MPIR_Segment dt_seg;
+    MPIR_Segment *dt_seg;
     ssize_t dt_size, num, rem;
     size_t dtc, count, count1, count2;;
 
@@ -707,19 +707,23 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg);
-        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+        dt_seg = MPIR_Segment_alloc();
+        MPIR_Segment_init(NULL, 1, dt_datatype, dt_seg);
+        MPIR_Segment_manipulate(dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);
+        MPIR_Segment_free(dt_seg);
         count1 = params.count;
         params.count = 0;
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg);
-        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+        dt_seg = MPIR_Segment_alloc();
+        MPIR_Segment_init(NULL, dtc, dt_datatype, dt_seg);
+        MPIR_Segment_manipulate(dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);
+        MPIR_Segment_free(dt_seg);
         count2 = params.count;
         if (count2 == 1) {      /* Contiguous */
             num = (dt_size * dt_count) / max_pipe;

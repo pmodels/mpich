@@ -534,13 +534,14 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	}
 	else
 	{
-	    MPIR_Segment seg;
+	    MPIR_Segment *seg;
 	    MPI_Aint last;
 
+            seg = MPIR_Segment_alloc();
 	    MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
-			      rreq->dev.datatype, &seg);
+			      rreq->dev.datatype, seg);
 	    last = unpack_sz;
-	    MPIR_Segment_unpack(&seg, 0, &last, rreq->dev.tmpbuf);
+	    MPIR_Segment_unpack(seg, 0, &last, rreq->dev.tmpbuf);
 	    if (last != unpack_sz)
 	    {
 		/* --BEGIN ERROR HANDLING-- */
@@ -553,6 +554,8 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 			 "**dtypemismatch", 0);
 		/* --END ERROR HANDLING-- */
 	    }
+
+            MPIR_Segment_free(seg);
 	}
     }
 
