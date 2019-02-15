@@ -132,11 +132,11 @@ static int llc_vc_init(MPIDI_VC_t * vc)
 
     {
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                       "MPIDI_NEM_VC_NETMOD_AREA_LEN = %d\n", MPIDI_NEM_VC_NETMOD_AREA_LEN);
+                      "MPIDI_NEM_VC_NETMOD_AREA_LEN = %d\n", MPIDI_NEM_VC_NETMOD_AREA_LEN);
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                       "MPIDI_NEM_REQ_NETMOD_AREA_LEN = %d", MPIDI_NEM_REQ_NETMOD_AREA_LEN);
+                      "MPIDI_NEM_REQ_NETMOD_AREA_LEN = %d", MPIDI_NEM_REQ_NETMOD_AREA_LEN);
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                       "MPID_nem_llc_vc_area = %d\n", (int) sizeof(MPID_nem_llc_vc_area));
+                      "MPID_nem_llc_vc_area = %d\n", (int) sizeof(MPID_nem_llc_vc_area));
     }
 
     /* MPIDI_CH3I_VC: src/mpid/ch3/channels/nemesis/include/mpidi_ch3_pre.h */

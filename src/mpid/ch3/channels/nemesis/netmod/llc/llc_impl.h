@@ -87,8 +87,7 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
                              void *data, intptr_t data_sz);
 int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
                                  intptr_t data_sz, MPIR_Request ** sreq_ptr);
-int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
-                               intptr_t hdr_sz);
+int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz);
 
 int MPIDI_nem_llc_Rqst_iov_update(MPIR_Request * mreq, intptr_t consume);
 int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue);
