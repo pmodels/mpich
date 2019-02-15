@@ -457,6 +457,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     /* Override split_type */
     MPIDI_CH4_Global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
+    
     MPIR_Comm_fns = &MPIDI_CH4_Global.MPIR_Comm_fns_store;
 
     MPIR_Process.attrs.appnum = appnum;
