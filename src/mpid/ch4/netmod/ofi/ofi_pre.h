@@ -111,7 +111,7 @@ typedef struct {
 
 
 typedef struct {
-    struct MPIR_Segment segment;
+    struct MPIR_Segment *segment;
     char pack_buffer[0];
 } MPIDI_OFI_pack_t;
 
