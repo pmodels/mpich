@@ -293,13 +293,6 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     int first_ind;
     MPI_Aint last_ind;
 
-    segp = MPIR_Segment_alloc();
-    /* --BEGIN ERROR HANDLING-- */
-    if (!segp) {
-        return DLOOP_Dataloop_create_struct_memory_error();
-    }
-    /* --END ERROR HANDLING-- */
-
     /* use segment code once to count contiguous regions */
     for (i = 0; i < count; i++) {
         int is_basic;
@@ -321,13 +314,12 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
             /* if the derived type has some data to contribute,
              * add to flattened representation */
             if (sz > 0) {
-                err = MPIR_Segment_init(NULL, (MPI_Aint) blklens[i], oldtypes[i], segp);
-                if (err)
-                    return err;
+                segp = MPIR_Segment_alloc(NULL, (MPI_Aint) blklens[i], oldtypes[i]);
 
                 bytes = MPIR_SEGMENT_IGNORE_LAST;
 
                 MPIR_Segment_count_contig_blocks(segp, 0, &bytes, &tmp_nr_blks);
+                MPIR_Segment_free(segp);
 
                 nr_blks += tmp_nr_blks;
             }
@@ -339,7 +331,6 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
      * do: store a simple contig of zero ints and call it done.
      */
     if (nr_blks == 0) {
-        MPIR_Segment_free(segp);
         err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
         return err;
 
@@ -350,7 +341,6 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     tmp_blklens = (MPI_Aint *) MPL_malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
-        MPIR_Segment_free(segp);
         return DLOOP_Dataloop_create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
@@ -360,7 +350,6 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
-        MPIR_Segment_free(segp);
         return DLOOP_Dataloop_create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
@@ -385,10 +374,8 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
          */
         if (oldtypes[i] != MPI_UB &&
             oldtypes[i] != MPI_LB && blklens[i] != 0 && (is_basic || sz > 0)) {
-            err = MPIR_Segment_init((char *) MPIR_AINT_CAST_TO_VOID_PTR disps[i],
-                                    (MPI_Aint) blklens[i], oldtypes[i], segp);
-            if (err)
-                return err;
+            segp = MPIR_Segment_alloc((char *) MPIR_AINT_CAST_TO_VOID_PTR disps[i],
+                                      (MPI_Aint) blklens[i], oldtypes[i]);
 
             last_ind = nr_blks - first_ind;
             bytes = MPIR_SEGMENT_IGNORE_LAST;
@@ -396,6 +383,7 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
                                      0,
                                      &bytes,
                                      &tmp_blklens[first_ind], &tmp_disps[first_ind], &last_ind);
+            MPIR_Segment_free(segp);
             first_ind += last_ind;
         }
     }
@@ -412,8 +400,6 @@ static int DLOOP_Dataloop_create_flattened_struct(MPI_Aint count,
         MPL_DBG_OUT(MPIR_DBG_DATATYPE, "--- end of flattened type ---");
     }
 #endif
-
-    MPIR_Segment_free(segp);
 
     err = MPIR_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
                                        MPI_BYTE, dlp_p, dlsz_p);

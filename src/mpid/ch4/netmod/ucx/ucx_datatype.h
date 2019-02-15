@@ -34,10 +34,9 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *b
     MPI_Aint packsize;
 
     state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
-    segment_ptr = MPIR_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
     state->datatype = *datatype;
@@ -58,9 +57,8 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffe
 
     state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
     MPIR_Pack_size_impl(count, *datatype, &packsize);
-    segment_ptr = MPIR_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
     state->datatype = *datatype;

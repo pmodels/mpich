@@ -377,10 +377,9 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 
         packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
-        seg = MPIR_Segment_alloc();
+        seg = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(origin_addr, origin_count, origin_datatype, seg);
         MPIR_Segment_pack(seg, first, &last, packed_buf);
         MPIR_Segment_free(seg);
 
@@ -513,10 +512,9 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
         packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
-        seg = MPIR_Segment_alloc();
+        seg = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
-        MPIR_Segment_init(origin_addr, origin_count, origin_datatype, seg);
         MPIR_Segment_pack(seg, first, &last, packed_buf);
         MPIR_Segment_free(seg);
 

@@ -109,7 +109,7 @@ int MPI_Pack_external(const char datarep[],
         goto fn_exit;
     }
 
-    segp = MPIR_Segment_alloc();
+    segp = MPIR_Segment_alloc(inbuf, incount, datatype);
     /* --BEGIN ERROR HANDLING-- */
     if (segp == NULL) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
@@ -120,9 +120,6 @@ int MPI_Pack_external(const char datarep[],
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
-    mpi_errno = MPIR_Segment_init(inbuf, incount, datatype, segp);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 
     /* NOTE: the use of buffer values and positions in MPI_Pack_external and
      * in MPIR_Segment_pack_external are quite different.  See code or docs

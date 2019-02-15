@@ -115,7 +115,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
-        struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc();
+        struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
         MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
 #ifndef	notdef_leak_0001_hack
         /* See also MPIDI_CH3_Request_create and _destory() */
@@ -123,7 +123,6 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         sreq->dev.segment_ptr = segment_ptr;
 #endif /* notdef_leak_0001_hack */
 
-        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
@@ -830,9 +829,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                         MPI_Aint last;
 
                         /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-			seg = MPIR_Segment_alloc();
-                        MPIR_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
-                                          seg);
+                        seg = MPIR_Segment_alloc(req->dev.user_buf, req->dev.user_count, req->dev.datatype);
                         last = unpack_sz;
                         MPIR_Segment_unpack(seg, 0, &last, REQ_FIELD(req, pack_buf));
                         if (last != unpack_sz) {
@@ -1038,13 +1035,13 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
-        struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc();
+        struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
+
         MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         /* See also MPIDI_CH3_Request_create and _destory() */
         /*     in src/mpid/ch3/src/ch3u_request.c */
         sreq->dev.segment_ptr = segment_ptr;
 
-        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;

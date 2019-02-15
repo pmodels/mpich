@@ -86,8 +86,7 @@ static inline int MPIDI_NM_am_isend(int rank,
 
         send_buf = MPL_malloc(am_hdr_sz + data_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
-        segment = MPIR_Segment_alloc();
-        MPIR_Segment_init(data, count, datatype, segment);
+        segment = MPIR_Segment_alloc(data, count, datatype);
         last = data_sz;
         MPIR_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
         MPIR_Assert(last == data_sz);
@@ -179,8 +178,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
 
         send_buf = MPL_malloc(am_hdr_sz + data_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
-        segment = MPIR_Segment_alloc();
-        MPIR_Segment_init(data, count, datatype, segment);
+        segment = MPIR_Segment_alloc(data, count, datatype);
         last = data_sz;
         MPIR_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
         MPIR_Assert(last == data_sz);

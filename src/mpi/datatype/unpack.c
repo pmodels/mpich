@@ -64,11 +64,9 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
 
 
     /* non-contig case */
-    segp = MPIR_Segment_alloc();
+    segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
     MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPIR_Segment_alloc");
-    mpi_errno = MPIR_Segment_init(outbuf, outcount, datatype, segp);
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
     /* NOTE: the use of buffer values and positions in MPI_Unpack and in
      * MPIR_Segment_unpack are quite different.  See code or docs or something.

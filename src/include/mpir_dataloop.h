@@ -238,11 +238,8 @@ void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPI_Aint old_loop_sz, MPIR_Data
 void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop);
 
 /* Segment functions (segment.c) */
-MPIR_Segment *MPIR_Segment_alloc(void);
-
+MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle);
 void MPIR_Segment_free(MPIR_Segment * segp);
-
-int MPIR_Segment_init(const void *buf, MPI_Aint count, MPI_Datatype handle, MPIR_Segment * segp);
 
 void
 MPIR_Segment_manipulate(MPIR_Segment * segp,

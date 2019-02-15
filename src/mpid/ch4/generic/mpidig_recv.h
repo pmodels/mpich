@@ -75,10 +75,9 @@ static inline int MPIDI_handle_unexpected(void *buf,
     /* Copy the data from the message. */
 
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
-        MPIR_Segment_init(buf, count, datatype, segment_ptr);
 
         last = nbytes;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
