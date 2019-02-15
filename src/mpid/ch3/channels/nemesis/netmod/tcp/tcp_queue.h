@@ -11,8 +11,8 @@
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
 
 #define PRINT_QUEUE(qp, next_field) do {        \
-    } while(0)       
-        
+    } while (0)
+
 
 #define GENERIC_Q_EMPTY(q) ((q).head == NULL)
 
