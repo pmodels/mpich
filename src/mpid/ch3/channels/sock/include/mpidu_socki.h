@@ -22,7 +22,7 @@
 
 #if defined(HAVE_GETHOSTNAME) && defined(NEEDS_GETHOSTNAME_DECL) && !defined(gethostname)
 int gethostname(char *name, size_t len);
-# endif
+#endif
 
 #ifndef SSIZE_MAX
 /* SSIZE_MAX is the maximum amount of data that we expect to be able
@@ -37,8 +37,8 @@ int gethostname(char *name, size_t len);
 #define MPIDI_CH3I_SOCK_SIZE_MAX	   SSIZE_MAX
 #define MPIDI_CH3I_SOCK_NATIVE_FD       int
 
-typedef struct MPIDI_CH3I_Sock_set * MPIDI_CH3I_Sock_set_t;
-typedef struct MPIDI_CH3I_Sock * MPIDI_CH3I_Sock_t;
+typedef struct MPIDI_CH3I_Sock_set *MPIDI_CH3I_Sock_set_t;
+typedef struct MPIDI_CH3I_Sock *MPIDI_CH3I_Sock_t;
 typedef size_t MPIDI_CH3I_Sock_size_t;
 
 #define MPIDI_CH3I_SOCKI_STATE_LIST \

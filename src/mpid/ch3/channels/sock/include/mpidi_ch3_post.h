@@ -7,14 +7,14 @@
 #ifndef MPIDI_CH3_POST_H_INCLUDED
 #define MPIDI_CH3_POST_H_INCLUDED
 
-/* FIXME: We need to document all of these parameters.  There should be no 
+/* FIXME: We need to document all of these parameters.  There should be no
    ifdef that is not documented, other than those set by configure */
 /*
- * MPIDI_CH3_EAGER_MAX_MSG_SIZE - threshold for switch between the eager and 
+ * MPIDI_CH3_EAGER_MAX_MSG_SIZE - threshold for switch between the eager and
  * rendezvous protocolsa
  */
 #if !defined(MPIDI_CH3_EAGER_MAX_MSG_SIZE)
-#   define MPIDI_CH3_EAGER_MAX_MSG_SIZE (256 * 1024)
+#define MPIDI_CH3_EAGER_MAX_MSG_SIZE (256 * 1024)
 #endif
 
 
@@ -29,9 +29,8 @@
 #define MPIDI_CH3_Progress_end(progress_state_) MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
 #define MPIDI_CH3_Progress_poke() (MPIDI_CH3_Progress_test())
 
-int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state *state);
+int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state * state);
 #define MPIDI_CH3_Progress_test() MPIDI_CH3I_Progress(FALSE, NULL)
 #define MPIDI_CH3_Progress_wait(state) MPIDI_CH3I_Progress(TRUE, state)
 
 #endif /* MPIDI_CH3_POST_H_INCLUDED */
-
