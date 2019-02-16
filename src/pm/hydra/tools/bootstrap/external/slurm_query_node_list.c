@@ -92,17 +92,17 @@ static HYD_status list_to_nodes(char *str)
     /* compile element regex for old format: "h14" */
     regcomp(&ematch_old, "([a-zA-Z]+[0-9]+)", REG_EXTENDED);
 
-    /* compile group-0 regex for new format: "h-[00-12,14] | h-14" */
-    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z]+[0-9]*-)(\\[[-,0-9]+\\]|[0-9]+)(,|$)", REG_EXTENDED);
+    /* compile group-0 regex for new format: "h00-[00-12,14] | h00[00-12,14] | h00-14 | h0014" */
+    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z0-9]+-?)(\\[[-,0-9]+\\]|[0-9]*)(,|$)", REG_EXTENDED);
 
-    /* compile group-1 regex for new format: "00-12 | 14" */
-    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED);
+    /* compile group-1 regex for new format: "00-12 | 14 | " */
+    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]*)([],]|$)", REG_EXTENDED);
 
     /* compile range regex for new format: "00-12" */
     regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED);
 
-    /* compile element regex for new format: "14" */
-    regcomp(&ematch_new, "([0-9]+)", REG_EXTENDED);
+    /* compile element regex for new format: "14 | " */
+    regcomp(&ematch_new, "([0-9]*)", REG_EXTENDED);
 
     gpattern[0] = string;
 
@@ -166,7 +166,7 @@ static HYD_status list_to_nodes(char *str)
         gpattern[0] += gmatch[0][0].rm_eo;
     }
 
-    /* match new group-0 pattern: (,|^)(h-)([00-12,14] | 00-12 | 14)(,|$) */
+    /* match new group-0 pattern: (,|^)(h|h-)([00-12,14] | 00-12 | 14)(,|$) */
     while (*gpattern[0] && regexec(&gmatch_new[0], gpattern[0], MAX_GMATCH, gmatch[0], 0) == 0) {
         /* bound group-0 for group-1 matching: h-[00-h12,14],... -> h-[00-12,14]\0... */
         tmp[0] = *(gpattern[0] + gmatch[0][0].rm_eo);
@@ -227,6 +227,14 @@ static HYD_status list_to_nodes(char *str)
         /* unbound group-0 and move to next group-0: h-[00-12,14]\0... -> h-[00-12,14],... */
         *(gpattern[0] + gmatch[0][0].rm_eo) = tmp[0];
         gpattern[0] += gmatch[0][0].rm_eo;
+    }
+
+    /* if nodelist format not recognized throw an error message and abort */
+    if (global_node_list == NULL) {
+        fprintf(stdout,
+                "Error: node list format not recognized. Try using '-hosts=<hostnames>'.\n");
+        fflush(stdout);
+        abort();
     }
 
     /* clean up match patterns */
