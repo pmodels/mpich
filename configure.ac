@@ -1469,7 +1469,9 @@ AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-if test "$with_hwloc_prefix" = "embedded" ; then
+if test "$with_hwloc_prefix" = "no" ; then
+   have_hwloc=no
+elif test "$with_hwloc_prefix" = "embedded" ; then
    # Disable visibility when setting up hwloc
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
