@@ -28,6 +28,16 @@ typedef struct MPL_thread_cond_t {
 
 typedef void (*MPL_thread_func_t) (void *data);
 
+#define MPL_thread_init(err_ptr_)               \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
+#define MPL_thread_finalize(err_ptr_)           \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
 void MPL_thread_exit(void);
 void MPL_thread_self(MPL_thread_id_t * id);
