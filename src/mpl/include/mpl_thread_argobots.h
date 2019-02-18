@@ -25,6 +25,26 @@ typedef ABT_key MPL_thread_tls_t;
  *    Creation and misc
  * ======================================================================*/
 
+#define MPL_thread_init(err_ptr_)                                             \
+    do {                                                                      \
+        int err__;                                                            \
+        err__ = ABT_init(0, NULL);                                            \
+        if (unlikely(err__))                                                  \
+            MPL_internal_sys_error_printf("ABT_init", err__,                  \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
+        *(int *)(err_ptr_) = err__;                                           \
+    } while (0)
+
+#define MPL_thread_finalize(err_ptr_)                                         \
+    do {                                                                      \
+        int err__;                                                            \
+        err__ = ABT_finalize();                                               \
+        if (unlikely(err__))                                                  \
+            MPL_internal_sys_error_printf("ABT_finalize", err__,              \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
+        *(int *)(err_ptr_) = err__;                                           \
+    } while (0)
+
 /* MPL_thread_create() defined in mpiu_thread_argobots.c */
 typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp);

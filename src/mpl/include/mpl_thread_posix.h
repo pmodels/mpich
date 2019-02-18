@@ -28,6 +28,16 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
 
+#define MPL_thread_init(err_ptr_)               \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
+#define MPL_thread_finalize(err_ptr_)           \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
 #define MPL_thread_exit()                       \
     do {                                        \
         pthread_exit(NULL);                     \
