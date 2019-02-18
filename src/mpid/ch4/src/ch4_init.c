@@ -246,6 +246,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
 
     MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &mpi_errno);
     if (mpi_errno != MPI_SUCCESS) {
@@ -485,6 +486,8 @@ int MPID_CS_finalize(void)
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
