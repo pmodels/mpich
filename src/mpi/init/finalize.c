@@ -337,6 +337,14 @@ int MPI_Finalize(void)
     }
 #endif
 
+    /* Finalize the threading library after releasing all synchronization
+     * objects (e.g., mutexes) */
+    {
+        int thread_err;
+        MPL_thread_finalize(&thread_err);
+        MPIR_Assert(thread_err == 0);
+    }
+
     /* ... end of body of routine ... */
   fn_exit:
     MPIR_FUNC_TERSE_FINALIZE_EXIT(MPID_STATE_MPI_FINALIZE);
