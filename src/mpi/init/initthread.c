@@ -345,15 +345,15 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 
-#if (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
-    int rc = ABT_initialized();
-    if (rc != ABT_SUCCESS) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPI_Init_thread", __LINE__, MPI_ERR_OTHER,
-                                         "**argobots_uninitialized", 0);
-        goto fn_fail;
+    /* The threading library must be initialized at the very beginning because
+     * it manages all synchronization objects (e.g., mutexes) that will be
+     * initialized later */
+    {
+        int thread_err;
+        MPL_thread_init(&thread_err);
+        if (thread_err)
+            goto fn_fail;
     }
-#endif
 
 #ifdef HAVE_HWLOC
     MPIR_Process.bindset = hwloc_bitmap_alloc();
