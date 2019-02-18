@@ -356,6 +356,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int thread_provided = 0;
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
+#if defined(MPICH_IS_THREADED)
+    bool cs_initialized = false;
+#endif
 
     /* The threading library must be initialized at the very beginning because
      * it manages all synchronization objects (e.g., mutexes) that will be
@@ -401,6 +404,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
 #if defined(MPICH_IS_THREADED)
     mpi_errno = thread_cs_init();
+    cs_initialized = true;
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -675,7 +679,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 #if defined(MPICH_IS_THREADED)
-    MPIR_Thread_CS_Finalize();
+    if (cs_initialized) {
+        MPIR_Thread_CS_Finalize();
+    }
 #endif
     return mpi_errno;
     /* --END ERROR HANDLING-- */
