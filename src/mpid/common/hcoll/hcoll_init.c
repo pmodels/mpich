@@ -216,8 +216,12 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 
 int hcoll_do_progress(int *made_progress)
 {
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
     *made_progress = 1;
     hcoll_progress_fn();
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return MPI_SUCCESS;
 }

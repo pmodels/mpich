@@ -227,6 +227,8 @@ int MPII_Genutil_progress_hook(int *made_progress)
     int mpi_errno = MPI_SUCCESS;
     MPII_Coll_req_t *coll_req, *coll_req_tmp;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
     if (made_progress)
         *made_progress = FALSE;
 
@@ -255,6 +257,8 @@ int MPII_Genutil_progress_hook(int *made_progress)
 
     if (coll_queue.head == NULL)
         MPID_Progress_deactivate_hook(MPII_Genutil_progress_hook_id);
+
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
 }
