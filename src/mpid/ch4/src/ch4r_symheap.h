@@ -526,12 +526,6 @@ static inline int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offse
                 MPL_munmap(base_ptr, mapsize, MPL_MEM_RMA);
         }
     }
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-#endif
 
     if (all_map_result != MPIDIU_SYMSHM_SUCCESS) {
         /* if fail to allocate, return and let the caller choose another method */
@@ -540,8 +534,21 @@ static inline int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offse
         *fail_flag = true;
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+
+    /* always fail, return and let the caller choose another method */
+    MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                "WARNING: Win_allocate:  Unable to allocate global symmetric heap\n");
+    *fail_flag = true;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
+    return mpi_errno;
+#endif
 }
 
 #endif /* CH4R_SYMHEAP_H_INCLUDED */
