@@ -103,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_shm(int vci)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
-    int mpi_errno;
+    int mpi_errno, vci;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -131,16 +131,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
         MPIR_ERR_POP(mpi_errno);
 
     if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_Progress_vci_nm(0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
+        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+            mpi_errno = MPIDI_Progress_vci_nm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
         }
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (flags & MPIDI_PROGRESS_SHM) {
-        mpi_errno = MPIDI_Progress_vci_shm(0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
+        for (vci = 0; vci < MPIDI_CH4_Global.n_shm_vcis_provided; vci++) {
+            mpi_errno = MPIDI_Progress_vci_shm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
         }
     }
 #endif
