@@ -14,12 +14,96 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Progress_hooks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_hooks(void)
+{
+    int mpi_errno, made_progress, num_of_hooks, i;
+    mpi_errno = MPI_SUCCESS;
+
+    num_of_hooks = OPA_load_int(&MPIDI_CH4_Global.registered_progress_hooks);
+    for (i = 0; i < num_of_hooks; i++) {
+        progress_func_ptr_t func_ptr = NULL;
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
+        if (MPIDI_CH4_Global.progress_hooks[i].active == TRUE) {
+            func_ptr = MPIDI_CH4_Global.progress_hooks[i].func_ptr;
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
+            MPIR_Assert(func_ptr != NULL);
+            mpi_errno = func_ptr(&made_progress);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        } else {
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
+        }
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Progress_vci_nm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_nm(int vci)
+{
+    int mpi_errno;
+    mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+
+    /* Progress the WorkQ associated with this NM VCI */
+    mpi_errno = MPIDI_workq_vci_progress_unsafe();
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+    /* Progress this NM VCI */
+    mpi_errno = MPIDI_NM_progress(vci, 0);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_fail:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Progress_vci_shm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_shm(int vci)
+{
+    int mpi_errno;
+    mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+
+    /* Progress the WorkQ associated with this SHM VCI */
+    mpi_errno = MPIDI_workq_vci_progress_unsafe();
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+    /* Progress this SHM VCI */
+    mpi_errno = MPIDI_SHM_progress(vci, 0);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_fail:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
-    int mpi_errno, made_progress, num_of_hooks, i;
+    int mpi_errno;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -34,23 +118,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     }
 #endif
 
-    num_of_hooks = OPA_load_int(&MPIDI_CH4_Global.registered_progress_hooks);
-    if (num_of_hooks && (flags & MPIDI_PROGRESS_HOOKS)) {
-        for (i = 0; i < num_of_hooks; i++) {
-            progress_func_ptr_t func_ptr = NULL;
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
-            if (MPIDI_CH4_Global.progress_hooks[i].active == TRUE) {
-                func_ptr = MPIDI_CH4_Global.progress_hooks[i].func_ptr;
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
-                MPIR_Assert(func_ptr != NULL);
-                mpi_errno = func_ptr(&made_progress);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-
-            } else {
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
-            }
-
+    if (flags & MPIDI_PROGRESS_HOOKS) {
+        mpi_errno = MPIDI_Progress_hooks();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     /* todo: progress unexp_list */
@@ -59,24 +130,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
-
     if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_NM_progress(0, 0);
+        mpi_errno = MPIDI_Progress_vci_nm(0);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (flags & MPIDI_PROGRESS_SHM) {
-        mpi_errno = MPIDI_SHM_progress(0, 0);
+        mpi_errno = MPIDI_Progress_vci_shm(0);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
     }
 #endif
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
   fn_fail:

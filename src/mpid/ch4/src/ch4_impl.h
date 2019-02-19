@@ -16,6 +16,9 @@
 #include "mpidig.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_hooks(void);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_nm(int vci);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_shm(int vci);
 
 /* Static inlines */
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
