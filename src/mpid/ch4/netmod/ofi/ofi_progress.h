@@ -27,8 +27,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1, 1);
     else if (likely(1)) {
@@ -41,8 +39,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
         else
             mpi_errno = MPIDI_OFI_handle_cq_error(vci, ret);
     }
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
 

@@ -62,9 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 #define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
 #define MPIDI_OFI_CALL(FUNC,STR)                                     \
     do {                                                    \
-        MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
         ssize_t _ret = FUNC;                                \
-        MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         MPIDI_OFI_ERR(_ret<0,                       \
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
@@ -97,11 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
     do {                                                    \
-        if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
         _ret = FUNC;                                        \
-        if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         if (likely(_ret==0)) break;                          \
         MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
                               mpi_errno,                    \
@@ -116,8 +110,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
         /* FIXME: by fixing the recursive locking interface to account
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
@@ -127,8 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
         MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
-        if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -136,11 +126,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 #define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR)                       \
     do {                                                    \
     ssize_t _ret;                                           \
-    MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);       \
     FUNC1;                                                  \
     do {                                                    \
         _ret = FUNC2;                                       \
-        MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         if (likely(_ret==0)) break;                          \
         MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
                               mpi_errno,                    \
@@ -157,15 +145,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
-        MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);       \
             (_ret) = FUNC;                                              \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);        \
         } while (0)
 
 #define MPIDI_OFI_PMI_CALL_POP(FUNC,STR)                    \
