@@ -50,6 +50,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
 
+    if (bblock <= 0) {
+        bblock = size;
+    } else if (bblock > size) {
+        bblock = size;
+    } else if (size % bblock != 0) {
+        bblock = size;
+    }
+
     /* vtcs is twice the batch size to store both send and recv ids */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, 2 * batch_size * sizeof(int), mpi_errno, "vtcs", MPL_MEM_COLL);
     MPIR_CHKLMEM_MALLOC(recv_id, int *, bblock * sizeof(int), mpi_errno, "recv_id", MPL_MEM_COLL);
@@ -69,9 +77,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-
-    if (bblock > size)
-        bblock = size;
 
     /* First, post bblock number of sends/recvs */
     for (i = 0; i < bblock; i++) {
