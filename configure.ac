@@ -1694,6 +1694,10 @@ if test "$enable_threads" = "multiple" ; then
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
 
+if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
+    AC_MSG_ERROR([the ch4 device does not support the per-object critical section])
+fi
+
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" -a "$device_name" != "ch4" ; then
     AC_MSG_ERROR([per-vci critical section granularity is only supported for the ch4 device])
 fi

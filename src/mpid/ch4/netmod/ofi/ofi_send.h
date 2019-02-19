@@ -345,8 +345,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-
         if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* Set up a memory region for the lmt data transfer */
             ctrl.rma_key = MPIDI_OFI_mr_key_alloc();
@@ -395,7 +393,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                (&ctrl, send_buf, data_sz, rank, comm, sreq, FALSE));
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
     }
 
   fn_exit:

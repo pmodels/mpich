@@ -547,7 +547,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
         goto fn_exit;
     }
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_get_tag_from_port(port_name, &port_id));
 
     if (rank == root) {
@@ -626,7 +625,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     } else {
         MPL_free(remote_lupids);
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     return mpi_errno;
   fn_fail:
@@ -740,8 +738,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
         goto fn_exit;
     }
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
-
     if (rank == root) {
         char conname[FI_NAME_MAX];
         int port_id;
@@ -797,7 +793,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     } else {
         MPL_free(remote_lupids);
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
     return mpi_errno;
 

@@ -29,9 +29,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx);
     do {                                                                \
         ssize_t _ret;                                                   \
         do {                                                            \
-            if (LOCK) MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             _ret = FUNC;                                                \
-            if (LOCK) MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             if (likely(_ret==0)) break;                                  \
             MPIR_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,                  \
                                    mpi_errno,                           \
@@ -42,9 +40,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx);
                                    __LINE__,                            \
                                    FCNAME,                              \
                                    fi_strerror(-_ret));                 \
-            if (LOCK) MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
-            if (LOCK) MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_POP(mpi_errno);                                \
         } while (_ret == -FI_EAGAIN);                                   \
