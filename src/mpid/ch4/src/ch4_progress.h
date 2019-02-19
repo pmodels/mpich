@@ -13,6 +13,8 @@
 
 #include "ch4_impl.h"
 
+#define MPIDI_MAX_VCI_PROGRESS_ATTEMPTS 50
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_hooks
 #undef FCNAME
@@ -98,12 +100,91 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_vci_shm(int vci)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Progress_test_vci
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_vci(MPIDI_hook_flags hook_flags,
+                                                     MPIDI_vci_type vci_type, int vci)
+{
+    int mpi_errno;
+    mpi_errno = MPI_SUCCESS;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (vci_type == MPIDI_VCI_SHM) {
+        if (hook_flags & MPIDI_PROGRESS_SHM) {
+            mpi_errno = MPIDI_Progress_vci_shm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+    } else
+#endif
+    {
+        if (hook_flags & MPIDI_PROGRESS_NM) {
+            mpi_errno = MPIDI_Progress_vci_nm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Progress_global
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_global(MPIDI_hook_flags hook_flags)
+{
+    int mpi_errno, vci;
+
+    /* Reset the progress attempt counter */
+    OPA_store_int(&MPIDI_CH4_Global.vci_progress_attempt_counter, 0);
+    /* Progress the registered hooks */
+    if (hook_flags & MPIDI_PROGRESS_HOOKS) {
+        mpi_errno = MPIDI_Progress_hooks();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
+    /* todo: progress unexp_list */
+
+    /* Progress all the NM VCIs */
+    if (hook_flags & MPIDI_PROGRESS_NM) {
+        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
+            mpi_errno = MPIDI_Progress_vci_nm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+    }
+    /* Progress all the SHM VCIs */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (hook_flags & MPIDI_PROGRESS_SHM) {
+        for (vci = 0; vci < MPIDI_CH4_Global.n_shm_vcis_provided; vci++) {
+            mpi_errno = MPIDI_Progress_vci_shm(vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+    }
+#endif
+
+  fn_fail:
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(MPIDI_hook_flags hook_flags,
+                                                 MPIDI_progress_type progress_type,
+                                                 MPIDI_vci_type vci_type, int vci)
 {
-    int mpi_errno, vci;
+    int mpi_errno, vci_progress_attempt_counter;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -118,36 +199,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     }
 #endif
 
-    if (flags & MPIDI_PROGRESS_HOOKS) {
-        mpi_errno = MPIDI_Progress_hooks();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-    }
-    /* todo: progress unexp_list */
-
-    mpi_errno = MPIDI_workq_vci_progress();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
-
-    if (flags & MPIDI_PROGRESS_NM) {
-        for (vci = 0; vci < MPIDI_CH4_Global.n_nm_vcis_provided; vci++) {
-            mpi_errno = MPIDI_Progress_vci_nm(vci);
+    switch (progress_type) {
+        case MPIDI_PROGRESS_TYPE__GLOBAL:
+            /* global progress */
+            mpi_errno = MPIDI_Progress_global(hook_flags);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
             }
-        }
-    }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (flags & MPIDI_PROGRESS_SHM) {
-        for (vci = 0; vci < MPIDI_CH4_Global.n_shm_vcis_provided; vci++) {
-            mpi_errno = MPIDI_Progress_vci_shm(vci);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
+            break;
+        case MPIDI_PROGRESS_TYPE__VCI:
+            /* attempt progress on 1 VCI */
+            vci_progress_attempt_counter =
+                OPA_fetch_and_add_int(&MPIDI_CH4_Global.vci_progress_attempt_counter, 1);
+            if (vci_progress_attempt_counter > MPIDI_MAX_VCI_PROGRESS_ATTEMPTS) {
+                /* global progress */
+                mpi_errno = MPIDI_Progress_global(hook_flags);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIR_ERR_POP(mpi_errno);
+                }
+            } else {
+                /* VCI progress */
+                if (hook_flags & MPIDI_PROGRESS_HOOKS) {
+                    mpi_errno = MPIDI_Progress_hooks();
+                    if (mpi_errno != MPI_SUCCESS) {
+                        MPIR_ERR_POP(mpi_errno);
+                    }
+                }
+                mpi_errno = MPIDI_Progress_test_vci(hook_flags, vci_type, vci);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIR_ERR_POP(mpi_errno);
+                }
             }
-        }
+            break;
     }
-#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
@@ -161,7 +246,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
 {
-    return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
+    return MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__GLOBAL, 0, 0);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)

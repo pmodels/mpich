@@ -454,6 +454,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
+    /* Set the progress attempt counter */
+    OPA_store_int(&MPIDI_CH4_Global.vci_progress_attempt_counter, 0);
+
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
     MPIR_Datatype_init();

@@ -27,6 +27,16 @@ enum {
     MPIDI_VCI_RX = 0x2, /* Can receive */
 };
 
+typedef enum {
+    MPIDI_VCI_TYPE__NM = 0x1,   /* Netmod VCI */
+    MPIDI_VCI_TYPE__SHM = 0x2,  /* Shmmod VCI */
+} MPIDI_vci_type;
+
+typedef enum {
+    MPIDI_PROGRESS_TYPE__GLOBAL = 0x1,  /* Global progress */
+    MPIDI_PROGRESS_TYPE__VCI = 0x2,     /* Progress only 1 VCI */
+} MPIDI_progress_type;
+
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
 #define MPIDI_CH4I_BUF_POOL_SZ (256)
 
@@ -45,11 +55,13 @@ typedef struct progress_hook_slot {
  *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
  * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
  */
-#define MPIDI_PROGRESS_HOOKS  (1)
-#define MPIDI_PROGRESS_NM     (1<<1)
-#define MPIDI_PROGRESS_SHM    (1<<2)
+typedef enum {
+    MPIDI_PROGRESS_HOOKS = 0x1,
+    MPIDI_PROGRESS_NM = 0x2,
+    MPIDI_PROGRESS_SHM = 0x4,
 
-#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
+    MPIDI_PROGRESS_ALL = MPIDI_PROGRESS_HOOKS | MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM,
+} MPIDI_hook_flags;
 
 enum {
     MPIDI_CH4U_SEND = 0,        /* Eager send */
@@ -307,6 +319,7 @@ typedef struct MPIDI_CH4_Global_t {
     int my_sigusr1_count;
 #endif
     OPA_int_t progress_count;
+    OPA_int_t vci_progress_attempt_counter;
 
     int n_nm_vcis_provided;
     int n_shm_vcis_provided;
