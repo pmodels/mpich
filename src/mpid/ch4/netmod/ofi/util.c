@@ -48,14 +48,12 @@ static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
 
 void MPIDI_OFI_mr_key_allocator_init()
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     mr_key_allocator.chunk_size = 128;
     mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
     mr_key_allocator.last_free_mr_key = 0;
     mr_key_allocator.bitmask = MPL_malloc(sizeof(uint64_t) * mr_key_allocator.num_ints,
                                           MPL_MEM_RMA);
     memset(mr_key_allocator.bitmask, 0xFF, sizeof(uint64_t) * mr_key_allocator.num_ints);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
 #define MPIDI_OFI_INDEX_CALC(val,nval,shift,mask) \
@@ -66,7 +64,6 @@ void MPIDI_OFI_mr_key_allocator_init()
 uint64_t MPIDI_OFI_mr_key_alloc()
 {
     uint64_t i;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
         if (mr_key_allocator.bitmask[i]) {
             register uint64_t val, nval;
@@ -80,7 +77,6 @@ uint64_t MPIDI_OFI_mr_key_alloc()
             nval -= val & 0x1ULL;
             mr_key_allocator.bitmask[i] &= ~(0x1ULL << (nval - 1));
             mr_key_allocator.last_free_mr_key = i;
-            MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
             return i * sizeof(uint64_t) * 8 + (nval - 1);
         }
         if (i == mr_key_allocator.num_ints - 1) {
@@ -93,28 +89,23 @@ uint64_t MPIDI_OFI_mr_key_alloc()
                    sizeof(uint64_t) * mr_key_allocator.chunk_size);
         }
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     return -1;
 }
 
 void MPIDI_OFI_mr_key_free(uint64_t index)
 {
     uint64_t int_index, bitpos, numbits;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     numbits = sizeof(uint64_t) * 8;
     int_index = (index + 1) / numbits;
     bitpos = index % numbits;
 
     mr_key_allocator.last_free_mr_key = MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
     mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
 void MPIDI_OFI_mr_key_allocator_destroy()
 {
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     MPL_free(mr_key_allocator.bitmask);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
 /* Translate the control message to get a huge message into a request to

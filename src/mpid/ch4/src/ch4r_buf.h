@@ -119,11 +119,9 @@ static inline void *MPIDIU_get_buf(MPIDIU_buf_pool_t * pool)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_BUF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_BUF);
 
-    MPID_THREAD_CS_ENTER(POBJ, pool->lock);
     MPID_THREAD_CS_ENTER(VCI, pool->lock);
     buf = MPIDIU_get_buf_safe(pool);
     MPID_THREAD_CS_EXIT(VCI, pool->lock);
-    MPID_THREAD_CS_EXIT(POBJ, pool->lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_BUF);
     return buf;
@@ -149,12 +147,10 @@ static inline void MPIDIU_release_buf(void *buf)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_BUF);
 
     curr_buf = MPL_container_of(buf, MPIDIU_buf_t, data);
-    MPID_THREAD_CS_ENTER(POBJ, &curr_buf->pool->lock);
     MPID_THREAD_CS_ENTER(VCI, curr_buf->pool->lock);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
     MPID_THREAD_CS_EXIT(VCI, curr_buf->pool->lock);
-    MPID_THREAD_CS_EXIT(POBJ, &curr_buf->pool->lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_BUF);
 }
