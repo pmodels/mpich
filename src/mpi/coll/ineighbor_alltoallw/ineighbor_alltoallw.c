@@ -148,6 +148,14 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
                                                                   sendtypes, recvbuf, recvcounts,
                                                                   rdispls, recvtypes, comm_ptr, s);
                 break;
+            case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_GENTRAN_LINEAR:
+                mpi_errno =
+                    MPIR_Ineighbor_alltoallw_sched_allcomm_gentran_linear(sendbuf, sendcounts,
+                                                                          sdispls, sendtypes,
+                                                                          recvbuf, recvcounts,
+                                                                          rdispls, recvtypes,
+                                                                          comm_ptr, s);
+                break;
             case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -164,6 +172,14 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
                     MPIR_Ineighbor_alltoallw_sched_allcomm_linear(sendbuf, sendcounts, sdispls,
                                                                   sendtypes, recvbuf, recvcounts,
                                                                   rdispls, recvtypes, comm_ptr, s);
+                break;
+            case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_GENTRAN_LINEAR:
+                mpi_errno =
+                    MPIR_Ineighbor_alltoallw_sched_allcomm_gentran_linear(sendbuf, sendcounts,
+                                                                          sdispls, sendtypes,
+                                                                          recvbuf, recvcounts,
+                                                                          rdispls, recvtypes,
+                                                                          comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

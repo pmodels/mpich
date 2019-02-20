@@ -641,6 +641,9 @@ int MPII_Coll_init(void)
     /* Ineighbor_alltoallw Inter */
     if (0 == strcmp(MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM, "linear"))
         MPIR_Ineighbor_alltoallw_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM, "gentran_linear"))
+        MPIR_Ineighbor_alltoallw_inter_algo_choice =
+            MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_GENTRAN_LINEAR;
     else
         MPIR_Ineighbor_alltoallw_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 
