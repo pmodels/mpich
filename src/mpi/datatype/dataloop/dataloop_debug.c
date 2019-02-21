@@ -11,9 +11,6 @@
 #include <limits.h>
 #include "datatype.h"
 
-static void dot_printf(MPIR_Dataloop * loop_p, int depth, int header);
-static char *depth_spacing(int depth) ATTRIBUTE((unused));
-
 #define NR_TYPE_CUTOFF 6        /* Number of types to display before truncating
                                  * output. 6 picked as arbitrary cutoff */
 
@@ -22,6 +19,7 @@ static char *depth_spacing(int depth) ATTRIBUTE((unused));
  */
 
 /* --BEGIN ERROR HANDLING-- */
+static void dot_printf(MPIR_Dataloop * loop_p, int depth, int header);
 static void dot_printf(MPIR_Dataloop * loop_p, int depth, int header)
 {
     int i;
