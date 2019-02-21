@@ -315,6 +315,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
 
     coll_algo_tests+="alltoall1 8 ${env}${nl}"
+done
 
 algo_names="gentran_brucks"
 kvalues="2 3 4"
@@ -327,6 +328,7 @@ for algo_name in ${algo_names}; do
         coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0${nl}"
         coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1${nl}"
     done
+done
 
 ########## Add tests for scan algorithms ############
 
@@ -343,6 +345,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_ISCAN_INTRA_ALGORITHM=${algo_name} "
 
     coll_algo_tests+="scantst 4"
+done
 
 ######### Add tests for ineighbor_alltoallw algorithms ###########
 
@@ -374,7 +377,7 @@ batchsizes="1 2 4"
 outstandingtasks="4 8"
 for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
-    if [ ${algo_name} -eq "gentran_scattered"]; then
+    if [ ${algo_name} = "gentran_scattered" ]; then
         for task in ${outstandingtasks}; do
             for batchsize in ${batchsizes}; do
                 env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
@@ -385,6 +388,7 @@ for algo_name in ${algo_names}; do
             done
         done
     fi
+done
 
 ######### Add tests for Ineighbor_allgather algorithms ###########
 
