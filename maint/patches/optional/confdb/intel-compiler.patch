@@ -1,0 +1,14 @@
+--- ltmain.sh	2019-02-22 16:28:30.548803098 -0600
++++ ltmain.sh.new	2019-02-22 16:44:08.057521482 -0600
+@@ -7183,6 +7183,11 @@
+ 	continue
+ 	;;
+ 
++      -static-intel)
++        func_append compiler_flags " $arg"
++        continue
++        ;;
++
+       -thread-safe)
+ 	thread_safe=yes
+ 	continue
