@@ -931,6 +931,22 @@ if [ "$do_build_configure" = "yes" ] ; then
 	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
             (cd $amdir && $autoreconf $autoreconf_args) || exit 1
+            # Patching ltmain.sh
+            if [ -f $amdir/confdb/ltmain.sh ] ; then
+                echo_n "Patching ltmain.sh for compatibility with Intel compiler options... "
+                patch -N -s -l $amdir/confdb/ltmain.sh maint/patches/optional/confdb/intel-compiler.patch
+                if [ $? -eq 0 ] ; then
+                    # Remove possible leftovers, which don't imply a failure
+                    rm -f $amdir/confdb/ltmain.sh.orig
+                    echo "done"
+                else
+                    echo "failed"
+                fi
+                # Rebuild configure
+                (cd $amdir && $autoconf -f) || exit 1
+                # Reset ltmain.sh timestamps to avoid confusing make
+                touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/ltmain.sh
+            fi
             # Patching libtool.m4
             # This works with libtool versions 2.4 - 2.4.2.
             # Older versions are not supported to build mpich.
