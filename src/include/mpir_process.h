@@ -20,6 +20,10 @@
 #include "netloc_util.h"
 #endif
 
+#ifdef HAVE_SCOTCH
+#include <scotch.h>
+#endif
+
 /* Per process data */
 typedef struct PreDefined_attrs {
     int appnum;                 /* Application number provided by mpiexec (MPI-2) */
@@ -56,6 +60,11 @@ typedef struct MPIR_Process_t {
 #ifdef HAVE_NETLOC
     netloc_topology_t netloc_topology;
     MPIR_Netloc_network_attributes network_attr;
+#endif
+
+#ifdef HAVE_SCOTCH
+    SCOTCH_Arch *arch;
+    int *arch_mapping;
 #endif
 
 #ifdef USE_PMIX_API

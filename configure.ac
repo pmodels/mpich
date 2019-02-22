@@ -1561,6 +1561,16 @@ if test "$have_hwloc" = "yes" ; then
 fi
 
 # ----------------------------------------------------------------------------
+# SCOTCH
+# ----------------------------------------------------------------------------
+PAC_SET_HEADER_LIB_PATH([scotch])
+PAC_CHECK_HEADER_LIB([scotch.h], [scotch], [SCOTCH_archInit],[
+    AC_DEFINE(HAVE_SCOTCH,1,[Define if scotch is available])
+    PAC_PREPEND_FLAG([-lscotch -lscotcherr -lm -lpthread -lz], [WRAPPER_LIBS])],
+    [AC_MSG_WARN([Unable to configure SCOTCH integration])],
+    [-lscotcherr -lm -lpthread -lz])
+
+# ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
 #

@@ -23,6 +23,9 @@
 #ifdef HAVE_USLEEP
 #include <unistd.h>
 #endif
+#ifdef HAVE_SCOTCH
+#include <scotch.h>
+#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -575,6 +578,50 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_Coll_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+#ifdef HAVE_SCOTCH
+    /* allocate and initialize scotch arch */
+    MPIR_Process.arch = SCOTCH_archAlloc();
+    MPIR_ERR_CHKANDJUMP(MPIR_Process.arch == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    mpi_errno = SCOTCH_archInit(MPIR_Process.arch);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* build scotch topology using on/off node information. in reality, this should use
+     * hwloc/netloc information. this is just a start to get something working. Currently
+     * assumes symmetric number of processes on all nodes.
+     */
+    if (MPIR_Process.comm_world->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+        SCOTCH_Num sizetab[2], linktab[2] = { 1000, 1 };
+        int num_nodes;
+
+        /* number of nodes is max node id + 1 */
+        MPID_Get_max_node_id(MPIR_Process.comm_world, &num_nodes);
+        num_nodes++;
+
+        /* create 2-level tree arch */
+        sizetab[0] = num_nodes;
+        sizetab[1] =
+            MPIR_Process.comm_world->node_comm ? MPIR_Comm_size(MPIR_Process.
+                                                                comm_world->node_comm) : 1;
+        mpi_errno = SCOTCH_archTleaf(MPIR_Process.arch, 2, sizetab, linktab);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* create reference mapping of ranks to arch nodes */
+        MPIR_Process.arch_mapping =
+            MPL_malloc(sizeof(int) * MPIR_Comm_size(MPIR_Process.comm_world), MPL_MEM_OTHER);
+        for (int i = 0, curr = 0; i < num_nodes; i++) {
+            for (int j = 0; j < MPIR_Comm_size(MPIR_Process.comm_world); j++) {
+                int nodeid;
+                MPID_Get_node_id(MPIR_Process.comm_world, j, &nodeid);
+                if (nodeid == i)
+                    MPIR_Process.arch_mapping[curr++] = j;
+            }
+        }
+    }
+#endif
 
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;

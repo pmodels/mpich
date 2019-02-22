@@ -7,6 +7,9 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#ifdef HAVE_SCOTCH
+#include <scotch.h>
+#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -291,6 +294,11 @@ int MPI_Finalize(void)
 
 #if defined(MPICH_IS_THREADED)
     MPIR_Thread_CS_Finalize();
+#endif
+
+#ifdef HAVE_SCOTCH
+    SCOTCH_archExit(MPIR_Process.arch);
+    MPL_free(MPIR_Process.arch_mapping);
 #endif
 
     /* We place the memory tracing at the very end because any of the other
