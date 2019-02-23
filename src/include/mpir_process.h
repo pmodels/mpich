@@ -13,7 +13,7 @@
 #endif
 
 #ifdef HAVE_NETLOC
-#include "netloc_util.h"
+#include "mpir_netloc.h"
 #endif
 
 /* Per process data */
