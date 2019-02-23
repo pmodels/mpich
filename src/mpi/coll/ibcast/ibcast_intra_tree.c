@@ -10,6 +10,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"  /* for MPIR_Ibcast_tree_type */
 #include "ibcast.h"
 
 /* generate gentran algo prototypes */

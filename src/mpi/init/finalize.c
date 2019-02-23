@@ -265,7 +265,7 @@ int MPI_Finalize(void)
     /* Free complete request */
     MPIR_Request_free(MPIR_Process.lw_req);
 
-    mpi_errno = MPII_Coll_finalize();
+    mpi_errno = MPIR_Coll_finalize();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

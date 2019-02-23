@@ -7,6 +7,9 @@
 #include "mpidimpl.h"
 #include "utlist.h"
 
+/* defined in src/mpi/coll/src/coll_impl.c */
+extern int MPIR_Nbc_progress_hook_id;
+
 /* A random guess at an appropriate value, we can tune it later.  It could also
  * be a real tunable parameter. */
 #define MPIDU_SCHED_INITIAL_ENTRIES (16)

@@ -5,7 +5,10 @@
  */
 
 #include "mpiimpl.h"
-#include "iallgatherv.h"
+#include "coll_impl.h"
+
+/* defined in iallgatherv_utils.c */
+int MPII_Iallgatherv_is_displs_ordered(int size, const int recvcounts[], const int displs[]);
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

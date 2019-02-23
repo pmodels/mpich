@@ -10,6 +10,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"  /* for MPIR_Ireduce_tree_type */
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"

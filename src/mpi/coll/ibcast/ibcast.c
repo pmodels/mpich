@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"
 #include "ibcast.h"
 
 /*

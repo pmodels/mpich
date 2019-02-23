@@ -14,7 +14,9 @@
  * times within the same .c file. */
 
 #include "tsp_namespace_def.h"
-#include "iallgatherv.h"
+
+/* defined in iallgatherv_utils.c */
+int MPII_Iallgatherv_is_displs_ordered(int size, const int recvcounts[], const int displs[]);
 
 /* XXX The code has work around to deal with a known failure with a ICC version
  * 2019.0.105 build with the following configuration:

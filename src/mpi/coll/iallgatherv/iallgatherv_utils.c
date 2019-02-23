@@ -10,7 +10,10 @@
  */
 
 #include "mpiimpl.h"
-#include "iallgatherv.h"
+
+/* FIXME: The code is rather general move it to somewhere such as
+   coll_util.c and coll_util.h
+*/
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Iallgatherv_is_displs_ordered

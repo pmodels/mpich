@@ -572,7 +572,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPIR_ERR_POP(mpi_errno);
 
     /* Initialize collectives infrastructure */
-    mpi_errno = MPII_Coll_init();
+    mpi_errno = MPIR_Coll_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

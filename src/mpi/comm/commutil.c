@@ -781,7 +781,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Process.comm_parent = NULL;
 
         /* Cleanup collectives-specific infrastructure */
-        mpi_errno = MPII_Coll_comm_cleanup(comm_ptr);
+        mpi_errno = MPIR_Coll_comm_cleanup(comm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

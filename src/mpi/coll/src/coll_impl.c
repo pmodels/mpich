@@ -12,6 +12,13 @@
 #include "mpiimpl.h"
 #include "coll_impl.h"
 
+#include "stubtran_impl.h"
+#include "gentran_impl.h"
+
+#include "../../algorithms/stubalgo/stubalgo.h"
+#include "../../algorithms/treealgo/treealgo.h"
+#include "../../algorithms/recexchalgo/recexchalgo.h"
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -160,10 +167,10 @@ MPIR_Scatter_intra_algo_t MPIR_Scatter_intra_algo_choice = MPIR_SCATTER_INTRA_AL
 MPIR_Scatter_inter_algo_t MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_AUTO;
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Coll_init
+#define FUNCNAME MPIR_Coll_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Coll_init(void)
+int MPIR_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -986,10 +993,10 @@ int MPII_Coll_init(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Coll_finalize
+#define FUNCNAME MPIR_Coll_finalize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Coll_finalize(void)
+int MPIR_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1045,7 +1052,7 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 }
 
 /* Function to cleanup any communicators for collectives */
-int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
+int MPIR_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 

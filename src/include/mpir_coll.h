@@ -8,7 +8,18 @@
 #ifndef MPIR_COLL_H_INCLUDED
 #define MPIR_COLL_H_INCLUDED
 
-#include "coll_impl.h"
+#include "allreduce_group.h"    /* ref: comm_{agree,shrink,contextid}.c */
+
+/* Hook for any collective algorithms related initialization/finalization */
+int MPIR_Coll_init(void);       /* src/mpi/init/initthread.c */
+int MPIR_Coll_finalize(void);   /* src/mpi/init/finalize.c */
+
+/* Function to initialze/cleanup communicators for collectives */
+int MPIR_Coll_comm_init(MPIR_Comm * comm);
+int MPIR_Coll_comm_cleanup(MPIR_Comm * comm);
+
+/* Function called from ch3/channels/nemesis/include/mpid_nem_inline.h */
+int MPIR_Coll_safe_to_block(void);
 
 /* Internal point-to-point communication for collectives */
 /* These functions are used in the implementation of collective and

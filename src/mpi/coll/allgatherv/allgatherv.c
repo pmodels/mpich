@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

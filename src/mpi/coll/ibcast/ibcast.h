@@ -7,9 +7,6 @@
 #ifndef IBCAST_H_INCLUDED
 #define IBCAST_H_INCLUDED
 
-#include "mpiimpl.h"
-
-
 struct MPII_Ibcast_state {
     int curr_bytes;
     int n_bytes;

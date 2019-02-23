@@ -27,5 +27,3 @@ mpi_core_sources +=                                           \
     src/mpi/coll/iallgatherv/iallgatherv_intra_gentran_brucks.c   \
     src/mpi/coll/iallgatherv/iallgatherv_utils.c
 
-noinst_HEADERS += \
-    src/mpi/coll/iallgatherv/iallgatherv.h
