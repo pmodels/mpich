@@ -10,7 +10,7 @@
 #include "mpiimpl.h"
 
 #ifdef HAVE_NETLOC
-#include "netloc_util.h"
+#include "mpir_netloc.h"
 #include "mpl.h"
 #define MAX_DISTANCE 65535
 
