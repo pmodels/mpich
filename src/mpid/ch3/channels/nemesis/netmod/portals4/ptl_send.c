@@ -184,13 +184,15 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         /* noncontig data */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Small noncontig message");
         sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                             "**nomem %s", "MPIR_Segment_alloc");
         sreq->dev.segment_first = 0;
         sreq->dev.segment_size = data_sz;
 
         last = sreq->dev.segment_size;
         sreq->dev.iov_count = MPL_IOV_LIMIT;
-        MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
+        MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov,
+                            &sreq->dev.iov_count);
         MPIR_Segment_free(sreq->dev.segment_ptr);
 
         if (last == sreq->dev.segment_size) {
@@ -221,7 +223,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
         /* IOV is not long enough to describe entire message */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
-        MPIR_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
+        MPIR_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno,
+                            "chunk_buffer", MPL_MEM_BUFFER);
         sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
         sreq->dev.segment_first = 0;
         last = data_sz;
@@ -272,7 +275,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     /* Large noncontig data */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Large noncontig message");
     sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-    MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+    MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPIR_Segment_alloc");
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
 
