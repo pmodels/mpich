@@ -311,7 +311,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
         switch (MPIR_Ibcast_intra_algo_choice) {
             case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -320,7 +320,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
                     break;
                 mpi_errno =
-                    MPIR_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
+                    MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(buffer, count, datatype, root,
                                                                 comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -328,7 +328,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 break;
             case MPIR_IBCAST_INTRA_ALGO_GENTRAN_RING:
                 mpi_errno =
-                    MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

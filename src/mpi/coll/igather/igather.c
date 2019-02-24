@@ -244,9 +244,9 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Igather_intra_algo_choice) {
-            case MPIR_IGATHER_INTRA_ALGO_TREE:
+            case MPIR_IGATHER_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Igather_intra_tree(sendbuf, sendcount, sendtype,
+                    MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcount, recvtype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);

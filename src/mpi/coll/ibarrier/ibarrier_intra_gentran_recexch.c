@@ -10,25 +10,25 @@
  */
 
 #include "mpiimpl.h"
-#include "ibcast.h"
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_scatter_recexch_allgather_algos_prototypes.h"
+#include "../iallreduce/iallreduce_tsp_recexch_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_scatter_recexch_allgather
+#define FUNCNAME MPIR_Ibarrier_intra_gentran_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count,
-                                                MPI_Datatype datatype, int root,
-                                                MPIR_Comm * comm_ptr, MPIR_Request ** request)
+int MPIR_Ibarrier_intra_gentran_recexch(MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *recvbuf = NULL;
 
-    mpi_errno = MPII_Gentran_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                                    comm_ptr, request);
+    mpi_errno =
+        MPII_Gentran_Iallreduce_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE, MPI_SUM, comm,
+                                              req, MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
+                                              MPIR_CVAR_IBARRIER_RECEXCH_KVAL);
 
     return mpi_errno;
 }

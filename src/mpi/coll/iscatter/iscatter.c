@@ -20,9 +20,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto     - Internal algorithm selection
-        binomial - Force binomial algorithm
-        tree     - Force genetric transport based tree algorithm
+        auto         - Internal algorithm selection
+        binomial     - Force binomial algorithm
+        gentran_tree - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_ISCATTER_TREE_KVAL
       category    : COLLECTIVE
@@ -257,9 +257,9 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Iscatter_intra_algo_choice) {
-            case MPIR_ISCATTER_INTRA_ALGO_TREE:
+            case MPIR_ISCATTER_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Iscatter_intra_tree(sendbuf, sendcount, sendtype,
+                    MPIR_Iscatter_intra_gentran_tree(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcount, recvtype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);

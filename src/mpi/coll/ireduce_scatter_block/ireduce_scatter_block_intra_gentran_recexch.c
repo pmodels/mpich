@@ -17,10 +17,10 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_intra_recexch
+#define FUNCNAME MPIR_Ireduce_scatter_block_intra_gentran_recexch
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_gentran_recexch(const void *sendbuf, void *recvbuf,
                                              int recvcount, MPI_Datatype datatype,
                                              MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req)
 {

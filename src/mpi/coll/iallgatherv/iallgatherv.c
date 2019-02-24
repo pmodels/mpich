@@ -314,24 +314,24 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Iallgatherv_intra_algo_choice) {
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DOUBLING:
                 /* This algo cannot handle unordered data */
                 if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,
                                                                      recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_HALVING:
                 /* This algo cannot handle unordered data */
                 if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
                                                                     recvtype, comm_ptr, request);
                 if (mpi_errno)

@@ -297,8 +297,8 @@ int MPIR_Coll_init(void)
     /* Barrier Intra */
     if (0 == strcmp(MPIR_CVAR_BARRIER_INTRA_ALGORITHM, "nb"))
         MPIR_Barrier_intra_algo_choice = MPIR_BARRIER_INTRA_ALGO_NB;
-    else if (0 == strcmp(MPIR_CVAR_BARRIER_INTRA_ALGORITHM, "recursive_doubling"))
-        MPIR_Barrier_intra_algo_choice = MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_BARRIER_INTRA_ALGORITHM, "dissemination"))
+        MPIR_Barrier_intra_algo_choice = MPIR_BARRIER_INTRA_ALGO_DISSEMINATION;
     else
         MPIR_Barrier_intra_algo_choice = MPIR_BARRIER_INTRA_ALGO_AUTO;
 
@@ -379,12 +379,12 @@ int MPIR_Coll_init(void)
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "ring"))
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RING;
-    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_doubling"))
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_recexch_doubling"))
         MPIR_Iallgather_intra_algo_choice =
-            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING;
-    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_halving"))
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_recexch_halving"))
         MPIR_Iallgather_intra_algo_choice =
-            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_HALVING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_brucks"))
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "gentran_ring"))
@@ -405,12 +405,12 @@ int MPIR_Coll_init(void)
         MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "ring"))
         MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_RING;
-    else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "recexch_distance_doubling"))
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "gentran_recexch_doubling"))
         MPIR_Iallgatherv_intra_algo_choice =
-            MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING;
-    else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "recexch_distance_halving"))
+            MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "gentran_recexch_halving"))
         MPIR_Iallgatherv_intra_algo_choice =
-            MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
+            MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_HALVING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "gentran_ring"))
         MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "gentran_brucks"))
@@ -565,8 +565,8 @@ int MPIR_Coll_init(void)
     /* Igather Intra */
     if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "binomial"))
         MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_BINOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "tree"))
-        MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_TREE;
+    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "gentran_tree"))
+        MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_GENTRAN_TREE;
     else
         MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_AUTO;
 
@@ -767,8 +767,8 @@ int MPIR_Coll_init(void)
     /* Iscatter Intra */
     if (0 == strcmp(MPIR_CVAR_ISCATTER_INTRA_ALGORITHM, "binomial"))
         MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_BINOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_ISCATTER_INTRA_ALGORITHM, "tree"))
-        MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_TREE;
+    else if (0 == strcmp(MPIR_CVAR_ISCATTER_INTRA_ALGORITHM, "gentran_tree"))
+        MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_GENTRAN_TREE;
     else
         MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_AUTO;
 

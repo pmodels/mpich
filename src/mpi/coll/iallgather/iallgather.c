@@ -304,18 +304,18 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Iallgather_intra_algo_choice) {
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DOUBLING:
                 mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgather_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcount, recvtype,
                                                                     comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_HALVING:
                 mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgather_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, request);
                 if (mpi_errno)

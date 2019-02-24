@@ -287,7 +287,7 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
             case MPIR_IREDUCE_SCATTER_INTRA_ALGO_GENTRAN_RECEXCH:
                 if (is_commutative) {
                     mpi_errno =
-                        MPIR_Ireduce_scatter_intra_recexch(sendbuf, recvbuf, recvcounts, datatype,
+                        MPIR_Ireduce_scatter_intra_gentran_recexch(sendbuf, recvbuf, recvcounts, datatype,
                                                            op, comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);

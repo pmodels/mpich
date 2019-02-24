@@ -307,7 +307,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
         switch (MPIR_Iallreduce_intra_algo_choice) {
             case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
+                    MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
                                                                 op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -315,7 +315,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
             case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
+                    MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
                                                                   op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -323,7 +323,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
             case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype,
+                    MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
                                                op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -331,7 +331,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
             case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RING:
                 if (is_commutative) {
                     mpi_errno =
-                        MPIR_Iallreduce_intra_ring(sendbuf, recvbuf, count, datatype,
+                        MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                    op, comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);

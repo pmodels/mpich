@@ -17,10 +17,10 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_ring
+#define FUNCNAME MPIR_Iallreduce_intra_gentran_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op,
                                MPIR_Comm * comm, MPIR_Request ** req)
 {

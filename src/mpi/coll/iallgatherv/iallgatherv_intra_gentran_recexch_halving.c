@@ -20,18 +20,18 @@
 #define FUNCNAME MPIR_Iallgatherv_intra_recexch_single_buffer
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_intra_recexch_distance_doubling(const void *sendbuf, int sendcount,
-                                                     MPI_Datatype sendtype, void *recvbuf,
-                                                     const int *recvcounts, const int *displs,
-                                                     MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                     MPIR_Request ** req)
+int MPIR_Iallgatherv_intra_gentran_recexch_halving(const void *sendbuf, int sendcount,
+                                                    MPI_Datatype sendtype, void *recvbuf,
+                                                    const int *recvcounts, const int *displs,
+                                                    MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                    MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallgatherv_intra_recexch(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm, req,
-                                                       MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING,
+                                                       MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING,
                                                        MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL);
 
     return mpi_errno;

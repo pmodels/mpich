@@ -22,4 +22,4 @@ mpi_core_sources +=                          \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_noncommutative.c \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_inter_remote_reduce_local_scatterv.c \
     src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_gentran_algos.c                    \
-    src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_recexch.c
+    src/mpi/coll/ireduce_scatter_block/ireduce_scatter_block_intra_gentran_recexch.c

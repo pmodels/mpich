@@ -187,7 +187,7 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
         /* intracommunicator */
         switch (MPIR_Ibarrier_intra_algo_choice) {
             case MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH:
-                mpi_errno = MPIR_Ibarrier_intra_recexch(comm_ptr, request);
+                mpi_errno = MPIR_Ibarrier_intra_gentran_recexch(comm_ptr, request);
 
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);

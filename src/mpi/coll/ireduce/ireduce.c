@@ -290,7 +290,7 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
         switch (MPIR_Ireduce_intra_algo_choice) {
             case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE:
                 mpi_errno =
-                    MPIR_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
+                    MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
                                             comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -298,7 +298,7 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
             case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING:
                 mpi_errno =
-                    MPIR_Ireduce_intra_ring(sendbuf, recvbuf, count, datatype, op, root,
+                    MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                             comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);

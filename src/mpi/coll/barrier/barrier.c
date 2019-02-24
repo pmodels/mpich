@@ -144,7 +144,7 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Barrier_intra_algo_choice) {
-            case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_BARRIER_INTRA_ALGO_DISSEMINATION:
                 mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_NB:

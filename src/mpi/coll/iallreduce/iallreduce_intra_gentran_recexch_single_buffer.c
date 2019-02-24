@@ -17,19 +17,19 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_recexch_multiple_buffer
+#define FUNCNAME MPIR_Iallreduce_intra_gentran_recexch_single_buffer
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_recexch_multiple_buffer(const void *sendbuf, void *recvbuf, int count,
-                                                  MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm, MPIR_Request ** req)
+int MPIR_Iallreduce_intra_gentran_recexch_single_buffer(const void *sendbuf, void *recvbuf, int count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallreduce_intra_recexch(sendbuf, recvbuf, count,
                                                       datatype, op,
                                                       comm, req,
-                                                      MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
+                                                      MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
                                                       MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL);
 
     return mpi_errno;
