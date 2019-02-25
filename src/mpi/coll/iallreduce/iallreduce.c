@@ -72,7 +72,7 @@ cvars:
 
     - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -83,14 +83,14 @@ cvars:
         naive                    - Force naive algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
-        recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
-        recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
-        tree                     - Force generic transport tree algorithm
-        ring                     - Force generic transport ring algorithm
+        gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
+        gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        gentran_tree                     - Force generic transport tree algorithm
+        gentran_ring                     - Force generic transport ring algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -220,23 +220,23 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
                 MPIR_Iallreduce_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         } else {
             /* intracommunicator */
-            switch (MPIR_Iallreduce_intra_algo_choice) {
-                case MPIR_IALLREDUCE_INTRA_ALGO_NAIVE:
+            switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
                     mpi_errno = MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count,
                                                                   datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
                     mpi_errno =
                         MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count,
                                                                        datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
                     mpi_errno =
                         MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf,
                                                                              count, datatype, op,
                                                                              comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
                     MPL_FALLTHROUGH;
                 default:
                     mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
@@ -246,14 +246,14 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iallreduce_inter_algo_choice) {
-            case MPIR_IALLREDUCE_INTER_ALGO_REMOTE_REDUCE_LOCAL_BCAST:
+        switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_remote_reduce_local_bcast:
                 mpi_errno =
                     MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           s);
                 break;
-            case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallreduce_sched_inter_auto(sendbuf, recvbuf, count,
@@ -304,8 +304,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallreduce_intra_algo_choice) {
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER:
+        switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_single_buffer:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
                                                                 op, comm_ptr, request);
@@ -313,7 +313,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
                                                                   op, comm_ptr, request);
@@ -321,14 +321,14 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
                                                op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RING:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
                 if (is_commutative) {
                     mpi_errno =
                         MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,

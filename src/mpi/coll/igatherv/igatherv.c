@@ -13,7 +13,7 @@
 cvars:
     - name        : MPIR_CVAR_IGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_IGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -132,14 +132,14 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Igatherv_intra_algo_choice) {
-            case MPIR_IGATHERV_INTRA_ALGO_LINEAR:
+        switch (MPIR_CVAR_IGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHERV_INTRA_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcounts, displs, recvtype, root, comm_ptr,
                                                        s);
                 break;
-            case MPIR_IGATHERV_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IGATHERV_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno =
@@ -148,14 +148,14 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
                 break;
         }
     } else {
-        switch (MPIR_Igatherv_inter_algo_choice) {
-            case MPIR_IGATHERV_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_IGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_IGATHERV_INTER_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcounts, displs, recvtype, root, comm_ptr,
                                                        s);
                 break;
-            case MPIR_IGATHERV_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IGATHERV_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno =

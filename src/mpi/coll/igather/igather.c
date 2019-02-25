@@ -13,16 +13,16 @@
 cvars:
     - name        : MPIR_CVAR_IGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto     - Internal algorithm selection
-        binomial - Force binomial algorithm
-        tree     - Force genetric transport based tree algorithm
+        auto         - Internal algorithm selection
+        binomial     - Force binomial algorithm
+        gentran_tree - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_IGATHER_TREE_KVAL
       category    : COLLECTIVE
@@ -36,16 +36,16 @@ cvars:
 
     - name        : MPIR_CVAR_IGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto        - Internal algorithm selection
-        long_inter  - Force long inter algorithm
-        short_inter - Force short inter algorithm
+        auto  - Internal algorithm selection
+        long  - Force long inter algorithm
+        short - Force short inter algorithm
 
     - name        : MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -162,13 +162,13 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Igather_intra_algo_choice) {
-            case MPIR_IGATHER_INTRA_ALGO_BINOMIAL:
+        switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_binomial:
                 mpi_errno = MPIR_Igather_sched_intra_binomial(sendbuf, sendcount, sendtype,
                                                               recvbuf, recvcount, recvtype, root,
                                                               comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igather_sched_intra_auto(sendbuf, sendcount, sendtype,
@@ -178,18 +178,18 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Igather_inter_algo_choice) {
-            case MPIR_IGATHER_INTER_ALGO_LONG:
+        switch (MPIR_CVAR_IGATHER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_long:
                 mpi_errno = MPIR_Igather_sched_inter_long(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype, root,
                                                           comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTER_ALGO_SHORT:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_short:
                 mpi_errno = MPIR_Igather_sched_inter_short(sendbuf, sendcount, sendtype,
                                                            recvbuf, recvcount, recvtype, root,
                                                            comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igather_sched_inter_auto(sendbuf, sendcount, sendtype, recvbuf,
@@ -243,8 +243,8 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Igather_intra_algo_choice) {
-            case MPIR_IGATHER_INTRA_ALGO_GENTRAN_TREE:
+        switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcount, recvtype, root, comm_ptr, request);

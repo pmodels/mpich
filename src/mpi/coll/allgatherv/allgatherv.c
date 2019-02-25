@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -40,7 +40,7 @@ cvars:
 
     - name        : MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -193,28 +193,28 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Allgatherv_intra_algo_choice) {
-            case MPIR_ALLGATHERV_INTRA_ALGO_BRUCKS:
+        switch (MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM_brucks:
                 mpi_errno = MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype,
                                                          recvbuf, recvcounts, displs, recvtype,
                                                          comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Allgatherv_intra_recursive_doubling(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,
                                                                      recvtype, comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTRA_ALGO_RING:
+            case MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM_ring:
                 mpi_errno = MPIR_Allgatherv_intra_ring(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTRA_ALGO_NB:
+            case MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Allgatherv_allcomm_nb(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Allgatherv_intra_auto(sendbuf, sendcount, sendtype,
@@ -224,19 +224,19 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Allgatherv_inter_algo_choice) {
-            case MPIR_ALLGATHERV_INTER_ALGO_REMOTE_GATHER_LOCAL_BCAST:
+        switch (MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM_remote_gather_local_bcast:
                 mpi_errno =
                     MPIR_Allgatherv_inter_remote_gather_local_bcast(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
                                                                     recvtype, comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTER_ALGO_NB:
+            case MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Allgatherv_allcomm_nb(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm_ptr, errflag);
                 break;
-            case MPIR_ALLGATHERV_INTER_ALGO_AUTO:
+            case MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Allgatherv_inter_auto(sendbuf, sendcount, sendtype,

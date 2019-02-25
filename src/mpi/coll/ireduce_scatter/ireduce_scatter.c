@@ -23,7 +23,7 @@ cvars:
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -35,11 +35,11 @@ cvars:
         recursive_doubling - Force recursive doubling algorithm
         pairwise           - Force pairwise algorithm
         recursive_halving  - Force recursive halving algorithm
-        recexch  - Force generic transport recursive exchange algorithm
+        gentran_recexch    - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -188,29 +188,29 @@ int MPIR_Ireduce_scatter_sched_impl(const void *sendbuf, void *recvbuf, const in
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ireduce_scatter_intra_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_NONCOMMUTATIVE:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_noncommutative:
                 mpi_errno = MPIR_Ireduce_scatter_sched_intra_noncommutative(sendbuf, recvbuf,
                                                                             recvcounts, datatype,
                                                                             op, comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_PAIRWISE:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_pairwise:
                 mpi_errno = MPIR_Ireduce_scatter_sched_intra_pairwise(sendbuf, recvbuf,
                                                                       recvcounts, datatype, op,
                                                                       comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_RECURSIVE_HALVING:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_halving:
                 mpi_errno = MPIR_Ireduce_scatter_sched_intra_recursive_halving(sendbuf, recvbuf,
                                                                                recvcounts, datatype,
                                                                                op, comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Ireduce_scatter_sched_intra_recursive_doubling(sendbuf, recvbuf,
                                                                                 recvcounts,
                                                                                 datatype, op,
                                                                                 comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ireduce_scatter_sched_intra_auto(sendbuf, recvbuf,
@@ -220,15 +220,15 @@ int MPIR_Ireduce_scatter_sched_impl(const void *sendbuf, void *recvbuf, const in
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ireduce_scatter_inter_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_remote_reduce_local_scatterv:
                 mpi_errno =
                     MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf,
                                                                                   recvcounts,
                                                                                   datatype, op,
                                                                                   comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ireduce_scatter_sched_inter_auto(sendbuf, recvbuf, recvcounts,
@@ -283,8 +283,8 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ireduce_scatter_intra_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_INTRA_ALGO_GENTRAN_RECEXCH:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_gentran_recexch:
                 if (is_commutative) {
                     mpi_errno =
                         MPIR_Ireduce_scatter_intra_gentran_recexch(sendbuf, recvbuf, recvcounts, datatype,
