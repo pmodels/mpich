@@ -245,6 +245,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_misc_post.h"
 #include "mpit.h"
 #include "mpir_handlemem.h"
+#include "mpir_hw_topo.h"
 
 /*****************************************************************************/
 /******************** PART 6: DEVICE "POST" FUNCTIONALITY ********************/
