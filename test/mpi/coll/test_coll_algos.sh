@@ -309,14 +309,6 @@ testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE=0 "
-algo_names="gentran_ring"
-
-for algo_name in ${algo_names}; do
-    env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
-
-    coll_algo_tests+="alltoall1 8 ${env}${nl}"
-done
-
 algo_names="gentran_brucks"
 kvalues="2 3 4"
 
