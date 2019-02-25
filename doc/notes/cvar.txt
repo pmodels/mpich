@@ -1,0 +1,25 @@
+-- updated by Hui Zhou, 2019/02 
+
+CVARs are declared in comment blocks such as:
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_IBCAST_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree (kary, knomial, etc.) based ibcast
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+It is in YAML format -- which means, although it looks like plain text, it is not -- the format matters here.
+
+`autogen.sh` runs perl script `maint/extractcvars`, which looks through all .c and .h files in directories listed in `maint/cvardirs`. Both these files need be processed by configure only to replace `@abs_srcdir@`. If we assume it will always be run by `autogen.sh` or it will always run from top src dir, then probably can simplify the process quite a bit.
+
+`maint/extractcvars` generates `src/include/mpir_cvars.h` and `src/util/cvar/mpir_cvars.c`. The former is included by `mpiimpl.h`, thus every file, declares `MPIR_CVAR_...` extern variables. The latter defines MPIR_T_cvar_init/finalize functions that are called by MPI_Init/Finalize. The `MPIR_T_cvar_init` function checks environment variable for each CVAR variable and sets values according to the CVAR data type.
+
+A portion of CVAR string varialbes are actually enum types, such as collective algorithm cvars. It is expensive to do strcmp at runtime repeatedly, therefore, it is translated into int variables. This was done manually before. Now I am introducing a enum type and updated `maint/extractcvars` to automatically declare the enum type based on description text, and automatically convert enviroment string into enum/int.
