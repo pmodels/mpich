@@ -50,13 +50,12 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
 
-    if (bblock <= 0) {
+    /* Alltoall: each process need send #size msgs and recv #size msgs
+     * This algorithm does #bblock send/recv first
+     * followed by addition batchs of #batch_size each.
+     */
+    if (bblock > size)
         bblock = size;
-    } else if (bblock > size) {
-        bblock = size;
-    } else if (size % bblock != 0) {
-        bblock = size;
-    }
 
     /* vtcs is twice the batch size to store both send and recv ids */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, 2 * batch_size * sizeof(int), mpi_errno, "vtcs", MPL_MEM_COLL);
@@ -93,10 +92,10 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     /* Post more send/recv pairs as the previous ones finish */
     for (i = bblock; i < size; i += batch_size) {
         ww = MPL_MIN(size - i, batch_size);
-        index = 0;      /* Store vtcs array from the start */
-        /* Get the send and recv ids from previous sends/recvs.
-         * ((i + j) % bblock) would ensure extracting and storing
-         * dependencies in order from '0, 1,...,bblock' */
+        index = 0;
+        /* Add dependency to ensure not to run until previous block the batch portion
+         * is finished -- effectively limiting the on-going tasks to bblock
+         */
         for (j = 0; j < ww; j++) {
             vtcs[index++] = recv_id[(i + j) % bblock];
             vtcs[index++] = send_id[(i + j) % bblock];
@@ -105,11 +104,11 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
         for (j = 0; j < ww; j++) {
             src = (rank + i + j) % size;
             recv_id[(i + j) % bblock] =
-                MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src],
+                MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src] * recvtype_extent,
                                      recvcounts[src], recvtype, src, tag, comm, sched, 1, &invtcs);
             dst = (rank - i - j + size) % size;
             send_id[(i + j) % bblock] =
-                MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
+                MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * sendtype_extent,
                                      sendcounts[dst], sendtype, dst, tag, comm, sched, 1, &invtcs);
         }
     }
