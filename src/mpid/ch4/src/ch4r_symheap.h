@@ -435,7 +435,6 @@ static inline int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offse
                                          MPIR_Comm * comm, MPIR_Win * win, bool * fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int all_map_result = MPIDIU_SYMSHM_MAP_FAIL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_SHM_SYMHEAP);
@@ -444,6 +443,7 @@ static inline int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offse
     int iter = MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY;
     MPL_shm_hnd_t *shm_segment_hdl_ptr = &MPIDIG_WIN(win, shm_segment_handle);
     void **base_ptr = &MPIDIG_WIN(win, mmap_addr);
+    int all_map_result = MPIDIU_SYMSHM_MAP_FAIL;
 
     size_t mapsize = 0, page_sz = 0, maxsz = 0;
     int maxsz_loc = 0;
