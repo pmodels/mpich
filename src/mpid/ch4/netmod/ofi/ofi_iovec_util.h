@@ -146,13 +146,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
             MPIR_Assert(0);
             break;
     }
-    if (*cursor >= last)
-        return 1;
-    /* Pack datatype into iovec during runtime. Everytime only one vector is processed,
-     * and we try to pack as much as possible using last byte of datatype.
-     * If pack is complete, num_contig returns as 0. */
-    MPIR_Segment_to_iov(seg, *cursor, &last, &dloop, &num_contig);
-    MPIR_Assert(num_contig <= 1);
+
+    if (*cursor < last) {
+        /* Pack datatype into iovec during runtime. Everytime only one
+         * vector is processed, and we try to pack as much as possible
+         * using last byte of datatype.  If pack is complete,
+         * num_contig returns as 0. */
+        MPIR_Segment_to_iov(seg, *cursor, &last, &dloop, &num_contig);
+        MPIR_Assert(num_contig <= 1);
+    } else {
+        dloop.iov_base = NULL;
+        dloop.iov_len = 0;
+        num_contig = 0;
+    }
+
     *cursor = last;
     *out_vector = dloop;
     return num_contig == 0 ? 1 : 0;
