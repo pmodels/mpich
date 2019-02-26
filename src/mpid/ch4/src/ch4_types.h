@@ -309,8 +309,10 @@ typedef struct MPIDI_CH4_Global_t {
     int my_sigusr1_count;
 #endif
     OPA_int_t progress_count;
+    int num_nm_vcis;
 
     MPID_Thread_mutex_t vci_locks[MPIDI_CH4_MAX_NM_VCIS];
+    OPA_int_t vci_progress_count[MPIDI_CH4_MAX_NM_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif

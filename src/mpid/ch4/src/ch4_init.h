@@ -443,10 +443,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 
+        MPIDI_CH4_Global.num_nm_vcis = n_nm_vcis_provided;
+
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
 
         MPIR_Assert(MPIR_CVAR_CH4_NUM_NM_VCIS <= MPIDI_CH4_MAX_NM_VCIS);
+        MPIR_Assert(n_nm_vcis_provided <= MPIR_CVAR_CH4_NUM_NM_VCIS);
         for (i = 0; i < MPIR_CVAR_CH4_NUM_NM_VCIS; i++) {
             MPID_Thread_mutex_create(&MPIDI_CH4_Global.vci_locks[i], &mpi_errno);
             if (mpi_errno != MPI_SUCCESS) {
