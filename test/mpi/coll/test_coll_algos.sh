@@ -288,7 +288,7 @@ done
 
 ######### Add tests for Alltoall algorithms ###########
 
-#disable device collectives for allgather to test MPIR algorithms
+#disable device collectives for alltoall to test MPIR algorithms
 testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
 
 #test nb algorithms
