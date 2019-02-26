@@ -14,21 +14,23 @@
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_scatter_recexch_allgather_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_scatter_recexch_allgather
+#define FUNCNAME MPIR_Ibcast_intra_gentran_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count,
-                                                MPI_Datatype datatype, int root,
-                                                MPIR_Comm * comm_ptr, MPIR_Request ** request)
+int MPIR_Ibcast_intra_gentran_tree(void *buffer, int count,
+                           MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+                           MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPII_Gentran_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                                    comm_ptr, request);
+    mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
+                                               comm_ptr, request, MPIR_Ibcast_tree_type,
+                                               MPIR_CVAR_IBCAST_TREE_KVAL,
+                                               MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
 
     return mpi_errno;
 }

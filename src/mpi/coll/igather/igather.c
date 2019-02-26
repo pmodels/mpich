@@ -245,8 +245,9 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
         switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
             case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Igather_intra_tree(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, root, comm_ptr, request);
+                    MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                    request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

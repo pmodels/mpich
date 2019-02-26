@@ -10,26 +10,27 @@
  */
 
 #include "mpiimpl.h"
+#include "ibcast.h"
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ireduce_tsp_tree_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_intra_ring
+#define FUNCNAME MPIR_Ibcast_intra_gentran_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
-                            MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                            MPIR_Request ** request)
+int MPIR_Ibcast_intra_gentran_ring(void *buffer, int count,
+                           MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+                           MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Ring algorithm is equivalent to kary tree with k = 1 */
-    mpi_errno = MPII_Gentran_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                comm_ptr, request, MPIR_TREE_TYPE_KARY,
-                                                1, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE);
+    /* Ring algorithm is equivalent to kary tree algorithm with k = 1 */
+    mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
+                                               comm_ptr, request, MPIR_TREE_TYPE_KARY,
+                                               1, MPIR_CVAR_IBCAST_RING_CHUNK_SIZE);
 
     return mpi_errno;
 }
