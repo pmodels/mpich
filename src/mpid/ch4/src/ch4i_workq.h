@@ -383,11 +383,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[0]);
 
     mpi_errno = MPIDI_workq_vci_progress_unsafe();
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[0]);
   fn_fail:
     return mpi_errno;
 }

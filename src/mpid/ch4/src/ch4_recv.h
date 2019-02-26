@@ -240,11 +240,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
                                              int context_offset, MPIDI_av_entry_t * av,
                                              MPI_Status * status, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -263,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RECV_SAFE);
     return mpi_errno;
 
@@ -284,11 +285,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
                                               int context_offset, MPIDI_av_entry_t * av,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -306,7 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IRECV_SAFE);
     return mpi_errno;
 
@@ -322,11 +324,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                                MPI_Aint count, MPI_Datatype datatype,
                                                MPIR_Request * message, MPIR_Request ** rreqp)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMRECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(message->comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -343,7 +346,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMRECV_SAFE);
     return mpi_errno;
 
@@ -357,15 +360,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    vci = MPIDI_hash_comm_to_vci(rreq->comm);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     mpi_errno = MPIDI_cancel_recv_unsafe(rreq);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);

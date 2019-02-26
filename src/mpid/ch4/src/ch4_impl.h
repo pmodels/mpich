@@ -1184,4 +1184,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     return mpi_errno;
 }
 
+static inline int MPIDI_hash_comm_to_vci(MPIR_Comm* comm)
+{
+    int vci;
+#if 0
+    vci = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.n_netmod_eps;
+#else
+    vci = 0;
+#endif
+    MPIR_Assert(vci >= 0);
+    return vci;
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */

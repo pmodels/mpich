@@ -276,6 +276,8 @@ typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
 
+#define MPIDI_CH4_MAX_NM_VCIS 16
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -308,7 +310,7 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     OPA_int_t progress_count;
 
-    MPID_Thread_mutex_t vci_lock;
+    MPID_Thread_mutex_t vci_locks[MPIDI_CH4_MAX_NM_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif

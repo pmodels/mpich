@@ -91,6 +91,16 @@ cvars:
         handoff
         trylock
 
+    - name        : MPIR_CVAR_CH4_NUM_NM_VCIS
+      category    : CH4
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Number of active Netmod VCIs
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -207,10 +217,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_nm_vcis_provided;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vcis_provided;
-#endif
+    int n_nm_vcis_provided = 0;
+    int n_shm_vcis_provided __attribute__((unused)) = 0;
 #ifndef USE_PMI2_API
     int max_pmi_name_length;
 #endif
@@ -327,15 +335,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
 
-    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vci_lock, &mpi_errno);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
-#if defined(MPIDI_CH4_USE_WORK_QUEUES)
-    MPIDI_workq_init(&MPIDI_CH4_Global.workqueue);
-#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
-
-
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         MPIDI_print_runtime_configurations();
 
@@ -446,6 +445,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
+
+        MPIR_Assert(MPIR_CVAR_CH4_NUM_NM_VCIS <= MPIDI_CH4_MAX_NM_VCIS);
+        for (i = 0; i < MPIR_CVAR_CH4_NUM_NM_VCIS; i++) {
+            MPID_Thread_mutex_create(&MPIDI_CH4_Global.vci_locks[i], &mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POPFATAL(mpi_errno);
+            }
+        }
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+        MPIDI_workq_init(&MPIDI_CH4_Global.workqueue);
+#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
+
     }
 
     /* Call any and all MPID_Init type functions */
@@ -559,12 +570,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
 {
-    int mpi_errno = MPI_SUCCESS, thr_err;
+    int mpi_errno = MPI_SUCCESS, i, thr_err;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vci_lock, &thr_err);
-    MPIR_Assert(thr_err == 0);
+    for (i = 0; i < MPIR_CVAR_CH4_NUM_NM_VCIS; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vci_locks[i], &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);

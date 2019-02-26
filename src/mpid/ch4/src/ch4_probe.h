@@ -119,16 +119,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
                                                MPIDI_av_entry_t * av, int *flag,
                                                MPI_Status * status)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_iprobe_unsafe(source, tag, comm, context_offset, av, flag, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -152,16 +153,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
                                                 int *flag, MPIR_Request ** message,
                                                 MPI_Status * status)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_improbe_unsafe(source, tag, comm, context_offset, av, flag, message, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[vci]);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);

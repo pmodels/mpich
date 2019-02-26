@@ -191,11 +191,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
                                              MPIR_Comm * comm, int context_offset,
                                              MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -213,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_SAFE);
     return mpi_errno;
 
@@ -233,11 +234,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                                               MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -255,7 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ISEND_SAFE);
     return mpi_errno;
 
@@ -275,11 +277,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
                                               MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SSEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SSEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -297,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SSEND_SAFE);
     return mpi_errno;
 
@@ -317,11 +320,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISSEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISSEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    vci = MPIDI_hash_comm_to_vci(comm);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -339,7 +343,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_CH4_Global.vci_locks[vci], cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ISSEND_SAFE);
     return mpi_errno;
 
