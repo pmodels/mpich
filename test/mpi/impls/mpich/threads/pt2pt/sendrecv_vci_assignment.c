@@ -28,6 +28,7 @@ struct thread_param {
     MPI_Comm comm;
     int tag;
     int result;
+    bool maintain_msg_order;    /* Useful for the hint allow overtaking */
 };
 
 /* A simple send recv test that is used by the test threads */
@@ -43,12 +44,21 @@ MTEST_THREAD_RETURN_TYPE run_send_recv_test(void *arg)
     MPI_Comm_rank(p->comm, &rank);
     for (i = 0; i < p->iter; i++) {
         if (rank == 0) {
-            buff[i] = i + (thread_id_mult * p->id);
+            buff[i] = (thread_id_mult * p->id);
+            /* If the hint mpi_assert_allow_overtaking is present, msg from
+             * the different iterations can match in any order. So, we keep
+             * the data value same across the iterations. That way the data
+             * validation in this test after the recv will not pick it as
+             error */
+            if (p->maintain_msg_order)
+                buff[i] += i;
             MPI_Send(&buff[i], 1, MPI_INT, 1, p->tag, p->comm);
         } else {
             buff[i] = -1;
             MPI_Recv(&buff[i], 1, MPI_INT, 0, p->tag, p->comm, &status[i]);
-            if (buff[i] != i + thread_id_mult * p->id) {
+            /* Data validation */
+            if ((p->maintain_msg_order && buff[i] != i + thread_id_mult * p->id)
+                || !p->maintain_msg_order && buff[i] != thread_id_mult * p->id) {
                 errs++;
             }
         }
@@ -60,7 +70,7 @@ MTEST_THREAD_RETURN_TYPE run_send_recv_test(void *arg)
 
 /* Launch multiple threads, apply provided comm hints, run send/recv */
 int comm_hint_test(const char **comm_hints, const char **comm_hints_vals, int n_hints,
-                   bool test_set_value)
+                   bool test_set_value, bool maintain_msg_order)
 {
     int i, j, errs = 0, nprocs, rank, flag;
     struct thread_param params[NTHREADS];
@@ -111,6 +121,7 @@ int comm_hint_test(const char **comm_hints, const char **comm_hints_vals, int n_
         params[i].tag = i;      /* Set tag = thread id */
         params[i].iter = ITERATIONS;
         params[i].id = i;
+        params[i].maintain_msg_order = maintain_msg_order;
         if (i == NTHREADS - 1)
             run_send_recv_test(&params[i]);
         else
@@ -159,10 +170,41 @@ int main(int argc, char **argv)
      * Perform send/recv with no comm hint applied. Just for
      * sanity check.
      */
-    errs += comm_hint_test(NULL, NULL, 0, false);
+    errs += comm_hint_test(NULL, NULL, 0, false, false);
     MPI_Barrier(MPI_COMM_WORLD);
 
-    /* TODO: Standard comm hints tests. */
+    /* Standard comm hints tests.
+     * The following standard comm hints are expected to guide how
+     * vci_idx are chosen for both sender and receiver. So, this test
+     * aims to trigger the vci_idx selection. After applying this hint,
+     * we expect send-recv to run without any crash or hangup.
+     */
+
+    /* Test : hints assert_no_any_tag */
+    hints_1[0] = "mpi_assert_no_any_tag";
+    hints_1_vals[0] = "true";
+    errs += comm_hint_test(hints_1, hints_1_vals, 1, true, true);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Test : hints assert_no_any_tag and assert_no_any_source */
+    hints_1[0] = "mpi_assert_no_any_source";
+    hints_1_vals[0] = "true";
+    errs += comm_hint_test(hints_1, hints_1_vals, 1, true, true);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Test : hints assert_no_any_tag and assert_no_any_source */
+    hints_1[0] = "mpi_assert_no_any_tag";
+    hints_1[1] = "mpi_assert_no_any_source";
+    hints_1_vals[0] = "true";
+    hints_1_vals[1] = "true";
+    errs += comm_hint_test(hints_1, hints_1_vals, 2, true, true);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Test : hint assert_allow_overtaking */
+    hints_1[0] = "mpi_assert_allow_overtaking";
+    hints_1_vals[0] = "true";
+    errs += comm_hint_test(hints_1, hints_1_vals, 1, true, false);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* Non-standard comm hints tests.
      * The following non-standard hints allow user to directly
@@ -178,7 +220,7 @@ int main(int argc, char **argv)
     hints_1[1] = "vci_idx_receiver";
     hints_1_vals[0] = "2";
     hints_1_vals[1] = "3";
-    errs += comm_hint_test(hints_1, hints_1_vals, 2, false);
+    errs += comm_hint_test(hints_1, hints_1_vals, 2, false, true);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Test : vci_idx_sender and vci_idx_receiver with potential invalid values
@@ -191,7 +233,7 @@ int main(int argc, char **argv)
     hints_1[1] = "vci_idx_receiver";
     hints_1_vals[0] = "99999";
     hints_1_vals[1] = "99999";
-    errs += comm_hint_test(hints_1, hints_1_vals, 2, false);
+    errs += comm_hint_test(hints_1, hints_1_vals, 2, false, true);
     MPI_Barrier(MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
