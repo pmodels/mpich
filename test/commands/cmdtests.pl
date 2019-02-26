@@ -1,17 +1,43 @@
-#! @PERL@ -w
 # -*- Mode: perl; -*-
 #
 # Test the commands provided as part of MPICH
+#
+# note: my test run returns 32 errors, need investigate -- hzhou
 #
 # mpicc, mpicxx - handle -Dname="foo bar" and -Dname='"foo bar"'
 # (not done yet - see mpich1 test/command/runtests)
 # mpiexec - environment handling; stdout, stderr redirection
 #
 # Configuration values
-my $prefix      = "@prefix@";
-my $exec_prefix = "@exec_prefix@";
-my $bindir      = "@bindir@";
-my $srcdir      = "@srcdir@";
+my $mpiexec = "mpiexec";
+my $mpicc = "mpicc";
+my $mpicxx = "mpicxx";
+my $mpif77 = "mpif77";
+
+my $srcdir      = ".";
+if ($0=~/(.*)\//) {
+    $srcdir = $1;
+}
+
+my %opt;
+foreach my $a (@ARGV){
+    if ($a=~/^-(cxx|f77)/) {
+        $opt{$1} = 1;
+    }
+    elsif ($a=~/^-bindir=(.+)/){
+        $mpiexec = "$1/mpiexec";
+        $mpicc = "$1/mpicc";
+        $mpicxx = "$1/mpicxx";
+        $mpif77 = "$1/mpif77";
+    }
+    elsif ($a=~/^--help/){
+        print "perl $0 [-cxx] [-f77] [-bindir=path_to_mpiexec]\n";
+        exit 0;
+    }
+}
+
+# Get a way to kill processes
+my $killall = "killall";
 
 # Global variables
 my $errors = 0;
@@ -38,8 +64,6 @@ if (!defined($ENV{"MPIEXEC_TIMEOUT"})) {
 }
 
 #
-# Get a way to kill processes
-my $killall = '@KILLALL@';
 my $myusername = "";
 if (defined($ENV{'LOGNAME'})) {
     $myusername = $ENV{'LOGNAME'};
@@ -102,8 +126,6 @@ $ENV{TestEnvVar} = "test var name";
 %EnvExpected = ();
 
 print "Try some environment args\n" if $gVerbose;
-
-$mpiexec = "$bindir/mpiexec" ;
 
 # Do we get the environment?
 %EnvSeen = ();
@@ -525,8 +547,8 @@ $cmd = "mpicc";
 #$outlog = "/dev/null";
 $outlog = "out.log";
 unlink $outlog;
-&Announce( "$bindir/mpicc -Dtestname=\\\"foo\\\" $srcdir/rtest.c" );
-system "$bindir/mpicc -Dtestname=\\\"foo\\\" $srcdir/rtest.c > $outlog 2>&1";
+&Announce( "$mpicc -Dtestname=\\\"foo\\\" $srcdir/rtest.c" );
+system "$mpicc -Dtestname=\\\"foo\\\" $srcdir/rtest.c > $outlog 2>&1";
 $rc = $?;
 if ($rc != 0) {
     &ReportError( "Error with escaped double quotes in $cmd\n" );
@@ -535,8 +557,8 @@ if ($rc != 0) {
 }
 
 unlink $outlog;
-&Announce( "$bindir/mpicc -Dtestname='\"foo bar\"' $srcdir/rtest.c" );
-system "$bindir/mpicc -Dtestname='\"foo bar\"' $srcdir/rtest.c  > $outlog 2>&1";
+&Announce( "$mpicc -Dtestname='\"foo bar\"' $srcdir/rtest.c" );
+system "$mpicc -Dtestname='\"foo bar\"' $srcdir/rtest.c  > $outlog 2>&1";
 $rc = $?;
 if ($rc != 0) {
     &ReportError( "Error with double inside of single quotes in $cmd\n" );
@@ -546,11 +568,11 @@ if ($rc != 0) {
 unlink "a.out";
 
 # Run this test only if mpicxx is valid
-if ("@bindings@" =~ /cxx/) {
+if ($opt{cxx}) {
     $cmd = "mpicxx";
     unlink $outlog;
-    &Announce( "$bindir/mpicxx -Dtestname=\\\"foo\\\" $srcdir/rtestx.cxx" );
-    system "$bindir/mpicxx -Dtestname=\\\"foo\\\" $srcdir/rtestx.cxx  > $outlog 2>&1";
+    &Announce( "$mpicxx -Dtestname=\\\"foo\\\" $srcdir/rtestx.cxx" );
+    system "$mpicxx -Dtestname=\\\"foo\\\" $srcdir/rtestx.cxx  > $outlog 2>&1";
     $rc = $?;
     if ($rc != 0) {
 	&ReportError( "Error with escaped double quotes in $cmd\n" );
@@ -558,8 +580,8 @@ if ("@bindings@" =~ /cxx/) {
 	$errors ++;
     }
     unlink $outlog;
-    &Announce( "$bindir/mpicxx -Dtestname='\"foo bar\"' $srcdir/rtestx.cxx" );
-    system "$bindir/mpicxx -Dtestname='\"foo bar\"' $srcdir/rtestx.cxx > $outlog 2>&1";
+    &Announce( "$mpicxx -Dtestname='\"foo bar\"' $srcdir/rtestx.cxx" );
+    system "$mpicxx -Dtestname='\"foo bar\"' $srcdir/rtestx.cxx > $outlog 2>&1";
     $rc = $?;
     if ($rc != 0) {
 	&ReportError( "Error with double inside of single quotes in $cmd\n" );
@@ -569,11 +591,11 @@ if ("@bindings@" =~ /cxx/) {
     unlink "a.out";
 }
 # Run this test only if mpif77 is valid
-if ("@bindings@" =~ /f77/) {
+if ($opt{f77}) {
     $cmd = "mpif77";
     unlink $outlog;
-    &Announce( "$bindir/mpif77 -Dtestname=\\\"foo\\\" $srcdir/rtestf.F" );
-    system "$bindir/mpif77 -Dtestname=\\\"foo\\\" $srcdir/rtestf.F  > $outlog 2>&1";
+    &Announce( "$mpif77 -Dtestname=\\\"foo\\\" $srcdir/rtestf.F" );
+    system "$mpif77 -Dtestname=\\\"foo\\\" $srcdir/rtestf.F  > $outlog 2>&1";
     $rc = $?;
     if ($rc != 0) {
 	&ReportError( "Error with escaped double quotes in $cmd\n" );
@@ -581,8 +603,8 @@ if ("@bindings@" =~ /f77/) {
 	$errors ++;
     }
     unlink $outlog;
-    &Announce( "$bindir/mpif77 -Dtestname='\"foo bar\"' $srcdir/rtestf.F" );
-    system "$bindir/mpif77 -Dtestname='\"foo bar\"' $srcdir/rtestf.F > $outlog 2>&1";
+    &Announce( "$mpif77 -Dtestname='\"foo bar\"' $srcdir/rtestf.F" );
+    system "$mpif77 -Dtestname='\"foo bar\"' $srcdir/rtestf.F > $outlog 2>&1";
     $rc = $?;
     if ($rc != 0) {
 	&ReportError( "Error with double inside of single quotes in $cmd\n" );
