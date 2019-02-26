@@ -16,7 +16,7 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
-algo_names="tree scatter_recexch_allgather ring"
+algo_names="gentran_tree gentran_scatter_recexch_allgather gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
@@ -52,7 +52,7 @@ testing_env="env=MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="tree ring"
+algo_names="gentran_tree gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
@@ -90,7 +90,7 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_single_buffer recexch_multiple_buffer tree"
+algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree"
 tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
@@ -139,7 +139,7 @@ testing_env="env=MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_brucks gentran_ring"
+algo_names="gentran_recexch_doubling gentran_recexch_halving gentran_brucks gentran_ring"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -162,7 +162,7 @@ testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring gentran_brucks"
+algo_names="gentran_recexch_doubling gentran_recexch_halving gentran_ring gentran_brucks"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -195,7 +195,7 @@ testing_env="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
-algo_names="recexch"
+algo_names="gentran_recexch"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -223,7 +223,7 @@ testing_env="env=MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch"
+algo_names="gentran_recexch"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -249,7 +249,7 @@ testing_env="env=MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_SCATTER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE=0 "
-algo_names="tree"
+algo_names="gentran_tree"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -272,7 +272,7 @@ testing_env="env=MPIR_CVAR_GATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_GATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="tree"
+algo_names="gentran_tree"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do

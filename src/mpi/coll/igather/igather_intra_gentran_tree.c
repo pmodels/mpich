@@ -17,10 +17,10 @@
 #include "tsp_undef.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_intra_tree
+#define FUNCNAME MPIR_Igather_intra_gentran_tree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_intra_tree(const void *sendbuf, int sendcount,
+int MPIR_Igather_intra_gentran_tree(const void *sendbuf, int sendcount,
                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                             MPIR_Request ** request)
