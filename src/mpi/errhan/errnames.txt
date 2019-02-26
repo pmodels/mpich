@@ -819,6 +819,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **envvarparse:Unable to parse environment variable
 **envvarparse %s:Unable to parse environment variable (%s)
+**cvar_val:Invalid CVAR value
+**cvar_val %s %s:Invalid %s value (%s)
 
 **infohintparse:Unable to parse info hint
 **infohintparse %s:Unable to parse info hint (%s)
