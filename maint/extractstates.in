@@ -387,7 +387,7 @@ sub findStateDecl {
 	    $inDecls = 0;
 	    if (! ($lastState =~ /:$state:/) &&
 		! defined($exceptionState{$state}) ) {
-		print STDERR "Warning: State in FUNC_ENTER($state) does not match STATE_DECL($lastState) in $file\n" if $showWarnings;
+                print STDERR "Warning: State in FUNC_ENTER($state) does not match STATE_DECL($lastState) in $file at $linenum\n" if $showWarnings;
 	    }
 	}
 	elsif (/FUNC_EXIT\((.*)\)/ && !/^\#\s*define\s/) {
@@ -396,7 +396,7 @@ sub findStateDecl {
 	    $inDecls = 0;
 	    if (! ($lastState =~ /:$state:/) && 
 		! defined($exceptionState{$state})) {
-		print STDERR "Warning: State in FUNC_EXIT($state) does not match STATE_DECL($lastState) in $file\n" if $showWarnings;
+                print STDERR "Warning: State in FUNC_EXIT($state) does not match STATE_DECL($lastState) in $file\n" if $showWarnings;
 	    }
 #	    else {
 #		# Remove this state from the defined states
