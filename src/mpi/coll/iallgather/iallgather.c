@@ -305,18 +305,18 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
         switch (MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_recexch_doubling:
                 mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcount, recvtype,
-                                                                    comm_ptr, request);
+                    MPIR_Iallgather_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
+                                                                   recvbuf, recvcount, recvtype,
+                                                                   comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_recexch_halving:
                 mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
-                                                                   recvbuf, recvcount, recvtype,
-                                                                   comm_ptr, request);
+                    MPIR_Iallgather_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
+                                                                  recvbuf, recvcount, recvtype,
+                                                                  comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

@@ -310,7 +310,8 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
         switch (MPIR_CVAR_IBCAST_INTRA_ALGORITHM) {
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
+                                                   request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -319,15 +320,16 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
                     break;
                 mpi_errno =
-                    MPIR_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                                comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(buffer, count, datatype,
+                                                                        root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
-                    MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
+                                                   request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

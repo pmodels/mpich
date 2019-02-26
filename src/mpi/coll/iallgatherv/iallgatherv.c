@@ -316,9 +316,9 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
-                                                                     recvbuf, recvcounts, displs,
-                                                                     recvtype, comm_ptr, request);
+                    MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
+                                                                    recvbuf, recvcounts, displs,
+                                                                    recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -328,9 +328,9 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs,
-                                                                    recvtype, comm_ptr, request);
+                    MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
+                                                                   recvbuf, recvcounts, displs,
+                                                                   recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

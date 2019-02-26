@@ -304,24 +304,26 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
         switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_single_buffer:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
-                                                                op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
+                                                                        datatype, op, comm_ptr,
+                                                                        request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
-                                                                  op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
+                                                                          datatype, op, comm_ptr,
+                                                                          request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype,
-                                               op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
+                                                       op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

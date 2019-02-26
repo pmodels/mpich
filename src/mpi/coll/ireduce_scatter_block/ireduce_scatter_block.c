@@ -283,8 +283,9 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
             case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_gentran_recexch:
                 if (is_commutative) {
                     mpi_errno =
-                        MPIR_Ireduce_scatter_block_intra_recexch(sendbuf, recvbuf, recvcount,
-                                                                 datatype, op, comm_ptr, request);
+                        MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
+                                                                         recvcount, datatype, op,
+                                                                         comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     goto fn_exit;
