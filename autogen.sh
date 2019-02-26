@@ -103,6 +103,7 @@ do_subcfg_m4=yes
 do_izem=yes
 do_ofi=yes
 do_ucx=yes
+do_test=yes
 
 export do_build_configure
 
@@ -581,7 +582,11 @@ echo
 check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc"
+
+if [ "yes" = "$do_test" ] ; then
+    externals="${externals} test/mpi"
+fi
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem

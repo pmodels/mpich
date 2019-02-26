@@ -2813,18 +2813,6 @@ AC_LANG_C
 # subsystems to build
 # ----------------------------------------------------------------------------
 
-# Look for perl.  Perl is used *only* in the tests of the commands such as
-# mpiexec, mpicc, etc, in test/commands, and in some of the utility
-# programs for processing log files .  If perl is not found,
-# MPICH may still be built and used.
-# We need the full path to perl since we'll use it as the interpreter for
-# a shell script.
-AC_PATH_PROG(PERL,perl)
-
-# Check for the killall program; this can be used in some of the tests
-# in test/commands
-AC_CHECK_PROGS(KILLALL,killall,true)
-
 # Does xargs need the -r option to handle the case where the input 
 # is empty (gnu utils do, Mac OSX does not accept -r)
 xargs_out=`echo "" | xargs ls | wc -l | sed -e 's/ //g'`
@@ -5543,7 +5531,6 @@ PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 
-AC_CONFIG_SUBDIRS([test/mpi])
 dnl
 dnl Generate the Makefiles from Makefile.in
 dnl Also generate mpi.h from mpi.h.in so that we can eliminate all ifdefs
@@ -5593,9 +5580,6 @@ dnl date.  We can use this to avoid rebuilding the library when
 dnl a build aborts due to an error (this is intended to help developers)
 AC_OUTPUT_COMMANDS([if [ ! -d lib ] ; then mkdir lib ; fi 
 date > lib/newconfig])
-
-AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
-
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 
@@ -5873,6 +5857,6 @@ AC_OUTPUT(Makefile \
           doc/logging/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
-          test/commands/cmdtests)
+          )
 
 echo 'Configuration completed.'
