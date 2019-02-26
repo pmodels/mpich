@@ -135,7 +135,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     int *pack_invtcs, *recv_invtcs, *unpack_invtcs;
     int *invtcs, n_invtcs;
     int rank, size;
-    int nphases, max;
+    int nphases = 0, max;
     int p_of_k;                 /* largest power of k that is (strictly) smaller than 'size' */
     int is_inplace;
     size_t s_extent, s_lb, r_extent, r_lb;
@@ -172,7 +172,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     rank = MPIR_Comm_rank(comm);
     size = MPIR_Comm_size(comm);
 
-    nphases = 0;
     max = size - 1;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
