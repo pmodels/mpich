@@ -9,49 +9,119 @@
 #include <mpir_dataloop.h>
 #include <stdlib.h>
 
-/*@
-  MPIR_Type_flatten
+struct flatten_hdr {
+    MPI_Aint size;
+    MPI_Aint extent, ub, lb, true_ub, true_lb;
+    int has_sticky_ub, has_sticky_lb;
+    int is_contig;
+    int basic_type;
+    MPI_Aint max_contig_blocks;
+};
 
-Input Parameters:
-. type - MPI Datatype (must have been committed)
-
-Output Parameters:
-. nr_blocks_p - pointer to int in which to store the number of contiguous blocks in the type
-
-
-  Return Value:
-  0 on success, -1 on failure.
-@*/
-
-int MPIR_Type_flatten(MPI_Datatype type,
-                      MPI_Aint * off_array, MPI_Aint * size_array, MPI_Aint * array_len_p)
+/*
+ * MPIR_Type_flatten_size
+ *
+ * Parameters:
+ * datatype_ptr        - (IN)  datatype to flatten
+ * flattened_type_size - (OUT) buffer size needed for the flattened representation
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_flatten_size
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size)
 {
-    MPI_Aint first, last;
-    MPIR_Datatype *datatype_ptr ATTRIBUTE((unused));
-    MPIR_Segment *segp;
+    int flattened_dataloop_size;
+    int mpi_errno = MPI_SUCCESS;
 
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-        off_array[0] = 0;
-        MPIR_Datatype_get_size_macro(type, size_array[0]);
-        *array_len_p = 1;
-        return 0;
-    }
+    MPIR_Dataloop_flatten_size(datatype_ptr, &flattened_dataloop_size);
 
-    MPIR_Datatype_get_ptr(type, datatype_ptr);
-    MPIR_Assert(datatype_ptr->is_committed);
-    MPIR_Assert(*array_len_p >= datatype_ptr->max_contig_blocks);
+    *flattened_type_size = flattened_dataloop_size + sizeof(struct flatten_hdr);
 
-    segp = MPIR_Segment_alloc(0, 1, type);      /* first 0 is bufptr,
-                                                 * 1 is count
-                                                 */
-    MPIR_Assert(segp != NULL);
+    return mpi_errno;
+}
 
-    first = 0;
-    last = MPIR_SEGMENT_IGNORE_LAST;
+/*
+ * MPIR_Type_flatten
+ *
+ * Parameters:
+ * datatype_ptr   - (IN)  datatype to flatten
+ * flattened_type - (OUT) buffer that will contain the flattened representation
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_flatten
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
+{
+    struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
+    void *flattened_dataloop = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
+    int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Segment_flatten(segp, first, &last, off_array, size_array, array_len_p);
+    flatten_hdr->size = datatype_ptr->size;
+    flatten_hdr->extent = datatype_ptr->extent;
+    flatten_hdr->ub = datatype_ptr->ub;
+    flatten_hdr->lb = datatype_ptr->lb;
+    flatten_hdr->true_ub = datatype_ptr->true_ub;
+    flatten_hdr->true_lb = datatype_ptr->true_lb;
+    flatten_hdr->has_sticky_ub = datatype_ptr->has_sticky_ub;
+    flatten_hdr->has_sticky_lb = datatype_ptr->has_sticky_lb;
+    flatten_hdr->is_contig = datatype_ptr->is_contig;
+    flatten_hdr->basic_type = datatype_ptr->basic_type;
+    flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
 
-    MPIR_Segment_free(segp);
+    mpi_errno = MPIR_Dataloop_flatten(datatype_ptr, flattened_dataloop);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    return 0;
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * MPIR_Type_unflatten
+ *
+ * Parameters:
+ * datatype_ptr   - (OUT) datatype into which the buffer will be unflattened
+ * flattened_type - (IN)  buffer that contains the flattened representation
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_unflatten
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
+{
+    struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
+    void *flattened_dataloop =
+        (MPIR_Dataloop *) ((char *) flattened_type + sizeof(struct flatten_hdr));
+    int mpi_errno = MPI_SUCCESS;
+
+    datatype_ptr->is_committed = 1;
+    datatype_ptr->attributes = 0;
+    datatype_ptr->name[0] = 0;
+    datatype_ptr->is_contig = flatten_hdr->is_contig;
+    datatype_ptr->max_contig_blocks = flatten_hdr->max_contig_blocks;
+    datatype_ptr->size = flatten_hdr->size;
+    datatype_ptr->extent = flatten_hdr->extent;
+    datatype_ptr->basic_type = flatten_hdr->basic_type;
+    datatype_ptr->ub = flatten_hdr->ub;
+    datatype_ptr->lb = flatten_hdr->lb;
+    datatype_ptr->true_ub = flatten_hdr->true_ub;
+    datatype_ptr->true_lb = flatten_hdr->true_lb;
+    datatype_ptr->has_sticky_ub = flatten_hdr->has_sticky_ub;
+    datatype_ptr->has_sticky_lb = flatten_hdr->has_sticky_lb;
+    datatype_ptr->contents = NULL;
+
+    mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_dataloop);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
