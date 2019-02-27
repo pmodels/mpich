@@ -395,16 +395,8 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
             MPIR_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE ||
                         pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-            /* Only basic datatype may contain piggyback lock.
-             * Thus we do not check extended header type for derived case.*/
-            if (pkt->type == MPIDI_CH3_PKT_ACCUMULATE) {
-                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
-                buf_size += sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
-            }
-            else {
-                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_t);
-                buf_size += sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_t);
-            }
+            recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_stream_t);
+            buf_size += sizeof(MPIDI_CH3_Ext_pkt_stream_t);
         }
 
         if (new_ptr != NULL) {
@@ -1234,14 +1226,9 @@ static inline void MPIDI_CH3_ExtPkt_Accum_get_stream(MPIDI_CH3_Pkt_flags_t flags
                                                      int is_derived_dt, void *ext_hdr_ptr,
                                                      MPI_Aint * stream_offset)
 {
-    if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && is_derived_dt) {
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIR_Assert(ext_hdr_ptr != NULL);
-        (*stream_offset) =
-            ((MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) ext_hdr_ptr)->stream_offset;
-    }
-    else if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-        MPIR_Assert(ext_hdr_ptr != NULL);
-        (*stream_offset) = ((MPIDI_CH3_Ext_pkt_accum_stream_t *) ext_hdr_ptr)->stream_offset;
+        (*stream_offset) = ((MPIDI_CH3_Ext_pkt_stream_t *) ext_hdr_ptr)->stream_offset;
     }
 }
 
