@@ -33,6 +33,15 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 */
 #include "tsp_namespace_def.h"
 
+/* This ring algorithm passes entire buffer around (as if an allgather)
+   each round each process picks one portion out of it.
+
+   It does N-1 round N messages with each message N time larger than a
+   linear method. However it may prevent congestion in a network topology
+   that is missing efficient all-to-all transport.
+   -- notes by Hui.
+*/
+
 /* Routine to schedule a ring based allgather */
 #undef FUNCNAME
 #define FUNCNAME MPIR_TSP_Ialltoall_sched_intra_ring
