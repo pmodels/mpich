@@ -405,8 +405,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Request *curr_req = NULL;
     MPI_Datatype target_datatype;
     MPIR_Datatype*target_dtp_ptr = NULL;
-    MPIDI_CH3_Ext_pkt_put_derived_t *ext_hdr_ptr = NULL;
-    MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_PUT_OP);
 
@@ -425,6 +423,8 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
     else {
         MPI_Aint origin_type_size;
+        MPIDI_CH3_Ext_pkt_put_derived_t *ext_hdr_ptr = NULL;
+        MPI_Aint ext_hdr_sz = 0;
         MPIR_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
 
         /* If derived datatype on target, add extended packet header. */
