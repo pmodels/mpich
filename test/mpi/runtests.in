@@ -44,6 +44,15 @@ use File::Copy qw(move);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 # Global variables
+# FIXME: update to `use strict` -- hzhou
+# FIXME: $listfiles implies multiple listfiles, which is not the case here.
+my $listfiles;
+my @individual_tests;
+# global options
+my $g_xfail_only;
+my $g_filter_include; 
+my $g_filter_exclude;
+
 $MPIMajorVersion = "@MPI_VERSION@";
 $MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
@@ -209,6 +218,9 @@ foreach $_ (@ARGV) {
     elsif (/--?batchdir=(.*)/) { $batrundir = $1; }
     elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?timeoutarg=(.*)/) { $timeoutArgPattern = $1; }
+    elsif (/--?xfail-only/)   { $g_xfail_only = 1; }
+    elsif (/--?include=(.*)/) { $g_filter_include = $1; }
+    elsif (/--?exclude=(.*)/) { $g_filter_exclude = $1; }
     elsif (/--?xmlfile=(.*)/) {
 	$xmlfile   = $1;
 	if (! ($xmlfile =~ /^\//)) {
@@ -267,16 +279,23 @@ foreach $_ (@ARGV) {
         $junitoutput = 1;
         open( JUNITOUT, ">$junitfile" ) || die "Cannot open $junitfile\n";
     }
-    else {
-	print STDERR "Unrecognized argument $_\n";
+    elsif (/--?help/) {
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-ppn=max-proc-per-node] [-ppnarg=string] \
         [-timelimitarg=string] [-mpiversion=major.minor] \
         [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
-        [-verbose] [-showprogress] [-debug] [-batch]\n";
+        [-verbose] [-showprogress] [-debug] [-batch] 
+        [--dir=execute_in_dir] [\"individual test\"]\n";
 	exit(1);
+    }
+    elsif (/--?dir=(.*)/) {
+        chdir $1 or die "Can't chdir $1\n";
+    }
+    else {
+        # Eg: ./runtests --dir=coll "allred 4"
+        push @individual_tests, $_;
     }
 }
 
@@ -304,7 +323,18 @@ else {
 }
 
 # ---- running tests ----------
-RunList( $listfiles );
+if (@individual_tests) {
+    RunList($listfiles, \@individual_tests);
+}
+else {
+    # ./runtests -tests="testlist testlist.dtp"
+    my @t = split /\s+/, $listfiles;
+    foreach my $f (@t){
+        if ($f and -f $f){
+            RunList( $f );
+        }
+    }
+}
 
 # ---- post running -----------
 if ($xmloutput && $closeXMLOutput) { 
@@ -374,8 +404,8 @@ else {
 # Enter a new directory and process a list file.  
 #  ProcessDir( directory-name, list-file-name )
 sub ProcessDir {
-    my $dir = $_[0]; $dir =~ s/\/$//;
-    my $listfile = $_[1];
+    my ($dir, $listfiles) = @_;
+    $dir =~ s/\/$//;
     my $savedir = `pwd`;
     my $savecurdir = $curdir;
     my $savesrcdir = $srcdir;
@@ -392,7 +422,7 @@ sub ProcessDir {
     }
     $curdir .= "/$dir";
 
-    &RunList( $listfile );
+    &RunList( $listfiles );
     print "\n" if $showProgress; # Terminate line from progress output
     chdir $savedir;
     $curdir = $savecurdir;
@@ -404,48 +434,87 @@ sub ProcessDir {
 #  programname number-of-processes [ key=value ... ]
 # If the second value is not given, the default value is used.
 # 
+
+sub load_testlist {
+    my ($file) = shift;
+    my @include_list=split /\s+/, $file;
+    my %history; # to prevent deadloop loading
+    my @test_lines;
+    while (my $listfile = shift @include_list) {
+        if (!$listfile or $history{$listfile}) {
+            next;
+        }
+        $history{$listfile} = 1;
+
+        print "Looking in $curdir/$listfile\n" if $debug;
+        if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
+            $listfileSource = "$srcdir/$curdir/$listfile";
+        }
+        open( In, "<$listfileSource" ) || die "Could not open $listfileSource\n";
+        while (<In>) {
+            s/#.*//g;
+            s/\r?\n//;
+            s/^\s*//;
+
+            if (/^\s*$/) {
+                next;
+            }
+
+            if (/^include\s+(\S+)/) {
+                # include testlist.xxx
+                push @include_list, $1;
+            }
+            elsif (/^(\S+)/ and -d $1){
+                # directory
+                push @$test_lines, $_;
+            }
+            elif ($g_xfail_only or $g_filter_include or $g_filter_exclude) {
+                if ($g_xfail_only) {
+                    if (!/xfail=/) {
+                        next;
+                    }
+                    s/xfail=\S*//;
+                }
+                if ($g_filter_include) {
+                    if (!/$g_filter_include/) {
+                        next;
+                    }
+                }
+                if ($g_filter_exclude) {
+                    if (/$g_filter_exclude/) {
+                        next;
+                    }
+                }
+                push @test_lines, $_;
+            }
+            else {
+                push @$test_lines, $_;
+            }
+        }
+        close In;
+    }
+    return \@test_lines;
+}
+
 sub RunList { 
-    my $LIST = "LIST$depth"; $depth++;
-    my $listfile = $_[0];
+    my ($listfiles, $test_lines) = @_;
     my $ResultTest = "";
     my $InitForRun = "";
-    my $listfileSource = $listfile;
-    my @TYPES = "";
-    my $DTP_SWITCH = "@DTP_SWITCH@";
 
-    if (! defined $ENV{"DTP_NUM_OBJS"}) {
-        $ENV{"DTP_NUM_OBJS"} = "5";
+    if (!$test_lines) {
+        $test_lines = load_testlist($listfiles);
     }
 
-    if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
-        @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
-    }
-    else {
-        @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
-    }
-
-    print "Looking in $curdir/$listfile\n" if $debug;
-    if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
-	$listfileSource = "$srcdir/$curdir/$listfile";
-    }
-    open( $LIST, "<$listfileSource" ) || 
-	die "Could not open $listfileSource\n";
-    while (<$LIST>) {
+    foreach (@$test_lines) {
 	# Check for stop file
 	if (-s $stopfile) {
 	    # Exit because we found a stopfile
 	    print STDERR "Terminating test because stopfile $stopfile found\n";
 	    last;
 	}
-	# Skip comments
-	s/#.*//g;
-	# Remove any trailing newlines/returns
-	s/\r?\n//;
-        # Remove any leading whitespace
-        s/^\s*//;
 	# Some tests require that support routines are built first
 	# This is specified with !<dir>:<target>
-	if (/^\s*\!([^:]*):(.*)/) {
+	if (/^!([^:]*):(.*)/) {
 	    # Hack: just execute in a subshell.  This discards any 
 	    # output.
 	    `cd $1 && make $2`;
@@ -453,104 +522,42 @@ sub RunList {
 	}
 	# List file entries have the form:
 	# program [ np [ name=value ... ] ]
+        if ($verbose) {
+            print "TEST: $_\n";
+        }
 	# See files errhan/testlist, init/testlist, and spawn/testlist
 	# for examples of using the key=value form
 	my @args = split(/\s+/,$_);
-	my $programname = $args[0];
-	my $np = "";
-	my $ResultTest = "";
-	my $InitForRun = "";
-	my $timeLimit  = "";
-	my $progArgs   = "";
-	my $mpiexecArgs = "";
-	my $requiresStrict = "";
-	my $requiresMPIX   = "";
-	my $progEnv    = "";
-	my $mpiVersion = "";
-        my $xfail = "";
-    my $dtp_match_type = 0;
-    my $dtp_test_type = "";    # this test type
-    # get the type of this test
-    if ($programname =~ /BASIC/) {
-        $dtp_test_type = "BASIC";
-    } elsif ($programname =~ /STRUCT/) {
-        $dtp_test_type = "STRUCT";
-    }
-	if ($#args >= 1) { $np = $args[1]; }
-	# Process the key=value arguments
-	for (my $i=2; $i <= $#args; $i++) {
-	    if ($args[$i] =~ /([^=]+)=(.*)/) {
-		my $key = $1;
-		my $value = $2;
-		if ($key eq "resultTest") {
-		    $ResultTest = $value;
-		}
-		elsif ($key eq "init") {
-		    $InitForRun = $value;
-		}
-		elsif ($key eq "timeLimit") {
-		    $timeLimit = $value;
-		}
-		elsif ($key eq "arg") {
-            # match allowed datatypes here
-            for my $j (@TYPES) {
-                if ($value eq "-type=$j") {
-                    $dtp_match_type=1;
-                    break;
-                }
-            }
+	my $programname = shift @args;
+	my $np = shift @args;
 
-            $progArgs = "$progArgs $value";
-        }
-		elsif ($key eq "mpiexecarg") {
-		    $mpiexecArgs = "$mpiexecArgs $value";
-		}
-		elsif ($key eq "env") {
-		    if ($progEnv eq "") {
-			$progEnv = "$value";
-		    }
-		    else {
-			$progEnv = "$progEnv $value";
-		    }
-		}
-		elsif ($key eq "mpiversion") {
-		    $mpiVersion = $value;
-		}
-		elsif ($key eq "strict") {
-		    $requiresStrict = $value
-		}
-		elsif ($key eq "mpix") {
-		    $requiresMPIX = $value
-		}
-                elsif ($key eq "xfail") {
-                    if ($value eq "") {
-                        print STDERR "\"xfail=\" requires an argument\n";
+	if (!$np) { $np = $np_default; }
+	if ($np_max > 0 && $np > $np_max) { $np = $np_max; }
+
+	# Process the key=value arguments
+        my (%opts, @defs);
+        foreach my $a (@args) {
+            if ($a =~ /^-D.+/) {
+                push @defs, $a;
+            }
+	    elsif ($a =~ /([^=]+)=(.*)/) {
+		my ($key,$value) = ($1, $2);
+                if ($key=~/^(resultTest|init|timeLimit|arg|env|mpiexecarg|xfail|mpiversion|strict|mpix)$/) {
+                    if (exist $opts{$key}) {
+                        $opts{$key}.=" $value";
                     }
-                    $xfail = $value;
+                    else {
+                        $opts{$key}=$value;
+                    }
                 }
-		else {
+                else {
 		    print STDERR "Unrecognized key $key in $listfileSource\n";
-		}
+                }
 	    }
 	}
-
-    if ($DTP_SWITCH eq "ON") {
-        # if dtpools tests are ON only run matching types for basic tests
-        if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
-            $programname = "";
+        if (exist $opt{xfail} && $opt{xfail} eq ""){
+            print STDERR "\"xfail=\" requires an argument\n";
         }
-    } else {
-        # if dtpools tests are OFF only disable dtpools tests, run the rest
-        if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
-            $programname = "";
-        }
-    }
-
-	# skip empty lines
-	if ($programname eq "") { next; }
-
-	if ($np eq "") { $np = $np_default; }
-	if ($np_max > 0 && $np > $np_max) { $np = $np_max; }
 
         # allows us to accurately output TAP test numbers without disturbing the
         # original totals that have traditionally been reported
@@ -565,6 +572,7 @@ sub RunList {
 	# If a minimum MPI version is specified, check against the
 	# available MPI.  If the version is unknown, we ignore this
 	# test (thus, all tests will be run).  
+        my $mpiVersion = $opt{mpiversion};
 	if ($mpiVersion ne "" && $MPIMajorVersion ne "unknown" &&
 	    $MPIMinorVersion ne "unknown") {
 	    my ($majorReq,$minorReq) = split(/\./,$mpiVersion);
@@ -579,6 +587,7 @@ sub RunList {
 	}
 	# Check whether strict is required by MPI but not by the
 	# test (use strict=false for tests that use non-standard extensions)
+        my $requiresStrict = $opt{strict};
         if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
             unless (-d $programname) {
                 SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "non-strict test, strict MPI mode requested");
@@ -593,6 +602,7 @@ sub RunList {
             $xfail = '';
         }
 
+        my $xfail = $opt{xfail};
 	if ($xfail ne '' && $runxfail eq "false") {
 	    # Skip xfail tests if they are not configured. Strict MPI tests that are
 	    # marked xfail will still run with --enable-strictmpi.
@@ -602,6 +612,7 @@ sub RunList {
 	    next;
 	}
 
+        my $requiresMPIX = $opt{mpix};
         if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {
                 SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "tests MPIX extensions, MPIX testing disabled");
@@ -616,16 +627,19 @@ sub RunList {
 	}
 	else {
 	    $total_run++;
-	    if (&BuildMPIProgram( $programname, $xfail ) == 0) {
+            my $defs;
+            if (@defs) {
+                $defs = 'DEFS="'.join(" ", @defs).'"';
+            }
+	    if (&BuildMPIProgram( $programname, $xfail, $defs ) == 0) {
+                my @params = ( $programname, $np, $opt{resultTest}, 
+                               $opt{init}, $opt{timeLimit}, $opt{arg},
+                               $opt{env}, $opt{mpiexecarg}, $xfail );
 		if ($batchRun == 1) {
-		    &AddMPIProgram( $programname, $np, $ResultTest, 
-				    $InitForRun, $timeLimit, $progArgs,
-				    $progEnv, $mpiexecArgs, $xfail );
+		    &AddMPIProgram( @params );
 		}
 		else {
-		    &RunMPIProgram( $programname, $np, $ResultTest, 
-				    $InitForRun, $timeLimit, $progArgs, 
-				    $progEnv, $mpiexecArgs, $xfail );
+		    &RunMPIProgram( @params );
 		}
 	    }
 	    elsif ($xfail eq '') {
@@ -639,7 +653,6 @@ sub RunList {
 	    }
 	}
     }
-    close( $LIST );
 }
 
 #
@@ -696,7 +709,7 @@ sub RunMPIProgram {
 	&$InitForTest();
     }
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "    $mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     if ($progEnv ne "") {
@@ -872,13 +885,16 @@ sub AddMPIProgram {
 # 
 # Return value is 0 on success, non zero on failure
 sub BuildMPIProgram {
-    my $programname = shift;
-    my $xfail = shift;
+    my ($programname, $xfail, $defs) = @_;
     my $rc = 0;
-    if ($verbose) { print STDERR "making $programname\n"; }
     if (! -x $programname) { $remove_this_pgm = 1; }
     else { $remove_this_pgm = 0; }
-    my $output = `make $programname 2>&1`;
+    my $cmd = "make $defs $programname";
+    if ($verbose){
+        print STDERR "making $programname\n";
+        print "    $cmd ...\n";
+    }
+    my $output = `$cmd 2>&1`;
     $rc = $?;
     if ($rc > 255) { $rc >>= 8; }
     if (! -x $programname) {
