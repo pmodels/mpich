@@ -218,10 +218,10 @@ static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_
 
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Genutil_progress_hook
+#define FUNCNAME MPII_Genutil_queue_progress_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Genutil_progress_hook(int *made_progress)
+int MPII_Genutil_queue_progress_hook(int *made_progress)
 {
     int count = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -232,7 +232,7 @@ int MPII_Genutil_progress_hook(int *made_progress)
 
     /* Go over up to MPIR_COLL_PROGRESS_MAX_COLLS collecives in the
      * queue and make progress on them */
-    DL_FOREACH_SAFE(coll_queue.head, coll_req, coll_req_tmp) {
+    DL_FOREACH_SAFE(MPII_coll_queue.head, coll_req, coll_req_tmp) {
         /* make progress on the collective operation */
         int done;
         MPII_Genutil_sched_t *sched = (MPII_Genutil_sched_t *) (coll_req->sched);
@@ -246,15 +246,15 @@ int MPII_Genutil_progress_hook(int *made_progress)
             coll_req->sched = NULL;
 
             req = MPL_container_of(coll_req, MPIR_Request, u.nbc.coll);
-            DL_DELETE(coll_queue.head, coll_req);
+            DL_DELETE(MPII_coll_queue.head, coll_req);
             MPID_Request_complete(req);
         }
         if (++count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
             break;
     }
 
-    if (coll_queue.head == NULL)
-        MPID_Progress_deactivate_hook(MPII_Genutil_progress_hook_id);
+    if (MPII_coll_queue.head == NULL)
+        MPID_Progress_deactivate_hook(MPII_Genutil_queue_progress_hook_id);
 
     return mpi_errno;
 }
@@ -535,4 +535,13 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_queue_has_pending_scheds
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_queue_has_pending_scheds()
+{
+    return MPII_coll_queue.head != NULL;
 }

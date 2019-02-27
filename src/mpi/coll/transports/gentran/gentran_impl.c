@@ -32,9 +32,9 @@ cvars:
 #include "tsp_gentran.h"
 #include "gentran_utils.h"
 
-MPII_Coll_queue_t coll_queue = { NULL };
+MPII_Coll_queue_t MPII_coll_queue = { NULL };
 
-int MPII_Genutil_progress_hook_id = 0;
+int MPII_Genutil_queue_progress_hook_id = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Gentran_init
@@ -45,7 +45,8 @@ int MPII_Gentran_init()
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPID_Progress_register_hook(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
+        MPID_Progress_register_hook(MPII_Genutil_queue_progress_hook,
+                                    &MPII_Genutil_queue_progress_hook_id);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -89,17 +90,7 @@ int MPII_Gentran_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Progress_deregister_hook(MPII_Genutil_progress_hook_id);
+    MPID_Progress_deregister_hook(MPII_Genutil_queue_progress_hook_id);
 
     return mpi_errno;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_scheds_are_pending
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Gentran_scheds_are_pending()
-{
-    return coll_queue.head != NULL;
 }
