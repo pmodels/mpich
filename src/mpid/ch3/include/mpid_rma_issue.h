@@ -65,10 +65,10 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 
 /* Set extended header for ACC operation and return its real size. */
 #undef FUNCNAME
-#define FUNCNAME init_accum_ext_pkt
+#define FUNCNAME init_stream_dtype_ext_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
+static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                               MPIR_Datatype* target_dtp, intptr_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz, int *flattened_type_size)
 {
@@ -495,7 +495,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */
-        init_accum_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
+        init_stream_dtype_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
                            &accum_pkt->info.flattened_type_size);
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
@@ -716,7 +716,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */
-        init_accum_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
+        init_stream_dtype_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
                            &get_accum_pkt->info.flattened_type_size);
 
         /* Note: here we need to allocate an extended packet header in response request,
@@ -725,9 +725,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
          * other information. */
         {
             int dummy;
-            init_accum_ext_pkt(flags, NULL /* target_dtp_ptr */ , stream_offset,
-                               &(resp_req->dev.ext_hdr_ptr), &(resp_req->dev.ext_hdr_sz),
-                               &dummy);
+            init_stream_dtype_ext_pkt(flags, NULL /* target_dtp_ptr */ , stream_offset,
+                                      &(resp_req->dev.ext_hdr_ptr), &(resp_req->dev.ext_hdr_sz),
+                                      &dummy);
         }
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
