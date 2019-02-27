@@ -80,5 +80,9 @@ int MPII_Gentran_finalize(void)
 
 int MPII_Gentran_scheds_are_pending(void)
 {
+    /* this function is only called within a critical section to decide whether
+     * yield is necessary. (ref: .../ch3/.../mpid_nem_inline.h)
+     * therefore, there is no need for additional lock protection.
+     */
     return coll_queue.head != NULL;
 }
