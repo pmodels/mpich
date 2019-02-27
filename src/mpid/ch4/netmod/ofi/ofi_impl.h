@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 
 #define MPIDI_OFI_CALL_LOCK 1
 #define MPIDI_OFI_CALL_NO_LOCK 0
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN)          \
+#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN, vci)   \
     do {                                                    \
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
@@ -122,9 +122,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[0]);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[vci]);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[0]);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
-#define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR)                       \
+#define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR, vci)      \
     do {                                                    \
     ssize_t _ret;                                           \
     MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);       \
@@ -151,11 +151,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
-        /* This needs fine-grained progress, not global */  \
-        /* FIXME: yielding vci_locks[0] is just temporary */  \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[0]);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_locks[vci]);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[0]);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);        \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
@@ -485,16 +483,16 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
                                                     void *desc, uint32_t src, fi_addr_t dest_addr,
                                                     uint64_t tag, void *context, int is_inject,
-                                                    int do_lock, int do_eagain)
+                                                    int do_lock, int do_eagain, int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                             do_lock, do_eagain);
+                             do_lock, do_eagain, vci);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                             tsenddata, do_lock, do_eagain);
+                             tsenddata, do_lock, do_eagain, vci);
     }
 
   fn_exit:
@@ -598,7 +596,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
-                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
+                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE, 0 /*vci*/);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
