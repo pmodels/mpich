@@ -57,7 +57,7 @@ extern int MPII_Genutil_progress_hook_id;
 /* Transport function to initialize a new schedule */
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched);
 
-/* Transport function to schedule a isend vertex */
+/* Transport function to schedule an isend vertex */
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -66,7 +66,7 @@ int MPII_Genutil_sched_isend(const void *buf,
                              MPIR_Comm * comm_ptr,
                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
-/* Transport function to schedule a irecv vertex */
+/* Transport function to schedule an irecv vertex */
 int MPII_Genutil_sched_irecv(void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -75,7 +75,7 @@ int MPII_Genutil_sched_irecv(void *buf,
                              MPIR_Comm * comm_ptr,
                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
-/* Transport function to schedule a imcast vertex */
+/* Transport function to schedule an imcast vertex */
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
                               MPI_Datatype dt,
