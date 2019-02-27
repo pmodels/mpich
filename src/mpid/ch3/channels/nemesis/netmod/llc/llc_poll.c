@@ -108,14 +108,13 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                      * Exclude eager-short by requiring req->comm != 0. */
                     int is_contig;
                     MPIR_Datatype_is_contig(sreq->dev.datatype, &is_contig);
-                    if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
+                    if (!is_contig) {
                         dprintf("llc_send_handler,non-contiguous,free pack_buf\n");
                         MPL_free(REQ_FIELD(sreq, pack_buf));
                     }
                 }
 
-                if ((REQ_FIELD(sreq, rma_buf) != NULL && sreq->dev.datatype_ptr &&
-                     sreq->dev.segment_size > 0)) {
+                if ((sreq->dev.datatype_ptr && sreq->dev.segment_size > 0)) {
                     MPL_free(REQ_FIELD(sreq, rma_buf)); // allocated in MPID_nem_llc_SendNoncontig
                     REQ_FIELD(sreq, rma_buf) = NULL;
                 }

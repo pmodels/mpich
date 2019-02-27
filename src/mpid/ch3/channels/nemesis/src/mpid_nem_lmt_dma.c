@@ -605,7 +605,7 @@ int MPID_nem_lmt_dma_progress(void)
                         free_me = cur;
                         cur = cur->next;
                     }
-                    if (free_me) MPL_free(free_me);
+                    MPL_free(free_me);
                     --MPID_nem_local_lmt_pending;
                     continue;
                 }
@@ -632,7 +632,7 @@ int MPID_nem_lmt_dma_progress(void)
                     cur = cur->next;
                 }
 
-                if (free_me) MPL_free(free_me);
+                MPL_free(free_me);
                 --MPID_nem_local_lmt_pending;
                 continue;
                 

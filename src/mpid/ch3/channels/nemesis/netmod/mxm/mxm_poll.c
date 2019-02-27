@@ -333,8 +333,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
     MPIDI_CH3U_Handle_recv_req(req->ch.vc, req, &complete);
     MPIR_Assert(complete == TRUE);
 
-    if (tmp_buf)
-        MPL_free(tmp_buf);
+    MPL_free(tmp_buf);
 
     return complete;
 }

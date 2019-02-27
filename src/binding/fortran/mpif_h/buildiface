@@ -1980,7 +1980,7 @@ sub logical_array_in_decl {
 	print $OUTFD "    int _ctsize;\n";
     }
     print $OUTFD "    int *l$count=0;\n";
-    $clean_up .= "    if (l$count) { $free( l$count ); }\n";
+    $clean_up .= "    $free( l$count );\n";
 }
 sub logical_array_in_arg {
     my $count = $_[0];
@@ -2820,7 +2820,7 @@ sub fint2int_array_in_ftoc {
      }
     }
 ";
-	$clean_up .= "     if ($coutvar) { $free( $coutvar ); }\n";
+	$clean_up .= "     $free( $coutvar );\n";
     }
 }
 sub fint2int_array_inout_ftoc {
@@ -2851,7 +2851,7 @@ sub fint2int_array_out_ftoc {
 	print $OUTFD "\
     $coutvar = (int *)$malloc( $asize * sizeof(int), MPL_MEM_OTHER );
 ";
-        $clean_up .= "     if ($coutvar) { $free( $coutvar ); }\n";
+        $clean_up .= "     $free( $coutvar );\n";
     }
 }
 
@@ -2998,7 +2998,7 @@ sub fint2intinplace_array_in_ftoc {
      }
     }
 ";
-	$clean_up .= "     if ($coutvar) { $free( $coutvar ); }\n";
+	$clean_up .= "     $free( $coutvar );\n";
     }
 }
 sub fint2intinplace_array_in_decl {
@@ -3051,7 +3051,7 @@ sub fint2int_rangearray_in_ftoc {
      }
     }
 ";
-	$clean_up .= "     if ($coutvar) { $free( $coutvar ); }\n";
+	$clean_up .= "     $free( $coutvar );\n";
     }
 }
 sub fint2int_rangearray_in_decl {
@@ -3515,7 +3515,7 @@ sub intToAintArr_in_ctof {
     my $vname = $_[1];
     print $OUTFD "
 #ifdef HAVE_AINT_LARGER_THAN_FINT
-    if ($lname) { $free($lname); }
+    $free($lname);
 #endif\n";
 }
 # ---------------------------------------------------------------------------

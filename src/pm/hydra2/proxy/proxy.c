@@ -806,11 +806,8 @@ int main(int argc, char **argv)
         MPL_free(hash);
     }
 
-    if (proxy_params.cwd)
-        MPL_free(proxy_params.cwd);
-
-    if (proxy_params.root.hostname)
-        MPL_free(proxy_params.root.hostname);
+    MPL_free(proxy_params.cwd);
+    MPL_free(proxy_params.root.hostname);
 
     HYD_ASSERT(proxy_params.immediate.proxy.fd_control_hash == NULL, status);
     HYD_ASSERT(proxy_params.immediate.proxy.fd_stdin_hash == NULL, status);
@@ -818,15 +815,12 @@ int main(int argc, char **argv)
     HYD_ASSERT(proxy_params.immediate.proxy.fd_stderr_hash == NULL, status);
     HYD_ASSERT(proxy_params.immediate.proxy.pid_hash == NULL, status);
 
-    if (proxy_params.immediate.proxy.block_start)
-        MPL_free(proxy_params.immediate.proxy.block_start);
-    if (proxy_params.immediate.proxy.block_size)
-        MPL_free(proxy_params.immediate.proxy.block_size);
+    MPL_free(proxy_params.immediate.proxy.block_start);
+    MPL_free(proxy_params.immediate.proxy.block_size);
 
     if (proxy_params.immediate.proxy.num_children) {
         for (i = 0; i < proxy_params.immediate.proxy.num_children; i++)
-            if (proxy_params.immediate.proxy.kvcache[i])
-                MPL_free(proxy_params.immediate.proxy.kvcache[i]);
+            MPL_free(proxy_params.immediate.proxy.kvcache[i]);
         MPL_free(proxy_params.immediate.proxy.kvcache);
         MPL_free(proxy_params.immediate.proxy.kvcache_size);
         MPL_free(proxy_params.immediate.proxy.kvcache_num_blocks);
@@ -837,32 +831,27 @@ int main(int argc, char **argv)
     HYD_ASSERT(proxy_params.immediate.process.fd_pmi_hash == NULL, status);
     HYD_ASSERT(proxy_params.immediate.process.pid_hash == NULL, status);
 
-    if (proxy_params.immediate.process.pmi_id)
-        MPL_free(proxy_params.immediate.process.pmi_id);
+    MPL_free(proxy_params.immediate.process.pmi_id);
 
-    if (proxy_params.all.kvsname)
-        MPL_free(proxy_params.all.kvsname);
+    MPL_free(proxy_params.all.kvsname);
     if (proxy_params.all.complete_exec_list)
         HYD_exec_free_list(proxy_params.all.complete_exec_list);
 
-    if (proxy_params.all.primary_env.serial_buf)
-        MPL_free(proxy_params.all.primary_env.serial_buf);
+    MPL_free(proxy_params.all.primary_env.serial_buf);
     if (proxy_params.all.primary_env.argc) {
         for (i = 0; i < proxy_params.all.primary_env.argc; i++)
             MPL_free(proxy_params.all.primary_env.argv[i]);
         MPL_free(proxy_params.all.primary_env.argv);
     }
 
-    if (proxy_params.all.secondary_env.serial_buf)
-        MPL_free(proxy_params.all.secondary_env.serial_buf);
+    MPL_free(proxy_params.all.secondary_env.serial_buf);
     if (proxy_params.all.secondary_env.argc) {
         for (i = 0; i < proxy_params.all.secondary_env.argc; i++)
             MPL_free(proxy_params.all.secondary_env.argv[i]);
         MPL_free(proxy_params.all.secondary_env.argv);
     }
 
-    if (proxy_params.all.pmi_process_mapping)
-        MPL_free(proxy_params.all.pmi_process_mapping);
+    MPL_free(proxy_params.all.pmi_process_mapping);
 
   fn_exit:
     return status;

@@ -58,26 +58,13 @@ void mpiexec_free_params(void)
 {
     struct stdoe_fd *tmp, *run;
 
-    if (mpiexec_params.base_path)
-        MPL_free(mpiexec_params.base_path);
-
-    if (mpiexec_params.port_range)
-        MPL_free(mpiexec_params.port_range);
-
-    if (mpiexec_params.nameserver)
-        MPL_free(mpiexec_params.nameserver);
-
-    if (mpiexec_params.localhost)
-        MPL_free(mpiexec_params.localhost);
-
-    if (mpiexec_params.prepend_pattern)
-        MPL_free(mpiexec_params.prepend_pattern);
-
-    if (mpiexec_params.outfile_pattern)
-        MPL_free(mpiexec_params.outfile_pattern);
-
-    if (mpiexec_params.errfile_pattern)
-        MPL_free(mpiexec_params.errfile_pattern);
+    MPL_free(mpiexec_params.base_path);
+    MPL_free(mpiexec_params.port_range);
+    MPL_free(mpiexec_params.nameserver);
+    MPL_free(mpiexec_params.localhost);
+    MPL_free(mpiexec_params.prepend_pattern);
+    MPL_free(mpiexec_params.outfile_pattern);
+    MPL_free(mpiexec_params.errfile_pattern);
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);
@@ -86,17 +73,10 @@ void mpiexec_free_params(void)
         run = tmp;
     }
 
-    if (mpiexec_params.rmk)
-        MPL_free(mpiexec_params.rmk);
-
-    if (mpiexec_params.launcher)
-        MPL_free(mpiexec_params.launcher);
-
-    if (mpiexec_params.launcher_exec)
-        MPL_free(mpiexec_params.launcher_exec);
-
-    if (mpiexec_params.binding)
-        MPL_free(mpiexec_params.binding);
+    MPL_free(mpiexec_params.rmk);
+    MPL_free(mpiexec_params.launcher);
+    MPL_free(mpiexec_params.launcher_exec);
+    MPL_free(mpiexec_params.binding);
 }
 
 void mpiexec_print_params(void)

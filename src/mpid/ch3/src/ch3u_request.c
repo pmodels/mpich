@@ -615,11 +615,6 @@ void MPID_Request_destroy_hook(MPIR_Request *req)
         MPIDI_CH3U_SRBuf_free(req);
     }
 
-    if (req->dev.ext_hdr_ptr != NULL) {
-        MPL_free(req->dev.ext_hdr_ptr);
-    }
-
-    if (req->dev.flattened_type != NULL) {
-        MPL_free(req->dev.flattened_type);
-    }
+    MPL_free(req->dev.ext_hdr_ptr);
+    MPL_free(req->dev.flattened_type);
 }

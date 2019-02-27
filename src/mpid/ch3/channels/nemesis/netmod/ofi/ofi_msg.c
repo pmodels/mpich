@@ -130,11 +130,9 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
              * to store updated TAG values in the sreq.
              */
             if (MPIR_cc_get(sreq->cc) == 1) {
-                if (REQ_OFI(sreq)->pack_buffer)
-                    MPL_free(REQ_OFI(sreq)->pack_buffer);
+                MPL_free(REQ_OFI(sreq)->pack_buffer);
 
-                if (REQ_OFI(sreq)->real_hdr)
-                    MPL_free(REQ_OFI(sreq)->real_hdr);
+                MPL_free(REQ_OFI(sreq)->real_hdr);
 
                 reqFn = sreq->dev.OnDataAvail;
                 if (!reqFn) {

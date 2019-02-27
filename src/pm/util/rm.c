@@ -403,12 +403,8 @@ int MPIE_FreeMachineTable(MachineTable * mt)
     int i;
     for (i = 0; i < mt->nHosts; i++) {
         MPL_free(mt->desc[i].hostname);
-        if (mt->desc[i].login) {
-            MPL_free(mt->desc[i].login);
-        }
-        if (mt->desc[i].netname) {
-            MPL_free(mt->desc[i].netname);
-        }
+        MPL_free(mt->desc[i].login);
+        MPL_free(mt->desc[i].netname);
     }
     MPL_free(mt->desc);
     MPL_free(mt);

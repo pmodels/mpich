@@ -534,9 +534,7 @@ static int MPIR_FreeProctable(void *ptable)
     int i;
     MPIR_PROCDESC *proctable = (MPIR_PROCDESC *) ptable;
     for (i = 0; i < MPIR_proctable_size; i++) {
-        if (proctable[i].host_name) {
-            MPL_free(proctable[i].host_name);
-        }
+        MPL_free(proctable[i].host_name);
     }
     MPL_free(proctable);
 

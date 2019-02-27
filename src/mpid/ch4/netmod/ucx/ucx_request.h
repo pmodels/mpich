@@ -26,9 +26,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
-    if ((req)->dev.ch4.am.netmod_am.ucx.pack_buffer) {
-        MPL_free((req)->dev.ch4.am.netmod_am.ucx.pack_buffer);
-    }
+    MPL_free((req)->dev.ch4.am.netmod_am.ucx.pack_buffer);
     /* MPIR_Request_free(req); */
 }
 

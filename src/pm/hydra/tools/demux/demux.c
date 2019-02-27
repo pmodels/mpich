@@ -203,8 +203,7 @@ HYD_status HYDT_dmx_finalize(void)
     run1 = HYDT_dmxu_cb_list;
     while (run1) {
         run2 = run1->next;
-        if (run1->fd)
-            MPL_free(run1->fd);
+        MPL_free(run1->fd);
         MPL_free(run1);
         run1 = run2;
     }

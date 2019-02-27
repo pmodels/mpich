@@ -226,10 +226,8 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
     } else if (topology->kind == MPI_DIST_GRAPH) {
         MPL_free(topology->topo.dist_graph.in);
         MPL_free(topology->topo.dist_graph.out);
-        if (topology->topo.dist_graph.in_weights)
-            MPL_free(topology->topo.dist_graph.in_weights);
-        if (topology->topo.dist_graph.out_weights)
-            MPL_free(topology->topo.dist_graph.out_weights);
+        MPL_free(topology->topo.dist_graph.in_weights);
+        MPL_free(topology->topo.dist_graph.out_weights);
         MPL_free(topology);
     }
     /* --BEGIN ERROR HANDLING-- */

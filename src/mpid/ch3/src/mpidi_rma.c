@@ -206,8 +206,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if ((*win_ptr)->basic_info_table != NULL)
-        MPL_free((*win_ptr)->basic_info_table);
+    MPL_free((*win_ptr)->basic_info_table);
     MPL_free((*win_ptr)->op_pool_start);
     MPL_free((*win_ptr)->target_pool_start);
     MPL_free((*win_ptr)->slots);

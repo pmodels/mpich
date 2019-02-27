@@ -530,8 +530,7 @@ static int _mxm_fini(void)
             _mxm_disconnect(&(_mxm_obj.endpoint[--_mxm_obj.mxm_np]));
         }
 
-        if (_mxm_obj.endpoint)
-            MPL_free(_mxm_obj.endpoint);
+        MPL_free(_mxm_obj.endpoint);
 
         _mxm_barrier();
 

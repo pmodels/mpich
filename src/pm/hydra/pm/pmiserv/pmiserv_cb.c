@@ -58,8 +58,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     }
 
   fn_exit:
-    if (cmd)
-        MPL_free(cmd);
+    MPL_free(cmd);
     if (args) {
         HYDU_free_strlist(args);
         MPL_free(args);

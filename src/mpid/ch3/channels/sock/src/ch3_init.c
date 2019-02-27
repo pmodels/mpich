@@ -59,9 +59,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CH3_INIT);
     return mpi_errno;
   fn_fail:
-    if (publish_bc_orig != NULL) {
-        MPL_free(publish_bc_orig);
-    }
+    MPL_free(publish_bc_orig);
     goto fn_exit;
 }
 

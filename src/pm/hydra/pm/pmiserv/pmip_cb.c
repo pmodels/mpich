@@ -340,14 +340,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         goto check_cmd;
 
   fn_exit:
-    if (pmi_cmd)
-        MPL_free(pmi_cmd);
+    MPL_free(pmi_cmd);
     if (args) {
         HYDU_free_strlist(args);
         MPL_free(args);
     }
-    if (buf)
-        MPL_free(buf);
+    MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -403,14 +401,12 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     }
 
   fn_exit:
-    if (pmi_cmd)
-        MPL_free(pmi_cmd);
+    MPL_free(pmi_cmd);
     if (args) {
         HYDU_free_strlist(args);
         MPL_free(args);
     }
-    if (buf)
-        MPL_free(buf);
+    MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;
 

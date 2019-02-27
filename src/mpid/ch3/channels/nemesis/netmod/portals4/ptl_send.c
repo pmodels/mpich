@@ -81,11 +81,9 @@ static int handler_send(const ptl_event_t * e)
         }
 
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
-            if (REQ_PTL(sreq)->chunk_buffer[i])
-                MPL_free(REQ_PTL(sreq)->chunk_buffer[i]);
+            MPL_free(REQ_PTL(sreq)->chunk_buffer[i]);
 
-        if (REQ_PTL(sreq)->get_me_p)
-            MPL_free(REQ_PTL(sreq)->get_me_p);
+        MPL_free(REQ_PTL(sreq)->get_me_p);
     }
     mpi_errno = MPID_Request_complete(sreq);
     if (mpi_errno != MPI_SUCCESS) {

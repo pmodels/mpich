@@ -495,8 +495,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     }
 
   fn_exit:
-    if (mapping)
-        MPL_free(mapping);
+    MPL_free(mapping);
     MPL_free(filler_pmi_ids);
     MPL_free(nonfiller_pmi_ids);
     return status;
@@ -555,11 +554,8 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
     if (pg->pg_scratch) {
         pg_scratch = pg->pg_scratch;
 
-        if (pg_scratch->ecount)
-            MPL_free(pg_scratch->ecount);
-
-        if (pg_scratch->dead_processes)
-            MPL_free(pg_scratch->dead_processes);
+        MPL_free(pg_scratch->ecount);
+        MPL_free(pg_scratch->dead_processes);
 
         HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
 

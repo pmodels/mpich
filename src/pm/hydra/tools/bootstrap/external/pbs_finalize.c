@@ -21,10 +21,8 @@ HYD_status HYDT_bscd_pbs_launcher_finalize(void)
 #endif /* HAVE_TM_H */
 
     if (HYDT_bscd_pbs_sys) {
-        if (HYDT_bscd_pbs_sys->task_id)
-            MPL_free(HYDT_bscd_pbs_sys->task_id);
-        if (HYDT_bscd_pbs_sys->spawn_events)
-            MPL_free(HYDT_bscd_pbs_sys->spawn_events);
+        MPL_free(HYDT_bscd_pbs_sys->task_id);
+        MPL_free(HYDT_bscd_pbs_sys->spawn_events);
         MPL_free(HYDT_bscd_pbs_sys);
     }
 

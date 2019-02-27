@@ -145,8 +145,7 @@ HYD_status HYD_pmci_launch_procs(void)
     MPL_free(control_fd);
 
   fn_exit:
-    if (control_port)
-        MPL_free(control_port);
+    MPL_free(control_port);
     HYD_STRING_STASH_FREE(proxy_stash);
     HYDU_FUNC_EXIT();
     return status;

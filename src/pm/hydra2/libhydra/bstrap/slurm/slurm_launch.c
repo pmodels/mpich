@@ -66,8 +66,7 @@ HYD_status HYDI_bstrap_slurm_launch(const char *hostname, const char *launch_exe
 
   fn_exit:
     HYD_str_free_list(targs);
-    if (lexec)
-        MPL_free(lexec);
+    MPL_free(lexec);
     HYD_FUNC_EXIT();
     return status;
 

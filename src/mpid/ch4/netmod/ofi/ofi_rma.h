@@ -220,8 +220,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     return mpi_errno;
   fn_fail:
-    if (req)
-        MPL_free(req);
+    MPL_free(req);
     req = NULL;
     goto fn_exit;
 }
@@ -277,8 +276,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     return mpi_errno;
   fn_fail:
-    if (req)
-        MPL_free(req);
+    MPL_free(req);
     req = NULL;
     goto fn_exit;
 }
@@ -348,8 +346,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
-    if (req)
-        MPL_free(req);
+    MPL_free(req);
     req = NULL;
     goto fn_exit;
 }

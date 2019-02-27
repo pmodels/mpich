@@ -926,17 +926,9 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    if (pollinfos != NULL) {
-        MPL_free(pollinfos);
-    }
-
-    if (pollfds != NULL) {
-        MPL_free(pollfds);
-    }
-
-    if (sock != NULL) {
-        MPL_free(sock);
-    }
+    MPL_free(pollinfos);
+    MPL_free(pollfds);
+    MPL_free(sock);
 
     goto fn_exit;
     /* --END ERROR HANDLING-- */
