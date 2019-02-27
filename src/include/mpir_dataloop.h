@@ -17,7 +17,6 @@ typedef struct MPIR_Dataloop MPIR_Dataloop;
 typedef struct MPIR_Segment MPIR_Segment;
 
 /* Dataloop functions */
-void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff);
 void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPI_Aint old_loop_sz, MPIR_Dataloop ** new_loop_p);
 
 void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop);
