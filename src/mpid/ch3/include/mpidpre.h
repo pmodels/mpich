@@ -444,7 +444,7 @@ typedef struct MPIDI_Request {
     /* For accumulate, since data is first read into a tmp_buf */
     void *real_user_buf;
     /* For derived datatypes at target. */
-    void *dataloop;
+    void *flattened_type;
     /* req. handle needed to implement derived datatype gets.
      * It also used for remembering user request of request-based RMA operations. */
     MPI_Request request_handle;
