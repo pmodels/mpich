@@ -207,6 +207,8 @@ int MPII_Genutil_queue_progress_hook(int *made_progress)
     int mpi_errno = MPI_SUCCESS;
     MPII_Coll_req_t *coll_req, *coll_req_tmp;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+
     if (made_progress)
         *made_progress = FALSE;
 
@@ -235,6 +237,8 @@ int MPII_Genutil_queue_progress_hook(int *made_progress)
 
     if (MPII_coll_queue.head == NULL)
         MPID_Progress_deactivate_hook(MPII_Genutil_queue_progress_hook_id);
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 
     return mpi_errno;
 }
@@ -499,5 +503,11 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
 int MPII_Genutil_queue_has_pending_scheds()
 {
-    return MPII_coll_queue.head != NULL;
+    int ret;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    ret = (MPII_coll_queue.head != NULL);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+
+    return ret;
 }
