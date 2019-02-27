@@ -296,7 +296,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     *req = reqp;
     MPIR_Request_add_ref(reqp);
 
-    /* Make some progress */
+    /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {
         MPID_Request_complete(reqp);
@@ -309,9 +309,8 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
         MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
     DL_APPEND(coll_queue.head, &(reqp->u.nbc.coll));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
-
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
