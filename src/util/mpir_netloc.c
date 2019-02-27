@@ -46,7 +46,7 @@ static int get_tree_attributes(netloc_topology_t topology,
     int out_degree_mismatch_at_level = 0;
     MPIR_CHKPMEM_DECL(3);
 
-    network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+    network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
 
     host_nodes =
         (netloc_dt_lookup_table_t *) MPL_malloc(sizeof(netloc_dt_lookup_table_t), MPL_MEM_OTHER);
@@ -87,7 +87,7 @@ static int get_tree_attributes(netloc_topology_t topology,
         }
 
         if (!host_node_at_leaf_level) {
-            network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+            network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
             goto fn_exit;
         }
 
@@ -155,7 +155,7 @@ static int get_tree_attributes(netloc_topology_t topology,
             }
             if (end_index < topology->num_nodes) {
                 /* Cycle in the graph, not a tree or close network */
-                network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
                 goto fn_exit;
             }
 
@@ -287,9 +287,9 @@ static int get_tree_attributes(netloc_topology_t topology,
                 }
             }
             if (!out_degree_mismatch_at_level && !edges_go_across_levels) {
-                network_attr->type = MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK;
+                network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK;
                 if (!count_at_level_mismatch && !bandwidth_mismatch && !out_degree_mismatch) {
-                    network_attr->type = MPIR_NETLOC_NETWORK_TYPE__FAT_TREE;
+                    network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE;
                 }
 
                 errno = MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
@@ -298,10 +298,10 @@ static int get_tree_attributes(netloc_topology_t topology,
                                                           &MPIR_Process.
                                                           network_attr.network_endpoint);
                 if (errno != MPI_SUCCESS) {
-                    network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                    network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
                 }
             } else {
-                network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
             }
         }
     }
@@ -851,8 +851,8 @@ static int get_torus_attributes(netloc_topology_t topology,
     int mpi_errno = MPI_SUCCESS;
     int num_edges = -1;
 
-    if (network_attr->type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
-        network_attr->type = MPIR_NETLOC_NETWORK_TYPE__TORUS;
+    if (network_attr->type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
+        network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__TORUS;
         /* Check necessary condition for a torus i.e., outdegree of each node is the same */
         int node_count = 0;
         nodes =
@@ -876,7 +876,7 @@ static int get_torus_attributes(netloc_topology_t topology,
             }
         }
     }
-    if (start_node != NULL && network_attr->type != MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+    if (start_node != NULL && network_attr->type != MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
         /* Assuming that hypercube dimension size is less than the bit width of long long */
         unsigned long long *hypercube_labels = NULL;
         int i, j, k, l;
@@ -1061,7 +1061,7 @@ static int get_torus_attributes(netloc_topology_t topology,
                     }
                 }
                 if (!valid_label) {
-                    network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                    network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
                     goto cleanup;
                 }
                 hypercube_labels[neighbor->__uid__] = new_label;
@@ -1069,7 +1069,7 @@ static int get_torus_attributes(netloc_topology_t topology,
             }
 
             MPL_free(distance_matrix);
-            network_attr->type = MPIR_NETLOC_NETWORK_TYPE__TORUS;
+            network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__TORUS;
 
             hypercube_dimension = 0;
             index = 0;
@@ -1419,7 +1419,7 @@ static int get_torus_attributes(netloc_topology_t topology,
                                                       MPIR_Process.hwloc_topology,
                                                       &MPIR_Process.network_attr.network_endpoint);
             if (errno != MPI_SUCCESS) {
-                network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+                network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
             } else {
                 /* Flatten computed coordinates into a long value for the current node */
                 coordinates =
@@ -1434,7 +1434,7 @@ static int get_torus_attributes(netloc_topology_t topology,
             MPL_free(path_graph_count);
             MPL_free(path_graphs);
         } else {
-            network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+            network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
         }
 
       cleanup:
@@ -1444,7 +1444,7 @@ static int get_torus_attributes(netloc_topology_t topology,
         MPL_free(semicube_vertices);
         MPL_free(maximum_matching);
     } else {
-        network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
+        network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
     }
 
   fn_exit:
@@ -1461,7 +1461,7 @@ int MPIR_Netloc_parse_topology(netloc_topology_t netloc_topology,
     mpi_errno = get_tree_attributes(MPIR_Process.netloc_topology, network_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (network_attr->type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+    if (network_attr->type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
         mpi_errno = get_torus_attributes(MPIR_Process.netloc_topology, network_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }

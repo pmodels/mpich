@@ -9,16 +9,10 @@
 #define MPIR_NETLOC_H_INCLUDED
 
 #include "netloc.h"
-
-typedef enum {
-    MPIR_NETLOC_NETWORK_TYPE__FAT_TREE,
-    MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK,
-    MPIR_NETLOC_NETWORK_TYPE__TORUS,
-    MPIR_NETLOC_NETWORK_TYPE__INVALID,
-} MPIR_Netloc_network_topo_type;
+#include "mpir_hw_topo.h"
 
 typedef struct {
-    MPIR_Netloc_network_topo_type type;
+    MPIR_Network_topology_type type;
 
     union {
         struct {
