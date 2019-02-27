@@ -18,5 +18,4 @@ noinst_HEADERS += src/mpid/ch4/netmod/include/netmod_impl.h
 
 include $(top_srcdir)/src/mpid/ch4/netmod/ofi/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/netmod/ucx/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/netmod/portals4/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/netmod/stubnm/Makefile.mk

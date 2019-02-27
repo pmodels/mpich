@@ -2636,7 +2636,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 #define __netmod_inline_stubnm__   0
 #define __netmod_inline_ofi__    1
 #define __netmod_inline_ucx__    2
-#define __netmod_inline_portals4__ 3
 
 #if NETMOD_INLINE==__netmod_inline_stubnm__
 #include "../stubnm/netmod_inline.h"
@@ -2644,8 +2643,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 #include "../ofi/netmod_inline.h"
 #elif NETMOD_INLINE==__netmod_inline_ucx__
 #include "../ucx/netmod_inline.h"
-#elif NETMOD_INLINE==__netmod_inline_portals4__
-#include "../portals4/netmod_inline.h"
 #else
 #error "No direct netmod included"
 #endif
