@@ -1461,7 +1461,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
             MPIR_Datatype_get_extent_macro(fop_pkt->datatype, extent);
 
-            req->dev.user_buf = MPL_malloc(extent, MPL_MEM_BUFFER);
+            req->dev.user_buf = MPL_malloc(extent, MPL_MEM_RMA);
             if (!req->dev.user_buf) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", extent);
             }
