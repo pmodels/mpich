@@ -126,8 +126,7 @@ static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_ACCUM_EXT_PKT);
     return mpi_errno;
   fn_fail:
-    if ((*ext_hdr_ptr))
-        MPL_free((*ext_hdr_ptr));
+    MPL_free((*ext_hdr_ptr));
     (*ext_hdr_ptr) = NULL;
     (*ext_hdr_sz) = 0;
     goto fn_exit;
@@ -300,8 +299,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (req) {
         if (req->dev.datatype_ptr)
             MPIR_Datatype_ptr_release(req->dev.datatype_ptr);
-        if (req->dev.ext_hdr_ptr)
-            MPL_free(req->dev.ext_hdr_ptr);
+        MPL_free(req->dev.ext_hdr_ptr);
         MPIR_Request_free(req);
     }
 
@@ -546,10 +544,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         rma_op->single_req = NULL;
     }
     else if (rma_op->reqs_size > 1) {
-        if (rma_op->multi_reqs != NULL) {
-            MPL_free(rma_op->multi_reqs);
-            rma_op->multi_reqs = NULL;
-        }
+        MPL_free(rma_op->multi_reqs);
+        rma_op->multi_reqs = NULL;
     }
     rma_op->reqs_size = 0;
     goto fn_exit;

@@ -63,9 +63,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                 }
                 reqFn = req->dev.OnDataAvail;
                 if (reqFn) {
-                    if (REQ_OFI(req)->pack_buffer) {
-                        MPL_free(REQ_OFI(req)->pack_buffer);
-                    }
+                    MPL_free(REQ_OFI(req)->pack_buffer);
                     vc = REQ_OFI(req)->vc;
 
                     complete = 0;

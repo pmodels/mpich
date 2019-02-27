@@ -55,8 +55,7 @@ HYD_status HYDI_rmk_lsf_query_node_list(int *node_count, struct HYD_node **nodes
             hostname = strtok(NULL, " ");
         }
 
-        if (thosts)
-            MPL_free(thosts);
+        MPL_free(thosts);
     }
 
   fn_exit:

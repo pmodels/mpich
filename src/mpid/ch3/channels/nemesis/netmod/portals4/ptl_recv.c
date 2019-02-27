@@ -70,8 +70,7 @@ static int handler_recv_complete(const ptl_event_t * e)
     }
 
     for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
-        if (REQ_PTL(rreq)->chunk_buffer[i])
-            MPL_free(REQ_PTL(rreq)->chunk_buffer[i]);
+        MPL_free(REQ_PTL(rreq)->chunk_buffer[i]);
 
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno) {

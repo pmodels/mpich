@@ -132,9 +132,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
         }
     }
 
-    if (nIndirect) {
-        MPL_free(nIndirect);
-    }
+    MPL_free(nIndirect);
 
     if (leaked_handles && MPIR_CVAR_ABORT_ON_LEAKED_HANDLES) {
         /* comm_world has been (or should have been) destroyed by this point,

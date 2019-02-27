@@ -140,8 +140,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_CONN_REQ_CALLBACK);
     return mpi_errno;
   fn_fail:
-    if (vc)
-        MPL_free(vc);
+    MPL_free(vc);
     goto fn_exit;
 }
 
@@ -282,8 +281,7 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_CONNECT_TO_ROOT_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_CONNECT_TO_ROOT_CALLBACK);
 
-    if (REQ_OFI(sreq)->pack_buffer)
-        MPL_free(REQ_OFI(sreq)->pack_buffer);
+    MPL_free(REQ_OFI(sreq)->pack_buffer);
 
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
 
@@ -426,8 +424,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     VC_OFI(vc)->ready = 1;
 
   fn_exit:
-    if (addr)
-        MPL_free(addr);
+    MPL_free(addr);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_VC_CONNECT);
     return mpi_errno;
 
@@ -586,13 +583,11 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     VC_OFI(new_vc)->next = gl_data.cm_vcs;
     gl_data.cm_vcs = new_vc;
   fn_exit:
-    if (addr)
-        MPL_free(addr);
+    MPL_free(addr);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NM_CONNECT_TO_ROOT);
     return mpi_errno;
   fn_fail:
-    if (my_bc)
-        MPL_free(my_bc);
+    MPL_free(my_bc);
     goto fn_exit;
 }
 

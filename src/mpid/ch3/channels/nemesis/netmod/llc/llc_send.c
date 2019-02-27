@@ -568,10 +568,8 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
 
         lcmd = LLC_cmd_alloc2(1, 1, 1);
         if (lcmd == 0) {
-            if (buff != 0) {
-                MPL_free(buff);
-                buff = 0;
-            }
+            MPL_free(buff);
+            buff = 0;
             nw = -1;    /* ENOMEM */
             goto bad;
         }
@@ -648,10 +646,8 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
             if ((llc_errno == EAGAIN) || (llc_errno == ENOSPC)) {
                 nw = 0;
             } else {
-                if (lcmd->iov_local[0].addr != 0) {
-                    MPL_free((void *) lcmd->iov_local[0].addr);
-                    lcmd->iov_local[0].addr = 0;
-                }
+                MPL_free((void *) lcmd->iov_local[0].addr);
+                lcmd->iov_local[0].addr = 0;
                 (void) LLC_cmd_free(lcmd, 1);
                 nw = -1;
                 goto bad;
@@ -769,10 +765,8 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     }
                     (*sfnc) (vp_sreq, &reqid);
 
-                    if (lcmd->iov_local[0].addr != 0) {
-                        MPL_free((void *) lcmd->iov_local[0].addr);
-                        lcmd->iov_local[0].addr = 0;
-                    }
+                    MPL_free((void *) lcmd->iov_local[0].addr);
+                    lcmd->iov_local[0].addr = 0;
                     llc_errno = LLC_cmd_free(lcmd, 1);
                     MPIR_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
 
@@ -909,10 +903,8 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
 
                         MPID_Request_complete(req);
 
-                        if (lcmd->iov_local[0].addr != 0) {
-                            MPL_free((void *) lcmd->iov_local[0].addr);
-                            lcmd->iov_local[0].addr = 0;
-                        }
+                        MPL_free((void *) lcmd->iov_local[0].addr);
+                        lcmd->iov_local[0].addr = 0;
                     } else if (lcmd->opcode == LLC_OPCODE_SEND || lcmd->opcode == LLC_OPCODE_SSEND) {
                         req->status.MPI_ERROR = MPI_SUCCESS;
                         MPIR_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");

@@ -153,10 +153,8 @@ static HYD_status flush_put_cache(void)
         }
     }
 
-    if (lengths)
-        MPL_free(lengths);
-    if (buf)
-        MPL_free(buf);
+    MPL_free(lengths);
+    MPL_free(buf);
 
   fn_exit:
     return status;

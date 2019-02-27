@@ -778,14 +778,10 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
                 /* discard pending events, since we will retransmit
                  * this op anyway */
-                if (op->u.put.ack) {
-                    MPL_free(op->u.put.ack);
-                    op->u.put.ack = NULL;
-                }
-                if (op->u.put.send) {
-                    MPL_free(op->u.put.send);
-                    op->u.put.send = NULL;
-                }
+                MPL_free(op->u.put.ack);
+                op->u.put.ack = NULL;
+                MPL_free(op->u.put.send);
+                op->u.put.send = NULL;
             }
 
             if (op->op_type == RPTL_OP_PUT)

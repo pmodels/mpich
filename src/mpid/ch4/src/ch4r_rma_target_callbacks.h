@@ -699,8 +699,7 @@ static inline int MPIDIG_handle_acc_cmpl(MPIR_Request * rreq)
 #endif
 
     /* MPIDI_CS_EXIT(); */
-    if (MPIDIG_REQUEST(rreq, req->areq.data))
-        MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
+    MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
 
     MPIDIG_REQUEST(rreq, req->areq.data) = NULL;
     mpi_errno = MPIDIG_ack_acc(rreq);
@@ -806,8 +805,7 @@ static inline int MPIDIG_handle_get_acc_cmpl(MPIR_Request * rreq)
 #endif
 
     /* MPIDI_CS_EXIT(); */
-    if (MPIDIG_REQUEST(rreq, req->areq.data))
-        MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
+    MPL_free(MPIDIG_REQUEST(rreq, req->areq.data));
 
     MPIDIG_REQUEST(rreq, req->areq.data) = original;
     mpi_errno = MPIDIG_ack_get_acc(rreq);
@@ -974,9 +972,7 @@ static inline int MPIDIG_put_target_cmpl_cb(MPIR_Request * rreq)
         MPL_free(MPIDIG_REQUEST(rreq, req->iov));
     }
 
-    if (MPIDIG_REQUEST(rreq, req->preq.dt_iov)) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->preq.dt_iov));
-    }
+    MPL_free(MPIDIG_REQUEST(rreq, req->preq.dt_iov));
 
     mpi_errno = MPIDIG_ack_put(rreq);
     if (mpi_errno)
@@ -1330,9 +1326,7 @@ static inline int MPIDIG_put_ack_taget_msg_cb(int handler_id, void *am_hdr,
     preq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = MPIDIG_REQUEST(preq, req->preq.win_ptr);
 
-    if (MPIDIG_REQUEST(preq, req->preq.dt_iov)) {
-        MPL_free(MPIDIG_REQUEST(preq, req->preq.dt_iov));
-    }
+    MPL_free(MPIDIG_REQUEST(preq, req->preq.dt_iov));
 
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(preq, rank));
 
@@ -1370,9 +1364,7 @@ static inline int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     areq = (MPIR_Request *) msg_hdr->req_ptr;
     win = MPIDIG_REQUEST(areq, req->areq.win_ptr);
 
-    if (MPIDIG_REQUEST(areq, req->areq.dt_iov)) {
-        MPL_free(MPIDIG_REQUEST(areq, req->areq.dt_iov));
-    }
+    MPL_free(MPIDIG_REQUEST(areq, req->areq.dt_iov));
 
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(areq, rank));
     MPIDIG_win_remote_acc_cmpl_cnt_decr(win, MPIDIG_REQUEST(areq, rank));
@@ -1415,9 +1407,7 @@ static inline int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     areq = (MPIR_Request *) msg_hdr->req_ptr;
 
-    if (MPIDIG_REQUEST(areq, req->areq.dt_iov)) {
-        MPL_free(MPIDIG_REQUEST(areq, req->areq.dt_iov));
-    }
+    MPL_free(MPIDIG_REQUEST(areq, req->areq.dt_iov));
 
     MPIDI_Datatype_get_info(MPIDIG_REQUEST(areq, req->areq.result_count),
                             MPIDIG_REQUEST(areq, req->areq.result_datatype),
@@ -2418,9 +2408,7 @@ static inline int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__RMA);
     MPIDIG_REQUEST(greq, req->greq.greq_ptr) = (uint64_t) rreq;
 
-    if (MPIDIG_REQUEST(rreq, req->greq.dt_iov)) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->greq.dt_iov));
-    }
+    MPL_free(MPIDIG_REQUEST(rreq, req->greq.dt_iov));
 
     *target_cmpl_cb = MPIDIG_get_ack_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD

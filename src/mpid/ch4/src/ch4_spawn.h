@@ -99,15 +99,10 @@ static inline void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *cou
 
     for (i = 0; i < size; i++) {
         for (j = 0; j < counts[i]; j++) {
-            if (kv[i][j].key != NULL)
-                MPL_free((char *) kv[i][j].key);
-
-            if (kv[i][j].val != NULL)
-                MPL_free(kv[i][j].val);
+            MPL_free((char *) kv[i][j].key);
+            MPL_free(kv[i][j].val);
         }
-
-        if (kv[i] != NULL)
-            MPL_free(kv[i]);
+        MPL_free(kv[i]);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
@@ -238,11 +233,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
         MPL_free(info_keyval_vectors);
     }
 
-    if (info_keyval_sizes)
-        MPL_free(info_keyval_sizes);
-
-    if (pmi_errcodes)
-        MPL_free(pmi_errcodes);
+    MPL_free(info_keyval_sizes);
+    MPL_free(pmi_errcodes);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     return mpi_errno;

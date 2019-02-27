@@ -251,8 +251,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     }
 
   fn_exit:
-    if (mapping)
-        MPL_free(mapping);
+    MPL_free(mapping);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
     return mpi_errno;
@@ -443,8 +442,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mapping)
-        MPL_free(mapping);
+    MPL_free(mapping);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
     return mpi_errno;

@@ -112,8 +112,7 @@ HYD_status HYDT_topo_finalize(void)
     }
 #endif /* HAVE_HWLOC */
 
-    if (HYDT_topo_info.topolib)
-        MPL_free(HYDT_topo_info.topolib);
+    MPL_free(HYDT_topo_info.topolib);
 
   fn_exit:
     HYDU_FUNC_EXIT();

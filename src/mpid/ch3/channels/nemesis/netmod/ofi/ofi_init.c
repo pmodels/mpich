@@ -197,10 +197,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* --------------------------- */
     /* Free providers info         */
     /* --------------------------- */
-    if (provname) {
-        MPL_free(provname);
-        hints->fabric_attr->prov_name = NULL;
-    }
+    MPL_free(provname);
+    hints->fabric_attr->prov_name = NULL;
 
     fi_freeinfo(hints);
     fi_freeinfo(prov_use);
@@ -289,8 +287,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* --------------------------------------------- */
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
   fn_exit:
-    if (fi_addrs)
-        MPL_free(fi_addrs);
+    MPL_free(fi_addrs);
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_INIT);
     return mpi_errno;

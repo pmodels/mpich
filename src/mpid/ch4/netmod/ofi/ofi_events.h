@@ -279,8 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
         if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) && (MPIDI_OFI_REQUEST(sreq, noncontig.pack))) {
             MPIR_Segment_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
-        } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK) &&
-                   MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
+        } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
@@ -556,10 +555,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
             break;
     }
 
-    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
-        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
-    }
+    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
 
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
 

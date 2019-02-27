@@ -439,10 +439,8 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
   fn_exit:
     for (i = 0; i < comm_size; ++i) {
-        if (rin[i])
-            MPL_free(rin[i]);
-        if (rout[i])
-            MPL_free(rout[i]);
+        MPL_free(rin[i]);
+        MPL_free(rout[i]);
     }
 
     MPIR_CHKLMEM_FREEALL();
@@ -453,14 +451,12 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    if (dist_graph_ptr && dist_graph_ptr->in)
+    if (dist_graph_ptr) {
         MPL_free(dist_graph_ptr->in);
-    if (dist_graph_ptr && dist_graph_ptr->in_weights)
         MPL_free(dist_graph_ptr->in_weights);
-    if (dist_graph_ptr && dist_graph_ptr->out)
         MPL_free(dist_graph_ptr->out);
-    if (dist_graph_ptr && dist_graph_ptr->out_weights)
         MPL_free(dist_graph_ptr->out_weights);
+    }
     MPIR_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno =

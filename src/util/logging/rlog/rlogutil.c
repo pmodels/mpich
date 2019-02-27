@@ -503,31 +503,19 @@ int RLOG_CloseInputStruct(RLOG_IOStruct ** ppInput)
         return -1;
     fclose((*ppInput)->f);
     for (i = 0; i < (*ppInput)->nNumRanks; i++) {
-        if ((*ppInput)->ppCurEvent[i])
-            MPL_free((*ppInput)->ppCurEvent[i]);
-        if ((*ppInput)->ppCurGlobalEvent[i])
-            MPL_free((*ppInput)->ppCurGlobalEvent[i]);
-        if ((*ppInput)->gppCurEvent[i])
-            MPL_free((*ppInput)->gppCurEvent[i]);
-        if ((*ppInput)->gppPrevEvent[i])
-            MPL_free((*ppInput)->gppPrevEvent[i]);
-        if ((*ppInput)->ppEventOffset[i])
-            MPL_free((*ppInput)->ppEventOffset[i]);
-        if ((*ppInput)->ppNumEvents[i])
-            MPL_free((*ppInput)->ppNumEvents[i]);
+        MPL_free((*ppInput)->ppCurEvent[i]);
+        MPL_free((*ppInput)->ppCurGlobalEvent[i]);
+        MPL_free((*ppInput)->gppCurEvent[i]);
+        MPL_free((*ppInput)->gppPrevEvent[i]);
+        MPL_free((*ppInput)->ppEventOffset[i]);
+        MPL_free((*ppInput)->ppNumEvents[i]);
     }
-    if ((*ppInput)->ppCurEvent)
-        MPL_free((*ppInput)->ppCurEvent);
-    if ((*ppInput)->ppCurGlobalEvent)
-        MPL_free((*ppInput)->ppCurGlobalEvent);
-    if ((*ppInput)->gppCurEvent)
-        MPL_free((*ppInput)->gppCurEvent);
-    if ((*ppInput)->gppPrevEvent)
-        MPL_free((*ppInput)->gppPrevEvent);
-    if ((*ppInput)->ppEventOffset)
-        MPL_free((*ppInput)->ppEventOffset);
-    if ((*ppInput)->ppNumEvents)
-        MPL_free((*ppInput)->ppNumEvents);
+    MPL_free((*ppInput)->ppCurEvent);
+    MPL_free((*ppInput)->ppCurGlobalEvent);
+    MPL_free((*ppInput)->gppCurEvent);
+    MPL_free((*ppInput)->gppPrevEvent);
+    MPL_free((*ppInput)->ppEventOffset);
+    MPL_free((*ppInput)->ppNumEvents);
     MPL_free(*ppInput);
     *ppInput = NULL;
     return 0;

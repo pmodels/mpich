@@ -50,8 +50,7 @@ static HYD_status control_port_fn(char *arg, char ***argv)
     (*argv)++;
 
   fn_exit:
-    if (port)
-        MPL_free(port);
+    MPL_free(port);
     return status;
 
   fn_fail:

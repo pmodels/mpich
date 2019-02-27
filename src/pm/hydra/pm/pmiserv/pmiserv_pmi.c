@@ -45,8 +45,7 @@ HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
         MPL_free(publish->info_keys[i].key);
         MPL_free(publish->info_keys[i].val);
     }
-    if (publish->info_keys)
-        MPL_free(publish->info_keys);
+    MPL_free(publish->info_keys);
 
     HYDU_FUNC_EXIT();
     return status;

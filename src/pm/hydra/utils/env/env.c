@@ -70,8 +70,7 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
     }
 
   fn_exit:
-    if (env_str)
-        MPL_free(env_str);
+    MPL_free(env_str);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -131,10 +130,8 @@ HYD_status HYDU_env_free(struct HYD_env *env)
 
     HYDU_FUNC_ENTER();
 
-    if (env->env_name)
-        MPL_free(env->env_name);
-    if (env->env_value)
-        MPL_free(env->env_value);
+    MPL_free(env->env_name);
+    MPL_free(env->env_value);
     MPL_free(env);
 
     HYDU_FUNC_EXIT();
@@ -202,19 +199,15 @@ HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
         while (1) {
             if (!strcmp(run->env_name, env_name)) {
                 /* If we found an entry for this environment variable, just update it */
-                if (run->env_value != NULL && tenv->env_value != NULL) {
-                    MPL_free(run->env_value);
+                MPL_free(run->env_value);
+                if (tenv->env_value != NULL) {
                     run->env_value = MPL_strdup(tenv->env_value);
-                } else if (run->env_value != NULL) {
-                    MPL_free(run->env_value);
+                } else {
                     run->env_value = NULL;
-                } else if (env_value != NULL) {
-                    run->env_value = MPL_strdup(tenv->env_value);
                 }
 
                 MPL_free(tenv->env_name);
-                if (tenv->env_value)
-                    MPL_free(tenv->env_value);
+                MPL_free(tenv->env_value);
                 MPL_free(tenv);
 
                 break;
@@ -251,8 +244,7 @@ HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_lis
     HYDU_ERR_POP(status, "unable to append env to list\n");
 
   fn_exit:
-    if (my_str)
-        MPL_free(my_str);
+    MPL_free(my_str);
     HYDU_FUNC_EXIT();
     return status;
 

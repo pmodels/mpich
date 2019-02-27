@@ -209,9 +209,7 @@ static inline int MPIDI_CH3I_Win_op_free(MPIR_Win * win_ptr, MPIDI_RMA_Op_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (e->multi_reqs != NULL) {
-        MPL_free(e->multi_reqs);
-    }
+    MPL_free(e->multi_reqs);
 
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool

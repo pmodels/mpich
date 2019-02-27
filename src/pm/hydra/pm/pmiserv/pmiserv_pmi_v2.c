@@ -728,8 +728,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
-    if (segment_list)
-        MPL_free(segment_list);
+    MPL_free(segment_list);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -787,10 +786,8 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
   fn_exit:
     if (tokens)
         HYD_pmcd_pmi_free_tokens(tokens, token_count);
-    if (name)
-        MPL_free(name);
-    if (port)
-        MPL_free(port);
+    MPL_free(name);
+    MPL_free(port);
     HYDU_FUNC_EXIT();
     return status;
 

@@ -1138,9 +1138,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     while (pg_list) {
 	pg_next = pg_list->next;
 	MPL_free( pg_list->str );
-	if (pg_list->pg_id ) {
-	    MPL_free( pg_list->pg_id );
-	}
+        MPL_free( pg_list->pg_id );
 	MPL_free( pg_list );
 	pg_list = pg_next;
     }

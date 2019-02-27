@@ -340,9 +340,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
 
-    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
-        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    }
+    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */

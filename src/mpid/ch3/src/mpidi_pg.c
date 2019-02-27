@@ -803,7 +803,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
  fn_exit:
     return mpi_errno;
  fn_fail:
-    if (string) MPL_free(string);
+    MPL_free(string);
     goto fn_exit;
 }
 static int connFromStringKVS( const char *buf ATTRIBUTE((unused)), 
@@ -814,9 +814,7 @@ static int connFromStringKVS( const char *buf ATTRIBUTE((unused)),
 }
 static int connFreeKVS( MPIDI_PG_t *pg )
 {
-    if (pg->connData) {
-	MPL_free( pg->connData );
-    }
+    MPL_free( pg->connData );
     return MPI_SUCCESS;
 }
 
@@ -868,7 +866,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
  fn_exit:
     return mpi_errno;
  fn_fail:
-    if (pg->connData) { MPL_free(pg->connData); }
+    MPL_free(pg->connData);
     goto fn_exit;
 }
 
