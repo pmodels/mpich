@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #endif
 
-#include "mpir_dataloop.h"
 #ifdef HAVE_LIBHCOLL
 #include "hcoll/api/hcoll_dte.h"
 #endif
