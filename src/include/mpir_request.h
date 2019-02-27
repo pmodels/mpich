@@ -354,7 +354,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
             MPIR_Comm_release(req->comm);
         }
 
-        if (req->kind == MPIR_REQUEST_KIND__GREQUEST && req->u.ureq.greq_fns != NULL) {
+        if (req->kind == MPIR_REQUEST_KIND__GREQUEST) {
             MPL_free(req->u.ureq.greq_fns);
         }
 

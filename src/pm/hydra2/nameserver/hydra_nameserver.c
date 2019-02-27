@@ -63,12 +63,8 @@ static void free_publish_element(struct nameserv_publish *publish)
     if (publish == NULL)
         return;
 
-    if (publish->name)
-        MPL_free(publish->name);
-
-    if (publish->info)
-        MPL_free(publish->info);
-
+    MPL_free(publish->name);
+    MPL_free(publish->info);
     MPL_free(publish);
 }
 

@@ -206,8 +206,7 @@ int MPIDI_GetIPInterface(MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found)
     }
 
   fn_exit:
-    if (NULL != buf_ptr)
-        MPL_free(buf_ptr);
+    MPL_free(buf_ptr);
     if (fd >= 0)
         close(fd);
 

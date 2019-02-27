@@ -71,8 +71,7 @@ void MPLI_cleanup_tls(void *a);
         if (unlikely(*((int *) err_ptr_)))                 \
             break;                                      \
                                                         \
-        if (thread_ptr)                                 \
-            MPL_free(thread_ptr);                       \
+        MPL_free(thread_ptr);                           \
                                                         \
         MPL_thread_tls_set(&(key), NULL, err_ptr_);     \
         if (unlikely(*((int *) err_ptr_)))              \

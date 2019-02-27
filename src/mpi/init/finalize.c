@@ -167,14 +167,12 @@ int MPI_Finalize(void)
 #ifdef HAVE_NETLOC
     switch (MPIR_Process.network_attr.type) {
         case MPIR_NETLOC_NETWORK_TYPE__TORUS:
-            if (MPIR_Process.network_attr.u.torus.geometry != NULL)
-                MPL_free(MPIR_Process.network_attr.u.torus.geometry);
+            MPL_free(MPIR_Process.network_attr.u.torus.geometry);
             break;
         case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
         case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
         default:
-            if (MPIR_Process.network_attr.u.tree.node_levels != NULL)
-                MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
+            MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
             break;
     }
 #endif

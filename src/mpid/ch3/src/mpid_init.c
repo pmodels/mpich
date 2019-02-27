@@ -615,9 +615,7 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
 int MPIDI_CH3I_BCFree( char *bc_val )
 {
     /* */
-    if (bc_val) {
-	MPL_free( bc_val );
-    }
+    MPL_free( bc_val );
     
     return 0;
 }
@@ -632,10 +630,7 @@ static int pg_compare_ids(void * id1, void * id2)
 
 static int pg_destroy(MPIDI_PG_t * pg)
 {
-    if (pg->id != NULL)
-    { 
-	MPL_free(pg->id);
-    }
+    MPL_free(pg->id);
     
     return MPI_SUCCESS;
 }

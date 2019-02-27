@@ -83,15 +83,10 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
     {
 	for (j=0; j<counts[i]; j++)
 	{
-	    if (kv[i][j].key != NULL)
-		MPL_free((char *)kv[i][j].key);
-	    if (kv[i][j].val != NULL)
-		MPL_free(kv[i][j].val);
+            MPL_free((char *)kv[i][j].key);
+            MPL_free(kv[i][j].val);
 	}
-	if (kv[i] != NULL)
-	{
-	    MPL_free(kv[i]);
-	}
+        MPL_free(kv[i]);
     }
 }
 
@@ -294,9 +289,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	MPL_free(info_keyval_sizes);
 	MPL_free(info_keyval_vectors);
     }
-    if (pmi_errcodes) {
-	MPL_free(pmi_errcodes);
-    }
+    MPL_free(pmi_errcodes);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
     return mpi_errno;
  fn_fail:
@@ -369,9 +362,7 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 }
 void MPIDI_CH3_FreeParentPort(void)
 {
-    if (parent_port_name) {
-	MPL_free( parent_port_name );
-	parent_port_name = 0;
-    }
+    MPL_free( parent_port_name );
+    parent_port_name = 0;
 }
 #endif

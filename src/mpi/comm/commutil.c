@@ -383,10 +383,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
              * any node awareness.  Node-aware collectives are an optimization. */
             MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
                           "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
-            if (comm->intranode_table)
-                MPL_free(comm->intranode_table);
-            if (comm->internode_table)
-                MPL_free(comm->internode_table);
+            MPL_free(comm->intranode_table);
+            MPL_free(comm->internode_table);
 
             mpi_errno = MPI_SUCCESS;
             goto fn_exit;
@@ -489,10 +487,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_Comm_map_free(comm);
     }
 
-    if (external_procs != NULL)
-        MPL_free(external_procs);
-    if (local_procs != NULL)
-        MPL_free(local_procs);
+    MPL_free(external_procs);
+    MPL_free(local_procs);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
     return mpi_errno;
@@ -810,10 +806,8 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Comm_release(comm_ptr->node_comm);
         if (comm_ptr->node_roots_comm)
             MPIR_Comm_release(comm_ptr->node_roots_comm);
-        if (comm_ptr->intranode_table != NULL)
-            MPL_free(comm_ptr->intranode_table);
-        if (comm_ptr->internode_table != NULL)
-            MPL_free(comm_ptr->internode_table);
+        MPL_free(comm_ptr->intranode_table);
+        MPL_free(comm_ptr->internode_table);
 
         /* Free the context value.  This should come after freeing the
          * intra/inter-node communicators since those free calls won't

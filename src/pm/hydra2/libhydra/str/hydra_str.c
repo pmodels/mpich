@@ -180,8 +180,7 @@ char **HYD_str_to_strlist(char *str)
             argc++;
         }
     }
-    if (strlist[argc])
-        MPL_free(strlist[argc]);
+    MPL_free(strlist[argc]);
     strlist[argc] = NULL;
 
   fn_exit:

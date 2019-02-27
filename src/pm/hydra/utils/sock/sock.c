@@ -568,8 +568,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     MPL_free(sport);
 
   fn_exit:
-    if (ip)
-        MPL_free(ip);
+    MPL_free(ip);
     return status;
 
   fn_fail:

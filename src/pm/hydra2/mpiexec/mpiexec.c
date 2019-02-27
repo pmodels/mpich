@@ -999,15 +999,12 @@ int main(int argc, char **argv)
 
     HASH_DEL(mpiexec_pg_hash, pg);
 
-    if (pg->node_list)
-        MPL_free(pg->node_list);
+    MPL_free(pg->node_list);
     if (pg->exec_list)
         HYD_exec_free_list(pg->exec_list);
 
-    if (pg->downstream.proxy_id)
-        MPL_free(pg->downstream.proxy_id);
-    if (pg->downstream.pid)
-        MPL_free(pg->downstream.pid);
+    MPL_free(pg->downstream.proxy_id);
+    MPL_free(pg->downstream.pid);
 
     HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
         HASH_DEL(pg->downstream.fd_control_hash, hash);
@@ -1015,73 +1012,48 @@ int main(int argc, char **argv)
     }
 
     for (i = 0; i < pg->num_downstream; i++)
-        if (pg->downstream.kvcache[i])
-            MPL_free(pg->downstream.kvcache[i]);
-    if (pg->downstream.kvcache)
-        MPL_free(pg->downstream.kvcache);
-    if (pg->downstream.kvcache_size)
-        MPL_free(pg->downstream.kvcache_size);
-    if (pg->downstream.kvcache_num_blocks)
-        MPL_free(pg->downstream.kvcache_num_blocks);
-
-    if (pg->pmi_process_mapping)
-        MPL_free(pg->pmi_process_mapping);
-
+        MPL_free(pg->downstream.kvcache[i]);
+    MPL_free(pg->downstream.kvcache);
+    MPL_free(pg->downstream.kvcache_size);
+    MPL_free(pg->downstream.kvcache_num_blocks);
+    MPL_free(pg->pmi_process_mapping);
     MPL_free(pg);
 
-    if (mpiexec_params.rmk)
-        MPL_free(mpiexec_params.rmk);
-    if (mpiexec_params.launcher)
-        MPL_free(mpiexec_params.launcher);
-    if (mpiexec_params.launcher_exec)
-        MPL_free(mpiexec_params.launcher_exec);
-    if (mpiexec_params.binding)
-        MPL_free(mpiexec_params.binding);
-    if (mpiexec_params.mapping)
-        MPL_free(mpiexec_params.mapping);
-    if (mpiexec_params.membind)
-        MPL_free(mpiexec_params.membind);
-    if (mpiexec_params.base_path)
-        MPL_free(mpiexec_params.base_path);
-    if (mpiexec_params.port_range)
-        MPL_free(mpiexec_params.port_range);
-    if (mpiexec_params.nameserver)
-        MPL_free(mpiexec_params.nameserver);
-    if (mpiexec_params.localhost)
-        MPL_free(mpiexec_params.localhost);
+    MPL_free(mpiexec_params.rmk);
+    MPL_free(mpiexec_params.launcher);
+    MPL_free(mpiexec_params.launcher_exec);
+    MPL_free(mpiexec_params.binding);
+    MPL_free(mpiexec_params.mapping);
+    MPL_free(mpiexec_params.membind);
+    MPL_free(mpiexec_params.base_path);
+    MPL_free(mpiexec_params.port_range);
+    MPL_free(mpiexec_params.nameserver);
+    MPL_free(mpiexec_params.localhost);
 
-    if (mpiexec_params.global_node_list)
-        MPL_free(mpiexec_params.global_node_list);
-    if (mpiexec_params.global_active_processes)
-        MPL_free(mpiexec_params.global_active_processes);
+    MPL_free(mpiexec_params.global_node_list);
+    MPL_free(mpiexec_params.global_active_processes);
 
     for (i = 0; i < mpiexec_params.envlist_count; i++)
         MPL_free(mpiexec_params.envlist[i]);
-    if (mpiexec_params.envlist)
-        MPL_free(mpiexec_params.envlist);
+    MPL_free(mpiexec_params.envlist);
 
     for (i = 0; i < mpiexec_params.primary.envcount; i++)
         MPL_free(mpiexec_params.primary.env[i]);
     if (mpiexec_params.primary.envcount)
         MPL_free(mpiexec_params.primary.env);
 
-    if (mpiexec_params.primary.serialized_buf)
-        MPL_free(mpiexec_params.primary.serialized_buf);
+    MPL_free(mpiexec_params.primary.serialized_buf);
 
     for (i = 0; i < mpiexec_params.secondary.envcount; i++)
         MPL_free(mpiexec_params.secondary.env[i]);
     if (mpiexec_params.secondary.envcount)
         MPL_free(mpiexec_params.secondary.env);
 
-    if (mpiexec_params.secondary.serialized_buf)
-        MPL_free(mpiexec_params.secondary.serialized_buf);
+    MPL_free(mpiexec_params.secondary.serialized_buf);
 
-    if (mpiexec_params.prepend_pattern)
-        MPL_free(mpiexec_params.prepend_pattern);
-    if (mpiexec_params.outfile_pattern)
-        MPL_free(mpiexec_params.outfile_pattern);
-    if (mpiexec_params.errfile_pattern)
-        MPL_free(mpiexec_params.errfile_pattern);
+    MPL_free(mpiexec_params.prepend_pattern);
+    MPL_free(mpiexec_params.outfile_pattern);
+    MPL_free(mpiexec_params.errfile_pattern);
 
   fn_exit:
     HYD_FUNC_EXIT();

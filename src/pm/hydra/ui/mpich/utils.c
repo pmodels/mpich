@@ -209,14 +209,10 @@ static HYD_status genv_fn(char *arg, char ***argv)
 
     HYDU_append_env_to_list(env_name, env_value, &HYD_server_info.user_global.global_env.user);
 
-    if (str[0])
-        MPL_free(str[0]);
-    if (str[1])
-        MPL_free(str[1]);
-    if (env_name)
-        MPL_free(env_name);
-    if (env_value)
-        MPL_free(env_value);
+    MPL_free(str[0]);
+    MPL_free(str[1]);
+    MPL_free(env_name);
+    MPL_free(env_value);
 
   fn_exit:
     return status;
@@ -653,14 +649,10 @@ static HYD_status env_fn(char *arg, char ***argv)
 
     HYDU_append_env_to_list(env_name, env_value, &exec->user_env);
 
-    if (str[0])
-        MPL_free(str[0]);
-    if (str[1])
-        MPL_free(str[1]);
-    if (env_name)
-        MPL_free(env_name);
-    if (env_value)
-        MPL_free(env_value);
+    MPL_free(str[0]);
+    MPL_free(str[1]);
+    MPL_free(env_name);
+    MPL_free(env_value);
 
   fn_exit:
     return status;

@@ -421,8 +421,7 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t *
                 MPIR_ERR_POP(mpi_errno);
             }
         }
-        if (REQ_PTL(sreq)->get_me_p)
-            MPL_free(REQ_PTL(sreq)->get_me_p);
+        MPL_free(REQ_PTL(sreq)->get_me_p);
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TYPICAL, "message cancelled");
     } else {

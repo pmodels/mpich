@@ -915,10 +915,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Free temporary resources         */
     /* -------------------------------- */
-    if (provname) {
-        MPL_free((char *) provname);
-        hints->fabric_attr->prov_name = NULL;
-    }
+    MPL_free((char *) provname);
+    hints->fabric_attr->prov_name = NULL;
 
     if (prov)
         fi_freeinfo(prov);

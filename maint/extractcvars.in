@@ -385,10 +385,8 @@ foreach my $p (@cvars) {
     if ($p->{type} eq 'string') {
         # Need to cleanup after whatever was strduped by the init routine
 print OUTPUT_C <<EOT;
-    if (${var_name} != NULL) {
-        MPL_free((char *)${var_name});
-        ${var_name} = NULL;
-    }
+    MPL_free((char *)${var_name});
+    ${var_name} = NULL;
 
 EOT
     }

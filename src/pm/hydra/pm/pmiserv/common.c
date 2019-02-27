@@ -59,8 +59,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
 
   fn_exit:
     MPL_free(buf);
-    if (str1)
-        MPL_free(str1);
+    MPL_free(str1);
     HYDU_FUNC_EXIT();
     return status;
 

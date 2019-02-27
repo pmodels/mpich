@@ -66,9 +66,7 @@ static inline int MPIR_Handle_free(void *((*indirect)[]), int indirect_size)
     for (i = 0; i < indirect_size; i++) {
         MPL_free((*indirect)[i]);
     }
-    if (indirect) {
-        MPL_free(indirect);
-    }
+    MPL_free(indirect);
     /* This does *not* remove any objects that the user created
      * and then did not destroy */
     return 0;

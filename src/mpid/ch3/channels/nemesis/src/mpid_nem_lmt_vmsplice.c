@@ -354,7 +354,7 @@ int MPID_nem_lmt_vmsplice_progress(void)
                 free_me = cur;
                 cur = cur->next;
             }
-            if (free_me) MPL_free(free_me);
+            MPL_free(free_me);
             --MPID_nem_local_lmt_pending;
         }
 

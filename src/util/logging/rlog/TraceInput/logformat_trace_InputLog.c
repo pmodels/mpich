@@ -248,11 +248,11 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextCategory(JNIEnv *
     if (ierr != 0 || legend_pos <= 0) {
         fprintf(errfile, "%s\n", TRACE_Get_err_string(ierr));
         fflush(errfile);
-        if (legend_base != NULL && legend_base != slegend_base)
+        if (legend_base != slegend_base)
             MPL_free(legend_base);
-        if (label_base != NULL && label_base != slabel_base)
+        if (label_base != slabel_base)
             MPL_free(label_base);
-        if (methods_base != NULL && methods_base != smethods_base)
+        if (methods_base != smethods_base)
             MPL_free(methods_base);
         return NULL;
     }
@@ -296,17 +296,17 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextCategory(JNIEnv *
     /* Clean up the unused reference and free local memory */
     if (jlegend != NULL)
         (*env)->DeleteLocalRef(env, jlegend);
-    if (legend_base != NULL && legend_base != slegend_base)
+    if (legend_base != slegend_base)
         MPL_free(legend_base);
 
     if (jlabel != NULL)
         (*env)->DeleteLocalRef(env, jlabel);
-    if (label_base != NULL && label_base != slabel_base)
+    if (label_base != slabel_base)
         MPL_free(label_base);
 
     if (jmethods != NULL)
         (*env)->DeleteLocalRef(env, jmethods);
-    if (methods_base != NULL && methods_base != smethods_base)
+    if (methods_base != smethods_base)
         MPL_free(methods_base);
 
     return objdef;
@@ -381,18 +381,14 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextYCoordMap(JNIEnv 
     if (ierr != 0) {
         fprintf(errfile, "Error: %s\n", TRACE_Get_err_string(ierr));
         fflush(errfile);
-        if (coordmap_base != NULL)
-            MPL_free(coordmap_base);
-        if (title_name != NULL)
-            MPL_free(title_name);
+        MPL_free(coordmap_base);
+        MPL_free(title_name);
         if (column_names != NULL) {
             for (icol = 0; icol < ncolumns - 1; icol++)
-                if (column_names[icol] != NULL)
-                    MPL_free(column_names[icol]);
+                MPL_free(column_names[icol]);
             MPL_free(column_names);
         }
-        if (methods_base != NULL)
-            MPL_free(methods_base);
+        MPL_free(methods_base);
         return NULL;
     }
 
@@ -446,22 +442,18 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextYCoordMap(JNIEnv 
     /* Clean up the unused reference and free local memory */
     if (coordmap_pos > 0)
         (*env)->DeleteLocalRef(env, j_coordmap_elems);
-    if (coordmap_base != NULL)
-        MPL_free(coordmap_base);
+    MPL_free(coordmap_base);
 
-    if (title_name != NULL)
-        MPL_free(title_name);
+    MPL_free(title_name);
     if (column_names != NULL) {
         for (icol = 0; icol < ncolumns - 1; icol++)
-            if (column_names[icol] != NULL)
-                MPL_free(column_names[icol]);
+            MPL_free(column_names[icol]);
         MPL_free(column_names);
     }
 
     if (jmethods != NULL)
         (*env)->DeleteLocalRef(env, jmethods);
-    if (methods_base != NULL)
-        MPL_free(methods_base);
+    MPL_free(methods_base);
 
     return ycoordmap;
 }
@@ -534,11 +526,11 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextPrimitive(JNIEnv 
     if (ierr != 0 || (tcoord_pos <= 0 || ycoord_pos <= 0)) {
         fprintf(errfile, "%s\n", TRACE_Get_err_string(ierr));
         fflush(errfile);
-        if (tcoord_base != NULL && tcoord_base != stcoord_base)
+        if (tcoord_base != stcoord_base)
             MPL_free(tcoord_base);
-        if (ycoord_base != NULL && ycoord_base != sycoord_base)
+        if (ycoord_base != sycoord_base)
             MPL_free(ycoord_base);
-        if (info_base != NULL && info_base != sinfo_base)
+        if (info_base != sinfo_base)
             MPL_free(info_base);
         return NULL;
     }
@@ -578,17 +570,17 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextPrimitive(JNIEnv 
     /* Clean up the unused reference and free local memory */
     if (tcoord_pos > 0)
         (*env)->DeleteLocalRef(env, j_tcoords);
-    if (tcoord_base != NULL && tcoord_base != stcoord_base)
+    if (tcoord_base != stcoord_base)
         MPL_free(tcoord_base);
 
     if (ycoord_pos > 0)
         (*env)->DeleteLocalRef(env, j_ycoords);
-    if (ycoord_base != NULL && ycoord_base != sycoord_base)
+    if (ycoord_base != sycoord_base)
         MPL_free(ycoord_base);
 
     if (info_pos > 0)
         (*env)->DeleteLocalRef(env, j_infos);
-    if (info_base != NULL && info_base != sinfo_base)
+    if (info_base != sinfo_base)
         MPL_free(info_base);
 
     return prime;
@@ -690,8 +682,7 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextComposite(JNIEnv 
     /* Clean up the unused reference and free local memory */
     if (cm_info_sz > 0 && cm_info_pos > 0)
         (*env)->DeleteLocalRef(env, j_cm_infos);
-    if (cm_info_base != NULL)
-        MPL_free(cm_info_base);
+    MPL_free(cm_info_base);
 
     return cmplx;
 }

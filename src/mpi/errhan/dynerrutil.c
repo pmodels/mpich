@@ -157,9 +157,7 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
     MPL_strncpy(str, msg_string, msg_len + 1);
     if (errcode) {
         if (errcode < first_free_code) {
-            if (user_code_msgs[errcode]) {
-                MPL_free((void *) (user_code_msgs[errcode]));
-            }
+            MPL_free((void *) (user_code_msgs[errcode]));
             user_code_msgs[errcode] = (const char *) str;
         } else {
             /* FIXME : Unallocated error code? */
@@ -167,9 +165,7 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
         }
     } else {
         if (errclass < first_free_class) {
-            if (user_class_msgs[errclass]) {
-                MPL_free((void *) (user_class_msgs[errclass]));
-            }
+            MPL_free((void *) (user_class_msgs[errclass]));
             user_class_msgs[errclass] = (const char *) str;
         } else {
             /* FIXME : Unallocated error code? */
@@ -323,13 +319,11 @@ static int MPIR_Dynerrcodes_finalize(void *p ATTRIBUTE((unused)))
     if (not_initialized == 0) {
 
         for (i = 0; i < first_free_class; i++) {
-            if (user_class_msgs[i])
-                MPL_free((char *) user_class_msgs[i]);
+            MPL_free((char *) user_class_msgs[i]);
         }
 
         for (i = 0; i < first_free_code; i++) {
-            if (user_code_msgs[i])
-                MPL_free((char *) user_code_msgs[i]);
+            MPL_free((char *) user_code_msgs[i]);
         }
     }
     return 0;

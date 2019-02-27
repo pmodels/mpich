@@ -824,8 +824,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    if (hintval_global != NULL)
-        MPL_free(hintval_global);
+    MPL_free(hintval_global);
 
     *info_args_are_equal = hintval_equal_global;
     return mpi_errno;

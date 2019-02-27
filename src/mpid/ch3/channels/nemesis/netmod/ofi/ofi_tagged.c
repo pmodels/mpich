@@ -62,8 +62,7 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
-    if (REQ_OFI(sreq)->pack_buffer)
-        MPL_free(REQ_OFI(sreq)->pack_buffer);
+    MPL_free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_SEND_CALLBACK);
@@ -127,9 +126,7 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
          * If anysource was posted for non-contig dtype then don't forget
          * to clean up tmp space.
          */
-        if (REQ_OFI(rreq)->pack_buffer) {
-            MPL_free(REQ_OFI(rreq)->pack_buffer);
-        }
+        MPL_free(REQ_OFI(rreq)->pack_buffer);
         matched = FALSE;
     } else {
         /* Cancel failed. We can only fail in the case of the message

@@ -82,8 +82,7 @@ HYD_status HYDI_dmx_poll_wait_for_event(int wtime)
         status = HYD_ERR_TIMED_OUT;
 
   fn_exit:
-    if (pollfds)
-        MPL_free(pollfds);
+    MPL_free(pollfds);
     HYD_FUNC_EXIT();
     return status;
 

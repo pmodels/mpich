@@ -208,8 +208,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_EXTPKTHANDLER_ACCUMULATE);
     return mpi_errno;
   fn_fail:
-    if ((*ext_hdr_ptr) != NULL)
-        MPL_free((*ext_hdr_ptr));
+    MPL_free((*ext_hdr_ptr));
     (*ext_hdr_ptr) = NULL;
     (*ext_hdr_sz) = 0;
     goto fn_exit;

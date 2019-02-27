@@ -124,9 +124,7 @@ int MPIE_InitForDebugger(ProcessWorld * pWorld)
 /* This routine is provided to free memory allocated in this routine */
 int MPIE_FreeFromDebugger(void)
 {
-    if (MPIR_proctable) {
-        MPL_free(MPIR_proctable);
-    }
+    MPL_free(MPIR_proctable);
     return 0;
 }
 

@@ -1225,10 +1225,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
         if (MPIDI_OFI_WIN(win).mr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
-        if (MPIDI_OFI_WIN(win).winfo) {
-            MPL_free(MPIDI_OFI_WIN(win).winfo);
-            MPIDI_OFI_WIN(win).winfo = NULL;
-        }
+        MPL_free(MPIDI_OFI_WIN(win).winfo);
+        MPIDI_OFI_WIN(win).winfo = NULL;
         MPL_free(MPIDI_OFI_WIN(win).acc_hint);
         MPIDI_OFI_WIN(win).acc_hint = NULL;
     }
