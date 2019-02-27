@@ -63,7 +63,7 @@
    For optimization, we want the cell to start at a cacheline boundary
    and the cell length to be a multiple of cacheline size.  This will
    avoid false sharing.  We also want payload to start at an 8-byte
-   boundary to to optimize memcpys and dataloop operations on the
+   boundary to to optimize memcpys and datatype operations on the
    payload.  To ensure payload is 8-byte aligned, we add padding after
    the next pointer so the packet starts at the 8-byte boundary.
 
