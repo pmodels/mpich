@@ -331,6 +331,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &thr_err);
 
     MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &mpi_errno);
     if (mpi_errno != MPI_SUCCESS) {

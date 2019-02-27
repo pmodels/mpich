@@ -306,9 +306,22 @@ int MPII_Genutil_queue_sched_enqueue(MPII_Genutil_sched_t * sched, MPIR_Comm * c
 
     /* Enqueue schedule and activate progress hook if not already activated */
     reqp->u.nbc.coll.sched = (void *) sched;
+    /* The check for head == NULL should happen inside the lock. Consider
+     * we have another thread that is executing the progress hook through the
+     * progress engine. The other thread holds the TSP_QUEUE lock and if it
+     * finishes progressing all the schedules, then it would deactivate the
+     * hook before releasing the lock. If the head == NULL check occurs outside
+     * the lock, then the hook will not be rightly activated until the user
+     * issues another non-blocking collective operation, which is incorrect since
+     * the user may not issue another non-blocking collective operation.
+     */
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+
     if (MPII_coll_queue.head == NULL)
         MPID_Progress_activate_hook(MPII_Genutil_queue_progress_hook_id);
     DL_APPEND(MPII_coll_queue.head, &(reqp->u.nbc.coll));
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
