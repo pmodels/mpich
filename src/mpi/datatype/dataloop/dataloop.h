@@ -329,6 +329,8 @@ void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
                                    MPI_Aint * lastp,
                                    MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp);
 
+void MPII_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff);
+
 void MPII_Segment_manipulate(MPIR_Segment * segp,
                              MPI_Aint first,
                              MPI_Aint * lastp,

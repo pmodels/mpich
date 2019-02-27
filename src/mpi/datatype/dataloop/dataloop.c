@@ -126,7 +126,7 @@ int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
 
     ptrdiff =
         (MPI_Aint) ((char *) (dtp->dataloop) - (char *) dloop_flatten_hdr->dataloop_local_addr);
-    MPIR_Dataloop_update(dtp->dataloop, ptrdiff);
+    MPII_Dataloop_update(dtp->dataloop, ptrdiff);
 
   fn_exit:
     return mpi_errno;
@@ -172,7 +172,7 @@ static void dloop_copy(void *dest, void *src, MPI_Aint size)
     /* copy region first */
     MPIR_Memcpy(dest, src, size);
 
-    /* Calculate difference in starting locations. MPIR_Dataloop_update()
+    /* Calculate difference in starting locations. MPII_Dataloop_update()
      * then traverses the new structure and updates internal pointers by
      * adding this difference to them. This way we can just copy the
      * structure, including pointers, in one big block.
@@ -180,14 +180,14 @@ static void dloop_copy(void *dest, void *src, MPI_Aint size)
     ptrdiff = (MPI_Aint) ((char *) dest - (char *) src);
 
     /* traverse structure updating pointers */
-    MPIR_Dataloop_update(dest, ptrdiff);
+    MPII_Dataloop_update(dest, ptrdiff);
 
     return;
 }
 
 
 /*@
-  MPIR_Dataloop_update - update pointers after a copy operation
+  MPII_Dataloop_update - update pointers after a copy operation
 
 Input Parameters:
 + dataloop - pointer to loop to update
@@ -196,7 +196,7 @@ Input Parameters:
   This function is used to recursively update all the pointers in a
   dataloop tree.
 @*/
-void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
+void MPII_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
 {
     /* OPT: only declare these variables down in the Struct case */
     int i;
@@ -227,7 +227,7 @@ void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
                     (MPIR_VOID_PTR_CAST_TO_MPI_AINT(char *)dataloop->loop_params.cm_t.dataloop +
                      ptrdiff);
 
-                MPIR_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
             }
             break;
 
@@ -255,7 +255,7 @@ void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
                     (MPIR_VOID_PTR_CAST_TO_MPI_AINT(char *)dataloop->loop_params.bi_t.dataloop +
                      ptrdiff);
 
-                MPIR_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
             }
             break;
 
@@ -294,7 +294,7 @@ void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
                     (MPIR_VOID_PTR_CAST_TO_MPI_AINT(char *)dataloop->loop_params.i_t.dataloop +
                      ptrdiff);
 
-                MPIR_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
             }
             break;
 
@@ -348,7 +348,7 @@ void MPIR_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
             }
 
             for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
-                MPIR_Dataloop_update(looparray[i], ptrdiff);
+                MPII_Dataloop_update(looparray[i], ptrdiff);
             }
             break;
         default:
