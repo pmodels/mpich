@@ -124,6 +124,10 @@ noinst_PROGRAMS =      \
     neighb_alltoall    \
     neighb_alltoallv   \
     neighb_alltoallw
+
+# dtpool tests
+noinst_PROGRAMS += bcast bcast_world
+
 allgatherv4_LDADD = $(LDADD) -lm
 
 # Generate tests of the nonblocking collectives by reusing the blocking tests.
@@ -172,4 +176,5 @@ nbicscatter_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbicscatterv_SOURCES = icscatterv.c
 nbicscatterv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 
-include Makefile.dtp
+bcast_world_SOURCES = bcast.c
+bcast_world_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)

@@ -11,8 +11,10 @@ EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = typecntsx typenamex typemiscx
 
+# dtpool tests
+noinst_PROGRAMS += packsizeex
+
 typecntsx_SOURCES = typecntsx.cxx
 typenamex_SOURCES = typenamex.cxx
 typemiscx_SOURCES = typemiscx.cxx
-
-include Makefile.dtp
+packsizeex_SOURCES = packsizeex.cxx

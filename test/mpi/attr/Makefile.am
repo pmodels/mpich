@@ -32,6 +32,8 @@ noinst_PROGRAMS =      \
     keyval_double_free_type \
     keyval_double_free_win
 
-EXTRA_DIST = testlist.in
+# dtpool tests
+noinst_PROGRAMS += \
+    fkeyvaltype
 
-include Makefile.dtp
+EXTRA_DIST = testlist.in

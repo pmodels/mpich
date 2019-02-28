@@ -63,7 +63,8 @@ noinst_PROGRAMS =  \
     irecv_any   \
     large_tag
 
+# dtpool tests
+noinst_PROGRAMS += pingping sendrecv1 sendself
+
 irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
 irecv_any_SOURCES  = recv_any.c
-
-include Makefile.dtp

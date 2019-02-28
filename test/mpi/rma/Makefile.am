@@ -191,6 +191,24 @@ if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
 endif
 
+# dtpool tests
+noinst_PROGRAMS += \
+    accfence1 \
+    accpscw1 \
+    epochtest \
+    getfence1 \
+    lock_contention_dt \
+    lock_dt \
+    lock_dt_flush \
+    lock_dt_flushlocal \
+    lockall_dt \
+    lockall_dt_flush \
+    lockall_dt_flushall \
+    lockall_dt_flushlocal \
+    lockall_dt_flushlocalall \
+    putfence1 \
+    putpscw1
+
 atomic_get_short_int_SOURCES      = atomic_get.c
 atomic_get_2int_SOURCES           = atomic_get.c
 atomic_get_long_int_SOURCES       = atomic_get.c
@@ -359,5 +377,3 @@ overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
 
 get_flushlocal_shm_SOURCES        = get_flushlocal.c
 get_flushlocal_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
-
-include Makefile.dtp
