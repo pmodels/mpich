@@ -1189,9 +1189,8 @@ static inline int MPIDI_hash_comm_to_vci(MPIR_Comm* comm)
     int vci;
 #if 0
     vci = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
-    vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.n_netmod_eps;
 #else
-    vci = 0;
+    vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis;
 #endif
     MPIR_Assert(vci >= 0);
     return vci;
