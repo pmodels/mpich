@@ -109,19 +109,10 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
 
     last_idx = paramp->index - 1;
     if (last_idx >= 0) {
-        /* Since disps can be negative, we cannot use
-         * MPIR_Ensure_Aint_fits_in_pointer to verify that disps +
-         * blklens fits in a pointer.  Just let it truncate, if the
-         * sizeof a pointer is less than the sizeof an MPI_Aint.
-         */
-        last_end = (char *) MPIR_AINT_CAST_TO_VOID_PTR
+        last_end = (char *)
             (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
     }
 
-    /* Since bufp can be a displacement and can be negative, we cannot
-     * use MPIR_Ensure_Aint_fits_in_pointer to ensure the sum fits in
-     * a pointer.  Just let it truncate.
-     */
     if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
         /* we have used up all our entries, and this region doesn't fit on
          * the end of the last one.  setting blocks to 0 tells manipulation
@@ -133,11 +124,7 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
         /* add this size to the last vector rather than using up another one */
         paramp->blklens[last_idx] += size;
     } else {
-        /* Since bufp can be a displacement and can be negative, we cannot use
-         * MPIR_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.  Just let it
-         * sign extend.
-         */
-        paramp->disps[last_idx + 1] = MPIR_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
+        paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off;
         paramp->blklens[last_idx + 1] = size;
         paramp->index++;
     }
@@ -189,21 +176,10 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            /* Since disps can be negative, we cannot use
-             * MPIR_Ensure_Aint_fits_in_pointer to verify that disps +
-             * blklens fits in a pointer.  Nor can we use
-             * MPIR_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
-             * Just let it truncate, if the sizeof a pointer is less
-             * than the sizeof an MPI_Aint.
-             */
-            last_end = (char *) MPIR_AINT_CAST_TO_VOID_PTR
+            last_end = (char *)
                 (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
         }
 
-        /* Since bufp can be a displacement and can be negative, we cannot use
-         * MPIR_Ensure_Aint_fits_in_pointer to ensure the sum fits in a pointer.
-         * Just let it truncate.
-         */
         if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
@@ -221,11 +197,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            /* Since bufp can be a displacement and can be negative, we cannot use
-             * MPIR_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.  Just let it
-             * sign extend.
-             */
-            paramp->disps[last_idx + 1] = MPIR_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
+            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off;
             paramp->blklens[last_idx + 1] = size;
             paramp->index++;
         }
@@ -280,21 +252,10 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            /* Since disps can be negative, we cannot use
-             * MPIR_Ensure_Aint_fits_in_pointer to verify that disps +
-             * blklens fits in a pointer.  Nor can we use
-             * MPIR_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
-             * Just let it truncate, if the sizeof a pointer is less
-             * than the sizeof an MPI_Aint.
-             */
-            last_end = (char *) MPIR_AINT_CAST_TO_VOID_PTR
+            last_end = (char *)
                 (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
         }
 
-        /* Since bufp can be a displacement and can be negative, we
-         * cannot use MPIR_Ensure_Aint_fits_in_pointer to ensure the
-         * sum fits in a pointer.  Just let it truncate.
-         */
         if ((last_idx == paramp->length - 1) &&
             (last_end != ((char *) bufp + rel_off + offsetarray[i]))) {
             /* we have used up all our entries, and this one doesn't fit on
@@ -306,12 +267,7 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            /* Since bufp can be a displacement and can be negative, we cannot
-             * use MPIR_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.
-             * Just let it sign extend.
-             */
-            paramp->disps[last_idx + 1] = MPIR_PTR_DISP_CAST_TO_MPI_AINT bufp +
-                rel_off + offsetarray[i];
+            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off + offsetarray[i];
             paramp->blklens[last_idx + 1] = size;
             paramp->index++;
         }
@@ -356,21 +312,10 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            /* Since disps can be negative, we cannot use
-             * MPIR_Ensure_Aint_fits_in_pointer to verify that disps +
-             * blklens fits in a pointer.  Nor can we use
-             * MPIR_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
-             * Just let it truncate, if the sizeof a pointer is less
-             * than the sizeof an MPI_Aint.
-             */
-            last_end = (char *) MPIR_AINT_CAST_TO_VOID_PTR
+            last_end = (char *)
                 (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
         }
 
-        /* Since bufp can be a displacement and can be negative, we
-         * cannot use MPIR_Ensure_Aint_fits_in_pointer to ensure the
-         * sum fits in a pointer.  Just let it truncate.
-         */
         if ((last_idx == paramp->length - 1) &&
             (last_end != ((char *) bufp + rel_off + offsetarray[i]))) {
             /* we have used up all our entries, and this one doesn't fit on
@@ -382,12 +327,7 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            /* Since bufp can be a displacement and can be negative, we cannot
-             * use MPIR_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.
-             * Just let it sign extend.
-             */
-            paramp->disps[last_idx + 1] = MPIR_PTR_DISP_CAST_TO_MPI_AINT bufp +
-                rel_off + offsetarray[i];
+            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off + offsetarray[i];
             paramp->blklens[last_idx + 1] = size;       /* these blocks are in bytes */
             paramp->index++;
         }

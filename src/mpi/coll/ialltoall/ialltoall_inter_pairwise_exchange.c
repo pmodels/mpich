@@ -42,10 +42,6 @@ int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendco
 
     /* Do the pairwise exchanges */
     max_size = MPL_MAX(local_size, remote_size);
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     max_size * recvcount * recvtype_extent);
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                     max_size * sendcount * sendtype_extent);
     for (i = 0; i < max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;

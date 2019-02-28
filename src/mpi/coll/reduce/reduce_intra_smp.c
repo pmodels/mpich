@@ -35,8 +35,6 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
                             mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */

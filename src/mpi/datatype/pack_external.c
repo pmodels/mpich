@@ -128,9 +128,6 @@ int MPI_Pack_external(const char datarep[],
     first = 0;
     last = MPIR_SEGMENT_IGNORE_LAST;
 
-    /* Ensure that pointer increment fits in a pointer */
-    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) + *position);
-
     MPIR_Segment_pack_external32(segp, first, &last, (void *) ((char *) outbuf + *position));
 
     *position += last;

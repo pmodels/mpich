@@ -38,9 +38,6 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
             comm_size = comm_ptr->remote_size;
 
         MPIR_Datatype_get_extent_macro(recvtype, extent);
-        /* each node can make sure it is not going to overflow aint */
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         displs[rank] * extent);
 
         for (i = 0; i < comm_size; i++) {
             if (recvcounts[i]) {
