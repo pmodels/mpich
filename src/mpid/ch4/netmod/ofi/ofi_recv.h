@@ -157,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     msg.data = 0;
     msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr);
 
-    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
+    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].rx, &msg, flags), trecv,
                          MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_hash_comm_to_vci(comm));
 
   fn_exit:
@@ -260,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
@@ -283,7 +283,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].rx, &msg, flags), trecv,
                              MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_hash_comm_to_vci(comm));
     }
 
@@ -437,7 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 #endif
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-    ret = fi_cancel((fid_t) MPIDI_Global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
+    ret = fi_cancel((fid_t) MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(rreq->comm)].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
     if (ret == 0) {

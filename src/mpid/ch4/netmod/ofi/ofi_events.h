@@ -149,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);
         int r = rreq->status.MPI_SOURCE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, NULL, 0, NULL,
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(c)].tx, NULL, 0, NULL,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
@@ -417,7 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
         remote_key = recv->remote_info.rma_key;
 
         MPIDI_OFI_cntr_incr();
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_Global.ctx[0].tx,    /* endpoint     */
+        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(recv->comm_ptr)].tx,    /* endpoint     */
                                      (void *) ((uintptr_t) recv->wc.buf + recv->cur_offset),    /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
