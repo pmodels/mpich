@@ -2,10 +2,11 @@
 #include "mpiimpl.h"
 #include "hcoll_dtypes.h"
 
-extern int hcoll_initialized;
-extern int hcoll_enable;
+extern int MPIDI_HCOLL_initialized;
+extern int MPIDI_HCOLL_enable;
 
-static dte_data_representation_t mpi_predefined_derived_2_hcoll(MPI_Datatype datatype)
+static dte_data_representation_t MPIDI_HCOLL_mpi_predefined_derived_to_hcoll_dtype(MPI_Datatype
+                                                                                   datatype)
 {
     MPI_Aint size;
 
@@ -62,19 +63,20 @@ static dte_data_representation_t mpi_predefined_derived_2_hcoll(MPI_Datatype dat
     return DTE_ZERO;
 }
 
-dte_data_representation_t mpi_dtype_2_hcoll_dtype(MPI_Datatype datatype, int count, const int mode)
+dte_data_representation_t MPIDI_HCOLL_mpi_to_hcoll_dtype(MPI_Datatype datatype, int count,
+                                                         const int mode)
 {
     dte_data_representation_t dte_data_rep = DTE_ZERO;
 
     if (HANDLE_GET_KIND((datatype)) == HANDLE_KIND_BUILTIN) {
         /* Built-in type */
-        dte_data_rep = mpi_dtype_2_dte_dtype(datatype);
+        dte_data_rep = MPIDI_HCOLL_mpi_to_dte_dtype(datatype);
     }
 #if HCOLL_API >= HCOLL_VERSION(3,6)
     else if (TRY_FIND_DERIVED == mode) {
 
         /* Check for predefined derived types */
-        dte_data_rep = mpi_predefined_derived_2_hcoll(datatype);
+        dte_data_rep = MPIDI_HCOLL_mpi_predefined_derived_to_hcoll_dtype(datatype);
         if (HCOL_DTE_IS_ZERO(dte_data_rep)) {
             MPIR_Datatype *dt_ptr;
 
@@ -98,21 +100,22 @@ dte_data_representation_t mpi_dtype_2_hcoll_dtype(MPI_Datatype datatype, int cou
 }
 
 /* This will only get called once */
-int hcoll_type_commit_hook(MPIR_Datatype * dtype_p)
+int MPIDI_HCOLL_type_commit_hook(MPIR_Datatype * dtype_p)
 {
     int mpi_errno, ret;
 
-    if (0 == hcoll_initialized) {
-        mpi_errno = hcoll_initialize();
+    if (0 == MPIDI_HCOLL_initialized) {
+        mpi_errno = MPIDI_HCOLL_initialize();
         if (mpi_errno)
             return MPI_ERR_OTHER;
     }
 
-    if (0 == hcoll_enable) {
+    if (0 == MPIDI_HCOLL_enable) {
         return MPI_SUCCESS;
     }
 
-    dtype_p->dev.hcoll_datatype = mpi_predefined_derived_2_hcoll(dtype_p->handle);
+    dtype_p->dev.hcoll_datatype =
+        MPIDI_HCOLL_mpi_predefined_derived_to_hcoll_dtype(dtype_p->handle);
     if (!HCOL_DTE_IS_ZERO(dtype_p->dev.hcoll_datatype)) {
         return MPI_SUCCESS;
     }
@@ -130,9 +133,9 @@ int hcoll_type_commit_hook(MPIR_Datatype * dtype_p)
     return MPI_SUCCESS;
 }
 
-int hcoll_type_free_hook(MPIR_Datatype * dtype_p)
+int MPIDI_HCOLL_type_free_hook(MPIR_Datatype * dtype_p)
 {
-    if (0 == hcoll_enable) {
+    if (0 == MPIDI_HCOLL_enable) {
         return MPI_SUCCESS;
     }
 

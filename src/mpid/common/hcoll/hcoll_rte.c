@@ -10,127 +10,129 @@
 #include "hcoll/api/hcoll_dte.h"
 #include "hcoll_dtypes.h"
 
-static int recv_nb(dte_data_representation_t data,
-                   uint32_t count,
-                   void *buffer,
-                   rte_ec_handle_t, rte_grp_handle_t, uint32_t tag, rte_request_handle_t * req);
+static int MPIDI_HCOLL_recv_nb(dte_data_representation_t data,
+                               uint32_t count,
+                               void *buffer,
+                               rte_ec_handle_t, rte_grp_handle_t, uint32_t tag,
+                               rte_request_handle_t * req);
 
-static int send_nb(dte_data_representation_t data,
-                   uint32_t count,
-                   void *buffer,
-                   rte_ec_handle_t ec_h,
-                   rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req);
+static int MPIDI_HCOLL_send_nb(dte_data_representation_t data,
+                               uint32_t count,
+                               void *buffer,
+                               rte_ec_handle_t ec_h,
+                               rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req);
 
-static int test(rte_request_handle_t * request, int *completed);
+static int MPIDI_HCOLL_test(rte_request_handle_t * request, int *completed);
 
-static int ec_handle_compare(rte_ec_handle_t handle_1,
-                             rte_grp_handle_t
-                             group_handle_1,
-                             rte_ec_handle_t handle_2, rte_grp_handle_t group_handle_2);
+static int MPIDI_HCOLL_ec_handle_compare(rte_ec_handle_t handle_1,
+                                         rte_grp_handle_t
+                                         group_handle_1,
+                                         rte_ec_handle_t handle_2, rte_grp_handle_t group_handle_2);
 
-static int get_ec_handles(int num_ec,
-                          int *ec_indexes, rte_grp_handle_t, rte_ec_handle_t * ec_handles);
+static int MPIDI_HCOLL_get_ec_handles(int num_ec,
+                                      int *ec_indexes, rte_grp_handle_t,
+                                      rte_ec_handle_t * ec_handles);
 
-static int group_size(rte_grp_handle_t group);
-static int my_rank(rte_grp_handle_t grp_h);
-static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group);
-static rte_grp_handle_t get_world_group_handle(void);
-static uint32_t jobid(void);
+static int MPIDI_HCOLL_group_size(rte_grp_handle_t group);
+static int MPIDI_HCOLL_my_rank(rte_grp_handle_t grp_h);
+static int MPIDI_HCOLL_ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group);
+static rte_grp_handle_t MPIDI_HCOLL_get_world_group_handle(void);
+static uint32_t MPIDI_HCOLL_jobid(void);
 
-static void *get_coll_handle(void);
-static int coll_handle_test(void *handle);
-static void coll_handle_free(void *handle);
-static void coll_handle_complete(void *handle);
-static int group_id(rte_grp_handle_t group);
+static void *MPIDI_HCOLL_get_coll_handle(void);
+static int MPIDI_HCOLL_coll_handle_test(void *handle);
+static void MPIDI_HCOLL_coll_handle_free(void *handle);
+static void MPIDI_HCOLL_coll_handle_complete(void *handle);
+static int MPIDI_HCOLL_group_id(rte_grp_handle_t group);
 
-static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
+static int MPIDI_HCOLL_world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
 
 #undef FUNCNAME
-#define FUNCNAME progress
+#define FUNCNAME MPIDI_HCOLL_progress
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void progress(void)
+static void MPIDI_HCOLL_progress(void)
 {
     int ret;
     int made_progress;
 
-    if (0 == world_comm_destroying) {
+    if (0 == MPIDI_HCOLL_world_comm_destroying) {
         MPID_Progress_test();
     } else {
         /* FIXME: The hcoll library needs to be updated to return
          * error codes.  The progress function pointer right now
          * expects that the function returns void. */
-        ret = hcoll_do_progress(&made_progress);
+        ret = MPIDI_HCOLL_do_progress(&made_progress);
         MPIR_Assert(ret == MPI_SUCCESS);
     }
 }
 
 #if HCOLL_API >= HCOLL_VERSION(3,6)
-static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
-                                 int *num_addresses, int *num_datatypes,
-                                 hcoll_mpi_type_combiner_t * combiner);
-static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
-                                 int max_datatypes, int *array_of_integers,
-                                 void *array_of_addresses, void *array_of_datatypes);
-static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type);
-static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type);
-static int get_mpi_constants(size_t * mpi_datatype_size,
-                             int *mpi_order_c, int *mpi_order_fortran,
-                             int *mpi_distribute_block,
-                             int *mpi_distribute_cyclic,
-                             int *mpi_distribute_none, int *mpi_distribute_dflt_darg);
+static int MPIDI_HCOLL_get_mpi_type_envelope(void *mpi_type, int *num_integers,
+                                             int *num_addresses, int *num_datatypes,
+                                             hcoll_mpi_type_combiner_t * combiner);
+static int MPIDI_HCOLL_get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
+                                             int max_datatypes, int *array_of_integers,
+                                             void *array_of_addresses, void *array_of_datatypes);
+static int MPIDI_HCOLL_get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type);
+static int MPIDI_HCOLL_set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type);
+static int MPIDI_HCOLL_get_mpi_constants(size_t * mpi_datatype_size,
+                                         int *mpi_order_c, int *mpi_order_fortran,
+                                         int *mpi_distribute_block,
+                                         int *mpi_distribute_cyclic,
+                                         int *mpi_distribute_none, int *mpi_distribute_dflt_darg);
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME init_module_fns
+#define FUNCNAME MPIDI_HCOLL_init_module_fns
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void init_module_fns(void)
+static void MPIDI_HCOLL_init_module_fns(void)
 {
-    hcoll_rte_functions.send_fn = send_nb;
-    hcoll_rte_functions.recv_fn = recv_nb;
-    hcoll_rte_functions.ec_cmp_fn = ec_handle_compare;
-    hcoll_rte_functions.get_ec_handles_fn = get_ec_handles;
-    hcoll_rte_functions.rte_group_size_fn = group_size;
-    hcoll_rte_functions.test_fn = test;
-    hcoll_rte_functions.rte_my_rank_fn = my_rank;
-    hcoll_rte_functions.rte_ec_on_local_node_fn = ec_on_local_node;
-    hcoll_rte_functions.rte_world_group_fn = get_world_group_handle;
-    hcoll_rte_functions.rte_jobid_fn = jobid;
-    hcoll_rte_functions.rte_progress_fn = progress;
-    hcoll_rte_functions.rte_get_coll_handle_fn = get_coll_handle;
-    hcoll_rte_functions.rte_coll_handle_test_fn = coll_handle_test;
-    hcoll_rte_functions.rte_coll_handle_free_fn = coll_handle_free;
-    hcoll_rte_functions.rte_coll_handle_complete_fn = coll_handle_complete;
-    hcoll_rte_functions.rte_group_id_fn = group_id;
-    hcoll_rte_functions.rte_world_rank_fn = world_rank;
+    hcoll_rte_functions.send_fn = MPIDI_HCOLL_send_nb;
+    hcoll_rte_functions.recv_fn = MPIDI_HCOLL_recv_nb;
+    hcoll_rte_functions.ec_cmp_fn = MPIDI_HCOLL_ec_handle_compare;
+    hcoll_rte_functions.get_ec_handles_fn = MPIDI_HCOLL_get_ec_handles;
+    hcoll_rte_functions.rte_group_size_fn = MPIDI_HCOLL_group_size;
+    hcoll_rte_functions.test_fn = MPIDI_HCOLL_test;
+    hcoll_rte_functions.rte_my_rank_fn = MPIDI_HCOLL_my_rank;
+    hcoll_rte_functions.rte_ec_on_local_node_fn = MPIDI_HCOLL_ec_on_local_node;
+    hcoll_rte_functions.rte_world_group_fn = MPIDI_HCOLL_get_world_group_handle;
+    hcoll_rte_functions.rte_jobid_fn = MPIDI_HCOLL_jobid;
+    hcoll_rte_functions.rte_progress_fn = MPIDI_HCOLL_progress;
+    hcoll_rte_functions.rte_get_coll_handle_fn = MPIDI_HCOLL_get_coll_handle;
+    hcoll_rte_functions.rte_coll_handle_test_fn = MPIDI_HCOLL_coll_handle_test;
+    hcoll_rte_functions.rte_coll_handle_free_fn = MPIDI_HCOLL_coll_handle_free;
+    hcoll_rte_functions.rte_coll_handle_complete_fn = MPIDI_HCOLL_coll_handle_complete;
+    hcoll_rte_functions.rte_group_id_fn = MPIDI_HCOLL_group_id;
+    hcoll_rte_functions.rte_world_rank_fn = MPIDI_HCOLL_world_rank;
 #if HCOLL_API >= HCOLL_VERSION(3,6)
-    hcoll_rte_functions.rte_get_mpi_type_envelope_fn = get_mpi_type_envelope;
-    hcoll_rte_functions.rte_get_mpi_type_contents_fn = get_mpi_type_contents;
-    hcoll_rte_functions.rte_get_hcoll_type_fn = get_hcoll_type;
-    hcoll_rte_functions.rte_set_hcoll_type_fn = set_hcoll_type;
-    hcoll_rte_functions.rte_get_mpi_constants_fn = get_mpi_constants;
+    hcoll_rte_functions.rte_get_mpi_type_envelope_fn = MPIDI_HCOLL_get_mpi_type_envelope;
+    hcoll_rte_functions.rte_get_mpi_type_contents_fn = MPIDI_HCOLL_get_mpi_type_contents;
+    hcoll_rte_functions.rte_get_hcoll_type_fn = MPIDI_HCOLL_get_hcoll_type;
+    hcoll_rte_functions.rte_set_hcoll_type_fn = MPIDI_HCOLL_set_hcoll_type;
+    hcoll_rte_functions.rte_get_mpi_constants_fn = MPIDI_HCOLL_get_mpi_constants;
 #endif
 }
 
 #undef FUNCNAME
-#define FUNCNAME hcoll_rte_fns_setup
+#define FUNCNAME MPIDI_HCOLL_rte_fns_setup
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void hcoll_rte_fns_setup(void)
+void MPIDI_HCOLL_rte_fns_setup(void)
 {
-    init_module_fns();
+    MPIDI_HCOLL_init_module_fns();
 }
 
 #undef FUNCNAME
-#define FUNCNAME recv_nb
+#define FUNCNAME MPIDI_HCOLL_recv_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int recv_nb(struct dte_data_representation_t data,
-                   uint32_t count,
-                   void *buffer,
-                   rte_ec_handle_t ec_h,
-                   rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req)
+static int MPIDI_HCOLL_recv_nb(struct dte_data_representation_t data,
+                               uint32_t count,
+                               void *buffer,
+                               rte_ec_handle_t ec_h,
+                               rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req)
 {
     int mpi_errno;
     MPI_Datatype dtype;
@@ -162,14 +164,14 @@ static int recv_nb(struct dte_data_representation_t data,
 }
 
 #undef FUNCNAME
-#define FUNCNAME send_nb
+#define FUNCNAME MPIDI_HCOLL_send_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int send_nb(dte_data_representation_t data,
-                   uint32_t count,
-                   void *buffer,
-                   rte_ec_handle_t ec_h,
-                   rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req)
+static int MPIDI_HCOLL_send_nb(dte_data_representation_t data,
+                               uint32_t count,
+                               void *buffer,
+                               rte_ec_handle_t ec_h,
+                               rte_grp_handle_t grp_h, uint32_t tag, rte_request_handle_t * req)
 {
     int mpi_errno;
     MPI_Datatype dtype;
@@ -202,10 +204,10 @@ static int send_nb(dte_data_representation_t data,
 }
 
 #undef FUNCNAME
-#define FUNCNAME test
+#define FUNCNAME MPIDI_HCOLL_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int test(rte_request_handle_t * request, int *completed)
+static int MPIDI_HCOLL_test(rte_request_handle_t * request, int *completed)
 {
     MPIR_Request *req;
     req = (MPIR_Request *) request->data;
@@ -224,23 +226,24 @@ static int test(rte_request_handle_t * request, int *completed)
 }
 
 #undef FUNCNAME
-#define FUNCNAME ec_handle_compare
+#define FUNCNAME MPIDI_HCOLL_ec_handle_compare
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int ec_handle_compare(rte_ec_handle_t handle_1,
-                             rte_grp_handle_t
-                             group_handle_1,
-                             rte_ec_handle_t handle_2, rte_grp_handle_t group_handle_2)
+static int MPIDI_HCOLL_ec_handle_compare(rte_ec_handle_t handle_1,
+                                         rte_grp_handle_t
+                                         group_handle_1,
+                                         rte_ec_handle_t handle_2, rte_grp_handle_t group_handle_2)
 {
     return handle_1.handle == handle_2.handle;
 }
 
 #undef FUNCNAME
-#define FUNCNAME get_ec_handles
+#define FUNCNAME MPIDI_HCOLL_get_ec_handles
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int get_ec_handles(int num_ec,
-                          int *ec_indexes, rte_grp_handle_t grp_h, rte_ec_handle_t * ec_handles)
+static int MPIDI_HCOLL_get_ec_handles(int num_ec,
+                                      int *ec_indexes, rte_grp_handle_t grp_h,
+                                      rte_ec_handle_t * ec_handles)
 {
     int i;
     MPIR_Comm *comm;
@@ -257,28 +260,28 @@ static int get_ec_handles(int num_ec,
 }
 
 #undef FUNCNAME
-#define FUNCNAME group_size
+#define FUNCNAME MPIDI_HCOLL_group_size
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int group_size(rte_grp_handle_t grp_h)
+static int MPIDI_HCOLL_group_size(rte_grp_handle_t grp_h)
 {
     return MPIR_Comm_size((MPIR_Comm *) grp_h);
 }
 
 #undef FUNCNAME
-#define FUNCNAME my_rank
+#define FUNCNAME MPIDI_HCOLL_my_rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int my_rank(rte_grp_handle_t grp_h)
+static int MPIDI_HCOLL_my_rank(rte_grp_handle_t grp_h)
 {
     return MPIR_Comm_rank((MPIR_Comm *) grp_h);
 }
 
 #undef FUNCNAME
-#define FUNCNAME ec_on_local_node
+#define FUNCNAME MPIDI_HCOLL_ec_on_local_node
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
+static int MPIDI_HCOLL_ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
 {
     MPIR_Comm *comm;
     int nodeid, my_nodeid;
@@ -292,29 +295,29 @@ static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
 
 
 #undef FUNCNAME
-#define FUNCNAME get_world_group_handle
+#define FUNCNAME MPIDI_HCOLL_get_world_group_handle
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static rte_grp_handle_t get_world_group_handle(void)
+static rte_grp_handle_t MPIDI_HCOLL_get_world_group_handle(void)
 {
     return (rte_grp_handle_t) (MPIR_Process.comm_world);
 }
 
 #undef FUNCNAME
-#define FUNCNAME jobid
+#define FUNCNAME MPIDI_HCOLL_jobid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static uint32_t jobid(void)
+static uint32_t MPIDI_HCOLL_jobid(void)
 {
     /* not used currently */
     return 0;
 }
 
 #undef FUNCNAME
-#define FUNCNAME group_id
+#define FUNCNAME MPIDI_HCOLL_group_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int group_id(rte_grp_handle_t group)
+static int MPIDI_HCOLL_group_id(rte_grp_handle_t group)
 {
     MPIR_Comm *comm;
     comm = (MPIR_Comm *) group;
@@ -322,10 +325,10 @@ static int group_id(rte_grp_handle_t group)
 }
 
 #undef FUNCNAME
-#define FUNCNAME get_coll_handle
+#define FUNCNAME MPIDI_HCOLL_get_coll_handle
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void *get_coll_handle(void)
+static void *MPIDI_HCOLL_get_coll_handle(void)
 {
     MPIR_Request *req;
     req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
@@ -334,10 +337,10 @@ static void *get_coll_handle(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME coll_handle_test
+#define FUNCNAME MPIDI_HCOLL_coll_handle_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int coll_handle_test(void *handle)
+static int MPIDI_HCOLL_coll_handle_test(void *handle)
 {
     int completed;
     MPIR_Request *req;
@@ -347,10 +350,10 @@ static int coll_handle_test(void *handle)
 }
 
 #undef FUNCNAME
-#define FUNCNAME coll_handle_free
+#define FUNCNAME MPIDI_HCOLL_coll_handle_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void coll_handle_free(void *handle)
+static void MPIDI_HCOLL_coll_handle_free(void *handle)
 {
     MPIR_Request *req;
     if (NULL != handle) {
@@ -360,10 +363,10 @@ static void coll_handle_free(void *handle)
 }
 
 #undef FUNCNAME
-#define FUNCNAME coll_handle_complete
+#define FUNCNAME MPIDI_HCOLL_coll_handle_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void coll_handle_complete(void *handle)
+static void MPIDI_HCOLL_coll_handle_complete(void *handle)
 {
     MPIR_Request *req;
     if (NULL != handle) {
@@ -373,10 +376,10 @@ static void coll_handle_complete(void *handle)
 }
 
 #undef FUNCNAME
-#define FUNCNAME world_rank
+#define FUNCNAME MPIDI_HCOLL_world_rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
+static int MPIDI_HCOLL_world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
 #ifdef MPIDCH4_H_INCLUDED
     return MPIDIU_rank_to_lpid(ec.rank, (MPIR_Comm *) grp_h);
@@ -386,7 +389,7 @@ static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 }
 
 #if HCOLL_API >= HCOLL_VERSION(3,6)
-hcoll_mpi_type_combiner_t mpi_combiner_2_hcoll_combiner(int combiner)
+hcoll_mpi_type_combiner_t MPIDI_HCOLL_combiner_mpi_to_hcoll(int combiner)
 {
     switch (combiner) {
         case MPI_COMBINER_CONTIGUOUS:
@@ -427,23 +430,23 @@ hcoll_mpi_type_combiner_t mpi_combiner_2_hcoll_combiner(int combiner)
     return HCOLL_MPI_COMBINER_LAST;
 }
 
-static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
-                                 int *num_addresses, int *num_datatypes,
-                                 hcoll_mpi_type_combiner_t * combiner)
+static int MPIDI_HCOLL_get_mpi_type_envelope(void *mpi_type, int *num_integers,
+                                             int *num_addresses, int *num_datatypes,
+                                             hcoll_mpi_type_combiner_t * combiner)
 {
     int mpi_combiner;
     MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
 
     MPIR_Type_get_envelope(dt_handle, num_integers, num_addresses, num_datatypes, &mpi_combiner);
 
-    *combiner = mpi_combiner_2_hcoll_combiner(mpi_combiner);
+    *combiner = MPIDI_HCOLL_combiner_mpi_to_hcoll(mpi_combiner);
 
     return HCOLL_SUCCESS;
 }
 
-static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
-                                 int max_datatypes, int *array_of_integers,
-                                 void *array_of_addresses, void *array_of_datatypes)
+static int MPIDI_HCOLL_get_mpi_type_contents(void *mpi_type, int max_integers, int max_addresses,
+                                             int max_datatypes, int *array_of_integers,
+                                             void *array_of_addresses, void *array_of_datatypes)
 {
     int ret;
     MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
@@ -457,26 +460,26 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
     return ret == MPI_SUCCESS ? HCOLL_SUCCESS : HCOLL_ERROR;
 }
 
-static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type)
+static int MPIDI_HCOLL_get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type)
 {
     MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
     MPIR_Datatype *dt_ptr;
 
-    *hcoll_type = mpi_dtype_2_hcoll_dtype(dt_handle, -1, TRY_FIND_DERIVED);
+    *hcoll_type = MPIDI_HCOLL_mpi_to_hcoll_dtype(dt_handle, -1, TRY_FIND_DERIVED);
 
     return HCOL_DTE_IS_ZERO((*hcoll_type)) ? HCOLL_ERR_NOT_FOUND : HCOLL_SUCCESS;
 }
 
-static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type)
+static int MPIDI_HCOLL_set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type)
 {
     return HCOLL_SUCCESS;
 }
 
-static int get_mpi_constants(size_t * mpi_datatype_size,
-                             int *mpi_order_c, int *mpi_order_fortran,
-                             int *mpi_distribute_block,
-                             int *mpi_distribute_cyclic,
-                             int *mpi_distribute_none, int *mpi_distribute_dflt_darg)
+static int MPIDI_HCOLL_get_mpi_constants(size_t * mpi_datatype_size,
+                                         int *mpi_order_c, int *mpi_order_fortran,
+                                         int *mpi_distribute_block,
+                                         int *mpi_distribute_cyclic,
+                                         int *mpi_distribute_none, int *mpi_distribute_dflt_darg)
 {
     *mpi_datatype_size = sizeof(MPI_Datatype);
     *mpi_order_c = MPI_ORDER_C;

@@ -24,43 +24,43 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static int hcoll_comm_world_initialized = 0;
-static int hcoll_progress_hook_id = 0;
+static int MPIDI_HCOLL_comm_world_initialized = 0;
+static int MPIDI_HCOLL_progress_hook_id = 0;
 
-int hcoll_initialized = 0;
-int hcoll_enable = -1;
-int hcoll_enable_barrier = 1;
-int hcoll_enable_bcast = 1;
-int hcoll_enable_reduce = 1;
-int hcoll_enable_allgather = 1;
-int hcoll_enable_allreduce = 1;
-int hcoll_enable_alltoall = 1;
-int hcoll_enable_alltoallv = 1;
-int hcoll_enable_ibarrier = 1;
-int hcoll_enable_ibcast = 1;
-int hcoll_enable_iallgather = 1;
-int hcoll_enable_iallreduce = 1;
-int world_comm_destroying = 0;
+int MPIDI_HCOLL_initialized = 0;
+int MPIDI_HCOLL_enable = -1;
+int MPIDI_HCOLL_enable_barrier = 1;
+int MPIDI_HCOLL_enable_bcast = 1;
+int MPIDI_HCOLL_enable_reduce = 1;
+int MPIDI_HCOLL_enable_allgather = 1;
+int MPIDI_HCOLL_enable_allreduce = 1;
+int MPIDI_HCOLL_enable_alltoall = 1;
+int MPIDI_HCOLL_enable_alltoallv = 1;
+int MPIDI_HCOLL_enable_ibarrier = 1;
+int MPIDI_HCOLL_enable_ibcast = 1;
+int MPIDI_HCOLL_enable_iallgather = 1;
+int MPIDI_HCOLL_enable_iallreduce = 1;
+int MPIDI_HCOLL_world_comm_destroying = 0;
 
 #if defined(MPL_USE_DBG_LOGGING)
 MPL_dbg_class MPIR_DBG_HCOLL;
 #endif /* MPL_USE_DBG_LOGGING */
 
-void hcoll_rte_fns_setup(void);
+void MPIDI_HCOLL_rte_fns_setup(void);
 
 #undef FUNCNAME
-#define FUNCNAME hcoll_destroy
+#define FUNCNAME MPIDI_HCOLL_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-int hcoll_destroy(void *param ATTRIBUTE((unused)))
+int MPIDI_HCOLL_destroy(void *param ATTRIBUTE((unused)))
 {
-    if (1 == hcoll_initialized) {
+    if (1 == MPIDI_HCOLL_initialized) {
         hcoll_finalize();
-        MPID_Progress_deactivate_hook(hcoll_progress_hook_id);
-        MPID_Progress_deregister_hook(hcoll_progress_hook_id);
+        MPID_Progress_deactivate_hook(MPIDI_HCOLL_progress_hook_id);
+        MPID_Progress_deregister_hook(MPIDI_HCOLL_progress_hook_id);
     }
-    hcoll_initialized = 0;
+    MPIDI_HCOLL_initialized = 0;
     return 0;
 }
 
@@ -68,32 +68,32 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
     do { \
         envar = getenv("HCOLL_ENABLE_" #nameEnv); \
         if (NULL != envar) { \
-            hcoll_enable_##name = atoi(envar); \
-            MPL_DBG_MSG_D(MPIR_DBG_HCOLL, VERBOSE, "HCOLL_ENABLE_" #nameEnv " = %d\n", hcoll_enable_##name); \
+            MPIDI_HCOLL_enable_##name = atoi(envar); \
+            MPL_DBG_MSG_D(MPIR_DBG_HCOLL, VERBOSE, "HCOLL_ENABLE_" #nameEnv " = %d\n", MPIDI_HCOLL_enable_##name); \
         } \
     } while (0)
 
 #undef FUNCNAME
-#define FUNCNAME hcoll_initialize
+#define FUNCNAME MPIDI_HCOLL_initialize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_initialize(void)
+int MPIDI_HCOLL_initialize(void)
 {
     int mpi_errno;
     char *envar;
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
+    MPIDI_HCOLL_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
         !MPIR_ThreadInfo.isThreaded;
-    if (0 >= hcoll_enable) {
+    if (0 >= MPIDI_HCOLL_enable) {
         goto fn_exit;
     }
 #if defined(MPL_USE_DBG_LOGGING)
     MPIR_DBG_HCOLL = MPL_dbg_class_alloc("HCOLL", "hcoll");
 #endif /* MPL_USE_DBG_LOGGING */
 
-    hcoll_rte_fns_setup();
+    MPIDI_HCOLL_rte_fns_setup();
 
     hcoll_read_init_opts(&init_opts);
     init_opts->base_tag = MPIR_FIRST_HCOLL_TAG;
@@ -109,15 +109,16 @@ int hcoll_initialize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (!hcoll_initialized) {
-        hcoll_initialized = 1;
-        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress, &hcoll_progress_hook_id);
+    if (!MPIDI_HCOLL_initialized) {
+        MPIDI_HCOLL_initialized = 1;
+        mpi_errno =
+            MPID_Progress_register_hook(MPIDI_HCOLL_do_progress, &MPIDI_HCOLL_progress_hook_id);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        MPID_Progress_activate_hook(hcoll_progress_hook_id);
+        MPID_Progress_activate_hook(MPIDI_HCOLL_progress_hook_id);
     }
-    MPIR_Add_finalize(hcoll_destroy, 0, 0);
+    MPIR_Add_finalize(MPIDI_HCOLL_destroy, 0, 0);
 
     CHECK_ENABLE_ENV_VARS(BARRIER, barrier);
     CHECK_ENABLE_ENV_VARS(BCAST, bcast);
@@ -138,31 +139,31 @@ int hcoll_initialize(void)
 
 
 #undef FUNCNAME
-#define FUNCNAME hcoll_comm_create
+#define FUNCNAME MPIDI_HCOLL_comm_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
+int MPIDI_HCOLL_comm_create(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
     int num_ranks;
     int context_destroyed;
     mpi_errno = MPI_SUCCESS;
 
-    if (0 == hcoll_initialized) {
-        mpi_errno = hcoll_initialize();
+    if (0 == MPIDI_HCOLL_initialized) {
+        mpi_errno = MPIDI_HCOLL_initialize();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
 
-    if (0 == hcoll_enable) {
+    if (0 == MPIDI_HCOLL_enable) {
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
 
     if (MPIR_Process.comm_world == comm_ptr) {
-        hcoll_comm_world_initialized = 1;
+        MPIDI_HCOLL_comm_world_initialized = 1;
     }
-    if (!hcoll_comm_world_initialized) {
+    if (!MPIDI_HCOLL_comm_world_initialized) {
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
@@ -187,20 +188,20 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
 }
 
 #undef FUNCNAME
-#define FUNCNAME hcoll_comm_destroy
+#define FUNCNAME MPIDI_HCOLL_comm_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
+int MPIDI_HCOLL_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
     int context_destroyed;
-    if (0 >= hcoll_enable) {
+    if (0 >= MPIDI_HCOLL_enable) {
         goto fn_exit;
     }
     mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->handle == MPI_COMM_WORLD)
-        world_comm_destroying = 1;
+        MPIDI_HCOLL_world_comm_destroying = 1;
 
     context_destroyed = 0;
     if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
@@ -214,7 +215,7 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
     goto fn_exit;
 }
 
-int hcoll_do_progress(int *made_progress)
+int MPIDI_HCOLL_do_progress(int *made_progress)
 {
     *made_progress = 1;
     hcoll_progress_fn();
