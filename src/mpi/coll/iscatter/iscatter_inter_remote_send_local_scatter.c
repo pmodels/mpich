@@ -56,9 +56,6 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
             MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
 
             MPIR_Datatype_get_extent_macro(recvtype, extent);
-            MPIR_Ensure_Aint_fits_in_pointer(extent * recvcount * local_size);
-            MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                             sendcount * remote_size * extent);
 
             MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *,
                                       recvcount * local_size * (MPL_MAX(extent, true_extent)),

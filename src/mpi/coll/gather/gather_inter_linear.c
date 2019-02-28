@@ -38,8 +38,6 @@ int MPIR_Gather_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype se
 
     if (root == MPI_ROOT) {
         MPIR_Datatype_get_extent_macro(recvtype, extent);
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         (recvcount * remote_size * extent));
 
         for (i = 0; i < remote_size; i++) {
             mpi_errno =

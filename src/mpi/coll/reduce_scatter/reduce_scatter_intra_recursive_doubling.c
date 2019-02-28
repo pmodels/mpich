@@ -72,10 +72,6 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
         goto fn_exit;
     }
 
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
-
     /* slightly retask pof2 to mean pof2 equal or greater, not always greater as it is above */
     pof2 = 1;
     while (pof2 < comm_size)

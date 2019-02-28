@@ -74,10 +74,6 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
     first = 0;
     last = MPIR_SEGMENT_IGNORE_LAST;
 
-    /* Ensure that pointer increment fits in a pointer */
-    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT inbuf) +
-                                     (MPI_Aint) * position);
-
     MPIR_Segment_unpack(segp, first, &last, (void *) ((char *) inbuf + *position));
 
     /* Ensure that calculation fits into an int datatype. */

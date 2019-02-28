@@ -64,8 +64,6 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
             MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
             MPIR_Datatype_get_extent_macro(sendtype, extent);
 
-            MPIR_Ensure_Aint_fits_in_pointer(sendcount * local_size *
-                                             (MPL_MAX(extent, true_extent)));
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
                                 sendcount * local_size * (MPL_MAX(extent, true_extent)), mpi_errno,
                                 "tmp_buf", MPL_MEM_BUFFER);

@@ -49,8 +49,6 @@ int MPIR_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcount
         for (i = 0; i < ss; i++) {
             dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst] && recvtype_size) {
-                MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                 rdispls[dst] * recv_extent);
                 mpi_errno = MPIR_Sched_recv((char *) recvbuf + rdispls[dst] * recv_extent,
                                             recvcounts[dst], recvtype, dst, comm_ptr, s);
                 if (mpi_errno)
@@ -61,8 +59,6 @@ int MPIR_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcount
         for (i = 0; i < ss; i++) {
             dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst] && sendtype_size) {
-                MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                 sdispls[dst] * send_extent);
                 mpi_errno = MPIR_Sched_send((char *) sendbuf + sdispls[dst] * send_extent,
                                             sendcounts[dst], sendtype, dst, comm_ptr, s);
                 if (mpi_errno)

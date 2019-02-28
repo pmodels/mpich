@@ -71,9 +71,6 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
             comm_size = comm_ptr->remote_size;
 
         MPIR_Datatype_get_extent_macro(recvtype, extent);
-        /* each node can make sure it is not going to overflow aint */
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         displs[rank] * extent);
 
         MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *),
                             mpi_errno, "reqarray", MPL_MEM_BUFFER);

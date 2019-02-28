@@ -77,10 +77,6 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
         disps[i] = i * recvcount;
     }
 
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
-
     /* need to allocate temporary buffer to receive incoming data */
     MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count * (MPL_MAX(true_extent, extent)),
                         mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);

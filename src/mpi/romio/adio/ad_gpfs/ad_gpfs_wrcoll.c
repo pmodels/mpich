@@ -1651,7 +1651,6 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
 
             sbuf_ptr = all_recv_buf + rdispls[i];
             for (j = 0; j < count[i]; j++) {
-                ADIOI_ENSURE_AINT_FITS_IN_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
                 to_ptr =
                     (char *) ADIOI_AINT_CAST_TO_VOID_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
                 len = others_req[i].lens[start_pos[i] + j];

@@ -73,17 +73,4 @@
 #define MPIR_Ensure_Aint_fits_in_int(aint) \
   MPIR_Assert((aint) == (MPI_Aint)(int)(aint));
 
-/*
- * Ensure an MPI_Aint value fits into a pointer.
- * Useful for detecting overflow when MPI_Aint is larger than a pointer.
- *
- * \param[in]  aint  Variable of type MPI_Aint
- */
-#ifndef SIZEOF_PTR_IS_AINT
-#define MPIR_Ensure_Aint_fits_in_pointer(aint) \
-  MPIR_Assert((aint) == (MPI_Aint)(uintptr_t) MPIR_AINT_CAST_TO_VOID_PTR(aint));
-#else
-#define MPIR_Ensure_Aint_fits_in_pointer(aint) do {} while (0)
-#endif
-
 #endif /* MPIR_POINTERS_H_INCLUDED */

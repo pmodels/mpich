@@ -437,22 +437,10 @@ static int contig_m2m(MPI_Aint * blocks_p,
 #endif
 
     if (paramp->direction == M2M_TO_USERBUF) {
-        /* Ensure that pointer increment fits in a pointer */
-        /* userbuf is a pointer (not a displacement) since it is being
-         * used on a memcpy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->userbuf)) +
-                                         rel_off);
         MPIR_Memcpy((char *) paramp->userbuf + rel_off, paramp->streambuf, size);
     } else {
-        /* Ensure that pointer increment fits in a pointer */
-        /* userbuf is a pointer (not a displacement) since it is being used on a memcpy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->userbuf)) +
-                                         rel_off);
         MPIR_Memcpy(paramp->streambuf, (char *) paramp->userbuf + rel_off, size);
     }
-    /* Ensure that pointer increment fits in a pointer */
-    /* streambuf is a pointer (not a displacement) since it was used on a memcpy */
-    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->streambuf)) + size);
     paramp->streambuf += size;
     return 0;
 }
@@ -472,9 +460,6 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
     char *cbufp;
 
-    /* Ensure that pointer increment fits in a pointer */
-    /* userbuf is a pointer (not a displacement) since it is being used for a memory copy */
-    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->userbuf)) + rel_off);
     cbufp = (char *) paramp->userbuf + rel_off;
     MPIR_Datatype_get_size_macro(el_type, el_size);
     DBG_SEGMENT(printf
@@ -499,26 +484,14 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
                 MPIR_Memcpy(cbufp, paramp->streambuf, ((MPI_Aint) blksz) * el_size);
                 DBG_SEGMENT(printf("vec: memcpy %p %p %d\n", cbufp,
                                    paramp->streambuf, (int) (blksz * el_size)));
-                /* Ensure that pointer increment fits in a pointer */
-                /* streambuf is a pointer (not a displacement) since it is being used for a memory copy */
-                MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT
-                                                  (paramp->streambuf)) +
-                                                 ((MPI_Aint) blksz) * el_size);
                 paramp->streambuf += ((MPI_Aint) blksz) * el_size;
 
-                MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(cbufp)) + stride);
                 cbufp += stride;
             }
             if (blocks_left) {
                 MPIR_Memcpy(cbufp, paramp->streambuf, ((MPI_Aint) blocks_left) * el_size);
                 DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n", cbufp,
                                    paramp->streambuf, (int) (blocks_left * el_size)));
-                /* Ensure that pointer increment fits in a pointer */
-                /* streambuf is a pointer (not a displacement) since
-                 * it is being used for a memory copy */
-                MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT
-                                                  (paramp->streambuf)) +
-                                                 ((MPI_Aint) blocks_left) * el_size);
                 paramp->streambuf += ((MPI_Aint) blocks_left) * el_size;
             }
         }
@@ -536,14 +509,8 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
         } else {
             for (i = 0; i < whole_count; i++) {
                 MPIR_Memcpy(paramp->streambuf, cbufp, (MPI_Aint) blksz * el_size);
-                /* Ensure that pointer increment fits in a pointer */
-                /* streambuf is a pointer (not a displacement) since
-                 * it is being used for a memory copy */
                 DBG_SEGMENT(printf("vec: memcpy %p %p %d\n",
                                    paramp->streambuf, cbufp, (int) (blksz * el_size)));
-                MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT
-                                                  (paramp->streambuf)) +
-                                                 (MPI_Aint) blksz * el_size);
                 paramp->streambuf += (MPI_Aint) blksz *el_size;
                 cbufp += stride;
             }
@@ -551,12 +518,6 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
                 MPIR_Memcpy(paramp->streambuf, cbufp, (MPI_Aint) blocks_left * el_size);
                 DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n",
                                    paramp->streambuf, cbufp, (int) (blocks_left * el_size)));
-                /* Ensure that pointer increment fits in a pointer */
-                /* streambuf is a pointer (not a displacement) since
-                 * it is being used for a memory copy */
-                MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT
-                                                  (paramp->streambuf)) +
-                                                 (MPI_Aint) blocks_left * el_size);
                 paramp->streambuf += (MPI_Aint) blocks_left *el_size;
             }
         }
@@ -587,11 +548,6 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
 
         MPIR_Assert(curblock < count);
 
-        /* Ensure that pointer increment fits in a pointer */
-        /* userbuf is a pointer (not a displacement) since it is being
-         * used for a memory copy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->userbuf)) +
-                                         rel_off + offsetarray[curblock]);
         cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
 
         /* there was some casting going on here at one time but now all types
@@ -620,11 +576,6 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
                         ("blkidx m3m:memcpy(%p,%p,%d)\n", dest, src, (int) (blocklen * el_size)));
         }
 
-        /* Ensure that pointer increment fits in a pointer */
-        /* streambuf is a pointer (not a displacement) since it is
-         * being used for a memory copy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->streambuf)) +
-                                         (MPI_Aint) blocklen * el_size);
         paramp->streambuf += (MPI_Aint) blocklen *el_size;
         blocks_left -= blocklen;
         curblock++;
@@ -655,11 +606,6 @@ static int index_m2m(MPI_Aint * blocks_p,
         MPIR_Assert(curblock < count);
         cur_block_sz = blockarray[curblock];
 
-        /* Ensure that pointer increment fits in a pointer */
-        /* userbuf is a pointer (not a displacement) since it is being
-         * used for a memory copy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->userbuf)) +
-                                         rel_off + offsetarray[curblock]);
         cbufp = (char *) paramp->userbuf + rel_off + offsetarray[curblock];
 
         if (cur_block_sz > blocks_left)
@@ -684,11 +630,6 @@ static int index_m2m(MPI_Aint * blocks_p,
             MPIR_Memcpy(dest, src, cur_block_sz * el_size);
         }
 
-        /* Ensure that pointer increment fits in a pointer */
-        /* streambuf is a pointer (not a displacement) since it is
-         * being used for a memory copy */
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(paramp->streambuf)) +
-                                         cur_block_sz * el_size);
         paramp->streambuf += cur_block_sz * el_size;
         blocks_left -= cur_block_sz;
         curblock++;
@@ -995,7 +936,6 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
             paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN;
     }
 
-    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(bufp)) + rel_off);
     if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((char *) bufp + rel_off))) {
         /* we have used up all our entries, and this region doesn't fit on
          * the end of the last one.  setting blocks to 0 tells manipulation
@@ -1082,7 +1022,6 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
                 paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN;
         }
 
-        MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT(bufp)) + rel_off);
         if ((last_idx == paramp->u.pack_vector.length - 1) &&
             (last_end != ((char *) bufp + rel_off))) {
             /* we have used up all our entries, and this one doesn't fit on

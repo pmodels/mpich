@@ -930,8 +930,6 @@ int ADIOI_MPE_iwrite_b;
    (no loss of (meaningful) high order bytes in 8 byte MPI_Aint
       to (possible) 4 byte ptr cast)                              */
 /* Should work even on 64bit or old 32bit configs                 */
-  /* Use MPIR_Ensure_Aint_fits_in_pointer and
-   * MPIR_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
 #include "mpir_ext.h"
 
 #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(intptr_t)
@@ -939,15 +937,12 @@ int ADIOI_MPE_iwrite_b;
    * when casting a (possible 4 byte) aint to a (8 byte) long long or offset */
 #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
 #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
-
-#define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) MPIR_Ext_ensure_Aint_fits_in_pointer(aint_value)
 #define ADIOI_Assert MPIR_Ext_assert
 #else
 #include <assert.h>
 #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)
 #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
 #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
-#define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value)
 #define ADIOI_Assert assert
 #endif
 

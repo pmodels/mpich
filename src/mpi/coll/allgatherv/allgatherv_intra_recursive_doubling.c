@@ -69,8 +69,6 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
-    MPIR_Ensure_Aint_fits_in_pointer(total_count *
-                                     (MPL_MAX(recvtype_true_extent, recvtype_extent)));
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
                         total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent)),
                         mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
