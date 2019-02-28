@@ -64,7 +64,7 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-    size_t data_sz, dt_sz;
+    size_t data_sz ATTRIBUTE((unused)), dt_sz, nbytes;
     MPIR_Segment *segment_ptr;
     void *buf;
     MPI_Aint count;
@@ -82,16 +82,16 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 
     message_sz = MPIDIG_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
-    MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
     if (message_sz > count * dt_sz) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        nbytes = dt_sz * count;
     } else {
         rreq->status.MPI_ERROR = MPI_SUCCESS;
-        count = message_sz / dt_sz;
+        nbytes = message_sz;
     }
 
-    MPIR_STATUS_SET_COUNT(rreq->status, count * dt_sz);
+    MPIR_STATUS_SET_COUNT(rreq->status, nbytes);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (!dt_contig) {
@@ -99,17 +99,17 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
 
-        last = count * dt_sz;
+        last = nbytes;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
         MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) (count * dt_sz)) {
+        if (last != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
             rreq->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), data_sz);
+        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
     MPL_free(MPIDIG_REQUEST(rreq, buffer));
