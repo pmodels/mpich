@@ -216,6 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state,
 
     vci = MPIDI_hash_comm_to_vci(req->comm);
 
+#if  (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL)
     if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_DIRECT) {
         ret = MPID_Progress_test_req(req);
         if (unlikely(ret))
@@ -223,7 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state,
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         goto fn_exit;
     }
-
+#else
     state->progress_count = OPA_load_int(&MPIDI_CH4_Global.progress_count);
     vci_progress_count = OPA_load_int(&MPIDI_CH4_Global.vci_progress_count[vci]);
     global_progress_patience = MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE;
@@ -247,6 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state,
 
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     } while (1);
+#endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
