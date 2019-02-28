@@ -56,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
 #if defined HAVE_LIBHCOLL
-    hcoll_comm_create(comm, NULL);
+    MPIDI_HCOLL_comm_create(comm, NULL);
 #endif
 
   fn_exit:
@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
 
     mpi_errno = MPIDIG_destroy_comm(comm);
 #ifdef HAVE_LIBHCOLL
-    hcoll_comm_destroy(comm, NULL);
+    MPIDI_HCOLL_comm_destroy(comm, NULL);
 #endif
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);

@@ -175,7 +175,7 @@ struct MPIR_Comm {
     MPIR_Info *info;            /* Hints to the communicator */
 
 #if defined HAVE_LIBHCOLL
-    hcoll_comm_priv_t hcoll_priv;
+    MPIDI_HCOLL_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_LIBHCOLL */
 
     /* the mapper is temporarily filled out in order to allow the

@@ -10,6 +10,6 @@
 typedef struct {
     int is_hcoll_init;
     void *hcoll_context;
-} hcoll_comm_priv_t;
+} MPIDI_HCOLL_comm_priv_t;
 
 #endif /* HCOLLPRE_H_INCLUDED */
