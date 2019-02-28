@@ -1,0 +1,77 @@
+# (C) 2018 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+# Processed by maint/gen_dtp_tests.pl to generate testlist.dtp
+# --------------------------------------------------------
+# For basic data type tests very line must have the format:
+#
+#   <test pathname>:<ssv macros>:<ssv counts>:timeLimit=<seconds>:<procs#>
+#
+# The script generates a single test for every line and every basic datatype.
+#
+# --------------------------------------------------------
+# Every line must have the format:
+#
+#   <test pathname>:<ssv macros>:PAIR|STRUCT:timeLimit=<seconds>:<np>
+#
+# The script generates a single test for every `pair` types and every `struct` types that are passed in from commandlines. 
+#     default pair type: MPI_INT:MPI_INT
+#     defualt struct type: MPI_CHAR:64,MPI_INT:32,MPI_INT:16,MPI_FLOAT:8 -pair MPI_INT:MPI_INT
+#     corresponds to:
+#         struct { int  i1; int  i2; };
+#     and
+#         struct { char  c[64]; int   i1[32]; int   i2[16]; float f[8]; };
+#
+# example (which happen to be the default): 
+#
+#     perl maint/gen_dtp_tests.pl -type MPI_INT -type MPI_DOUBLE -struct MPI_CHAR:64,MPI_INT:32,MPI_INT:16,MPI_FLOAT:8 -pair MPI_INT:MPI_INT
+#
+
+attr/fkeyvaltype::1::1
+coll/bcast::1 8 64 512 32768 262144:timeLimit=1200:4
+coll/bcast_world::1 8 64 512 32768 262144:timeLimit=1200:10
+cxx/attr/fkeyvaltypex::1::1
+cxx/datatype/packsizex::1::1
+pt2pt/pingping::1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144:timeLimit=1200:2
+pt2pt/sendrecv1::1 8 64 512 32768 262144::4
+pt2pt/sendself::1 8 64 512 32768 262144::1
+rma/accfence1::1 8 64 512 32768 262144:timeLimit=900:4
+rma/accpscw1::1 8 64 512 32768 262144:timeLimit=900:4
+rma/epochtest::1 8 64 512 32768 262144:timeLimit=900:4
+rma/getfence1::1 8 64 512 32768 262144::2
+rma/getfence1::16000000:timeLimit=1800:2
+rma/lock_contention_dt::1 8 64 512 32768 262144:timeLimit=600:4
+rma/lock_dt::1 8 64 512 32768 262144::2
+rma/lock_dt_flush::1 8 64 512 32768 262144::2
+rma/lock_dt_flushlocal::1 8 64 512 32768 262144::2
+rma/lockall_dt::1 8 64 512 32768 262144:timeLimit=1800:4
+rma/lockall_dt_flush::1 8 64 512 32768 262144:timeLimit=1800:4
+rma/lockall_dt_flushall::1 8 64 512 32768 262144:timeLimit=1800:4
+rma/lockall_dt_flushlocal::1 8 64 512 32768 262144:timeLimit=1800:4
+rma/lockall_dt_flushlocalall::1 8 64 512 32768 262144:timeLimit=1800:4
+rma/putfence1::1 8 64 512 32768 262144::2
+rma/putfence1::16000000:timeLimit=1800:2
+rma/putpscw1::1 8 64 512 32768 262144:timeLimit=900:4
+
+attr/fkeyvaltype::STRUCT::1
+coll/bcast::STRUCT::4
+#cxx/attr/fkeyvaltypex::STRUCT::1
+#cxx/datatype/packsizex::STRUCT::1
+pt2pt/sendrecv1::STRUCT::4
+pt2pt/sendself::STRUCT::1
+pt2pt/pingping::STRUCT::2
+rma/accfence1::PAIR::4
+rma/accpscw1::PAIR::4
+rma/epochtest::STRUCT::4
+rma/getfence1::STRUCT::2
+rma/lock_contention_dt::PAIR::4
+rma/lock_dt::PAIR::2
+rma/lock_dt_flush::PAIR::2
+rma/lock_dt_flushlocal::PAIR::2
+rma/lockall_dt::PAIR::4
+rma/lockall_dt_flush::PAIR::4
+rma/lockall_dt_flushall::PAIR::4
+rma/lockall_dt_flushlocal::PAIR::4
+rma/lockall_dt_flushlocalall::PAIR::4
+rma/putfence1::STRUCT::2
+rma/putpscw1::STRUCT::4
