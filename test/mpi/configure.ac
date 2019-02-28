@@ -722,10 +722,74 @@ AC_SUBST(largetest)
 if test "$enable_collalgo_tests" = "yes" ; then
     source $srcdir/coll/test_coll_algos.sh
 else
-    coll_algo_tests=""
+    coll_algo_bcast=""
+    coll_algo_reduce=""
+    coll_algo_reduce=""
+    coll_algo_allreduce=""
+    coll_algo_allgather=""
+    coll_algo_allgatherv=""
+    coll_algo_reduce_scatter_block=""
+    coll_algo_reduce_scatter""
+    coll_algo_scatter=""
+    coll_algo_gather=""
+    coll_algo_alltoall=""
+    coll_algo_alltoallv=""
+    coll_algo_alltoallw=""
+    coll_algo_gatherv=""
+    coll_algo_scatterv=""
+    coll_algo_scan=""
+    coll_algo_neighbor_alltoallw=""
+    coll_algo_neighbor_allgather=""
+    coll_algo_neighbor_allgatherv=""
+    coll_algo_neighbor_alltoall=""
+    coll_algo_neighbor_alltoallv=""
+    coll_algo_intra_bcast=""
+    coll_algo_intra_reduce=""
 fi
-AC_SUBST(coll_algo_tests)
-AM_SUBST_NOTMAKE(coll_algo_tests)
+AC_SUBST(coll_algo_bcast)
+AC_SUBST(coll_algo_reduce)
+AC_SUBST(coll_algo_allreduce)
+AC_SUBST(coll_algo_allgather)
+AC_SUBST(coll_algo_allgatherv)
+AC_SUBST(coll_algo_reduce_scatter_block)
+AC_SUBST(coll_algo_reduce_scatter)
+AC_SUBST(coll_algo_scatter)
+AC_SUBST(coll_algo_gather)
+AC_SUBST(coll_algo_alltoall)
+AC_SUBST(coll_algo_alltoallv)
+AC_SUBST(coll_algo_alltoallw)
+AC_SUBST(coll_algo_gatherv)
+AC_SUBST(coll_algo_scatterv)
+AC_SUBST(coll_algo_scan)
+AC_SUBST(coll_algo_neighbor_alltoallw)
+AC_SUBST(coll_algo_neighbor_allgather)
+AC_SUBST(coll_algo_neighbor_allgatherv)
+AC_SUBST(coll_algo_neighbor_alltoall)
+AC_SUBST(coll_algo_neighbor_alltoallv)
+AC_SUBST(coll_algo_intra_bcast)
+AC_SUBST(coll_algo_intra_reduce)
+AM_SUBST_NOTMAKE(coll_algo_bcast)
+AM_SUBST_NOTMAKE(coll_algo_reduce)
+AM_SUBST_NOTMAKE(coll_algo_allreduce)
+AM_SUBST_NOTMAKE(coll_algo_allgather)
+AM_SUBST_NOTMAKE(coll_algo_allgatherv)
+AM_SUBST_NOTMAKE(coll_algo_reduce_scatter_block)
+AM_SUBST_NOTMAKE(coll_algo_reduce_scatter)
+AM_SUBST_NOTMAKE(coll_algo_scatter)
+AM_SUBST_NOTMAKE(coll_algo_gather)
+AM_SUBST_NOTMAKE(coll_algo_alltoall)
+AM_SUBST_NOTMAKE(coll_algo_alltoallv)
+AM_SUBST_NOTMAKE(coll_algo_alltoallw)
+AM_SUBST_NOTMAKE(coll_algo_gatherv)
+AM_SUBST_NOTMAKE(coll_algo_scatterv)
+AM_SUBST_NOTMAKE(coll_algo_scan)
+AM_SUBST_NOTMAKE(coll_algo_neighbor_alltoallw)
+AM_SUBST_NOTMAKE(coll_algo_neighbor_allgather)
+AM_SUBST_NOTMAKE(coll_algo_neighbor_allgatherv)
+AM_SUBST_NOTMAKE(coll_algo_neighbor_alltoall)
+AM_SUBST_NOTMAKE(coll_algo_neighbor_alltoallv)
+AM_SUBST_NOTMAKE(coll_algo_intra_bcast)
+AM_SUBST_NOTMAKE(coll_algo_intra_reduce)
 
 
 # Only run the long double complex tests if that type is available

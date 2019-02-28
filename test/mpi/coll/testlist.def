@@ -169,4 +169,24 @@ neighb_alltoall 4 mpiversion=3.0
 neighb_alltoallv 4 mpiversion=3.0
 neighb_alltoallw 4 mpiversion=3.0
 
-@coll_algo_tests@
+@coll_algo_bcast@
+@coll_algo_reduce@
+@coll_algo_allreduce@
+@coll_algo_allgather@
+@coll_algo_reduce_scatter_block@
+@coll_algo_reduce_scatter@
+@coll_algo_gather@
+@coll_algo_gatherv@
+@coll_algo_scatter@
+@coll_algo_scatterv@
+@coll_algo_alltoall@
+@coll_algo_alltoallv@
+@coll_algo_alltoallw@
+@coll_algo_scan@
+@coll_algo_neighbor_alltoallw@
+@coll_algo_neighbor_allgather@
+@coll_algo_neighbor_allgatherv@
+@coll_algo_neighbor_alltoall@
+@coll_algo_neighbor_alltoallv@
+@coll_algo_intra_bcast@
+@coll_algo_intra_reduce@
