@@ -31,7 +31,7 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int i, k, l;
+    int k, l;
     int *srcs, *dsts;
     int comm_size;
     int tag;
@@ -46,13 +46,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-
-    for (i = 0; i < comm_size; ++i) {
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                         (sdispls[i] * sendtype_extent));
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         (rdispls[i] * recvtype_extent));
-    }
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     if (mpi_errno)

@@ -65,13 +65,9 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
          * in the event of recvbuf=MPI_IN_PLACE on the root,
          * recvcount and recvtype are not valid */
         MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                         extent * sendcount * comm_size);
-
         nbytes = sendtype_size * sendcount;
     } else {
         MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
-        MPIR_Ensure_Aint_fits_in_pointer(extent * recvcount * comm_size);
         nbytes = recvtype_size * recvcount;
     }
 

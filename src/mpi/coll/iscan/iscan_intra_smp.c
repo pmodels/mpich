@@ -42,8 +42,6 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-
     MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count * (MPL_MAX(extent, true_extent)),
                               mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     tempbuf = (void *) ((char *) tempbuf - true_lb);

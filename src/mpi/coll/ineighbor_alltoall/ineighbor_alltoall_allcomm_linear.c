@@ -32,13 +32,6 @@ int MPIR_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int sendco
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
-    /* This is the largest offset we add to sendbuf */
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                     (comm_ptr->local_size * sendcount * sendtype_extent));
-    /* This is the largest offset we add to recvbuf */
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     (comm_ptr->local_size * recvcount * recvtype_extent));
-
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

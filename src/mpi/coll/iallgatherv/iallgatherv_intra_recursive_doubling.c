@@ -45,8 +45,6 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
     if (total_count == 0)
         goto fn_exit;
 
-    MPIR_Ensure_Aint_fits_in_pointer(total_count *
-                                     (MPL_MAX(recvtype_true_extent, recvtype_extent)));
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *,
                               total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent)),
                               mpi_errno, "tmp_buf", MPL_MEM_BUFFER);

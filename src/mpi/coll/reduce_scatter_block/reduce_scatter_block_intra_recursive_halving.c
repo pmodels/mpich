@@ -97,10 +97,6 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
         disps[i] = i * recvcount;
     }
 
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
-
     /* commutative and short. use recursive halving algorithm */
 
     /* allocate temp. buffer to receive incoming data */

@@ -36,10 +36,6 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
-    /* This is the largest offset we add to recvbuf */
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     (comm_size * recvcount * recvtype_extent));
-
     /* allocate a temporary buffer of the same size as recvbuf. */
     /* get true extent of recvtype */
 

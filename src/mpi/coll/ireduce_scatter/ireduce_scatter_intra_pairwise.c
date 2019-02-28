@@ -54,9 +54,6 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     if (total_count == 0) {
         goto fn_exit;
     }
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
 
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */

@@ -369,8 +369,7 @@ static int create_flattened_struct(MPI_Aint count,
          */
         if (oldtypes[i] != MPI_UB &&
             oldtypes[i] != MPI_LB && blklens[i] != 0 && (is_basic || sz > 0)) {
-            segp = MPIR_Segment_alloc((char *) MPIR_AINT_CAST_TO_VOID_PTR disps[i],
-                                      (MPI_Aint) blklens[i], oldtypes[i]);
+            segp = MPIR_Segment_alloc((char *) disps[i], (MPI_Aint) blklens[i], oldtypes[i]);
 
             last_ind = nr_blks - first_ind;
             bytes = MPIR_SEGMENT_IGNORE_LAST;

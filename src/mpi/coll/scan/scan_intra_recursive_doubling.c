@@ -87,10 +87,6 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
     MPIR_CHKLMEM_MALLOC(partial_scan, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
                         "partial_scan", MPL_MEM_BUFFER);
 
-    /* This eventually gets malloc()ed as a temp buffer, not added to
-     * any user buffers */
-    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *) ((char *) partial_scan - true_lb);
 
