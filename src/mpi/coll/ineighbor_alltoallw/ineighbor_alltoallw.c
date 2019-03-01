@@ -12,7 +12,7 @@
 cvars:
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -142,14 +142,14 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Ineighbor_alltoallw_intra_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Ineighbor_alltoallw_sched_allcomm_linear(sendbuf, sendcounts, sdispls,
                                                                   sendtypes, recvbuf, recvcounts,
                                                                   rdispls, recvtypes, comm_ptr, s);
                 break;
-            case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno =
@@ -159,14 +159,14 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
                 break;
         }
     } else {
-        switch (MPIR_Ineighbor_alltoallw_inter_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Ineighbor_alltoallw_sched_allcomm_linear(sendbuf, sendcounts, sdispls,
                                                                   sendtypes, recvbuf, recvcounts,
                                                                   rdispls, recvtypes, comm_ptr, s);
                 break;
-            case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno =
@@ -228,8 +228,8 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ineighbor_alltoallw_intra_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_GENTRAN_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM_gentran_linear:
                 mpi_errno =
                     MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(sendbuf, sendcounts, sdispls,
                                                                     sendtypes, recvbuf, recvcounts,
@@ -245,8 +245,8 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ineighbor_alltoallw_inter_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_GENTRAN_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM_gentran_linear:
                 mpi_errno =
                     MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(sendbuf, sendcounts, sdispls,
                                                                     sendtypes, recvbuf, recvcounts,

@@ -12,7 +12,7 @@
 cvars:
     - name        : MPIR_CVAR_ISCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -90,13 +90,13 @@ int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 {
     int mpi_errno = MPI_SUCCESS;
 
-    switch (MPIR_Iscan_intra_algo_choice) {
-        case MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+    switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_recursive_doubling:
             mpi_errno =
                 MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                           comm_ptr, s);
             break;
-        case MPIR_ISCAN_INTRA_ALGO_AUTO:
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_auto:
             MPL_FALLTHROUGH;
         default:
             mpi_errno =
@@ -151,8 +151,8 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iscan_intra_algo_choice) {
-            case MPIR_ISCAN_INTRA_ALGO_GENTRAN_RECURSIVE_DOUBLING:
+        switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_gentran_recursive_doubling:
                 mpi_errno =
                     MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
                                                                 datatype, op, comm_ptr, request);

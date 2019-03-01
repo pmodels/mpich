@@ -22,20 +22,20 @@ cvars:
 
     - name        : MPIR_CVAR_BARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto               - Internal algorithm selection
-        nb                 - Force nonblocking algorithm
-        recursive_doubling - Force recursive doubling algorithm
+        auto          - Internal algorithm selection
+        nb            - Force nonblocking algorithm
+        dissemination - Force dissemination algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -142,14 +142,14 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Barrier_intra_algo_choice) {
-            case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+        switch (MPIR_CVAR_BARRIER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_BARRIER_INTRA_ALGORITHM_dissemination:
                 mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_INTRA_ALGO_NB:
+            case MPIR_CVAR_BARRIER_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Barrier_allcomm_nb(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_BARRIER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, errflag);
@@ -157,14 +157,14 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Barrier_inter_algo_choice) {
-            case MPIR_BARRIER_INTER_ALGO_BCAST:
+        switch (MPIR_CVAR_BARRIER_INTER_ALGORITHM) {
+            case MPIR_CVAR_BARRIER_INTER_ALGORITHM_bcast:
                 mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_INTER_ALGO_NB:
+            case MPIR_CVAR_BARRIER_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Barrier_allcomm_nb(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_BARRIER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Barrier_inter_auto(comm_ptr, errflag);

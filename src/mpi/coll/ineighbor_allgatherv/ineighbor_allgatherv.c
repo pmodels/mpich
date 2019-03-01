@@ -12,7 +12,7 @@
 cvars:
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -137,14 +137,14 @@ int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Ineighbor_allgatherv_intra_algo_choice) {
-            case MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
                                                                    recvtype, comm_ptr, s);
                 break;
-            case MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_intra_auto(sendbuf, sendcount, sendtype,
@@ -153,14 +153,14 @@ int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
                 break;
         }
     } else {
-        switch (MPIR_Ineighbor_allgatherv_inter_algo_choice) {
-            case MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM_linear:
                 mpi_errno =
                     MPIR_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
                                                                    recvtype, comm_ptr, s);
                 break;
-            case MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO:
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_inter_auto(sendbuf, sendcount, sendtype,
@@ -217,8 +217,8 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ineighbor_allgatherv_intra_algo_choice) {
-            case MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_GENTRAN_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM_gentran_linear:
                 mpi_errno =
                     MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,
@@ -233,8 +233,8 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ineighbor_allgatherv_inter_algo_choice) {
-            case MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_GENTRAN_LINEAR:
+        switch (MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTER_ALGORITHM_gentran_linear:
                 mpi_errno =
                     MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,

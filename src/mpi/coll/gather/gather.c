@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_GATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -38,7 +38,7 @@ cvars:
 
     - name        : MPIR_CVAR_GATHER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -164,18 +164,18 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Gather_intra_algo_choice) {
-            case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
+        switch (MPIR_CVAR_GATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_binomial:
                 mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype, root,
                                                        comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTRA_ALGO_NB:
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Gather_allcomm_nb(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
                                                    errflag);
                 break;
-            case MPIR_GATHER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_intra_auto(sendbuf, sendcount, sendtype,
@@ -185,23 +185,23 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Gather_inter_algo_choice) {
-            case MPIR_GATHER_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_GATHER_INTER_ALGORITHM) {
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_linear:
                 mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
                                                      recvbuf, recvcount, recvtype, root,
                                                      comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_local_gather_remote_send:
                 mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
                                                                        recvbuf, recvcount, recvtype,
                                                                        root, comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_NB:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Gather_allcomm_nb(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
                                                    errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_inter_auto(sendbuf, sendcount, sendtype,

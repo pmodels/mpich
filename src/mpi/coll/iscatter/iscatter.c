@@ -12,16 +12,16 @@
 cvars:
     - name        : MPIR_CVAR_ISCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto     - Internal algorithm selection
-        binomial - Force binomial algorithm
-        tree     - Force genetric transport based tree algorithm
+        auto         - Internal algorithm selection
+        binomial     - Force binomial algorithm
+        gentran_tree - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_ISCATTER_TREE_KVAL
       category    : COLLECTIVE
@@ -35,7 +35,7 @@ cvars:
 
     - name        : MPIR_CVAR_ISCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -171,13 +171,13 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iscatter_intra_algo_choice) {
-            case MPIR_ISCATTER_INTRA_ALGO_BINOMIAL:
+        switch (MPIR_CVAR_ISCATTER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_binomial:
                 mpi_errno = MPIR_Iscatter_sched_intra_binomial(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcount, recvtype, root,
                                                                comm_ptr, s);
                 break;
-            case MPIR_ISCATTER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iscatter_sched_intra_auto(sendbuf, sendcount, sendtype,
@@ -187,20 +187,20 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iscatter_inter_algo_choice) {
-            case MPIR_ISCATTER_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_ISCATTER_INTER_ALGORITHM) {
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_linear:
                 mpi_errno = MPIR_Iscatter_sched_inter_linear(sendbuf, sendcount, sendtype,
                                                              recvbuf, recvcount, recvtype, root,
                                                              comm_ptr, s);
                 break;
-            case MPIR_ISCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER:
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_remote_send_local_scatter:
                 mpi_errno =
                     MPIR_Iscatter_sched_inter_remote_send_local_scatter(sendbuf, sendcount,
                                                                         sendtype, recvbuf,
                                                                         recvcount, recvtype, root,
                                                                         comm_ptr, s);
                 break;
-            case MPIR_ISCATTER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iscatter_sched_inter_auto(sendbuf, sendcount, sendtype,
@@ -255,8 +255,8 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iscatter_intra_algo_choice) {
-            case MPIR_ISCATTER_INTRA_ALGO_TREE:
+        switch (MPIR_CVAR_ISCATTER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iscatter_intra_tree(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcount, recvtype, root, comm_ptr, request);
