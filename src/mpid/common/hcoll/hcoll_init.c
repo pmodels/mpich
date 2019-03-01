@@ -48,6 +48,11 @@ MPL_dbg_class MPIR_DBG_HCOLL;
 
 void MPIDI_HCOLL_rte_fns_setup(void);
 
+/* This will be called directly by code that is outside the MPIDI_HCOLL
+ * class. For now, it is being called only during MPI_Finalize. Hence,
+ * we define only an unsafe version of this function. If a safe version
+ * is needed in the future, it needs to be defined and declared, possibly
+ * with a change in this function's name stating that it is unsafe */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_HCOLL_state_destroy
 #undef FCNAME
@@ -72,6 +77,16 @@ int MPIDI_HCOLL_state_destroy(void *param ATTRIBUTE((unused)))
         } \
     } while (0)
 
+/* Only the MPIDI_HCOLL class calls this function. It will be called only
+ * once because it sets MPIDI_HCOLL_initialized and this function is called
+ * only if MPIDI_HCOLL_initialized is not set. The MPI operations that
+ * calls this function are MPI_Init and MPI_Type_commit. While multiple threads
+ * could call the latter, the program is erroneous if MPI_Type_commit is called
+ * before MPI_Init. Hence, it is guaranteed that this function will be called
+ * by a single thread only (even if MPI_Init internally calls MPI_Type_commit).
+ * So, this an unsafe function. If a thread safe version is needed in the
+ * future, it needs to be defined and declared, possibly with a change in this
+ * function's name stating that it is unsafe.*/
 #undef FUNCNAME
 #define FUNCNAME MPIDI_HCOLL_state_initialize
 #undef FCNAME
@@ -83,8 +98,7 @@ int MPIDI_HCOLL_state_initialize(void)
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    MPIDI_HCOLL_state_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
-        !MPIR_ThreadInfo.isThreaded;
+    MPIDI_HCOLL_state_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL);
     if (0 >= MPIDI_HCOLL_state_enable) {
         goto fn_exit;
     }
@@ -161,6 +175,8 @@ int MPIDI_HCOLL_mpi_comm_create(MPIR_Comm * comm_ptr, void *param)
     }
 
     if (MPIR_Process.comm_world == comm_ptr) {
+        /* This is called only during MPI_Init and hence, no need
+         * to worry about a race to set this value */
         MPIDI_HCOLL_state_comm_world_initialized = 1;
     }
     if (!MPIDI_HCOLL_state_comm_world_initialized) {
@@ -174,7 +190,15 @@ int MPIDI_HCOLL_mpi_comm_create(MPIR_Comm * comm_ptr, void *param)
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
-    comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
+
+    if (comm_ptr == MPIR_Process.comm_world) {
+        /* This is during MPI_Init and hence, no need to protect this call */
+        comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
+    } else {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+        comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+    }
     if (NULL == comm_ptr->hcoll_priv.hcoll_context) {
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
         goto fn_fail;
@@ -200,15 +224,23 @@ int MPIDI_HCOLL_mpi_comm_destroy(MPIR_Comm * comm_ptr, void *param)
     }
     mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->handle == MPI_COMM_WORLD)
-        MPIDI_HCOLL_state_world_comm_destroying = 1;
-
     context_destroyed = 0;
-    if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
-        hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
-                              (rte_grp_handle_t) comm_ptr, &context_destroyed);
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
+    if (comm_ptr->handle == MPI_COMM_WORLD) {
+        /* This is during MPI_Finalize and hence, no need to worry about mutex */
+        MPIDI_HCOLL_state_world_comm_destroying = 1;
+        if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
+            hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
+                                  (rte_grp_handle_t) comm_ptr, &context_destroyed);
+        }
+    } else {
+        if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+            hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
+                                  (rte_grp_handle_t) comm_ptr, &context_destroyed);
+            MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+        }
     }
+    comm_ptr->hcoll_priv.is_hcoll_init = 0;
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -218,7 +250,14 @@ int MPIDI_HCOLL_mpi_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 int MPIDI_HCOLL_state_progress(int *made_progress)
 {
     *made_progress = 1;
+#if HCOLL_API < HCOLL_VERSION(4,0)
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     hcoll_progress_fn();
-
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+#else
+    /* hcoll_progress_fn() has been deprecated since v4.0 and does nothing.
+     * Hence, we don't need any thread safety here */
+    hcoll_progress_fn();
+#endif
     return MPI_SUCCESS;
 }
