@@ -22,7 +22,7 @@ cvars:
 
     - name        : MPIR_CVAR_IBARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -31,11 +31,11 @@ cvars:
         Variable to select ibarrier algorithm
         auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
-        recexch            - Force generic transport based recursive exchange algorithm
+        gentran_recexch    - Force generic transport based recursive exchange algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -121,11 +121,11 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ibarrier_intra_algo_choice) {
-            case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+        switch (MPIR_CVAR_IBARRIER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
                 break;
-            case MPIR_IBARRIER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);
@@ -133,11 +133,11 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ibarrier_inter_algo_choice) {
-            case MPIR_IBARRIER_INTER_ALGO_BCAST:
+        switch (MPIR_CVAR_IBARRIER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_bcast:
                 mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
                 break;
-            case MPIR_IBARRIER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibarrier_sched_inter_auto(comm_ptr, s);
@@ -184,8 +184,8 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ibarrier_intra_algo_choice) {
-            case MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH:
+        switch (MPIR_CVAR_IBARRIER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_gentran_recexch:
                 mpi_errno = MPIR_Ibarrier_intra_recexch(comm_ptr, request);
 
                 if (mpi_errno)
