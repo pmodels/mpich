@@ -103,7 +103,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
         }
     }
 
-    mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
     if (!MPIR_Request_is_persistent(request_ptr)) {
         MPIR_Request_free(request_ptr);
         *request = MPI_REQUEST_NULL;
@@ -154,7 +154,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAIT);
 
     /* Check the arguments */
@@ -206,7 +206,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
 
   fn_exit:
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAIT);
-    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

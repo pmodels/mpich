@@ -256,7 +256,6 @@ int MPIR_Datatype_builtin_fillin(void)
 
             /* dptr will point into MPIR_Datatype_builtin */
             dptr->handle = d;
-            dptr->is_permanent = 1;
             dptr->is_contig = 1;
             MPIR_Object_set_ref(dptr, 1);
             MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
@@ -349,16 +348,13 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     new_dtp->size = 0;
     new_dtp->has_sticky_ub = 0;
@@ -476,4 +472,104 @@ void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype 
     MPIR_Memcpy(user_types, ptr, cp->nr_types * sizeof(MPI_Datatype));
 
     return;
+}
+
+/* MPII_Datatype_indexed_count_contig()
+ *
+ * Determines the actual number of contiguous blocks represented by the
+ * blocklength/displacement arrays.  This might be less than count (as
+ * few as 1).
+ *
+ * Extent passed in is for the original type.
+ */
+MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
+                                            const MPI_Aint * blocklength_array,
+                                            const void *displacement_array,
+                                            int dispinbytes, MPI_Aint old_extent)
+{
+    MPI_Aint i, contig_count = 1;
+    MPI_Aint cur_blklen, first;
+
+    if (count) {
+        /* Skip any initial zero-length blocks */
+        for (first = 0; first < count; ++first)
+            if ((MPI_Aint) blocklength_array[first])
+                break;
+
+        if (first == count) {   /* avoid invalid reads later on */
+            contig_count = 0;
+            return contig_count;
+        }
+
+        cur_blklen = (MPI_Aint) blocklength_array[first];
+        if (!dispinbytes) {
+            MPI_Aint cur_tdisp = (MPI_Aint) ((int *) displacement_array)[first];
+
+            for (i = first + 1; i < count; ++i) {
+                if (blocklength_array[i] == 0) {
+                    continue;
+                } else if (cur_tdisp + (MPI_Aint) cur_blklen ==
+                           (MPI_Aint) ((int *) displacement_array)[i]) {
+                    /* adjacent to current block; add to block */
+                    cur_blklen += (MPI_Aint) blocklength_array[i];
+                } else {
+                    cur_tdisp = (MPI_Aint) ((int *) displacement_array)[i];
+                    cur_blklen = (MPI_Aint) blocklength_array[i];
+                    contig_count++;
+                }
+            }
+        } else {
+            MPI_Aint cur_bdisp = (MPI_Aint) ((MPI_Aint *) displacement_array)[first];
+
+            for (i = first + 1; i < count; ++i) {
+                if (blocklength_array[i] == 0) {
+                    continue;
+                } else if (cur_bdisp + (MPI_Aint) cur_blklen * old_extent ==
+                           (MPI_Aint) ((MPI_Aint *) displacement_array)[i]) {
+                    /* adjacent to current block; add to block */
+                    cur_blklen += (MPI_Aint) blocklength_array[i];
+                } else {
+                    cur_bdisp = (MPI_Aint) ((MPI_Aint *) displacement_array)[i];
+                    cur_blklen = (MPI_Aint) blocklength_array[i];
+                    contig_count++;
+                }
+            }
+        }
+    }
+    return contig_count;
+}
+
+MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
+                                                 MPI_Aint blklen,
+                                                 const void *disp_array,
+                                                 int dispinbytes, MPI_Aint old_extent)
+{
+    int i, contig_count = 1;
+
+    if (!dispinbytes) {
+        /* this is from the MPI type, is of type int */
+        MPI_Aint cur_tdisp = (MPI_Aint) ((int *) disp_array)[0];
+
+        for (i = 1; i < count; i++) {
+            MPI_Aint next_tdisp = (MPI_Aint) ((int *) disp_array)[i];
+
+            if (cur_tdisp + (MPI_Aint) blklen != next_tdisp) {
+                contig_count++;
+            }
+            cur_tdisp = next_tdisp;
+        }
+    } else {
+        /* this is from the MPI type, is of type MPI_Aint */
+        MPI_Aint cur_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[0];
+
+        for (i = 1; i < count; i++) {
+            MPI_Aint next_bdisp = (MPI_Aint) ((MPI_Aint *) disp_array)[i];
+
+            if (cur_bdisp + (MPI_Aint) blklen * old_extent != next_bdisp) {
+                contig_count++;
+            }
+            cur_bdisp = next_bdisp;
+        }
+    }
+    return contig_count;
 }

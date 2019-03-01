@@ -55,38 +55,17 @@ void HYD_uiu_free_params(void)
 
     HYDU_finalize_user_global(&HYD_server_info.user_global);
 
-    if (HYD_server_info.base_path)
-        MPL_free(HYD_server_info.base_path);
-
-    if (HYD_server_info.port_range)
-        MPL_free(HYD_server_info.port_range);
-
-    if (HYD_server_info.iface_ip_env_name)
-        MPL_free(HYD_server_info.iface_ip_env_name);
-
-    if (HYD_server_info.nameserver)
-        MPL_free(HYD_server_info.nameserver);
-
-    if (HYD_server_info.localhost)
-        MPL_free(HYD_server_info.localhost);
-
-    if (HYD_server_info.node_list)
-        HYDU_free_node_list(HYD_server_info.node_list);
-
-    if (HYD_server_info.pg_list.proxy_list)
-        HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
-
-    if (HYD_server_info.pg_list.next)
-        HYDU_free_pg_list(HYD_server_info.pg_list.next);
-
-    if (HYD_ui_info.prepend_pattern)
-        MPL_free(HYD_ui_info.prepend_pattern);
-
-    if (HYD_ui_info.outfile_pattern)
-        MPL_free(HYD_ui_info.outfile_pattern);
-
-    if (HYD_ui_info.errfile_pattern)
-        MPL_free(HYD_ui_info.errfile_pattern);
+    MPL_free(HYD_server_info.base_path);
+    MPL_free(HYD_server_info.port_range);
+    MPL_free(HYD_server_info.iface_ip_env_name);
+    MPL_free(HYD_server_info.nameserver);
+    MPL_free(HYD_server_info.localhost);
+    HYDU_free_node_list(HYD_server_info.node_list);
+    HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
+    HYDU_free_pg_list(HYD_server_info.pg_list.next);
+    MPL_free(HYD_ui_info.prepend_pattern);
+    MPL_free(HYD_ui_info.outfile_pattern);
+    MPL_free(HYD_ui_info.errfile_pattern);
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);

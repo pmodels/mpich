@@ -90,10 +90,8 @@ HYD_status HYD_env_free(struct HYD_env *env)
 
     HYD_FUNC_ENTER();
 
-    if (env->env_name)
-        MPL_free(env->env_name);
-    if (env->env_value)
-        MPL_free(env->env_value);
+    MPL_free(env->env_name);
+    MPL_free(env->env_value);
     MPL_free(env);
 
     HYD_FUNC_EXIT();
@@ -123,19 +121,15 @@ HYD_status HYD_env_append_to_list(const char *env_name, const char *env_value,
         while (1) {
             if (!strcmp(run->env_name, env_name)) {
                 /* If we found an entry for this environment variable, just update it */
-                if (run->env_value != NULL && tenv->env_value != NULL) {
-                    MPL_free(run->env_value);
+                MPL_free(run->env_value);
+                if (tenv->env_value != NULL) {
                     run->env_value = MPL_strdup(tenv->env_value);
-                } else if (run->env_value != NULL) {
-                    MPL_free(run->env_value);
+                } else {
                     run->env_value = NULL;
-                } else if (env_value != NULL) {
-                    run->env_value = MPL_strdup(tenv->env_value);
                 }
 
                 MPL_free(tenv->env_name);
-                if (tenv->env_value)
-                    MPL_free(tenv->env_value);
+                MPL_free(tenv->env_value);
                 MPL_free(tenv);
 
                 break;

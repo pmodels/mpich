@@ -455,7 +455,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
             local_upid_sendsize += local_upid_size[i];
         local_node_ids = (int *) MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
         for (i = 0; i < comm_ptr->local_size; i++)
-            MPIDI_CH4U_get_node_id(comm_ptr, i, &local_node_ids[i]);
+            MPIDIU_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
 
         match_bits = MPIDI_OFI_init_sendtag(port_id, comm_ptr->rank, tag, MPIDI_OFI_DYNPROC_SEND);
@@ -547,7 +547,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
         goto fn_exit;
     }
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_get_tag_from_port(port_name, &port_id));
 
     if (rank == root) {
@@ -626,7 +625,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     } else {
         MPL_free(remote_lupids);
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     return mpi_errno;
   fn_fail:
@@ -727,7 +725,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;
-    fi_addr_t conn;
+    fi_addr_t conn = -1;
     int rank = comm_ptr->rank;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
@@ -739,8 +737,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
         MPIR_Assert(0);
         goto fn_exit;
     }
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
 
     if (rank == root) {
         char conname[FI_NAME_MAX];
@@ -797,7 +793,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     } else {
         MPL_free(remote_lupids);
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
     return mpi_errno;
 

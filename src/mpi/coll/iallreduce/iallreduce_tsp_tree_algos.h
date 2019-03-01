@@ -36,7 +36,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int is_commutative;
     int size;
     int rank;
-    int num_children;
+    int num_children = 0;
     int is_tree_leaf;           /* Variables to store location of this rank in the tree */
     MPII_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
@@ -75,8 +75,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
                                              chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
-        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;   /* Force tree_type to be knomial because kary trees cannot
-                                                 * handle non-commutative operations correctly */
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;   /* Force tree_type to be knomial_1 because kary and knomial_2 trees
+                                                 * cannot handle non-commutative operations correctly */
     }
 
     /* initialize the tree */

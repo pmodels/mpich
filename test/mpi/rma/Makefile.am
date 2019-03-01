@@ -81,6 +81,8 @@ noinst_PROGRAMS =          \
     strided_getacc_indexed \
     strided_getacc_indexed_shared \
     window_creation        \
+    window_allocation      \
+    window_noncontig_allocation  \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
@@ -158,6 +160,7 @@ noinst_PROGRAMS =          \
     atomic_get_double_int          \
     atomic_get_long_double_int     \
     acc_pairtype           \
+    acc_pairtype_shm       \
     manyget                \
     derived_acc_flush_local\
     large_acc_flush_local  \
@@ -202,6 +205,9 @@ atomic_get_float_int_CPPFLAGS       = -DTEST_FLOAT_INT $(AM_CPPFLAGS)
 atomic_get_double_int_CPPFLAGS      = -DTEST_DOUBLE_INT $(AM_CPPFLAGS)
 atomic_get_long_double_int_CPPFLAGS = -DTEST_LONG_DOUBLE_INT $(AM_CPPFLAGS)
 
+acc_pairtype_shm_SOURCES            = acc_pairtype.c
+acc_pairtype_shm_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
 strided_acc_subarray_LDADD      = $(LDADD) -lm
@@ -210,6 +216,12 @@ strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
 strided_putget_indexed_shared_LDADD = $(LDADD) -lm
+
+window_allocation_SOURCES            = window_creation.c
+window_allocation_CPPFLAGS           = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+
+window_noncontig_allocation_SOURCES  = window_creation.c
+window_noncontig_allocation_CPPFLAGS = -DUSE_WIN_ALLOCATE_NONCONTIG $(AM_CPPFLAGS)
 
 fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
 fetch_and_op_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)

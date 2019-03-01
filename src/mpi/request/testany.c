@@ -121,7 +121,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;
     int n_inactive;
-    int active_flag;
     int last_disabled_anysource = -1;
     int first_nonnull = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -130,7 +129,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
@@ -228,7 +227,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     if (*indx != MPI_UNDEFINED) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
+        mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status);
         if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
             MPIR_Request_free(request_ptrs[*indx]);
             array_of_requests[*indx] = MPI_REQUEST_NULL;
@@ -256,7 +255,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTANY);
-    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -44,7 +44,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.target_win_handle = MPI_WIN_NULL;
     req->dev.source_win_handle = MPI_WIN_NULL;
     req->dev.target_lock_queue_entry = NULL;
-    req->dev.dataloop	   = NULL;
+    req->dev.flattened_type = NULL;
     req->dev.iov_offset        = 0;
     req->dev.flags             = MPIDI_CH3_PKT_FLAG_NONE;
     req->dev.resp_request_handle = MPI_REQUEST_NULL;
@@ -103,7 +103,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_Assert(sreq->dev.segment_first < last);
     MPIR_Assert(last > 0);
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
-    MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, 
+    MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, 
 			     &last, iov, iov_n);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
     "post-pv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
@@ -269,7 +269,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 			  rreq->dev.segment_first, last, rreq->dev.iov_count));
 	MPIR_Assert(rreq->dev.segment_first < last);
 	MPIR_Assert(last > 0);
-	MPIR_Segment_unpack_vector(rreq->dev.segment_ptr, 
+	MPIR_Segment_from_iov(rreq->dev.segment_ptr, 
 				   rreq->dev.segment_first,
 				   &last, &rreq->dev.iov[0], &rreq->dev.iov_count);
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
@@ -534,13 +534,13 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	}
 	else
 	{
-	    MPIR_Segment seg;
+	    MPIR_Segment *seg;
 	    MPI_Aint last;
 
-	    MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
-			      rreq->dev.datatype, &seg);
+	    seg = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
+                                     rreq->dev.datatype);
 	    last = unpack_sz;
-	    MPIR_Segment_unpack(&seg, 0, &last, rreq->dev.tmpbuf);
+	    MPIR_Segment_unpack(seg, 0, &last, rreq->dev.tmpbuf);
 	    if (last != unpack_sz)
 	    {
 		/* --BEGIN ERROR HANDLING-- */
@@ -553,6 +553,8 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 			 "**dtypemismatch", 0);
 		/* --END ERROR HANDLING-- */
 	    }
+
+            MPIR_Segment_free(seg);
 	}
     }
 
@@ -613,7 +615,6 @@ void MPID_Request_destroy_hook(MPIR_Request *req)
         MPIDI_CH3U_SRBuf_free(req);
     }
 
-    if (req->dev.ext_hdr_ptr != NULL) {
-        MPL_free(req->dev.ext_hdr_ptr);
-    }
+    MPL_free(req->dev.ext_hdr_ptr);
+    MPL_free(req->dev.flattened_type);
 }

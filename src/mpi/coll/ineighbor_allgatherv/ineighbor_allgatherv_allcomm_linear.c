@@ -25,7 +25,7 @@ int MPIR_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int send
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int i, k, l;
+    int k, l;
     int *srcs, *dsts;
     int comm_size;
     MPI_Aint recvtype_extent;
@@ -34,11 +34,6 @@ int MPIR_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int send
     comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-
-    for (i = 0; i < comm_size; ++i) {
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         (displs[i] * recvtype_extent));
-    }
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     if (mpi_errno)

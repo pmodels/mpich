@@ -48,10 +48,6 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
-    /* This is the largest offset we add to recvbuf */
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     (comm_size * recvcount * recvtype_extent));
-
     /* First, load the "local" version in the recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,

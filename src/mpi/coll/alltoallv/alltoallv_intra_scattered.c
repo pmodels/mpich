@@ -76,8 +76,6 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
             if (recvcounts[dst]) {
                 MPIR_Datatype_get_size_macro(recvtype, type_size);
                 if (type_size) {
-                    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                     rdispls[dst] * recv_extent);
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
                                            recvcounts[dst], recvtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
@@ -99,8 +97,6 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
             if (sendcounts[dst]) {
                 MPIR_Datatype_get_size_macro(sendtype, type_size);
                 if (type_size) {
-                    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                     sdispls[dst] * send_extent);
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,
                                            sendcounts[dst], sendtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr,

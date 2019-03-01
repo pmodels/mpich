@@ -263,6 +263,8 @@ int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
     MPIR_CHKLMEM_FREEALL();
     return vtx_id;
   fn_fail:
+    /* TODO - Replace this with real error handling */
+    MPIR_Assert(MPI_SUCCESS == mpi_errno);
     goto fn_exit;
 }
 

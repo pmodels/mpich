@@ -53,8 +53,6 @@ int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int
             recvaddr = NULL;
             recvcount = 0;
         } else {
-            MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                             rdispls[src] * recv_extent);
             recvaddr = (char *) recvbuf + rdispls[src] * recv_extent;
             recvcount = recvcounts[src];
         }
@@ -63,8 +61,6 @@ int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int
             sendaddr = NULL;
             sendcount = 0;
         } else {
-            MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                             sdispls[dst] * send_extent);
             sendaddr = (char *) sendbuf + sdispls[dst] * send_extent;
             sendcount = sendcounts[dst];
         }

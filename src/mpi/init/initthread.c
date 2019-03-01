@@ -187,7 +187,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ   || \
-    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #endif
 
@@ -199,7 +199,7 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 #endif
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 #endif
 
@@ -232,7 +232,7 @@ static int thread_cs_init(void)
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
@@ -286,7 +286,7 @@ int MPIR_Thread_CS_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
@@ -560,14 +560,16 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
 
-    mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     /* Create complete request to return in the event of immediately complete
      * operations. Use a SEND request to cover all possible use-cases. */
     MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                        "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
+
+    mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();

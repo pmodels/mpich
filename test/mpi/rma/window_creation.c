@@ -30,11 +30,25 @@ int main(int argc, char **argv)
 
     /* Perform a pile of window creations */
     for (i = 0; i < NUM_WIN; i++) {
+#ifdef USE_WIN_ALLOCATE
+        if (rank == 0)
+            MTestPrintfMsg(1, " + Allocating window %d\n", i);
+        MPI_Win_allocate(DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &base_ptrs[i], &windows[i]);
+#elif defined(USE_WIN_ALLOCATE_NONCONTIG)
+        MPI_Info info = MPI_INFO_NULL;
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "alloc_shared_noncontig", "true");
+        if (rank == 0)
+            MTestPrintfMsg(1, " + Allocating window (alloc_shared_noncontig=true) %d\n", i);
+        MPI_Win_allocate(DATA_SZ, 1, info, MPI_COMM_WORLD, &base_ptrs[i], &windows[i]);
+        MPI_Info_free(&info);
+#else
         if (rank == 0)
             MTestPrintfMsg(1, " + Creating window %d\n", i);
 
         MPI_Alloc_mem(DATA_SZ, MPI_INFO_NULL, &base_ptrs[i]);
         MPI_Win_create(base_ptrs[i], DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &windows[i]);
+#endif
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -45,7 +59,9 @@ int main(int argc, char **argv)
             MTestPrintfMsg(1, " + Freeing window %d\n", i);
 
         MPI_Win_free(&windows[i]);
+#if !defined(USE_WIN_ALLOCATE) && !defined(USE_WIN_ALLOCATE_NONCONTIG)
         MPI_Free_mem(base_ptrs[i]);
+#endif
     }
 
     MTest_Finalize(0);

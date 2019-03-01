@@ -31,8 +31,6 @@ static inline MPIR_Request *context_to_req(void *ofi_context)
 #include "ofi_probe_template.c"
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_poll)
 int MPID_nem_ofi_poll(int in_blocking_poll)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
@@ -42,7 +40,8 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
     MPIDI_VC_t *vc;
     MPIR_Request *req;
     req_fn reqFn;
-    BEGIN_FUNC(FCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_POLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_POLL);
     do {
         /* ----------------------------------------------------- */
         /* Poll the completion queue                             */
@@ -64,25 +63,19 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                 }
                 reqFn = req->dev.OnDataAvail;
                 if (reqFn) {
-                    if (REQ_OFI(req)->pack_buffer) {
-                        MPL_free(REQ_OFI(req)->pack_buffer);
-                    }
+                    MPL_free(REQ_OFI(req)->pack_buffer);
                     vc = REQ_OFI(req)->vc;
 
                     complete = 0;
                     MPIDI_CH3I_NM_OFI_RC(reqFn(vc, req, &complete));
                     continue;
-                }
-                else {
+                } else {
                     MPIR_Assert(0);
                 }
-            }
-            else {
+            } else {
                 MPIR_Assert(0);
             }
-        }
-        else if (ret == -FI_EAGAIN)
-          ;
+        } else if (ret == -FI_EAGAIN);
         else if (ret < 0) {
             if (ret == -FI_EAVAIL) {
                 ret = fi_cq_readerr(gl_data.cq, (void *) &error, 0);
@@ -96,34 +89,32 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                     req = context_to_req(error.op_context);
                     if (req->kind == MPIR_REQUEST_KIND__SEND) {
                         mpi_errno = REQ_OFI(req)->event_callback(NULL, req);
-                    }
-                    else if (req->kind == MPIR_REQUEST_KIND__RECV) {
+                    } else if (req->kind == MPIR_REQUEST_KIND__RECV) {
                         mpi_errno = REQ_OFI(req)->event_callback(&wc, req);
                         req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                         req->status.MPI_TAG = error.tag;
-                    }
-                    else {
+                    } else {
                         mpi_errno = MPI_ERR_OTHER;
                     }
+                } else if (error.err == FI_ECANCELED) {
+                    req = context_to_req(error.op_context);
+                    MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+                } else if (error.err == FI_ENOMSG) {
+                    req = context_to_req(error.op_context);
+                    REQ_OFI(req)->match_state = PEEK_NOT_FOUND;
+                } else {
+                    mpi_errno = MPI_ERR_OTHER;
                 }
-		else if (error.err == FI_ECANCELED) {
-			req = context_to_req(error.op_context);
-			MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
-		}
-                else if (error.err == FI_ENOMSG) {
-                        req = context_to_req(error.op_context);
-                        REQ_OFI(req)->match_state = PEEK_NOT_FOUND;
-                }
-		else {
-                        mpi_errno = MPI_ERR_OTHER;
-		}
-            }
-            else {
+            } else {
                 MPIR_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
                                      "**ofi_poll %s %d %s %s", __SHORT_FILE__,
-                                     __LINE__, FCNAME, fi_strerror(-ret));
+                                     __LINE__, __func__, fi_strerror(-ret));
             }
         }
     } while (in_blocking_poll && (ret > 0));
-    END_FUNC_RC(FCNAME);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_POLL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

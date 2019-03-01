@@ -211,8 +211,7 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
     if (ignoring_status) {
         for (i = 0; i < count; i++) {
             if (request_ptrs[i] != NULL && MPIR_Request_is_complete(request_ptrs[i])) {
-                MPIR_Request_completion_processing(request_ptrs[i],
-                                                   MPI_STATUS_IGNORE, &active_flag);
+                MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
                 if (!MPIR_Request_is_persistent(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
@@ -225,8 +224,8 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
     for (i = 0; i < count; i++) {
         if (request_ptrs[i] != NULL) {
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                rc = MPIR_Request_completion_processing(request_ptrs[i],
-                                                        &array_of_statuses[i], &active_flag);
+                active_flag = MPIR_Request_is_active(request_ptrs[i]);
+                rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
                 if (!MPIR_Request_is_persistent(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
@@ -319,7 +318,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTALL);
 
     /* Check the arguments */
@@ -357,7 +356,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
   fn_exit:
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTALL);
-    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

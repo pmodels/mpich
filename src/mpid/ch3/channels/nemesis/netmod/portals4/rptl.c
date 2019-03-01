@@ -87,7 +87,8 @@ static int find_target(ptl_process_t id, struct rptl_target **target)
 
     /* if the target does not already exist, create one */
     if (t == NULL) {
-        MPIR_CHKPMEM_MALLOC(t, struct rptl_target *, sizeof(struct rptl_target), mpi_errno, "rptl target", MPL_MEM_ADDRESS);
+        MPIR_CHKPMEM_MALLOC(t, struct rptl_target *, sizeof(struct rptl_target), mpi_errno,
+                            "rptl target", MPL_MEM_ADDRESS);
         DL_APPEND(rptl_info.target_list, t);
 
         t->id = id;
@@ -193,7 +194,8 @@ static int poke_progress(void)
                     continue;
                 /* find the target that has this target id and get the
                  * control portal information for it */
-                mpi_errno = rptl_info.get_target_info(i, &id, target->rptl->data.pt, &data_pt, &control_pt);
+                mpi_errno =
+                    rptl_info.get_target_info(i, &id, target->rptl->data.pt, &data_pt, &control_pt);
                 if (mpi_errno) {
                     ret = PTL_FAIL;
                     RPTLU_ERR_POP(ret, "Error getting target info\n");
@@ -239,14 +241,14 @@ static int poke_progress(void)
              * for it.  replace the user pointer with the OP id. */
             ret = PtlPut(op->u.put.md_handle, op->u.put.local_offset, op->u.put.length,
                          PTL_ACK_REQ, op->u.put.target_id, op->u.put.pt_index,
-                         op->u.put.match_bits, op->u.put.remote_offset, op,
-                         op->u.put.hdr_data);
+                         op->u.put.match_bits, op->u.put.remote_offset, op, op->u.put.hdr_data);
             RPTLU_ERR_POP(ret, "Error issuing PUT\n");
 
             op->state = RPTL_OP_STATE_ISSUED;
         }
 
-        if (target->state == RPTL_TARGET_STATE_DISABLED || target->state == RPTL_TARGET_STATE_PAUSE_ACKED)
+        if (target->state == RPTL_TARGET_STATE_DISABLED ||
+            target->state == RPTL_TARGET_STATE_PAUSE_ACKED)
             continue;
 
         /* then issue out all the data messages */
@@ -261,7 +263,8 @@ static int poke_progress(void)
                 if (op->state == RPTL_OP_STATE_NACKED)
                     break;
 
-                if (rptl_info.origin_events_left < 2 || target->issued_data_ops > PER_TARGET_THRESHOLD) {
+                if (rptl_info.origin_events_left < 2 ||
+                    target->issued_data_ops > PER_TARGET_THRESHOLD) {
                     /* too few origin events left.  we can't issue
                      * this op or any following op to this target in
                      * order to maintain ordering */
@@ -276,11 +279,9 @@ static int poke_progress(void)
                  * id. */
                 ret = PtlPut(op->u.put.md_handle, op->u.put.local_offset, op->u.put.length,
                              PTL_ACK_REQ, op->u.put.target_id, op->u.put.pt_index,
-                             op->u.put.match_bits, op->u.put.remote_offset, op,
-                             op->u.put.hdr_data);
+                             op->u.put.match_bits, op->u.put.remote_offset, op, op->u.put.hdr_data);
                 RPTLU_ERR_POP(ret, "Error issuing PUT\n");
-            }
-            else if (op->op_type == RPTL_OP_GET) {
+            } else if (op->op_type == RPTL_OP_GET) {
                 /* skip all the issued ops */
                 if (op->state == RPTL_OP_STATE_ISSUED)
                     continue;
@@ -290,7 +291,8 @@ static int poke_progress(void)
                 if (op->state == RPTL_OP_STATE_NACKED)
                     break;
 
-                if (rptl_info.origin_events_left < 1 || target->issued_data_ops > PER_TARGET_THRESHOLD) {
+                if (rptl_info.origin_events_left < 1 ||
+                    target->issued_data_ops > PER_TARGET_THRESHOLD) {
                     /* too few origin events left.  we can't issue
                      * this op or any following op to this target in
                      * order to maintain ordering */
@@ -479,7 +481,7 @@ static int send_pause_messages(struct rptl *rptl)
         assert(control_pt != PTL_PT_ANY);
 
         ret = rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0, 0,
-                                    NULL, RPTL_CONTROL_MSG_PAUSE, RPTL_PT_CONTROL);
+                       NULL, RPTL_CONTROL_MSG_PAUSE, RPTL_PT_CONTROL);
         RPTLU_ERR_POP(ret, "Error sending pause message\n");
     }
 
@@ -556,8 +558,7 @@ static int get_event_info(ptl_event_t * event, struct rptl **ret_rptl, struct rp
 
         assert(op);
         rptl = NULL;
-    }
-    else {
+    } else {
         /* for all target-side events, we look up the rptl based on
          * the pt_index */
         for (rptl = rptl_info.rptl_list; rptl; rptl = rptl->next)
@@ -610,8 +611,7 @@ static int stash_event(struct rptl_op *op, ptl_event_t event)
         MPIR_CHKPMEM_MALLOC(op->u.put.send, ptl_event_t *, sizeof(ptl_event_t), mpi_errno,
                             "ptl event", MPL_MEM_OTHER);
         memcpy(op->u.put.send, &event, sizeof(ptl_event_t));
-    }
-    else {
+    } else {
         MPIR_CHKPMEM_MALLOC(op->u.put.ack, ptl_event_t *, sizeof(ptl_event_t), mpi_errno,
                             "ptl event", MPL_MEM_OTHER);
         memcpy(op->u.put.ack, &event, sizeof(ptl_event_t));
@@ -726,7 +726,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
         /* the message came in on the control PT, repost it */
         tmp_ret = rptli_post_control_buffer(rptl->ni, rptl->control.pt,
-                                    &rptl->control.me[rptl->control.me_idx]);
+                                            &rptl->control.me[rptl->control.me_idx]);
         if (tmp_ret) {
             ret = tmp_ret;
             RPTLU_ERR_POP(ret, "Error returned from rptli_post_control_buffer\n");
@@ -744,11 +744,9 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             assert(target->state < RPTL_TARGET_STATE_RECEIVED_PAUSE);
             target->state = RPTL_TARGET_STATE_RECEIVED_PAUSE;
             target->rptl = rptl;
-        }
-        else if (event->hdr_data == RPTL_CONTROL_MSG_PAUSE_ACK) {
+        } else if (event->hdr_data == RPTL_CONTROL_MSG_PAUSE_ACK) {
             rptl->pause_ack_counter++;
-        }
-        else {  /* got an UNPAUSE message */
+        } else {        /* got an UNPAUSE message */
             /* clear NACKs from all operations to this target and poke
              * progress */
             tmp_ret = clear_nacks(event->initiator);
@@ -780,14 +778,10 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
                 /* discard pending events, since we will retransmit
                  * this op anyway */
-                if (op->u.put.ack) {
-                    MPL_free(op->u.put.ack);
-                    op->u.put.ack = NULL;
-                }
-                if (op->u.put.send) {
-                    MPL_free(op->u.put.send);
-                    op->u.put.send = NULL;
-                }
+                MPL_free(op->u.put.ack);
+                op->u.put.ack = NULL;
+                MPL_free(op->u.put.send);
+                op->u.put.send = NULL;
             }
 
             if (op->op_type == RPTL_OP_PUT)
@@ -835,8 +829,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
                 /* drop the send event */
                 ret = PTL_EQ_EMPTY;
-            }
-            else {
+            } else {
                 /* if the message is over the data portal, we'll
                  * return the send event.  if the user asked for an
                  * ACK, we will enqueue the ack to be returned
@@ -872,8 +865,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
                 /* drop the ack event */
                 ret = PTL_EQ_EMPTY;
-            }
-            else {
+            } else {
                 /* if the message is over the data portal, we'll
                  * return the send event.  if the user asked for an
                  * ACK, we will enqueue the ack to be returned
@@ -885,8 +877,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     MPL_free(op->u.put.send);
                     assert(pending_event_valid == 0);
                     pending_event_valid = 1;
-                }
-                else {
+                } else {
                     /* user didn't ask for an ACK, overwrite the ACK
                      * event with the pending send event */
                     memcpy(event, op->u.put.send, sizeof(ptl_event_t));

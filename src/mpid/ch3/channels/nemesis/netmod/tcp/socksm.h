@@ -8,9 +8,9 @@
 #define SOCKSM_H_INCLUDED
 
 #include <sys/poll.h>
-#include <stddef.h> 
+#include <stddef.h>
 
-enum SOCK_CONSTS {  /* more type safe than #define's */
+enum SOCK_CONSTS {              /* more type safe than #define's */
     LISTENQLEN = 10,
     POLL_CONN_TIME = 2
 };
@@ -23,16 +23,16 @@ enum CONSTS {
     CONN_PLFD_TBL_GROW_SIZE = 10,
     CONN_INVALID_FD = -1,
     CONN_INVALID_RANK = -1,
-    NEGOMSG_DATA_LEN = 4, /* Length of data during negotiation message exchanges. */
+    NEGOMSG_DATA_LEN = 4,       /* Length of data during negotiation message exchanges. */
     SLEEP_INTERVAL = 1500,
     PROGSM_TIMES = 20
 };
 
 typedef enum {
-    MPID_NEM_TCP_SOCK_ERROR_EOF, /* either a socket error or EOF received from peer */
+    MPID_NEM_TCP_SOCK_ERROR_EOF,        /* either a socket error or EOF received from peer */
     MPID_NEM_TCP_SOCK_CONNECTED,
-    MPID_NEM_TCP_SOCK_NOEVENT /*  No poll event on socket */
-}MPID_NEM_TCP_SOCK_STATUS_t;
+    MPID_NEM_TCP_SOCK_NOEVENT   /*  No poll event on socket */
+} MPID_NEM_TCP_SOCK_STATUS_t;
 
 #define M_(x) x
 #define CONN_TYPE_ M_(TYPE_CONN), M_(TYPE_ACPT)
@@ -69,26 +69,25 @@ typedef enum {
 
 /* REQ - Request, RSP - Response */
 
-typedef enum CONN_TYPE {CONN_TYPE_, CONN_TYPE_SIZE} Conn_type_t;
-typedef enum MPID_nem_tcp_Listen_State {LISTEN_STATE_INVALID = -1, LISTEN_STATE_, LISTEN_STATE_SIZE}
-    MPID_nem_tcp_Listen_State_t ;
+typedef enum CONN_TYPE { CONN_TYPE_, CONN_TYPE_SIZE } Conn_type_t;
+typedef enum MPID_nem_tcp_Listen_State { LISTEN_STATE_INVALID = -1, LISTEN_STATE_, LISTEN_STATE_SIZE
+} MPID_nem_tcp_Listen_State_t;
 
-typedef enum MPID_nem_tcp_Conn_State {CONN_STATE_INVALID = -1, CONN_STATE_, CONN_STATE_SIZE}
+typedef enum MPID_nem_tcp_Conn_State { CONN_STATE_INVALID = -1, CONN_STATE_, CONN_STATE_SIZE }
     MPID_nem_tcp_Conn_State_t;
 
 /*
   Note: event numbering starts from 1, as 0 is assumed to be the state of all-events cleared
  */
-typedef enum sockconn_event {EVENT_CONNECT = 1, EVENT_DISCONNECT}
-    sockconn_event_t;
+typedef enum sockconn_event { EVENT_CONNECT = 1, EVENT_DISCONNECT } sockconn_event_t;
 
 #undef M_
 #define M_(x) #x
 
 #if defined(SOCKSM_H_DEFGLOBALS_)
-const char *const CONN_TYPE_STR[CONN_TYPE_SIZE] = {CONN_TYPE_};
-const char *const LISTEN_STATE_STR[LISTEN_STATE_SIZE] = {LISTEN_STATE_};
-const char *const CONN_STATE_STR[CONN_STATE_SIZE] = {CONN_STATE_};
+const char *const CONN_TYPE_STR[CONN_TYPE_SIZE] = { CONN_TYPE_ };
+const char *const LISTEN_STATE_STR[LISTEN_STATE_SIZE] = { LISTEN_STATE_ };
+const char *const CONN_STATE_STR[CONN_STATE_SIZE] = { CONN_STATE_ };
 #elif defined(SOCKSM_H_EXTERNS_)
 extern const char *const CONN_TYPE_STR[];
 extern const char *const LISTEN_STATE_STR[];
@@ -98,7 +97,7 @@ extern const char *const CONN_STATE_STR[];
 
 #ifdef MPL_USE_DBG_LOGGING
 #define CONN_STATE_TO_STRING(_cstate) \
-    (( (_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE ) ? CONN_STATE_STR[_cstate] : "out_of_range")
+    (((_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE) ? CONN_STATE_STR[_cstate] : "out_of_range")
 
 #define DBG_CHANGE_STATE(_sc, _cstate) do { \
     const char *state_str = NULL; \
@@ -112,8 +111,8 @@ extern const char *const CONN_STATE_STR[];
     } \
 } while (0)
 #else
-#  define CONN_STATE_TO_STRING(_cstate) "unavailable"
-#  define DBG_CHANGE_STATE(_sc, _cstate) do { /*nothing*/ } while (0)
+#define CONN_STATE_TO_STRING(_cstate) "unavailable"
+#define DBG_CHANGE_STATE(_sc, _cstate) do { /*nothing*/ } while (0)
 #endif
 
 #define CHANGE_STATE(_sc, _cstate) do { \
@@ -121,37 +120,37 @@ extern const char *const CONN_STATE_STR[];
     (_sc)->state.cstate = (_cstate); \
     (_sc)->handler = sc_state_info[_cstate].sc_state_handler; \
     MPID_nem_tcp_plfd_tbl[(_sc)->index].events = sc_state_info[_cstate].sc_state_plfd_events; \
-} while(0)
+} while (0)
 
 struct MPID_nem_new_tcp_sockconn;
 typedef struct MPID_nem_new_tcp_sockconn sockconn_t;
 
 /* FIXME: should plfd really be const const?  Some handlers may need to change the plfd entry. */
-typedef int (*handler_func_t) (struct pollfd *const plfd, sockconn_t *const conn);
-struct MPID_nem_new_tcp_sockconn{
+typedef int (*handler_func_t) (struct pollfd * const plfd, sockconn_t * const conn);
+struct MPID_nem_new_tcp_sockconn {
     int fd;
     int index;
 
     /* Used to prevent the usage of uninitialized pg info.  is_same_pg, pg_rank,
      * and pg_id are _ONLY VALID_ if this (pg_is_set) is true */
-    int pg_is_set;   
-    int is_same_pg; /* boolean, true if the process on the other end of this sc
-                       is in the same PG as us (this process) */
+    int pg_is_set;
+    int is_same_pg;             /* boolean, true if the process on the other end of this sc
+                                 * is in the same PG as us (this process) */
     int is_tmpvc;
 
-    int pg_rank; /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */
-    char *pg_id; /*  MUST be used only if is_same_pg == FALSE */
+    int pg_rank;                /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */
+    char *pg_id;                /*  MUST be used only if is_same_pg == FALSE */
     union {
         MPID_nem_tcp_Conn_State_t cstate;
-        MPID_nem_tcp_Listen_State_t lstate; 
-    }state;
+        MPID_nem_tcp_Listen_State_t lstate;
+    } state;
     MPIDI_VC_t *vc;
     /* Conn_type_t conn_type;  Probably useful for debugging/analyzing purposes. */
     handler_func_t handler;
 };
 
 typedef enum MPIDI_nem_tcp_socksm_pkt_type {
-    MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO, /*  ID = rank + pg_id */
+    MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO,   /*  ID = rank + pg_id */
     MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK,
     MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK,
     MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO,
@@ -159,7 +158,7 @@ typedef enum MPIDI_nem_tcp_socksm_pkt_type {
     MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK,
     MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED
 } MPIDI_nem_tcp_socksm_pkt_type_t;
-    
+
 typedef struct MPIDI_nem_tcp_header {
     MPIDI_nem_tcp_socksm_pkt_type_t pkt_type;
     intptr_t datalen;

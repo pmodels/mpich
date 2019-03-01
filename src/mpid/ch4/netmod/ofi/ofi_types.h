@@ -67,53 +67,6 @@
 #endif
 #endif
 
-/* RMA Key Space division
- *    |                  |                   |                        |
- *    ...     Context ID | key type flag bit |  Key/window instance   |
- *    |                  |                   |                        |
- */
-/* 64-bit key space                         */
-/* 2147483648 window instances per comm           */
-/* 2147483648 outstanding huge RMAS per comm      */
-/* 4294967296 communicators                       */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_64 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_64  (32)
-#define MPIDI_OFI_MAX_KEY_BITS_64      (64-(MPIDI_OFI_MAX_KEY_TYPE_BITS_64+MPIDI_OFI_MAX_CONTEXT_BITS_64))
-#define MPIDI_OFI_MAX_HUGE_RMAS_64     (1<<(MPIDI_OFI_MAX_KEY_BITS_64))
-#define MPIDI_OFI_MAX_WINDOWS_64       MPIDI_OFI_MAX_HUGE_RMAS_64
-
-#define MPIDI_OFI_CONTEXT_SHIFT_64     (MPIDI_OFI_MAX_KEY_BITS_64+MPIDI_OFI_MAX_KEY_TYPE_BITS_64)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_64 (MPIDI_OFI_MAX_KEY_BITS_64)
-
-/* 32-bit key space                         */
-/* 32K window instances per comm           */
-/* 32K outstanding huge RMAS per comm      */
-/* 64K communicators                       */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_32 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_32  (16)
-#define MPIDI_OFI_MAX_KEY_BITS_32      (32-(MPIDI_OFI_MAX_KEY_TYPE_BITS_32+MPIDI_OFI_MAX_CONTEXT_BITS_32))
-#define MPIDI_OFI_MAX_HUGE_RMAS_32     (1<<(MPIDI_OFI_MAX_KEY_BITS_32))
-#define MPIDI_OFI_MAX_WINDOWS_32       MPIDI_OFI_MAX_HUGE_RMAS_32
-
-#define MPIDI_OFI_CONTEXT_SHIFT_32     (MPIDI_OFI_MAX_KEY_BITS_32+MPIDI_OFI_MAX_KEY_TYPE_BITS_32)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_32 (MPIDI_OFI_MAX_KEY_BITS_32)
-
-/* 16-bit key space                         */
-/* 128 window instances per comm             */
-/* 128 outstanding huge RMAS per comm        */
-/* 256 communicators                          */
-#define MPIDI_OFI_MAX_KEY_TYPE_BITS_16 (1)
-#define MPIDI_OFI_MAX_CONTEXT_BITS_16  (8)
-#define MPIDI_OFI_MAX_KEY_BITS_16      (16-(MPIDI_OFI_MAX_KEY_TYPE_BITS_16+MPIDI_OFI_MAX_CONTEXT_BITS_16))
-#define MPIDI_OFI_MAX_HUGE_RMAS_16     (1<<(MPIDI_OFI_MAX_KEY_BITS_16))
-#define MPIDI_OFI_MAX_WINDOWS_16       MPIDI_OFI_MAX_HUGE_RMAS_16
-
-#define MPIDI_OFI_CONTEXT_SHIFT_16     (MPIDI_OFI_MAX_KEY_BITS_16+MPIDI_OFI_MAX_KEY_TYPE_BITS_16)
-#define MPIDI_OFI_MAX_KEY_TYPE_SHIFT_16 (MPIDI_OFI_MAX_KEY_BITS_16)
-
-#define MPIDI_OFI_KEY_TYPE_HUGE_RMA (0)
-#define MPIDI_OFI_KEY_TYPE_WINDOW (1)
-
 
 #ifdef HAVE_FORTRAN_BINDING
 #ifdef MPICH_DEFINE_2COMPLEX
@@ -360,8 +313,7 @@ typedef struct {
     /* Queryable limits */
     uint64_t max_buffered_send;
     uint64_t max_buffered_write;
-    uint64_t max_send;
-    uint64_t max_write;
+    uint64_t max_msg_size;
     uint64_t max_short_send;
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
@@ -371,7 +323,7 @@ typedef struct {
     size_t tx_iov_limit;
     size_t rx_iov_limit;
     size_t rma_iov_limit;
-    int max_ch4_vnis;
+    int max_ch4_vcis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
@@ -398,7 +350,7 @@ typedef struct {
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIU_buf_pool_t *am_buf_pool;
+    MPIDIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
 
@@ -419,9 +371,6 @@ typedef struct {
 
     /* Communication info for dynamic processes */
     MPIDI_OFI_conn_manager_t conn_mgr;
-
-    /* complete request used for lightweight sends */
-    MPIR_Request *lw_send_req;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
@@ -452,29 +401,29 @@ typedef struct {
 } MPIDI_OFI_offset_checker_t;
 
 typedef struct MPIDI_OFI_seg_state {
-    DLOOP_Count buf_limit;      /* Maximum data size in bytes which a single OFI call can handle.
+    MPI_Aint buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
                                  * This value remains constant once seg_state is initialized. */
-    DLOOP_Count buf_limit_left; /* Buffer length left for a single OFI call */
+    MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
 
-    MPIR_Segment origin_seg;    /* Segment structure */
+    MPIR_Segment *origin_seg;   /* Segment structure */
     size_t origin_cursor;       /* First byte to pack */
     size_t origin_end;          /* Last byte to pack */
-    DLOOP_Count origin_iov_len; /* Length of data actually packed */
-    DLOOP_VECTOR origin_iov;    /* IOVEC returned after pack */
+    MPI_Aint origin_iov_len;    /* Length of data actually packed */
+    MPL_IOV origin_iov;         /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
-    MPIR_Segment target_seg;
+    MPIR_Segment *target_seg;
     size_t target_cursor;
     size_t target_end;
-    DLOOP_Count target_iov_len;
-    DLOOP_VECTOR target_iov;
+    MPI_Aint target_iov_len;
+    MPL_IOV target_iov;
     uintptr_t target_addr;
 
-    MPIR_Segment result_seg;
+    MPIR_Segment *result_seg;
     size_t result_cursor;
     size_t result_end;
-    DLOOP_Count result_iov_len;
-    DLOOP_VECTOR result_iov;
+    MPI_Aint result_iov_len;
+    MPL_IOV result_iov;
     uintptr_t result_addr;
 } MPIDI_OFI_seg_state_t;
 
@@ -573,38 +522,5 @@ extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
 
 extern int MPIR_Datatype_init_names(void);
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
-
-/* Build uniform mr_key using contextid, key type and uniq ID passed */
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_rma_key_pack(MPIR_Context_id_t ctx, int key_type,
-                                                         uint64_t key_id)
-{
-    uint64_t rma_key = 0;
-
-    /* place context_id into mr_key */
-    rma_key = ((uint64_t) (MPIR_CONTEXT_READ_FIELD(PREFIX, ctx))) << (MPIDI_Global.context_shift);
-
-    /* set key type bits */
-    rma_key |= (((uint64_t) key_type) & (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1))
-        << MPIDI_Global.max_rma_key_bits;
-
-    /* place Key/window instance-ID into mr_key */
-    rma_key |= ((uint64_t) key_id) & (MPIDI_Global.max_huge_rmas - 1);
-
-    return rma_key;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_rma_key_unpack(uint64_t key, MPIR_Context_id_t * ctx,
-                                                       int *key_type, uint32_t * key_id)
-{
-    if (ctx) {
-        (*ctx) = (MPIR_Context_id_t) (key >> MPIDI_Global.context_shift);
-    }
-
-    (*key_type) =
-        (int) ((key >> MPIDI_Global.max_rma_key_bits) &
-               (((uint64_t) 1 << MPIDI_Global.rma_key_type_bits) - 1));
-
-    (*key_id) = (uint32_t) (key & (MPIDI_Global.max_huge_rmas - 1));
-}
 
 #endif /* OFI_TYPES_H_INCLUDED */

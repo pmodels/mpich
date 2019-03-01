@@ -56,8 +56,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
   fn_exit:
-    if (buf)
-        MPL_free(buf);
+    MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;
 

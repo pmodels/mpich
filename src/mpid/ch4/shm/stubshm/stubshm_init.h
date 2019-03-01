@@ -13,7 +13,7 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vnis_provided)
+static inline int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_provided)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);
@@ -24,16 +24,16 @@ static inline int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vnis_pr
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_vni_attr(int vni)
+static inline int MPIDI_STUBSHM_get_vci_attr(int vci)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_QUERY_VNI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
     return ret;
 }
 

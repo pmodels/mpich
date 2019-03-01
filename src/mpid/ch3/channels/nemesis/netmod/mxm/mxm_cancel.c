@@ -33,8 +33,7 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPIR_Request * req)
             if (MPIR_STATUS_GET_CANCEL_BIT(req->status)) {
                 vc_area->pending_sends -= 1;
             }
-        }
-        else {
+        } else {
             mpi_errno = MPI_ERR_INTERN;
         }
     }
@@ -64,8 +63,7 @@ int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPIR_Request * req)
         ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
         if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
             _mxm_req_wait(&req_area->mxm_req->item.base);
-        }
-        else {
+        } else {
             mpi_errno = MPI_ERR_INTERN;
         }
     }

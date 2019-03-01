@@ -39,10 +39,6 @@ int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Dat
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
-    /* This is the largest offset we add to recvbuf */
-    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     (comm_size * recvcount * recvtype_extent));
-
     /* First, load the "local" version in the recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,

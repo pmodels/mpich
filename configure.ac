@@ -507,7 +507,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be global
-                         (default), per-object, per-vni, lock-free]),,enable_thread_cs=global)
+                         (default), per-object, per-vci, lock-free]),,enable_thread_cs=global)
 
 AC_ARG_ENABLE(mdta,
     AC_HELP_STRING([--enable-mdta],
@@ -522,7 +522,7 @@ AC_ARG_ENABLE(refcount,
                          Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object, per-vni, and lock-free, lock-free]),,
+                         for per-object, per-vci, and lock-free, lock-free]),,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
@@ -559,17 +559,20 @@ AC_ARG_ENABLE(multi-aliases,
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
-AC_ARG_ENABLE([wrapper-rpath],
-              [AC_HELP_STRING([--enable-wrapper-rpath],
-                              [Determine whether the rpath is set when programs
-                               are linked by mpicc compiler wrappers.  This only
-                               applies when shared libraries are built.  The
-                               default is yes; use --disable-wrapper-rpath to
-                               turn this feature off.  In that case, shared
-                               libraries will be found according to the rules
-                               for your system (e.g., in LD_LIBRARY_PATH)])],
-              [],[enable_wrapper_rpath=yes])
-AC_SUBST([enable_wrapper_rpath])
+AC_ARG_WITH([wrapper-dl-type],
+            [AC_HELP_STRING([--enable-wrapper-dl-type],
+                            [Dynamic loading model for alternate MPI
+                             libraries, used when programs are linked
+                             by mpicc compiler wrappers.  This only
+                             applies when shared libraries are built.
+                             The default is "runpath"; use
+                             --with-wrapper-dl-type=rpath to force
+                             rpath; use --with-wrapper-dl-type=none to
+                             find shared libraries according to the
+                             rules for your system (e.g., in
+                             LD_LIBRARY_PATH)])],
+              [],[with_wrapper_dl_type=runpath])
+AC_SUBST([with_wrapper_dl_type])
 
 AC_ARG_ENABLE([long-double],
               [AC_HELP_STRING([--disable-long-double],
@@ -643,10 +646,11 @@ LT_INIT()
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# Disable rpath in the compiler wrappers if shared libraries are disabled, since
-# rpath makes no sense in the context of static libraries.
+# Disable rpath/runpath-related linkflags in the compiler wrappers if
+# shared libraries are disabled, since rpath/runpath makes no sense in
+# the context of static libraries.
 if test "X$enable_shared" = "Xno" ; then
-    enable_wrapper_rpath=no
+    with_wrapper_dl_type=no
 fi
 
 INTERLIB_DEPS=yes
@@ -799,8 +803,6 @@ dnl To be clear, without these exports any variable values determined by this
 dnl configure script will not be seen by child scripts.  Instead they will dnl
 dnl receive the only the original inherited environment and configure args used
 dnl when this configure script was invoked.
-export AR
-export AR_FLAGS
 export CC
 export CFLAGS
 export CPPFLAGS
@@ -814,7 +816,6 @@ export LDFLAGS
 export LIBS
 export MPILIBNAME
 export PMPILIBNAME
-export RANLIB
 export OPALIBNAME
 export MPLLIBNAME
 # ----------------------------------------------------------------------------
@@ -1468,7 +1469,9 @@ AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-if test "$with_hwloc_prefix" = "embedded" ; then
+if test "$with_hwloc_prefix" = "no" ; then
+   have_hwloc=no
+elif test "$with_hwloc_prefix" = "embedded" ; then
    # Disable visibility when setting up hwloc
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
@@ -1662,8 +1665,8 @@ if test "$enable_threads" = "multiple" ; then
     thread_granularity=MPICH_THREAD_GRANULARITY__POBJ
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
-    per-vni|per_vni)
-    thread_granularity=MPICH_THREAD_GRANULARITY__VNI
+    per-vci|per_vci)
+    thread_granularity=MPICH_THREAD_GRANULARITY__VCI
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
     lock-free|lock_free|lockfree)
@@ -1691,8 +1694,12 @@ if test "$enable_threads" = "multiple" ; then
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
 
-if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VNI" -a "$device_name" != "ch4" ; then
-    AC_MSG_ERROR([per-vni critical section granularity is only supported for the ch4 device])
+if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
+    AC_MSG_ERROR([the ch4 device does not support the per-object critical section])
+fi
+
+if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" -a "$device_name" != "ch4" ; then
+    AC_MSG_ERROR([per-vci critical section granularity is only supported for the ch4 device])
 fi
 
 if test "$enable_mdta" = "yes" ; then
@@ -1874,7 +1881,6 @@ else
     # Make device_name available to subdirs
 fi
 
-PAC_SET_HEADER_LIB_PATH(pmix)
 if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
     # disable built-in PMI and process managers
     with_pmi="no"
@@ -2051,18 +2057,26 @@ if test -n "$MPI_DEFAULT_COPTS" ; then
 fi
 
 # ---------------------------------------------------------------------------
-# determine rpath and other shared library flags for CC
+# determine shared library flags for CC
 # src/env may not exist yet in a vpath build
 $MKDIR_P src/env
 cc_shlib_conf=src/env/cc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
-# output rpath flags in a usable format for mpich.pc (pkg-config)
-if test "X$enable_wrapper_rpath" = "Xyes"; then
-    eval WRAPPER_RPATH_LDFLAGS=\"$hardcode_libdir_flag_spec\"
+$cc_shlib_conf
+
+# Attempt to construct dynamic loading info, based on the user
+# preference of rpath, runpath or none and on the detected libdir
+# flags.
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+   eval WRAPPER_C_DYNAMIC_LOADING_FLAGS=\"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+   eval WRAPPER_C_DYNAMIC_LOADING_FLAGS=\"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"
+else
+   WRAPPER_C_DYNAMIC_LOADING_FLAGS=""
 fi
-AC_SUBST(WRAPPER_RPATH_LDFLAGS)
+AC_SUBST(WRAPPER_C_DYNAMIC_LOADING_FLAGS)
 
 # ---------------------------------------------------------------------------
 # Support for MPI_T performance variables
@@ -2357,7 +2371,7 @@ fi
 # Now test for Fortran compiler characteristics
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = "yes" ; then
-    # determine rpath and other shared library flags for F77
+    # determine shared library flags for F77
     f77_shlib_conf=src/env/f77_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
     AC_SUBST_FILE([f77_shlib_conf])
@@ -2486,7 +2500,7 @@ MPI_C_INTERFACE_TYPES_NAME=mpi_c_interface_types
 MPI_C_INTERFACE_CDESC_NAME=mpi_c_interface_cdesc
 
 if test "$enable_fc" = "yes" ; then
-    # determine rpath and other shared library flags for FC
+    # determine shared library flags for FC
     fc_shlib_conf=src/env/fc_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
     AC_SUBST_FILE([fc_shlib_conf])
@@ -2771,7 +2785,7 @@ int main() {
     AC_SUBST(MPIR_CXX_DOUBLE_COMPLEX)
     AC_SUBST(MPIR_CXX_LONG_DOUBLE_COMPLEX)
 
-    # determine rpath and other shared library flags for CXX
+    # determine shared library flags for CXX
     cxx_shlib_conf=src/env/cxx_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
     AC_SUBST_FILE([cxx_shlib_conf])
@@ -2810,26 +2824,6 @@ AC_LANG_C
 # We need the full path to perl since we'll use it as the interpreter for
 # a shell script.
 AC_PATH_PROG(PERL,perl)
-# Look for ar.  If we fail, abort
-AC_CHECK_PROGS(AR,ar)
-if test -z "$AR" ; then
-    AC_MSG_ERROR([The program ar is required for building MPICH.  Make sure that your path includes ar])
-fi
-
-# FIXME: this is probably unnecessary now that we only do one "ar" at the end
-# (via libtool).  If anything, it's likely to cause problems instead.
-# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
-AR_FLAGS=cr
-# this logic is lame, should really write a real test at some point
-AS_CASE([$host],
-    # Barry proposes AR_FLAGS="Scq" in trac#754, but that won't work correctly for re-builds
-    [*-*-darwin*], [AR_FLAGS=Scr]
-)
-AC_ARG_VAR(AR_FLAGS,[AR command flags]) # causes AC_SUBST too
-
-# Note that we set RANLIB to true if we don't find it (some systems neither
-# need it nor provide it)
-AC_CHECK_PROGS(RANLIB,ranlib,true)
 
 # Check for the killall program; this can be used in some of the tests
 # in test/commands
@@ -2846,9 +2840,6 @@ AC_SUBST(XARGS_NODATA_OPT)
 AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
 #
-# On Mac OS/X, install breaks libraries unless used with the -p switch
-dnl FIXME not necessary now that we are using libtool
-dnl PAC_PROG_INSTALL_BREAKS_LIBS
 # We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
@@ -5033,16 +5024,6 @@ AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
 AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
 AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
 
-# If sizeof(mpi_aint) = sizeof(int), set this value
-if test "$ac_cv_sizeof_int" = "$aint_size" ; then
-    AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(MPI_Aint)])
-fi
-
-# If sizeof(mpi_aint) = sizeof(int), set this value
-if test "$ac_cv_sizeof_void_p" = "$aint_size" ; then
-    AC_DEFINE(SIZEOF_PTR_IS_AINT,1,[define if sizeof(void *) = sizeof(MPI_Aint)])
-fi
-
 # ----------------------------------------------------------------------------
 # MPI_AINT datatype
 # ----------------------------------------------------------------------------
@@ -5155,7 +5136,6 @@ fi
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
-        PAC_SET_HEADER_LIB_PATH(blcr)
 	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
 	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
@@ -5577,11 +5557,10 @@ EXTERNAL_SETUPS="$EXTERNAL_SETUPS"
 LIBDIR="$libbuild_dir"
 MPILIBNAME="$MPILIBNAME"
 PMPILIBNAME="$PMPILIBNAME"
-AR="$AR"
 CC="$CC"
 CPPFLAGS="$CPPFLAGS"
 CFLAGS="$CFLAGS"
-export LIBDIR ; export MPILIBNAME ; export AR ; export CC ; export CPPFLAGS 
+export LIBDIR ; export MPILIBNAME ; export CC ; export CPPFLAGS
 export PMPILIBNAME 
 export CFLAGS
 # For test/mpi/configure

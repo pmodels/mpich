@@ -824,8 +824,7 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    if (hintval_global != NULL)
-        MPL_free(hintval_global);
+    MPL_free(hintval_global);
 
     *info_args_are_equal = hintval_equal_global;
     return mpi_errno;
@@ -944,7 +943,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
 #endif
-  fn_exit:
     return mpi_errno;
 }
 

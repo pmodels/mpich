@@ -84,86 +84,84 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
 
     kind = sreq->kind;
     switch (kind) {
-        unsigned int reqtype;
-    case MPIR_REQUEST_KIND__SEND:
-    case MPIR_REQUEST_KIND__PREQUEST_SEND:{
-            reqtype = MPIDI_Request_get_type(sreq);
+            unsigned int reqtype;
+        case MPIR_REQUEST_KIND__SEND:
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:{
+                reqtype = MPIDI_Request_get_type(sreq);
 
-            /* Free temporal buffer for non-contiguous data.
-             * MPIDI_Request_create_sreq (in mpid_isend.c) sets req->dev.datatype.
-             * A control message has a req_type of MPIDI_REQUEST_TYPE_RECV and
-             * msg_type of MPIDI_REQUEST_EAGER_MSG because
-             * control message send follows
-             * MPIDI_CH3_iStartMsg/v-->MPID_nem_llc_iStartContigMsg-->MPID_nem_llc_iSendContig
-             * and MPID_nem_llc_iSendContig set req->dev.state to zero
-             * because MPIR_Request_create
-             * sets it to zero. In addition, eager-short message has req->comm of zero. */
+                /* Free temporal buffer for non-contiguous data.
+                 * MPIDI_Request_create_sreq (in mpid_isend.c) sets req->dev.datatype.
+                 * A control message has a req_type of MPIDI_REQUEST_TYPE_RECV and
+                 * msg_type of MPIDI_REQUEST_EAGER_MSG because
+                 * control message send follows
+                 * MPIDI_CH3_iStartMsg/v-->MPID_nem_llc_iStartContigMsg-->MPID_nem_llc_iSendContig
+                 * and MPID_nem_llc_iSendContig set req->dev.state to zero
+                 * because MPIR_Request_create
+                 * sets it to zero. In addition, eager-short message has req->comm of zero. */
 #ifndef	notdef_leak_0001_hack
-            /* See also MPIDI_CH3_Request_create and _destory() */
-            /*     in src/mpid/ch3/src/ch3u_request.c */
+                /* See also MPIDI_CH3_Request_create and _destory() */
+                /*     in src/mpid/ch3/src/ch3u_request.c */
 #endif /* notdef_leak_0001_hack */
-            if (reqtype != MPIDI_REQUEST_TYPE_RECV && sreq->comm) {
-                /* Exclude control messages which have MPIDI_REQUEST_TYPE_RECV.
-                 * Note that RMA messages should be included.
-                 * Exclude eager-short by requiring req->comm != 0. */
-                int is_contig;
-                MPIR_Datatype_is_contig(sreq->dev.datatype, &is_contig);
-                if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
-                    dprintf("llc_send_handler,non-contiguous,free pack_buf\n");
-                    MPL_free(REQ_FIELD(sreq, pack_buf));
-                }
-            }
-
-            if ((REQ_FIELD(sreq, rma_buf) != NULL && sreq->dev.datatype_ptr &&
-                 sreq->dev.segment_size > 0)) {
-                MPL_free(REQ_FIELD(sreq, rma_buf));    // allocated in MPID_nem_llc_SendNoncontig
-                REQ_FIELD(sreq, rma_buf) = NULL;
-            }
-
-            /* sreq: src/mpid/ch3/include/mpidpre.h */
-            {
-                MPIDI_VC_t *vc;
-                int (*reqFn) (MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete);
-                int complete;
-                int r_mpi_errno;
-
-                p_reqid[0] = 0 /* REQ_LLC(sreq)->woff */ ;
-
-                vc = sreq->ch.vc;       /* before callback */
-                reqFn = sreq->dev.OnDataAvail;
-                if (reqFn == 0) {
-                    MPIR_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
-
-                    r_mpi_errno = MPID_Request_complete(sreq);
-                    if (r_mpi_errno != MPI_SUCCESS) {
-                        MPIR_ERR_POP(r_mpi_errno);
+                if (reqtype != MPIDI_REQUEST_TYPE_RECV && sreq->comm) {
+                    /* Exclude control messages which have MPIDI_REQUEST_TYPE_RECV.
+                     * Note that RMA messages should be included.
+                     * Exclude eager-short by requiring req->comm != 0. */
+                    int is_contig;
+                    MPIR_Datatype_is_contig(sreq->dev.datatype, &is_contig);
+                    if (!is_contig) {
+                        dprintf("llc_send_handler,non-contiguous,free pack_buf\n");
+                        MPL_free(REQ_FIELD(sreq, pack_buf));
                     }
-                    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
-                }
-                else {
-                    complete = 0;
-                    r_mpi_errno = reqFn(vc, sreq, &complete);
-                    if (r_mpi_errno)
-                        MPIR_ERR_POP(r_mpi_errno);
-                    if (complete == 0) {
-                        MPIR_Assert(complete == TRUE);
-                    }
-                    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete2");
                 }
 
-                /* push queued messages */
+                if ((sreq->dev.datatype_ptr && sreq->dev.segment_size > 0)) {
+                    MPL_free(REQ_FIELD(sreq, rma_buf)); // allocated in MPID_nem_llc_SendNoncontig
+                    REQ_FIELD(sreq, rma_buf) = NULL;
+                }
+
+                /* sreq: src/mpid/ch3/include/mpidpre.h */
                 {
-                    MPID_nem_llc_vc_area *vc_llc = VC_LLC(vc);
+                    MPIDI_VC_t *vc;
+                    int (*reqFn) (MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete);
+                    int complete;
+                    int r_mpi_errno;
 
-                    MPID_nem_llc_send_queued(vc, &vc_llc->send_queue);
+                    p_reqid[0] = 0 /* REQ_LLC(sreq)->woff */ ;
+
+                    vc = sreq->ch.vc;   /* before callback */
+                    reqFn = sreq->dev.OnDataAvail;
+                    if (reqFn == 0) {
+                        MPIR_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
+
+                        r_mpi_errno = MPID_Request_complete(sreq);
+                        if (r_mpi_errno != MPI_SUCCESS) {
+                            MPIR_ERR_POP(r_mpi_errno);
+                        }
+                        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                    } else {
+                        complete = 0;
+                        r_mpi_errno = reqFn(vc, sreq, &complete);
+                        if (r_mpi_errno)
+                            MPIR_ERR_POP(r_mpi_errno);
+                        if (complete == 0) {
+                            MPIR_Assert(complete == TRUE);
+                        }
+                        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete2");
+                    }
+
+                    /* push queued messages */
+                    {
+                        MPID_nem_llc_vc_area *vc_llc = VC_LLC(vc);
+
+                        MPID_nem_llc_send_queued(vc, &vc_llc->send_queue);
+                    }
                 }
+                break;
             }
+        default:
+            printf("send_handler,unknown kind=%08x\n", sreq->kind);
+            MPID_nem_llc_segv;
             break;
-        }
-    default:
-        printf("send_handler,unknown kind=%08x\n", sreq->kind);
-        MPID_nem_llc_segv;
-        break;
     }
 
   fn_exit:
@@ -199,11 +197,11 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
              * MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
              */
             MPIDI_PG_Get_vc_set_active(pg, pg_rank, &vc_from_pg);
-        }
-        else {
+        } else {
             MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "bad vc %p or", pg);
             MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "bad pg_rank %d", pg_rank);
-            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "bad pg_rank < %d", MPIDI_PG_Get_size(pg));
+            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "bad pg_rank < %d",
+                          MPIDI_PG_Get_size(pg));
             vc_from_pg = vc;    /* XXX */
         }
         if (vc != vc_from_pg) {
@@ -236,7 +234,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     intptr_t data_sz;
-    MPIR_Datatype*dt_ptr;
+    MPIR_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
 
@@ -262,8 +260,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     void *write_to_buf;
     if (dt_contig) {
         write_to_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
-    }
-    else {
+    } else {
         REQ_FIELD(req, pack_buf) = MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(req, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         write_to_buf = REQ_FIELD(req, pack_buf);
@@ -286,8 +283,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     if (req->dev.match.parts.rank == MPI_ANY_SOURCE) {
         cmd[0].rank = LLC_ANY_SOURCE;
         cmd[0].mask.rank = 0;
-    }
-    else {
+    } else {
         cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
     }
 
@@ -295,8 +291,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     if (req->dev.match.parts.tag == MPI_ANY_TAG) {
         *(int32_t *) ((uint8_t *) & cmd[0].tag) = LLC_ANY_TAG;
         *(int32_t *) ((uint8_t *) & cmd[0].mask.tag) = 0;
-    }
-    else {
+    } else {
         *(int32_t *) ((uint8_t *) & cmd[0].tag) = req->dev.match.parts.tag;
     }
 
@@ -325,8 +320,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     ((struct llc_cmd_area *) cmd[0].usr_area)->cbarg = req;
     if (req->dev.match.parts.rank == MPI_ANY_SOURCE) {
         ((struct llc_cmd_area *) cmd[0].usr_area)->raddr = MPI_ANY_SOURCE;      /* FIXME : should 0 ? */
-    }
-    else {
+    } else {
         ((struct llc_cmd_area *) cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
     }
 

@@ -96,7 +96,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
                                                 int rank, uint64_t match_bits, MPIR_Comm * comm,
-                                                MPIR_Request * sreq, MPIR_Datatype * dt_ptr)
+                                                MPIDI_av_entry_t * addr, MPIR_Request * sreq,
+                                                MPIR_Datatype * dt_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
@@ -111,8 +112,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     size_t oout = 0;
     size_t l = 0;
     size_t countp_huge = 0;
-    MPIR_Segment seg;
-    DLOOP_Offset last_byte = dt_ptr->size * count;
+    MPIR_Segment *seg;
+    MPI_Aint last_byte = dt_ptr->size * count;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -135,9 +136,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg);
-    MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack),
-                             &num_contig);
+    seg = MPIR_Segment_alloc(buf, count, MPIDI_OFI_REQUEST(sreq, datatype));
+    MPIR_Segment_to_iov(seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack), &num_contig);
+    MPIR_Segment_free(seg);
 
     originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
     oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
@@ -150,10 +151,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
      * and calculate the total number of iovecs */
     for (j = 0; j < num_contig; j++) {
-        if (originv[j].iov_len > MPIDI_Global.max_send) {
+        if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
             huge = 1;
-            countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
-            if (originv[j].iov_len % MPIDI_Global.max_send) {
+            countp_huge += originv[j].iov_len / MPIDI_Global.max_msg_size;
+            if (originv[j].iov_len % MPIDI_Global.max_msg_size) {
                 countp_huge++;
             }
         } else {
@@ -173,11 +174,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
         for (j = 0; j < num_contig; j++) {
             l = 0;
-            if (originv[j].iov_len > MPIDI_Global.max_send) {
+            if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
                 while (l < originv[j].iov_len) {
                     length = originv[j].iov_len - l;
-                    if (length > MPIDI_Global.max_send)
-                        length = MPIDI_Global.max_send;
+                    if (length > MPIDI_Global.max_msg_size)
+                        length = MPIDI_Global.max_msg_size;
                     originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                     originv_huge[k].iov_len = length;
                     k++;
@@ -213,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = comm->rank;
-    msg.addr = MPIDI_OFI_comm_to_phys(comm, rank);
+    msg.addr = MPIDI_OFI_av_to_phys(addr);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg, flags), tsendv,
                          MPIDI_OFI_CALL_LOCK, FALSE);
@@ -285,8 +286,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
-            mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, sreq, dt_ptr);
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_msg_size) {
+            mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, addr, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
@@ -301,15 +302,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment), MPL_MEM_BUFFER);
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment *), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
         size_t segment_first;
         segment_first = 0;
         last = data_sz;
 
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
-        MPIR_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
+        MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment) = MPIR_Segment_alloc(buf, count, datatype);
+        MPIR_Segment_pack(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer));
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);
     } else {
@@ -326,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz <= MPIDI_Global.max_send) {
+    } else if (data_sz <= MPIDI_Global.max_msg_size) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
@@ -344,16 +345,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-
         if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* Set up a memory region for the lmt data transfer */
-            ctrl.rma_key =
-                MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
-            MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
-            rma_key = MPIDI_OFI_rma_key_pack(comm->context_id, MPIDI_OFI_KEY_TYPE_HUGE_RMA,
-                                             ctrl.rma_key);
-            ctrl.rma_key = rma_key;
+            ctrl.rma_key = MPIDI_OFI_mr_key_alloc();
+            rma_key = ctrl.rma_key;
         }
 
         MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,    /* In:  Domain Object       */
@@ -367,8 +362,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                         NULL), mr_reg); /* In:  context             */
 
         /* Create map to the memory region */
-        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr,
-                           MPL_MEM_BUFFER);
+        MPIDIU_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr,
+                       MPL_MEM_BUFFER);
 
         if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* MR_BASIC */
@@ -378,11 +373,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Send the maximum amount of data that we can here to get things
          * started, then do the rest using the MR below. This can be confirmed
          * in the MPIDI_OFI_get_huge code where we start the offset at
-         * MPIDI_Global.max_send */
+         * MPIDI_Global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
         MPIDI_OFI_REQUEST(sreq, util_id) = rank;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, send_buf,
-                                           MPIDI_Global.max_send,
+                                           MPIDI_Global.max_msg_size,
                                            NULL,
                                            comm->rank,
                                            MPIDI_OFI_av_to_phys(addr),
@@ -398,7 +393,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                (&ctrl, send_buf, data_sz, rank, comm, sreq, FALSE));
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
     }
 
   fn_exit:
@@ -461,14 +455,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                                   context_offset, addr, request, (*request == NULL), 0ULL);
+    }
 
-    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                               context_offset, addr, request, (*request == NULL), 0ULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
     return mpi_errno;
 }
@@ -490,14 +483,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                                   context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
+    }
 
-    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                               context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
     return mpi_errno;
 }
@@ -520,14 +512,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                                   context_offset, addr, request, 0, 0ULL);
+    }
 
-    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                               context_offset, addr, request, 0, 0ULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
     return mpi_errno;
 }
@@ -549,14 +540,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                                   context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
+    }
 
-    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                               context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     return mpi_errno;
 }

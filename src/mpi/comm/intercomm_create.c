@@ -148,10 +148,8 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 
 
   fn_exit:
-    if (remote_lpids) {
-        MPL_free(remote_lpids);
-        remote_lpids = NULL;
-    }
+    MPL_free(remote_lpids);
+    remote_lpids = NULL;
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
     return mpi_errno;
   fn_fail:

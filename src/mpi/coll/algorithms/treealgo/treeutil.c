@@ -248,6 +248,5 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
                      ct->parent, nranks, root));
     MPL_free(flip_bit);
 
-  fn_exit:
     return mpi_errno;
 }

@@ -59,15 +59,10 @@ dnl Find a C compiler
 PAC_PROG_CC
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)
-# Note that we set RANLIB to true if we don't find it (some systems neither
-# need it nor provide it)
-AC_CHECK_PROGS(RANLIB,ranlib,true)
 dnl
 dnl AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
-dnl On Mac OS/X, install breaks libraries unless used with the -p switch
-PAC_PROG_INSTALL_BREAKS_LIBS
 dnl We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE

@@ -22,7 +22,7 @@ kvalues="3"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        if [ ${algo_name} -eq "tree" ]; then
+        if [ ${algo_name} = "tree" ]; then
             for tree_type in ${tree_types}; do
                 #set the environment
                 env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
@@ -57,7 +57,7 @@ tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
-    if [ ${algo_name} -eq "tree" ]; then
+    if [ ${algo_name} = "tree" ]; then
         for tree_type in ${tree_types}; do
             for kval in ${kvalues}; do
                 #set the environment
@@ -90,24 +90,44 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_single_buffer recexch_multiple_buffer tree_kary tree_knomial"
+algo_names="recexch_single_buffer recexch_multiple_buffer tree"
+tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        #set the environment
-        env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
+        if [ "${algo_name}" = "tree" ]; then
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
+                env+="env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval} "
 
-        coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
-        coll_algo_tests+="allred 7 ${env}${nl}"
-        coll_algo_tests+="allredmany 4 ${env}${nl}"
-        coll_algo_tests+="allred2 4 ${env}${nl}"
-        coll_algo_tests+="allred3 10 ${env}${nl}"
-        coll_algo_tests+="allred4 4 ${env}${nl}"
-        coll_algo_tests+="allred5 5 ${env}${nl}"
-        coll_algo_tests+="allred6 4 ${env}${nl}"
-        coll_algo_tests+="allred6 7 ${env}${nl}"
+                coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
+                coll_algo_tests+="allred 7 ${env}${nl}"
+                coll_algo_tests+="allredmany 4 ${env}${nl}"
+                coll_algo_tests+="allred2 4 ${env}${nl}"
+                coll_algo_tests+="allred3 10 ${env}${nl}"
+                coll_algo_tests+="allred4 4 ${env}${nl}"
+                coll_algo_tests+="allred5 5 ${env}${nl}"
+                coll_algo_tests+="allred6 4 ${env}${nl}"
+                coll_algo_tests+="allred6 7 ${env}${nl}"
+            done
+        else
+            #set the environment
+            env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
+            env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval} "
+
+            coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
+            coll_algo_tests+="allred 7 ${env}${nl}"
+            coll_algo_tests+="allredmany 4 ${env}${nl}"
+            coll_algo_tests+="allred2 4 ${env}${nl}"
+            coll_algo_tests+="allred3 10 ${env}${nl}"
+            coll_algo_tests+="allred4 4 ${env}${nl}"
+            coll_algo_tests+="allred5 5 ${env}${nl}"
+            coll_algo_tests+="allred6 4 ${env}${nl}"
+            coll_algo_tests+="allred6 7 ${env}${nl}"
+        fi
     done
 done
 
@@ -119,7 +139,7 @@ testing_env="env=MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_brucks"
+algo_names="recexch_distance_doubling recexch_distance_halving gentran_brucks gentran_ring"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -142,14 +162,18 @@ testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring"
+algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring gentran_brucks"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     if [ "${algo_name}" != "gentran_ring" ]; then
         for kval in ${kvalues}; do
             env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name} "
-            env+="env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
+            if [ "${algo_name}" != "gentran_brucks" ]; then
+                env+="env=MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL=${kval}"
+            else
+                env+="env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
+            fi
 
             coll_algo_tests+="allgatherv2 10 ${env}${nl}"
             coll_algo_tests+="allgatherv3 10 ${env}${nl}"
@@ -260,6 +284,163 @@ for algo_name in ${algo_names}; do
         coll_algo_tests+="gather 4 ${env}${nl}"
         coll_algo_tests+="gather2 4 ${env}${nl}"
     done
+done
+
+######### Add tests for Alltoall algorithms ###########
+
+#disable device collectives for allgather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_ring"
+
+for algo_name in ${algo_names}; do
+    env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="alltoall1 8 ${env}${nl}"
+done
+
+algo_names="gentran_brucks"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=${kval} "
+
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0${nl}"
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1${nl}"
+    done
+done
+
+########## Add tests for scan algorithms ############
+
+#disable device collectives for scan to test MPIR algorithms
+testing_env="env=MPIR_CVAR_SCAN_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_SCAN_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_recursive_doubling"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_ISCAN_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="scantst 4"
+done
+
+######### Add tests for ineighbor_alltoallw algorithms ###########
+
+#disable device collectives for neighbor_alltoallw to test mpir algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_alltoallw 4 mpiversion=3.0 ${env}${nl}"
+done
+
+######### Add tests for Alltoallv algorithms ###########
+
+#disable device collectives for alltoallv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_scattered"
+batchsizes="1 2 4"
+outstandingtasks="4 8"
+for algo_name in ${algo_names}; do
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+    if [ ${algo_name} = "gentran_scattered" ]; then
+        for task in ${outstandingtasks}; do
+            for batchsize in ${batchsizes}; do
+                env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE=${batchsize} "
+                env+="env=MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=${task} "
+                 coll_algo_tests+="alltoallv 8 ${env}${nl}"
+                 coll_algo_tests+="alltoallv0 10 ${env}${nl}"
+            done
+        done
+    fi
+done
+
+######### Add tests for Ineighbor_allgather algorithms ###########
+
+#disable device collectives for neighbor_allgather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLGATHER_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_allgather 4 mpiversion=3.0 ${env}${nl}"
+done
+
+######### Add tests for Ineighbor_allgatherv algorithms ###########
+
+#disable device collectives for neighbor_allgatherv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_allgatherv 4 mpiversion=3.0 ${env}${nl}"
+done
+
+######### Add tests for Ineighbor_alltoall algorithms ###########
+
+#disable device collectives for neighbor_alltoall to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_alltoall 4 mpiversion=3.0 ${env}${nl}"
+done
+
+######### Add tests for Ineighbor_alltoallv algorithms ###########
+
+#disable device collectives for neighbor_alltoallv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name} "
+
+    coll_algo_tests+="neighb_alltoallv 4 mpiversion=3.0 ${env}${nl}"
 done
 
 export coll_algo_tests

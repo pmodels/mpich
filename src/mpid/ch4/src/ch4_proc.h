@@ -14,24 +14,24 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4_rank_is_local
+#define FUNCNAME MPIDI_rank_is_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RANK_IS_LOCAL);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
-     * it will call back up to the CH4U function to get the infomration. */
+     * it will call back up to the MPIDIU function to get the infomration. */
     ret = MPIDI_NM_rank_is_local(rank, comm);
 #else
-    ret = MPIDI_CH4U_rank_is_local(rank, comm);
+    ret = MPIDIU_rank_is_local(rank, comm);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4_RANK_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RANK_IS_LOCAL);
     return ret;
 }
 
@@ -43,18 +43,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AV_IS_LOCAL);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
-     * it will call back up to the CH4U function to get the infomration. */
+     * it will call back up to the MPIDIU function to get the infomration. */
     ret = MPIDI_NM_av_is_local(av);
 #else
-    ret = MPIDI_CH4U_av_is_local(av);
+    ret = MPIDIU_av_is_local(av);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AV_IS_LOCAL);
     return ret;
 }
 

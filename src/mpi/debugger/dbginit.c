@@ -352,7 +352,7 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Sendq *p;
 
-/* TODO: We reuse the global lock for the per-vni granularity here instead of a
+/* TODO: We reuse the global lock for the per-vci granularity here instead of a
  * theoritically more scalable approach of creating a separate lock. Whether
  * this brief-global critical section would perturbate debugging is unknown;
  * investigation is needed before attempting to optimize this case. */
@@ -534,9 +534,7 @@ static int MPIR_FreeProctable(void *ptable)
     int i;
     MPIR_PROCDESC *proctable = (MPIR_PROCDESC *) ptable;
     for (i = 0; i < MPIR_proctable_size; i++) {
-        if (proctable[i].host_name) {
-            MPL_free(proctable[i].host_name);
-        }
+        MPL_free(proctable[i].host_name);
     }
     MPL_free(proctable);
 

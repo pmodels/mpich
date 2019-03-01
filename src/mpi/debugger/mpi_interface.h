@@ -453,7 +453,7 @@ typedef struct mqs_process_callbacks {
 extern void mqs_setup_basic_callbacks(const mqs_basic_callbacks *);
 
 /* Version handling */
-extern char *mqs_version_string(void);
+extern const char *mqs_version_string(void);
 extern int mqs_version_compatibility(void);
 /* This gives the width which has been compiled into the DLL, it is
  * _not_ the width of a specific process, which could be smaller than
@@ -462,7 +462,7 @@ extern int mqs_version_compatibility(void);
 extern int mqs_dll_taddr_width(void);
 
 /* Provide a text string for an error value */
-extern char *mqs_dll_error_string(int);
+extern const char *mqs_dll_error_string(int);
 
 /***********************************************************************
  * Calls related to an executable image.
@@ -497,7 +497,7 @@ extern int mqs_setup_image(mqs_image *, const mqs_image_callbacks *);
  * disable things, or loudly enable them).
  */
 
-extern int mqs_image_has_queues(mqs_image *, char **);
+extern int mqs_image_has_queues(mqs_image *, const char **);
 
 /* This will be called by the debugger to let you tidy up whatever is
  * required when the mqs_image_info is no longer needed.

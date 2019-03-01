@@ -453,7 +453,10 @@ int MPIR_Iallgather_intra_recexch_distance_halving(const void *sendbuf, int send
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,
                                                    MPIR_Comm * comm, MPIR_Request ** req);
-
+int MPIR_Iallgather_intra_gentran_ring(const void *sendbuf, int sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf,
+                                       int recvcount, MPI_Datatype recvtype,
+                                       MPIR_Comm * comm, MPIR_Request ** req);
 /* sched-based intercomm-only functions */
 int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -472,6 +475,10 @@ int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, 
 int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                           const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                           MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                          void *recvbuf, const int recvcounts[], const int displs[],
+                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                          MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
@@ -557,12 +564,9 @@ int MPIR_Iallreduce_intra_recexch_single_buffer(const void *sendbuf, void *recvb
 int MPIR_Iallreduce_intra_recexch_multiple_buffer(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm, MPIR_Request ** req);
-int MPIR_Iallreduce_intra_tree_kary(const void *sendbuf, void *recvbuf, int count,
-                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                    MPIR_Request ** request);
-int MPIR_Iallreduce_intra_tree_knomial(const void *sendbuf, void *recvbuf, int count,
-                                       MPI_Datatype datatype, MPI_Op op,
-                                       MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                               MPIR_Request ** request);
 int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s);
@@ -585,6 +589,12 @@ int MPIR_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                         int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                         MPIR_Request ** request);
+int MPIR_Ialltoall_intra_gentran_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                      MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ialltoall_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                        MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
@@ -657,6 +667,11 @@ int MPIR_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendcount
                                         const int recvcounts[], const int rdispls[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
+int MPIR_Ialltoallv_intra_gentran_scattered(const void *sendbuf, const int sendcnts[],
+                                            const int sdispls[], MPI_Datatype sendtype,
+                                            void *recvbuf, const int recvcnts[],
+                                            const int rdispls[], MPI_Datatype recvtype,
+                                            MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
@@ -888,6 +903,10 @@ int MPIR_Ineighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype se
 int MPIR_Ineighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                   MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ineighbor_allgather_allcomm_gentran_linear(const void *sendbuf, int sendcount,
+                                                    MPI_Datatype sendtype, void *recvbuf,
+                                                    int recvcount, MPI_Datatype recvtype,
+                                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_allgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -925,6 +944,11 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datat
                                    void *recvbuf, const int recvcounts[], const int displs[],
                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                    MPIR_Request ** request);
+int MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(const void *sendbuf, int sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     const int recvcounts[], const int displs[],
+                                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                                     MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -965,6 +989,10 @@ int MPIR_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sen
 int MPIR_Ineighbor_alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                  MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ineighbor_alltoall_allcomm_gentran_linear(const void *sendbuf, int sendcount,
+                                                   MPI_Datatype sendtype, void *recvbuf,
+                                                   int recvcount, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_alltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -1003,6 +1031,11 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], c
                                   MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                                   const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                   MPIR_Request ** request);
+int MPIR_Ineighbor_alltoallv_allcomm_gentran_linear(const void *sendbuf, const int sendcounts[],
+                                                    const int sdispls[], MPI_Datatype sendtype,
+                                                    void *recvbuf, const int recvcounts[],
+                                                    const int rdispls[], MPI_Datatype recvtype,
+                                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
@@ -1048,6 +1081,13 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                                   void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[],
                                   const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
                                   MPIR_Request ** request);
+int MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(const void *sendbuf, const int sendcounts[],
+                                                    const MPI_Aint sdispls[],
+                                                    const MPI_Datatype sendtypes[], void *recvbuf,
+                                                    const int recvcounts[],
+                                                    const MPI_Aint rdispls[],
+                                                    const MPI_Datatype recvtypes[],
+                                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
@@ -1255,6 +1295,9 @@ int MPIR_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
 
 /******************************** Iscatter ********************************/

@@ -33,9 +33,6 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
-#ifdef HAVE_MPIR_TYPE_FLATTEN
-    MPI_Aint flatten_idx;
-#endif
     MPI_Count flat_count, curr_index = 0;
     int is_contig, flag;
     ADIOI_Flatlist_node *flat;
@@ -48,10 +45,6 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 
     /* check if necessary to flatten. */
 
-#ifdef FLATTEN_DEBUG
-    DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: is_contig %#X\n", is_contig);
-#endif
-
     /* has it already been flattened? */
     MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &flat, &flag);
     if (flag) {
@@ -63,6 +56,10 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 
     /* is it entirely contiguous? */
     ADIOI_Datatype_iscontig(datatype, &is_contig);
+
+#ifdef FLATTEN_DEBUG
+    DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: is_contig %#X\n", is_contig);
+#endif
     /* it would be great if ADIOI_Count_contiguous_blocks and the rest of the
      * flattening code operated on the built-in named types, but
      * it recursively processes types, stopping when it hits a named type. So
@@ -82,20 +79,12 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
     } else {
 
         curr_index = 0;
-#ifdef HAVE_MPIR_TYPE_FLATTEN
-        flatten_idx = (MPI_Aint) flat->count;
-        MPIR_Type_flatten(datatype, flat->indices, flat->blocklens, &flatten_idx);
-#ifdef FLATTEN_DEBUG
-        DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: MPIR_Type_flatten\n");
-#endif
-#else
         ADIOI_Flatten(datatype, flat, 0, &curr_index);
 #ifdef FLATTEN_DEBUG
         DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: ADIOI_Flatten\n");
 #endif
 
         ADIOI_Optimize_flattened(flat);
-#endif
 /* debug */
 #ifdef FLATTEN_DEBUG
         {

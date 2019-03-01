@@ -134,7 +134,7 @@ static inline int MPIDI_choose_netmod(void)
 
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI)
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
@@ -194,7 +194,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
-  fn_fail:
     return mpi_errno;
 }
 
@@ -208,9 +207,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_nm_vnis_provided;
+    int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vnis_provided;
+    int n_shm_vcis_provided;
 #endif
 #ifndef USE_PMI2_API
     int max_pmi_name_length;
@@ -324,11 +323,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
 
-    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vni_lock, &mpi_errno);
+    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vci_lock, &mpi_errno);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
@@ -395,7 +394,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #endif
 
     /* setup receive queue statistics */
-    mpi_errno = MPIDI_CH4U_Recvq_init();
+    mpi_errno = MPIDIG_recvq_init();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -405,11 +404,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
-    mpi_errno = MPIDI_CH4U_build_nodemap(MPIR_Process.comm_world->rank,
-                                         MPIR_Process.comm_world,
-                                         MPIR_Process.comm_world->local_size,
-                                         MPIDI_CH4_Global.node_map[0],
-                                         &MPIDI_CH4_Global.max_node_id);
+    mpi_errno = MPIDIU_build_nodemap(MPIR_Process.comm_world->rank, MPIR_Process.comm_world,
+                                     MPIR_Process.comm_world->local_size,
+                                     MPIDI_CH4_Global.node_map[0], &MPIDI_CH4_Global.max_node_id);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -433,7 +430,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
@@ -442,7 +439,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
                                            MPIR_Process.comm_world,
-                                           MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
+                                           MPIR_Process.comm_self, has_parent, &n_nm_vcis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -566,15 +563,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
 
-    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vci_lock, &thr_err);
     MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
     return mpi_errno;
 }
@@ -755,7 +752,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *i
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_NODE_ID);
 
-    MPIDI_CH4U_get_node_id(comm, rank, id_p);
+    MPIDIU_get_node_id(comm, rank, id_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_NODE_ID);
     return mpi_errno;
@@ -771,7 +768,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_MAX_NODE_ID);
 
-    MPIDI_CH4U_get_max_node_id(comm, max_id_p);
+    MPIDIU_get_max_node_id(comm, max_id_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_MAX_NODE_ID);
     return mpi_errno;
@@ -825,7 +822,7 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
     MPI_Aint result;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_ADD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_ADD);
-    result = MPIR_VOID_PTR_CAST_TO_MPI_AINT((char *) MPIR_AINT_CAST_TO_VOID_PTR(base) + disp);
+    result = (MPI_Aint) ((char *) base + disp);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_ADD);
     return result;
 }
@@ -840,8 +837,7 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_DIFF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_DIFF);
 
-    result = MPIR_PTR_DISP_CAST_TO_MPI_AINT((char *) MPIR_AINT_CAST_TO_VOID_PTR(addr1)
-                                            - (char *) MPIR_AINT_CAST_TO_VOID_PTR(addr2));
+    result = (MPI_Aint) ((char *) addr1 - (char *) addr2);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_DIFF);
     return result;
 }

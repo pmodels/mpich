@@ -1185,6 +1185,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
         MPI_Type_free(recv_types + i);
     ADIOI_Free(recv_types);
 
+#ifdef MPI_STATUSES_IGNORE
+    statuses = MPI_STATUSES_IGNORE;
+#else
     if (fd->atomicity) {
         /* bug fix from Wei-keng Liao and Kenin Coloma */
         statuses = (MPI_Status *) ADIOI_Malloc((nprocs_send + 1) * sizeof(MPI_Status));
@@ -1194,6 +1197,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
                                                sizeof(MPI_Status));
         /* +1 to avoid a 0-size malloc */
     }
+#endif
 
 #ifdef NEEDS_MPI_TEST
     i = 0;
@@ -1216,7 +1220,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5033, 0, NULL);
 #endif
+#ifndef MPI_STATUSES_IGNORE
     ADIOI_Free(statuses);
+#endif
     ADIOI_Free(requests);
     if (!buftype_is_contig && nprocs_send) {
         for (i = 0; i < nprocs; i++)
@@ -1645,7 +1651,6 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
 
             sbuf_ptr = all_recv_buf + rdispls[i];
             for (j = 0; j < count[i]; j++) {
-                ADIOI_ENSURE_AINT_FITS_IN_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
                 to_ptr =
                     (char *) ADIOI_AINT_CAST_TO_VOID_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
                 len = others_req[i].lens[start_pos[i] + j];

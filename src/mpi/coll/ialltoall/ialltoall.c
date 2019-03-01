@@ -24,6 +24,8 @@ cvars:
         inplace           - Force inplace algorithm
         pairwise          - Force pairwise algorithm
         permuted_sendrecv - Force permuted sendrecv algorithm
+        gentran_ring      - Force generic transport based ring algorithm
+        gentran_brucks    - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -274,6 +276,38 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ialltoall_intra_algo_choice) {
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_ring(sendbuf, sendcount, sendtype, recvbuf,
+                                                      recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
+                                                        recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
+
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
 
     *request = NULL;
 

@@ -30,7 +30,7 @@ enum {
 #define MPIDI_POSIX_REQUEST(req, field)       ((req)->dev.ch4.shm.posix.field)
 
 typedef struct {
-    MPIU_buf_pool_t *am_buf_pool;
+    MPIDIU_buf_pool_t *am_buf_pool;
 
     /* Postponed queue */
     MPIDI_POSIX_am_request_header_t *postponed_queue;

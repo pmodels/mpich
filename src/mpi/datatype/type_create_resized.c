@@ -56,16 +56,13 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes = 0;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = 0;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     /* if oldtype is a basic, we build a contiguous dataloop of count = 1 */
     if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {
@@ -74,7 +71,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->size = oldsize;
         new_dtp->has_sticky_ub = 0;
         new_dtp->has_sticky_lb = 0;
-        new_dtp->dataloop_depth = 1;
         new_dtp->true_lb = 0;
         new_dtp->lb = lb;
         new_dtp->true_ub = oldsize;
@@ -95,7 +91,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->size = old_dtp->size;
         new_dtp->has_sticky_ub = 0;
         new_dtp->has_sticky_lb = 0;
-        new_dtp->dataloop_depth = old_dtp->dataloop_depth;
         new_dtp->true_lb = old_dtp->true_lb;
         new_dtp->lb = lb;
         new_dtp->true_ub = old_dtp->true_ub;

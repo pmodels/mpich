@@ -20,11 +20,8 @@
  *
  */
 
-
-void MPII_Datatype_dot_printf(MPI_Datatype type, int depth, int header);
-void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount);
-void MPII_Dataloop_dot_printf(MPIR_Dataloop * loop_p, int depth, int header);
-static char *MPII_Datatype_depth_spacing(int depth) ATTRIBUTE((unused));
+static void contents_printf(MPI_Datatype type, int depth, int acount);
+static char *depth_spacing(int depth) ATTRIBUTE((unused));
 
 #define NR_TYPE_CUTOFF 6        /* Number of types to display before truncating
                                  * output. 6 picked as arbitrary cutoff */
@@ -34,202 +31,6 @@ static char *MPII_Datatype_depth_spacing(int depth) ATTRIBUTE((unused));
  */
 
 /* --BEGIN ERROR HANDLING-- */
-void MPII_Dataloop_dot_printf(MPIR_Dataloop * loop_p, int depth, int header)
-{
-    int i;
-
-    if (loop_p == NULL) {
-        MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "<null dataloop>\n"));
-        return;
-    }
-
-    if (header) {
-        MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                            /* graphviz does not like the 0xNNN format */
-                                            "digraph %lld {   {", (long long int) loop_p));
-    }
-
-    switch (loop_p->kind & DLOOP_KIND_MASK) {
-        case DLOOP_KIND_CONTIG:
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "      dl%d [shape = record, label = \"contig |{ ct = %d; el_sz = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];", depth,
-                                                (int) loop_p->loop_params.c_t.count,
-                                                (MPI_Aint) loop_p->el_size,
-                                                (MPI_Aint) loop_p->el_extent));
-            break;
-        case DLOOP_KIND_VECTOR:
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "      dl%d [shape = record, label = \"vector |{ ct = %d; blk = %d; str = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_sz = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_ext =  "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];", depth,
-                                                (int) loop_p->loop_params.v_t.count,
-                                                (int) loop_p->loop_params.v_t.blocksize,
-                                                (MPI_Aint) loop_p->loop_params.v_t.stride,
-                                                (MPI_Aint) loop_p->el_size,
-                                                (MPI_Aint) loop_p->el_extent));
-            break;
-        case DLOOP_KIND_INDEXED:
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "      dl%d [shape = record, label = \"indexed |{ ct = %d; tot_blks = %d; regions = ",
-                                                depth,
-                                                (int) loop_p->loop_params.i_t.count,
-                                                (int) loop_p->loop_params.i_t.total_blocks));
-
-            for (i = 0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.i_t.count; i++) {
-                if (i + 1 < loop_p->loop_params.i_t.count) {
-                    /* more regions after this one */
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d), ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        i_t.offset_array[i],
-                                                        (int) loop_p->loop_params.
-                                                        i_t.blocksize_array[i]));
-                } else {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d); ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        i_t.offset_array[i],
-                                                        (int) loop_p->loop_params.
-                                                        i_t.blocksize_array[i]));
-                }
-            }
-            if (i < loop_p->loop_params.i_t.count) {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "\\n...; ");
-            }
-
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];\n",
-                                                (MPI_Aint) loop_p->el_size,
-                                                (MPI_Aint) loop_p->el_extent));
-            break;
-        case DLOOP_KIND_BLOCKINDEXED:
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "      dl%d [shape = record, label = \"blockindexed |{ ct = %d; blk = %d; disps = ",
-                                                depth,
-                                                (int) loop_p->loop_params.bi_t.count,
-                                                (int) loop_p->loop_params.bi_t.blocksize));
-
-            for (i = 0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.bi_t.count; i++) {
-                if (i + 1 < loop_p->loop_params.bi_t.count) {
-                    /* more regions after this one */
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        MPI_AINT_FMT_DEC_SPEC ",\\n ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        bi_t.offset_array[i]));
-                } else {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        MPI_AINT_FMT_DEC_SPEC "; ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        bi_t.offset_array[i]));
-                }
-            }
-            if (i < loop_p->loop_params.bi_t.count) {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "...; ");
-            }
-
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];",
-                                                (MPI_Aint) loop_p->el_size,
-                                                (MPI_Aint) loop_p->el_extent));
-            break;
-        case DLOOP_KIND_STRUCT:
-            MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "      dl%d [shape = record, label = \"struct | {ct = %d; blks = ",
-                                                depth, (int) loop_p->loop_params.s_t.count));
-            for (i = 0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
-                if (i + 1 < loop_p->loop_params.s_t.count) {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "%d, ",
-                                                        (int) loop_p->loop_params.
-                                                        s_t.blocksize_array[i]));
-                } else {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "%d; ",
-                                                        (int) loop_p->loop_params.
-                                                        s_t.blocksize_array[i]));
-                }
-            }
-            if (i < loop_p->loop_params.s_t.count) {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "...; disps = ");
-            } else {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "disps = ");
-            }
-
-            for (i = 0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
-                if (i + 1 < loop_p->loop_params.s_t.count) {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPI_AINT_FMT_DEC_SPEC ", ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        s_t.offset_array[i]));
-                } else {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPI_AINT_FMT_DEC_SPEC "; ",
-                                                        (MPI_Aint) loop_p->loop_params.
-                                                        s_t.offset_array[i]));
-                }
-            }
-            if (i < loop_p->loop_params.s_t.count) {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "... }\"];");
-            } else {
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "}\"];");
-            }
-            break;
-        default:
-            MPIR_Assert(0);
-    }
-
-    if (!(loop_p->kind & DLOOP_FINAL_MASK)) {
-        /* more loops to go; recurse */
-        MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                            "      dl%d -> dl%d;\n", depth, depth + 1));
-        switch (loop_p->kind & DLOOP_KIND_MASK) {
-            case DLOOP_KIND_CONTIG:
-                MPII_Dataloop_dot_printf(loop_p->loop_params.c_t.dataloop, depth + 1, 0);
-                break;
-            case DLOOP_KIND_VECTOR:
-                MPII_Dataloop_dot_printf(loop_p->loop_params.v_t.dataloop, depth + 1, 0);
-                break;
-            case DLOOP_KIND_INDEXED:
-                MPII_Dataloop_dot_printf(loop_p->loop_params.i_t.dataloop, depth + 1, 0);
-                break;
-            case DLOOP_KIND_BLOCKINDEXED:
-                MPII_Dataloop_dot_printf(loop_p->loop_params.bi_t.dataloop, depth + 1, 0);
-                break;
-            case DLOOP_KIND_STRUCT:
-                for (i = 0; i < loop_p->loop_params.s_t.count; i++) {
-                    MPII_Dataloop_dot_printf(loop_p->loop_params.s_t.dataloop_array[i],
-                                             depth + 1, 0);
-                }
-                break;
-            default:
-                MPL_DBG_OUT(MPIR_DBG_DATATYPE, "      < unsupported type >");
-        }
-    }
-
-
-    if (header) {
-        MPL_DBG_OUT(MPIR_DBG_DATATYPE, "   }\n}");
-    }
-    return;
-}
-
-void MPII_Datatype_dot_printf(MPI_Datatype type, int depth, int header)
-{
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-        MPL_DBG_OUT(MPIR_DBG_DATATYPE, "MPII_Datatype_dot_printf: type is a basic");
-        return;
-    } else {
-        MPIR_Datatype *dt_p;
-        MPIR_Dataloop *loop_p;
-
-        MPIR_Datatype_get_ptr(type, dt_p);
-        loop_p = dt_p->dataloop;
-
-        MPII_Dataloop_dot_printf(loop_p, depth, header);
-        return;
-    }
-}
 
 void MPII_Datatype_printf(MPI_Datatype type,
                           int depth, MPI_Aint displacement, int blocklength, int header)
@@ -502,7 +303,9 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 {
     int is_builtin;
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     const char *string;
+#endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
 
     is_builtin = (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN);
@@ -515,12 +318,13 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                         (MPL_DBG_FDEST, "# MPIU_Datatype_debug: MPI_Datatype = MPI_DATATYPE_NULL"));
         return;
     }
-
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(type);
     MPIR_Assert(string != NULL);
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                         "# MPIU_Datatype_debug: MPI_Datatype = 0x%0x (%s)", type,
                                         (is_builtin) ? string : "derived"));
+#endif
 
     if (is_builtin)
         return;
@@ -528,6 +332,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPIR_Datatype_get_ptr(type, dtp);
     MPIR_Assert(dtp != NULL);
 
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(dtp->basic_type);
     MPIR_Assert(string != NULL);
 
@@ -546,15 +351,16 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         -1 ? "multiple types" :
                                         string,
                                         dtp->is_contig ? "is N contig" : "is not N contig"));
+#endif
 
     MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Contents:");
-    MPII_Datatype_contents_printf(type, 0, array_ct);
+    contents_printf(type, 0, array_ct);
 
     MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Dataloop:");
-    MPII_Datatype_dot_printf(type, 0, 1);
+    MPIR_Dataloop_printf(type, 0, 1);
 }
 
-static char *MPII_Datatype_depth_spacing(int depth)
+static char *depth_spacing(int depth)
 {
     static char d0[] = "";
     static char d1[] = "  ";
@@ -585,7 +391,7 @@ static char *MPII_Datatype_depth_spacing(int depth)
  if (cp->nr_types > 0) MPL_free(types);   \
  return;                                 }
 
-void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
+static void contents_printf(MPI_Datatype type, int depth, int acount)
 {
     int i;
     MPIR_Datatype *dtp;
@@ -594,15 +400,16 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
     MPI_Aint *aints = NULL;
     MPI_Datatype *types = NULL;
     int *ints = NULL;
-    const char *string;
 
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-        string = MPIR_Datatype_builtin_to_string(type);
+        const char *string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
         MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %stype: %s\n",
-                                            MPII_Datatype_depth_spacing(depth), string));
+                                            depth_spacing(depth), string));
         return;
     }
+#endif
 
     MPIR_Datatype_get_ptr(type, dtp);
     cp = dtp->contents;
@@ -629,12 +436,14 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
         MPIR_Assert(types != NULL);
         MPII_Datatype_get_contents_types(cp, types);
     }
-
-
-    string = MPIR_Datatype_combiner_to_string(cp->combiner);
-    MPIR_Assert(string != NULL);
-    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scombiner: %s",
-                                        MPII_Datatype_depth_spacing(depth), string));
+#if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
+    {
+        const char *string = MPIR_Datatype_combiner_to_string(cp->combiner);
+        MPIR_Assert(string != NULL);
+        MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scombiner: %s",
+                                            depth_spacing(depth), string));
+    }
+#endif
 
     switch (cp->combiner) {
         case MPI_COMBINER_NAMED:
@@ -645,78 +454,77 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
         case MPI_COMBINER_CONTIGUOUS:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %scontig ct = %d\n",
-                                                MPII_Datatype_depth_spacing(depth), *ints));
-            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+                                                depth_spacing(depth), *ints));
+            contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_VECTOR:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "# %svector ct = %d, blk = %d, str = %d\n",
-                                                MPII_Datatype_depth_spacing(depth),
-                                                ints[0], ints[1], ints[2]));
-            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+                                                depth_spacing(depth), ints[0], ints[1], ints[2]));
+            contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_HVECTOR:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "# %shvector ct = %d, blk = %d, str = "
                                                 MPI_AINT_FMT_DEC_SPEC "\n",
-                                                MPII_Datatype_depth_spacing(depth), ints[0],
+                                                depth_spacing(depth), ints[0],
                                                 ints[1], (MPI_Aint) aints[0]));
-            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_INDEXED:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sindexed ct = %d:",
-                                                MPII_Datatype_depth_spacing(depth), ints[0]));
+                                                depth_spacing(depth), ints[0]));
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  indexed [%d]: blk = %d, disp = %d\n",
-                                                    MPII_Datatype_depth_spacing(depth),
+                                                    depth_spacing(depth),
                                                     i,
                                                     ints[i + 1], ints[i + (cp->nr_ints / 2) + 1]));
-                MPII_Datatype_contents_printf(*types, depth + 1, acount);
+                contents_printf(*types, depth + 1, acount);
             }
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_HINDEXED:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %shindexed ct = %d:",
-                                                MPII_Datatype_depth_spacing(depth), ints[0]));
+                                                depth_spacing(depth), ints[0]));
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  hindexed [%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
-                                                    MPII_Datatype_depth_spacing(depth), i,
+                                                    depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
-                MPII_Datatype_contents_printf(*types, depth + 1, acount);
+                contents_printf(*types, depth + 1, acount);
             }
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_STRUCT:
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sstruct ct = %d:",
-                                                MPII_Datatype_depth_spacing(depth), (int) ints[0]));
+                                                depth_spacing(depth), (int) ints[0]));
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  struct[%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
-                                                    MPII_Datatype_depth_spacing(depth), i,
+                                                    depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
-                MPII_Datatype_contents_printf(types[i], depth + 1, acount);
+                contents_printf(types[i], depth + 1, acount);
             }
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_SUBARRAY:
             MPIR_Assert((ints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %ssubarray ct = %d:",
-                                                MPII_Datatype_depth_spacing(depth), (int) ints[0]));
+                                                depth_spacing(depth), (int) ints[0]));
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  sizes[%d] = %d subsizes[%d] = %d starts[%d] = %d\n",
-                                                    MPII_Datatype_depth_spacing(depth),
+                                                    depth_spacing(depth),
                                                     i, (int) ints[i + 1],
                                                     i, (int) ints[i + ints[0] + 1],
                                                     i, (int) ints[2 * ints[0] + 1]));
             }
-            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+            contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
 
         case MPI_COMBINER_RESIZED:
@@ -724,13 +532,12 @@ void MPII_Datatype_contents_printf(MPI_Datatype type, int depth, int acount)
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
                             (MPL_DBG_FDEST,
                              "# %sresized lb = " MPI_AINT_FMT_DEC_SPEC " extent = "
-                             MPI_AINT_FMT_DEC_SPEC "\n", MPII_Datatype_depth_spacing(depth),
-                             aints[0], aints[1]));
-            MPII_Datatype_contents_printf(*types, depth + 1, acount);
+                             MPI_AINT_FMT_DEC_SPEC "\n", depth_spacing(depth), aints[0], aints[1]));
+            contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         default:
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %sunhandled combiner",
-                                                MPII_Datatype_depth_spacing(depth)));
+                                                depth_spacing(depth)));
             MPII_DATATYPE_FREE_AND_RETURN;
     }
 }

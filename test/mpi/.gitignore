@@ -115,7 +115,11 @@
 /coll/nbredscat
 /coll/nbredscat3
 /coll/nbredscatinter
-/coll/neighb_coll
+/coll/neighb_allgather
+/coll/neighb_allgatherv
+/coll/neighb_alltoall
+/coll/neighb_alltoallv
+/coll/neighb_alltoallw
 /coll/nonblocking
 /coll/nonblocking2
 /coll/nonblocking3
@@ -1110,6 +1114,7 @@
 /pt2pt/greq1
 /pt2pt/huge_anysrc
 /pt2pt/huge_dupcomm
+/pt2pt/huge_ssend
 /pt2pt/huge_underflow
 /pt2pt/icsend
 /pt2pt/inactivereq
@@ -1146,6 +1151,7 @@
 /results.txt
 /rma/acc_loc
 /rma/acc_pairtype
+/rma/acc_pairtype_shm
 /rma/acc_flush_get
 /rma/acc_ordering
 /rma/accfence1
@@ -1311,6 +1317,8 @@
 /rma/win_zero
 /rma/wincall
 /rma/window_creation
+/rma/window_allocation
+/rma/window_noncontig_allocation
 /rma/winname
 /rma/wintest
 /rma/wintest_shm

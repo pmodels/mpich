@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
 
     if (unlikely(status == UCS_ERR_CANCELED))
         MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
-    MPIDI_CH4U_request_complete(req);
+    MPIDIU_request_complete(req);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 
@@ -103,13 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
     } else if (have_request) {
-#ifndef HAVE_DEBUGGER_SUPPORT
-        req = MPIDI_UCX_global.lw_send_req;
-        MPIR_Request_add_ref(req);
-#else
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_cc_set(&req->cc, 0);
-#endif
+        req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     }
     *request = req;
 

@@ -6,18 +6,18 @@
  */
 
 #include "mpiimpl.h"
+#include "dataloop.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#undef DEBUG_DLOOP_SIZE
-#undef DLOOP_DEBUG_MEMORY
+#undef DEBUG_MEMORY
 
 /* Dataloops
  *
  * The functions here are used for the creation, copying, update, and display
- * of DLOOP_Dataloop structures and trees of these structures.
+ * of MPIR_Dataloop structures and trees of these structures.
  *
  * Currently we store trees of dataloops in contiguous regions of memory.  They
  * are stored in such a way that subtrees are also stored contiguously.  This
@@ -40,7 +40,7 @@
 /* Some functions in this file are responsible for allocation of space for
  * dataloops.  These structures include the dataloop structure itself
  * followed by a sequence of variable-sized arrays, depending on the loop
- * kind.  For example, a dataloop of kind DLOOP_KIND_INDEXED has a
+ * kind.  For example, a dataloop of kind MPII_DATALOOP_KIND_INDEXED has a
  * dataloop structure followed by an array of block sizes and then an array
  * of offsets.
  *
@@ -57,22 +57,84 @@
 Input/output Parameters:
 . dataloop - pointer to dataloop structure
 @*/
-void MPIR_Dataloop_free(DLOOP_Dataloop ** dataloop)
+void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop)
 {
 
     if (*dataloop == NULL)
         return;
 
-#ifdef DLOOP_DEBUG_MEMORY
-    MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "DLOOP_Dataloop_free: freeing loop @ %x.\n",
+#ifdef DEBUG_MEMORY
+    MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "MPIR_Dataloop_free: freeing loop @ %x.\n",
                   (int) *dataloop);
 #endif
 
-    memset(*dataloop, 0, sizeof(DLOOP_Dataloop_common));
-    DLOOP_Free(*dataloop);
+    MPL_free(*dataloop);
     *dataloop = NULL;
     return;
 }
+
+struct dloop_flatten_hdr {
+    MPI_Aint dataloop_size;
+    MPIR_Dataloop *dataloop_local_addr;
+};
+
+int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_dataloop_size)
+{
+    *flattened_dataloop_size = sizeof(struct dloop_flatten_hdr) + dtp->dataloop_size;
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void *flattened_dataloop)
+{
+    struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
+    int mpi_errno = MPI_SUCCESS;
+
+    /*
+     * Our flattened layout contains three elements:
+     *    - The size of the dataloop
+     *    - The local address of the dataloop (needed to update the dataloop pointers when we unflatten)
+     *    - The actual dataloop itself
+     */
+
+    dloop_flatten_hdr->dataloop_size = dtp->dataloop_size;
+    dloop_flatten_hdr->dataloop_local_addr = dtp->dataloop;
+
+    MPIR_Memcpy(((char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr)),
+                dtp->dataloop, dtp->dataloop_size);
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Dataloop_unflatten
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
+{
+    struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
+    MPI_Aint ptrdiff;
+    int mpi_errno = MPI_SUCCESS;
+
+    dtp->dataloop = MPL_malloc(dloop_flatten_hdr->dataloop_size, MPL_MEM_DATATYPE);
+    MPIR_ERR_CHKANDJUMP1(dtp->dataloop == NULL, mpi_errno, MPI_ERR_INTERN, "**nomem", "**nomem %s",
+                         "dataloop flatten hdr");
+
+    MPIR_Memcpy(dtp->dataloop, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
+                dloop_flatten_hdr->dataloop_size);
+    dtp->dataloop_size = dloop_flatten_hdr->dataloop_size;
+
+    ptrdiff =
+        (MPI_Aint) ((char *) (dtp->dataloop) - (char *) dloop_flatten_hdr->dataloop_local_addr);
+    MPII_Dataloop_update(dtp->dataloop, ptrdiff);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 
 /*@
   Dataloop_copy - Copy an arbitrary dataloop structure, updating
@@ -97,35 +159,35 @@ Input Parameters:
 - all pointers in the region are relative to the start of the data region
   the first dataloop in the array is the root of the tree
 @*/
-void MPIR_Dataloop_copy(void *dest, void *src, DLOOP_Size size)
+static void dloop_copy(void *dest, void *src, MPI_Aint size)
 {
-    DLOOP_Offset ptrdiff;
+    MPI_Aint ptrdiff;
 
-#ifdef DLOOP_DEBUG_MEMORY
+#ifdef DEBUG_MEMORY
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                    (MPL_DBG_FDEST, "DLOOP_Dataloop_copy: copying from %x to %x (%z bytes).\n",
+                    (MPL_DBG_FDEST, "dloop_copy: copying from %x to %x (%z bytes).\n",
                      (int) src, (int) dest, (size_t) size));
 #endif
 
     /* copy region first */
-    DLOOP_Memcpy(dest, src, size);
+    MPIR_Memcpy(dest, src, size);
 
-    /* Calculate difference in starting locations. DLOOP_Dataloop_update()
+    /* Calculate difference in starting locations. MPII_Dataloop_update()
      * then traverses the new structure and updates internal pointers by
      * adding this difference to them. This way we can just copy the
      * structure, including pointers, in one big block.
      */
-    ptrdiff = (DLOOP_Offset) ((char *) dest - (char *) src);
+    ptrdiff = (MPI_Aint) ((char *) dest - (char *) src);
 
     /* traverse structure updating pointers */
-    MPIR_Dataloop_update(dest, ptrdiff);
+    MPII_Dataloop_update(dest, ptrdiff);
 
     return;
 }
 
 
 /*@
-  Dataloop_update - update pointers after a copy operation
+  MPII_Dataloop_update - update pointers after a copy operation
 
 Input Parameters:
 + dataloop - pointer to loop to update
@@ -134,15 +196,15 @@ Input Parameters:
   This function is used to recursively update all the pointers in a
   dataloop tree.
 @*/
-void MPIR_Dataloop_update(DLOOP_Dataloop * dataloop, DLOOP_Offset ptrdiff)
+void MPII_Dataloop_update(MPIR_Dataloop * dataloop, MPI_Aint ptrdiff)
 {
     /* OPT: only declare these variables down in the Struct case */
     int i;
-    DLOOP_Dataloop **looparray;
+    MPIR_Dataloop **looparray;
 
-    switch (dataloop->kind & DLOOP_KIND_MASK) {
-        case DLOOP_KIND_CONTIG:
-        case DLOOP_KIND_VECTOR:
+    switch (dataloop->kind & MPII_DATALOOP_KIND_MASK) {
+        case MPII_DATALOOP_KIND_CONTIG:
+        case MPII_DATALOOP_KIND_VECTOR:
             /*
              * All these really ugly assignments are really of the form:
              *
@@ -153,145 +215,88 @@ void MPIR_Dataloop_update(DLOOP_Dataloop * dataloop, DLOOP_Offset ptrdiff)
              * struct for contig and vector):
              */
 
-            if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
-                DLOOP_Assert(dataloop->loop_params.cm_t.dataloop);
+            if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
+                MPIR_Assert(dataloop->loop_params.cm_t.dataloop);
 
-                DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                    (char *)dataloop->loop_params.cm_t.dataloop +
-                                                    ptrdiff);
+                dataloop->loop_params.cm_t.dataloop = (MPIR_Dataloop *) (void *)
+                    ((MPI_Aint) (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
 
-                dataloop->loop_params.cm_t.dataloop =
-                    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                    (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.cm_t.dataloop +
-                     ptrdiff);
-
-                MPIR_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
             }
             break;
 
-        case DLOOP_KIND_BLOCKINDEXED:
-            DLOOP_Assert(dataloop->loop_params.bi_t.offset_array);
+        case MPII_DATALOOP_KIND_BLOCKINDEXED:
+            MPIR_Assert(dataloop->loop_params.bi_t.offset_array);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.bi_t.offset_array +
-                                                ptrdiff);
+            dataloop->loop_params.bi_t.offset_array = (MPI_Aint *) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
 
-            dataloop->loop_params.bi_t.offset_array =
-                (DLOOP_Offset *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.bi_t.offset_array +
-                 ptrdiff);
+            if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
+                MPIR_Assert(dataloop->loop_params.bi_t.dataloop);
 
-            if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
-                DLOOP_Assert(dataloop->loop_params.bi_t.dataloop);
+                dataloop->loop_params.bi_t.dataloop = (MPIR_Dataloop *) (void *)
+                    ((MPI_Aint) (char *) dataloop->loop_params.bi_t.dataloop + ptrdiff);
 
-                DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                    (char *)dataloop->loop_params.bi_t.dataloop +
-                                                    ptrdiff);
-
-                dataloop->loop_params.bi_t.dataloop =
-                    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                    (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.bi_t.dataloop +
-                     ptrdiff);
-
-                MPIR_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
             }
             break;
 
-        case DLOOP_KIND_INDEXED:
-            DLOOP_Assert(dataloop->loop_params.i_t.blocksize_array);
+        case MPII_DATALOOP_KIND_INDEXED:
+            MPIR_Assert(dataloop->loop_params.i_t.blocksize_array);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.i_t.blocksize_array +
-                                                ptrdiff);
+            dataloop->loop_params.i_t.blocksize_array = (MPI_Aint *) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
 
-            dataloop->loop_params.i_t.blocksize_array =
-                (DLOOP_Count *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.i_t.blocksize_array +
-                 ptrdiff);
+            MPIR_Assert(dataloop->loop_params.i_t.offset_array);
 
-            DLOOP_Assert(dataloop->loop_params.i_t.offset_array);
+            dataloop->loop_params.i_t.offset_array = (MPI_Aint *) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.i_t.offset_array +
-                                                ptrdiff);
+            if (!(dataloop->kind & MPII_DATALOOP_FINAL_MASK)) {
+                MPIR_Assert(dataloop->loop_params.i_t.dataloop);
 
-            dataloop->loop_params.i_t.offset_array =
-                (DLOOP_Offset *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.i_t.offset_array +
-                 ptrdiff);
+                dataloop->loop_params.i_t.dataloop = (MPIR_Dataloop *) (void *)
+                    ((MPI_Aint) (char *) dataloop->loop_params.i_t.dataloop + ptrdiff);
 
-            if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
-                DLOOP_Assert(dataloop->loop_params.i_t.dataloop);
-
-                DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                    (char *)dataloop->loop_params.i_t.dataloop +
-                                                    ptrdiff);
-
-                dataloop->loop_params.i_t.dataloop =
-                    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                    (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.i_t.dataloop +
-                     ptrdiff);
-
-                MPIR_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
+                MPII_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
             }
             break;
 
-        case DLOOP_KIND_STRUCT:
-            DLOOP_Assert(dataloop->loop_params.s_t.blocksize_array);
+        case MPII_DATALOOP_KIND_STRUCT:
+            MPIR_Assert(dataloop->loop_params.s_t.blocksize_array);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.s_t.blocksize_array +
-                                                ptrdiff);
+            dataloop->loop_params.s_t.blocksize_array = (MPI_Aint *) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
 
-            dataloop->loop_params.s_t.blocksize_array =
-                (DLOOP_Count *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.s_t.blocksize_array +
-                 ptrdiff);
+            MPIR_Assert(dataloop->loop_params.s_t.offset_array);
 
-            DLOOP_Assert(dataloop->loop_params.s_t.offset_array);
+            dataloop->loop_params.s_t.offset_array = (MPI_Aint *) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.s_t.offset_array +
-                                                ptrdiff);
-
-            dataloop->loop_params.s_t.offset_array =
-                (DLOOP_Offset *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.s_t.offset_array +
-                 ptrdiff);
-
-            if (dataloop->kind & DLOOP_FINAL_MASK)
+            if (dataloop->kind & MPII_DATALOOP_FINAL_MASK)
                 break;
 
-            DLOOP_Assert(dataloop->loop_params.s_t.dataloop_array);
+            MPIR_Assert(dataloop->loop_params.s_t.dataloop_array);
 
-            DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET
-                                                (char *)dataloop->loop_params.s_t.dataloop_array +
-                                                ptrdiff);
-
-            dataloop->loop_params.s_t.dataloop_array =
-                (DLOOP_Dataloop **) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)dataloop->loop_params.s_t.dataloop_array +
-                 ptrdiff);
+            dataloop->loop_params.s_t.dataloop_array = (MPIR_Dataloop **) (void *)
+                ((MPI_Aint) (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
 
             /* fix the N dataloop pointers too */
             looparray = dataloop->loop_params.s_t.dataloop_array;
             for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
-                DLOOP_Assert(looparray[i]);
+                MPIR_Assert(looparray[i]);
 
-                DLOOP_Ensure_Offset_fits_in_pointer(DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)looparray
-                                                    [i] + ptrdiff);
-
-                looparray[i] = (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
-                    (DLOOP_VOID_PTR_CAST_TO_OFFSET(char *)looparray[i] + ptrdiff);
+                looparray[i] = (MPIR_Dataloop *) (void *)
+                    ((MPI_Aint) (char *) looparray[i] + ptrdiff);
             }
 
             for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
-                MPIR_Dataloop_update(looparray[i], ptrdiff);
+                MPII_Dataloop_update(looparray[i], ptrdiff);
             }
             break;
         default:
             /* --BEGIN ERROR HANDLING-- */
-            DLOOP_Assert(0);
+            MPIR_Assert(0);
             break;
             /* --END ERROR HANDLING-- */
     }
@@ -312,10 +317,10 @@ Input Parameters:
   The count parameter passed into this function will often be different
   from the count passed in at the MPI layer due to optimizations.
 @*/
-void MPIR_Dataloop_alloc(int kind,
-                         DLOOP_Count count, DLOOP_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p)
+void MPII_Dataloop_alloc(int kind,
+                         MPI_Aint count, MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p)
 {
-    MPIR_Dataloop_alloc_and_copy(kind, count, NULL, 0, new_loop_p, new_loop_sz_p);
+    MPII_Dataloop_alloc_and_copy(kind, count, NULL, 0, new_loop_p, new_loop_sz_p);
     return;
 }
 
@@ -336,20 +341,20 @@ Input Parameters:
   The count parameter passed into this function will often be different
   from the count passed in at the MPI layer.
 @*/
-void MPIR_Dataloop_alloc_and_copy(int kind,
-                                  DLOOP_Count count,
-                                  DLOOP_Dataloop * old_loop,
-                                  DLOOP_Size old_loop_sz,
-                                  DLOOP_Dataloop ** new_loop_p, DLOOP_Size * new_loop_sz_p)
+void MPII_Dataloop_alloc_and_copy(int kind,
+                                  MPI_Aint count,
+                                  MPIR_Dataloop * old_loop,
+                                  MPI_Aint old_loop_sz,
+                                  MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p)
 {
-    DLOOP_Size new_loop_sz = 0;
+    MPI_Aint new_loop_sz = 0;
     int align_sz;
     int epsilon;
-    DLOOP_Size loop_sz = sizeof(DLOOP_Dataloop);
-    DLOOP_Size off_sz = 0, blk_sz = 0, ptr_sz = 0, extent_sz = 0;
+    MPI_Aint loop_sz = sizeof(MPIR_Dataloop);
+    MPI_Aint off_sz = 0, blk_sz = 0, ptr_sz = 0, extent_sz = 0;
 
     char *pos;
-    DLOOP_Dataloop *new_loop;
+    MPIR_Dataloop *new_loop;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
     align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
@@ -358,28 +363,28 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
 #endif
 
     if (old_loop != NULL) {
-        DLOOP_Assert((old_loop_sz % align_sz) == 0);
+        MPIR_Assert((old_loop_sz % align_sz) == 0);
     }
 
     /* calculate the space that we actually need for everything */
     switch (kind) {
-        case DLOOP_KIND_STRUCT:
+        case MPII_DATALOOP_KIND_STRUCT:
             /* need space for dataloop pointers and extents */
-            ptr_sz = count * sizeof(DLOOP_Dataloop *);
-            extent_sz = count * sizeof(DLOOP_Offset);
+            ptr_sz = count * sizeof(MPIR_Dataloop *);
+            extent_sz = count * sizeof(MPI_Aint);
             MPL_FALLTHROUGH;
-        case DLOOP_KIND_INDEXED:
+        case MPII_DATALOOP_KIND_INDEXED:
             /* need space for block sizes */
-            blk_sz = count * sizeof(DLOOP_Count);
+            blk_sz = count * sizeof(MPI_Aint);
             MPL_FALLTHROUGH;
-        case DLOOP_KIND_BLOCKINDEXED:
+        case MPII_DATALOOP_KIND_BLOCKINDEXED:
             /* need space for block offsets */
-            off_sz = count * sizeof(DLOOP_Offset);
-        case DLOOP_KIND_CONTIG:
-        case DLOOP_KIND_VECTOR:
+            off_sz = count * sizeof(MPI_Aint);
+        case MPII_DATALOOP_KIND_CONTIG:
+        case MPII_DATALOOP_KIND_VECTOR:
             break;
         default:
-            DLOOP_Assert(0);
+            MPIR_Assert(0);
     }
 
     /* pad everything that we're going to allocate */
@@ -406,22 +411,22 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
     new_loop_sz += loop_sz + off_sz + blk_sz + ptr_sz + extent_sz + old_loop_sz;
 
     /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (MPIR_Dataloop *) MPL_malloc(new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
     }
-#ifdef DLOOP_DEBUG_MEMORY
+#ifdef DEBUG_MEMORY
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "DLOOP_Dataloop_alloc_and_copy: new loop @ %x (tot sz = %z, loop = %z, off = %z, blk = %z, ptr = %z, extent = %z, old = %z)\n",
+                     "MPII_Dataloop_alloc_and_copy: new loop @ %x (tot sz = %z, loop = %z, off = %z, blk = %z, ptr = %z, extent = %z, old = %z)\n",
                      (int) new_loop, new_loop_sz, loop_sz, off_sz, blk_sz, ptr_sz, extent_sz,
                      old_loop_sz));
 #endif
 
     /* set all the pointers in the new dataloop structure */
     switch (kind) {
-        case DLOOP_KIND_STRUCT:
+        case MPII_DATALOOP_KIND_STRUCT:
             /* order is:
              * - pointers
              * - blocks
@@ -429,182 +434,66 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
              * - extents
              */
             new_loop->loop_params.s_t.dataloop_array =
-                (DLOOP_Dataloop **) (((char *) new_loop) + loop_sz);
+                (MPIR_Dataloop **) (((char *) new_loop) + loop_sz);
             new_loop->loop_params.s_t.blocksize_array =
-                (DLOOP_Count *) (((char *) new_loop) + loop_sz + ptr_sz);
+                (MPI_Aint *) (((char *) new_loop) + loop_sz + ptr_sz);
             new_loop->loop_params.s_t.offset_array =
-                (DLOOP_Offset *) (((char *) new_loop) + loop_sz + ptr_sz + blk_sz);
+                (MPI_Aint *) (((char *) new_loop) + loop_sz + ptr_sz + blk_sz);
             new_loop->loop_params.s_t.el_extent_array =
-                (DLOOP_Offset *) (((char *) new_loop) + loop_sz + ptr_sz + blk_sz + off_sz);
+                (MPI_Aint *) (((char *) new_loop) + loop_sz + ptr_sz + blk_sz + off_sz);
             break;
-        case DLOOP_KIND_INDEXED:
+        case MPII_DATALOOP_KIND_INDEXED:
             /* order is:
              * - blocks
              * - offsets
              */
             new_loop->loop_params.i_t.blocksize_array =
-                (DLOOP_Count *) (((char *) new_loop) + loop_sz);
+                (MPI_Aint *) (((char *) new_loop) + loop_sz);
             new_loop->loop_params.i_t.offset_array =
-                (DLOOP_Offset *) (((char *) new_loop) + loop_sz + blk_sz);
+                (MPI_Aint *) (((char *) new_loop) + loop_sz + blk_sz);
             if (old_loop == NULL) {
                 new_loop->loop_params.i_t.dataloop = NULL;
             } else {
                 new_loop->loop_params.i_t.dataloop =
-                    (DLOOP_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
+                    (MPIR_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
             }
             break;
-        case DLOOP_KIND_BLOCKINDEXED:
-            new_loop->loop_params.bi_t.offset_array =
-                (DLOOP_Offset *) (((char *) new_loop) + loop_sz);
+        case MPII_DATALOOP_KIND_BLOCKINDEXED:
+            new_loop->loop_params.bi_t.offset_array = (MPI_Aint *) (((char *) new_loop) + loop_sz);
             if (old_loop == NULL) {
                 new_loop->loop_params.bi_t.dataloop = NULL;
             } else {
                 new_loop->loop_params.bi_t.dataloop =
-                    (DLOOP_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
+                    (MPIR_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
             }
             break;
-        case DLOOP_KIND_CONTIG:
+        case MPII_DATALOOP_KIND_CONTIG:
             if (old_loop == NULL) {
                 new_loop->loop_params.c_t.dataloop = NULL;
             } else {
                 new_loop->loop_params.c_t.dataloop =
-                    (DLOOP_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
+                    (MPIR_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
             }
             break;
-        case DLOOP_KIND_VECTOR:
+        case MPII_DATALOOP_KIND_VECTOR:
             if (old_loop == NULL) {
                 new_loop->loop_params.v_t.dataloop = NULL;
             } else {
                 new_loop->loop_params.v_t.dataloop =
-                    (DLOOP_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
+                    (MPIR_Dataloop *) (((char *) new_loop) + (new_loop_sz - old_loop_sz));
             }
             break;
         default:
-            DLOOP_Assert(0);
+            MPIR_Assert(0);
     }
 
     pos = ((char *) new_loop) + (new_loop_sz - old_loop_sz);
     if (old_loop != NULL) {
-        MPIR_Dataloop_copy(pos, old_loop, old_loop_sz);
+        dloop_copy(pos, old_loop, old_loop_sz);
     }
 
     *new_loop_p = new_loop;
     *new_loop_sz_p = new_loop_sz;
-    return;
-}
-
-/*@
-  Dataloop_struct_alloc - allocate the resources used to store a dataloop and
-                          copy in old dataloop as appropriate.  This version
-                          is specifically for use when a struct dataloop is
-                          being created; the space to hold old dataloops in
-                          this case must be described back to the
-                          implementation in order for efficient copying.
-
-Input Parameters:
-+ count         - number of elements in dataloop (kind dependent)
-. old_loop_sz   - size of old dataloop (should be zero if old_loop is NULL)
-. basic_ct      - number of basic types for which new dataloops are needed
-. old_loop_p    - address at which to store pointer to old loops
-. new_loop_p    - address at which to store new struct dataloop pointer
-- new_loop_sz_p - address at which to store new loop size
-
-  Notes:
-  The count parameter passed into this function will often be different
-  from the count passed in at the MPI layer due to optimizations.
-
-  The caller is responsible for filling in the region pointed to by
-  old_loop_p (count elements).
-@*/
-void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
-                                DLOOP_Size old_loop_sz,
-                                int basic_ct,
-                                DLOOP_Dataloop ** old_loop_p,
-                                DLOOP_Dataloop ** new_loop_p, DLOOP_Size * new_loop_sz_p)
-{
-    DLOOP_Size new_loop_sz = 0;
-    int align_sz;
-    int epsilon;
-    DLOOP_Size loop_sz = sizeof(DLOOP_Dataloop);
-    DLOOP_Size off_sz, blk_sz, ptr_sz, extent_sz, basic_sz;
-
-    DLOOP_Dataloop *new_loop;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;       /* default aligns everything to 8-byte boundaries */
-#endif
-
-    /* calculate the space that we actually need for everything */
-    ptr_sz = count * sizeof(DLOOP_Dataloop *);
-    extent_sz = count * sizeof(DLOOP_Offset);
-    blk_sz = count * sizeof(DLOOP_Count);
-    off_sz = count * sizeof(DLOOP_Offset);
-    basic_sz = sizeof(DLOOP_Dataloop);
-
-    /* pad everything that we're going to allocate */
-    epsilon = loop_sz % align_sz;
-    if (epsilon)
-        loop_sz += align_sz - epsilon;
-
-    epsilon = off_sz % align_sz;
-    if (epsilon)
-        off_sz += align_sz - epsilon;
-
-    epsilon = blk_sz % align_sz;
-    if (epsilon)
-        blk_sz += align_sz - epsilon;
-
-    epsilon = ptr_sz % align_sz;
-    if (epsilon)
-        ptr_sz += align_sz - epsilon;
-
-    epsilon = extent_sz % align_sz;
-    if (epsilon)
-        extent_sz += align_sz - epsilon;
-
-    epsilon = basic_sz % align_sz;
-    if (epsilon)
-        basic_sz += align_sz - epsilon;
-
-    /* note: we pad *each* basic type dataloop, because the
-     * code used to create them assumes that we're going to
-     * do that.
-     */
-
-    new_loop_sz += loop_sz + off_sz + blk_sz + ptr_sz +
-        extent_sz + (basic_ct * basic_sz) + old_loop_sz;
-
-    /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
-    if (new_loop == NULL) {
-        *new_loop_p = NULL;
-        return;
-    }
-#ifdef DLOOP_DEBUG_MEMORY
-    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "DLOOP_Dataloop_struct_alloc: new loop @ %x (tot sz = %z, loop = %z, off = %z, blk = %z, ptr = %z, extent = %z, basics = %z, old = %z)\n",
-                     (int) new_loop, new_loop_sz, loop_sz, off_sz, blk_sz, ptr_sz, extent_sz,
-                     basic_sz, old_loop_sz));
-#endif
-
-    /* set all the pointers in the new dataloop structure */
-    new_loop->loop_params.s_t.dataloop_array = (DLOOP_Dataloop **)
-        (((char *) new_loop) + loop_sz);
-    new_loop->loop_params.s_t.blocksize_array = (DLOOP_Count *)
-        (((char *) new_loop) + loop_sz + ptr_sz);
-    new_loop->loop_params.s_t.offset_array = (DLOOP_Offset *)
-        (((char *) new_loop) + loop_sz + ptr_sz + blk_sz);
-    new_loop->loop_params.s_t.el_extent_array = (DLOOP_Offset *)
-        (((char *) new_loop) + loop_sz + ptr_sz + blk_sz + off_sz);
-
-    *old_loop_p = (DLOOP_Dataloop *)
-        (((char *) new_loop) + loop_sz + ptr_sz + blk_sz + off_sz + extent_sz);
-    *new_loop_p = new_loop;
-    *new_loop_sz_p = new_loop_sz;
-
     return;
 }
 
@@ -613,27 +502,40 @@ void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
 
   Returns 0 on success, -1 on failure.
 @*/
-void MPIR_Dataloop_dup(DLOOP_Dataloop * old_loop,
-                       DLOOP_Count old_loop_sz, DLOOP_Dataloop ** new_loop_p)
+void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPI_Aint old_loop_sz, MPIR_Dataloop ** new_loop_p)
 {
-    DLOOP_Dataloop *new_loop;
+    MPIR_Dataloop *new_loop;
 
-    DLOOP_Assert(old_loop != NULL);
-    DLOOP_Assert(old_loop_sz > 0);
+    MPIR_Assert(old_loop != NULL);
+    MPIR_Assert(old_loop_sz > 0);
 
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(old_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (MPIR_Dataloop *) MPL_malloc(old_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
     }
 
-    MPIR_Dataloop_copy(new_loop, old_loop, old_loop_sz);
+    dloop_copy(new_loop, old_loop, old_loop_sz);
     *new_loop_p = new_loop;
     return;
 }
 
+MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
+{
+    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
+        return MPII_Datatype_get_basic_size_external32(type);
+    } else {
+        MPIR_Dataloop *dlp = NULL;
+
+        MPII_DATALOOP_GET_LOOPPTR(type, dlp);
+        MPIR_Assert(dlp != NULL);
+
+        return MPII_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
+    }
+}
+
 /*@
-  Dataloop_stream_size - return the size of the data described by the dataloop
+MPII_Dataloop_stream_size - return the size of the data described by the dataloop
 
 Input Parameters:
 + dl_p   - pointer to dataloop for which we will return the size
@@ -641,78 +543,78 @@ Input Parameters:
            (passing NULL will instead result in el_size values being used)
 
 @*/
-DLOOP_Offset
-MPIR_Dataloop_stream_size(struct DLOOP_Dataloop * dl_p, DLOOP_Offset(*sizefn) (DLOOP_Type el_type))
+MPI_Aint
+MPII_Dataloop_stream_size(struct MPIR_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type))
 {
-    DLOOP_Offset tmp_sz, tmp_ct = 1;
+    MPI_Aint tmp_sz, tmp_ct = 1;
 
     for (;;) {
-        if ((dl_p->kind & DLOOP_KIND_MASK) == DLOOP_KIND_STRUCT) {
+        if ((dl_p->kind & MPII_DATALOOP_KIND_MASK) == MPII_DATALOOP_KIND_STRUCT) {
             int i;
 
             tmp_sz = 0;
             for (i = 0; i < dl_p->loop_params.s_t.count; i++) {
-                tmp_sz += (DLOOP_Offset) (dl_p->loop_params.s_t.blocksize_array[i]) *
-                    MPIR_Dataloop_stream_size(dl_p->loop_params.s_t.dataloop_array[i], sizefn);
+                tmp_sz += (MPI_Aint) (dl_p->loop_params.s_t.blocksize_array[i]) *
+                    MPII_Dataloop_stream_size(dl_p->loop_params.s_t.dataloop_array[i], sizefn);
             }
             return tmp_sz * tmp_ct;
         }
 
-        switch (dl_p->kind & DLOOP_KIND_MASK) {
-            case DLOOP_KIND_CONTIG:
-                tmp_ct *= (DLOOP_Offset) (dl_p->loop_params.c_t.count);
-#ifdef DLOOP_DEBUG_SIZE
+        switch (dl_p->kind & MPII_DATALOOP_KIND_MASK) {
+            case MPII_DATALOOP_KIND_CONTIG:
+                tmp_ct *= (MPI_Aint) (dl_p->loop_params.c_t.count);
+#ifdef MPII_DATALOOP_DEBUG_SIZE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: contig: ct = %d; new tot_ct = "
-                                 DLOOP_OFFSET_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.c_t.count,
-                                 (DLOOP_Offset) tmp_ct));
+                                 MPI_AINT_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.c_t.count,
+                                 (MPI_Aint) tmp_ct));
 #endif
                 break;
-            case DLOOP_KIND_VECTOR:
-                tmp_ct *= (DLOOP_Offset) (dl_p->loop_params.v_t.count) *
-                    (DLOOP_Offset) (dl_p->loop_params.v_t.blocksize);
-#ifdef DLOOP_DEBUG_SIZE
+            case MPII_DATALOOP_KIND_VECTOR:
+                tmp_ct *= (MPI_Aint) (dl_p->loop_params.v_t.count) *
+                    (MPI_Aint) (dl_p->loop_params.v_t.blocksize);
+#ifdef MPII_DATALOOP_DEBUG_SIZE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: vector: ct = %d; blk = %d; new tot_ct = "
-                                 DLOOP_OFFSET_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.v_t.count,
-                                 (int) dl_p->loop_params.v_t.blocksize, (DLOOP_Offset) tmp_ct));
+                                 MPI_AINT_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.v_t.count,
+                                 (int) dl_p->loop_params.v_t.blocksize, (MPI_Aint) tmp_ct));
 #endif
                 break;
-            case DLOOP_KIND_BLOCKINDEXED:
-                tmp_ct *= (DLOOP_Offset) (dl_p->loop_params.bi_t.count) *
-                    (DLOOP_Offset) (dl_p->loop_params.bi_t.blocksize);
-#ifdef DLOOP_DEBUG_SIZE
+            case MPII_DATALOOP_KIND_BLOCKINDEXED:
+                tmp_ct *= (MPI_Aint) (dl_p->loop_params.bi_t.count) *
+                    (MPI_Aint) (dl_p->loop_params.bi_t.blocksize);
+#ifdef MPII_DATALOOP_DEBUG_SIZE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: blkindexed: blks = %d; new tot_ct = "
-                                 DLOOP_OFFSET_FMT_DEC_SPEC "\n",
+                                 MPI_AINT_FMT_DEC_SPEC "\n",
                                  (int) dl_p->loop_params.bi_t.count *
-                                 (int) dl_p->loop_params.bi_t.blocksize, (DLOOP_Offset) tmp_ct));
+                                 (int) dl_p->loop_params.bi_t.blocksize, (MPI_Aint) tmp_ct));
 #endif
                 break;
-            case DLOOP_KIND_INDEXED:
-                tmp_ct *= (DLOOP_Offset) (dl_p->loop_params.i_t.total_blocks);
-#ifdef DLOOP_DEBUG_SIZE
+            case MPII_DATALOOP_KIND_INDEXED:
+                tmp_ct *= (MPI_Aint) (dl_p->loop_params.i_t.total_blocks);
+#ifdef MPII_DATALOOP_DEBUG_SIZE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: contig: blks = %d; new tot_ct = "
-                                 DLOOP_OFFSET_FMT_DEC_SPEC "\n",
-                                 (int) dl_p->loop_params.i_t.total_blocks, (DLOOP_Offset) tmp_ct));
+                                 MPI_AINT_FMT_DEC_SPEC "\n",
+                                 (int) dl_p->loop_params.i_t.total_blocks, (MPI_Aint) tmp_ct));
 #endif
                 break;
             default:
                 /* --BEGIN ERROR HANDLING-- */
-                DLOOP_Assert(0);
+                MPIR_Assert(0);
                 break;
                 /* --END ERROR HANDLING-- */
         }
 
-        if (dl_p->kind & DLOOP_FINAL_MASK)
+        if (dl_p->kind & MPII_DATALOOP_FINAL_MASK)
             break;
         else {
-            DLOOP_Assert(dl_p->loop_params.cm_t.dataloop != NULL);
+            MPIR_Assert(dl_p->loop_params.cm_t.dataloop != NULL);
             dl_p = dl_p->loop_params.cm_t.dataloop;
         }
     }
@@ -722,97 +624,3 @@ MPIR_Dataloop_stream_size(struct DLOOP_Dataloop * dl_p, DLOOP_Offset(*sizefn) (D
 
     return tmp_sz * tmp_ct;
 }
-
-/* --BEGIN ERROR HANDLING-- */
-/*@
-  Dataloop_print - dump a dataloop tree to stdout for debugging
-  purposes
-
-Input Parameters:
-+ dataloop - root of tree to dump
-- depth - starting depth; used to help keep up with where we are in the tree
-@*/
-void MPIR_Dataloop_print(struct DLOOP_Dataloop *dataloop, int depth)
-{
-    int i;
-
-    if (dataloop == NULL) {
-        MPL_DBG_MSG(MPIR_DBG_DATATYPE, VERBOSE, "dataloop is NULL (probably basic type)\n");
-        return;
-    }
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "loc=%p, treedepth=%d, kind=%d, el_extent=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
-                     dataloop, (int) depth, (int) dataloop->kind,
-                     (DLOOP_Offset) dataloop->el_extent));
-    switch (dataloop->kind & DLOOP_KIND_MASK) {
-        case DLOOP_KIND_CONTIG:
-            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                            (MPL_DBG_FDEST, "\tCONTIG: count=%d, datatype=%p\n",
-                             (int) dataloop->loop_params.c_t.count,
-                             dataloop->loop_params.c_t.dataloop));
-            if (!(dataloop->kind & DLOOP_FINAL_MASK))
-                MPIR_Dataloop_print(dataloop->loop_params.c_t.dataloop, depth + 1);
-            break;
-        case DLOOP_KIND_VECTOR:
-            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                            (MPL_DBG_FDEST,
-                             "\tVECTOR: count=%d, blksz=%d, stride=" DLOOP_OFFSET_FMT_DEC_SPEC
-                             ", datatype=%p\n", (int) dataloop->loop_params.v_t.count,
-                             (int) dataloop->loop_params.v_t.blocksize,
-                             (DLOOP_Offset) dataloop->loop_params.v_t.stride,
-                             dataloop->loop_params.v_t.dataloop));
-            if (!(dataloop->kind & DLOOP_FINAL_MASK))
-                MPIR_Dataloop_print(dataloop->loop_params.v_t.dataloop, depth + 1);
-            break;
-        case DLOOP_KIND_BLOCKINDEXED:
-            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                            (MPL_DBG_FDEST, "\tBLOCKINDEXED: count=%d, blksz=%d, datatype=%p\n",
-                             (int) dataloop->loop_params.bi_t.count,
-                             (int) dataloop->loop_params.bi_t.blocksize,
-                             dataloop->loop_params.bi_t.dataloop));
-            /* print out offsets later */
-            if (!(dataloop->kind & DLOOP_FINAL_MASK))
-                MPIR_Dataloop_print(dataloop->loop_params.bi_t.dataloop, depth + 1);
-            break;
-        case DLOOP_KIND_INDEXED:
-            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                            (MPL_DBG_FDEST, "\tINDEXED: count=%d, datatype=%p\n",
-                             (int) dataloop->loop_params.i_t.count,
-                             dataloop->loop_params.i_t.dataloop));
-            /* print out blocksizes and offsets later */
-            if (!(dataloop->kind & DLOOP_FINAL_MASK))
-                MPIR_Dataloop_print(dataloop->loop_params.i_t.dataloop, depth + 1);
-            break;
-        case DLOOP_KIND_STRUCT:
-            MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "\tSTRUCT: count=%d\n",
-                          (int) dataloop->loop_params.s_t.count);
-            MPL_DBG_MSG(MPIR_DBG_DATATYPE, VERBOSE, "\tblocksizes:\n");
-            for (i = 0; i < dataloop->loop_params.s_t.count; i++)
-                MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "\t\t%d\n",
-                              (int) dataloop->loop_params.s_t.blocksize_array[i]);
-            MPL_DBG_MSG(MPIR_DBG_DATATYPE, VERBOSE, "\toffsets:\n");
-            for (i = 0; i < dataloop->loop_params.s_t.count; i++)
-                MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
-                                (MPL_DBG_FDEST, "\t\t" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
-                                 (DLOOP_Offset) dataloop->loop_params.s_t.offset_array[i]));
-            MPL_DBG_MSG(MPIR_DBG_DATATYPE, VERBOSE, "\tdatatypes:\n");
-            for (i = 0; i < dataloop->loop_params.s_t.count; i++)
-                MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "\t\t%p\n",
-                              dataloop->loop_params.s_t.dataloop_array[i]);
-            if (dataloop->kind & DLOOP_FINAL_MASK)
-                break;
-
-            for (i = 0; i < dataloop->loop_params.s_t.count; i++) {
-                MPIR_Dataloop_print(dataloop->loop_params.s_t.dataloop_array[i], depth + 1);
-            }
-            break;
-        default:
-            DLOOP_Assert(0);
-            break;
-    }
-    return;
-}
-
-/* --END ERROR HANDLING-- */

@@ -142,15 +142,15 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     rem = data_sz;
 
     while (done != data_sz) {
-        curr_len = MPL_MIN(rem, MPIDI_Global.max_send);
+        curr_len = MPL_MIN(rem, MPIDI_Global.max_msg_size);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_BUF_POOL_SIZE);
-        am_req = (MPIDI_OFI_am_request_t *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
+        am_req = (MPIDI_OFI_am_request_t *) MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
         MPIR_Assert(am_req);
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);
         am_req->event_id = MPIDI_OFI_EVENT_AM_READ;
-        comm = MPIDI_CH4U_context_id_to_comm(context_id);
+        comm = MPIDIG_context_id_to_comm(context_id);
         MPIR_Assert(comm);
         MPIDI_OFI_cntr_incr();
 
@@ -241,7 +241,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = ((data_sz - 1) / MPIDI_Global.max_send) + 1;
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = ((data_sz - 1) / MPIDI_Global.max_msg_size) + 1;
         MPIDI_OFI_do_rdma_read(p_data,
                                lmt_msg->src_offset,
                                data_sz, lmt_msg->context_id, lmt_msg->src_rank, rreq);
@@ -259,7 +259,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
         for (i = 0; i < iov_len && rem > 0; i++) {
             curr_len = MPL_MIN(rem, iov[i].iov_len);
-            num_reads = ((curr_len - 1) / MPIDI_Global.max_send) + 1;
+            num_reads = ((curr_len - 1) / MPIDI_Global.max_msg_size) + 1;
             MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
             rem -= curr_len;
         }
@@ -334,22 +334,13 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     sreq = (MPIR_Request *) ack_msg->sreq_ptr;
 
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        uint32_t idx_back;
-        int key_type;
         uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
-
-        MPIDI_OFI_rma_key_unpack(mr_key, NULL, &key_type, &idx_back);
-        MPIR_Assert(MPIDI_OFI_KEY_TYPE_HUGE_RMA == key_type);
-
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
-                                       idx_back);
+        MPIDI_OFI_mr_key_free(mr_key);
     }
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
 
-    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
-        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    }
+    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
@@ -378,7 +369,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
 
-    comm = MPIDI_CH4U_context_id_to_comm(context_id);
+    comm = MPIDIG_context_id_to_comm(context_id);
 
     msg.hdr.am_hdr_sz = sizeof(msg.pyld);
     msg.hdr.data_sz = 0;

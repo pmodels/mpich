@@ -18,7 +18,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int appnum,
                                          int *tag_bits,
                                          MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
+                                         MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -34,7 +34,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_get_vni_attr(int vni)
+static inline int MPIDI_NM_get_vci_attr(int vci)
 {
     MPIR_Assert(0);
     return 0;
@@ -71,12 +71,12 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 
 static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_mpi_free_mem(ptr);
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 

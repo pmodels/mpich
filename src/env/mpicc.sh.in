@@ -39,8 +39,19 @@ libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 CC="@CC@"
 MPICH_VERSION="@MPICH_VERSION@"
 
-enable_wrapper_rpath="@enable_wrapper_rpath@"
 @cc_shlib_conf@
+
+# Attempt to construct dynamic loading info, based on the user
+# preference of rpath, runpath or none and on the detected libdir
+# flags.
+with_wrapper_dl_type=@with_wrapper_dl_type@
+if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+    eval wrapper_dl_type_flags=\"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"
+elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+    eval wrapper_dl_type_flags=\"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"
+else
+    wrapper_dl_type_flags=""
+fi
 
 # Internal variables
 # Show is set to echo to cause the compilation command to be echoed instead 
@@ -245,34 +256,14 @@ fi
 # file or an object file.  Instead, we just check for an option that
 # suppressing linking, such as -c or -M.
 if [ "$linking" = yes ] ; then
-    # Attempt to encode rpath info into the executable if the user has not
-    # disabled rpath usage and some flavor of rpath makes sense on this
-    # platform.
-    # TODO configure and config.rpath are computing more sophisticated rpath
-    # schemes than this simple one.  Consider updating this logic accordingly.
-    if test "X$enable_wrapper_rpath" = "Xyes" ; then
-        eval rpath_flags=\"${hardcode_libdir_flag_spec}\"
-    else
-	rpath_flags=""
-    fi
-
     if [ "$nativelinking" = yes ] ; then
         $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} $allargs -I$includedir
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         else
-          fabric_dep=""
-          if [ "@ofi_embedded@" = yes ] ; then
-              fabric_dep=`pkg-config --static --libs $libdir/pkgconfig/libfabric.pc`
-              fabric_dep=`echo $fabric_dep | sed 's/-lfabric//'`
-          elif [ -f @with_libfabric@/lib/pkgconfig/libfabric.pc ] ; then
-              fabric_dep=`pkg-config --static --libs @with_libfabric@/lib/pkgconfig/libfabric.pc`
-          else
-              fabric_dep=`pkg-config --static --libs libfabric`
-          fi
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags $libdir/libmpi.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} ${fabric_dep}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         fi
         rc=$?
     fi

@@ -68,11 +68,11 @@
 /* End of connection-related macros */
 
 /* FIXME: Any of these used in the ch3->channel interface should be
-   defined in a header file in ch3/include that defines the 
+   defined in a header file in ch3/include that defines the
    channel interface */
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id);
+int MPIDI_CH3I_Progress_register_hook(int (*progress_fn) (int *), int *id);
 int MPIDI_CH3I_Progress_deregister_hook(int id);
 int MPIDI_CH3I_Progress_activate_hook(int id);
 int MPIDI_CH3I_Progress_deactivate_hook(int id);

@@ -69,7 +69,7 @@ int MPIR_Type_indexed(int count,
 
     /* sanity check that blocklens are all non-negative */
     for (i = 0; i < count; ++i) {
-        DLOOP_Assert(blocklength_array[i] >= 0);
+        MPIR_Assert(blocklength_array[i] >= 0);
     }
 
     /* allocate new datatype object and handle */
@@ -86,16 +86,13 @@ int MPIR_Type_indexed(int count,
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
@@ -216,9 +213,10 @@ int MPIR_Type_indexed(int count,
         MPIR_Assert(blklens != NULL);
         for (i = 0; i < count; i++)
             blklens[i] = blocklength_array[i];
-        contig_count = MPIR_Type_indexed_count_contig(count,
-                                                      blklens,
-                                                      displacement_array, dispinbytes, old_extent);
+        contig_count = MPII_Datatype_indexed_count_contig(count,
+                                                          blklens,
+                                                          displacement_array, dispinbytes,
+                                                          old_extent);
         new_dtp->max_contig_blocks = contig_count;
         if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;

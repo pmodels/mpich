@@ -323,7 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, *wd->message, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-                if (!MPIDI_CH4I_REQUEST(*wd->message, is_local))
+                if (!MPIDI_REQUEST(*wd->message, is_local))
 #endif
                     MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -362,7 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_unsafe(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_workq_elemt_t *workq_elemt = NULL;
@@ -379,15 +379,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_unsafe(void)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
 
-    mpi_errno = MPIDI_workq_vni_progress_unsafe();
+    mpi_errno = MPIDI_workq_vci_progress_unsafe();
 
-    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
   fn_fail:
     return mpi_errno;
 }
@@ -396,12 +396,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(void)
 #define MPIDI_workq_pt2pt_enqueue(...)
 #define MPIDI_workq_rma_enqueue(...)
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_unsafe(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
 {
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)
 {
     return MPI_SUCCESS;
 }

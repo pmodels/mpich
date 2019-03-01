@@ -28,7 +28,6 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     void *tmp_recvbuf;
     int src, dst;
     int total_count;
-    int is_commutative;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
@@ -37,10 +36,9 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-    is_commutative = MPIR_Op_is_commutative(op);
 #ifdef HAVE_ERROR_CHECKING
     {
-        MPIR_Assert(is_commutative);
+        MPIR_Assert(MPIR_Op_is_commutative(op));
     }
 #endif
 
@@ -56,9 +54,6 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     if (total_count == 0) {
         goto fn_exit;
     }
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
 
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */

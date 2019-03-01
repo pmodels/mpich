@@ -104,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     uint8_t *send_buf = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr_p = &msg_hdr;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
-    const int grank = MPIDI_CH4U_rank_to_lpid(rank, comm);
+    const int grank = MPIDIU_rank_to_lpid(rank, comm);
     struct iovec iov_left[2];
     struct iovec *iov_left_ptr;
     size_t iov_num_left;
@@ -134,12 +134,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         MPI_Aint last;
         struct MPIR_Segment *segment_ptr = NULL;
 
-        segment_ptr = MPIR_Segment_alloc();
-
+        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-
-        MPIR_Segment_init(data, count, datatype, segment_ptr);
 
         segment_first = 0;
         last = data_sz;
@@ -201,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 #else /* POSIX_AM_DEBUG */
                 -1,
 #endif /* POSIX_AM_DEBUG */
-                ((MPIDI_CH4U_hdr_t *) am_hdr)->tag, ((MPIDI_CH4U_hdr_t *) am_hdr)->src_rank, grank);
+                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
 
     result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
 
@@ -264,7 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
         am_hdr_buf = (uint8_t *) MPL_malloc(am_hdr_sz, MPL_MEM_SHM);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (uint8_t *) MPIDI_CH4R_get_buf(MPIDI_POSIX_global.am_buf_pool);
+        am_hdr_buf = (uint8_t *) MPIDIU_get_buf(MPIDI_POSIX_global.am_buf_pool);
         is_allocated = 0;
     }
 
@@ -282,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDI_CH4R_release_buf(am_hdr_buf);
+        MPIDIU_release_buf(am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AMV);
 
@@ -306,9 +303,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ISEND_REPLY);
 
-    mpi_errno = MPIDI_POSIX_am_isend(src_rank,
-                                     MPIDI_CH4U_context_id_to_comm(context_id),
-                                     handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
+    mpi_errno = MPIDI_POSIX_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
+                                     am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ISEND_REPLY);
 
@@ -393,7 +389,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     struct iovec iov_left[1];
     struct iovec *iov_left_ptr = iov_left;
     size_t iov_num_left = 1;
-    const int grank = MPIDI_CH4U_rank_to_lpid(rank, comm);
+    const int grank = MPIDIU_rank_to_lpid(rank, comm);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_SEND_HDR);
@@ -455,9 +451,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
 
-    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank,
-                                        MPIDI_CH4U_context_id_to_comm(context_id),
-                                        handler_id, am_hdr, am_hdr_sz);
+    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
+                                        am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
 
@@ -475,15 +470,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_RECV);
 
-    MPIDI_CH4U_send_long_ack_msg_t msg;
+    MPIDIG_send_long_ack_msg_t msg;
 
-    msg.sreq_ptr = (MPIDI_CH4U_REQUEST(req, req->rreq.peer_req_ptr));
+    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = (uint64_t) req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
-    mpi_errno =
-        MPIDI_POSIX_am_send_hdr_reply(MPIDI_CH4U_REQUEST(req, context_id),
-                                      MPIDI_CH4U_REQUEST(req, rank), MPIDI_CH4U_SEND_LONG_ACK, &msg,
-                                      sizeof(msg));
+    mpi_errno = MPIDI_POSIX_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
+                                              MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
+                                              sizeof(msg));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

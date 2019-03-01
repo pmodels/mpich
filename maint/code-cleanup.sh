@@ -7,10 +7,10 @@ else
 fi
 
 indent_version=$($indent --version)
-if echo "$indent_version" | grep -q "GNU indent"; then
+if echo "$indent_version" | grep -q "GNU indent 2.2.11"; then
     :
 else
-    echo "This script requires GNU indent."
+    echo "This script requires GNU indent version 2.2.11."
     exit
 fi
 
@@ -92,7 +92,8 @@ recursive=0
 got_file=0
 debug=
 ignore=0
-ignore_list="src/mpid/ch3|doc/"
+ignore_list="doc/|src/mpid/ch3/doc|src/mpid/ch3/include|src/mpid/ch3/src|src/mpid/ch3/util"
+ignore_list="$ignore_list|src/mpid/ch3/channels/nemesis/include|src/mpid/ch3/channels/nemesis/src|src/mpid/ch3/channels/nemesis/utils"
 ignore_list="$ignore_list|src/mpi/romio/include/mpiof.h.in|test/mpi/errors/f77/io/addsize.h.in|test/mpi/errors/f77/io/iooffset.h.in"
 ignore_list="$ignore_list|test/mpi/f77/attr/attraints.h.in|test/mpi/f77/datatype/typeaints.h.in|test/mpi/f77/ext/add1size.h.in"
 ignore_list="$ignore_list|test/mpi/f77/io/ioaint.h.in|test/mpi/f77/io/iodisp.h.in|test/mpi/f77/io/iooffset.h.in"

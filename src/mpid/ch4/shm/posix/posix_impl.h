@@ -18,24 +18,4 @@
 #include "posix_eager.h"
 #include "posix_eager_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME nothing
-#define BEGIN_FUNC(FUNCNAME)                    \
-    MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);     \
-    MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
-#define END_FUNC(FUNCNAME)                      \
-    MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);
-#define END_FUNC_RC(FUNCNAME)                   \
-  fn_exit:                                      \
-    MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);           \
-    return mpi_errno;                           \
-  fn_fail:                                      \
-    goto fn_exit;
-
-#define __SHORT_FILE__                          \
-    (strrchr(__FILE__,'/')                      \
-     ? strrchr(__FILE__,'/')+1                  \
-     : __FILE__                                 \
-)
-
 #endif /* POSIX_IMPL_H_INCLUDED */

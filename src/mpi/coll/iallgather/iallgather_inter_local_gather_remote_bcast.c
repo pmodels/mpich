@@ -40,7 +40,6 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
         MPIR_Datatype_get_extent_macro(sendtype, send_extent);
         extent = MPL_MAX(send_extent, true_extent);
 
-        MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, extent * sendcount * local_size, mpi_errno,
                                   "tmp_buf", MPL_MEM_BUFFER);
 

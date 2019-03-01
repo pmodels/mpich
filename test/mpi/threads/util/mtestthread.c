@@ -37,7 +37,7 @@ static MTEST_THREAD_HANDLE threads[MTEST_MAX_THREADS];
  * speculative loading/storing */
 static volatile int nthreads = 0;
 
-#ifdef HAVE_WINDOWS_H
+#if defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_WIN)
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
     int errs = 0;
@@ -120,7 +120,10 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     return MTestReturnValue(errs);
 }
 
-#else
+/* FIXME: We currently assume Solaris threads and Pthreads are interoperable.
+ * We need to use Solaris threads explicitly to avoid potential interoperability issues.*/
+#elif defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_POSIX ||   \
+                                       THREAD_PACKAGE_NAME == THREAD_PACKAGE_SOLARIS)
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
     int err;
@@ -191,9 +194,78 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     }
     return err;
 }
+
+#elif defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_ARGOBOTS)
+
+extern ABT_pool pools[MTEST_NUM_XSTREAMS];
+
+int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
+{
+    int ret;
+
+    if (nthreads >= MTEST_MAX_THREADS) {
+        fprintf(stderr, "Too many threads already created: max is %d\n", MTEST_MAX_THREADS);
+        return 1;
+    }
+    /* We push threads to pools[0] and let the random work-stealing
+     * scheduler balance things out. */
+    ret = ABT_thread_create(pools[0], fn, arg, ABT_THREAD_ATTR_NULL, &threads[nthreads]);
+    MTEST_ABT_ERROR(ret, "ABT_thread_create");
+
+    nthreads++;
+
+    return 0;
+}
+
+int MTest_Join_threads(void)
+{
+    int i, ret, err = 0;
+    for (i = 0; i < nthreads; i++) {
+        ret = ABT_thread_free(&threads[i]);
+        MTEST_ABT_ERROR(ret, "ABT_thread_free");
+    }
+    nthreads = 0;
+    return 0;
+}
+
+int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE * lock)
+{
+    int ret;
+    ret = ABT_mutex_create(lock);
+    MTEST_ABT_ERROR(ret, "ABT_mutex_create");
+    return 0;
+}
+
+int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
+{
+    int ret;
+    ret = ABT_mutex_lock(*(lock));
+    MTEST_ABT_ERROR(ret, "ABT_mutex_lock");
+    return 0;
+}
+
+int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE * lock)
+{
+    int ret;
+    ret = ABT_mutex_unlock(*(lock));
+    MTEST_ABT_ERROR(ret, "ABT_mutex_unlock");
+    return 0;
+}
+
+int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
+{
+    int ret;
+    ret = ABT_mutex_free(lock);
+    MTEST_ABT_ERROR(ret, "ABT_mutex_free");
+    return 0;
+}
+#else
+#error "thread package (THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
 
-#if defined(HAVE_PTHREAD_H) && defined(HAVE_PTHREAD_BARRIER_INIT)
+#if defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_POSIX ||     \
+                                     THREAD_PACKAGE_NAME == THREAD_PACKAGE_SOLARIS) &&  \
+                                     defined(HAVE_PTHREAD_BARRIER_INIT)
 static MTEST_THREAD_LOCK_TYPE barrierLock;
 static pthread_barrier_t barrier;
 static int bcount = -1;
@@ -239,6 +311,54 @@ int MTest_thread_barrier(int nt)
             return err;
     }
     return pthread_barrier_wait(&barrier);
+}
+#elif defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_ARGOBOTS)
+static MTEST_THREAD_LOCK_TYPE barrierLock;
+static ABT_barrier barrier;
+static int bcount = -1;
+int MTest_thread_barrier_init(void)
+{
+    bcount = -1;        /* must reset to force barrier re-creation */
+    return MTest_thread_lock_create(&barrierLock);
+}
+
+int MTest_thread_barrier_free(void)
+{
+    int ret;
+    MTest_thread_lock_free(&barrierLock);
+    ret = ABT_barrier_free(&barrier);
+    MTEST_ABT_ERROR(ret, "ABT_barrier_free");
+    return 0;
+}
+
+/* FIXME this barrier interface should be changed to more closely match the
+ * pthread interface.  Specifically, nt should not be a barrier-time
+ * parameter but an init-time parameter.  The double-checked locking below
+ * isn't valid according to pthreads, and it isn't guaranteed to be robust
+ * in the presence of aggressive CPU/compiler optimization. */
+int MTest_thread_barrier(int nt)
+{
+    int ret;
+    if (nt < 0)
+        nt = nthreads;
+    if (bcount != nt) {
+        /* One thread needs to initialize the barrier */
+        ret = MTest_thread_lock(&barrierLock);
+        /* Test again in case another thread already fixed the problem */
+        if (bcount != nt) {
+            if (bcount > 0) {
+                ret = ABT_barrier_free(&barrier);
+                MTEST_ABT_ERROR(ret, "ABT_barrier_free");
+            }
+            ret = ABT_barrier_create(nt, &barrier);
+            MTEST_ABT_ERROR(ret, "ABT_barrier_create");
+            bcount = nt;
+        }
+        ret = MTest_thread_unlock(&barrierLock);
+    }
+    ret = ABT_barrier_wait(barrier);
+    MTEST_ABT_ERROR(ret, "ABT_barrier_wait");
+    return 0;
 }
 #else
 static MTEST_THREAD_LOCK_TYPE barrierLock;

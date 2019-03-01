@@ -18,6 +18,7 @@
 
 struct MPIDI_UCX_pack_state {
     MPIR_Segment *segment_ptr;
+    MPI_Datatype datatype;
     MPI_Aint packsize;
 };
 
@@ -33,12 +34,12 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *b
     MPI_Aint packsize;
 
     state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
-    segment_ptr = MPIR_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
+    state->datatype = *datatype;
 
     return (void *) state;
 }
@@ -56,11 +57,11 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffe
 
     state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
     MPIR_Pack_size_impl(count, *datatype, &packsize);
-    segment_ptr = MPIR_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
+    state->datatype = *datatype;
 
     return (void *) state;
 }
@@ -118,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Finish_pack(void *state)
 {
     MPIR_Datatype *dt_ptr;
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
-    MPIR_Datatype_get_ptr(pack_state->segment_ptr->handle, dt_ptr);
+    MPIR_Datatype_get_ptr(pack_state->datatype, dt_ptr);
     MPIR_Segment_free(pack_state->segment_ptr);
     MPIR_Datatype_ptr_release(dt_ptr);
     MPL_free(pack_state);

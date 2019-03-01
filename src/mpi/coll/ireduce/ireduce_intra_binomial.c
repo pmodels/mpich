@@ -47,11 +47,6 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    /* I think this is the worse case, so we can avoid an assert()
-     * inside the for loop */
-    /* should be buf+{this}? */
-    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
                               mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */

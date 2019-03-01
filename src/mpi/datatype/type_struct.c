@@ -193,16 +193,13 @@ int MPIR_Type_struct(int count,
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)

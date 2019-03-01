@@ -395,16 +395,8 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
             MPIR_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE ||
                         pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-            /* Only basic datatype may contain piggyback lock.
-             * Thus we do not check extended header type for derived case.*/
-            if (pkt->type == MPIDI_CH3_PKT_ACCUMULATE) {
-                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
-                buf_size += sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
-            }
-            else {
-                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_t);
-                buf_size += sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_t);
-            }
+            recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_stream_t);
+            buf_size += sizeof(MPIDI_CH3_Ext_pkt_stream_t);
         }
 
         if (new_ptr != NULL) {
@@ -884,7 +876,8 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
                                    void *target_buf, int target_count, MPI_Datatype target_dtp,
-                                   MPI_Aint stream_offset, MPI_Op acc_op)
+                                   MPI_Aint stream_offset, MPI_Op acc_op,
+                                   MPIDI_RMA_Acc_srcbuf_kind_t srckind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
@@ -937,17 +930,17 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     else {
         /* derived datatype */
         MPIR_Segment *segp;
-        DLOOP_VECTOR *dloop_vec;
+        MPL_IOV *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
-        MPI_Aint type_extent, type_size;
+        MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype*dtp;
         MPI_Aint curr_len;
         void *curr_loc;
         int accumulated_count;
 
-        segp = MPIR_Segment_alloc();
+        segp = MPIR_Segment_alloc(NULL, target_count, target_dtp);
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
@@ -957,15 +950,14 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             return mpi_errno;
         }
         /* --END ERROR HANDLING-- */
-        MPIR_Segment_init(NULL, target_count, target_dtp, segp);
         first = stream_offset;
         last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        dloop_vec = (DLOOP_VECTOR *)
-            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_DATATYPE);
+        dloop_vec = (MPL_IOV *)
+            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_DATATYPE);
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
@@ -976,7 +968,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         }
         /* --END ERROR HANDLING-- */
 
-        MPIR_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
+        MPIR_Segment_to_iov(segp, first, &last, dloop_vec, &vec_len);
 
         type = dtp->basic_type;
         MPIR_Assert(type != MPI_DATATYPE_NULL);
@@ -984,29 +976,36 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Assert(type == source_dtp);
         type_size = source_dtp_size;
         type_extent = source_dtp_extent;
+        /* If the source buffer has been packed by the caller, the distance between
+         * two elements can be smaller than extent. E.g., predefined pairtype may
+         * have larger extent than size.*/
+        if (srckind == MPIDI_RMA_ACC_SRCBUF_PACKED)
+            src_type_stride = type_size;
+        else
+            src_type_stride = type_extent;
 
         i = 0;
-        curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
-        curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+        curr_loc = dloop_vec[0].MPL_IOV_BUF;
+        curr_len = dloop_vec[0].MPL_IOV_LEN;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                curr_len += dloop_vec[i].MPL_IOV_LEN;
                 continue;
             }
 
             MPIR_Assign_trunc(count, curr_len / type_size, int);
 
-            (*uop) ((char *) source_buf + type_extent * accumulated_count,
+            (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
                     (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
 
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
-                    curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                    curr_loc = dloop_vec[i].MPL_IOV_BUF;
+                    curr_len = dloop_vec[i].MPL_IOV_LEN;
                 }
             }
             else {
@@ -1227,14 +1226,9 @@ static inline void MPIDI_CH3_ExtPkt_Accum_get_stream(MPIDI_CH3_Pkt_flags_t flags
                                                      int is_derived_dt, void *ext_hdr_ptr,
                                                      MPI_Aint * stream_offset)
 {
-    if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && is_derived_dt) {
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIR_Assert(ext_hdr_ptr != NULL);
-        (*stream_offset) =
-            ((MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) ext_hdr_ptr)->stream_offset;
-    }
-    else if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-        MPIR_Assert(ext_hdr_ptr != NULL);
-        (*stream_offset) = ((MPIDI_CH3_Ext_pkt_accum_stream_t *) ext_hdr_ptr)->stream_offset;
+        (*stream_offset) = ((MPIDI_CH3_Ext_pkt_stream_t *) ext_hdr_ptr)->stream_offset;
     }
 }
 

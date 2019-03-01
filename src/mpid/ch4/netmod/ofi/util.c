@@ -17,13 +17,13 @@
 #define FUNCNAME MPIDI_OFI_handle_cq_error_util
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
 
-    mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
+    mpi_errno = MPIDI_OFI_handle_cq_error(vci_idx, ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     return mpi_errno;
@@ -37,28 +37,23 @@ int MPIDI_OFI_retry_progress()
     return MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM);
 }
 
-typedef struct MPIDI_OFI_index_allocator_t {
-    int chunk_size;
-    int num_ints;
-    int start;
-    int last_free_index;
+typedef struct MPIDI_OFI_mr_key_allocator_t {
+    uint64_t chunk_size;
+    uint64_t num_ints;
+    uint64_t last_free_mr_key;
     uint64_t *bitmask;
-} MPIDI_OFI_index_allocator_t;
+} MPIDI_OFI_mr_key_allocator_t;
 
-void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_class class)
+static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
+
+void MPIDI_OFI_mr_key_allocator_init()
 {
-    MPIDI_OFI_index_allocator_t *allocator;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t), class);
-    allocator->chunk_size = 128;
-    allocator->num_ints = allocator->chunk_size;
-    allocator->start = start;
-    allocator->last_free_index = 0;
-    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints, class);
-    memset(allocator->bitmask, 0xFF, sizeof(uint64_t) * allocator->num_ints);
-    assert(allocator != NULL);
-    *indexmap = allocator;
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
+    mr_key_allocator.chunk_size = 128;
+    mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
+    mr_key_allocator.last_free_mr_key = 0;
+    mr_key_allocator.bitmask = MPL_malloc(sizeof(uint64_t) * mr_key_allocator.num_ints,
+                                          MPL_MEM_RMA);
+    memset(mr_key_allocator.bitmask, 0xFF, sizeof(uint64_t) * mr_key_allocator.num_ints);
 }
 
 #define MPIDI_OFI_INDEX_CALC(val,nval,shift,mask) \
@@ -66,15 +61,13 @@ void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_cla
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
+uint64_t MPIDI_OFI_mr_key_alloc()
 {
-    int i;
-    MPIDI_OFI_index_allocator_t *allocator = indexmap;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    for (i = allocator->last_free_index; i < allocator->num_ints; i++) {
-        if (allocator->bitmask[i]) {
+    uint64_t i;
+    for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
+        if (mr_key_allocator.bitmask[i]) {
             register uint64_t val, nval;
-            val = allocator->bitmask[i];
+            val = mr_key_allocator.bitmask[i];
             nval = 2;
             MPIDI_OFI_INDEX_CALC(val, nval, 32, 0xFFFFFFFFULL);
             MPIDI_OFI_INDEX_CALC(val, nval, 16, 0xFFFFULL);
@@ -82,45 +75,37 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
             MPIDI_OFI_INDEX_CALC(val, nval, 4, 0xFULL);
             MPIDI_OFI_INDEX_CALC(val, nval, 2, 0x3ULL);
             nval -= val & 0x1ULL;
-            allocator->bitmask[i] &= ~(0x1ULL << (nval - 1));
-            allocator->last_free_index = i;
-            MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-            return i * sizeof(uint64_t) * 8 + (nval - 1) + allocator->start;
+            mr_key_allocator.bitmask[i] &= ~(0x1ULL << (nval - 1));
+            mr_key_allocator.last_free_mr_key = i;
+            return i * sizeof(uint64_t) * 8 + (nval - 1);
         }
-        if (i == allocator->num_ints - 1) {
-            allocator->num_ints += allocator->chunk_size;
-            allocator->bitmask = MPL_realloc(allocator->bitmask,
-                                             sizeof(uint64_t) * allocator->num_ints, class);
-            MPIR_Assert(allocator->bitmask);
-            memset(&allocator->bitmask[i + 1], 0xFF, sizeof(uint64_t) * allocator->chunk_size);
+        if (i == mr_key_allocator.num_ints - 1) {
+            mr_key_allocator.num_ints += mr_key_allocator.chunk_size;
+            mr_key_allocator.bitmask = MPL_realloc(mr_key_allocator.bitmask,
+                                                   sizeof(uint64_t) * mr_key_allocator.num_ints,
+                                                   MPL_MEM_RMA);
+            MPIR_Assert(mr_key_allocator.bitmask);
+            memset(&mr_key_allocator.bitmask[i + 1], 0xFF,
+                   sizeof(uint64_t) * mr_key_allocator.chunk_size);
         }
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
     return -1;
 }
 
-void MPIDI_OFI_index_allocator_free(void *indexmap, int index)
+void MPIDI_OFI_mr_key_free(uint64_t index)
 {
-    int int_index, bitpos, numbits;
-    MPIDI_OFI_index_allocator_t *allocator = indexmap;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
+    uint64_t int_index, bitpos, numbits;
     numbits = sizeof(uint64_t) * 8;
-    int_index = (index + 1 - allocator->start) / numbits;
-    bitpos = (index - allocator->start) % numbits;
+    int_index = (index + 1) / numbits;
+    bitpos = index % numbits;
 
-    allocator->last_free_index = MPL_MIN(int_index, allocator->last_free_index);
-    allocator->bitmask[int_index] |= (0x1ULL << bitpos);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
+    mr_key_allocator.last_free_mr_key = MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
+    mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
 }
 
-void MPIDI_OFI_index_allocator_destroy(void *indexmap)
+void MPIDI_OFI_mr_key_allocator_destroy()
 {
-    MPIDI_OFI_index_allocator_t *allocator;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = (MPIDI_OFI_index_allocator_t *) indexmap;
-    MPL_free(allocator->bitmask);
-    MPL_free(allocator);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
+    MPL_free(mr_key_allocator.bitmask);
 }
 
 /* Translate the control message to get a huge message into a request to
@@ -134,7 +119,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
 
     /* Look up the communicator */
-    comm_ptr = MPIDI_CH4U_context_id_to_comm(info->comm_id);
+    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
@@ -156,8 +141,8 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv = (MPIDI_OFI_huge_recv_t *)
-                    MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                          list_ptr->rreq->handle);
+                    MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                                      list_ptr->rreq->handle);
 
                 MPL_free(list_ptr);
                 break;
@@ -180,7 +165,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv->cur_offset = MPIDI_Global.max_send;
+    recv->cur_offset = MPIDI_Global.max_msg_size;
     recv->remote_info = *info;
     recv->comm_ptr = comm_ptr;
     recv->next = NULL;

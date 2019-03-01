@@ -36,10 +36,15 @@
 
 /* Get op index.
  * TODO: OP_NULL is the oddball. Change configure to table this correctly */
-#define MPIDI_OFI_MPI_ACCU_OP_INDEX(op, op_index) do {   \
-    if (op == MPI_OP_NULL) op_index = 14;                \
-    else op_index = (0x000000FFU & op) - 1;              \
-} while (0);
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
+{
+    int op_index;
+    if (op == MPI_OP_NULL)
+        op_index = MPIDI_OFI_OP_SIZES - 1;
+    else
+        op_index = (0x000000FFU & op) - 1;
+    return op_index;
+}
 
 /*
  * Helper routines and macros for request completion
@@ -57,9 +62,7 @@
 #define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
 #define MPIDI_OFI_CALL(FUNC,STR)                                     \
     do {                                                    \
-        MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
         ssize_t _ret = FUNC;                                \
-        MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         MPIDI_OFI_ERR(_ret<0,                       \
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
@@ -92,11 +95,7 @@
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
     do {                                                    \
-        if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
         _ret = FUNC;                                        \
-        if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         if (likely(_ret==0)) break;                          \
         MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
                               mpi_errno,                    \
@@ -111,19 +110,15 @@
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
         /* FIXME: by fixing the recursive locking interface to account
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
-        if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -131,11 +126,9 @@
 #define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR)                       \
     do {                                                    \
     ssize_t _ret;                                           \
-    MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);       \
     FUNC1;                                                  \
     do {                                                    \
         _ret = FUNC2;                                       \
-        MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         if (likely(_ret==0)) break;                          \
         MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
                               mpi_errno,                    \
@@ -146,21 +139,18 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
-        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);        \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
-        MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
-            MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);       \
             (_ret) = FUNC;                                              \
-            MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);        \
         } while (0)
 
 #define MPIDI_OFI_PMI_CALL_POP(FUNC,STR)                    \
@@ -206,21 +196,6 @@
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
-
-#ifndef HAVE_DEBUGGER_SUPPORT
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
-    do {                                                                \
-        (req) = MPIDI_Global.lw_send_req;                               \
-        MPIR_Request_add_ref((req));                                    \
-    } while (0)
-#else
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
-    do {                                                                \
-        (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
-        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
-        MPIR_cc_set(&(req)->cc, 0);                                     \
-    } while (0)
-#endif
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
 {
@@ -274,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
     do {                                                                \
         if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
-            MPIDI_OFI_SEND_REQUEST_CREATE_LW(req);                      \
+            (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
         } else {                                                        \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
@@ -300,8 +275,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
             MPIR_cc_decr(&(req)->cc, &incomplete_);         \
         }                                                   \
     } while (0)
-
-#define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
@@ -337,10 +310,10 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_index_allocator_create(void **_indexmap, int start, MPL_memory_class class);
-int MPIDI_OFI_index_allocator_alloc(void *_indexmap, MPL_memory_class class);
-void MPIDI_OFI_index_allocator_free(void *_indexmap, int index);
-void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
+void MPIDI_OFI_mr_key_allocator_init(void);
+uint64_t MPIDI_OFI_mr_key_alloc(void);
+void MPIDI_OFI_mr_key_free(uint64_t index);
+void MPIDI_OFI_mr_key_allocator_destroy(void);
 
 /* Common Utility functions used by the
  * C and C++ components
@@ -349,18 +322,18 @@ void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
 {
     /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
         && MPIDI_Global.max_order_war != -1) {
         /* An order size value of 0 indicates that ordering is not guaranteed. */
         MPIR_Assert(MPIDI_Global.max_order_war != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
     }
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW)
         && MPIDI_Global.max_order_waw != -1) {
         MPIR_Assert(MPIDI_Global.max_order_waw != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
     }
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW)
         && MPIDI_Global.max_order_raw != -1) {
         MPIR_Assert(MPIDI_Global.max_order_raw != 0);
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
@@ -379,17 +352,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct f
      * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
      * after window is created. */
     finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
-        MPIDI_CH4I_ACCU_ORDER_RAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAR) ==
+        MPIDIG_ACCU_ORDER_RAR)
         finfo->tx_attr->msg_order |= FI_ORDER_RAR;
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
-        MPIDI_CH4I_ACCU_ORDER_RAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) ==
+        MPIDIG_ACCU_ORDER_RAW)
         finfo->tx_attr->msg_order |= FI_ORDER_RAW;
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
-        MPIDI_CH4I_ACCU_ORDER_WAR)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR) ==
+        MPIDIG_ACCU_ORDER_WAR)
         finfo->tx_attr->msg_order |= FI_ORDER_WAR;
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
-        MPIDI_CH4I_ACCU_ORDER_WAW)
+    if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW) ==
+        MPIDIG_ACCU_ORDER_WAW)
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
@@ -475,11 +448,6 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_tag(uint64_t match_bits)
 {
     return ((int) (match_bits & MPIDI_OFI_TAG_MASK));
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_source(uint64_t match_bits)
-{
-    return ((int) ((match_bits & MPIDI_OFI_SOURCE_MASK) >> MPIDI_OFI_TAG_BITS));
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *context)
@@ -638,60 +606,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
 
 struct MPIDI_OFI_contig_blocks_params {
     size_t max_pipe;
-    DLOOP_Count count;
-    DLOOP_Offset last_loc;
-    DLOOP_Offset start_loc;
+    MPI_Aint count;
+    MPI_Aint last_loc;
+    MPI_Aint start_loc;
     size_t last_chunk;
 };
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_contig_count_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
-                                     DLOOP_Type el_type,
-                                     DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
-{
-    DLOOP_Offset size, el_size;
-    size_t rem, num;
-    struct MPIDI_OFI_contig_blocks_params *paramp = v_paramp;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-
-    DLOOP_Assert(*blocks_p > 0);
-
-    DLOOP_Handle_get_size_macro(el_type, el_size);
-    size = *blocks_p * el_size;
-    if (paramp->count > 0 && rel_off == paramp->last_loc) {
-        /* this region is adjacent to the last */
-        paramp->last_loc += size;
-        /* If necessary, recalculate the number of chunks in this block */
-        if (paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
-            paramp->count -= paramp->last_chunk;
-            num = (paramp->last_loc - paramp->start_loc) / paramp->max_pipe;
-            rem = (paramp->last_loc - paramp->start_loc) % paramp->max_pipe;
-            if (rem)
-                num++;
-            paramp->last_chunk = num;
-            paramp->count += num;
-        }
-    } else {
-        /* new region */
-        num = size / paramp->max_pipe;
-        rem = size % paramp->max_pipe;
-        if (rem)
-            num++;
-
-        paramp->last_chunk = num;
-        paramp->last_loc = rel_off + size;
-        paramp->start_loc = rel_off;
-        paramp->count += num;
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
-    return 0;
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_count_iov
@@ -700,55 +619,32 @@ MPL_STATIC_INLINE_PREFIX
 MPL_STATIC_INLINE_PREFIX
     size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
-    struct MPIDI_OFI_contig_blocks_params params;
-    MPIR_Segment dt_seg;
-    ssize_t dt_size, num, rem;
-    size_t dtc, count, count1, count2;;
+    MPIR_Segment *dt_seg;
+    ssize_t rem_size;
+    size_t num_iov, total_iov = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
 
-    count = 0;
-    dtc = MPL_MIN(2, dt_count);
-    params.max_pipe = max_pipe;
-    MPIDI_Datatype_check_size(dt_datatype, dtc, dt_size);
-    if (dtc) {
-        params.count = 0;
-        params.last_loc = 0;
-        params.start_loc = 0;
-        params.last_chunk = 0;
-        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg);
-        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
-                                MPIDI_OFI_contig_count_block,
-                                NULL, NULL, NULL, NULL, (void *) &params);
-        count1 = params.count;
-        params.count = 0;
-        params.last_loc = 0;
-        params.start_loc = 0;
-        params.last_chunk = 0;
-        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg);
-        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
-                                MPIDI_OFI_contig_count_block,
-                                NULL, NULL, NULL, NULL, (void *) &params);
-        count2 = params.count;
-        if (count2 == 1) {      /* Contiguous */
-            num = (dt_size * dt_count) / max_pipe;
-            rem = (dt_size * dt_count) % max_pipe;
-            if (rem)
-                num++;
-            count += num;
-        } else if (count2 < count1 * 2)
-            /* The commented calculation assumes merged blocks  */
-            /* The iov processor will not merge adjacent blocks */
-            /* When the iov state machine adds this capability  */
-            /* we should switch to use the optimized calcultion */
-            /* count += (count1*dt_count) - (dt_count-1);       */
-            count += count1 * dt_count;
-        else
-            count += count1 * dt_count;
-    }
+    if (dt_datatype == MPI_DATATYPE_NULL)
+        goto fn_exit;
+
+    dt_seg = MPIR_Segment_alloc(NULL, dt_count, dt_datatype);
+    MPIDI_Datatype_check_size(dt_datatype, dt_count, rem_size);
+
+    do {
+        size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
+
+        MPIR_Segment_count_contig_blocks(dt_seg, 0, &tmp_size, &num_iov);
+        total_iov += num_iov;
+
+        rem_size -= tmp_size;
+    } while (rem_size);
+    MPIR_Segment_free(dt_seg);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
-    return count;
+    return total_iov;
 }
 
 /* Find the nearest length of iov that meets alignment requirement */

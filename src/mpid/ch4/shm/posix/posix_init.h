@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_choose_posix_eager(void)
 #define FUNCNAME MPIDI_POSIX_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided, int *tag_bits)
+static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -86,14 +86,14 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 #endif /* MPL_USE_DBG_LOGGING */
 
     MPIDI_POSIX_global.am_buf_pool =
-        MPIDI_CH4U_create_buf_pool(MPIDI_POSIX_BUF_POOL_NUM, MPIDI_POSIX_BUF_POOL_SIZE);
+        MPIDIU_create_buf_pool(MPIDI_POSIX_BUF_POOL_NUM, MPIDI_POSIX_BUF_POOL_SIZE);
 
     MPIR_CHKPMEM_DECL(3);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
 
-    *n_vnis_provided = 1;
+    *n_vcis_provided = 1;
 
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_finalize_hook(void)
 
     mpi_errno = MPIDI_POSIX_eager_finalize();
 
-    MPIDI_CH4R_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
+    MPIDIU_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
@@ -149,10 +149,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_vni_attr(int vni)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_vci_attr(int vci)
 {
-    MPIR_Assert(0 <= vni && vni < 1);
-    return MPIDI_VNI_TX | MPIDI_VNI_RX;
+    MPIR_Assert(0 <= vci && vci < 1);
+    return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
 MPL_STATIC_INLINE_PREFIX void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)

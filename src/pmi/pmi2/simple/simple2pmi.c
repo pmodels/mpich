@@ -1482,8 +1482,7 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
   fn_exit:
     return pmi2_errno;
   fn_fail:
-    if (cmd_buf)
-        PMI2U_Free(cmd_buf);
+    PMI2U_Free(cmd_buf);
     goto fn_exit;
 }
 

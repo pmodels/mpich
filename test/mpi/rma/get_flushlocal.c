@@ -45,6 +45,8 @@ int main(int argc, char **argv)
         winbuf[i] = rank * BUFCNT + i;
     MPI_Win_unlock(rank, win);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MPI_Win_lock_all(0, win);
     for (x = 0; x < NITER; x++) {
         for (target_rank = 0; target_rank < nproc; target_rank++) {

@@ -46,8 +46,7 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, i
         status->MPI_SOURCE = mxm_req.completion.sender_imm;
         status->MPI_TAG = _mxm_tag_mxm2mpi(mxm_req.completion.sender_tag);
         MPIR_STATUS_SET_COUNT(*status, mxm_req.completion.sender_len);
-    }
-    else {
+    } else {
         mpi_errno = MPI_ERR_INTERN;
     }
 
@@ -89,11 +88,9 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
         status->MPI_SOURCE = mxm_req.completion.sender_imm;
         status->MPI_TAG = _mxm_tag_mxm2mpi(mxm_req.completion.sender_tag);
         MPIR_STATUS_SET_COUNT(*status, mxm_req.completion.sender_len);
-    }
-    else if (MXM_ERR_NO_MESSAGE == err) {
+    } else if (MXM_ERR_NO_MESSAGE == err) {
         *flag = 0;
-    }
-    else {
+    } else {
         mpi_errno = MPI_ERR_INTERN;
     }
 
@@ -179,12 +176,10 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
                         "imProbe ========> Found USER msg (context %d from %d tag %d size %d) \n",
                         comm->context_id + context_offset, status->MPI_SOURCE, status->MPI_TAG,
                         MPIR_STATUS_GET_COUNT(*status));
-    }
-    else if (MXM_ERR_NO_MESSAGE == err) {
+    } else if (MXM_ERR_NO_MESSAGE == err) {
         *flag = 0;
         *message = NULL;
-    }
-    else {
+    } else {
         mpi_errno = MPI_ERR_INTERN;
     }
 

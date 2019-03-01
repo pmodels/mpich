@@ -71,33 +71,35 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Memcpy(((char *) recvbuf + recvtype_true_lb),
                     ((char *) sendbuf + sendtype_true_lb), copy_sz);
     } else if (sendtype_iscontig) {
-        MPIR_Segment seg;
+        MPIR_Segment *seg;
         MPI_Aint last;
 
-        MPIR_Segment_init(recvbuf, recvcount, recvtype, &seg);
+        seg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
         last = copy_sz;
-        MPIR_Segment_unpack(&seg, 0, &last, (char *) sendbuf + sendtype_true_lb);
+        MPIR_Segment_unpack(seg, 0, &last, (char *) sendbuf + sendtype_true_lb);
         MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
+        MPIR_Segment_free(seg);
     } else if (recvtype_iscontig) {
-        MPIR_Segment seg;
+        MPIR_Segment *seg;
         MPI_Aint last;
 
-        MPIR_Segment_init(sendbuf, sendcount, sendtype, &seg);
+        seg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
         last = copy_sz;
-        MPIR_Segment_pack(&seg, 0, &last, (char *) recvbuf + recvtype_true_lb);
+        MPIR_Segment_pack(seg, 0, &last, (char *) recvbuf + recvtype_true_lb);
         MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
+        MPIR_Segment_free(seg);
     } else {
         char *buf;
         intptr_t buf_off;
-        MPIR_Segment sseg;
+        MPIR_Segment *sseg;
         intptr_t sfirst;
-        MPIR_Segment rseg;
+        MPIR_Segment *rseg;
         intptr_t rfirst;
 
         MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
 
-        MPIR_Segment_init(sendbuf, sendcount, sendtype, &sseg);
-        MPIR_Segment_init(recvbuf, recvcount, recvtype, &rseg);
+        sseg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
+        rseg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
 
         sfirst = 0;
         rfirst = 0;
@@ -113,13 +115,13 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
                 last = copy_sz;
             }
 
-            MPIR_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
+            MPIR_Segment_pack(sseg, sfirst, &last, buf + buf_off);
             MPIR_Assert(last > sfirst);
 
             buf_end = buf + buf_off + (last - sfirst);
             sfirst = last;
 
-            MPIR_Segment_unpack(&rseg, rfirst, &last, buf);
+            MPIR_Segment_unpack(rseg, rfirst, &last, buf);
             MPIR_Assert(last > rfirst);
 
             rfirst = last;
@@ -138,6 +140,9 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
                 memmove(buf, buf_end - buf_off, buf_off);
             }
         }
+
+        MPIR_Segment_free(sseg);
+        MPIR_Segment_free(rseg);
     }
 
   fn_exit:

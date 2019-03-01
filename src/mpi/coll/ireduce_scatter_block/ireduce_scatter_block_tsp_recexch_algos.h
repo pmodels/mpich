@@ -31,8 +31,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     int is_inplace;
     size_t extent;
     MPI_Aint lb, true_extent;
-    int is_commutative;
-    int step1_sendto = -1, step2_nphases, step1_nrecvs;
+    int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0;
     int in_step2;
     int *step1_recvfrom = NULL;
     int **step2_nbrs = NULL;
@@ -57,8 +56,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
-    is_commutative = MPIR_Op_is_commutative(op);
-    MPIR_Assert(is_commutative == 1);
+    MPIR_Assert(MPIR_Op_is_commutative(op) == 1);
 
     total_count = nranks * recvcount;
 

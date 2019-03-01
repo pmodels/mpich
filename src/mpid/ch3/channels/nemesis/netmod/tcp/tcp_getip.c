@@ -58,7 +58,7 @@ static int dbg_ifname = 0;
 #define FUNCNAME MPIDI_GetIPInterface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
+int MPIDI_GetIPInterface(MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found)
 {
     int mpi_errno = MPI_SUCCESS;
     char *buf_ptr = NULL, *ptr;
@@ -78,14 +78,14 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
-	MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_create");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_create");
     }
 
     /* Use MSB localhost if necessary */
 #ifdef WORDS_BIGENDIAN
     localhost = MSBlocalhost;
 #endif
-    
+
 
     /*
      * Obtain the interface information from the operating system
@@ -97,36 +97,35 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
     buf_len = NUM_IFREQS * sizeof(struct ifreq);
     buf_len_prev = 0;
 
-    for(;;)
-    {
-	struct ifconf			ifconf;
-	int				rc;
+    for (;;) {
+        struct ifconf ifconf;
+        int rc;
 
-	buf_ptr = (char *) MPL_malloc(buf_len, MPL_MEM_BUFFER);
-	if (buf_ptr == NULL) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
-	}
-	
-	ifconf.ifc_buf = buf_ptr;
-	ifconf.ifc_len = buf_len;
+        buf_ptr = (char *) MPL_malloc(buf_len, MPL_MEM_BUFFER);
+        if (buf_ptr == NULL) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
+        }
 
-	rc = ioctl(fd, SIOCGIFCONF, &ifconf);
-	if (rc < 0) {
-	    if (errno != EINVAL || buf_len_prev != 0) {
-		MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIR_Strerror(errno));
-	    }
-	}
-        else {
-	    if (ifconf.ifc_len == buf_len_prev) {
-		buf_len = ifconf.ifc_len;
-		break;
-	    }
+        ifconf.ifc_buf = buf_ptr;
+        ifconf.ifc_len = buf_len;
 
-	    buf_len_prev = ifconf.ifc_len;
-	}
-	
-	MPL_free(buf_ptr);
-	buf_len += NUM_IFREQS * sizeof(struct ifreq);
+        rc = ioctl(fd, SIOCGIFCONF, &ifconf);
+        if (rc < 0) {
+            if (errno != EINVAL || buf_len_prev != 0) {
+                MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno,
+                                     MPIR_Strerror(errno));
+            }
+        } else {
+            if (ifconf.ifc_len == buf_len_prev) {
+                buf_len = ifconf.ifc_len;
+                break;
+            }
+
+            buf_len_prev = ifconf.ifc_len;
+        }
+
+        MPL_free(buf_ptr);
+        buf_len += NUM_IFREQS * sizeof(struct ifreq);
     }
 
     /*
@@ -137,95 +136,90 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
      */
     ptr = buf_ptr;
 
-    while(ptr < buf_ptr + buf_len) {
-	struct ifreq *			ifreq;
+    while (ptr < buf_ptr + buf_len) {
+        struct ifreq *ifreq;
 
-	ifreq = (struct ifreq *) ptr;
+        ifreq = (struct ifreq *) ptr;
 
-	if (dbg_ifname) {
-	    fprintf( stdout, "%10s\t", ifreq->ifr_name );
-	}
-	
-	if (ifreq->ifr_addr.sa_family == AF_INET) {
-	    struct in_addr		addr;
+        if (dbg_ifname) {
+            fprintf(stdout, "%10s\t", ifreq->ifr_name);
+        }
 
-	    addr = ((struct sockaddr_in *) &(ifreq->ifr_addr))->sin_addr;
-	    if (dbg_ifname) {
-		fprintf( stdout, "IPv4 address = %08x (%s)\n", addr.s_addr, 
-			 inet_ntoa( addr ) );
-	    }
+        if (ifreq->ifr_addr.sa_family == AF_INET) {
+            struct in_addr addr;
 
-	    if (addr.s_addr == localhost && dbg_ifname) {
-		fprintf( stdout, "Found local host\n" );
-	    }
-	    /* Save localhost if we find it.  Let any new interface 
-	       overwrite localhost.  However, if we find more than 
-	       one non-localhost interface, then we'll choose none for the 
-	       interfaces */
-	    if (addr.s_addr == localhost) {
-		foundLocalhost = 1;
-		if (nfound == 0) {
-		    myifaddr.type = AF_INET;
-		    myifaddr.len  = 4;
-		    MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
-		}
-	    }
-	    else {
-		nfound++;
-		myifaddr.type = AF_INET;
-		myifaddr.len  = 4;
-		MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
-	    }
-	}
-	else {
-	    if (dbg_ifname) {
-		fprintf( stdout, "\n" );
-	    }
-	}
+            addr = ((struct sockaddr_in *) &(ifreq->ifr_addr))->sin_addr;
+            if (dbg_ifname) {
+                fprintf(stdout, "IPv4 address = %08x (%s)\n", addr.s_addr, inet_ntoa(addr));
+            }
 
-	/*
-	 *  Increment pointer to the next ifreq; some adjustment may be
-	 *  required if the address is an IPv6 address
-	 */
-	/* This is needed for MAX OSX */
+            if (addr.s_addr == localhost && dbg_ifname) {
+                fprintf(stdout, "Found local host\n");
+            }
+            /* Save localhost if we find it.  Let any new interface
+             * overwrite localhost.  However, if we find more than
+             * one non-localhost interface, then we'll choose none for the
+             * interfaces */
+            if (addr.s_addr == localhost) {
+                foundLocalhost = 1;
+                if (nfound == 0) {
+                    myifaddr.type = AF_INET;
+                    myifaddr.len = 4;
+                    MPIR_Memcpy(myifaddr.ifaddr, &addr.s_addr, 4);
+                }
+            } else {
+                nfound++;
+                myifaddr.type = AF_INET;
+                myifaddr.len = 4;
+                MPIR_Memcpy(myifaddr.ifaddr, &addr.s_addr, 4);
+            }
+        } else {
+            if (dbg_ifname) {
+                fprintf(stdout, "\n");
+            }
+        }
+
+        /*
+         *  Increment pointer to the next ifreq; some adjustment may be
+         *  required if the address is an IPv6 address
+         */
+        /* This is needed for MAX OSX */
 #ifdef _SIZEOF_ADDR_IFREQ
-	ptr += _SIZEOF_ADDR_IFREQ(*ifreq);
+        ptr += _SIZEOF_ADDR_IFREQ(*ifreq);
 #else
-	ptr += sizeof(struct ifreq);
+        ptr += sizeof(struct ifreq);
 
 #	if defined(AF_INET6)
-	{
-	    if (ifreq->ifr_addr.sa_family == AF_INET6)
-	    {
-		ptr += sizeof(struct sockaddr_in6) - sizeof(struct sockaddr);
-	    }
-	}
+        {
+            if (ifreq->ifr_addr.sa_family == AF_INET6) {
+                ptr += sizeof(struct sockaddr_in6) - sizeof(struct sockaddr);
+            }
+        }
 #	endif
 #endif
     }
 
     /* If we found a unique address, use that */
     if (nfound == 1 || (nfound == 0 && foundLocalhost == 1)) {
-	*ifaddr = myifaddr;
-	*found  = 1;
+        *ifaddr = myifaddr;
+        *found = 1;
     }
 
-fn_exit:
-    if (NULL != buf_ptr)
-        MPL_free(buf_ptr);
+  fn_exit:
+    MPL_free(buf_ptr);
     if (fd >= 0)
         close(fd);
-    
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GETIPINTERFACE);
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #else /* things needed to find the interfaces */
 
 /* In this case, just return false for interfaces found */
-int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
+int MPIDI_GetIPInterface(MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found)
 {
     *found = 0;
     return MPI_SUCCESS;
@@ -244,7 +238,7 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found)
 {
     int mpi_errno = MPI_SUCCESS;
     int fd, ret;
@@ -254,26 +248,29 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifad
         *found = FALSE;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
-    ifr.ifr_addr.sa_family = AF_INET; /* just IPv4 for now */
-    MPL_strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+    MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d",
+                         MPIR_Strerror(errno), errno);
+    ifr.ifr_addr.sa_family = AF_INET;   /* just IPv4 for now */
+    MPL_strncpy(ifr.ifr_name, ifname, IFNAMSIZ - 1);
     ret = ioctl(fd, SIOCGIFADDR, &ifr);
-    MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno,
+                         MPIR_Strerror(errno));
 
     *found = TRUE;
-    MPIR_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, 4);
+    MPIR_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr, 4);
     ifaddr->len = 4;
     ifaddr->type = AF_INET;
 
-fn_exit:
+  fn_exit:
     if (fd != -1) {
         ret = close(fd);
         if (ret < 0) {
-            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIR_Strerror(errno), errno);
+            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d",
+                          MPIR_Strerror(errno), errno);
         }
     }
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -283,7 +280,7 @@ fn_fail:
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t * ifaddr, int *found)
 {
     if (found != NULL)
         *found = FALSE;

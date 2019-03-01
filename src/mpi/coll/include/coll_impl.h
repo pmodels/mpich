@@ -194,6 +194,7 @@ typedef enum MPIR_Iallgather_intra_algo_t {
     MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING,
     MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING,
     MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS,
+    MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RING,
 } MPIR_Iallgather_intra_algo_t;
 extern MPIR_Iallgather_intra_algo_t MPIR_Iallgather_intra_algo_choice;
 
@@ -211,6 +212,7 @@ typedef enum MPIR_Iallgatherv_intra_algo_t {
     MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING,
     MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING,
     MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RING,
+    MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_BRUCKS,
 } MPIR_Iallgatherv_intra_algo_t;
 extern MPIR_Iallgatherv_intra_algo_t MPIR_Iallgatherv_intra_algo_choice;
 
@@ -227,8 +229,7 @@ typedef enum MPIR_Iallreduce_intra_algo_t {
     MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER,
     MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER,
-    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY,
-    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL,
+    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE,
 } MPIR_Iallreduce_intra_algo_t;
 extern MPIR_Iallreduce_intra_algo_t MPIR_Iallreduce_intra_algo_choice;
 
@@ -237,6 +238,7 @@ typedef enum MPIR_Iallreduce_inter_algo_t {
     MPIR_IALLREDUCE_INTER_ALGO_REMOTE_REDUCE_LOCAL_BCAST,
 } MPIR_Iallreduce_inter_algo_t;
 extern MPIR_Iallreduce_inter_algo_t MPIR_Iallreduce_inter_algo_choice;
+extern MPIR_Tree_type_t MPIR_Iallreduce_tree_type;
 
 typedef enum MPIR_Ialltoall_intra_algo_t {
     MPIR_IALLTOALL_INTRA_ALGO_AUTO,
@@ -244,6 +246,8 @@ typedef enum MPIR_Ialltoall_intra_algo_t {
     MPIR_IALLTOALL_INTRA_ALGO_INPLACE,
     MPIR_IALLTOALL_INTRA_ALGO_PAIRWISE,
     MPIR_IALLTOALL_INTRA_ALGO_PERMUTED_SENDRECV,
+    MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_RING,
+    MPIR_IALLTOALL_INTRA_ALGO_GENTRAN_BRUCKS,
 } MPIR_Ialltoall_intra_algo_t;
 extern MPIR_Ialltoall_intra_algo_t MPIR_Ialltoall_intra_algo_choice;
 
@@ -257,6 +261,7 @@ typedef enum MPIR_Ialltoallv_intra_algo_t {
     MPIR_IALLTOALLV_INTRA_ALGO_AUTO,
     MPIR_IALLTOALLV_INTRA_ALGO_BLOCKED,
     MPIR_IALLTOALLV_INTRA_ALGO_INPLACE,
+    MPIR_IALLTOALLV_INTRA_ALGO_GENTRAN_SCATTERED,
 } MPIR_Ialltoallv_intra_algo_t;
 extern MPIR_Ialltoallv_intra_algo_t MPIR_Ialltoallv_intra_algo_choice;
 
@@ -344,60 +349,70 @@ extern MPIR_Igatherv_inter_algo_t MPIR_Igatherv_inter_algo_choice;
 typedef enum MPIR_Ineighbor_allgather_intra_algo_t {
     MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_allgather_intra_algo_t;
 extern MPIR_Ineighbor_allgather_intra_algo_t MPIR_Ineighbor_allgather_intra_algo_choice;
 
 typedef enum MPIR_Ineighbor_allgather_inter_algo_t {
     MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_allgather_inter_algo_t;
 extern MPIR_Ineighbor_allgather_inter_algo_t MPIR_Ineighbor_allgather_inter_algo_choice;
 
 typedef enum MPIR_Ineighbor_allgatherv_intra_algo_t {
     MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_allgatherv_intra_algo_t;
 extern MPIR_Ineighbor_allgatherv_intra_algo_t MPIR_Ineighbor_allgatherv_intra_algo_choice;
 
 typedef enum MPIR_Ineighbor_allgatherv_inter_algo_t {
     MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_allgatherv_inter_algo_t;
 extern MPIR_Ineighbor_allgatherv_inter_algo_t MPIR_Ineighbor_allgatherv_inter_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoall_intra_algo_t {
     MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoall_intra_algo_t;
 extern MPIR_Ineighbor_alltoall_intra_algo_t MPIR_Ineighbor_alltoall_intra_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoall_inter_algo_t {
     MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoall_inter_algo_t;
 extern MPIR_Ineighbor_alltoall_inter_algo_t MPIR_Ineighbor_alltoall_inter_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoallv_intra_algo_t {
     MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoallv_intra_algo_t;
 extern MPIR_Ineighbor_alltoallv_intra_algo_t MPIR_Ineighbor_alltoallv_intra_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoallv_inter_algo_t {
     MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoallv_inter_algo_t;
 extern MPIR_Ineighbor_alltoallv_inter_algo_t MPIR_Ineighbor_alltoallv_inter_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoallw_intra_algo_t {
     MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoallw_intra_algo_t;
 extern MPIR_Ineighbor_alltoallw_intra_algo_t MPIR_Ineighbor_alltoallw_intra_algo_choice;
 
 typedef enum MPIR_Ineighbor_alltoallw_inter_algo_t {
     MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO,
     MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_LINEAR,
+    MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_GENTRAN_LINEAR,
 } MPIR_Ineighbor_alltoallw_inter_algo_t;
 extern MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice;
 
@@ -453,6 +468,7 @@ extern MPIR_Ireduce_inter_algo_t MPIR_Ireduce_inter_algo_choice;
 typedef enum MPIR_Iscan_intra_algo_t {
     MPIR_ISCAN_INTRA_ALGO_AUTO,
     MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING,
+    MPIR_ISCAN_INTRA_ALGO_GENTRAN_RECURSIVE_DOUBLING,
 } MPIR_Iscan_intra_algo_t;
 extern MPIR_Iscan_intra_algo_t MPIR_Iscan_intra_algo_choice;
 

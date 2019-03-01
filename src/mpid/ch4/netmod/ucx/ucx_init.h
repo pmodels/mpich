@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
                                                     int *tag_bits,
                                                     MPIR_Comm * comm_world,
                                                     MPIR_Comm * comm_self, int spawned,
-                                                    int *n_vnis_provided)
+                                                    int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
 
-    *n_vnis_provided = 1;
+    *n_vcis_provided = 1;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -103,15 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
 
-    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
-
-#ifndef HAVE_DEBUGGER_SUPPORT
-    MPIDI_UCX_global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-    if (MPIDI_UCX_global.lw_send_req == NULL) {
-        MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-    MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
-#endif
+    MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
@@ -206,10 +198,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 
     MPIDIG_finalize();
 
-#ifndef HAVE_DEBUGGER_SUPPORT
-    MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
-#endif
-
   fn_exit:
     MPL_free(pending);
     return mpi_errno;
@@ -219,13 +207,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_get_vni_attr
+#define FUNCNAME MPIDI_NM_get_vci_attr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_vni_attr(int vni)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_vci_attr(int vci)
 {
-    MPIR_Assert(0 <= vni && vni < 1);
-    return MPIDI_VNI_TX | MPIDI_VNI_RX;
+    MPIR_Assert(0 <= vci && vci < 1);
+    return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
 #undef FUNCNAME
@@ -288,7 +276,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * ne
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_mpi_free_mem(ptr);
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 #undef FUNCNAME
@@ -297,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 #endif /* UCX_INIT_H_INCLUDED */

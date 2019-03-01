@@ -311,12 +311,8 @@ static int get_tree_attributes(netloc_topology_t topology,
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
     MPIR_CHKPMEM_REAP();
-    if (host_nodes != NULL) {
-        MPL_free(host_nodes);
-    }
-    if (nodes != NULL) {
-        MPL_free(nodes);
-    }
+    MPL_free(host_nodes);
+    MPL_free(nodes);
     return mpi_errno;
 
   fn_fail:
@@ -771,15 +767,9 @@ static void find_augmenting_path(netloc_topology_t topology, netloc_node_t *** n
     }
 
   fn_exit:
-    if (forest != NULL) {
-        MPL_free(forest);
-    }
-    if (unmarked_vertices != NULL) {
-        MPL_free(unmarked_vertices);
-    }
-    if (unmarked_edges != NULL) {
-        MPL_free(unmarked_edges);
-    }
+    MPL_free(forest);
+    MPL_free(unmarked_vertices);
+    MPL_free(unmarked_edges);
     *augmenting_path = current_augmenting_path;
     *augmenting_path_length = path_length;
     return;
@@ -850,9 +840,7 @@ static void find_maximum_matching(netloc_topology_t topology, netloc_node_t *** 
     }
 
   fn_exit:
-    if (augmenting_path != NULL) {
-        MPL_free(augmenting_path);
-    }
+    MPL_free(augmenting_path);
     return;
 }
 
@@ -1452,21 +1440,11 @@ static int get_torus_attributes(netloc_topology_t topology,
         }
 
       cleanup:
-        if (traversal_order != NULL) {
-            MPL_free(traversal_order);
-        }
-        if (hypercube_labels != NULL) {
-            MPL_free(hypercube_labels);
-        }
-        if (semicube_edges != NULL) {
-            MPL_free(semicube_edges);
-        }
-        if (semicube_vertices != NULL) {
-            MPL_free(semicube_vertices);
-        }
-        if (maximum_matching != NULL) {
-            MPL_free(maximum_matching);
-        }
+        MPL_free(traversal_order);
+        MPL_free(hypercube_labels);
+        MPL_free(semicube_edges);
+        MPL_free(semicube_vertices);
+        MPL_free(maximum_matching);
     } else {
         network_attr->type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
     }
@@ -1580,9 +1558,7 @@ int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_att
     }
 
   fn_exit:
-    if (host_nodes != NULL) {
-        MPL_free(host_nodes);
-    }
+    MPL_free(host_nodes);
     *end_point = node_end_point;
     return mpi_errno;
 
@@ -1705,12 +1681,8 @@ int MPIR_Netloc_get_switches_at_level(netloc_topology_t topology,
     }
 
   fn_exit:
-    if (switches != NULL) {
-        MPL_free(switches);
-    }
-    if (switch_nodes != NULL) {
-        MPL_free(switch_nodes);
-    }
+    MPL_free(switches);
+    MPL_free(switch_nodes);
     *switches_at_level = switches;
     *switch_count = i;
     return mpi_errno;

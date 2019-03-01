@@ -19,9 +19,8 @@
         type_size_   = sizeof(foo.a) + sizeof(foo.b);                   \
         type_extent_ = (MPI_Aint) sizeof(foo);                          \
         el_size_ = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
-        true_ub_ = (MPIR_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
-                                                  (char *) &foo.a)) +   \
-                  (MPI_Aint) sizeof(foo.b);                             \
+        true_ub_ = ((MPI_Aint) ((char *) &foo.b - (char *) &foo.a)) +   \
+            (MPI_Aint) sizeof(foo.b);                                   \
         alignsize_ = MPL_MAX(MPIR_Datatype_get_basic_size(mt1_),        \
                              MPIR_Datatype_get_basic_size(mt2_));       \
     }
@@ -64,22 +63,19 @@ Input Parameters:
 @*/
 int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 {
-    int err, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int type_size, alignsize;
     MPI_Aint type_extent, true_ub, el_size;
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_permanent = 1;
     new_dtp->is_committed = 1;  /* predefined types are pre-committed */
     new_dtp->attributes = NULL;
-    new_dtp->cache_id = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
-    new_dtp->dataloop_depth = -1;
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -170,36 +166,22 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
      * type and then committing it, then the dataloop will be missing.
      */
 
-#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
-    /* If MPID implementation needs use to reduce everything to
-     * a byte stream, do that. */
-    err = MPIR_Dataloop_create_pairtype(type,
-                                        &(new_dtp->dataloop),
-                                        &(new_dtp->dataloop_size),
-                                        &(new_dtp->dataloop_depth), MPIDU_DATALOOP_ALL_BYTES);
-#else
-    err = MPIR_Dataloop_create_pairtype(type,
-                                        &(new_dtp->dataloop),
-                                        &(new_dtp->dataloop_size),
-                                        &(new_dtp->dataloop_depth), MPIR_DATALOOP_DEFAULT);
-#endif
+    MPIR_Dataloop_create(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
 
 #ifdef MPID_Type_commit_hook
-    if (!err) {
-        err = MPID_Type_commit_hook(new_dtp);
-    }
-#endif /* MPID_Type_commit_hook */
+    int err = MPID_Type_commit_hook(new_dtp);
 
     /* --BEGIN ERROR HANDLING-- */
     if (err) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                          MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Dataloop_create_pairtype",
+                                         "MPID_Type_commit_hook",
                                          __LINE__, MPI_ERR_OTHER, "**nomem", 0);
         return mpi_errno;
 
     }
     /* --END ERROR HANDLING-- */
+#endif /* MPID_Type_commit_hook */
 
     return mpi_errno;
 }

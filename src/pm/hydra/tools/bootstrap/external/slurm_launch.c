@@ -50,8 +50,7 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
 
   fn_exit:
     HYDU_free_strlist(tmp);
-    if (foo)
-        MPL_free(foo);
+    MPL_free(foo);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -163,11 +162,9 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
   fn_exit:
-    if (node_list_str)
-        MPL_free(node_list_str);
+    MPL_free(node_list_str);
     HYDU_free_strlist(targs);
-    if (path)
-        MPL_free(path);
+    MPL_free(path);
     HYDU_FUNC_EXIT();
     return status;
 

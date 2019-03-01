@@ -22,32 +22,27 @@ MPIR_Object_alloc_t MPIR_Request_mem = {
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
-   "active" has meaning only if the request is a persistent request; this
-   allows the completion routines to indicate that a persistent request
-   was inactive and did not require any extra completion operation.
-
    If debugger information is being provided for pending (user-initiated)
    send operations, the macros MPII_SENDQ_FORGET will be defined to
    call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
-int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status, int *active)
+int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rc;
 
-    *active = TRUE;
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
             {
-                if (status != MPI_STATUS_IGNORE) {
-                    MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                               MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-                }
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 MPII_SENDQ_FORGET(request_ptr);
                 break;
             }
         case MPIR_REQUEST_KIND__RECV:
+        case MPIR_REQUEST_KIND__COLL:
+        case MPIR_REQUEST_KIND__RMA:
             {
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;
@@ -65,25 +60,15 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     request_ptr->u.persist.real_request = NULL;
 
                     if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                                       MPIR_STATUS_GET_CANCEL_BIT
-                                                       (prequest_ptr->status));
-                        }
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
                         mpi_errno = prequest_ptr->status.MPI_ERROR;
                     } else {
                         /* This is needed for persistent Bsend requests */
-                        int rc;
-
-                        rc = MPIR_Grequest_query(prequest_ptr);
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = rc;
-                        }
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                                       MPIR_STATUS_GET_CANCEL_BIT
-                                                       (prequest_ptr->status));
-                        }
+                        mpi_errno = MPIR_Grequest_query(prequest_ptr);
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT
+                                                   (prequest_ptr->status));
                         if (mpi_errno == MPI_SUCCESS) {
                             mpi_errno = prequest_ptr->status.MPI_ERROR;
                         }
@@ -98,13 +83,10 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
                         /* if the persistent request failed to start then make the
                          * error code available */
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
-                        }
+                        MPIR_Status_set_cancel_bit(status, FALSE);
                         mpi_errno = request_ptr->status.MPI_ERROR;
                     } else {
                         MPIR_Status_set_empty(status);
-                        *active = FALSE;
                     }
                 }
 
@@ -132,8 +114,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                         /* if the persistent request failed to start then make the
                          * error code available */
                         mpi_errno = request_ptr->status.MPI_ERROR;
-                    } else {
-                        *active = FALSE;
                     }
                     /* --END ERROR HANDLING-- */
                 }
@@ -143,26 +123,13 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
 
         case MPIR_REQUEST_KIND__GREQUEST:
             {
-                int rc;
-
-                rc = MPIR_Grequest_query(request_ptr);
-                if (mpi_errno == MPI_SUCCESS) {
-                    mpi_errno = rc;
-                }
+                mpi_errno = MPIR_Grequest_query(request_ptr);
                 MPIR_Request_extract_status(request_ptr, status);
                 rc = MPIR_Grequest_free(request_ptr);
                 if (mpi_errno == MPI_SUCCESS) {
                     mpi_errno = rc;
                 }
 
-                break;
-            }
-
-        case MPIR_REQUEST_KIND__COLL:
-        case MPIR_REQUEST_KIND__RMA:
-            {
-                mpi_errno = request_ptr->status.MPI_ERROR;
-                MPIR_Request_extract_status(request_ptr, status);
                 break;
             }
 
@@ -199,10 +166,13 @@ int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
 #define FUNCNAME MPIR_Request_get_error
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* FIXME: What is this routine for?
+/* This routine is for obtaining the error code of an existing request.
+ * It is similar as MPIR_Request_completion_processing without any "free" + status setting.
  *
- * [BRT] it is used by testall, although looking at testall now, I think the
- * algorithm can be change slightly and eliminate the need for this routine
+ * It is only needed by MPI_Testall because if not all request are completed then (quote):
+ * "neither the array_of_requests nor the array_of_statuses is modified.
+ * If one or more of the requests completes with an error, MPI_ERR_IN_STATUS is returned".
+ * Therefore, we have to get the error code without modifying the request.
  */
 int MPIR_Request_get_error(MPIR_Request * request_ptr)
 {
@@ -248,51 +218,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
         case MPIR_REQUEST_KIND__GREQUEST:
             {
-                int rc;
-
-                /* Note that we've acquired the thread private storage above */
-
-                switch (request_ptr->u.ureq.greq_fns->greq_lang) {
-                    case MPIR_LANG__C:
-#ifdef HAVE_CXX_BINDING
-                    case MPIR_LANG__CXX:
-#endif
-                        rc = (request_ptr->u.ureq.greq_fns->query_fn) (request_ptr->u.
-                                                                       ureq.greq_fns->grequest_extra_state,
-                                                                       &request_ptr->status);
-                        MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;,
-                                             "**user", "**userquery %d", rc);
-                        break;
-#ifdef HAVE_FORTRAN_BINDING
-                    case MPIR_LANG__FORTRAN:
-                    case MPIR_LANG__FORTRAN90:
-                        {
-                            MPI_Fint ierr;
-                            MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
-                            ((MPIR_Grequest_f77_query_function *) (request_ptr->u.ureq.
-                                                                   greq_fns->query_fn))
-                                (request_ptr->u.ureq.greq_fns->grequest_extra_state, is, &ierr);
-                            rc = (int) ierr;
-                            if (rc == MPI_SUCCESS)
-                                PMPI_Status_f2c(is, &request_ptr->status);
-                            MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;,
-                                                 "**user", "**userquery %d", rc);
-                            break;
-                        }
-#endif
-
-                    default:
-                        {
-                            /* --BEGIN ERROR HANDLING-- */
-                            /* This should not happen */
-                            MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN,;,
-                                                 "**badcase",
-                                                 "**badcase %d",
-                                                 request_ptr->u.ureq.greq_fns->greq_lang);
-                            break;
-                            /* --END ERROR HANDLING-- */
-                        }
-                }
+                mpi_errno = MPIR_Grequest_query(request_ptr);
 
                 break;
             }

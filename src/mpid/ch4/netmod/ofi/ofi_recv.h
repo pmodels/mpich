@@ -33,8 +33,8 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
-                                                MPIR_Request * rreq, MPIR_Datatype * dt_ptr,
-                                                uint64_t flags)
+                                                MPIDI_av_entry_t * addr, MPIR_Request * rreq,
+                                                MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     size_t countp_huge = 0;
     size_t oout = 0;
     size_t cur_o = 0;
-    MPIR_Segment seg;
+    MPIR_Segment *seg;
     struct fi_msg_tagged msg;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -66,16 +66,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
 
     map_size = dt_ptr->max_contig_blocks * count + 1;
     num_contig = map_size;      /* map_size is the maximum number of iovecs that can be generated */
-    DLOOP_Offset last = dt_ptr->size * count;
+    MPI_Aint last = dt_ptr->size * count;
 
     size = o_size * num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
 
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), &seg);
-    MPIR_Segment_pack_vector(&seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack),
-                             &num_contig);
+    seg = MPIR_Segment_alloc(buf, count, MPIDI_OFI_REQUEST(rreq, datatype));
+    MPIR_Segment_to_iov(seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack), &num_contig);
+    MPIR_Segment_free(seg);
 
     originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
     oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
@@ -88,10 +88,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
      * and calculate the total number of iovecs */
     for (j = 0; j < num_contig; j++) {
-        if (originv[j].iov_len > MPIDI_Global.max_send) {
+        if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
             huge = 1;
-            countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
-            if (originv[j].iov_len % MPIDI_Global.max_send) {
+            countp_huge += originv[j].iov_len / MPIDI_Global.max_msg_size;
+            if (originv[j].iov_len % MPIDI_Global.max_msg_size) {
                 countp_huge++;
             }
         } else {
@@ -110,11 +110,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
         MPIR_Assert(originv_huge != NULL);
         for (j = 0; j < num_contig; j++) {
             l = 0;
-            if (originv[j].iov_len > MPIDI_Global.max_send) {
+            if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
                 while (l < originv[j].iov_len) {
                     length = originv[j].iov_len - l;
-                    if (length > MPIDI_Global.max_send)
-                        length = MPIDI_Global.max_send;
+                    if (length > MPIDI_Global.max_msg_size)
+                        length = MPIDI_Global.max_msg_size;
                     originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                     originv_huge[k].iov_len = length;
                     k++;
@@ -155,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     msg.ignore = mask_bits;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
-    msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_comm_to_phys(comm, rank);
+    msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
                          MPIDI_OFI_CALL_LOCK, FALSE);
@@ -222,10 +222,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_msg_size) {
             mpi_errno =
-                MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, rreq,
-                                   dt_ptr, flags);
+                MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, addr,
+                                   rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS)       /* Receive posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_RECV_NEEDS_UNPACK)
@@ -239,12 +239,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment), MPL_MEM_BUFFER);
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment *), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer) == NULL,
                              mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer);
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment));
+        MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment) = MPIR_Segment_alloc(buf, count, datatype);
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) = NULL;
         MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
@@ -253,9 +253,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
 
-    if (unlikely(data_sz > MPIDI_Global.max_send)) {
+    if (unlikely(data_sz > MPIDI_Global.max_msg_size)) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        data_sz = MPIDI_Global.max_send;
+        data_sz = MPIDI_Global.max_msg_size;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
@@ -316,14 +316,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
+                                       context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
+    }
 
-    mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
     return mpi_errno;
 }
@@ -369,18 +368,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        rreq = message;
 
-    rreq = message;
+        av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
+        mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
+                                       message->status.MPI_TAG, rreq->comm, 0, av,
+                                       &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
+    }
 
-    av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
-    mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
-                                   message->status.MPI_TAG, rreq->comm, 0, av,
-                                   &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
     return mpi_errno;
 }
@@ -405,14 +403,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
+                                       context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
+    }
 
-    mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
     return mpi_errno;
 }
@@ -436,9 +433,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     }
 #endif
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
     ret = fi_cancel((fid_t) MPIDI_Global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
@@ -450,7 +445,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
         if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
             MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
             MPIR_STATUS_SET_COUNT(rreq->status, 0);
-            MPIDI_CH4U_request_complete(rreq);
+            MPIDIU_request_complete(rreq);
         }
     }
 

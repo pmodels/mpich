@@ -558,29 +558,6 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
-#define MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(pkt_, dataloop_size_, err_) \
-    {                                                                   \
-        /* This macro sets dataloop_size in RMA operation packets       \
-           (PUT, GET, ACC, GACC) */                                     \
-        err_ = MPI_SUCCESS;                                             \
-        switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_PUT):                                       \
-            (pkt_).put.info.dataloop_size = (dataloop_size_);           \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET):                                       \
-            (pkt_).get.info.dataloop_size = (dataloop_size_);           \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            (pkt_).accum.info.dataloop_size = (dataloop_size_);         \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            (pkt_).get_accum.info.dataloop_size = (dataloop_size_);     \
-            break;                                                      \
-        default:                                                        \
-            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
-        }                                                               \
-    }
-
 #define MPIDI_CH3_PKT_RMA_GET_REQUEST_HANDLE(pkt_, request_hdl_, err_)  \
     {                                                                   \
         err_ = MPI_SUCCESS;                                             \
@@ -657,7 +634,7 @@ typedef struct MPIDI_CH3_Pkt_put {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     union {
-        int dataloop_size;
+        int flattened_type_size;
         MPIDI_CH3_RMA_Immed_u data;
     } info;
 } MPIDI_CH3_Pkt_put_t;
@@ -669,7 +646,7 @@ typedef struct MPIDI_CH3_Pkt_get {
     int count;
     MPI_Datatype datatype;
     struct {
-        int dataloop_size;      /* for derived datatypes */
+        int flattened_type_size;
     } info;
     MPI_Request request_handle;
     MPI_Win target_win_handle;
@@ -700,7 +677,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     union {
-        int dataloop_size;
+        int flattened_type_size;
         MPIDI_CH3_RMA_Immed_u data;
     } info;
 } MPIDI_CH3_Pkt_accum_t;
@@ -715,7 +692,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     MPI_Op op;
     MPI_Win target_win_handle;
     union {
-        int dataloop_size;
+        int flattened_type_size;
         MPIDI_CH3_RMA_Immed_u data;
     } info;
 } MPIDI_CH3_Pkt_get_accum_t;
@@ -918,58 +895,9 @@ typedef union MPIDI_CH3_Pkt {
 
 /* Extended header packet types */
 
-/* to send derived datatype across in RMA ops */
-typedef struct MPIDI_RMA_dtype_info {   /* for derived datatypes */
-    int is_contig;
-    MPI_Aint max_contig_blocks;
-    MPI_Aint size;
-    MPI_Aint extent;
-    MPI_Aint dataloop_size;     /* not needed because this info is sent in
-                                 * packet header. remove it after lock/unlock
-                                 * is implemented in the device */
-    void *dataloop;             /* pointer needed to update pointers
-                                 * within dataloop on remote side */
-    int dataloop_depth;
-    int basic_type;
-    MPI_Aint ub, lb, true_ub, true_lb;
-    int has_sticky_ub, has_sticky_lb;
-} MPIDI_RMA_dtype_info;
-
 typedef struct MPIDI_CH3_Ext_pkt_stream {
     MPI_Aint stream_offset;
 } MPIDI_CH3_Ext_pkt_stream_t;
-
-typedef struct MPIDI_CH3_Ext_pkt_derived {
-    MPIDI_RMA_dtype_info dtype_info;
-    /* Follow with variable-length dataloop.
-     * On origin we allocate a large buffer including
-     * this header and the dataloop; on target we use
-     * separate buffer to receive dataloop in order
-     * to avoid extra copy.*/
-} MPIDI_CH3_Ext_pkt_derived_t;
-
-typedef struct MPIDI_CH3_Ext_pkt_stream_derived {
-    MPI_Aint stream_offset;
-    MPIDI_RMA_dtype_info dtype_info;
-    /* follow with variable-length dataloop. */
-} MPIDI_CH3_Ext_pkt_stream_derived_t;
-
-/* Note that since ACC and GET_ACC contain the same extended attributes,
- * we use generic routines for them in some places (see below).
- * If we add OP-specific attribute in future, we should handle them separately.
- *  1. origin issuing function
- *  2. target packet handler
- *  3. target data receive complete handler. */
-typedef MPIDI_CH3_Ext_pkt_stream_t MPIDI_CH3_Ext_pkt_accum_stream_t;
-typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_accum_derived_t;
-typedef MPIDI_CH3_Ext_pkt_stream_derived_t MPIDI_CH3_Ext_pkt_accum_stream_derived_t;
-
-typedef MPIDI_CH3_Ext_pkt_stream_t MPIDI_CH3_Ext_pkt_get_accum_stream_t;
-typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_get_accum_derived_t;
-typedef MPIDI_CH3_Ext_pkt_stream_derived_t MPIDI_CH3_Ext_pkt_get_accum_stream_derived_t;
-
-typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_put_derived_t;
-typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_get_derived_t;
 
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
 typedef struct MPIDI_CH3_Pkt_send_container {

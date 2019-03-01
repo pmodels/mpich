@@ -70,11 +70,6 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
         goto fn_exit;
     }
 
-    /* total_count*extent eventually gets malloced. it isn't added to
-     * a user-passed in buffer */
-    MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
-
-
     /* commutative and long message, or noncommutative and long message.
      * use (p-1) pairwise exchanges */
 

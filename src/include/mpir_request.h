@@ -354,7 +354,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
             MPIR_Comm_release(req->comm);
         }
 
-        if (req->kind == MPIR_REQUEST_KIND__GREQUEST && req->u.ureq.greq_fns != NULL) {
+        if (req->kind == MPIR_REQUEST_KIND__GREQUEST) {
             MPL_free(req->u.ureq.greq_fns);
         }
 
@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
     return mpi_errno;
 }
 
-int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
+int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *);
 int MPIR_Request_get_error(MPIR_Request *);
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request *);

@@ -615,36 +615,12 @@ AS_CASE([$enable_yield],
 #######################################################################
 ## START OF THREADS CODE
 #######################################################################
-PAC_SET_HEADER_LIB_PATH(uti)
 
-AC_ARG_WITH([thread-package],
-[  --with-thread-package=package     Thread package to use. Supported thread packages include:
-        posix or pthreads - POSIX threads (default, if required)
-        solaris - Solaris threads (Solaris OS only)
-        abt or argobots - Argobots threads
-        win - windows threads
-        uti - POSIX threads plus Utility Thread Offloading library
-        none - no threads
-],,with_thread_package=posix)
-
-if test "${thread_pkg_required}" = "no" -o "${with_thread_package}" = "no" ; then
-   with_thread_package=none
-fi
-
-if test "${with_thread_package}" = "yes" ; then
-   with_thread_package=posix
-fi
-
-if test "${thread_pkg_required}" = "yes" -a "${with_thread_package}" = "none" ; then
-   AC_ERROR([if no thread package is available, use --enable-threads=single or funneled])
-fi
+PAC_ARG_THREAD_PACKAGE
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
-    posix|pthreads|uti)
-	if test "${with_thread_package}" = "pthreads" ; then
-	    with_thread_package=posix
-	fi
+    yes|posix|pthreads|uti)
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
@@ -664,37 +640,8 @@ case $with_thread_package in
         # this check should come after the AC_CHECK_LIB for -lpthread
         AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
 
-	# Check for a routine that specify a routine to call on
-	# thread exit.  We can use this to release memory that may
-	# be allocated by the MPL library in the thread.
-	# A complication: pthread_cleanup_push may be a macro; in that
-	# case, check_funcs will fail to find it.
-	# Under OSX, pthread_cleanup_push and pop are macros that must
-	# appear together in the same lexical scope, and hence are
-	# really useless in libraries that may allocate data within
-	# a user-managed thread.
-	AC_CHECK_FUNCS(pthread_cleanup_push)
-	if test "$ac_cv_func_pthread_cleanup_push" = "no" ; then
-            AC_CACHE_CHECK([whether pthread_cleanup_push is available (may be a macro in pthread.h)],pac_cv_func_pthread_cleanup_push,[
-	    AC_TRY_LINK([
-#include <pthread.h>
-void f1(void *a) { return; }],
-[pthread_cleanup_push( f1, (void *)0 );],
-            pac_cv_func_pthread_cleanup_push=yes,
-            pac_cv_func_pthread_cleanup_push=no)])
-            if test "$pac_cv_func_pthread_cleanup_push" = yes ; then
-	        AC_DEFINE(HAVE_PTHREAD_CLEANUP_PUSH_MACRO,1,[Define if pthread_cleanup_push is available, even as a macro])
-            fi
-
-        fi
-
 	if test "${with_thread_package}" = "uti" ; then
-	    PAC_CHECK_HEADER_LIB(uti.h,uti,uti_attr_init,have_uti=yes,have_uti=no)
-	    if test "${have_uti}" = "yes" ; then
-		AC_MSG_NOTICE([Using POSIX and Utility Thread Offloading library for thread package])
-	    else
-		AC_MSG_ERROR([Unable to find Utility Thread Offloading library])
-	    fi
+	    PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
 	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
 	else
 	    AC_MSG_NOTICE([POSIX will be used for thread package.])
@@ -718,14 +665,7 @@ void f1(void *a) { return; }],
         ;;
     abt|argobots)
         with_thread_package=argobots
-        AC_CHECK_HEADERS(abt.h)
-        AC_CHECK_LIB([abt],[abt_key_create],have_abt=yes)
-        if test "$have_abt" = "yes"; then
-           PAC_PREPEND_FLAG([-labt],[LIBS])
-        fi
-        AC_CHECK_FUNCS(ABT_thread_yield)
-        AC_CHECK_FUNC([abt_key_create],[],[AC_MSG_ERROR([unable to find Argobots library])])
-        AC_CHECK_FUNCS(abt_cleanup_push)
+        PAC_CHECK_HEADER_LIB_FATAL([argobots], [abt.h], [abt], [ABT_key_create])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
     no|none)
@@ -792,9 +732,6 @@ case $with_proc_mutex_package in
     AC_CHECK_FUNC([pthread_mutex_init],[],[AC_MSG_ERROR([unable to find pthreads library])])
     # pthread_mutexattr_setpshared is first released in Issue 5
     AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
-    if test "$ac_cv_func_pthread_mutexattr_setpshared" = "no" ; then
-      AC_DEFINE(HAVE_PTHREAD_MUTEXATTR_SETPSHARED,1, [Define if pthread_mutexattr_setpshared is available.])
-    fi
 
     AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
     PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_POSIX
@@ -834,7 +771,7 @@ if test "${with_thread_package}" = "pthreads" -o "${with_proc_mutex_package}" = 
                  pac_cv_has_pthread_mutex_errorcheck=no)])
 
   if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
-      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NPRRORCHECK,
+      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
                 [Define to an expression that will result in an error checking mutex type.])
   elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
       AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,

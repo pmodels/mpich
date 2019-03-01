@@ -101,7 +101,7 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_mxm_probe, /* probe */
     MPID_nem_mxm_iprobe,        /* iprobe */
     MPID_nem_mxm_improbe,       /* improbe */
-    NULL                        /* imrecv */
+    NULL        /* imrecv */
 };
 
 
@@ -230,7 +230,7 @@ int MPID_nem_mxm_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MXM_GET_BUSINESS_CARD);
 
     str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, MXM_MPICH_ENDPOINT_KEY,
-                                        _mxm_obj.mxm_ep_addr, _mxm_obj.mxm_ep_addr_size);
+                                       _mxm_obj.mxm_ep_addr, _mxm_obj.mxm_ep_addr_size);
     if (str_errno) {
         MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
@@ -279,8 +279,8 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
     /* local connection is used for any source communication */
     MPIR_Assert(MPID_nem_mem_region.rank != vc->lpid);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                     (MPL_DBG_FDEST,
-                      "[%i]=== connecting  to  %i  \n", MPID_nem_mem_region.rank, vc->lpid));
+                    (MPL_DBG_FDEST,
+                     "[%i]=== connecting  to  %i  \n", MPID_nem_mem_region.rank, vc->lpid));
     {
         char *business_card;
         int val_max_sz;
@@ -377,8 +377,7 @@ int MPID_nem_mxm_vc_terminate(MPIDI_VC_t * vc)
          * outstanding sends with an error and terminate connection
          * immediately. */
         MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
-    }
-    else {
+    } else {
         while (vc_area->pending_sends > 0)
             MPID_nem_mxm_poll(FALSE);
     }
@@ -412,11 +411,11 @@ static int _mxm_conf(void)
     cur_ver = mxm_get_version();
     if (cur_ver != MXM_API) {
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                         (MPL_DBG_FDEST,
-                          "WARNING: MPICH was compiled with MXM version %d.%d but version %ld.%ld detected.",
-                          MXM_VERNO_MAJOR,
-                          MXM_VERNO_MINOR,
-                          (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff));
+                        (MPL_DBG_FDEST,
+                         "WARNING: MPICH was compiled with MXM version %d.%d but version %ld.%ld detected.",
+                         MXM_VERNO_MAJOR,
+                         MXM_VERNO_MINOR,
+                         (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff));
     }
 
     _mxm_obj.compiletime_version = MXM_VERNO_STRING;
@@ -438,10 +437,10 @@ static int _mxm_conf(void)
         _mxm_obj.conf.bulk_connect = 0;
         _mxm_obj.conf.bulk_disconnect = 0;
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                         (MPL_DBG_FDEST,
-                          "WARNING: MPICH runs with %s version of MXM that is less than 3.2, "
-                          "so bulk connect/disconnect cannot work properly and will be turn off.",
-                          _mxm_obj.runtime_version));
+                        (MPL_DBG_FDEST,
+                         "WARNING: MPICH runs with %s version of MXM that is less than 3.2, "
+                         "so bulk connect/disconnect cannot work properly and will be turn off.",
+                         _mxm_obj.runtime_version));
     }
 
   fn_exit:
@@ -493,7 +492,8 @@ static int _mxm_init(int rank, int size)
     _mxm_obj.mxm_rank = rank;
     _mxm_obj.mxm_np = size;
     _mxm_obj.endpoint =
-        (MPID_nem_mxm_ep_t *) MPL_malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t), MPL_MEM_ADDRESS);
+        (MPID_nem_mxm_ep_t *) MPL_malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t),
+                                         MPL_MEM_ADDRESS);
     memset(_mxm_obj.endpoint, 0, _mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
 
     list_init(&_mxm_obj.free_queue);
@@ -530,8 +530,7 @@ static int _mxm_fini(void)
             _mxm_disconnect(&(_mxm_obj.endpoint[--_mxm_obj.mxm_np]));
         }
 
-        if (_mxm_obj.endpoint)
-            MPL_free(_mxm_obj.endpoint);
+        MPL_free(_mxm_obj.endpoint);
 
         _mxm_barrier();
 
@@ -586,7 +585,7 @@ static int _mxm_connect(MPID_nem_mxm_ep_t * ep, const char *business_card,
 
     str_errno =
         MPL_str_get_binary_arg(business_card, MXM_MPICH_ENDPOINT_KEY, mxm_ep_addr,
-                                sizeof(mxm_ep_addr), &len);
+                               sizeof(mxm_ep_addr), &len);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**buscard");
 
     ret = mxm_ep_connect(_mxm_obj.mxm_ep, mxm_ep_addr, &ep->mxm_conn);
@@ -655,8 +654,7 @@ static int _mxm_add_comm(MPIR_Comm * comm, void *param)
         MPIR_ERR_CHKANDJUMP1(ret != MXM_OK,
                              mpi_errno, MPI_ERR_OTHER,
                              "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
-    }
-    else
+    } else
         memcpy(&mq_h_v[1], &mq_h_v[0], sizeof(mxm_mq_h));
 
     comm->dev.ch.netmod_priv = (void *) mq_h_v;

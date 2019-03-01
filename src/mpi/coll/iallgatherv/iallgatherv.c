@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "iallgatherv.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -19,6 +20,16 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         k value for recursive exchange based iallgatherv
+
+    - name        : MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for radix in brucks based iallgatherv
 
     - name        : MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -36,6 +47,7 @@ cvars:
         recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
         recexch_distance_halving     - Force generic transport recursive exchange with neighbours halving in distance in each phase
         gentran_ring              - Force generic transport ring algorithm
+        gentran_brucks     - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -80,22 +92,6 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     __attribute__ ((weak, alias("PMPI_Iallgatherv")));
 #endif
 /* -- End Profiling Symbol Block */
-
-/* This function checks whether the displacements are in increasing order and
- * that there is no overlap or gap between the data of successive ranks. Some
- * algorithms can only handle ordered array of data and hence this function for
- * checking whether the data is ordered. */
-static int is_ordered(int comm_size, const int recvcounts[], const int displs[])
-{
-    int i, pos = 0;
-    for (i = 0; i < comm_size; i++) {
-        if (pos != displs[i]) {
-            return 0;
-        }
-        pos += recvcounts[i];
-    }
-    return 1;
-}
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
@@ -316,7 +312,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* intracommunicator */
         switch (MPIR_Iallgatherv_intra_algo_choice) {
             case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
-                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                /* This algo cannot handle unordered data */
+                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
                     MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
@@ -327,7 +324,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 goto fn_exit;
                 break;
             case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
-                if (!is_ordered(comm_size, recvcounts, displs)) /* This algo cannot handle unordered data */
+                /* This algo cannot handle unordered data */
+                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
                     MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
@@ -342,6 +340,15 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     MPIR_Iallgatherv_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcounts, displs,
                                                         recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Iallgatherv_intra_gentran_brucks(sendbuf, sendcount, sendtype,
+                                                          recvbuf, recvcounts, displs,
+                                                          recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

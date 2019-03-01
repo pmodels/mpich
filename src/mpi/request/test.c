@@ -63,7 +63,6 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int active_flag;
     MPIR_Request *request_ptr = NULL;
 
     /* If this is a null request handle, then return an empty status */
@@ -81,7 +80,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
         MPIR_ERR_POP(mpi_errno);
 
     if (*flag) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
         if (!MPIR_Request_is_persistent(request_ptr)) {
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;
@@ -139,7 +138,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TEST);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -190,7 +189,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
   fn_exit:
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TEST);
-    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

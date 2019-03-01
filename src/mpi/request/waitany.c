@@ -150,7 +150,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;
-    int active_flag;
     int last_disabled_anysource = -1;
     int first_nonnull = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -256,7 +255,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         }
     }
 
-    mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status);
     if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
         MPIR_Request_free(request_ptrs[*indx]);
         array_of_requests[*indx] = MPI_REQUEST_NULL;

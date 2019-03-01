@@ -117,11 +117,11 @@ do {                                                                         \
   } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * state,
-                                                    DLOOP_VECTOR * out_vector,
+                                                    MPL_IOV * out_vector,
                                                     MPIDI_OFI_segment_side_t side)
 {
-    DLOOP_VECTOR dloop;
-    DLOOP_Offset last;
+    MPL_IOV dloop;
+    MPI_Aint last;
     MPIR_Segment *seg;
     size_t *cursor;
     int num_contig = 1;
@@ -129,30 +129,37 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
     switch (side) {
         case MPIDI_OFI_SEGMENT_ORIGIN:
             last = state->origin_end;
-            seg = &state->origin_seg;
+            seg = state->origin_seg;
             cursor = &state->origin_cursor;
             break;
         case MPIDI_OFI_SEGMENT_TARGET:
             last = state->target_end;
-            seg = &state->target_seg;
+            seg = state->target_seg;
             cursor = &state->target_cursor;
             break;
         case MPIDI_OFI_SEGMENT_RESULT:
             last = state->result_end;
-            seg = &state->result_seg;
+            seg = state->result_seg;
             cursor = &state->result_cursor;
             break;
         default:
             MPIR_Assert(0);
             break;
     }
-    if (*cursor >= last)
-        return 1;
-    /* Pack datatype into iovec during runtime. Everytime only one vector is processed,
-     * and we try to pack as much as possible using last byte of datatype.
-     * If pack is complete, num_contig returns as 0. */
-    MPIR_Segment_pack_vector(seg, *cursor, &last, &dloop, &num_contig);
-    MPIR_Assert(num_contig <= 1);
+
+    if (*cursor < last) {
+        /* Pack datatype into iovec during runtime. Everytime only one
+         * vector is processed, and we try to pack as much as possible
+         * using last byte of datatype.  If pack is complete,
+         * num_contig returns as 0. */
+        MPIR_Segment_to_iov(seg, *cursor, &last, &dloop, &num_contig);
+        MPIR_Assert(num_contig <= 1);
+    } else {
+        dloop.iov_base = NULL;
+        dloop.iov_len = 0;
+        num_contig = 0;
+    }
+
     *cursor = last;
     *out_vector = dloop;
     return num_contig == 0 ? 1 : 0;
@@ -167,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
                                                        MPI_Datatype origin_type,
                                                        MPI_Datatype target_type)
 {
-    /* `seg_state->buflimit` is `DLOOP_Count` == `MPI_Aint` (typically, long or other signed types)
+    /* `seg_state->buflimit` is `MPI_Aint` == `MPI_Aint` (typically, long or other signed types)
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
@@ -179,14 +186,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
 
     seg_state->origin_cursor = 0;
     MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    MPIR_Segment_init(origin, origin_count, origin_type, &seg_state->origin_seg);
+    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
     MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    MPIR_Segment_init((const void *) target, target_count, target_type, &seg_state->target_seg);
+    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state(MPIDI_OFI_seg_state_t seg_state)
+{
+    MPIR_Segment_free(seg_state.origin_seg);
+    MPIR_Segment_free(seg_state.target_seg);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * seg_state,
@@ -201,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
                                                         MPI_Datatype result_type,
                                                         MPI_Datatype target_type)
 {
-    /* `seg_state->buflimit` is `DLOOP_Count` == `MPI_Aint` (typically, long or other signed types)
+    /* `seg_state->buflimit` is `MPI_Aint` == `MPI_Aint` (typically, long or other signed types)
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
@@ -213,19 +226,26 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
 
     seg_state->origin_cursor = 0;
     MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    MPIR_Segment_init(origin, origin_count, origin_type, &seg_state->origin_seg);
+    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
     MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    MPIR_Segment_init((const void *) target, target_count, target_type, &seg_state->target_seg);
+    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     seg_state->result_cursor = 0;
     MPIDI_Datatype_check_size(result_type, result_count, seg_state->result_end);
-    MPIR_Segment_init(result, result_count, result_type, &seg_state->result_seg);
+    seg_state->result_seg = MPIR_Segment_alloc(result, result_count, result_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);
     MPIDI_OFI_INIT_SEG_STATE(result, RESULT);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state2(MPIDI_OFI_seg_state_t seg_state)
+{
+    MPIR_Segment_free(seg_state.origin_seg);
+    MPIR_Segment_free(seg_state.target_seg);
+    MPIR_Segment_free(seg_state.result_seg);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * seg_state,
