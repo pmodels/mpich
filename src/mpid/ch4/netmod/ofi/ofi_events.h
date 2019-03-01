@@ -230,7 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
                          (MPIDI_OFI_TAG_MASK & wc->tag)));
 
         recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(recv == NULL, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(recv == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
         MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv,
                        MPL_MEM_BUFFER);
 
