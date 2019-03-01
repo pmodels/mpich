@@ -15,6 +15,8 @@
 #define AD_DAOS_H_INCLUDED
 
 #include "adio.h"
+#include <assert.h>
+#include <gurt/list.h>
 #include <daos_types.h>
 #include <daos_api.h>
 #include <daos_addons.h>

@@ -75,8 +75,7 @@ int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)
         error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                           MPIR_ERR_RECOVERABLE, myname,
                                           line, MPI_ERR_FILE_EXISTS,
-                                          "**fileexist", "**fileexist %s",
-                                          filename);
+                                          "**fileexist", 0);
         break;
     case -DER_NOTDIR:
         error_code = MPIO_Err_create_code(MPI_SUCCESS,
