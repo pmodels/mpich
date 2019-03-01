@@ -8,10 +8,10 @@
 #include "hcoll.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_barrier
+#define FUNCNAME MPIDI_HCOLL_coll_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     int rc = -1;
     MPI_Comm comm = comm_ptr->handle;
@@ -25,11 +25,11 @@ int MPIDI_HCOLL_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_bcast
+#define FUNCNAME MPIDI_HCOLL_coll_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_bcast(void *buffer, int count, MPI_Datatype datatype, int root,
+                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t dtype;
     int rc = -1;
@@ -38,7 +38,7 @@ int MPIDI_HCOLL_bcast(void *buffer, int count, MPI_Datatype datatype, int root,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL BCAST.");
-    dtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
+    dtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(datatype, count, TRY_FIND_DERIVED);
     MPI_Comm comm = comm_ptr->handle;
     if (HCOL_DTE_IS_COMPLEX(dtype) || HCOL_DTE_IS_ZERO(dtype)) {
         /*If we are here then datatype is not simple predefined datatype */
@@ -54,11 +54,11 @@ int MPIDI_HCOLL_bcast(void *buffer, int count, MPI_Datatype datatype, int root,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_reduce
+#define FUNCNAME MPIDI_HCOLL_coll_reduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                       MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                            MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t dtype;
     hcoll_dte_op_t *Op;
@@ -68,8 +68,8 @@ int MPIDI_HCOLL_reduce(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL REDUCE.");
-    dtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
-    Op = MPIDI_HCOLL_mpi_to_dte_op(op);
+    dtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(datatype, count, TRY_FIND_DERIVED);
+    Op = MPIDI_HCOLL_dtype_op_mpi_to_dte(op);
     if (MPI_IN_PLACE == sendbuf) {
         sendbuf = HCOLL_IN_PLACE;
     }
@@ -87,11 +87,11 @@ int MPIDI_HCOLL_reduce(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_allreduce
+#define FUNCNAME MPIDI_HCOLL_coll_allreduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
@@ -102,8 +102,8 @@ int MPIDI_HCOLL_allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Dat
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOL ALLREDUCE.");
-    Dtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
-    Op = MPIDI_HCOLL_mpi_to_dte_op(op);
+    Dtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(datatype, count, TRY_FIND_DERIVED);
+    Op = MPIDI_HCOLL_dtype_op_mpi_to_dte(op);
     if (MPI_IN_PLACE == sendbuf) {
         sendbuf = HCOLL_IN_PLACE;
     }
@@ -119,12 +119,12 @@ int MPIDI_HCOLL_allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_allgather
+#define FUNCNAME MPIDI_HCOLL_coll_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                          void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
-                          MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
+                               void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
+                               MPIR_Errflag_t * err)
 {
     MPI_Comm comm = comm_ptr->handle;
     dte_data_representation_t stype;
@@ -135,12 +135,12 @@ int MPIDI_HCOLL_allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
-    rtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(rdtype, rcount, TRY_FIND_DERIVED);
+    rtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(rdtype, rcount, TRY_FIND_DERIVED);
     if (MPI_IN_PLACE == sbuf) {
         sbuf = HCOLL_IN_PLACE;
         stype = rtype;
     } else {
-        stype = MPIDI_HCOLL_mpi_to_hcoll_dtype(sdtype, rcount, TRY_FIND_DERIVED);
+        stype = MPIDI_HCOLL_dtype_mpi_to_hcoll(sdtype, rcount, TRY_FIND_DERIVED);
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype)) {
@@ -155,12 +155,12 @@ int MPIDI_HCOLL_allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_alltoall
+#define FUNCNAME MPIDI_HCOLL_coll_alltoall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
-                         void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
-                         MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
+                              void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
+                              MPIR_Errflag_t * err)
 {
     MPI_Comm comm = comm_ptr->handle;
     dte_data_representation_t stype;
@@ -171,12 +171,12 @@ int MPIDI_HCOLL_alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
-    rtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(rdtype, rcount, TRY_FIND_DERIVED);
+    rtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(rdtype, rcount, TRY_FIND_DERIVED);
     if (MPI_IN_PLACE == sbuf) {
         sbuf = HCOLL_IN_PLACE;
         stype = rtype;
     } else {
-        stype = MPIDI_HCOLL_mpi_to_hcoll_dtype(sdtype, rcount, TRY_FIND_DERIVED);
+        stype = MPIDI_HCOLL_dtype_mpi_to_hcoll(sdtype, rcount, TRY_FIND_DERIVED);
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype)) {
@@ -191,12 +191,13 @@ int MPIDI_HCOLL_alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_HCOLL_alltoallv
+#define FUNCNAME MPIDI_HCOLL_coll_alltoallv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_HCOLL_alltoallv(const void *sbuf, const int *scounts, const int *sdispls,
-                          MPI_Datatype sdtype, void *rbuf, const int *rcounts, const int *rdispls,
-                          MPI_Datatype rdtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
+int MPIDI_HCOLL_coll_alltoallv(const void *sbuf, const int *scounts, const int *sdispls,
+                               MPI_Datatype sdtype, void *rbuf, const int *rcounts,
+                               const int *rdispls, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
+                               MPIR_Errflag_t * err)
 {
     MPI_Comm comm = comm_ptr->handle;
     dte_data_representation_t stype;
@@ -207,12 +208,12 @@ int MPIDI_HCOLL_alltoallv(const void *sbuf, const int *scounts, const int *sdisp
         return rc;
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
-    rtype = MPIDI_HCOLL_mpi_to_hcoll_dtype(rdtype, 0, TRY_FIND_DERIVED);
+    rtype = MPIDI_HCOLL_dtype_mpi_to_hcoll(rdtype, 0, TRY_FIND_DERIVED);
     if (MPI_IN_PLACE == sbuf) {
         sbuf = HCOLL_IN_PLACE;
         stype = rtype;
     } else {
-        stype = MPIDI_HCOLL_mpi_to_hcoll_dtype(sdtype, 0, TRY_FIND_DERIVED);
+        stype = MPIDI_HCOLL_dtype_mpi_to_hcoll(sdtype, 0, TRY_FIND_DERIVED);
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype)) {

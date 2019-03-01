@@ -97,9 +97,9 @@ int MPIDI_CH3I_Comm_init(void)
         }
 #endif
 
-        mpi_errno = MPIDI_CH3U_Comm_register_create_hook(MPIDI_HCOLL_comm_create, NULL);
+        mpi_errno = MPIDI_CH3U_Comm_register_create_hook(MPIDI_HCOLL_mpi_comm_create, NULL);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_HCOLL_comm_destroy, NULL);
+        mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_HCOLL_mpi_comm_destroy, NULL);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 #endif

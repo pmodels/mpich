@@ -21,7 +21,7 @@ static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = MPIDI_HCOLL_barrier(comm, errflag);
+    mpi_errno = MPIDI_HCOLL_coll_barrier(comm, errflag);
     if (mpi_errno == MPI_SUCCESS)
         goto fn_exit;
 #endif
@@ -41,7 +41,7 @@ static inline int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype, int
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = MPIDI_HCOLL_bcast(buffer, count, datatype, root, comm, errflag);
+    mpi_errno = MPIDI_HCOLL_coll_bcast(buffer, count, datatype, root, comm, errflag);
     if (mpi_errno == MPI_SUCCESS)
         goto fn_exit;
 #endif
@@ -62,7 +62,7 @@ static inline int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = MPIDI_HCOLL_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    mpi_errno = MPIDI_HCOLL_coll_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     if (mpi_errno == MPI_SUCCESS)
         goto fn_exit;
 #endif
@@ -84,7 +84,7 @@ static inline int MPID_Allgather(const void *sendbuf, int sendcount, MPI_Datatyp
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = MPIDI_HCOLL_allgather(sendbuf, sendcount, sendtype, recvbuf,
+    mpi_errno = MPIDI_HCOLL_coll_allgather(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm, errflag);
     if (mpi_errno == MPI_SUCCESS)
         goto fn_exit;
