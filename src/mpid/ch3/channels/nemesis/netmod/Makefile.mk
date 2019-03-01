@@ -11,4 +11,3 @@ include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/none/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/portals4/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/mxm/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/ofi/Makefile.mk
-include $(top_srcdir)/src/mpid/ch3/channels/nemesis/netmod/llc/Makefile.mk
