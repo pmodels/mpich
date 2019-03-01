@@ -14,12 +14,12 @@ enum {
     NO_DERIVED
 };
 
-int MPIDI_HCOLL_type_commit_hook(MPIR_Datatype * dtype_p);
-int MPIDI_HCOLL_type_free_hook(MPIR_Datatype * dtype_p);
-dte_data_representation_t MPIDI_HCOLL_mpi_to_hcoll_dtype(MPI_Datatype datatype, int count,
+int MPIDI_HCOLL_dtype_commit_hook(MPIR_Datatype * dtype_p);
+int MPIDI_HCOLL_dtype_free_hook(MPIR_Datatype * dtype_p);
+dte_data_representation_t MPIDI_HCOLL_dtype_mpi_to_hcoll(MPI_Datatype datatype, int count,
                                                          const int mode);
 
-static dte_data_representation_t MPIDI_HCOLL_mpi_to_dte_dtype(MPI_Datatype datatype)
+static dte_data_representation_t MPIDI_HCOLL_dtype_mpi_to_dte(MPI_Datatype datatype)
 {
     switch (datatype) {
         case MPI_CHAR:
@@ -55,7 +55,7 @@ static dte_data_representation_t MPIDI_HCOLL_mpi_to_dte_dtype(MPI_Datatype datat
     }
 }
 
-static hcoll_dte_op_t *MPIDI_HCOLL_mpi_to_dte_op(MPI_Op op)
+static hcoll_dte_op_t *MPIDI_HCOLL_dtype_op_mpi_to_dte(MPI_Op op)
 {
     switch (op) {
         case MPI_MAX:

@@ -136,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatyp
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
 #if HAVE_LIBHCOLL
-    MPIDI_HCOLL_type_free_hook(datatype_p);
+    MPIDI_HCOLL_dtype_free_hook(datatype_p);
 #endif
 
     return 0;
@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datat
 
     }
 #if HAVE_LIBHCOLL
-    MPIDI_HCOLL_type_commit_hook(datatype_p);
+    MPIDI_HCOLL_dtype_commit_hook(datatype_p);
 #endif
 
     return 0;
