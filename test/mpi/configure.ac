@@ -718,16 +718,6 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
 fi
 AC_SUBST(largetest)
 
-# Extended collectives test
-if test "$enable_collalgo_tests" = "yes" ; then
-    source $srcdir/coll/test_coll_algos.sh
-else
-    coll_algo_tests=""
-fi
-AC_SUBST(coll_algo_tests)
-AM_SUBST_NOTMAKE(coll_algo_tests)
-
-
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
    test "x$enable_long_double_complex" = "xyes" && \
