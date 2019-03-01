@@ -601,37 +601,37 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t * id, p
         MPL_str_get_binary_arg(business_card, NID_KEY, (char *) &id->phys.nid, sizeof(id->phys.nid),
                                &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(id->phys.nid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(id->phys.nid), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret =
         MPL_str_get_binary_arg(business_card, PID_KEY, (char *) &id->phys.pid, sizeof(id->phys.pid),
                                &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(id->phys.pid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(id->phys.pid), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTI_KEY, (char *) pt, sizeof(*pt), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*pt), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*pt), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTIG_KEY, (char *) ptg, sizeof(*ptg), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*ptg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*ptg), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTIC_KEY, (char *) ptc, sizeof(*ptc), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*ptc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*ptc), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTIR_KEY, (char *) ptr, sizeof(*ptr), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTIRG_KEY, (char *) ptrg, sizeof(*ptrg), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*ptrg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*ptrg), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     ret = MPL_str_get_binary_arg(business_card, PTIRC_KEY, (char *) ptrc, sizeof(*ptrc), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS ||
-                        len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**business_card");
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_GET_ID_FROM_BC);

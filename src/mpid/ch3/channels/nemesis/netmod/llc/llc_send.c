@@ -115,7 +115,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     } else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
         struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 #ifndef	notdef_leak_0001_hack
         /* See also MPIDI_CH3_Request_create and _destory() */
         /*     in src/mpid/ch3/src/ch3u_request.c */
@@ -127,7 +127,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         intptr_t last = segment_size;
         MPIR_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**nomem");
         MPIR_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIR_Assert(last == data_sz);
         write_from_buf = REQ_FIELD(sreq, pack_buf);
@@ -363,7 +363,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     data_sz = sreq->dev.segment_size;
     if (data_sz > 0) {
         REQ_FIELD(sreq, rma_buf) = MPL_malloc((size_t) sreq->dev.segment_size, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**nomem");
         MPIR_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
                           (char *) REQ_FIELD(sreq, rma_buf));
 
@@ -1032,7 +1032,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
         struct MPIR_Segment *segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
 
-        MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
         /* See also MPIDI_CH3_Request_create and _destory() */
         /*     in src/mpid/ch3/src/ch3u_request.c */
         sreq->dev.segment_ptr = segment_ptr;
@@ -1042,7 +1042,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         intptr_t last = segment_size;
         MPIR_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**nomem");
         MPIR_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIR_Assert(last == data_sz);
         write_from_buf = REQ_FIELD(sreq, pack_buf);
