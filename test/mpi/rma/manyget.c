@@ -4,11 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* This test triggers a limitation in the Portals4 netmod where
- * too many large messages can overflow the available ME entries
- * (PTL_NO_SPACE). Our approach is to queue the entire send message
- * in the Rportals layer until we know there is ME space available.
- */
 #include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
