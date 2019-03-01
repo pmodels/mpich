@@ -193,7 +193,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{
-                mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
+                mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq);
                 goto fn_exit;
             }
             break;

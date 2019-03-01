@@ -685,7 +685,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_repost_event(struct fi_cq_tagged_entry
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc,
-                                                         MPIR_Request * req, int buffered)
+                                                         MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -709,7 +709,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
         if (wc->flags & FI_RECV)
             mpi_errno = MPIDI_OFI_am_recv_event(wc, req);
 
-        if (unlikely((wc->flags & FI_MULTI_RECV) && !buffered))
+        if (unlikely(wc->flags & FI_MULTI_RECV))
             mpi_errno = MPIDI_OFI_am_repost_event(wc, req);
 
         goto fn_exit;
@@ -818,8 +818,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *w
 #define FUNCNAME MPIDI_OFI_handle_cq_entries
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc,
-                                                         ssize_t num, int buffered)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
@@ -828,7 +827,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
 
     for (i = 0; i < num; i++) {
         req = MPIDI_OFI_context_to_request(wc[i].op_context);
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_dispatch_function(&wc[i], req, buffered));
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_dispatch_function(&wc[i], req));
     }
 
   fn_exit:
@@ -860,13 +859,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
 
                     switch (req->kind) {
                         case MPIR_REQUEST_KIND__SEND:
-                            mpi_errno = MPIDI_OFI_dispatch_function(NULL, req, 0);
+                            mpi_errno = MPIDI_OFI_dispatch_function(NULL, req);
                             break;
 
                         case MPIR_REQUEST_KIND__RECV:
                             mpi_errno =
-                                MPIDI_OFI_dispatch_function((struct fi_cq_tagged_entry *) &e, req,
-                                                            0);
+                                MPIDI_OFI_dispatch_function((struct fi_cq_tagged_entry *) &e, req);
                             req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                             break;
 
