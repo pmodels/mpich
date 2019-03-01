@@ -290,7 +290,11 @@ typedef struct MPIDI_CH4_Global_t {
     int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
+#ifdef HAVE_LIBHCOLL
+    MPID_Thread_mutex_t m[7];
+#else
     MPID_Thread_mutex_t m[6];
+#endif
     MPIDIU_map_t *win_map;
     char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
@@ -328,5 +332,7 @@ extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX  MPIDI_CH4_Global.m[3]
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX  MPIDI_CH4_Global.m[4]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX  MPIDI_CH4_Global.m[5]
-
+#ifdef HAVE_LIBHCOLL
+#define MPIDIU_THREAD_HCOLL_MUTEX  MPIDI_CH4_Global.m[6]
+#endif
 #endif /* CH4_TYPES_H_INCLUDED */

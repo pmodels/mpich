@@ -122,7 +122,9 @@ int MPIDI_HCOLL_dtype_commit_hook(MPIR_Datatype * dtype_p)
 
     dtype_p->dev.hcoll_datatype = DTE_ZERO;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     ret = hcoll_create_mpi_type((void *) (intptr_t) dtype_p->handle, &dtype_p->dev.hcoll_datatype);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     if (HCOLL_SUCCESS != ret) {
         return MPI_ERR_OTHER;
     }
@@ -142,7 +144,9 @@ int MPIDI_HCOLL_dtype_free_hook(MPIR_Datatype * dtype_p)
     if (HCOL_DTE_IS_ZERO(dtype_p->dev.hcoll_datatype))
         MPIR_Datatype_release_if_not_builtin(dtype_p->handle);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     int rc = hcoll_dt_destroy(dtype_p->dev.hcoll_datatype);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     if (HCOLL_SUCCESS != rc) {
         return MPI_ERR_OTHER;
     }

@@ -49,6 +49,8 @@ static int MPIDI_HCOLL_rte_group_id(rte_grp_handle_t group);
 
 static int MPIDI_HCOLL_rte_world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
 
+/* The current implementation of the function relies on its callees to be thread
+ * safe. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_HCOLL_rte_progress
 #undef FCNAME
