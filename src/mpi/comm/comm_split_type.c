@@ -650,7 +650,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                     for (i = 0; i < num_procs; i++) {
                         if (hwloc_bitmap_isincluded(parent_obj->cpuset, node_comm_bindset[i]) ||
                             hwloc_bitmap_isequal(parent_obj->cpuset, node_comm_bindset[i])) {
-                            processes_cpuset[hw_obj_index] = 1;
+                            processes_cpuset[hw_obj_index]++;
                             if (i == subcomm_rank) {
                                 current_proc_index = hw_obj_index;
                             }
