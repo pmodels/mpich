@@ -1583,7 +1583,7 @@ AC_OUTPUT_COMMANDS([chmod a+x impls/hydra/proc_binding.sh])
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
-          runtests \
+          runtests.config \
           checktests \
           Makefile \
           basic/Makefile \

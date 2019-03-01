@@ -1,0 +1,8 @@
+MPIMajorVersion = @MPI_VERSION@
+MPIMinorVersion = @MPI_SUBVERSION@
+MPI_SOURCE = @MPI_SOURCE@
+mpiexec = @MPIEXEC@
+run_strict = @MPI_IS_STRICT@
+run_mpix = @MPI_HAS_MPIX@
+run_xfail = @RUN_XFAIL@
+
