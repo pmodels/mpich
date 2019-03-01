@@ -52,7 +52,6 @@ void MPIDI_HCOLL_rte_fns_setup(void);
 #define FUNCNAME MPIDI_HCOLL_state_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-
 int MPIDI_HCOLL_state_destroy(void *param ATTRIBUTE((unused)))
 {
     if (1 == MPIDI_HCOLL_state_initialized) {
