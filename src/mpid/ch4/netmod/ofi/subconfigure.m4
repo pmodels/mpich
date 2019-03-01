@@ -19,7 +19,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
             [ofi_direct_provider=$withval],
             [ofi_direct_provider=])
 
-    if [test "x$ofi_direct_provider" != "x"]; then
+    if test "x$ofi_direct_provider" != "x"; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
     fi
     ])
@@ -276,7 +276,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
         pcdir="${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric"
-    elif [ -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ] ; then
+    elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
     PAC_LIB_DEPS(fabric, $pcdir)
