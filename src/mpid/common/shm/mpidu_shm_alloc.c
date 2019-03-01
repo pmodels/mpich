@@ -51,8 +51,6 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
 #define ALLOCQ_ENQUEUE(ep) GENERIC_Q_ENQUEUE(&allocq, ep, next)
 #define ALLOCQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&allocq, epp, next)
 
-#define ROUND_UP_8(x) (((x) + (size_t)7) & ~(size_t)7)  /* rounds up to multiple of 8 */
-
 static size_t segment_len = 0;
 
 static int num_segments = 0;
@@ -91,8 +89,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 
     /* round up to multiple of 8 to ensure the start of the next
      * region is 64-bit aligned. */
-    len = ROUND_UP_8(len);
-
+    len = MPL_ROUND_UP_ALIGN(len, (size_t) 8);
     MPIR_Assert(len);
     MPIR_Assert(ptr_p);
 

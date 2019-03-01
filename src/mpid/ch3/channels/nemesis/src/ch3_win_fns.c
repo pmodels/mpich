@@ -11,8 +11,6 @@
 
 /* FIXME: get this from OS */
 #define MPIDI_CH3_PAGESIZE ((MPI_Aint)4096)
-#define MPIDI_CH3_PAGESIZE_MASK (~(MPIDI_CH3_PAGESIZE-1))
-#define MPIDI_CH3_ROUND_UP_PAGESIZE(x) ((((MPI_Aint)x)+(~MPIDI_CH3_PAGESIZE_MASK)) & MPIDI_CH3_PAGESIZE_MASK)
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 
@@ -552,7 +550,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     for (i = 0; i < node_size; i++) {
         if (noncontig)
             /* Round up to next page size */
-            (*win_ptr)->shm_segment_len += MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[i]);
+            (*win_ptr)->shm_segment_len += MPL_ROUND_UP_ALIGN(node_sizes[i], MPIDI_CH3_PAGESIZE);
         else
             (*win_ptr)->shm_segment_len += node_sizes[i];
     }
@@ -724,7 +722,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                      * allocated any memory. */
                     if (noncontig) {
                         ((*win_ptr)->shm_base_addrs)[i] =
-                            cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[cur_rank]);
+                            cur_base + MPL_ROUND_UP_ALIGN(node_sizes[cur_rank], MPIDI_CH3_PAGESIZE);
                     }
                     else {
                         ((*win_ptr)->shm_base_addrs)[i] = cur_base + node_sizes[cur_rank];
