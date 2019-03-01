@@ -31,7 +31,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, buf, data_sz, NULL, comm->rank,
-                               MPIDI_OFI_av_to_phys(addr), match_bits,
+                               MPIDI_OFI_av_to_phys(addr, comm), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain, MPIDI_hash_comm_to_vci(comm));
     if (mpi_errno)
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, buf, data_sz, NULL, comm->rank,
-                               MPIDI_OFI_av_to_phys(addr), match_bits,
+                               MPIDI_OFI_av_to_phys(addr, comm), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain, MPIDI_hash_comm_to_vci(comm));
     /* If we set CC>0 in case of injection, we need to decrement the CC
@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = comm->rank;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
+    msg.addr = MPIDI_OFI_av_to_phys(addr, comm);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, &msg, flags), tsendv,
                          MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_hash_comm_to_vci(comm));
@@ -278,7 +278,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr),       /* remote proc */
+                                      MPIDI_OFI_av_to_phys(addr, comm),       /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
                                       (void *) &(ackreq->context)), trecvsync, MPIDI_OFI_CALL_LOCK,
@@ -323,7 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     if (data_sz <= MPIDI_Global.max_buffered_send) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_av_to_phys(addr),
+                                   MPIDI_OFI_av_to_phys(addr, comm),
                                    match_bits, NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                    FALSE, MPIDI_hash_comm_to_vci(comm));
         if (mpi_errno)
@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     } else if (data_sz <= MPIDI_Global.max_msg_size) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_av_to_phys(addr),
+                                   MPIDI_OFI_av_to_phys(addr, comm),
                                    match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                    MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_hash_comm_to_vci(comm));
         if (mpi_errno)
@@ -384,7 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                            MPIDI_Global.max_msg_size,
                                            NULL,
                                            comm->rank,
-                                           MPIDI_OFI_av_to_phys(addr),
+                                           MPIDI_OFI_av_to_phys(addr, comm),
                                            match_bits,
                                            (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                            MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_NO_LOCK, FALSE, MPIDI_hash_comm_to_vci(comm));
