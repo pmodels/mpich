@@ -192,10 +192,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     mpi_errno = MPIDI_Populate_vc_node_ids(pg, pg_rank);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    /* Initialize FTB after PMI init */
-    mpi_errno = MPIDU_Ftb_init();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
     /* Initialize Window functions table with defaults, then call the channel's
        init function. */
     MPIDI_Win_fns_init(&MPIDI_CH3U_Win_fns);

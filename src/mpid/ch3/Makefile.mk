@@ -15,7 +15,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch3/include   \
                -I$(top_builddir)/src/mpid/ch3/include
 
 noinst_HEADERS +=                      \
-    src/mpid/ch3/include/mpidftb.h     \
     src/mpid/ch3/include/mpidimpl.h    \
     src/mpid/ch3/include/mpidpkt.h     \
     src/mpid/ch3/include/mpidpost.h    \

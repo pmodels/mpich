@@ -65,9 +65,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 	}
     }
     
-    MPIDU_Ftb_publish_me(MPIDU_FTB_EV_ABORT);
-    MPIDU_Ftb_finalize();
-    
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_Debugger_set_aborting( error_msg );
 #endif

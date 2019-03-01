@@ -1,6 +1,0 @@
-# Error names for FTB
-
-**ftb_connect:FTB_Connect failed
-**ftb_declare_publishable_events:FTB_Declare_publishable_events failed
-**ftb_disconnect:FTB_Disconnect failed
-**ftb_publish:FTB_Publish failed
