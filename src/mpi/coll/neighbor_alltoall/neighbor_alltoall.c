@@ -12,7 +12,7 @@
 cvars:
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -24,7 +24,7 @@ cvars:
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -128,13 +128,13 @@ int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Neighbor_alltoall_intra_algo_choice) {
-            case MPIR_NEIGHBOR_ALLTOALL_INTRA_ALGO_NB:
+        switch (MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM) {
+            case MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Neighbor_alltoall_allcomm_nb(sendbuf, sendcount, sendtype,
                                                               recvbuf, recvcount, recvtype,
                                                               comm_ptr);
                 break;
-            case MPIR_NEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Neighbor_alltoall_intra_auto(sendbuf, sendcount, sendtype,
@@ -143,13 +143,13 @@ int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
                 break;
         }
     } else {
-        switch (MPIR_Neighbor_alltoall_inter_algo_choice) {
-            case MPIR_NEIGHBOR_ALLTOALL_INTER_ALGO_NB:
+        switch (MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM) {
+            case MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Neighbor_alltoall_allcomm_nb(sendbuf, sendcount, sendtype,
                                                               recvbuf, recvcount, recvtype,
                                                               comm_ptr);
                 break;
-            case MPIR_NEIGHBOR_ALLTOALL_INTER_ALGO_AUTO:
+            case MPIR_CVAR_NEIGHBOR_ALLTOALL_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Neighbor_alltoall_inter_auto(sendbuf, sendcount, sendtype,

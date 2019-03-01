@@ -13,7 +13,7 @@
 cvars:
     - name        : MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -27,7 +27,7 @@ cvars:
 
     - name        : MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -143,25 +143,25 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Alltoallw_intra_algo_choice) {
-            case MPIR_ALLTOALLW_INTRA_ALGO_PAIRWISE_SENDRECV_REPLACE:
+        switch (MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM) {
+            case MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM_pairwise_sendrecv_replace:
                 mpi_errno = MPIR_Alltoallw_intra_pairwise_sendrecv_replace(sendbuf, sendcounts,
                                                                            sdispls, sendtypes,
                                                                            recvbuf, recvcounts,
                                                                            rdispls, recvtypes,
                                                                            comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLW_INTRA_ALGO_SCATTERED:
+            case MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM_scattered:
                 mpi_errno = MPIR_Alltoallw_intra_scattered(sendbuf, sendcounts,
                                                            sdispls, sendtypes, recvbuf, recvcounts,
                                                            rdispls, recvtypes, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLW_INTRA_ALGO_NB:
+            case MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Alltoallw_allcomm_nb(sendbuf, sendcounts,
                                                       sdispls, sendtypes, recvbuf, recvcounts,
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLW_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoallw_intra_auto(sendbuf, sendcounts,
@@ -171,19 +171,19 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Alltoallw_inter_algo_choice) {
-            case MPIR_ALLTOALLW_INTER_ALGO_PAIRWISE_EXCHANGE:
+        switch (MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM) {
+            case MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM_pairwise_exchange:
                 mpi_errno = MPIR_Alltoallw_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                                                    sendtypes, recvbuf, recvcounts,
                                                                    rdispls, recvtypes, comm_ptr,
                                                                    errflag);
                 break;
-            case MPIR_ALLTOALLW_INTER_ALGO_NB:
+            case MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Alltoallw_allcomm_nb(sendbuf, sendcounts,
                                                       sdispls, sendtypes, recvbuf, recvcounts,
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLW_INTER_ALGO_AUTO:
+            case MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoallw_inter_auto(sendbuf, sendcounts, sdispls,
