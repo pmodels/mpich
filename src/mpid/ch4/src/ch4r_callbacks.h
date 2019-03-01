@@ -90,7 +90,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
-    size_t count;
+    size_t nbytes;
     MPI_Aint last;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -204,31 +204,31 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
                             MPIDIG_REQUEST(match_req, datatype),
                             dt_contig, dt_sz, dt_ptr, dt_true_lb);
     MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(match_req, datatype), dt_sz);
-    MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
     /* Make sure this request has the right amount of data in it. */
     if (MPIDIG_REQUEST(rreq, count) > dt_sz * MPIDIG_REQUEST(match_req, count)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        count = MPIDIG_REQUEST(match_req, count);
+        nbytes = dt_sz * MPIDIG_REQUEST(match_req, count);
     } else {
         rreq->status.MPI_ERROR = MPI_SUCCESS;
-        count = MPIDIG_REQUEST(rreq, count) / dt_sz;
+        nbytes = MPIDIG_REQUEST(rreq, count);   /* incoming message is always count of bytes. */
     }
 
-    MPIR_STATUS_SET_COUNT(match_req->status, count * dt_sz);
-    MPIDIG_REQUEST(rreq, count) = count;
+    MPIR_STATUS_SET_COUNT(match_req->status, nbytes);
+    MPIDIG_REQUEST(rreq, count) = dt_sz > 0 ? nbytes / dt_sz : 0;
 
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer), count,
+        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer),
+                                         MPIDIG_REQUEST(match_req, count),
                                          MPIDIG_REQUEST(match_req, datatype));
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
 
-        last = count * dt_sz;
+        last = nbytes;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
         MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) (count * dt_sz)) {
+        if (last != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
@@ -236,7 +236,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
         }
     } else {
         MPIR_Memcpy((char *) MPIDIG_REQUEST(match_req, buffer) + dt_true_lb,
-                    MPIDIG_REQUEST(rreq, buffer), count * dt_sz);
+                    MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
     /* Now that the unexpected message has been completed, unset the status bit. */
