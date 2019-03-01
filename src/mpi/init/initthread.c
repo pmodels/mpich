@@ -563,6 +563,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Create complete request to return in the event of immediately complete
      * operations. Use a SEND request to cover all possible use-cases. */
     MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_Process.lw_req->dev.vci = 0;
     MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);

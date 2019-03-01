@@ -61,6 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
+    (*request)->dev.vci = MPIDI_hash_comm_to_vci(comm);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[MPIDI_hash_comm_to_vci(comm)].tx, buf, data_sz, NULL, comm->rank,
@@ -254,6 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
+    (*request)->dev.vci = MPIDI_hash_comm_to_vci(comm);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
