@@ -21,8 +21,6 @@
 
 #include "mpiimpl.h"
 
-#include "mpidftb.h"
-
 /* Add the ch3 packet definitions */
 #include "mpidpkt.h"
 

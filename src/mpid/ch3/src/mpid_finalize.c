@@ -153,8 +153,6 @@ int MPID_Finalize(void)
     
     MPL_free(MPIDI_failed_procs_string);
 
-    MPIDU_Ftb_finalize();
-
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
