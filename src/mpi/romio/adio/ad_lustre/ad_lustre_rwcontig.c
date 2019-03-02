@@ -160,6 +160,10 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 
+    /* zero-length request will make no calls to pwrite/pread below */
+    if (len == 0)
+        err = 0;
+
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         offset = fd->fp_ind;
     }
