@@ -14,7 +14,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *recvbuf,
                                                     int recvcount, MPI_Datatype datatype, MPI_Op op,
-                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                    MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
@@ -52,8 +52,8 @@ int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *r
 
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */
-        mpi_errno = MPIR_Sched_copy(((char *) sendbuf + disps[rank] * extent),
-                                    recvcount, datatype, recvbuf, recvcount, datatype, s);
+        mpi_errno = MPIR_Sched_element_copy(((char *) sendbuf + disps[rank] * extent),
+                                            recvcount, datatype, recvbuf, recvcount, datatype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -72,27 +72,28 @@ int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *r
         /* send the data that dst needs. recv data that this process
          * needs from src into tmp_recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
-            mpi_errno = MPIR_Sched_send(((char *) sendbuf + disps[dst] * extent),
-                                        recvcount, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(((char *) sendbuf + disps[dst] * extent),
+                                                recvcount, datatype, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         } else {
-            mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[dst] * extent),
-                                        recvcount, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(((char *) recvbuf + disps[dst] * extent),
+                                                recvcount, datatype, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
-        mpi_errno = MPIR_Sched_recv(tmp_recvbuf, recvcount, datatype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(tmp_recvbuf, recvcount, datatype, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
         if (sendbuf != MPI_IN_PLACE) {
-            mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, recvbuf, recvcount, datatype, op, s);
+            mpi_errno = MPIR_Sched_element_reduce(tmp_recvbuf, recvbuf, recvcount, datatype, op, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         } else {
-            mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, ((char *) recvbuf + disps[rank] * extent),
+            mpi_errno =
+                MPIR_Sched_element_reduce(tmp_recvbuf, ((char *) recvbuf + disps[rank] * extent),
                                           recvcount, datatype, op, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -107,8 +108,8 @@ int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *r
     /* if MPI_IN_PLACE, move output data to the beginning of
      * recvbuf. already done for rank 0. */
     if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
-        mpi_errno = MPIR_Sched_copy(((char *) recvbuf + disps[rank] * extent),
-                                    recvcount, datatype, recvbuf, recvcount, datatype, s);
+        mpi_errno = MPIR_Sched_element_copy(((char *) recvbuf + disps[rank] * extent),
+                                            recvcount, datatype, recvbuf, recvcount, datatype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

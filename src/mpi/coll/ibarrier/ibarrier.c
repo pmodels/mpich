@@ -87,7 +87,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 #define FUNCNAME MPIR_Ibarrier_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -102,7 +102,7 @@ int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 #define FUNCNAME MPIR_Ibarrier_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno;
 
@@ -115,7 +115,7 @@ int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 #define FUNCNAME MPIR_Ibarrier_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -152,7 +152,7 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 #define FUNCNAME MPIR_Ibarrier_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -173,14 +173,14 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
     /* If the user picks one of the transport-enabled algorithms, branch there
-     * before going down to the MPIR_Sched-based algorithms. */
+     * before going down to the MPIR_Sched_element-based algorithms. */
     /* TODO - Eventually the intention is to replace all of the
-     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * MPIR_Sched_element-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
@@ -193,15 +193,15 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 goto fn_exit;
                 break;
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                /* go down to the MPIR_Sched_element-based algorithms */
                 break;
         }
     }
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_create(&s);
+        mpi_errno = MPIR_Sched_element_create(&s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -209,7 +209,7 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+        mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

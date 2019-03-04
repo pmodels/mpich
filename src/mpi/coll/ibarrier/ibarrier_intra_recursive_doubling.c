@@ -23,7 +23,7 @@
 #define FUNCNAME MPIR_Ibarrier_sched_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;
@@ -42,15 +42,15 @@ int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sche
         dst = (rank + mask) % size;
         src = (rank - mask + size) % size;
 
-        mpi_errno = MPIR_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_element_barrier(s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

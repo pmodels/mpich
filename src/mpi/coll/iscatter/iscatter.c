@@ -100,7 +100,7 @@ struct shared_state {
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -123,7 +123,7 @@ int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datat
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int local_size, remote_size, sendtype_size, recvtype_size, nbytes;
     int mpi_errno = MPI_SUCCESS;
@@ -165,7 +165,7 @@ int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -219,7 +219,7 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -245,13 +245,13 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
-     * before going down to the MPIR_Sched-based algorithms. */
+     * before going down to the MPIR_Sched_element-based algorithms. */
     /* TODO - Eventually the intention is to replace all of the
-     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * MPIR_Sched_element-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
@@ -265,7 +265,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
                 goto fn_exit;
                 break;
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                /* go down to the MPIR_Sched_element-based algorithms */
                 break;
         }
     }
@@ -273,10 +273,10 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -286,7 +286,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

@@ -92,7 +92,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -155,7 +155,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -173,7 +173,7 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                          MPIR_Sched_t s)
+                                          MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -242,7 +242,7 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -268,14 +268,14 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     int is_commutative = MPIR_Op_is_commutative(op);
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
     /* If the user picks one of the transport-enabled algorithms, branch there
-     * before going down to the MPIR_Sched-based algorithms. */
+     * before going down to the MPIR_Sched_element-based algorithms. */
     /* TODO - Eventually the intention is to replace all of the
-     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * MPIR_Sched_element-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
@@ -291,14 +291,14 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                 }
                 break;
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                /* go down to the MPIR_Sched_element-based algorithms */
                 break;
         }
     }
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -307,7 +307,7 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

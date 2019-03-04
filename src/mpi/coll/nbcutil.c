@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Sched_cb_free_buf
+#define FUNCNAME MPIR_Sched_element_cb_free_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Sched_cb_free_buf(MPIR_Comm * comm, int tag, void *state)
+int MPIR_Sched_element_cb_free_buf(MPIR_Comm * comm, int tag, void *state)
 {
     MPL_free(state);
     return MPI_SUCCESS;

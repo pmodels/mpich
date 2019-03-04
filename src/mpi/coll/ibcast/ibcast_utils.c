@@ -80,7 +80,7 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, int nbytes,
-                                  MPIR_Sched_t s)
+                                  MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, src, dst;
@@ -120,7 +120,8 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
             curr_size = recv_size;
 
             if (recv_size > 0) {
-                mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + relative_rank * scatter_size),
+                mpi_errno =
+                    MPIR_Sched_element_recv(((char *) tmp_buf + relative_rank * scatter_size),
                                             recv_size, MPI_BYTE, src, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -146,8 +147,9 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
                 if (dst >= comm_size)
                     dst -= comm_size;
                 mpi_errno =
-                    MPIR_Sched_send(((char *) tmp_buf + scatter_size * (relative_rank + mask)),
-                                    send_size, MPI_BYTE, dst, comm_ptr, s);
+                    MPIR_Sched_element_send(((char *) tmp_buf +
+                                             scatter_size * (relative_rank + mask)), send_size,
+                                            MPI_BYTE, dst, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
 

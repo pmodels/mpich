@@ -18,7 +18,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int mask;
@@ -57,7 +57,8 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_PACKED, s);
+            mpi_errno =
+                MPIR_Sched_element_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_PACKED, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -98,16 +99,16 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
             if (src < 0)
                 src += comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                mpi_errno = MPIR_Sched_element_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
+                                                           comm_ptr, &ibcast_state->status, s);
             else
-                mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                mpi_errno = MPIR_Sched_element_recv_status(buffer, count, datatype, src,
+                                                           comm_ptr, &ibcast_state->status, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
+            mpi_errno = MPIR_Sched_element_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -134,14 +135,14 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
             else
-                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_send(buffer, count, datatype, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
             /* NOTE: This is departure from MPIR_Bcast_intra_binomial.  A true analog
-             * would put an MPIR_Sched_barrier here after every send. */
+             * would put an MPIR_Sched_element_barrier here after every send. */
         }
         mask >>= 1;
     }
@@ -149,7 +150,8 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
     if (!is_contig) {
         if (rank != root) {
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_PACKED, buffer, count, datatype, s);
+            mpi_errno =
+                MPIR_Sched_element_copy(tmp_buf, nbytes, MPI_PACKED, buffer, count, datatype, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);

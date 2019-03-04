@@ -901,7 +901,7 @@ static inline int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const int *sendcou
 #define FUNCNAME MPIDI_NM_mpi_ibarrier_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s)
+static inline int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno;
 
@@ -919,7 +919,7 @@ static inline int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count, MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm, MPIR_Sched_t s)
+                                            int root, MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno;
 
@@ -939,7 +939,7 @@ static inline int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count, MPI_Datatyp
 static inline int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, int sendcount,
                                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                 MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                MPIR_Sched_t s)
+                                                MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -961,7 +961,7 @@ static inline int MPIDI_NM_mpi_iallgatherv_sched(const void *sendbuf, int sendco
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  const int *recvcounts, const int *displs,
                                                  MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                 MPIR_Sched_t s)
+                                                 MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -981,7 +981,7 @@ static inline int MPIDI_NM_mpi_iallgatherv_sched(const void *sendbuf, int sendco
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, void *recvbuf, int count,
                                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                                MPIR_Sched_t s)
+                                                MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1001,7 +1001,7 @@ static inline int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, void *recvb
 static inline int MPIDI_NM_mpi_ialltoall_sched(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                MPI_Datatype recvtype, MPIR_Comm * comm,
-                                               MPIR_Sched_t s)
+                                               MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1023,7 +1023,7 @@ static inline int MPIDI_NM_mpi_ialltoallv_sched(const void *sendbuf, const int s
                                                 const int sdispls[], MPI_Datatype sendtype,
                                                 void *recvbuf, const int recvcounts[],
                                                 const int rdispls[], MPI_Datatype recvtype,
-                                                MPIR_Comm * comm, MPIR_Sched_t s)
+                                                MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1045,7 +1045,7 @@ static inline int MPIDI_NM_mpi_ialltoallw_sched(const void *sendbuf, const int s
                                                 const int sdispls[], const MPI_Datatype sendtypes[],
                                                 void *recvbuf, const int recvcounts[],
                                                 const int rdispls[], const MPI_Datatype recvtypes[],
-                                                MPIR_Comm * comm, MPIR_Sched_t s)
+                                                MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1065,7 +1065,7 @@ static inline int MPIDI_NM_mpi_ialltoallw_sched(const void *sendbuf, const int s
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iexscan_sched(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPIR_Sched_t s)
+                                             MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1085,7 +1085,7 @@ static inline int MPIDI_NM_mpi_iexscan_sched(const void *sendbuf, void *recvbuf,
 static inline int MPIDI_NM_mpi_igather_sched(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                              MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                             MPIR_Sched_t s)
+                                             MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1107,7 +1107,7 @@ static inline int MPIDI_NM_mpi_igatherv_sched(const void *sendbuf, int sendcount
                                               MPI_Datatype sendtype, void *recvbuf,
                                               const int *recvcounts, const int *displs,
                                               MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                              MPIR_Sched_t s)
+                                              MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1128,7 +1128,7 @@ static inline int MPIDI_NM_mpi_igatherv_sched(const void *sendbuf, int sendcount
 static inline int MPIDI_NM_mpi_ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf,
                                                            int recvcount, MPI_Datatype datatype,
                                                            MPI_Op op, MPIR_Comm * comm,
-                                                           MPIR_Sched_t s)
+                                                           MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1148,7 +1148,8 @@ static inline int MPIDI_NM_mpi_ireduce_scatter_block_sched(const void *sendbuf, 
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ireduce_scatter_sched(const void *sendbuf, void *recvbuf,
                                                      const int recvcounts[], MPI_Datatype datatype,
-                                                     MPI_Op op, MPIR_Comm * comm, MPIR_Sched_t s)
+                                                     MPI_Op op, MPIR_Comm * comm,
+                                                     MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1168,7 +1169,7 @@ static inline int MPIDI_NM_mpi_ireduce_scatter_sched(const void *sendbuf, void *
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, int root,
-                                             MPIR_Comm * comm, MPIR_Sched_t s)
+                                             MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1187,7 +1188,7 @@ static inline int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iscan_sched(const void *sendbuf, void *recvbuf, int count,
                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                           MPIR_Sched_t s)
+                                           MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1207,7 +1208,7 @@ static inline int MPIDI_NM_mpi_iscan_sched(const void *sendbuf, void *recvbuf, i
 static inline int MPIDI_NM_mpi_iscatter_sched(const void *sendbuf, int sendcount,
                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                               MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                              MPIR_Sched_t s)
+                                              MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1228,7 +1229,7 @@ static inline int MPIDI_NM_mpi_iscatter_sched(const void *sendbuf, int sendcount
 static inline int MPIDI_NM_mpi_iscatterv_sched(const void *sendbuf, const int *sendcounts,
                                                const int *displs, MPI_Datatype sendtype,
                                                void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                               int root, MPIR_Comm * comm, MPIR_Sched_t s)
+                                               int root, MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1249,7 +1250,7 @@ static inline int MPIDI_NM_mpi_iscatterv_sched(const void *sendbuf, const int *s
 static inline int MPIDI_NM_mpi_ineighbor_allgather_sched(const void *sendbuf, int sendcount,
                                                          MPI_Datatype sendtype, void *recvbuf,
                                                          int recvcount, MPI_Datatype recvtype,
-                                                         MPIR_Comm * comm, MPIR_Sched_t s)
+                                                         MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1271,7 +1272,7 @@ static inline int MPIDI_NM_mpi_ineighbor_allgatherv_sched(const void *sendbuf, i
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           const int recvcounts[],
                                                           const int displs[], MPI_Datatype recvtype,
-                                                          MPIR_Comm * comm, MPIR_Sched_t s)
+                                                          MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1292,7 +1293,7 @@ static inline int MPIDI_NM_mpi_ineighbor_allgatherv_sched(const void *sendbuf, i
 static inline int MPIDI_NM_mpi_ineighbor_alltoall_sched(const void *sendbuf, int sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         int recvcount, MPI_Datatype recvtype,
-                                                        MPIR_Comm * comm, MPIR_Sched_t s)
+                                                        MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1315,7 +1316,7 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallv_sched(const void *sendbuf,
                                                          const int sdispls[], MPI_Datatype sendtype,
                                                          void *recvbuf, const int recvcounts[],
                                                          const int rdispls[], MPI_Datatype recvtype,
-                                                         MPIR_Comm * comm, MPIR_Sched_t s)
+                                                         MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1340,7 +1341,7 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallw_sched(const void *sendbuf,
                                                          void *recvbuf, const int recvcounts[],
                                                          const MPI_Aint rdispls[],
                                                          const MPI_Datatype recvtypes[],
-                                                         MPIR_Comm * comm, MPIR_Sched_t s)
+                                                         MPIR_Comm * comm, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 

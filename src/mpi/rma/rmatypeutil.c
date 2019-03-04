@@ -17,7 +17,7 @@
  * as MPI_Compare_and_swap or MPI_Fetch_and_op.  Does NOT return MPICH error
  * codes. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Sched_cb_free_buf
+#define FUNCNAME MPIR_Sched_element_cb_free_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_is_rma_atomic(MPI_Datatype type)

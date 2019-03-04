@@ -20,7 +20,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -35,7 +35,8 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_element_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -73,7 +74,8 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
 
         if (rank == 0) {
             mpi_errno =
-                MPIR_Sched_send(tmp_buf, sendcount * local_size, sendtype, root, comm_ptr, s);
+                MPIR_Sched_element_send(tmp_buf, sendcount * local_size, sendtype, root, comm_ptr,
+                                        s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

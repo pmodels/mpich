@@ -21,7 +21,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                       MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, curr_cnt, rem, src, dst;
@@ -49,13 +49,14 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype, tmp_buf, recvcount, recvtype, s);
+        mpi_errno =
+            MPIR_Sched_element_copy(sendbuf, sendcount, sendtype, tmp_buf, recvcount, recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else {
-        mpi_errno = MPIR_Sched_copy(((char *) recvbuf + rank * recvcount * recvtype_extent),
-                                    recvcount, recvtype, tmp_buf, recvcount, recvtype, s);
+        mpi_errno = MPIR_Sched_element_copy(((char *) recvbuf + rank * recvcount * recvtype_extent),
+                                            recvcount, recvtype, tmp_buf, recvcount, recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -69,12 +70,12 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        mpi_errno = MPIR_Sched_send(tmp_buf, curr_cnt, recvtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(tmp_buf, curr_cnt, recvtype, dst, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         /* logically sendrecv, so no barrier here */
-        mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + curr_cnt * recvtype_extent),
-                                    curr_cnt, recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(((char *) tmp_buf + curr_cnt * recvtype_extent),
+                                            curr_cnt, recvtype, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -90,12 +91,12 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        mpi_errno = MPIR_Sched_send(tmp_buf, rem * recvcount, recvtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(tmp_buf, rem * recvcount, recvtype, dst, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         /* logically sendrecv, so no barrier here */
-        mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + curr_cnt * recvtype_extent),
-                                    (rem * recvcount), recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(((char *) tmp_buf + curr_cnt * recvtype_extent),
+                                            (rem * recvcount), recvtype, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -104,17 +105,19 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
     /* Rotate blocks in tmp_buf down by (rank) blocks and store
      * result in recvbuf. */
 
-    mpi_errno = MPIR_Sched_copy(tmp_buf, ((comm_size - rank) * recvcount), recvtype,
-                                ((char *) recvbuf + rank * recvcount * recvtype_extent),
-                                ((comm_size - rank) * recvcount), recvtype, s);
+    mpi_errno = MPIR_Sched_element_copy(tmp_buf, ((comm_size - rank) * recvcount), recvtype,
+                                        ((char *) recvbuf + rank * recvcount * recvtype_extent),
+                                        ((comm_size - rank) * recvcount), recvtype, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
     if (rank) {
         mpi_errno =
-            MPIR_Sched_copy(((char *) tmp_buf + (comm_size - rank) * recvcount * recvtype_extent),
-                            rank * recvcount, recvtype, recvbuf, rank * recvcount, recvtype, s);
+            MPIR_Sched_element_copy(((char *) tmp_buf +
+                                     (comm_size - rank) * recvcount * recvtype_extent),
+                                    rank * recvcount, recvtype, recvbuf, rank * recvcount, recvtype,
+                                    s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

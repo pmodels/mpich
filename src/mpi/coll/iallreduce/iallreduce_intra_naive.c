@@ -13,7 +13,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_intra_naive(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                      MPIR_Sched_t s)
+                                      MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
