@@ -409,7 +409,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
         goto fn_exit;
 
     do {
-        size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
+        MPI_Aint tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
 
         MPIR_Typerep_iov_len(NULL, dt_count, dt_datatype, 0, tmp_size, &num_iov);
         total_iov += num_iov;
