@@ -106,7 +106,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
-    char *key, *val, *val_p;
+    char *key = NULL, *val = NULL, *val_p;
     int out_len, val_len, rem, flag;
     pmix_value_t value, *pvalue;
     pmix_info_t *info;
