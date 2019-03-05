@@ -52,6 +52,7 @@
         else {                                  \
             MPIR_Datatype *dt_ptr;              \
             MPIR_Datatype_get_ptr(a,dt_ptr);    \
+            MPIR_Assert(dt_ptr != NULL);        \
             b = dt_ptr->basic_type;             \
         }                                       \
     } while (0)
