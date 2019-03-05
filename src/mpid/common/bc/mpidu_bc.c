@@ -144,7 +144,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_fence");
     PMIX_INFO_FREE(info, 1);
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = VALLEN;
@@ -250,7 +249,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     rc = PMI2_KVS_Fence();
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = PMI2_MAX_VALLEN;
@@ -361,7 +359,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
     }
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = val_max;
