@@ -17,9 +17,6 @@
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif /* HAVE_SYS_MMAN_H */
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif /* HAVE_SYS_TIME_H */
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
@@ -150,7 +147,8 @@ static inline void *MPIDIU_generate_random_addr(size_t size)
     size_t page_sz = 0;
     uint64_t random_unsigned;
     size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
-    struct timeval ts;
+    MPL_time_t ts;
+    unsigned int ts_32 = 0;
     int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
     int32_t rh, rl;
     struct random_data rbuf;
@@ -168,9 +166,10 @@ static inline void *MPIDIU_generate_random_addr(size_t size)
      * (http://stackoverflow.com/questions/4167034/c-initstate-r-crashing) */
     memset(&rbuf, 0, sizeof(rbuf));
 
-    gettimeofday(&ts, NULL);
+    MPL_wtime(&ts);
+    MPL_wtime_touint(&ts, &ts_32);
 
-    initstate_r(ts.tv_usec, random_state, sizeof(random_state), &rbuf);
+    initstate_r(ts_32, random_state, sizeof(random_state), &rbuf);
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
     random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
