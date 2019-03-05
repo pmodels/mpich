@@ -304,6 +304,9 @@ static int create_flattened_struct(MPI_Aint count,
              * add to flattened representation */
             if (sz > 0) {
                 segp = MPIR_Segment_alloc(NULL, (MPI_Aint) blklens[i], oldtypes[i]);
+                if (!segp) {
+                    return create_struct_memory_error();
+                }
 
                 bytes = MPIR_SEGMENT_IGNORE_LAST;
 
