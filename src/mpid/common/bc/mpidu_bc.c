@@ -112,14 +112,32 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     pmix_info_t *info;
     pmix_proc_t proc;
     int local_rank, local_leader;
+    size_t my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
+
+    /* if business cards can be different length, use the max value length */
+    if (!same_len)
+        bc_len = VALLEN;
+    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    mpi_errno =
+        MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
+                             MPL_MEM_ADDRESS);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (size == 1) {
+        memcpy(segment, bc, my_bc_len);
+        goto single;
+    }
 
     val = MPL_malloc(VALLEN, MPL_MEM_ADDRESS);
     memset(val, 0, VALLEN);
     val_p = val;
     rem = VALLEN;
-    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, bc_len);
+    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, my_bc_len);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
     MPIR_Assert(rem >= 0);
 
@@ -143,18 +161,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     rc = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_fence");
     PMIX_INFO_FREE(info, 1);
-
-    /* if business cards can be different length, use the max value length */
-    if (!same_len)
-        bc_len = VALLEN;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-    mpi_errno =
-        MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
 
     if (!roots_only) {
         start = local_rank * (size / local_size);
@@ -196,6 +202,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+  single:
     if (!same_len) {
         indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
         for (i = 0; i < size; i++)
@@ -228,26 +235,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int out_len, val_len, rem;
     char *key = NULL, *val = NULL, *val_p;
     int local_rank, local_leader;
+    size_t my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
-
-    val = MPL_malloc(PMI2_MAX_VALLEN, MPL_MEM_ADDRESS);
-    memset(val, 0, PMI2_MAX_VALLEN);
-    val_p = val;
-    rem = PMI2_MAX_VALLEN;
-    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, bc_len);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
-    MPIR_Assert(rem >= 0);
-
-    key = MPL_malloc(PMI2_MAX_KEYLEN, MPL_MEM_ADDRESS);
-    MPIR_Assert(key);
-    if (!roots_only || rank == local_leader) {
-        sprintf(key, "bc-%d", rank);
-        rc = PMI2_KVS_Put(key, val);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
-    }
-    rc = PMI2_KVS_Fence();
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
 
     /* if business cards can be different length, use the max value length */
     if (!same_len)
@@ -260,6 +250,29 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
                              MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (size == 1) {
+        memcpy(segment, bc, my_bc_len);
+        goto single;
+    }
+
+    val = MPL_malloc(PMI2_MAX_VALLEN, MPL_MEM_ADDRESS);
+    memset(val, 0, PMI2_MAX_VALLEN);
+    val_p = val;
+    rem = PMI2_MAX_VALLEN;
+    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, my_bc_len);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
+    MPIR_Assert(rem >= 0);
+
+    key = MPL_malloc(PMI2_MAX_KEYLEN, MPL_MEM_ADDRESS);
+    MPIR_Assert(key);
+    if (!roots_only || rank == local_leader) {
+        sprintf(key, "bc-%d", rank);
+        rc = PMI2_KVS_Put(key, val);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
+    }
+    rc = PMI2_KVS_Fence();
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
 
     if (!roots_only) {
         start = local_rank * (size / local_size);
@@ -294,6 +307,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+  single:
     if (!same_len) {
         indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
         for (i = 0; i < size; i++)
@@ -326,6 +340,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int key_max, val_max, name_max, out_len, rem;
     char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
     int local_rank = -1, local_leader = -1;
+    size_t my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
@@ -335,29 +350,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_key_length_max");
     rc = PMI_KVS_Get_value_length_max(&val_max);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-
-    kvsname = MPL_malloc(name_max, MPL_MEM_ADDRESS);
-    MPIR_Assert(kvsname);
-    rc = PMI_KVS_Get_my_name(kvsname, name_max);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
-
-    val = MPL_malloc(val_max, MPL_MEM_ADDRESS);
-    memset(val, 0, val_max);
-    val_p = val;
-    rem = val_max;
-    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, bc_len);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
-    MPIR_Assert(rem >= 0);
-
-    key = MPL_malloc(key_max, MPL_MEM_ADDRESS);
-    MPIR_Assert(key);
-    if (!roots_only || rank == local_leader) {
-        sprintf(key, "bc-%d", rank);
-        rc = PMI_KVS_Put(kvsname, key, val);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
-        rc = PMI_KVS_Commit(kvsname);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
-    }
 
     /* if business cards can be different length, use the max value length */
     if (!same_len)
@@ -370,6 +362,36 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
                              MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (size == 1) {
+        memcpy(segment, bc, my_bc_len);
+        goto single;
+    }
+
+    kvsname = MPL_malloc(name_max, MPL_MEM_ADDRESS);
+    MPIR_Assert(kvsname);
+    rc = PMI_KVS_Get_my_name(kvsname, name_max);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
+
+    val = MPL_malloc(val_max, MPL_MEM_ADDRESS);
+    memset(val, 0, val_max);
+    val_p = val;
+    rem = val_max;
+    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, my_bc_len);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
+    MPIR_Assert(rem >= 0);
+
+    key = MPL_malloc(key_max, MPL_MEM_ADDRESS);
+    MPIR_Assert(key);
+    if (!roots_only || rank == local_leader) {
+        sprintf(key, "bc-%d", rank);
+        rc = PMI_KVS_Put(kvsname, key, val);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+        rc = PMI_KVS_Commit(kvsname);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+    }
+    rc = PMI_Barrier();
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier");
 
     if (!roots_only) {
         start = local_rank * (size / local_size);
@@ -404,6 +426,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+  single:
     if (!same_len) {
         indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
         MPIR_Assert(indices);
