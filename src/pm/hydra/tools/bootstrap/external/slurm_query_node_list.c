@@ -92,8 +92,8 @@ static HYD_status list_to_nodes(char *str)
     /* compile element regex for old format: "h14" */
     regcomp(&ematch_old, "([a-zA-Z]+[0-9]+)", REG_EXTENDED);
 
-    /* compile group-0 regex for new format: "h-[00-12,14] | h-14" */
-    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z]+[0-9]*-)(\\[[-,0-9]+\\]|[0-9]+)(,|$)", REG_EXTENDED);
+    /* compile group-0 regex for new format: "h[00-12,14] | h14" */
+    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z]+[0-9]*-?)(\\[[-,0-9]+\\]|[0-9]+)(,|$)", REG_EXTENDED);
 
     /* compile group-1 regex for new format: "00-12 | 14" */
     regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED);
