@@ -7,6 +7,9 @@
 #ifndef MPL_SHM_WIN_H_INCLUDED
 #define MPL_SHM_WIN_H_INCLUDED
 
+#include <winsock2.h>
+#include <windows.h>
+
 typedef HANDLE MPL_shm_lhnd_t;
 
 typedef char *MPLI_shm_ghnd_t;
