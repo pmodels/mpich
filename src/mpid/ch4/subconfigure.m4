@@ -510,6 +510,8 @@ src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
+# we have to define it here to cover ch3 build
+AM_CONDITIONAL([BUILD_CH4_SHM],[test "$enable_ch4_direct" = "auto"])
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY
