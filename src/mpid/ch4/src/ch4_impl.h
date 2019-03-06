@@ -1187,16 +1187,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 static inline int MPIDI_hash_comm_to_vci(MPIR_Comm* comm)
 {
     int vci;
-#if 0
-    vci = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
-#else
     if (unlikely(comm == NULL))
         vci = 0;
     else
-        vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis;
-#endif
+        vci = comm->dev.vci;
     MPIR_Assert(vci >= 0);
     return vci;
+}
+
+extern OPA_int_t global_vci_counter;
+
+static inline void MPIDI_comm_set_vci(MPIR_Comm* comm)
+{
+    MPIR_Assert(comm != NULL);
+
+    if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "seqcount") == 0)
+        comm->dev.vci = OPA_fetch_and_add_int(&global_vci_counter, 1) % MPIDI_CH4_Global.num_nm_vcis;
+    else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "modulo") == 0)
+        comm->dev.vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis;
+    else
+        abort();
+
 }
 
 #endif /* CH4_IMPL_H_INCLUDED */

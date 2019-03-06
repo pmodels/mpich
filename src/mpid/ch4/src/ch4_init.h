@@ -101,6 +101,17 @@ cvars:
       description : >-
         Number of active Netmod VCIs
 
+    - name        : MPIR_CVAR_CH4_VCI_HASH
+      category    : CH4
+      type        : string
+      default     : "modulo"
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This variable specify which hash function to use when mapping
+        MPI semantics (comm, rank, tag, win, etc) to VCIs
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -345,6 +356,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
     MPIR_Process.comm_self->pof2 = 0;
+    MPIR_Process.comm_self->dev.vci = 0;
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_WORLD          */
@@ -353,6 +365,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
     MPIR_Process.comm_world->pof2 = MPL_pof2(size);
+    MPIR_Process.comm_world->dev.vci = 0;
 
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);

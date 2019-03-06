@@ -194,3 +194,5 @@ MPL_dbg_class MPIDI_CH4_DBG_MAP;
 MPL_dbg_class MPIDI_CH4_DBG_COMM;
 MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif
+
+OPA_int_t global_vci_counter = {0};
