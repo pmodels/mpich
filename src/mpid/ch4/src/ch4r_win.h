@@ -16,9 +16,6 @@
 #include "mpir_info.h"
 #include "ch4r_symheap.h"
 #include "uthash.h"
-#ifdef HAVE_SYS_MMAN_H
-#include <sys/mman.h>
-#endif /* HAVE_SYS_MMAN_H */
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
