@@ -455,6 +455,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POPFATAL(mpi_errno);
             }
+            MPIDI_CH4_Global.lw_reqs[i] = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+            MPIDI_CH4_Global.lw_reqs[i]->dev.vci= i;
+            MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.lw_reqs[i] == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                        "**nomemreq");
+             MPIR_cc_set(&MPIDI_CH4_Global.lw_reqs[i]->cc, 0);
         }
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
         MPIDI_workq_init(&MPIDI_CH4_Global.workqueue);

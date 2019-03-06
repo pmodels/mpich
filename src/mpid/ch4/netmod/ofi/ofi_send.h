@@ -60,7 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     uint64_t match_bits;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
+    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request, MPIDI_hash_comm_to_vci(comm));
     (*request)->dev.vci = MPIDI_hash_comm_to_vci(comm);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =

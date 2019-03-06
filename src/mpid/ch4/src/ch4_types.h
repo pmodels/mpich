@@ -313,6 +313,8 @@ typedef struct MPIDI_CH4_Global_t {
 
     MPID_Thread_mutex_t vci_locks[MPIDI_CH4_MAX_NM_VCIS];
     OPA_int_t vci_progress_count[MPIDI_CH4_MAX_NM_VCIS];
+    MPIR_Request *lw_reqs[MPIDI_CH4_MAX_NM_VCIS];
+
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif

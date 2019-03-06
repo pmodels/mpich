@@ -570,4 +570,6 @@ void MPIDI_sigusr1_handler(int sig);
 
 #include "mpidu_pre.h"
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete(MPIR_Request_kind_t kind, int vci);
+
 #endif /* MPIDPRE_H_INCLUDED */

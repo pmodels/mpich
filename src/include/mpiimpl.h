@@ -145,6 +145,10 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 struct MPIR_Request;
 typedef struct MPIR_Request MPIR_Request;
 
+enum MPIR_Request_kind_t;
+typedef enum MPIR_Request_kind_t MPIR_Request_kind_t;
+
+
 struct MPIR_Comm;
 typedef struct MPIR_Comm MPIR_Comm;
 

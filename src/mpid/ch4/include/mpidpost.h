@@ -28,6 +28,21 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_CREATE_HOOK);
 }
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete(MPIR_Request_kind_t kind, int vci)
+{
+    MPIR_Request *req;
+
+#ifdef HAVE_DEBUGGER_SUPPORT
+    req = MPIR_Request_create(kind);
+    MPIR_cc_set(&req->cc, 0);
+#else
+    req = MPIDI_CH4_Global.lw_reqs[vci];
+    MPIR_Request_add_ref(req);
+#endif
+
+    return req;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_FREE_HOOK);
