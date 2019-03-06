@@ -15,8 +15,9 @@
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "../shm/include/shm.h"
-
+#endif
 
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
