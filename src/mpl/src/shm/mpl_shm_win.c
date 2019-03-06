@@ -11,8 +11,8 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_USE_NT_SHM
 
-#include<winsock2.h>
-#include<windows.h>
+#include <winsock2.h>
+#include <windows.h>
 
 /* A template function which creates/attaches shm seg handle
  * to the shared memory. Used by user-exposed functions below
