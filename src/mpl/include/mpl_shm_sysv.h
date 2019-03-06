@@ -7,6 +7,10 @@
 #ifndef MPL_SHM_SYSV_H_INCLUDED
 #define MPL_SHM_SYSV_H_INCLUDED
 
+#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 typedef int MPLI_shm_lhnd_t;
 
 typedef char *MPLI_shm_ghnd_t;
