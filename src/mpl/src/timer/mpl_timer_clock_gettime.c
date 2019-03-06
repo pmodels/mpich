@@ -25,6 +25,13 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
     return MPL_TIMER_SUCCESS;
 }
 
+int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
+{
+    *val = (unsigned int) t->tv_nsec;
+
+    return MPL_TIMER_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = ((double) t->tv_sec + 1.0e-9 * (double) t->tv_nsec);

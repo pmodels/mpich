@@ -103,6 +103,13 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
     return MPL_TIMER_SUCCESS;
 }
 
+int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
+{
+    *val = (unsigned int) (*t & 0xffffffffUL);
+
+    return MPL_TIMER_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) *t * seconds_per_tick;
