@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state, MPIR_Request *req)
 {
-    int ret, vci, vci_progress_count, global_progress_patience;
+    int ret, vci, global_progress_patience;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
@@ -224,14 +224,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state,
     }
 #else
     state->progress_count = OPA_load_int(&MPIDI_CH4_Global.progress_count);
-    vci_progress_count = OPA_load_int(&MPIDI_CH4_Global.vci_progress_count[vci]);
     global_progress_patience = MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE;
     do {
         /* local progress */
         ret = MPID_Progress_test_req(req);
         if (unlikely(ret))
             MPIR_ERR_POP(ret);
-        if (vci_progress_count != OPA_load_int(&MPIDI_CH4_Global.vci_progress_count[vci]))
+        if (MPIR_Request_is_complete(req));
             break;
 
         if (--global_progress_patience <= 0) {

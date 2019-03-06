@@ -49,11 +49,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_FREE_HOOK);
 
     OPA_incr_int(&MPIDI_CH4_Global.progress_count);
-    if (req->dev.vci < 0) {
-        printf("req->dev.vci was not set\n");
-        abort();
-    }
-    OPA_incr_int(&MPIDI_CH4_Global.vci_progress_count[req->dev.vci]);
 
     if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
         NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))
