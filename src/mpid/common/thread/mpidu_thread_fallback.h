@@ -65,7 +65,7 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
 
 #if !defined(ENABLE_IZEM_SYNC)
 typedef struct {
-    MPL_thread_mutex_t mutex;
+    MPL_thread_mutex_t mutex __attribute__((aligned(64)));
     MPL_thread_id_t owner;
     int count;
 } MPIDU_Thread_mutex_t;
