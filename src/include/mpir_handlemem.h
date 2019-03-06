@@ -149,7 +149,9 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
 
     /* Create the next block */
     /* printf("Creating indirect block number %d with %d objects in it\n", *indirect_size, indirect_num_indices); */
-    block_ptr = (void *) MPL_calloc(indirect_num_indices, obj_size, MPL_MEM_OBJECT);
+    block_ptr = (void *) MPL_aligned_alloc(64, indirect_num_indices * obj_size, MPL_MEM_OBJECT);
+    memset(block_ptr, 0, indirect_num_indices * obj_size);
+
     if (!block_ptr) {
         return 0;
     }

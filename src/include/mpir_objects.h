@@ -403,7 +403,7 @@ typedef OPA_int_t Handle_ref_count;
  *
  * NOTE: This macro *must* be invoked as the very first element of the structure! */
 #define MPIR_OBJECT_HEADER                                              \
-    int handle;                                                         \
+    int handle __attribute__((aligned(64)));                                                         \
     Handle_ref_count ref_count  /*semicolon intentionally omitted */
 
 /* ALL objects have the handle as the first value. */
