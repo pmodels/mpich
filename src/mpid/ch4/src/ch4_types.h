@@ -276,7 +276,7 @@ typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
 
-#define MPIDI_CH4_MAX_NM_VCIS 16
+#define MPIDI_CH4_MAX_NM_VCIS 32
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
