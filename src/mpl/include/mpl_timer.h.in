@@ -166,6 +166,22 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff);
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
 
 /*@
+  MPL_wtime_touint - Converts a timestamp to an unsigned int.
+  Input Parameter:
+. timeval - 'MPL_time_t' time stamp
+
+  Output Parameter:
+. val - unsigned int generated from the timestamp.
+
+  Notes:
+  This routine may be used for initializing random seeds. The value is not
+  necessary a timestamp if 64-bit to 32-bit conversion happened.
+
+
+  @*/
+int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val);
+
+/*@
   MPL_wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:

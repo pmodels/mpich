@@ -17,6 +17,11 @@ double MPL_wtick(void)
     return seconds_per_tick;
 }
 
+void MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
+{
+    *d = (unsigned int) (*t & 0xffffffffUL);
+}
+
 void MPL_wtime_todouble(MPL_time_t * t, double *d)
 {
     *d = (double) (__int64) * t * seconds_per_tick;
