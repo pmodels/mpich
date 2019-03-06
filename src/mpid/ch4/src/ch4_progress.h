@@ -101,20 +101,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test_req(MPIR_Request *req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST_REQ);
 
-#ifdef HAVE_SIGNAL
-    if (MPIDI_CH4_Global.sigusr1_count > MPIDI_CH4_Global.my_sigusr1_count) {
-        MPIDI_CH4_Global.my_sigusr1_count = MPIDI_CH4_Global.sigusr1_count;
-        mpi_errno = MPIDI_check_for_failed_procs();
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-#endif
-
     /* TODO: progress per-vci workq not all of them */
     mpi_errno = MPIDI_workq_vci_progress();
     /* TODO: error handling */
 
-    vci = MPIDI_hash_comm_to_vci(req->comm);
+    vci = req->dev.vci;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_locks[vci]);
     mpi_errno = MPIDI_NM_progress(vci, 0);
@@ -203,27 +194,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
     goto fn_exit;
 }
 
-#define MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE 100
+#define MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE (1 << 10)
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state, MPIR_Request *req)
 {
-    int ret, vci, global_progress_patience;
+    int ret, global_progress_patience;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
-    vci = MPIDI_hash_comm_to_vci(req->comm);
-
-#if  (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL)
-    if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_DIRECT) {
-        ret = MPID_Progress_test_req(req);
-        if (unlikely(ret))
-            MPIR_ERR_POP(ret);
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        goto fn_exit;
-    }
-#else
-    state->progress_count = OPA_load_int(&MPIDI_CH4_Global.progress_count);
     global_progress_patience = MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE;
     do {
         /* local progress */
@@ -238,14 +217,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPID_Progress_state * state,
             ret = MPID_Progress_test();
             if (unlikely(ret))
                 MPIR_ERR_POP(ret);
-            if (state->progress_count != OPA_load_int(&MPIDI_CH4_Global.progress_count))
-                break;
             global_progress_patience = MPIR_CVAR_CH4_GLOBAL_PROGRESS_PATIENCE;
         }
 
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     } while (1);
-#endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
