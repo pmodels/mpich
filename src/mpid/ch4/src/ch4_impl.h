@@ -1197,12 +1197,65 @@ static inline int MPIDI_hash_comm_to_vci(MPIR_Comm* comm)
 
 extern OPA_int_t global_vci_counter;
 
+#define BIG_CONSTANT(x) (x##LLU)
+MPL_STATIC_INLINE_PREFIX uint64_t murmur_hash_64a ( const void * key)
+{
+  /* TODO: len and seed were arbitrary picked;
+   * study these values and extend API if needed. */
+  int len = 8;
+  uint64_t seed = 17;
+
+  const uint64_t m = BIG_CONSTANT(0xc6a4a7935bd1e995);
+  const int r = 47;
+
+  uint64_t h = seed ^ (len * m);
+
+  const uint64_t * data = (const uint64_t *)key;
+  const uint64_t * end = data + (len/8);
+
+  while(data != end)
+  {
+    uint64_t k = *data++;
+
+    k *= m;
+    k ^= k >> r;
+    k *= m;
+
+    h ^= k;
+    h *= m;
+  }
+
+  const unsigned char * data2 = (const unsigned char*)data;
+
+  switch(len & 7)
+  {
+  case 7: h ^= ((uint64_t)data2[6]) << 48;
+  case 6: h ^= ((uint64_t)data2[5]) << 40;
+  case 5: h ^= ((uint64_t)data2[4]) << 32;
+  case 4: h ^= ((uint64_t)data2[3]) << 24;
+  case 3: h ^= ((uint64_t)data2[2]) << 16;
+  case 2: h ^= ((uint64_t)data2[1]) << 8;
+  case 1: h ^= ((uint64_t)data2[0]);
+          h *= m;
+  };
+
+  h ^= h >> r;
+  h *= m;
+  h ^= h >> r;
+
+  return h;
+}
+
 static inline void MPIDI_comm_set_vci(MPIR_Comm* comm)
 {
     MPIR_Assert(comm != NULL);
 
     if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "seqcount") == 0)
         comm->dev.vci = OPA_fetch_and_add_int(&global_vci_counter, 1) % MPIDI_CH4_Global.num_nm_vcis;
+    else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "murhash2") == 0) {
+        int ctxid = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id);
+        comm->dev.vci = (int)(murmur_hash_64a((uint64_t*)&ctxid) % (uint64_t)MPIDI_CH4_Global.num_nm_vcis);
+    }
     else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "modulo") == 0)
         comm->dev.vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis;
     else
