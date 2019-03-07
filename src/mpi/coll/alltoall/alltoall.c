@@ -63,6 +63,7 @@ cvars:
        Variable to select alltoall algorithm
        auto                      - Internal algorithm selection
        brucks                    - Force brucks algorithm
+       k_brucks                  - Force radix k brucks algorithm
        nb                        - Force nonblocking algorithm
        pairwise                  - Force pairwise algorithm
        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
@@ -143,8 +144,8 @@ int MPIR_Alltoall_intra_auto(const void *sendbuf,
                                                           recvcount, recvtype, comm_ptr, errflag);
     } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno =
-            MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                       comm_ptr, errflag);
+            MPIR_Alltoall_intra_k_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                         comm_ptr, errflag);
     } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         mpi_errno =
             MPIR_Alltoall_intra_scattered(sendbuf, sendcount, sendtype, recvbuf, recvcount,
@@ -196,6 +197,11 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype,
                                                        comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM_k_brucks:
+                mpi_errno = MPIR_Alltoall_intra_k_brucks(sendbuf, sendcount, sendtype,
+                                                         recvbuf, recvcount, recvtype,
+                                                         comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM_pairwise:
                 mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
