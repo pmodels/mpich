@@ -1258,6 +1258,13 @@ static inline void MPIDI_comm_set_vci(MPIR_Comm* comm)
     }
     else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "modulo") == 0)
         comm->dev.vci = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis;
+    else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "revmodulo") == 0)
+        comm->dev.vci = (MPIDI_CH4_Global.num_nm_vcis - 1 - (MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis) + 2) % MPIDI_CH4_Global.num_nm_vcis;
+    else if (strcmp(MPIR_CVAR_CH4_VCI_HASH, "revmodulo2") == 0) {
+        comm->dev.vci = (MPIDI_CH4_Global.num_nm_vcis - 1 - (MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.num_nm_vcis) + 2) % MPIDI_CH4_Global.num_nm_vcis;
+        if (MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) >= MPIDI_CH4_Global.num_nm_vcis && comm->dev.vci > 1)
+            comm->dev.vci -= 2;
+    }
     else
         abort();
 
