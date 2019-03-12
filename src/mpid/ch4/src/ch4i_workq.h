@@ -177,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
             MPIR_Assert(0);
     }
 
-    MPIDI_workq_enqueue(&MPIDI_CH4_Global.workqueue, pt2pt_elemt);
+    MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
@@ -237,7 +237,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
         default:
             MPIR_Assert(0);
     }
-    MPIDI_workq_enqueue(&MPIDI_CH4_Global.workqueue, rma_elemt);
+    MPIDI_workq_enqueue(&MPIDI_global.workqueue, rma_elemt);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_t * workq_elemt)
@@ -367,12 +367,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_workq_elemt_t *workq_elemt = NULL;
 
-    MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueue, (void **) &workq_elemt);
+    MPIDI_workq_dequeue(&MPIDI_global.workqueue, (void **) &workq_elemt);
     while (workq_elemt != NULL) {
         mpi_errno = MPIDI_workq_dispatch(workq_elemt);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
-        MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueue, (void **) &workq_elemt);
+        MPIDI_workq_dequeue(&MPIDI_global.workqueue, (void **) &workq_elemt);
     }
 
   fn_fail:
@@ -383,11 +383,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     mpi_errno = MPIDI_workq_vci_progress_unsafe();
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
   fn_fail:
     return mpi_errno;
 }

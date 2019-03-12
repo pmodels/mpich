@@ -41,12 +41,12 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         void *table;
         fi_addr_t *mapped_table;
-        size_t rem_bcs, num_nodes = MPIDI_CH4_Global.max_node_id + 1;
+        size_t rem_bcs, num_nodes = MPIDI_global.max_node_id + 1;
         int i, curr, node;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
         rem_bcs = MPIR_Comm_size(comm) - num_nodes;
-        MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], &MPIDI_OFI_global.addrname,
+        MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], &MPIDI_OFI_global.addrname,
                            MPIDI_OFI_global.addrnamelen, TRUE, &table, NULL);
         MPIR_CHKLMEM_MALLOC(mapped_table, fi_addr_t *, rem_bcs * sizeof(fi_addr_t),
                             mpi_errno, "mapped_table", MPL_MEM_ADDRESS);

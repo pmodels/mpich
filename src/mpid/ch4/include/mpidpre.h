@@ -35,7 +35,7 @@
 #elif defined MPIDI_CH4_USE_MT_TRYLOCK
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
-#define MPIDI_CH4_MT_MODEL MPIDI_CH4_Global.settings.mt_model
+#define MPIDI_CH4_MT_MODEL MPIDI_global.settings.mt_model
 #else
 #error "Unknown MT model or MT model not defined"
 #endif
@@ -519,7 +519,7 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
 
-#define MPIDIU_get_node_map(avtid)   (MPIDI_CH4_Global.node_map[(avtid)])
+#define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
 
 #define MPID_Progress_register_hook(fn_, id_) MPID_Progress_register(fn_, id_)
 #define MPID_Progress_deregister_hook(id_) MPID_Progress_deregister(id_)

@@ -267,7 +267,7 @@ static inline int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_NODE_ID);
 
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
-    *id_p = MPIDI_CH4_Global.node_map[avtid][lpid];
+    *id_p = MPIDI_global.node_map[avtid][lpid];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_NODE_ID);
     return mpi_errno;
@@ -280,7 +280,7 @@ static inline int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
 
-    *max_id_p = MPIDI_CH4_Global.max_node_id;
+    *max_id_p = MPIDI_global.max_node_id;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
     return mpi_errno;
@@ -311,7 +311,7 @@ static inline int MPIDIU_get_n_avts()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_N_AVTS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_N_AVTS);
 
-    ret = MPIDI_CH4_Global.avt_mgr.n_avts;
+    ret = MPIDI_global.avt_mgr.n_avts;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_N_AVTS);
     return ret;
@@ -324,7 +324,7 @@ static inline int MPIDIU_get_max_n_avts()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAX_N_AVTS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAX_N_AVTS);
 
-    ret = MPIDI_CH4_Global.avt_mgr.max_n_avts;
+    ret = MPIDI_global.avt_mgr.max_n_avts;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAX_N_AVTS);
     return ret;
@@ -356,7 +356,7 @@ static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
 
     new_node_map = (int *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDJUMP(new_node_map == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
-    MPIDI_CH4_Global.node_map[avtid] = new_node_map;
+    MPIDI_global.node_map[avtid] = new_node_map;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
@@ -373,8 +373,8 @@ static inline int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    MPL_free(MPIDI_CH4_Global.node_map[avtid]);
-    MPIDI_CH4_Global.node_map[avtid] = NULL;
+    MPL_free(MPIDI_global.node_map[avtid]);
+    MPIDI_global.node_map[avtid] = NULL;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     return MPI_SUCCESS;
 }
@@ -384,26 +384,26 @@ static inline int MPIDIU_get_next_avtid(int *avtid)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
 
-    if (MPIDI_CH4_Global.avt_mgr.next_avtid == -1) {    /* out of free avtids */
+    if (MPIDI_global.avt_mgr.next_avtid == -1) {        /* out of free avtids */
         int old_max, new_max, i;
-        old_max = MPIDI_CH4_Global.avt_mgr.max_n_avts;
+        old_max = MPIDI_global.avt_mgr.max_n_avts;
         new_max = old_max + 1;
-        MPIDI_CH4_Global.avt_mgr.free_avtid =
-            (int *) MPL_realloc(MPIDI_CH4_Global.avt_mgr.free_avtid, new_max * sizeof(int),
+        MPIDI_global.avt_mgr.free_avtid =
+            (int *) MPL_realloc(MPIDI_global.avt_mgr.free_avtid, new_max * sizeof(int),
                                 MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; i++) {
-            MPIDI_CH4_Global.avt_mgr.free_avtid[i] = i + 1;
+            MPIDI_global.avt_mgr.free_avtid[i] = i + 1;
         }
-        MPIDI_CH4_Global.avt_mgr.free_avtid[new_max - 1] = -1;
-        MPIDI_CH4_Global.avt_mgr.max_n_avts = new_max;
-        MPIDI_CH4_Global.avt_mgr.next_avtid = old_max;
+        MPIDI_global.avt_mgr.free_avtid[new_max - 1] = -1;
+        MPIDI_global.avt_mgr.max_n_avts = new_max;
+        MPIDI_global.avt_mgr.next_avtid = old_max;
     }
 
-    *avtid = MPIDI_CH4_Global.avt_mgr.next_avtid;
-    MPIDI_CH4_Global.avt_mgr.next_avtid = MPIDI_CH4_Global.avt_mgr.free_avtid[*avtid];
-    MPIDI_CH4_Global.avt_mgr.free_avtid[*avtid] = -1;
-    MPIDI_CH4_Global.avt_mgr.n_avts++;
-    MPIR_Assert(MPIDI_CH4_Global.avt_mgr.n_avts <= MPIDI_CH4_Global.avt_mgr.max_n_avts);
+    *avtid = MPIDI_global.avt_mgr.next_avtid;
+    MPIDI_global.avt_mgr.next_avtid = MPIDI_global.avt_mgr.free_avtid[*avtid];
+    MPIDI_global.avt_mgr.free_avtid[*avtid] = -1;
+    MPIDI_global.avt_mgr.n_avts++;
+    MPIR_Assert(MPIDI_global.avt_mgr.n_avts <= MPIDI_global.avt_mgr.max_n_avts);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " new_avtid=%d", *avtid));
 
@@ -417,10 +417,10 @@ static inline int MPIDIU_free_avtid(int avtid)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVTID);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " free_avtid=%d", avtid));
-    MPIR_Assert(MPIDI_CH4_Global.avt_mgr.n_avts > 0);
-    MPIDI_CH4_Global.avt_mgr.free_avtid[avtid] = MPIDI_CH4_Global.avt_mgr.next_avtid;
-    MPIDI_CH4_Global.avt_mgr.next_avtid = avtid;
-    MPIDI_CH4_Global.avt_mgr.n_avts--;
+    MPIR_Assert(MPIDI_global.avt_mgr.n_avts > 0);
+    MPIDI_global.avt_mgr.free_avtid[avtid] = MPIDI_global.avt_mgr.next_avtid;
+    MPIDI_global.avt_mgr.next_avtid = avtid;
+    MPIDI_global.avt_mgr.n_avts--;
     /*
      * TODO:
      * If the allowed number of process groups are very large
@@ -509,32 +509,32 @@ static inline int MPIDIU_avt_init()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_INIT);
 
-    MPIDI_CH4_Global.avt_mgr.mmapped_size = 8 * 4 * 1024;
-    MPIDI_CH4_Global.avt_mgr.max_n_avts = 1;
-    MPIDI_CH4_Global.avt_mgr.next_avtid = 0;
-    MPIDI_CH4_Global.avt_mgr.n_avts = 0;
+    MPIDI_global.avt_mgr.mmapped_size = 8 * 4 * 1024;
+    MPIDI_global.avt_mgr.max_n_avts = 1;
+    MPIDI_global.avt_mgr.next_avtid = 0;
+    MPIDI_global.avt_mgr.n_avts = 0;
 
     MPIDI_av_table = (MPIDI_av_table_t **)
-        MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+        MPL_mmap(NULL, MPIDI_global.avt_mgr.mmapped_size,
                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_av_table == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
-    MPIDI_CH4_Global.node_map = (int **)
-        MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+    MPIDI_global.node_map = (int **)
+        MPL_mmap(NULL, MPIDI_global.avt_mgr.mmapped_size,
                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.node_map == MAP_FAILED, mpi_errno,
+    MPIR_ERR_CHKANDSTMT(MPIDI_global.node_map == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    MPIDI_CH4_Global.avt_mgr.free_avtid =
-        (int *) MPL_malloc(MPIDI_CH4_Global.avt_mgr.max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.avt_mgr.free_avtid == NULL, mpi_errno,
+    MPIDI_global.avt_mgr.free_avtid =
+        (int *) MPL_malloc(MPIDI_global.avt_mgr.max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_global.avt_mgr.free_avtid == NULL, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    for (i = 0; i < MPIDI_CH4_Global.avt_mgr.max_n_avts - 1; i++) {
-        MPIDI_CH4_Global.avt_mgr.free_avtid[i] = i + 1;
+    for (i = 0; i < MPIDI_global.avt_mgr.max_n_avts - 1; i++) {
+        MPIDI_global.avt_mgr.free_avtid[i] = i + 1;
     }
-    MPIDI_CH4_Global.avt_mgr.free_avtid[MPIDI_CH4_Global.avt_mgr.max_n_avts - 1] = -1;
+    MPIDI_global.avt_mgr.free_avtid[MPIDI_global.avt_mgr.max_n_avts - 1] = -1;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_INIT);
@@ -548,10 +548,9 @@ static inline int MPIDIU_avt_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
 
-    MPL_munmap((void *) MPIDI_CH4_Global.node_map, MPIDI_CH4_Global.avt_mgr.mmapped_size,
-               MPL_MEM_ADDRESS);
-    MPL_munmap((void *) MPIDI_av_table, MPIDI_CH4_Global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
-    MPL_free(MPIDI_CH4_Global.avt_mgr.free_avtid);
+    MPL_munmap((void *) MPIDI_global.node_map, MPIDI_global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
+    MPL_munmap((void *) MPIDI_av_table, MPIDI_global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
+    MPL_free(MPIDI_global.avt_mgr.free_avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_DESTROY);
     return MPI_SUCCESS;
@@ -563,8 +562,8 @@ static inline int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int s
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
-    ret = MPIDIU_build_nodemap(myrank, comm, sz, MPIDI_CH4_Global.node_map[avtid],
-                               &MPIDI_CH4_Global.max_node_id);
+    ret = MPIDIU_build_nodemap(myrank, comm, sz, MPIDI_global.node_map[avtid],
+                               &MPIDI_global.max_node_id);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
     return ret;

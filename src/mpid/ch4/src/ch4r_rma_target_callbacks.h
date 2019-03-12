@@ -1500,7 +1500,7 @@ static inline int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_CTRL_TARGET_MSG_CB);
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_win_ctrl);
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     /* TODO: check output win ptr */
 
     switch (handler_id) {
@@ -1585,7 +1585,7 @@ static inline int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIDIG_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
     MPIDIG_REQUEST(*req, rank) = msg_hdr->src_rank;
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDIG_win_base_at_target(win);
@@ -1684,7 +1684,7 @@ static inline int MPIDIG_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDIG_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
     MPIDIG_REQUEST(*req, rank) = msg_hdr->src_rank;
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     MPIDIG_REQUEST(rreq, req->preq.win_ptr) = win;
@@ -2051,7 +2051,7 @@ static inline int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
 
     *target_cmpl_cb = MPIDIG_cswap_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2059,7 +2059,7 @@ static inline int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_Datatype_check_contig_size(msg_hdr->datatype, 1, dt_contig, data_sz);
     *is_contig = dt_contig;
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDIG_win_base_at_target(win);
@@ -2125,7 +2125,7 @@ static inline int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     *target_cmpl_cb = MPIDIG_acc_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2136,7 +2136,7 @@ static inline int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr,
         *data = p_data;
     }
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDIG_win_base_at_target(win);
@@ -2237,7 +2237,7 @@ static inline int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDIG_win_base_at_target(win);
@@ -2266,7 +2266,7 @@ static inline int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     *data = (void *) dt_iov;
 
     *target_cmpl_cb = MPIDIG_acc_iov_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2341,7 +2341,7 @@ static inline int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
 
-    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
+    win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDIG_win_base_at_target(win);
