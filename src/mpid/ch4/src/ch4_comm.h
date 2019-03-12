@@ -550,4 +550,59 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_create_endpoints
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, int num_eps,
+                                                        MPI_Info info, MPIR_Comm ***newcomm_ptrs) {
+    int mpi_errno = MPI_SUCCESS;
+    int new_size = 0, parent_size, i, *num_eps_array, rank_offset;
+    MPIR_Comm **new_comms;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_CREATE_ENDPOINTS);
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_COMM_CREATE_ENDPOINTS);
+
+    new_comms = (MPIR_Comm**) MPL_malloc(num_eps * sizeof(MPIR_Comm*), MPL_MEM_OTHER);
+    num_eps_array = (int*) MPL_malloc(parent_size * sizeof(int), MPL_MEM_OTHER);
+    /* The endpoints communicator size equals the sum of the endpoints across all process
+     * of the parent comm. */
+    mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_eps_array, parent_size, MPI_INT, parent_comm, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    for (i = 0; i < parent_size; i++) {
+        new_size += num_eps_array[i];
+        if (i == parent_comm->rank)
+            rank_offset = new_size;
+    }
+
+    for (i = 0; i < num_eps; i++) {
+        mpi_errno = MPII_Comm_copy_data(parent_comm, &new_comms[i]);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* the parent context ids will be used as the base*/
+        new_comms[i]->context_id = parent_comm->context_id;
+        new_comms[i]->recvcontext_id = parent_comm->recvcontext_id;
+        new_comms[i]->local_size = new_size;
+        new_comms[i]->rank = rank_offset + i;
+        new_comms[i]->dev.vci = i % MPIDI_CH4_Global.num_nm_vcis;
+        new_comms[i]->dev.endpoint = i;
+
+         if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+    *newcomm_ptrs = new_comms;
+
+  fn_exit:
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_COMM_CREATE_ENDPOINTS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_COMM_H_INCLUDED */
