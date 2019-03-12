@@ -77,6 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_NUM_AM_BUFFERS            Number of buffers available for active messages
  * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
  * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
+ * MPIDI_OFI_EP_BITS                   The number of bits used for the endpoint in an OFI message
  * MPIDI_OFI_TAG_BITS                  The number of bits used for the tag in an OFI message
  * MPIDI_OFI_MAJOR_VERSION             The major API version of libfabric required
  * MPIDI_OFI_MINOR_VERSION             The minor API version of libfabric required
@@ -88,6 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_PROTOCOL_MASK             The bitmask used to extract the protocol from the match_bits in an OFI message
  * MPIDI_OFI_CONTEXT_MASK              The bitmask used to extract the context ID from the match_bits in an OFI message
  * MPIDI_OFI_SOURCE_MASK               The bitmask used to extract the source rank from the match_bits in an OFI message
+ * MPIDI_OFI_EP_MASK                   The bitmask used to extract the endpoint from the match_bits in an OFI message
  * MPIDI_OFI_TAG_MASK                  The bitmask used to extract the tag from the match_bits in an OFI message
  * Protocol bits
  * MPIDI_OFI_SYNC_SEND                 The bit to indicate a sync send
@@ -118,7 +120,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_NUM_AM_BUFFERS_PSM2            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_CONTEXT_BITS_PSM2              (16)
 #define MPIDI_OFI_SOURCE_BITS_PSM2               (0)
-#define MPIDI_OFI_TAG_BITS_PSM2                  (31)
+#define MPIDI_OFI_EP_BITS_PSM2                   (6)
+#define MPIDI_OFI_TAG_BITS_PSM2                  (25)
 #define MPIDI_OFI_MAJOR_VERSION_PSM2             1
 #define MPIDI_OFI_MINOR_VERSION_PSM2             6
 
@@ -145,9 +148,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK              (0x0000FFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM2 does support immediate data
                                                                          * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_EP_MASK                   (0x000000007E000000ULL)
+#define MPIDI_OFI_TAG_MASK                  (0x0000000001FFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
+#define MPIDI_OFI_EP_BITS                   MPIDI_OFI_EP_BITS_PSM2
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0001000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0002000000000000ULL)
@@ -179,7 +184,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (16)
 #define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
-#define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
+#define MPIDI_OFI_EP_BITS_SOCKETS                   (6)
+#define MPIDI_OFI_TAG_BITS_SOCKETS                  (25)
 #define MPIDI_OFI_MAJOR_VERSION_SOCKETS             1
 #define MPIDI_OFI_MINOR_VERSION_SOCKETS             5
 
@@ -206,9 +212,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK              (0x0000FFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* Sockets does support immediate data
                                                                          * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_EP_MASK                   (0x000000007E000000ULL)
+#define MPIDI_OFI_TAG_MASK                  (0x0000000001FFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_SOCKETS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_SOCKETS
+#define MPIDI_OFI_EP_BITS                   MPIDI_OFI_EP_BITS_SOCKETS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_SOCKETS
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0001000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0002000000000000ULL)
@@ -240,7 +248,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_NUM_AM_BUFFERS_BGQ            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_CONTEXT_BITS_BGQ              (16)
 #define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
-#define MPIDI_OFI_TAG_BITS_BGQ                  (31)
+#define MPIDI_OFI_EP_BITS_BGQ                   (6)
+#define MPIDI_OFI_TAG_BITS_BGQ                  (25)
 #define MPIDI_OFI_MAJOR_VERSION_BGQ             1
 #define MPIDI_OFI_MINOR_VERSION_BGQ             5
 
@@ -267,9 +276,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK              (0x0000FFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* BGQ does support immediate data
                                                                          * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_EP_MASK                   (0x000000007E000000ULL)
+#define MPIDI_OFI_TAG_MASK                  (0x0000000001FFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_BGQ
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_BGQ
+#define MPIDI_OFI_EP_BITS                   MPIDI_OFI_EP_BITS_BGQ
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_BGQ
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0001000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0002000000000000ULL)
@@ -301,7 +312,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_NUM_AM_BUFFERS_RXM               MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_CONTEXT_BITS_RXM                 (16)
 #define MPIDI_OFI_SOURCE_BITS_RXM                  (0)
-#define MPIDI_OFI_TAG_BITS_RXM                     (31)
+#define MPIDI_OFI_EP_BITS_RXM                      (6)
+#define MPIDI_OFI_TAG_BITS_RXM                     (25)
 #define MPIDI_OFI_MAJOR_VERSION_RXM                 1
 #define MPIDI_OFI_MINOR_VERSION_RXM                 6
 
@@ -328,9 +340,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK                  (0x0000FFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK                   (0x0000000000000000ULL) /* RxM does support immediate data
                                                                          * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                      (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_EP_MASK                       (0x000000007E000000ULL)
+#define MPIDI_OFI_TAG_MASK                      (0x0000000001FFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS                  MPIDI_OFI_CONTEXT_BITS_RXM
 #define MPIDI_OFI_SOURCE_BITS                   MPIDI_OFI_SOURCE_BITS_RXM
+#define MPIDI_OFI_EP_BITS                       MPIDI_OFI_EP_BITS_RXM
 #define MPIDI_OFI_TAG_BITS                      MPIDI_OFI_TAG_BITS_RXM
 #define MPIDI_OFI_SYNC_SEND_ACK                 (0x0001000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                     (0x0002000000000000ULL)
@@ -362,7 +376,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK_DEFAULT              (0x0000FFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
                                                                                  * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK_DEFAULT                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_EP_MASK_DEFAULT                   (0x000000007E000000ULL)
+#define MPIDI_OFI_TAG_MASK_DEFAULT                  (0x0000000001FFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_DEFAULT              (16)
 #define MPIDI_OFI_SOURCE_BITS_DEFAULT               (0)
 #define MPIDI_OFI_TAG_BITS_DEFAULT                  (31)
@@ -393,10 +408,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_MASK_MINIMAL              (0x0FFFF00000000000ULL)
 #define MPIDI_OFI_SOURCE_MASK_MINIMAL               (0x00000FFFFFF00000ULL)     /* assume that provider does not support immediate data
                                                                                  * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_MINIMAL                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_EP_MASK_MINIMAL                   (0x00000000000F0000ULL)
+#define MPIDI_OFI_TAG_MASK_MINIMAL                  (0x000000000000FFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_MINIMAL              (16)
 #define MPIDI_OFI_SOURCE_BITS_MINIMAL               (24)
-#define MPIDI_OFI_TAG_BITS_MINIMAL                  (20)
+#define MPIDI_OFI_EP_BITS_MINIMAL                  (4)
+#define MPIDI_OFI_TAG_BITS_MINIMAL                  (16)
 #define MPIDI_OFI_SYNC_SEND_MINIMAL                 (0x1000000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND_ACK_MINIMAL             (0x2000000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND_MINIMAL              (0x4000000000000000ULL)
@@ -424,6 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_Global.settings.num_am_buffers
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_Global.settings.context_bits
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_Global.settings.source_bits
+#define MPIDI_OFI_EP_BITS                   MPIDI_Global.settings.ep_bits
 #define MPIDI_OFI_TAG_BITS                  MPIDI_Global.settings.tag_bits
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_Global.settings.major_version
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_Global.settings.minor_version

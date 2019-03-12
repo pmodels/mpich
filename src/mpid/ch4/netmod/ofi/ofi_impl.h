@@ -430,10 +430,13 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+                                                         int source, int ep, int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
+
+    match_bits = (match_bits << MPIDI_OFI_EP_BITS);
+    match_bits |= (MPIDI_OFI_EP_MASK & ep);
 
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
@@ -443,11 +446,14 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
                                                          MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+                                                         int source, int ep, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
     match_bits = contextid;
+
+    match_bits = (match_bits << MPIDI_OFI_EP_BITS);
+    match_bits |= (MPIDI_OFI_EP_MASK & ep);
 
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
 
@@ -577,7 +583,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
-        match_bits = MPIDI_OFI_init_sendtag(context_id, rank, 1, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(context_id, rank, MPIDI_CH4_COMM_REGULAR, 1, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
         /* we need to get this connection from the sockname     */

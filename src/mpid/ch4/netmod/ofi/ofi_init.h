@@ -185,6 +185,18 @@ cvars:
         rank. The default value is -1, indicating that no value is set and that
         the default will be defined in the ofi_types.h file.
 
+    - name        : MPIR_CVAR_CH4_OFI_EP_BITS
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of bits that will be used for matching endpoints.
+        The default value is -1, indicating that no value is set and that
+        the default will be defined in the ofi_types.h file.
+
     - name        : MPIR_CVAR_CH4_OFI_TAG_BITS
       category    : CH4_OFI
       type        : int
@@ -196,6 +208,7 @@ cvars:
         Specifies the number of bits that will be used for matching the user
         tag. The default value is -1, indicating that no value is set and that
         the default will be defined in the ofi_types.h file.
+
 
     - name        : MPIR_CVAR_CH4_OFI_MAJOR_VERSION
       category    : CH4_OFI
@@ -344,7 +357,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
 
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, MPI_ANY_SOURCE, 1);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, MPIDI_CH4_COMM_REGULAR, MPI_ANY_SOURCE, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (max_n_conn > 0) {
@@ -1471,6 +1484,11 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         -1 ? MPIR_CVAR_CH4_OFI_RANK_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].source_bits :
         MPIR_CVAR_CH4_OFI_RANK_BITS;
+    MPIDI_Global.settings.ep_bits =
+        MPIR_CVAR_CH4_OFI_EP_BITS !=
+        -1 ? MPIR_CVAR_CH4_OFI_EP_BITS : prov_name ?
+        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].ep_bits :
+        MPIR_CVAR_CH4_OFI_EP_BITS;
     MPIDI_Global.settings.tag_bits =
         MPIR_CVAR_CH4_OFI_TAG_BITS !=
         -1 ? MPIR_CVAR_CH4_OFI_TAG_BITS : prov_name ?
