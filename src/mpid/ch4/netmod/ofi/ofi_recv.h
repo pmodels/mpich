@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t max_pipe = INT64_MAX;
-    size_t omax = MPIDI_Global.rx_iov_limit;
+    size_t omax = MPIDI_OFI_global.rx_iov_limit;
     size_t countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), max_pipe);
     size_t o_size = sizeof(struct iovec);
     unsigned map_size;
@@ -88,10 +88,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
      * and calculate the total number of iovecs */
     for (j = 0; j < num_contig; j++) {
-        if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
+        if (originv[j].iov_len > MPIDI_OFI_global.max_msg_size) {
             huge = 1;
-            countp_huge += originv[j].iov_len / MPIDI_Global.max_msg_size;
-            if (originv[j].iov_len % MPIDI_Global.max_msg_size) {
+            countp_huge += originv[j].iov_len / MPIDI_OFI_global.max_msg_size;
+            if (originv[j].iov_len % MPIDI_OFI_global.max_msg_size) {
                 countp_huge++;
             }
         } else {
@@ -110,11 +110,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
         MPIR_Assert(originv_huge != NULL);
         for (j = 0; j < num_contig; j++) {
             l = 0;
-            if (originv[j].iov_len > MPIDI_Global.max_msg_size) {
+            if (originv[j].iov_len > MPIDI_OFI_global.max_msg_size) {
                 while (l < originv[j].iov_len) {
                     length = originv[j].iov_len - l;
-                    if (length > MPIDI_Global.max_msg_size)
-                        length = MPIDI_Global.max_msg_size;
+                    if (length > MPIDI_OFI_global.max_msg_size)
+                        length = MPIDI_OFI_global.max_msg_size;
                     originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                     originv_huge[k].iov_len = length;
                     k++;
@@ -157,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     msg.data = 0;
     msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr);
 
-    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
+    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[0].rx, &msg, flags), trecv,
                          MPIDI_OFI_CALL_LOCK, FALSE);
 
   fn_exit:
@@ -222,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_msg_size) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, addr,
                                    rreq, dt_ptr, flags);
@@ -253,14 +253,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
 
-    if (unlikely(data_sz > MPIDI_Global.max_msg_size)) {
+    if (unlikely(data_sz > MPIDI_OFI_global.max_msg_size)) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        data_sz = MPIDI_Global.max_msg_size;
+        data_sz = MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
@@ -283,7 +283,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[0].rx, &msg, flags), trecv,
                              MPIDI_OFI_CALL_LOCK, FALSE);
     }
 
@@ -433,7 +433,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     }
 #endif
 
-    ret = fi_cancel((fid_t) MPIDI_Global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
+    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
 
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
