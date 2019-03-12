@@ -43,7 +43,7 @@ typedef struct MPIDI_UCX_win_info {
     ucp_rkey_h rkey;
     uint64_t addr;
     uint32_t disp;
-} __attribute__ ((packed)) MPIDI_UCX_win_info_t;
+} MPIDI_UCX_win_info_t;
 
 typedef enum {
     MPIDI_UCX_WIN_SYNC_UNSET = 0,
