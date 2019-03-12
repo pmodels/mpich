@@ -580,9 +580,9 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
 
     while (tcount > donecount) {
         MPIR_Assert(donecount <= tcount);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDI_OFI_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
         itercount++;
 

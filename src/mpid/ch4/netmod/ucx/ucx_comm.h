@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         size_t *bc_indices;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
-        MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], MPIDI_UCX_global.if_address,
+        MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
                            (int) MPIDI_UCX_global.addrname_len, FALSE,
                            (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
 

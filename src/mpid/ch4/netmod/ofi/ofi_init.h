@@ -797,7 +797,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                   &MPIDI_OFI_global.addrnamelen), getname);
         MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
-        mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
+        mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                           &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
                                           TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
         if (mpi_errno)
@@ -809,8 +809,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
             int *node_roots, num_nodes;
 
-            MPIR_NODEMAP_get_node_roots(MPIDI_CH4_Global.node_map[0], size, &node_roots,
-                                        &num_nodes);
+            MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
                            (MPIDI_OFI_global.av, table, num_nodes, mapped_table, 0ULL, NULL),
