@@ -15,7 +15,7 @@
 #include <mpidimpl.h>
 #include "ch4_impl.h"
 
-MPIDI_CH4_Global_t MPIDI_CH4_Global;
+MPIDI_CH4_Global_t MPIDI_global;
 MPIDI_av_table_t **MPIDI_av_table;
 MPIDI_av_table_t *MPIDI_av_table0;
 
@@ -69,9 +69,9 @@ pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #ifdef HAVE_SIGNAL
 void MPIDI_sigusr1_handler(int sig)
 {
-    MPIDI_CH4_Global.sigusr1_count++;
-    if (MPIDI_CH4_Global.prev_sighandler)
-        MPIDI_CH4_Global.prev_sighandler(sig);
+    MPIDI_global.sigusr1_count++;
+    if (MPIDI_global.prev_sighandler)
+        MPIDI_global.prev_sighandler(sig);
 }
 #endif
 
@@ -140,7 +140,7 @@ int MPIDI_check_for_failed_procs(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     int len;
-    char *kvsname = MPIDI_CH4_Global.jobid;
+    char *kvsname = MPIDI_global.jobid;
     char *failed_procs_string = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
