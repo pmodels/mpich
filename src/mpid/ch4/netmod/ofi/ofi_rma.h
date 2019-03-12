@@ -122,19 +122,19 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     MPIR_Assert(op_index >= 0);
     MPIR_Assert(op_index < MPIDI_OFI_OP_SIZES);
 
-    *fi_dt = (enum fi_datatype) MPIDI_Global.win_op_table[dt_index][op_index].dt;
-    *fi_op = (enum fi_op) MPIDI_Global.win_op_table[dt_index][op_index].op;
-    *dtsize = MPIDI_Global.win_op_table[dt_index][op_index].dtsize;
+    *fi_dt = (enum fi_datatype) MPIDI_OFI_global.win_op_table[dt_index][op_index].dt;
+    *fi_op = (enum fi_op) MPIDI_OFI_global.win_op_table[dt_index][op_index].op;
+    *dtsize = MPIDI_OFI_global.win_op_table[dt_index][op_index].dtsize;
 
     switch (query_type) {
         case MPIDI_OFI_QUERY_ATOMIC_COUNT:
-            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_atomic_count;
+            *count = MPIDI_OFI_global.win_op_table[dt_index][op_index].max_atomic_count;
             break;
         case MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT:
-            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_fetch_atomic_count;
+            *count = MPIDI_OFI_global.win_op_table[dt_index][op_index].max_fetch_atomic_count;
             break;
         case MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT:
-            *count = MPIDI_Global.win_op_table[dt_index][op_index].max_compare_atomic_count;
+            *count = MPIDI_OFI_global.win_op_table[dt_index][op_index].max_compare_atomic_count;
             break;
         default:
             MPIR_Assert(*count == MPIDI_OFI_QUERY_ATOMIC_COUNT ||
@@ -407,7 +407,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
-    if (origin_contig && target_contig && (origin_bytes <= MPIDI_Global.max_buffered_write)) {
+    if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
                               fi_inject_write(MPIDI_OFI_WIN(win).ep,
                                               (char *) origin_addr + origin_true_lb, target_bytes,
@@ -446,7 +446,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                   target_rank,
                                                                   origin_datatype,
                                                                   target_datatype,
-                                                                  MPIDI_Global.max_msg_size,
+                                                                  MPIDI_OFI_global.max_msg_size,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -463,15 +463,15 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             MPIDI_Global.max_msg_size, origin_datatype, target_datatype);
+                             MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.put_get.originv[cur_o];
         targetv = &req->noncontig->iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.rma_iov_limit;
-        tmax = MPIDI_Global.rma_iov_limit;
+        omax = MPIDI_OFI_global.rma_iov_limit;
+        tmax = MPIDI_OFI_global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, originv, omax, targetv, tmax, &oout, &tout);
 
         if (rc == MPIDI_OFI_SEG_DONE)
@@ -619,7 +619,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count,
                                                                   target_rank,
                                                                   origin_datatype, target_datatype,
-                                                                  MPIDI_Global.max_msg_size,
+                                                                  MPIDI_OFI_global.max_msg_size,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -635,15 +635,15 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             MPIDI_Global.max_msg_size, origin_datatype, target_datatype);
+                             MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.put_get.originv[cur_o];
         targetv = &req->noncontig->iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.rma_iov_limit;
-        tmax = MPIDI_Global.rma_iov_limit;
+        omax = MPIDI_OFI_global.rma_iov_limit;
+        tmax = MPIDI_OFI_global.rma_iov_limit;
 
         rc = MPIDI_OFI_merge_segment(&p, originv, omax, targetv, tmax, &oout, &tout);
 
@@ -911,7 +911,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (max_count == 0)
         goto am_fallback;
     max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
-    max_size = MPL_MIN(max_size, MPIDI_Global.max_msg_size);
+    max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
     /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
@@ -946,8 +946,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.accumulate.originv[cur_o];
         targetv = &req->noncontig->iov.accumulate.targetv[cur_t];
-        omax = MPIDI_Global.rma_iov_limit;
-        tmax = MPIDI_Global.rma_iov_limit;
+        omax = MPIDI_OFI_global.rma_iov_limit;
+        tmax = MPIDI_OFI_global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, (struct iovec *) originv, omax,
                                      (struct fi_rma_iov *) targetv, tmax, &oout, &tout);
 
@@ -1053,7 +1053,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         goto am_fallback;
 
     max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
-    max_size = MPL_MIN(max_size, MPIDI_Global.max_msg_size);
+    max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
     /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
@@ -1104,10 +1104,10 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         resultv = &req->noncontig->iov.get_accumulate.resultv[cur_r];
         omax = rmax =
             MPIDI_OFI_FETCH_ATOMIC_IOVECS <
-            0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
+            0 ? MPIDI_OFI_global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
         tmax =
             MPIDI_OFI_FETCH_ATOMIC_IOVECS <
-            0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
+            0 ? MPIDI_OFI_global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
 
         if (op != MPI_NO_OP)
             rc = MPIDI_OFI_merge_segment2(&p, (struct iovec *) originv,

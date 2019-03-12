@@ -300,27 +300,27 @@ static inline int MPIDI_OFI_conn_manager_init()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
 
-    MPIDI_Global.conn_mgr.mmapped_size = 8 * 4 * 1024;
-    MPIDI_Global.conn_mgr.max_n_conn = 1;
-    MPIDI_Global.conn_mgr.next_conn_id = 0;
-    MPIDI_Global.conn_mgr.n_conn = 0;
+    MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
+    MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
+    MPIDI_OFI_global.conn_mgr.next_conn_id = 0;
+    MPIDI_OFI_global.conn_mgr.n_conn = 0;
 
-    MPIDI_Global.conn_mgr.conn_list =
-        (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_Global.conn_mgr.mmapped_size,
+    MPIDI_OFI_global.conn_mgr.conn_list =
+        (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_OFI_global.conn_mgr.mmapped_size,
                                       PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0,
                                       MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.conn_list == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
-                        goto fn_fail, "**nomem");
-
-    MPIDI_Global.conn_mgr.free_conn_id =
-        (int *) MPL_malloc(MPIDI_Global.conn_mgr.max_n_conn * sizeof(int), MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.free_conn_id == NULL, mpi_errno,
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    for (i = 0; i < MPIDI_Global.conn_mgr.max_n_conn; ++i) {
-        MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
+    MPIDI_OFI_global.conn_mgr.free_conn_id =
+        (int *) MPL_malloc(MPIDI_OFI_global.conn_mgr.max_n_conn * sizeof(int), MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.free_conn_id == NULL, mpi_errno,
+                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+
+    for (i = 0; i < MPIDI_OFI_global.conn_mgr.max_n_conn; ++i) {
+        MPIDI_OFI_global.conn_mgr.free_conn_id[i] = i + 1;
     }
-    MPIDI_Global.conn_mgr.free_conn_id[MPIDI_Global.conn_mgr.max_n_conn - 1] = -1;
+    MPIDI_OFI_global.conn_mgr.free_conn_id[MPIDI_OFI_global.conn_mgr.max_n_conn - 1] = -1;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
@@ -334,7 +334,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
     int mpi_errno = MPI_SUCCESS, i, j;
     MPIDI_OFI_dynamic_process_request_t *req;
     fi_addr_t *conn;
-    int max_n_conn = MPIDI_Global.conn_mgr.max_n_conn;
+    int max_n_conn = MPIDI_OFI_global.conn_mgr.max_n_conn;
     int *close_msg;
     uint64_t match_bits = 0;
     uint64_t mask_bits = 0;
@@ -359,7 +359,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
 
         j = 0;
         for (i = 0; i < max_n_conn; ++i) {
-            switch (MPIDI_Global.conn_mgr.conn_list[i].state) {
+            switch (MPIDI_OFI_global.conn_mgr.conn_list[i].state) {
                 case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
                     MPIDI_OFI_dynproc_send_disconnect(i);
                     break;
@@ -367,10 +367,10 @@ static inline int MPIDI_OFI_conn_manager_destroy()
                 case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
                     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                     (MPL_DBG_FDEST, "Wait for close of conn_id=%d", i));
-                    conn[j] = MPIDI_Global.conn_mgr.conn_list[i].dest;
+                    conn[j] = MPIDI_OFI_global.conn_mgr.conn_list[i].dest;
                     req[j].done = 0;
                     req[j].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-                    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
+                    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
                                                   &close_msg[j],
                                                   sizeof(int),
                                                   NULL,
@@ -387,7 +387,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
 
         for (i = 0; i < j; ++i) {
             MPIDI_OFI_PROGRESS_WHILE(!req[i].done);
-            MPIDI_Global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+            MPIDI_OFI_global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "conn_id=%d closed", i));
         }
@@ -395,9 +395,9 @@ static inline int MPIDI_OFI_conn_manager_destroy()
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPL_munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size,
+    MPL_munmap((void *) MPIDI_OFI_global.conn_mgr.conn_list, MPIDI_OFI_global.conn_mgr.mmapped_size,
                MPL_MEM_ADDRESS);
-    MPL_free(MPIDI_Global.conn_mgr.free_conn_id);
+    MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
@@ -565,37 +565,37 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* ------------------------------------------------------------------------ */
         /* Set global attributes attributes based on the provider choice            */
         /* ------------------------------------------------------------------------ */
-        MPIDI_Global.settings.enable_av_table = MPIDI_Global.settings.enable_av_table &&
+        MPIDI_OFI_global.settings.enable_av_table = MPIDI_OFI_global.settings.enable_av_table &&
             prov_use->domain_attr->av_type == FI_AV_TABLE;
-        MPIDI_Global.settings.enable_scalable_endpoints =
-            MPIDI_Global.settings.enable_scalable_endpoints &&
+        MPIDI_OFI_global.settings.enable_scalable_endpoints =
+            MPIDI_OFI_global.settings.enable_scalable_endpoints &&
             prov_use->domain_attr->max_ep_tx_ctx > 1;
-        MPIDI_Global.settings.enable_mr_scalable =
-            MPIDI_Global.settings.enable_mr_scalable &&
+        MPIDI_OFI_global.settings.enable_mr_scalable =
+            MPIDI_OFI_global.settings.enable_mr_scalable &&
             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
-        MPIDI_Global.settings.enable_tagged = MPIDI_Global.settings.enable_tagged &&
+        MPIDI_OFI_global.settings.enable_tagged = MPIDI_OFI_global.settings.enable_tagged &&
             (prov_use->caps & FI_TAGGED) && (prov_use->caps & FI_DIRECTED_RECV) &&
             (prov_use->domain_attr->cq_data_size >= 4);
-        MPIDI_Global.settings.enable_am = MPIDI_Global.settings.enable_am &&
+        MPIDI_OFI_global.settings.enable_am = MPIDI_OFI_global.settings.enable_am &&
             (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
             (FI_MSG | FI_MULTI_RECV | FI_READ);
-        MPIDI_Global.settings.enable_rma = MPIDI_Global.settings.enable_rma &&
+        MPIDI_OFI_global.settings.enable_rma = MPIDI_OFI_global.settings.enable_rma &&
             prov_use->caps & FI_RMA;
-        MPIDI_Global.settings.enable_atomics = MPIDI_Global.settings.enable_atomics &&
+        MPIDI_OFI_global.settings.enable_atomics = MPIDI_OFI_global.settings.enable_atomics &&
             prov_use->caps & FI_ATOMICS;
-        MPIDI_Global.settings.enable_data_auto_progress =
-            MPIDI_Global.settings.enable_data_auto_progress &&
+        MPIDI_OFI_global.settings.enable_data_auto_progress =
+            MPIDI_OFI_global.settings.enable_data_auto_progress &&
             hints->domain_attr->data_progress & FI_PROGRESS_AUTO;
-        MPIDI_Global.settings.enable_control_auto_progress =
-            MPIDI_Global.settings.enable_control_auto_progress &&
+        MPIDI_OFI_global.settings.enable_control_auto_progress =
+            MPIDI_OFI_global.settings.enable_control_auto_progress &&
             hints->domain_attr->control_progress & FI_PROGRESS_AUTO;
 
-        if (MPIDI_Global.settings.enable_scalable_endpoints) {
-            MPIDI_Global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
-            MPIDI_Global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+        if (MPIDI_OFI_global.settings.enable_scalable_endpoints) {
+            MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
+            MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
         } else {
-            MPIDI_Global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
-            MPIDI_Global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
+            MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
+            MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
         }
     }
 
@@ -604,19 +604,19 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_Global.prov_use = fi_dupinfo(prov_use);
-    MPIR_Assert(MPIDI_Global.prov_use);
+    MPIDI_OFI_global.prov_use = fi_dupinfo(prov_use);
+    MPIR_Assert(MPIDI_OFI_global.prov_use);
 
-    MPIDI_Global.max_buffered_send = prov_use->tx_attr->inject_size;
-    MPIDI_Global.max_buffered_write = prov_use->tx_attr->inject_size;
-    MPIDI_Global.max_msg_size = prov_use->ep_attr->max_msg_size;
-    MPIDI_Global.max_order_raw = prov_use->ep_attr->max_order_raw_size;
-    MPIDI_Global.max_order_war = prov_use->ep_attr->max_order_war_size;
-    MPIDI_Global.max_order_waw = prov_use->ep_attr->max_order_waw_size;
-    MPIDI_Global.tx_iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_Global.rx_iov_limit = MIN(prov_use->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_Global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_Global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
+    MPIDI_OFI_global.max_buffered_send = prov_use->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_write = prov_use->tx_attr->inject_size;
+    MPIDI_OFI_global.max_msg_size = prov_use->ep_attr->max_msg_size;
+    MPIDI_OFI_global.max_order_raw = prov_use->ep_attr->max_order_raw_size;
+    MPIDI_OFI_global.max_order_war = prov_use->ep_attr->max_order_war_size;
+    MPIDI_OFI_global.max_order_waw = prov_use->ep_attr->max_order_waw_size;
+    MPIDI_OFI_global.tx_iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MIN(prov_use->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
 
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
@@ -625,14 +625,14 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* provider".   We choose the first available fabric, but getinfo           */
     /* returns a list.                                                          */
     /* ------------------------------------------------------------------------ */
-    MPIDI_OFI_CALL(fi_fabric(prov_use->fabric_attr, &MPIDI_Global.fabric, NULL), fabric);
+    MPIDI_OFI_CALL(fi_fabric(prov_use->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
 
     /* ------------------------------------------------------------------------ */
     /* Create the access domain, which is the physical or virtual network or    */
     /* hardware port/collection of ports.  Returns a domain object that can be  */
     /* used to create endpoints.                                                */
     /* ------------------------------------------------------------------------ */
-    MPIDI_OFI_CALL(fi_domain(MPIDI_Global.fabric, prov_use, &MPIDI_Global.domain, NULL),
+    MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, prov_use, &MPIDI_OFI_global.domain, NULL),
                    opendomain);
 
     /* ------------------------------------------------------------------------ */
@@ -649,9 +649,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
     memset(&cq_attr, 0, sizeof(cq_attr));
     cq_attr.format = FI_CQ_FORMAT_TAGGED;
-    MPIDI_OFI_CALL(fi_cq_open(MPIDI_Global.domain,      /* In:  Domain Object                */
+    MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_global.domain,  /* In:  Domain Object                */
                               &cq_attr, /* In:  Configuration object         */
-                              &MPIDI_Global.p2p_cq,     /* Out: CQ Object                    */
+                              &MPIDI_OFI_global.p2p_cq, /* Out: CQ Object                    */
                               NULL), opencq);   /* In:  Context for cq events        */
 
     /* ------------------------------------------------------------------------ */
@@ -660,9 +660,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     memset(&cntr_attr, 0, sizeof(cntr_attr));
     cntr_attr.events = FI_CNTR_EVENTS_COMP;
     cntr_attr.wait_obj = FI_WAIT_UNSPEC;
-    MPIDI_OFI_CALL(fi_cntr_open(MPIDI_Global.domain,    /* In:  Domain Object        */
+    MPIDI_OFI_CALL(fi_cntr_open(MPIDI_OFI_global.domain,        /* In:  Domain Object        */
                                 &cntr_attr,     /* In:  Configuration object */
-                                &MPIDI_Global.rma_cmpl_cntr,    /* Out: Counter Object       */
+                                &MPIDI_OFI_global.rma_cmpl_cntr,        /* Out: Counter Object       */
                                 NULL), openct); /* Context: counter events   */
 
     /* ------------------------------------------------------------------------ */
@@ -693,9 +693,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     av_attr.map_addr = 0;
 
     unsigned do_av_insert = 1;
-    if (0 == fi_av_open(MPIDI_Global.domain,    /* In:  Domain Object         */
+    if (0 == fi_av_open(MPIDI_OFI_global.domain,        /* In:  Domain Object         */
                         &av_attr,       /* In:  Configuration object  */
-                        &MPIDI_Global.av,       /* Out: AV Object             */
+                        &MPIDI_OFI_global.av,   /* Out: AV Object             */
                         NULL)) {        /* Context: AV events         */
         do_av_insert = 0;
 
@@ -720,9 +720,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     } else {
         av_attr.name = NULL;
         av_attr.flags = 0;
-        MPIDI_OFI_CALL(fi_av_open(MPIDI_Global.domain,  /* In:  Domain Object    */
+        MPIDI_OFI_CALL(fi_av_open(MPIDI_OFI_global.domain,      /* In:  Domain Object    */
                                   &av_attr,     /* In:  Configuration object */
-                                  &MPIDI_Global.av,     /* Out: AV Object            */
+                                  &MPIDI_OFI_global.av, /* Out: AV Object            */
                                   NULL), avopen);       /* Context: AV events        */
     }
 
@@ -738,14 +738,15 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
         tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
-        MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
+        MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_OFI_global.domain,
                                              &tx_attr,
-                                             &MPIDI_Global.rma_stx_ctx, NULL /* context */), ret);
+                                             &MPIDI_OFI_global.rma_stx_ctx, NULL /* context */),
+                              ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to create shared TX context for RMA, "
                         "falling back to global EP/counter scheme");
-            MPIDI_Global.rma_stx_ctx = NULL;
+            MPIDI_OFI_global.rma_stx_ctx = NULL;
         }
     }
 
@@ -756,13 +757,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* completion queues, etc.                                                  */
     /* ------------------------------------------------------------------------ */
 
-    MPIDI_Global.max_ch4_vcis = 1;
+    MPIDI_OFI_global.max_ch4_vcis = 1;
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
                                   prov_use->domain_attr->rx_ctx_cnt);
         if (MPIR_CVAR_CH4_OFI_MAX_VCIS > 0)
-            MPIDI_Global.max_ch4_vcis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VCIS, max_by_prov);
-        if (MPIDI_Global.max_ch4_vcis < 1) {
+            MPIDI_OFI_global.max_ch4_vcis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VCIS, max_by_prov);
+        if (MPIDI_OFI_global.max_ch4_vcis < 1) {
             MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
                                       MPI_ERR_OTHER,
                                       "**ofid_ep",
@@ -771,33 +772,34 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */
-        prov_use->ep_attr->tx_ctx_cnt = MPIDI_Global.max_ch4_vcis;
-        prov_use->ep_attr->rx_ctx_cnt = MPIDI_Global.max_ch4_vcis;
+        prov_use->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
+        prov_use->ep_attr->rx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
     }
 
-    for (i = 0; i < MPIDI_Global.max_ch4_vcis; i++) {
+    for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
-                                                         MPIDI_Global.domain,
-                                                         MPIDI_Global.p2p_cq,
-                                                         MPIDI_Global.rma_cmpl_cntr,
-                                                         MPIDI_Global.av, &MPIDI_Global.ep, i));
+                                                         MPIDI_OFI_global.domain,
+                                                         MPIDI_OFI_global.p2p_cq,
+                                                         MPIDI_OFI_global.rma_cmpl_cntr,
+                                                         MPIDI_OFI_global.av, &MPIDI_OFI_global.ep,
+                                                         i));
     }
 
-    *n_vcis_provided = MPIDI_Global.max_ch4_vcis;
+    *n_vcis_provided = MPIDI_OFI_global.max_ch4_vcis;
 
     if (do_av_insert) {
         /* ---------------------------------- */
         /* Get our endpoint name and publish  */
         /* the socket to the KVS              */
         /* ---------------------------------- */
-        MPIDI_Global.addrnamelen = FI_NAME_MAX;
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
-                                  &MPIDI_Global.addrnamelen), getname);
-        MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
+        MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ep, MPIDI_OFI_global.addrname,
+                                  &MPIDI_OFI_global.addrnamelen), getname);
+        MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
-                                          &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, TRUE,
-                                          MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
+                                          &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                                          TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -811,7 +813,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                         &num_nodes);
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
-                           (MPIDI_Global.av, table, num_nodes, mapped_table, 0ULL, NULL), avmap);
+                           (MPIDI_OFI_global.av, table, num_nodes, mapped_table, 0ULL, NULL),
+                           avmap);
 
             for (i = 0; i < num_nodes; i++) {
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
@@ -827,7 +830,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPL_free(node_roots);
         } else {
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL),
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, size, mapped_table, 0ULL, NULL),
                            avmap);
 
             for (i = 0; i < size; i++) {
@@ -848,7 +851,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
-    MPIDIU_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -860,33 +863,34 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
-        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_msg_size);
-        MPIDI_Global.am_buf_pool =
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
+        MPIDI_OFI_global.am_buf_pool =
             MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
 
-        MPIDI_Global.cq_buffered_dynamic_head = MPIDI_Global.cq_buffered_dynamic_tail = NULL;
-        MPIDI_Global.cq_buffered_static_head = MPIDI_Global.cq_buffered_static_tail = 0;
+        MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
+            NULL;
+        MPIDI_OFI_global.cq_buffered_static_head = MPIDI_OFI_global.cq_buffered_static_tail = 0;
         optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
-        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_Global.ctx[0].rx->fid),
+        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[0].rx->fid),
                                  FI_OPT_ENDPOINT,
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIDI_Global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
-            MPIDI_Global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
-            MPIDI_Global.am_reqs[i].index = i;
-            MPIR_Assert(MPIDI_Global.am_bufs[i]);
-            MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_Global.am_iov[i]);
-            MPIDI_Global.am_iov[i].iov_base = MPIDI_Global.am_bufs[i];
-            MPIDI_Global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
-            MPIDI_Global.am_msg[i].msg_iov = &MPIDI_Global.am_iov[i];
-            MPIDI_Global.am_msg[i].desc = NULL;
-            MPIDI_Global.am_msg[i].addr = FI_ADDR_UNSPEC;
-            MPIDI_Global.am_msg[i].context = &MPIDI_Global.am_reqs[i].context;
-            MPIDI_Global.am_msg[i].iov_count = 1;
-            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_Global.ctx[0].rx,
-                                            &MPIDI_Global.am_msg[i],
+            MPIDI_OFI_global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
+            MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
+            MPIDI_OFI_global.am_reqs[i].index = i;
+            MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
+            MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_OFI_global.am_iov[i]);
+            MPIDI_OFI_global.am_iov[i].iov_base = MPIDI_OFI_global.am_bufs[i];
+            MPIDI_OFI_global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
+            MPIDI_OFI_global.am_msg[i].msg_iov = &MPIDI_OFI_global.am_iov[i];
+            MPIDI_OFI_global.am_msg[i].desc = NULL;
+            MPIDI_OFI_global.am_msg[i].addr = FI_ADDR_UNSPEC;
+            MPIDI_OFI_global.am_msg[i].context = &MPIDI_OFI_global.am_reqs[i].context;
+            MPIDI_OFI_global.am_msg[i].iov_count = 1;
+            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
+                                            &MPIDI_OFI_global.am_msg[i],
                                             FI_MULTI_RECV | FI_COMPLETION), prepost,
                                  MPIDI_OFI_CALL_LOCK, FALSE);
         }
@@ -896,8 +900,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_control_handler;
         MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
     }
-    OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
-    OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
+    OPA_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
+    OPA_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -908,7 +912,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_OFI_conn_manager_init();
     if (spawned) {
         char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname,
+        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_OFI_global.kvsname,
                                            MPIDI_PARENT_PORT_KVSKEY,
                                            parent_port, MPIDI_MAX_KVS_VALUE_LEN), pmi);
         MPIDI_OFI_MPI_CALL_POP(MPID_Comm_connect
@@ -960,47 +964,48 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIDI_OFI_conn_manager_destroy();
 
     /* Progress until we drain all inflight RMA send long buffers */
-    while (OPA_load_int(&MPIDI_Global.am_inflight_rma_send_mrs) > 0)
+    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
         MPIDI_OFI_PROGRESS();
 
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
     /* Barrier over allreduce, but force non-immediate send */
-    MPIDI_Global.max_buffered_send = 0;
+    MPIDI_OFI_global.max_buffered_send = 0;
     MPIDI_OFI_MPI_CALL_POP(MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT,
                                           MPI_SUM, MPIR_Process.comm_world, &errflag));
 
     /* Progress until we drain all inflight injection emulation requests */
-    while (OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) > 0)
+    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
         MPIDI_OFI_PROGRESS();
-    MPIR_Assert(OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) == 0);
+    MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        for (i = 0; i < MPIDI_Global.max_ch4_vcis; i++) {
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[i].tx), epclose);
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[i].rx), epclose);
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[i].cq), cqclose);
+        for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].tx), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].rx), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].cq), cqclose);
         }
     }
 
     /* Close RMA scalable EP. */
-    if (MPIDI_Global.rma_sep) {
+    if (MPIDI_OFI_global.rma_sep) {
         /* All transmit contexts on RMA must be closed. */
-        MPIR_Assert(utarray_len(MPIDI_Global.rma_sep_idx_array) == MPIDI_Global.max_rma_sep_tx_cnt);
-        utarray_free(MPIDI_Global.rma_sep_idx_array);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
+        MPIR_Assert(utarray_len(MPIDI_OFI_global.rma_sep_idx_array) ==
+                    MPIDI_OFI_global.max_rma_sep_tx_cnt);
+        utarray_free(MPIDI_OFI_global.rma_sep_idx_array);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_sep->fid), epclose);
     }
-    if (MPIDI_Global.rma_stx_ctx != NULL)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_stx_ctx->fid), stx_ctx_close);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.p2p_cq->fid), cqclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_cmpl_cntr->fid), cntrclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.domain->fid), domainclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.fabric->fid), fabricclose);
+    if (MPIDI_OFI_global.rma_stx_ctx != NULL)
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_stx_ctx->fid), stx_ctx_close);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.av->fid), avclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.p2p_cq->fid), cqclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_cmpl_cntr->fid), cntrclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.domain->fid), domainclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
-    fi_freeinfo(MPIDI_Global.prov_use);
+    fi_freeinfo(MPIDI_OFI_global.prov_use);
 
     /* --------------------------------------- */
     /* Free comm world addr table              */
@@ -1013,16 +1018,17 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
     MPIDIG_finalize();
 
-    MPIDIU_map_destroy(MPIDI_Global.win_map);
+    MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-            MPL_free(MPIDI_Global.am_bufs[i]);
+            MPL_free(MPIDI_OFI_global.am_bufs[i]);
 
-        MPIDIU_destroy_buf_pool(MPIDI_Global.am_buf_pool);
+        MPIDIU_destroy_buf_pool(MPIDI_OFI_global.am_buf_pool);
 
-        MPIR_Assert(MPIDI_Global.cq_buffered_static_head == MPIDI_Global.cq_buffered_static_tail);
-        MPIR_Assert(NULL == MPIDI_Global.cq_buffered_dynamic_head);
+        MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
+                    MPIDI_OFI_global.cq_buffered_static_tail);
+        MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
     }
 
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
@@ -1087,13 +1093,13 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
 
     MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
                         mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_Global.addrnamelen,
+    MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
                         mpi_errno, "temp_buf", MPL_MEM_BUFFER);
 
     for (i = 0; i < comm->local_size; i++) {
-        (*local_upid_size)[i] = MPIDI_Global.addrnamelen;
-        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
-                                    &temp_buf[i * MPIDI_Global.addrnamelen],
+        (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
+        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
+                                    &temp_buf[i * MPIDI_OFI_global.addrnamelen],
                                     &(*local_upid_size)[i]), avlookup);
         total_size += (*local_upid_size)[i];
     }
@@ -1102,7 +1108,7 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
                         mpi_errno, "local_upids", MPL_MEM_BUFFER);
     curr_ptr = (*local_upids);
     for (i = 0; i < comm->local_size; i++) {
-        memcpy(curr_ptr, &temp_buf[i * MPIDI_Global.addrnamelen], (*local_upid_size)[i]);
+        memcpy(curr_ptr, &temp_buf[i * MPIDI_OFI_global.addrnamelen], (*local_upid_size)[i]);
         curr_ptr += (*local_upid_size)[i];
     }
 
@@ -1141,8 +1147,8 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
                 continue;
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
-                sz = MPIDI_Global.addrnamelen;
-                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_TO_PHYS(k, j),
+                sz = MPIDI_OFI_global.addrnamelen;
+                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.av, MPIDI_OFI_TO_PHYS(k, j),
                                             &tbladdr, &sz), avlookup);
                 if (sz == remote_upid_size[i]
                     && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
@@ -1167,7 +1173,7 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
         MPIDI_OFI_MPI_CALL_POP(MPIDIU_new_avt(n_new_procs, &avtid));
 
         for (i = 0; i < n_new_procs; i++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[i],
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, new_upids[i],
                                         1,
                                         (fi_addr_t *) &
                                         MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
@@ -1231,8 +1237,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         memset(&cq_attr, 0, sizeof(cq_attr));
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
-        MPIDI_OFI_CALL(fi_cq_open(MPIDI_Global.domain,
-                                  &cq_attr, &MPIDI_Global.ctx[index].cq, NULL), opencq);
+        MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_global.domain,
+                                  &cq_attr, &MPIDI_OFI_global.ctx[index].cq, NULL), opencq);
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.op_flags = FI_COMPLETION;
@@ -1251,12 +1257,13 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         /* MSG */
         tx_attr.caps |= FI_MSG;
 
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_Global.ctx[index].tx, NULL), ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].tx,
-                                  &MPIDI_Global.ctx[index].cq->fid,
-                                  FI_SEND | FI_SELECTIVE_COMPLETION), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].tx, &rma_ctr->fid, FI_WRITE | FI_READ),
-                       bind);
+        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_OFI_global.ctx[index].tx, NULL),
+                       ep);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_OFI_global.ctx[index].tx, &MPIDI_OFI_global.ctx[index].cq->fid,
+                        FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_OFI_global.ctx[index].tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
@@ -1273,15 +1280,16 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
 
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_Global.ctx[index].rx, NULL), ep);
+        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_global.ctx[index].rx, NULL),
+                       ep);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_Global.ctx[index].rx, &MPIDI_Global.ctx[index].cq->fid, FI_RECV),
-                       bind);
+                       (MPIDI_OFI_global.ctx[index].rx, &MPIDI_OFI_global.ctx[index].cq->fid,
+                        FI_RECV), bind);
 
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
-        MPIDI_OFI_CALL(fi_enable(MPIDI_Global.ctx[index].tx), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_Global.ctx[index].rx), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[index].tx), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[index].rx), ep_enable);
     } else {
         /* ---------------------------------------------------------- */
         /* Bind the CQs, counters,  and AV to the endpoint object     */
@@ -1296,8 +1304,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         /* Copy the normal ep into the first entry for scalable endpoints to
          * allow compile macros to work */
-        MPIDI_Global.ctx[0].tx = MPIDI_Global.ctx[0].rx = *ep;
-        MPIDI_Global.ctx[0].cq = p2p_cq;
+        MPIDI_OFI_global.ctx[0].tx = MPIDI_OFI_global.ctx[0].rx = *ep;
+        MPIDI_OFI_global.ctx[0].cq = p2p_cq;
     }
 
   fn_exit:
@@ -1407,105 +1415,105 @@ static inline int MPIDI_OFI_application_hints(int rank)
 static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
 {
     /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_Global.settings.enable_av_table =
+    MPIDI_OFI_global.settings.enable_av_table =
         MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_av_table :
         MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
-    MPIDI_Global.settings.enable_scalable_endpoints =
+    MPIDI_OFI_global.settings.enable_scalable_endpoints =
         MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_scalable_endpoints :
         MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
      * and fall back if necessary in the RMA init code */
-    MPIDI_Global.settings.enable_shared_contexts =
+    MPIDI_OFI_global.settings.enable_shared_contexts =
         MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_shared_contexts :
         MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS;
-    MPIDI_Global.settings.enable_mr_scalable =
+    MPIDI_OFI_global.settings.enable_mr_scalable =
         MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_mr_scalable :
         MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
-    MPIDI_Global.settings.enable_tagged =
+    MPIDI_OFI_global.settings.enable_tagged =
         MPIR_CVAR_CH4_OFI_ENABLE_TAGGED !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_TAGGED : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_tagged :
         MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
-    MPIDI_Global.settings.enable_am =
+    MPIDI_OFI_global.settings.enable_am =
         MPIR_CVAR_CH4_OFI_ENABLE_AM !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_am :
         MPIR_CVAR_CH4_OFI_ENABLE_AM;
-    MPIDI_Global.settings.enable_rma =
+    MPIDI_OFI_global.settings.enable_rma =
         MPIR_CVAR_CH4_OFI_ENABLE_RMA !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_rma :
         MPIR_CVAR_CH4_OFI_ENABLE_RMA;
     /* try to enable atomics only when RMA is enabled */
-    MPIDI_Global.settings.enable_atomics =
+    MPIDI_OFI_global.settings.enable_atomics =
         MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS !=
                                 -1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS : prov_name ?
                                 MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number
                                                     (prov_name)].enable_atomics :
                                 MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
-    MPIDI_Global.settings.fetch_atomic_iovecs =
+    MPIDI_OFI_global.settings.fetch_atomic_iovecs =
         MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS !=
         -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].fetch_atomic_iovecs :
         MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
-    MPIDI_Global.settings.enable_data_auto_progress =
+    MPIDI_OFI_global.settings.enable_data_auto_progress =
         MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_data_auto_progress :
         MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS;
-    MPIDI_Global.settings.enable_control_auto_progress =
+    MPIDI_OFI_global.settings.enable_control_auto_progress =
         MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_control_auto_progress :
         MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS;
-    MPIDI_Global.settings.enable_pt2pt_nopack =
+    MPIDI_OFI_global.settings.enable_pt2pt_nopack =
         MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_pt2pt_nopack :
         MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK;
-    MPIDI_Global.settings.context_bits =
+    MPIDI_OFI_global.settings.context_bits =
         MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS !=
         -1 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].context_bits :
         MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
-    MPIDI_Global.settings.source_bits =
+    MPIDI_OFI_global.settings.source_bits =
         MPIR_CVAR_CH4_OFI_RANK_BITS !=
         -1 ? MPIR_CVAR_CH4_OFI_RANK_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].source_bits :
         MPIR_CVAR_CH4_OFI_RANK_BITS;
-    MPIDI_Global.settings.tag_bits =
+    MPIDI_OFI_global.settings.tag_bits =
         MPIR_CVAR_CH4_OFI_TAG_BITS !=
         -1 ? MPIR_CVAR_CH4_OFI_TAG_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].tag_bits :
         MPIR_CVAR_CH4_OFI_TAG_BITS;
-    MPIDI_Global.settings.major_version =
+    MPIDI_OFI_global.settings.major_version =
         MPIR_CVAR_CH4_OFI_MAJOR_VERSION !=
         -1 ? MPIR_CVAR_CH4_OFI_MAJOR_VERSION : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].major_version :
         MPIR_CVAR_CH4_OFI_MAJOR_VERSION;
-    MPIDI_Global.settings.minor_version =
+    MPIDI_OFI_global.settings.minor_version =
         MPIR_CVAR_CH4_OFI_MINOR_VERSION !=
         -1 ? MPIR_CVAR_CH4_OFI_MINOR_VERSION : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].minor_version :
         MPIR_CVAR_CH4_OFI_MINOR_VERSION;
-    MPIDI_Global.settings.num_am_buffers =
+    MPIDI_OFI_global.settings.num_am_buffers =
         MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS !=
         -1 ? MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].num_am_buffers :
         MPIDI_OFI_NUM_AM_BUFFERS_MINIMAL;
-    if (MPIDI_Global.settings.num_am_buffers < 0) {
-        MPIDI_Global.settings.num_am_buffers = 0;
+    if (MPIDI_OFI_global.settings.num_am_buffers < 0) {
+        MPIDI_OFI_global.settings.num_am_buffers = 0;
     }
-    if (MPIDI_Global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
-        MPIDI_Global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
+    if (MPIDI_OFI_global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
+        MPIDI_OFI_global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
     return MPI_SUCCESS;
 }

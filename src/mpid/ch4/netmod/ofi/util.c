@@ -165,7 +165,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv->cur_offset = MPIDI_Global.max_msg_size;
+    recv->cur_offset = MPIDI_OFI_global.max_msg_size;
     recv->remote_info = *info;
     recv->comm_ptr = comm_ptr;
     recv->next = NULL;
@@ -439,10 +439,10 @@ static MPI_Op mpi_ops[] = {
     MPI_REPLACE, MPI_NO_OP, MPI_OP_NULL,
 };
 
-#define _TBL MPIDI_Global.win_op_table[i][j]
+#define _TBL MPIDI_OFI_global.win_op_table[i][j]
 #define CHECK_ATOMIC(fcn,field1,field2)            \
   atomic_count = 0;                                \
-  ret = fcn(MPIDI_Global.ctx[0].tx,                \
+  ret = fcn(MPIDI_OFI_global.ctx[0].tx,                \
     fi_dt,                                 \
     fi_op,                                 \
             &atomic_count);                        \

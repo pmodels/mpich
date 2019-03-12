@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_PSM2
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS        MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2
-#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_Global.settings.enable_shared_contexts        /* Always controlled by CVAR */
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_OFI_global.settings.enable_shared_contexts    /* Always controlled by CVAR */
 #define MPIDI_OFI_ENABLE_MR_SCALABLE        MPIDI_OFI_ENABLE_MR_SCALABLE_PSM2
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_PSM2
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_PSM2
@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_SOCKETS
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS        MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS
-#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_Global.settings.enable_shared_contexts        /* Always controlled by CVAR */
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_OFI_global.settings.enable_shared_contexts    /* Always controlled by CVAR */
 #define MPIDI_OFI_ENABLE_MR_SCALABLE        MPIDI_OFI_ENABLE_MR_SCALABLE_SOCKETS
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_SOCKETS
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_SOCKETS
@@ -251,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ
 #define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_MAX_ENDPOINTS_BGQ
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS        MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
-#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_Global.settings.enable_shared_contexts        /* Always controlled by CVAR */
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_OFI_global.settings.enable_shared_contexts    /* Always controlled by CVAR */
 #define MPIDI_OFI_ENABLE_MR_SCALABLE        MPIDI_OFI_ENABLE_MR_SCALABLE_BGQ
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_BGQ
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_BGQ
@@ -312,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS     MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_RXM
 #define MPIDI_OFI_MAX_ENDPOINTS                 MPIDI_OFI_MAX_ENDPOINTS_RXM
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS            MPIDI_OFI_MAX_ENDPOINTS_BITS_RXM
-#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS        MPIDI_Global.settings.enable_shared_contexts    /* Always controlled by CVAR */
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS        MPIDI_OFI_global.settings.enable_shared_contexts        /* Always controlled by CVAR */
 #define MPIDI_OFI_ENABLE_MR_SCALABLE            MPIDI_OFI_ENABLE_MR_SCALABLE_RXM
 #define MPIDI_OFI_ENABLE_TAGGED                 MPIDI_OFI_ENABLE_TAGGED_RXM
 #define MPIDI_OFI_ENABLE_AM                     MPIDI_OFI_ENABLE_AM_RXM
@@ -406,27 +406,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_DEFAULT
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
-#define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_Global.settings.enable_av_table
-#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_Global.settings.enable_scalable_endpoints
-#define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_Global.settings.max_endpoints
-#define MPIDI_OFI_MAX_ENDPOINTS_BITS        MPIDI_Global.settings.max_endpoints_bits
-#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_Global.settings.enable_shared_contexts
-#define MPIDI_OFI_ENABLE_MR_SCALABLE        MPIDI_Global.settings.enable_mr_scalable
-#define MPIDI_OFI_ENABLE_TAGGED             MPIDI_Global.settings.enable_tagged
-#define MPIDI_OFI_ENABLE_AM                 MPIDI_Global.settings.enable_am
-#define MPIDI_OFI_ENABLE_RMA                MPIDI_Global.settings.enable_rma
-#define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_Global.settings.enable_atomics
-#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_Global.settings.fetch_atomic_iovecs
+#define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_global.settings.enable_av_table
+#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_global.settings.enable_scalable_endpoints
+#define MPIDI_OFI_MAX_ENDPOINTS             MPIDI_OFI_global.settings.max_endpoints
+#define MPIDI_OFI_MAX_ENDPOINTS_BITS        MPIDI_OFI_global.settings.max_endpoints_bits
+#define MPIDI_OFI_ENABLE_SHARED_CONTEXTS    MPIDI_OFI_global.settings.enable_shared_contexts
+#define MPIDI_OFI_ENABLE_MR_SCALABLE        MPIDI_OFI_global.settings.enable_mr_scalable
+#define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_global.settings.enable_tagged
+#define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_global.settings.enable_am
+#define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_global.settings.enable_rma
+#define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_global.settings.enable_atomics
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_global.settings.fetch_atomic_iovecs
 #define MPIDI_OFI_IOVEC_ALIGN               (1) /* Compile time configuration only */
-#define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_Global.settings.enable_data_auto_progress
-#define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_Global.settings.enable_control_auto_progress
-#define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_Global.settings.enable_pt2pt_nopack
-#define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_Global.settings.num_am_buffers
-#define MPIDI_OFI_CONTEXT_BITS              MPIDI_Global.settings.context_bits
-#define MPIDI_OFI_SOURCE_BITS               MPIDI_Global.settings.source_bits
-#define MPIDI_OFI_TAG_BITS                  MPIDI_Global.settings.tag_bits
-#define MPIDI_OFI_MAJOR_VERSION             MPIDI_Global.settings.major_version
-#define MPIDI_OFI_MINOR_VERSION             MPIDI_Global.settings.minor_version
+#define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_global.settings.enable_data_auto_progress
+#define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_global.settings.enable_control_auto_progress
+#define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_global.settings.enable_pt2pt_nopack
+#define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_global.settings.num_am_buffers
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_global.settings.context_bits
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_global.settings.source_bits
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_global.settings.tag_bits
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_global.settings.major_version
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_global.settings.minor_version
 #define MPIDI_OFI_CONTEXT_STRUCTS           2   /* Compile time configurable only */
 #endif
 

@@ -46,11 +46,11 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
         rem_bcs = MPIR_Comm_size(comm) - num_nodes;
-        MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], &MPIDI_Global.addrname,
-                           MPIDI_Global.addrnamelen, TRUE, &table, NULL);
+        MPIDU_bc_allgather(comm, MPIDI_CH4_Global.node_map[0], &MPIDI_OFI_global.addrname,
+                           MPIDI_OFI_global.addrnamelen, TRUE, &table, NULL);
         MPIR_CHKLMEM_MALLOC(mapped_table, fi_addr_t *, rem_bcs * sizeof(fi_addr_t),
                             mpi_errno, "mapped_table", MPL_MEM_ADDRESS);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, rem_bcs, mapped_table, 0ULL, NULL),
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, rem_bcs, mapped_table, 0ULL, NULL),
                        avmap);
 
         /* insert new addresses, skipping over node roots */
