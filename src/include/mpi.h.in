@@ -1564,6 +1564,8 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 int MPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 
 
+int MPIX_Comm_create_endpoints(MPI_Comm parent_comm,int my_num_ep, MPI_Info inf,
+                              MPI_Comm out_comm_hdls[]) MPICH_API_PUBLIC;
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
 
@@ -2209,6 +2211,8 @@ int PMPIX_Comm_revoke(MPI_Comm comm) MPICH_API_PUBLIC;
 int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 
+int PMPIX_Comm_create_endpoints(MPI_Comm parent_comm,int my_num_ep, MPI_Info inf,
+                              MPI_Comm out_comm_hdls[]) MPICH_API_PUBLIC;
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
 

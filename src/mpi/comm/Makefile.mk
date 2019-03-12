@@ -9,6 +9,7 @@ mpi_sources +=                       \
     src/mpi/comm/comm_compare.c      \
     src/mpi/comm/comm_create.c       \
     src/mpi/comm/comm_create_group.c \
+    src/mpi/comm/comm_create_endpoints.c \
     src/mpi/comm/comm_dup.c          \
     src/mpi/comm/comm_dup_with_info.c \
     src/mpi/comm/comm_free.c         \
