@@ -487,6 +487,7 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t local_map;
     } ch4;
     int vci;
+    int endpoint;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field

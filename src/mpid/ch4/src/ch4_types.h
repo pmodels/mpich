@@ -277,6 +277,8 @@ typedef struct {
 } MPIDI_CH4_configurations_t;
 
 #define MPIDI_CH4_MAX_NM_VCIS 32
+/* FIXME: this needs to coordinate with the endpoint bits provided by the netmod */
+#define MPIDI_CH4_COMM_REGULAR (0X3F)
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;

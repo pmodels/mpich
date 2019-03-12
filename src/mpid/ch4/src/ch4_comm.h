@@ -168,7 +168,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
 
+    /* These values will be overwritten in the case of MPID_Comm_create_endpoint */
     MPIDI_comm_set_vci(comm);
+    comm->dev.endpoint = MPIDI_CH4_COMM_REGULAR; /* means not an Endpoints communicator */
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
