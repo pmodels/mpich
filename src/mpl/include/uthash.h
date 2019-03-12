@@ -3,6 +3,7 @@
  * - some configure-time checking for __typeof() support was added
  * - intentionally omitted from "mpl.h" in order to require using code to opt-in
  * - override malloc/free/realloc to call MPL routines
+ * - check head first before calculating HASH_VALUE in HASH_FIND
  */
 /*
 Copyright (c) 2003-2017, Troy D. Hanson     http://troydhanson.github.com/uthash/
@@ -142,8 +143,11 @@ do {                                                                            
 #define HASH_FIND(hh,head,keyptr,keylen,out)                                     \
 do {                                                                             \
   unsigned _hf_hashv;                                                            \
-  HASH_VALUE(keyptr, keylen, _hf_hashv);                                         \
-  HASH_FIND_BYHASHVALUE(hh, head, keyptr, keylen, _hf_hashv, out);               \
+  (out) = NULL;                                                                  \
+  if (head) {                                                                    \
+    HASH_VALUE(keyptr, keylen, _hf_hashv);                                       \
+    HASH_FIND_BYHASHVALUE(hh, head, keyptr, keylen, _hf_hashv, out);             \
+  }                                                                              \
 } while (0)
 
 #ifdef HASH_BLOOM
