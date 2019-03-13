@@ -36,4 +36,5 @@ include $(top_srcdir)/adio/ad_testfs/Makefile.mk
 include $(top_srcdir)/adio/ad_ufs/Makefile.mk
 include $(top_srcdir)/adio/ad_xfs/Makefile.mk
 include $(top_srcdir)/adio/ad_ime/Makefile.mk
+include $(top_srcdir)/adio/ad_quobytefs/Makefile.mk
 include $(top_srcdir)/adio/common/Makefile.mk

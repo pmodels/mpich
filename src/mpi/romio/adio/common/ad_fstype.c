@@ -13,6 +13,10 @@
 #include <strings.h>
 #endif
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -173,6 +177,9 @@ static struct ADIO_FSTypes fstypes[] = {
 #endif
 #ifdef ROMIO_IME
     {&ADIO_IME_operations, ADIO_IME, "ime:"},
+#endif
+#ifdef ROMIO_QUOBYTEFS
+    {&ADIO_QUOBYTEFS_operations, ADIO_QUOBYTEFS, "quobyte:"},
 #endif
     {0, 0, 0}   /* guard entry */
 };

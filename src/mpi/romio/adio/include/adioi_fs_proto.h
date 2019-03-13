@@ -56,4 +56,11 @@ extern struct ADIOI_Fns_struct ADIO_IME_operations;
 /* prototypes are in adio/ad_daos/ad_daos.h */
 extern struct ADIOI_Fns_struct ADIO_DAOS_operations;
 #endif
+
+#ifdef ROMIO_QUOBYTEFS
+/* prototypes are in adio/ad_quobytefs/ad_quobytefs.h */
+extern struct ADIOI_Fns_struct ADIO_QUOBYTEFS_operations;
+extern void ADIOI_QUOBYTEFS_CreateAdapter(const char *, int *);
+#endif
+
 #endif /* ADIOI_FS_PROTO_H_INCLUDED */
