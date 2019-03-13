@@ -151,7 +151,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;
     int last_disabled_anysource = -1;
-    int first_nonnull = 0;
+    int first_nonnull = count;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITANY);
@@ -229,7 +229,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                     request_ptrs[i] = NULL;
                 }
             } else {
-                if (!first_nonnull)
+                if (first_nonnull == count)
                     first_nonnull = i;
             }
         } else {
