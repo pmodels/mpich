@@ -85,6 +85,9 @@
 #define FDTYPE HANDLE
 #else
 #define FDTYPE int
+#ifdef ROMIO_QUOBYTEFS
+#include "quobyte.h"
+#endif
 #endif
 
 typedef MPI_Offset ADIO_Offset;
@@ -233,7 +236,9 @@ typedef struct ADIOI_FileD {
     MPI_Win io_buf_put_amounts_window;  /* Window over the io_buf_put_amounts */
     /* External32 */
     int is_external32;          /* bool:  0 means native view */
-
+#ifdef ROMIO_QUOBYTEFS
+    struct quobyte_fh *file_handle;     /* file handle for quobytefs */
+#endif
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;
@@ -286,6 +291,7 @@ typedef struct {
 #define ADIO_GPFS                168
 #define ADIO_IME                 169    /* IME burst buffer */
 #define ADIO_DAOS                170
+#define ADIO_QUOBYTEFS           171    /* Quobyte FS */
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR
