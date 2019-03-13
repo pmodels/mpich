@@ -108,11 +108,40 @@ cvars:
         knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
 
+    - name        : MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Enable collective specific intra-node trees which leverage the memory hierarchy of a machine.
+        Depends on hwloc to extract the binding information of each rank. Pick a leader rank per
+        package (socket), then create a per_package tree for ranks on a same package, package leaders
+        tree for package leaders.
+        For Bcast - Assemble the per_package and package_leaders tree in such a way that leaders
+        interact among themselves first before interacting with package local ranks. Both the
+        package_leaders and per_package trees are left skewed (children are added from left to right,
+        first child to be added is the first one to be processed in traversal)
+        For Reduce - Assemble the per_package and package_leaders tree in such a way that a leader
+        rank interacts with its package local ranks first, then with the other package leaders. Both
+        the per_package and package_leaders tree is right skewed (children are added in reverse
+        order, first child to be added is the last one to be processed in traversal)
+        The tree radix and tree type of package_leaders and per_package tree is
+        MPIR_CVAR_BCAST{REDUCE}_INTRANODE_TREE_KVAL and MPIR_CVAR_BCAST{REDUCE}_INTRANODE_TREE_TYPE
+        respectively for bast and reduce. But of as now topology aware trees are only kary. knomial
+        is to be implemented.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 #include "mpiimpl.h"
 #include "release_gather.h"
+#ifdef HAVE_HWLOC
+#include "topotree.h"
+#include "topotree_util.h"
+#endif
 
 #define COMM_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm)->release_gather->field
@@ -167,6 +196,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     const long pg_sz = sysconf(_SC_PAGESIZE);
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     bool mapfail_flag = false;
+    int topotree_fail[2] = { 0, 0 };
 
     rank = MPIR_Comm_rank(comm_ptr);
     num_ranks = MPIR_Comm_size(comm_ptr);
@@ -269,30 +299,71 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
+#ifdef HAVE_HWLOC
         /* Create bcast_tree and reduce_tree with root of the tree as 0 */
-        mpi_errno =
-            MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Bcast_tree_type,
-                                      MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL, 0,
-                                      &release_gather_info_ptr->bcast_tree);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        if (MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES &&
+            getenv("HYDRA_USER_PROVIDED_BINDING")) {
+            if (hwloc_topology_load(MPIR_Process.hwloc_topology) == 0) {
+                mpi_errno =
+                    MPIDI_SHM_topology_tree_init(comm_ptr, 0, MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
+                                                 &release_gather_info_ptr->bcast_tree,
+                                                 &topotree_fail[0],
+                                                 MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL,
+                                                 &release_gather_info_ptr->reduce_tree,
+                                                 &topotree_fail[1], &errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                    MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
+            } else {
+                /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */
+                topotree_fail[0] = -1;
+                topotree_fail[1] = -1;
+            }
+            mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, topotree_fail, 2, MPI_INT,
+                                            MPI_MAX, comm_ptr, &errflag);
+        } else {
+            topotree_fail[0] = -1;
+            topotree_fail[1] = -1;
         }
-        mpi_errno =
-            MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Reduce_tree_type,
-                                      MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL, 0,
-                                      &release_gather_info_ptr->reduce_tree);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+#endif
+        /* Non-topology aware trees */
+        if (topotree_fail[0] != 0) {
+            if (topotree_fail[0] == 1)
+                MPIR_Treealgo_tree_free(&release_gather_info_ptr->bcast_tree);
+            mpi_errno =
+                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Bcast_tree_type,
+                                          MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL, 0,
+                                          &release_gather_info_ptr->bcast_tree);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+        }
+
+        if (topotree_fail[1] != 0) {
+            if (topotree_fail[1] == 1)
+                MPIR_Treealgo_tree_free(&release_gather_info_ptr->reduce_tree);
+            mpi_errno =
+                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Reduce_tree_type,
+                                          MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL, 0,
+                                          &release_gather_info_ptr->reduce_tree);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
 
         release_gather_info_ptr->gather_state = release_gather_info_ptr->release_state
