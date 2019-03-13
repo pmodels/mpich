@@ -550,7 +550,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wold-style-definition
         -Wno-multichar
         -Wno-deprecated-declarations
-        -Wpacked
         -Wnested-externs
         -Winvalid-pch
         -Wno-pointer-sign
