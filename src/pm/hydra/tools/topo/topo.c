@@ -55,6 +55,8 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
         goto fn_exit;
     }
 
+    /* Reaching here means that user specified some binding */
+    setenv("HYDRA_USER_PROVIDED_BINDING", "1", 1);
     /* Initialize the topology library requested by the user */
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
