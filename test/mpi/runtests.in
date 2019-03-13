@@ -729,7 +729,7 @@ sub RunMPIProgram {
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
-    my $extraArgs = "";
+    my $extraArgs = "--bind-to core ";
     my $runtime = 0;
 
     &RunPreMsg( $programname, $np, $curdir );
@@ -891,7 +891,7 @@ sub AddMPIProgram {
     # environment variable or command line option (e.g., for Cray aprun, 
     # the option -t <sec> must be given, there is no environment variable 
     # to set the timeout.
-    $extraArgs = "";
+    $extraArgs = "--bind-to core ";
     if (defined($timeoutArgPattern) && $timeoutArgPattern ne "") {
 	my $timeArg = $timeoutArgPattern;
 	$timeoutArg =~ s/<SEC>/$timeout/;
