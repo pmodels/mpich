@@ -667,7 +667,8 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 #define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
-    return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
+    size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
+    return (void *) (uintptr_t) aligned_iov;
 }
 
 #undef  FUNCNAME
