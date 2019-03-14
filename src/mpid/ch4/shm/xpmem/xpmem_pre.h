@@ -47,6 +47,11 @@ typedef struct {
     size_t sys_page_sz;
 } MPIDI_XPMEM_global_t;
 
+typedef struct {
+    MPIDI_XPMEM_seg_t **regist_segs;    /* store registered segments
+                                         * for all local processes in the window. */
+} MPIDI_XPMEM_win_t;
+
 extern MPIDI_XPMEM_global_t MPIDI_XPMEM_global;
 extern MPIR_Object_alloc_t MPIDI_XPMEM_seg_mem;
 
