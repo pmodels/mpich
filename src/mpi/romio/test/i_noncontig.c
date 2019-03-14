@@ -9,6 +9,18 @@
 #include <stdlib.h>
 
 /* tests noncontiguous reads/writes using nonblocking I/O */
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 
 #define SIZE 5000
 
@@ -83,13 +95,14 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite(fh, buf, 1, newtype, &req);
+    MPI_CHECK(MPI_File_iwrite(fh, buf, 1, newtype, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -101,7 +114,7 @@ int main(int argc, char **argv)
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at(fh, 0, buf, 1, newtype, &req);
+    MPI_CHECK(MPI_File_iread_at(fh, 0, buf, 1, newtype, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -131,7 +144,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -144,11 +157,12 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite_at(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &req);
+    MPI_CHECK(MPI_File_iwrite_at(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -160,7 +174,7 @@ int main(int argc, char **argv)
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &req);
+    MPI_CHECK(MPI_File_iread_at(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -190,7 +204,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -203,13 +217,14 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite(fh, buf, SIZE, MPI_INT, &req);
+    MPI_CHECK(MPI_File_iwrite(fh, buf, SIZE, MPI_INT, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -221,7 +236,7 @@ int main(int argc, char **argv)
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at(fh, 0, buf, SIZE, MPI_INT, &req);
+    MPI_CHECK(MPI_File_iread_at(fh, 0, buf, SIZE, MPI_INT, &req));
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait(&req, &status);
 #else
@@ -243,7 +258,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (mynod == 0) {

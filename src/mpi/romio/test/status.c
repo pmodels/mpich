@@ -12,6 +12,18 @@
 
 /* Checks if the status objects is filled correctly by I/O functions */
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 int main(int argc, char **argv)
 {
     int *buf, i, rank, nints, len, count, elements;
@@ -55,8 +67,9 @@ int main(int argc, char **argv)
     strcpy(tmp, filename);
     sprintf(filename, "%s.%d", tmp, rank);
 
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_write(fh, buf, nints, MPI_INT, &status);
+    MPI_CHECK(MPI_File_open(MPI_COMM_SELF, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_write(fh, buf, nints, MPI_INT, &status));
 
     MPI_Get_count(&status, MPI_INT, &count);
     MPI_Get_elements(&status, MPI_INT, &elements);
@@ -71,7 +84,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
