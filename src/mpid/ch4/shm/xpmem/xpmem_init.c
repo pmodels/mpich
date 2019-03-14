@@ -8,6 +8,7 @@
 #include "xpmem_noinline.h"
 #include "build_nodemap.h"
 #include "mpidu_init_shm.h"
+#include "xpmem_seg.h"
 
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
 {
@@ -47,6 +48,9 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     for (i = 0; i < num_local; i++) {
         MPIDU_Init_shm_get(i, sizeof(xpmem_segid_t), &MPIDI_XPMEM_global.segmaps[i].remote_segid);
         MPIDI_XPMEM_global.segmaps[i].apid = -1;        /* get apid at the first communication  */
+
+        /* Init AVL tree based segment cache */
+        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache);
     }
 
     /* Initialize other global parameters */
@@ -68,6 +72,9 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
 
     for (i = 0; i < MPIDI_XPMEM_global.num_local; i++) {
+        /* should be called before xpmem_release
+         * MPIDI_XPMEM_segtree_tree_delete_all will call xpmem_detach */
+        MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache);
         if (MPIDI_XPMEM_global.segmaps[i].apid != -1) {
             XPMEM_TRACE("finalize: release apid: node_rank %d, 0x%lx\n",
                         i, (uint64_t) MPIDI_XPMEM_global.segmaps[i].apid);
