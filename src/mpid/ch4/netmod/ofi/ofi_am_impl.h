@@ -195,7 +195,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
     int mpi_errno = MPI_SUCCESS, c;
-    int need_lock = !is_reply;
+    int need_lock ATTRIBUTE((unused)) = !is_reply;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
