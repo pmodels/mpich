@@ -61,6 +61,8 @@ struct ADIO_DAOS_cont {
     daos_obj_id_t	oid;
     /** Array OH for the MPI file */
     daos_handle_t	oh;
+    /** Object class of the DAOS object associated with the file */
+    daos_oclass_id_t	obj_class;
     /** data size to store in a dkey */
     daos_size_t		chunk_size;
     /** file open mode */

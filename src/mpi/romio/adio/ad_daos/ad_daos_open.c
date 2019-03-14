@@ -14,6 +14,8 @@
 #include "ad_daos.h"
 #include <libgen.h>
 #include <uuid/uuid.h>
+#include <gurt/common.h>
+#include <daos_uns.h>
 
 #define OID_SEED 5731
 
@@ -213,30 +215,90 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
     free(f2);
 }
 
+int
+get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
+                    daos_oclass_id_t *oclass)
+{
+    bool use_duns = false;
+    char *uuid_str;
+    int rc;
+
+    d_getenv_bool("DAOS_USE_DUNS", &use_duns);
+
+    if (use_duns) {
+        struct duns_attr_t attr;
+
+        rc = duns_resolve_path(path, &attr);
+        if (rc) {
+            PRINT_MSG(stderr, "Failed to resolve DAOS Namespace Properties\n");
+            return rc;
+        }
+
+        if (attr.da_type != DAOS_PROP_CO_LAYOUT_POSIX) {
+            PRINT_MSG(stderr, "Invalid DAOS container type\n");
+            return -DER_INVAL;
+        }
+
+        uuid_copy(*puuid, attr.da_puuid);
+        uuid_copy(*cuuid, attr.da_cuuid);
+        *oclass = (attr.da_oclass == DAOS_OC_UNKNOWN) ?
+            DAOS_OC_LARGE_RW : attr.da_oclass;
+
+        return 0;
+    }
+
+    uuid_str = getenv ("DAOS_POOL");
+    if (uuid_str != NULL) {
+        if (uuid_parse(uuid_str, *puuid) < 0) {
+            PRINT_MSG(stderr, "Failed to parse pool uuid\n");
+            return -DER_INVAL;
+        }
+    }
+
+    /* Hash container name to create uuid */
+    duuid_hash128(path, cuuid, NULL, NULL);
+    *oclass = DAOS_OC_LARGE_RW;
+
+    return 0;
+}
+
 void
 ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_OPEN";
     int perm, old_mask, amode;
-    char *uuid_str;
     int rc;
 
     *error_code = MPI_SUCCESS;
 
-    uuid_str = getenv ("DAOS_POOL");
-    if (uuid_str != NULL) {
-        if (uuid_parse(uuid_str, cont->puuid) < 0) {
-            PRINT_MSG(stderr, "Failed to parse pool uuid\n");
-            *error_code = MPI_ERR_ARG;
-            return;
-        }
+    rc = get_pool_cont_uuids(cont->cont_name, &cont->puuid, &cont->cuuid,
+                             &cont->obj_class);
+    if (rc) {
+        *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
+        return;
     }
+
+    /** Info object setting should override */
+    if (fd->hints->fs_hints.daos.obj_class != DAOS_OC_UNKNOWN)
+        cont->obj_class = fd->hints->fs_hints.daos.obj_class;
+
+#if 0
+    {
+        char uuid_str[37];
+        uuid_unparse(cont->cuuid, uuid_str);
+
+        fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
+        fprintf(stderr, "File %s\n", cont->obj_name);
+    }
+    fprintf(stderr, "chunk_size  = %d\n", fd->hints->fs_hints.daos.chunk_size);
+    fprintf(stderr, "OCLASS  = %d\n", cont->obj_class);
+#endif
 
     rc = adio_daos_poh_lookup_connect(cont->puuid, &cont->p);
     if (rc) {
         PRINT_MSG(stderr, "Failed to connect to DAOS Pool (%d)\n", rc);
-        *error_code = ADIOI_DAOS_err(myname, uuid_str, __LINE__, rc);
+        *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
         return;
     }
 
@@ -288,7 +350,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     perm = S_IFREG | perm;
 
     rc = dfs_open(cont->dfs, NULL, cont->obj_name, perm, amode,
-                  fd->hints->fs_hints.daos.obj_class, NULL, &cont->obj);
+                  cont->obj_class, NULL, &cont->obj);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
         goto err_dfs;
@@ -325,15 +387,6 @@ cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
     static char myname[] = "ADIOI_DAOS_OPEN";
     int rc;
 
-    uuid_str = getenv ("DAOS_POOL");
-    if (uuid_str != NULL) {
-        if (uuid_parse(uuid_str, cont->puuid) < 0) {
-            PRINT_MSG(stderr, "Failed to parse pool uuid\n");
-            *error_code = MPI_ERR_ARG;
-            return -1;
-        }
-    }
-
     cont->c = adio_daos_coh_lookup(cont->cuuid);
     if (cont->c == NULL) {
         /** insert handle into container hashtable */
@@ -363,6 +416,32 @@ cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
     return rc;
 }
 
+static int
+share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
+{
+    char buf[74];
+    int rc;
+
+    if (rank == 0) {
+        uuid_unparse(cont->puuid, buf);
+        uuid_unparse(cont->cuuid, buf+37);
+    }
+    rc = MPI_Bcast(buf, sizeof(buf), MPI_BYTE, 0, comm);
+    if (rc != MPI_SUCCESS)
+        return rc;
+
+    if (rank != 0) {
+        rc = uuid_parse(buf, cont->puuid);
+        if (rc)
+            return rc;
+
+        rc = uuid_parse(buf+37, cont->cuuid);
+        if (rc)
+            return rc;
+    }
+    return 0;
+}
+
 void
 ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 {
@@ -387,33 +466,13 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 	return;
     }
 
-#ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event( ADIOI_MPE_open_a, 0, NULL );
-#endif
     fd->access_mode = access_mode;
     cont->amode = amode;
-
     parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
-
-    /* Hash container name to create uuid */
-    duuid_hash128(cont->cont_name, &cont->cuuid, NULL, NULL);
-
     cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
     cont->p = NULL;
     cont->c = NULL;
     fd->fs_ptr = cont;
-
-#if 0
-    {
-        char uuid_str[37];
-        uuid_unparse(cont->cuuid, uuid_str);
-
-        fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
-        fprintf(stderr, "File %s\n", cont->obj_name);
-    }
-    fprintf(stderr, "chunk_size  = %d\n", fd->hints->fs_hints.daos.chunk_size);
-    fprintf(stderr, "OCLASS  = %d\n", fd->hints->fs_hints.daos.obj_class);
-#endif
 
     if (rank == 0) {
         (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
@@ -437,6 +496,7 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
         goto err_free;
 
     if (mpi_size > 1) {
+        share_cont_info(cont, rank, comm);
         handle_share(&cont->poh, HANDLE_POOL, rank, cont->poh, comm);
         handle_share(&cont->coh, HANDLE_CO, rank, cont->poh, comm);
         if (rank != 0) {
@@ -496,30 +556,23 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     uuid_t puuid, cuuid;
     dfs_t *dfs;
     char *obj_name, *cont_name;
-    char *uuid_str = NULL;
+    daos_oclass_id_t oclass;
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
 
-    uuid_str = getenv ("DAOS_POOL");
-    if (uuid_str != NULL) {
-        if (uuid_parse(uuid_str, puuid) < 0) {
-            fprintf(stderr, "Failed to parse pool UUID env\n");
-            *error_code = MPI_ERR_ARG;
-            return;
-        }
+    parse_filename(filename, &obj_name, &cont_name);
+    rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass);
+    if (rc) {
+        *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
+        return;
     }
 
     rc = adio_daos_poh_lookup_connect(puuid, &p);
     if (rc || p == NULL) {
-        fprintf(stderr, "Failed to connect to pool\n");
-        *error_code = ADIOI_DAOS_err(myname, uuid_str, __LINE__, rc);
+        PRINT_MSG(stderr, "Failed to connect to pool\n");
+        *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         return;
     }
-
-    parse_filename(filename, &obj_name, &cont_name);
-
-    /* Hash container name to container uuid */
-    duuid_hash128(cont_name, &cuuid, NULL, NULL);
 
     rc = adio_daos_coh_lookup_create(p->open_hdl, cuuid, false, &c);
     if (rc || c == NULL) {

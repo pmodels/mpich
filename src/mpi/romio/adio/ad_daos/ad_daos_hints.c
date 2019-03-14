@@ -29,7 +29,7 @@ void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->fs_hints.daos.chunk_size = 1048576;
 
         ADIOI_Info_set(fd->info, "romio_daos_obj_class", "DAOS_OC_LARGE_RW");
-        fd->hints->fs_hints.daos.obj_class = DAOS_OC_LARGE_RW;
+        fd->hints->fs_hints.daos.obj_class = DAOS_OC_UNKNOWN;
 
 	if (users_info != MPI_INFO_NULL) {
 	    /* Chunk size in each dkey */

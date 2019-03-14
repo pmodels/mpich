@@ -13,7 +13,7 @@
 
 #include "ad_daos.h"
 #include "gurt/hash.h"
-#include <assert.h>
+#include <gurt/common.h>
 
 static struct d_hash_table *coh_hash;
 static struct d_hash_table *poh_hash;
