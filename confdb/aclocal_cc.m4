@@ -575,6 +575,9 @@ if test "$enable_strict_done" != "yes" ; then
 	     stdc99)
 	        c_std=c99
 		;;
+	     stdgnu99)
+	        c_std=gnu99
+		;;
 	     !stdc)
 		c_std=none
 		;;
@@ -635,6 +638,9 @@ if test "$enable_strict_done" != "yes" ; then
 		# http://lists.gnu.org/archive/html/autoconf/2010-12/msg00059.html
 		# for discussion on why not to use -xc99
 		PAC_APPEND_FLAG([-D_STDC_C99=],[pac_cc_strict_flags])
+		;;
+	    gnu99)
+		PAC_APPEND_FLAG([-std=gnu99],[pac_cc_strict_flags])
 		;;
 	    *)
 		AC_MSG_ERROR([internal error, unexpected C std version: '$c_std'])
