@@ -459,6 +459,8 @@ dnl (-D __STRICT_ANSI__-trigraphs)
 AC_DEFUN([PAC_CC_STRICT],[
 export enable_strict_done
 if test "$enable_strict_done" != "yes" ; then
+    # make sure we don't add the below flags multiple times
+    enable_strict_done=yes
 
     # Some comments on strict warning options.
     # These were added to improve portability
@@ -560,56 +562,45 @@ if test "$enable_strict_done" != "yes" ; then
         -Wstack-usage=262144
     "
 
-    enable_c89=no
-    enable_c99=yes
-    enable_posix=2001
+    add_cflags=yes
+    c_std=c99
+    posix_std=2001
     enable_opt=yes
     flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
     for flag in ${flags}; do
         case "$flag" in
-	     c89)
-		enable_strict_done="yes"
-		enable_c89=yes
-                enable_c99=no
+	     stdc89)
+	        c_std=c89
 		;;
-	     c99)
-		enable_strict_done="yes"
-                enable_c89=no
-		enable_c99=yes
+	     stdc99)
+	        c_std=c99
+		;;
+	     !stdc)
+		c_std=none
 		;;
 	     posix1995)
-		enable_strict_done="yes"
-		enable_posix=1995
+		posix_std=1995
 		;;
-	     posix|posix2001)
-		enable_strict_done="yes"
-		enable_posix=2001
+	     posix2001)
+		posix_std=2001
 		;;
 	     posix2008)
-		enable_strict_done="yes"
-		enable_posix=2008
+		posix_std=2008
 		;;
-	     noposix)
-		enable_strict_done="yes"
-		enable_posix=no
+	     !posix)
+		posix_std=none
 		;;
 	     opt)
-		enable_strict_done="yes"
 		enable_opt=yes
 		;;
-	     noopt)
-		enable_strict_done="yes"
+	     !opt)
 		enable_opt=no
 		;;
 	     all|yes)
-		enable_strict_done="yes"
-		enable_c99=yes
-		enable_posix=2001
-		enable_opt=yes
+		# leave the defaults
 	        ;;
-	     no)
-		# Accept and ignore this value
-		:
+	     no|none)
+		add_cflags=no
 		;;
 	     *)
 		if test -n "$flag" ; then
@@ -620,34 +611,45 @@ if test "$enable_strict_done" != "yes" ; then
     done
 
     pac_cc_strict_flags=""
-    if test "${enable_strict_done}" = "yes" ; then
-       if test "${enable_opt}" = "yes" ; then
-       	  pac_cc_strict_flags="-O2"
-       fi
+    if test "${add_cflags}" = "yes" ; then
+       # common flags
        pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
-       # We only allow one of strict-C99 or strict-C89 to be
-       # enabled. If C99 is enabled, we automatically disable C89.
-       if test "${enable_c99}" = "yes" ; then
-       	  PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
-          # Use -D_STDC_C99= for Solaris compilers. See
-          # http://lists.gnu.org/archive/html/autoconf/2010-12/msg00059.html
-          # for discussion on why not to use -xc99
-          PAC_APPEND_FLAG([-D_STDC_C99=],[pac_cc_strict_flags])
-       elif test "${enable_c89}" = "yes" ; then
-       	  PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
-       	  PAC_APPEND_FLAG([-Wdeclaration-after-statement],[pac_cc_strict_flags])
+
+       # optimization flags
+       if test "${enable_opt}" = "yes" ; then
+	  PAC_APPEND_FLAG([-O2],[pac_cc_strict_flags])
        fi
-       # POSIX 2001 should be used with C99. But the default standard for some
-       # compilers are not C99. We must test the support of POSIX 2001 after
-       # testing C99.
-       case "$enable_posix" in
-            no)   : ;;
+
+       # stdc flags
+       case "${c_std}" in
+	    none)
+		:
+		;;
+	    c89)
+		PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+		PAC_APPEND_FLAG([-Wdeclaration-after-statement],[pac_cc_strict_flags])
+		;;
+	    c99)
+		PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
+		# Use -D_STDC_C99= for Solaris compilers. See
+		# http://lists.gnu.org/archive/html/autoconf/2010-12/msg00059.html
+		# for discussion on why not to use -xc99
+		PAC_APPEND_FLAG([-D_STDC_C99=],[pac_cc_strict_flags])
+		;;
+	    *)
+		AC_MSG_ERROR([internal error, unexpected C std version: '$c_std'])
+		;;
+       esac
+
+       # posix flags
+       case "${posix_std}" in
+            none) : ;;
             1995) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags]) ;;
             2001) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200112L],[pac_cc_strict_flags]) ;;
             2008) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200809L],[pac_cc_strict_flags]) ;;
-            *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$enable_posix']) ;;
+            *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$posix_std']) ;;
        esac
-       if test "$enable_posix" != "no" ; then
+       if test "${posix_std}" != "none" ; then
            AS_CASE([$host],[*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[pac_cc_strict_flags])])
        fi
     fi
@@ -676,7 +678,7 @@ dnl
 dnl D*/
 AC_DEFUN([PAC_ARG_STRICT],[
 AC_ARG_ENABLE(strict,
-	AC_HELP_STRING([--enable-strict], [Turn on strict compilation testing]))
+	AC_HELP_STRING([--enable-strict], [Turn on strict compilation testing]),,enable_strict=no)
 PAC_CC_STRICT($enable_strict)
 CFLAGS="$CFLAGS $pac_cc_strict_flags"
 export CFLAGS
