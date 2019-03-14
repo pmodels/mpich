@@ -8,6 +8,22 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* many calls are deliberately passed bogus values, are expected to fail, and
+ * then checked to see if we get the right error message.  Other
+ * calls are expected to succeed but the preciese return string is not checked.  This
+ * rouine and MPI_CHECK macro handle these unexpected error cases */
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 #define VERBOSE 0
 /* tests if error message is printed correctly */
 
@@ -58,8 +74,8 @@ int main(int argc, char **argv)
     strcpy(tmp, filename);
     sprintf(filename, "%s.%d", tmp, rank);
 
-    err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE + MPI_MODE_RDWR,
-                        MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE + MPI_MODE_RDWR,
+                            MPI_INFO_NULL, &fh));
     err = MPI_File_set_view(fh, -1, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     /* disp is deliberately passed as -1 */
 

@@ -17,6 +17,18 @@
    The file name is taken as a command-line argument, and the process rank
    is appended to it. */
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 int main(int argc, char **argv)
 {
     int *buf, i, rank, nints, len;
@@ -63,17 +75,19 @@ int main(int argc, char **argv)
     strcpy(tmp, filename);
     sprintf(filename, "%s.%d", tmp, rank);
 
-    PMPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    PMPI_File_write(fh, buf, nints, MPI_INT, &status);
-    PMPI_File_close(&fh);
+    MPI_CHECK(PMPI_File_open(MPI_COMM_SELF, filename,
+                             MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(PMPI_File_write(fh, buf, nints, MPI_INT, &status));
+    MPI_CHECK(PMPI_File_close(&fh));
 
     /* reopen the file and read the data back */
 
     for (i = 0; i < nints; i++)
         buf[i] = 0;
-    PMPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    PMPI_File_read(fh, buf, nints, MPI_INT, &status);
-    PMPI_File_close(&fh);
+    MPI_CHECK(PMPI_File_open(MPI_COMM_SELF, filename,
+                             MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(PMPI_File_read(fh, buf, nints, MPI_INT, &status));
+    MPI_CHECK(PMPI_File_close(&fh));
 
     /* check if the data read is correct */
     for (i = 0; i < nints; i++) {

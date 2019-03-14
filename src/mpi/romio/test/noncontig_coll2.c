@@ -19,6 +19,9 @@
  *   the processors ]
  */
 
+
+#define MPI_CHECK(fn) { int _errcode; _errcode = (fn); if (_errcode != MPI_SUCCESS) handle_error(_errcode, #fn); }
+
 /* we are going to muck with this later to make it evenly divisible by however many compute nodes we have */
 #define STARTING_SIZE 5000
 
@@ -407,7 +410,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         handle_error(errcode, "MPI_File_open");
     }
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
@@ -457,7 +460,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
             errors++;
         }
     }
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -469,7 +472,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
@@ -510,7 +513,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -522,9 +525,9 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh));
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info));
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
@@ -551,7 +554,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Type_free(&newtype);
     free(buf);
