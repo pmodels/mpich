@@ -10,10 +10,32 @@
 #include <xpmem.h>
 
 #define MPIDI_XPMEM_PERMIT_VALUE ((void *)0600)
+#define MPIDI_XPMEM_SEG_PREALLOC 8      /* Number of segments to preallocate in the "direct" block */
+
+typedef struct MPIDI_XPMEM_seg {
+    /* AVL-tree internal components start */
+    struct MPIDI_XPMEM_seg *parent;
+    struct MPIDI_XPMEM_seg *left;
+    struct MPIDI_XPMEM_seg *right;
+    uint64_t height;            /* height of this subtree */
+    /* AVL-tree internal components end */
+
+    uint64_t low;               /* page aligned low address of remote seg */
+    uint64_t high;              /* page aligned high address of remote seg */
+    void *vaddr;                /* virtual address attached in current process */
+    MPIR_cc_t refcount;         /* reference count of this seg */
+} MPIDI_XPMEM_seg_t;
+
+typedef struct MPIDI_XPMEM_segtree {
+    MPIDI_XPMEM_seg_t *root;
+    int tree_size;
+    MPID_Thread_mutex_t lock;
+} MPIDI_XPMEM_segtree_t;
 
 typedef struct {
     xpmem_segid_t remote_segid;
     xpmem_apid_t apid;
+    MPIDI_XPMEM_segtree_t segcache;     /* AVL tree based segment cache */
 } MPIDI_XPMEM_segmap_t;
 
 typedef struct {
@@ -26,6 +48,7 @@ typedef struct {
 } MPIDI_XPMEM_global_t;
 
 extern MPIDI_XPMEM_global_t MPIDI_XPMEM_global;
+extern MPIR_Object_alloc_t MPIDI_XPMEM_seg_mem;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_SHM_XPMEM_GENERAL;

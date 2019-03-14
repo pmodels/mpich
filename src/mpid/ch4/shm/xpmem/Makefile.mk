@@ -10,6 +10,7 @@ if BUILD_SHM_XPMEM
 noinst_HEADERS += src/mpid/ch4/shm/xpmem/shm_inline.h      \
                   src/mpid/ch4/shm/xpmem/xpmem_noinline.h  \
                   src/mpid/ch4/shm/xpmem/xpmem_impl.h      \
+                  src/mpid/ch4/shm/xpmem/xpmem_seg.h       \
                   src/mpid/ch4/shm/xpmem/xpmem_pre.h
 
 mpi_core_sources += src/mpid/ch4/shm/xpmem/globals.c       \
