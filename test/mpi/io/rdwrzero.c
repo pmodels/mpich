@@ -15,6 +15,7 @@
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test reading and writing zero bytes (set status correctly)";
@@ -27,11 +28,13 @@ int main(int argc, char *argv[])
     MPI_File fh;
     MPI_Comm comm;
     MPI_Status status;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
+    GET_TEST_FILENAME;
 
     comm = MPI_COMM_WORLD;
-    rc = MPI_File_open(comm, (char *) "test.ord",
+    rc = MPI_File_open(comm, filename,
                        MPI_MODE_RDWR | MPI_MODE_CREATE |
                        MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
     if (rc) {

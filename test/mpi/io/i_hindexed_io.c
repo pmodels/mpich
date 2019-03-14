@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define DATA_SIZE 324*4
 #define PAD 256
@@ -36,9 +37,9 @@ int main(int argc, char **argv)
     int i, j, k, errs = 0;
     MPI_Aint disp[BLK_COUNT];
     int block_lens[BLK_COUNT];
-    char *filename = "unnamed.dat";
     MPI_Status status;
     MPI_Request request;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     disp[0] = (MPI_Aint) (PAD);
@@ -59,9 +60,6 @@ int main(int argc, char **argv)
 
     MPI_Type_create_hvector(BLK_COUNT, data_size, 0, MPI_BYTE, &mem_type);
     MPI_Type_commit(&mem_type);
-
-    if (1 < argc)
-        filename = argv[1];
 
     CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
                         MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE,

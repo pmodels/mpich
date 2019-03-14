@@ -16,13 +16,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define NUM_OBJS 4
 #define OBJ_SIZE 1048576
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
 
 char *prog = NULL;
 int debug = 0;
@@ -33,7 +30,7 @@ static void Usage(int line)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank == 0) {
         fprintf(stderr,
-                "Usage (line %d): %s [-d] [-h] -f filename\n"
+                "Usage (line %d): %s [-d] [-h] [-id test_id]\n"
                 "\t-d for debugging\n"
                 "\t-h to turn on the hints to force collective aggregation\n", line, prog);
     }
@@ -237,15 +234,16 @@ set_hints(MPI_Info *info, char *hints) {
 int main(int argc, char *argv[])
 {
     int nproc = 1, rank = 0;
-    char *target = NULL;
     int c;
     MPI_Info info;
     int mpi_ret;
     int corrupt_blocks = 0;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME;
 
     if ((mpi_ret = MPI_Info_create(&info)) != MPI_SUCCESS) {
         if (rank == 0)
@@ -255,31 +253,25 @@ int main(int argc, char *argv[])
     prog = strdup(argv[0]);
 
     if (argc > 1) {
-        while ((c = getopt(argc, argv, "df:h")) != EOF) {
-            switch (c) {
-                case 'd':
-                    debug = 1;
-                    break;
-                case 'f':
-                    target = strdup(optarg);
-                    break;
-                case 'h':
-                    set_hints(&info);
-                    break;
-                default:
-                    Usage(__LINE__);
+        int i = 1;
+        while (i < argc) {
+            if (strcmp(argv[i], "-d") == 0) {
+                debug = 1;
+            } else if (strcmp(argv[i], "-h") == 0) {
+                set_hints(&info);
+            } else if (strncmp(argv[i], "-id=", 4) == 0) {
+                /* Already handled by GET_TEST_FILENAME */
+            } else {
+                Usage(__LINE__);
             }
-        }
-        if (!target) {
-            Usage(__LINE__);
+            i++;
         }
     } else {
-        target = "testfile";
         set_hints(&info);
     }
 
-    write_file(target, rank, &info);
-    read_file(target, rank, &info, &corrupt_blocks);
+    write_file(filename, rank, &info);
+    read_file(filename, rank, &info, &corrupt_blocks);
 
     MPI_Info_free(&info);
 

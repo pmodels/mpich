@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test file_get_extent";
@@ -18,11 +19,13 @@ int main(int argc, char *argv[])
     MPI_File fh;
     MPI_Comm comm;
     MPI_Aint extent, nextent;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
+    GET_TEST_FILENAME;
 
     comm = MPI_COMM_WORLD;
-    MPI_File_open(comm, (char *) "test.ord",
+    MPI_File_open(comm, filename,
                   MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
 
     MPI_File_get_type_extent(fh, MPI_INT, &extent);

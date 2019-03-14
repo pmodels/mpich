@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include "test_io.h"
 
 #define CHECK_ERROR(err, nerrs)                                         \
     do {                                                                \
@@ -29,11 +30,11 @@
 
 int main(int argc, char *argv[])
 {
-    char *filename;
-    int i, len, nprocs, amode, err, nerrs = 0;
+    int i, nprocs, amode, err, nerrs = 0;
     int blen[2], disp[2];
     MPI_Datatype etype, filetype;
     MPI_File fh;
+    INIT_FILENAME;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -43,21 +44,7 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    i = 1;
-    while ((i < argc) && strcmp("-fname", *argv)) {
-        i++;
-        argv++;
-    }
-    if (i >= argc) {
-        len = 8;
-        filename = (char *) malloc(len + 10);
-        strcpy(filename, "testfile");
-    } else {
-        argv++;
-        len = (int) strlen(*argv);
-        filename = (char *) malloc(len + 1);
-        strcpy(filename, *argv);
-    }
+    GET_TEST_FILENAME;
 
     MPI_File_delete(filename, MPI_INFO_NULL);
 

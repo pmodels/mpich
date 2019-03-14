@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test asynchronous I/O w/ multiple completion";
@@ -22,50 +23,17 @@ static char MTEST_Descrip[] = "Test asynchronous I/O w/ multiple completion";
 
 int main(int argc, char **argv)
 {
-    int *buf, i, rank, nints, len;
-    char *filename, *tmp;
+    int *buf, i, rank, nints;
     int errs = 0;
     MPI_File fh;
     MPI_Status statuses[NUMOPS];
     MPI_Request requests[NUMOPS];
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-/* process 0 takes the file name as a command-line argument and
-   broadcasts it to other processes */
-    if (!rank) {
-        i = 1;
-        while ((i < argc) && strcmp("-fname", *argv)) {
-            i++;
-            argv++;
-        }
-        if (i >= argc) {
-            /* Use a default filename of testfile */
-            len = 8;
-            filename = (char *) malloc(len + 10);
-            memset(filename, 0, (len + 10) * sizeof(char));
-            strcpy(filename, "testfile");
-            /*
-             * fprintf(stderr, "\n*#  Usage: async_any -fname filename\n\n");
-             * MPI_Abort(MPI_COMM_WORLD, 1);
-             */
-        } else {
-            argv++;
-            len = (int) strlen(*argv);
-            filename = (char *) malloc(len + 10);
-            MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
-            strcpy(filename, *argv);
-        }
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *) malloc(len + 10);
-        MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
-        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
-    }
-
+    GET_TEST_FILENAME_PER_RANK;
 
     buf = (int *) malloc(SIZE);
     nints = SIZE / sizeof(int);
@@ -73,10 +41,6 @@ int main(int argc, char **argv)
         buf[i] = rank * 100000 + i;
 
     /* each process opens a separate file called filename.'myrank' */
-    tmp = (char *) malloc(len + 10);
-    strcpy(tmp, filename);
-    sprintf(filename, "%s.%d", tmp, rank);
-
     MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
     MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, (char *) "native", MPI_INFO_NULL);
     for (i = 0; i < NUMOPS; i++) {
@@ -107,8 +71,6 @@ int main(int argc, char **argv)
     }
 
     free(buf);
-    free(filename);
-    free(tmp);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 #include "mpitestconf.h"
+#include "test_io.h"
 
 int verbose = 0;
 
@@ -33,18 +34,20 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_File fh;
     char inbuf[80];
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME;
 
     /* Create a file to which to attach the handler */
-    rc = MPI_File_open(MPI_COMM_WORLD, (char *) "test.txt",
+    rc = MPI_File_open(MPI_COMM_WORLD, filename,
                        MPI_MODE_CREATE | MPI_MODE_WRONLY | MPI_MODE_DELETE_ON_CLOSE,
                        MPI_INFO_NULL, &fh);
     if (rc) {
         errs++;
-        printf("Unable to open test.txt for writing\n");
+        printf("Unable to open %s for writing\n", filename);
     }
 
     rc = MPI_File_create_errhandler(user_handler, &ioerr_handler);

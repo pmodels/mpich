@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test set_view with DISPLACEMENT_CURRENT";
@@ -21,16 +22,17 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Status status;
     MPI_Request request;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
+    GET_TEST_FILENAME;
 
     /* This test reads a header then sets the view to every "size" int,
      * using set view and current displacement.  The file is first written
      * using a combination of collective and ordered writes */
 
     comm = MPI_COMM_WORLD;
-    err = MPI_File_open(comm, (char *) "test.ord",
-                        MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &fh);
+    err = MPI_File_open(comm, filename, MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &fh);
     if (err) {
         errs++;
         MTestPrintErrorMsg("Open(1)", err);
@@ -73,7 +75,7 @@ int main(int argc, char *argv[])
     }
 
     /* Reopen the file as sequential */
-    err = MPI_File_open(comm, (char *) "test.ord",
+    err = MPI_File_open(comm, filename,
                         MPI_MODE_RDONLY | MPI_MODE_SEQUENTIAL |
                         MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
     if (err) {

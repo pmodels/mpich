@@ -13,6 +13,7 @@
 #include <string.h>
 #include <mpi.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define YLEN 5
 #define XLEN 10
@@ -60,7 +61,7 @@ char compare_buf[XLEN * 4][YLEN * 4] = {
 int main(int argc, char **argv)
 {
     int i, j, err, rank, np, num_io;
-    char *buf, *filename;
+    char *buf;
     int rank_dim[2], array_of_sizes[2];
     int array_of_subsizes[2];
     int count, *blocklengths, global_array_size;
@@ -76,18 +77,18 @@ int main(int argc, char **argv)
 #ifdef VERBOSE
     int k;
 #endif
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
+    GET_TEST_FILENAME;
 
     if (np != 4) {
         if (!rank)
             printf("Please run with 4 processes. Exiting ...\n\n");
         return 1;
     }
-
-    filename = (argc > 1) ? argv[1] : "testfile";
 
     num_io = 2;
 

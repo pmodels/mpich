@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test contig asynchronous I/O";
@@ -31,8 +32,8 @@ static void handle_error(int errcode, char *str)
 
 int main(int argc, char **argv)
 {
-    int *buf, i, rank, nints, len, err;
-    char *filename = 0, *tmp;
+    int *buf, i, rank, nints, err;
+    pid_t pid;
     int errs = 0;
     int SIZE = DEFAULT_SIZE;
     MPI_File fh;
@@ -42,72 +43,43 @@ int main(int argc, char **argv)
 #else
     MPIO_Request request;
 #endif
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME_PER_RANK;
 
 
 /* process 0 takes the file name as a command-line argument and
    broadcasts it to other processes */
     if (!rank) {
         i = 1;
-        argv++;
-        /* Skip unrecognized arguments */
-        while (i < argc) {
-            if (strcmp(*argv, "-fname") == 0) {
-                argv++;
-                i++;
-                len = (int) strlen(*argv);
-                filename = (char *) malloc(len + 10);
-                MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
-                strcpy(filename, *argv);
-            } else if (strcmp(*argv, "-size") == 0) {
-                argv++;
-                i++;
-                SIZE = strtol(*argv, 0, 10);
-                if (errno) {
-                    fprintf(stderr, "-size requires a numeric argument\n");
-                    MPI_Abort(MPI_COMM_WORLD, 1);
-                } else if (SIZE <= 0) {
-                    fprintf(stderr, "-size requires a positive value\n");
-                }
-            } else {
-                i++;
-                argv++;
+        while ((i < argc) && strcmp("-size", argv[i])) {
+            i++;
+        }
+        if (i < argc) {
+            i++;
+            SIZE = strtol(argv[i], 0, 10);
+            if (errno) {
+                fprintf(stderr, "-size requires a numeric argument\n");
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            } else if (SIZE <= 0) {
+                fprintf(stderr, "-size requires a positive value\n");
             }
         }
 
-        if (!filename) {
-            /* Use a default filename of testfile */
-            len = 8;
-            filename = (char *) malloc(len + 10);
-            MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
-            strcpy(filename, "testfile");
-        }
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
         MPI_Bcast(&SIZE, 1, MPI_INT, 0, MPI_COMM_WORLD);
     } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *) malloc(len + 10);
-        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
         MPI_Bcast(&SIZE, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
 
-
     /*     printf("Starting (size=%d, file=%s)...\n", SIZE, filename); fflush(stdout); */
-
     buf = (int *) malloc(SIZE);
     nints = SIZE / sizeof(int);
     for (i = 0; i < nints; i++)
         buf[i] = rank * 100000 + i;
 
     /* each process opens a separate file called filename.'myrank' */
-    tmp = (char *) malloc(len + 10);
-    strcpy(tmp, filename);
-    sprintf(filename, "%s.%d", tmp, rank);
-    free(tmp);
-
     err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
                         MPI_INFO_NULL, &fh);
     if (err != MPI_SUCCESS)
@@ -161,7 +133,6 @@ int main(int argc, char **argv)
     }
 
     free(buf);
-    free(filename);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

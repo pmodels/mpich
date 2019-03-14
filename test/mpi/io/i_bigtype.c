@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 //#define NUM_X 536870911
 #define NUM_X 536870912
@@ -36,8 +37,10 @@ int main(int argc, char **argv)
     MPI_Datatype type[2];
     MPI_Status status;
     MPI_Request request;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
+    GET_TEST_FILENAME;
 
     if (sizeof(MPI_Aint) <= sizeof(int)) {
         /* can't test on this platform... */
@@ -90,10 +93,10 @@ int main(int argc, char **argv)
     MPI_Type_commit(&file_type);
     MPI_Type_free(&int_type);
 
-    rc = MPI_File_open(MPI_COMM_WORLD, "testfile",
+    rc = MPI_File_open(MPI_COMM_WORLD, filename,
                        MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &fh);
     if (rc != MPI_SUCCESS) {
-        fprintf(stderr, "Can't open file: %s\n", "testfile");
+        fprintf(stderr, "Can't open file: %s\n", filename);
         exit(1);
     }
 

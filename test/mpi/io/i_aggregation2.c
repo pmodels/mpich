@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define BUFSIZE 512
 
@@ -41,13 +42,12 @@ int main(int argc, char **argv)
     int errcode;
     int i, rank, errs = 0, buffer[BUFSIZE], buf2[BUFSIZE];
     MPI_Request request;
-    char *filename = NULL;
-
-    filename = (argc > 1) ? argv[1] : "testfile";
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME;
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");

@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define NSIDE 5
 #define NBLOCK 3
@@ -48,16 +49,15 @@ int main(int argc, char *argv[])
     double *ldata, *pdata;
 
     int tsize, nelem;
-    char *filename;
 
     MPI_File dfile;
-
-    filename = (argc > 1) ? argv[1] : "testfile";
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME;
 
     /* Set up type */
     CHECK(MPI_Type_create_darray(size, rank, 2, gsize, distrib,

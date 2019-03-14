@@ -12,6 +12,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test file_set_view";
@@ -34,14 +35,16 @@ int main(int argc, char *argv[])
     MPI_Info infoin, infoout;
     char value[1024];
     int flag, count;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
+    GET_TEST_FILENAME;
     MPI_Info_create(&infoin);
     MPI_Info_set(infoin, (char *) "access_style", (char *) "write_once,random");
-    MPI_File_open(comm, (char *) "testfile", MPI_MODE_RDWR | MPI_MODE_CREATE, infoin, &fh);
+    MPI_File_open(comm, filename, MPI_MODE_RDWR | MPI_MODE_CREATE, infoin, &fh);
     buf[0] = rank;
     err = MPI_File_write_ordered(fh, buf, 1, MPI_INT, &status);
     if (err) {
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(comm);
     MPI_Comm_rank(comm, &rank);
     if (rank == 0) {
-        err = MPI_File_delete((char *) "testfile", MPI_INFO_NULL);
+        err = MPI_File_delete(filename, MPI_INFO_NULL);
         if (err) {
             errs++;
             MTestPrintError(err);

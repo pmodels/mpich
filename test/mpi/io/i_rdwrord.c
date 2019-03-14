@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /*
 static char MTEST_Descrip[] = "Test reading and writing ordered output";
@@ -20,11 +21,13 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Status status;
     MPI_Request request;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
+    GET_TEST_FILENAME;
 
     comm = MPI_COMM_WORLD;
-    MPI_File_open(comm, (char *) "test.ord",
+    MPI_File_open(comm, filename,
                   MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
 
     MPI_Comm_size(comm, &size);

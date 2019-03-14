@@ -13,6 +13,7 @@
 
 #include <mpi.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 #define MAXLEN 9
 
@@ -142,13 +143,12 @@ static int test_indexed_with_zeros(char *filename, int testcase)
 int main(int argc, char **argv)
 {
     int errs, rank, np;
-    char *filename;
-
-    filename = (argc > 1) ? argv[1] : "testfile";
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
+    GET_TEST_FILENAME;
 
     if (np != 2) {
         if (rank == 0)

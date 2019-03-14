@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "mpi.h"
 #include "mpitest.h"
+#include "test_io.h"
 
 #define HANDLE_ERROR(err) \
     if (err != MPI_SUCCESS) { \
@@ -18,17 +19,16 @@
         MPI_Abort(MPI_COMM_WORLD, 1); \
     }
 
+static int rank;
+
 static void read_file(const char *name, void *buf, MPI_Datatype dt)
 {
-    int rank, err;
+    int err;
     MPI_File fh;
     char datarep[] = "external32";
     int amode = MPI_MODE_RDONLY;
     MPI_Status status;
     MPI_Offset offset;
-
-    /* get our rank */
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* open file */
     err = MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
@@ -54,14 +54,11 @@ static void read_file(const char *name, void *buf, MPI_Datatype dt)
 
 static void write_file(const char *name, void *buf, MPI_Datatype dt)
 {
-    int rank, amode, err;
+    int amode, err;
     char datarep[] = "external32";
     MPI_Status status;
     MPI_File fh;
     MPI_Offset offset;
-
-    /* get our rank in job */
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* open file */
     amode = MPI_MODE_WRONLY | MPI_MODE_CREATE;
@@ -92,19 +89,22 @@ static void write_file(const char *name, void *buf, MPI_Datatype dt)
  * in rank order */
 int main(int argc, char *argv[])
 {
-
+    INIT_FILENAME;
     char buf[2] = "a";
     MPI_Datatype dt;
     int blocks[2] = { 1, 1 };
     int disps[2] = { 0, 1 };
 
     MTest_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    GET_TEST_FILENAME;
+
     MPI_Type_indexed(2, blocks, disps, MPI_CHAR, &dt);
     MPI_Type_commit(&dt);
 
-    write_file("testfile", buf, dt);
+    write_file(filename, buf, dt);
 
-    read_file("testfile", buf, dt);
+    read_file(filename, buf, dt);
 
     MPI_Type_free(&dt);
 

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "mpitest.h"
+#include "test_io.h"
 
 /* A 32^3 array. For other array sizes, change array_of_gsizes below. */
 
@@ -33,34 +34,22 @@ int main(int argc, char **argv)
 {
     MPI_Datatype newtype;
     int i, ndims, array_of_gsizes[3], array_of_distribs[3];
-    int order, nprocs, j, len;
+    int order, nprocs, j;
     int array_of_dargs[3], array_of_psizes[3];
-    int *readbuf, *writebuf, mynod, *tmpbuf, array_size;
+    int *readbuf, *writebuf, rank, *tmpbuf, array_size;
     MPI_Count bufcount;
-    char *filename;
     int errs = 0, toterrs;
     MPI_File fh;
     MPI_Status status;
     MPI_Request request;
     MPI_Info info = MPI_INFO_NULL;
     int errcode;
+    INIT_FILENAME;
 
     MTest_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* process 0 broadcasts the file name to other processes */
-    if (!mynod) {
-        filename = "testfile";
-        len = strlen(filename);
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *) malloc(len + 1);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    }
-
+    GET_TEST_FILENAME;
 
     /* create the distributed array filetype */
     ndims = 3;
@@ -82,7 +71,7 @@ int main(int argc, char **argv)
         array_of_psizes[i] = 0;
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
 
-    MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
+    MPI_Type_create_darray(nprocs, rank, ndims, array_of_gsizes,
                            array_of_distribs, array_of_dargs,
                            array_of_psizes, order, MPI_INT, &newtype);
     MPI_Type_commit(&newtype);
@@ -97,8 +86,8 @@ int main(int argc, char **argv)
 
     array_size = array_of_gsizes[0] * array_of_gsizes[1] * array_of_gsizes[2];
     tmpbuf = (int *) calloc(array_size, sizeof(int));
-    MPI_Irecv(tmpbuf, 1, newtype, mynod, 10, MPI_COMM_WORLD, &request);
-    MPI_Send(writebuf, bufcount, MPI_INT, mynod, 10, MPI_COMM_WORLD);
+    MPI_Irecv(tmpbuf, 1, newtype, rank, 10, MPI_COMM_WORLD, &request);
+    MPI_Send(writebuf, bufcount, MPI_INT, rank, 10, MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
     j = 0;
@@ -110,7 +99,7 @@ int main(int argc, char **argv)
     free(tmpbuf);
 
     if (j != bufcount) {
-        fprintf(stderr, "Error in initializing writebuf on process %d\n", mynod);
+        fprintf(stderr, "Error in initializing writebuf on process %d\n", rank);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     /* end of initialization */
@@ -133,7 +122,7 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_close");
 
-    if (!mynod) {
+    if (!rank) {
         /* wkl suggests potential for false pass if both read
          * and write use the same file view */
         /* solution: rank 0 reads entire file and checks write values */
@@ -182,15 +171,13 @@ int main(int argc, char **argv)
         if (readbuf[i] != writebuf[i]) {
             errs++;
             fprintf(stderr, "Process %d, readbuf %d, writebuf %d, i %d\n",
-                    mynod, readbuf[i], writebuf[i], i);
+                    rank, readbuf[i], writebuf[i], i);
         }
     }
 
     MPI_Type_free(&newtype);
     free(readbuf);
     free(writebuf);
-    if (mynod)
-        free(filename);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
