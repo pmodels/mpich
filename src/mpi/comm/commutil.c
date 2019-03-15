@@ -11,6 +11,24 @@
 #include "utlist.h"
 #include "uthash.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLGATHER_INTRA_AUTO_TUNE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        For MPI_Allgather and MPI_Allgatherv, this file provides threshold value
+        through auto-tuned performnce data
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
 #ifndef MPID_COMM_PREALLOC
