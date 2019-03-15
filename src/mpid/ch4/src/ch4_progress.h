@@ -39,8 +39,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
             progress_func_ptr_t func_ptr = NULL;
             MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
             if (MPIDI_global.progress_hooks[i].active == TRUE) {
-                func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
+                func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
                 MPIR_Assert(func_ptr != NULL);
                 mpi_errno = func_ptr(&made_progress);
                 if (mpi_errno)
