@@ -176,6 +176,8 @@ struct MPIR_Comm {
                                  * are same number of processes across nodes or not */
     int max_num_procs;          /* provides processes per node, to be used when processes per
                                  * node is same across the nodes */
+    int threshold;              /* provides threshold value to be used to select among the
+                                 * collective algorithms */
     MPIR_Info *info;            /* Hints to the communicator */
 
 #if defined HAVE_LIBHCOLL

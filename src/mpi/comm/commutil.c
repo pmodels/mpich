@@ -124,6 +124,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_tail = NULL;
     comm_p->max_num_procs = -1;
     comm_p->uniform_ranks = 1;
+    comm_p->threshold = 0;
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     {
@@ -361,6 +362,9 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     int local_rank = -1, external_rank = -1;
     int *local_procs = NULL, *external_procs = NULL;
     int max_node_id, node_id, i, *nodemap = NULL;
+    FILE *fp;
+    char str[9999], str1[9999];
+    char *token;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
@@ -521,6 +525,25 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->uniform_ranks = 0;
             break;
         }
+    }
+
+    if (strcmp(MPIR_CVAR_ALLGATHER_INTRA_AUTO_TUNE, "")) {
+        fp = fopen(MPIR_CVAR_ALLGATHER_INTRA_AUTO_TUNE, "r");
+        if (fp) {
+            while (fscanf(fp, "%s", str) != EOF) {
+                strcpy(str1, str);
+                if (comm->max_num_procs == atoi(strtok(str1, ","))) {
+                    token = strtok(str, ",");
+                    for (i = 1; i <= max_node_id + 1 && token != NULL; i = i * 2) {
+                        token = strtok(NULL, ",");
+                    }
+                    comm->threshold = atoi(token);
+                }
+            }
+        }
+        fclose(fp);
+    } else {
+        goto fn_exit;
     }
 
   fn_exit:
