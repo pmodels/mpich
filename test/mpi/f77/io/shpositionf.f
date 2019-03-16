@@ -6,17 +6,26 @@ C
         program main
         implicit none
         include 'mpif.h'
-        integer comm, fh, r, s, i
+        integer comm, fh, r, s, i, n
         integer fileintsize
         integer errs, err, ierr
-        character *(100) filename
+        character *(100) filename, arg
         include 'iooffset.h'
         include 'ioaint.h'
 
         errs = 0
         call MTest_Init( ierr )
 
-        filename = "iotest.txt"
+        filename = "testfile"
+        DO i = 1, iargc()
+            CALL getarg(i, arg)
+            IF (INDEX(arg, '-id=') == 1) THEN
+                n = LEN(arg)
+                filename = 'testfile' // '.' // arg(5:n)
+                EXIT
+            END IF
+        END DO
+
         comm = MPI_COMM_WORLD
         call mpi_comm_size( comm, s, ierr )
         call mpi_comm_rank( comm, r, ierr )

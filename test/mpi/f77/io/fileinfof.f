@@ -9,7 +9,8 @@ C
       integer ierr, errs
       integer fh, info1, info2, rank
       logical flag
-      character*(50) filename
+      integer i, n
+      character*(50) filename, arg
       character*(MPI_MAX_INFO_KEY) mykey
       character*(MPI_MAX_INFO_VAL) myvalue
 
@@ -17,10 +18,19 @@ C
       call mtest_init( ierr )
 
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
+      filename = "testfile"
+      DO i = 1, iargc()
+          CALL getarg(i, arg)
+          IF (INDEX(arg, '-id=') == 1) THEN
+              n = LEN(arg)
+              filename = 'testfile' // '.' // arg(5:n)
+              EXIT
+          END IF
+      END DO
+
 C
 C Open a simple file
       ierr = -1
-      filename = "iotest.txt"
       call mpi_file_open( MPI_COMM_WORLD, filename, MPI_MODE_RDWR + 
      &     MPI_MODE_CREATE, MPI_INFO_NULL, fh, ierr )
       if (ierr .ne. MPI_SUCCESS) then

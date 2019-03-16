@@ -14,7 +14,7 @@ C
         integer errs, toterrs, err, ierr
         integer wrank, wsize
         integer fparms(2,maxfparm)
-        character *(100) filename
+        character *(100) filename, arg
         <writefiledecl/>
         <readfiledecl/>
         data fparms/1,4000,  4000,8,  4096,8,  64000,8,  65536,8 /
@@ -25,9 +25,18 @@ C
         call mpi_comm_rank( MPI_COMM_WORLD, wrank, ierr )
         call mpi_comm_size( MPI_COMM_WORLD, wsize, ierr )
 
+        filename = "testfile"
+        DO i = 1, iargc()
+            CALL getarg(i, arg)
+            IF (INDEX(arg, '-id=') == 1) THEN
+                n = LEN(arg)
+                filename = 'testfile' // '.' // arg(5:n)
+                EXIT
+            END IF
+        END DO
+
         call mpi_type_size( MPI_INTEGER, intsize, ierr )
         do ftype = 1, maxftype
-            filename = "iotest.txt"
             if (ftype .eq. 1) then
                 comm = MPI_COMM_WORLD
             elseif (ftype .eq. 2) then
