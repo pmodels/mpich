@@ -171,6 +171,8 @@ do
     printf "done\n"
 done
 
+cat coll/testlist.cvar >> coll/testlist.in
+
 printf "Generate basictypelist.txt for dtpools ... "
 printf "" > dtpools/basictypelist.txt
 while read -r line; do

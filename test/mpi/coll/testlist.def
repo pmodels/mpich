@@ -169,4 +169,3 @@ neighb_alltoall 4 mpiversion=3.0
 neighb_alltoallv 4 mpiversion=3.0
 neighb_alltoallw 4 mpiversion=3.0
 
-@coll_algo_tests@
