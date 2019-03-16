@@ -20,6 +20,7 @@ using namespace std;
 #include <string.h>
 #include <stdio.h>
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 /* tests various miscellaneous functions. */
 /* This is a C++ version of romio/test/misc.c */
@@ -27,7 +28,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    int buf[1024], amode, mynod, len, i;
+    int buf[1024], amode, mynod, i;
     bool flag;
     int errs = 0;
     MPI::File fh;
@@ -36,41 +37,16 @@ int main(int argc, char **argv)
     MPI::Offset disp, offset;
     MPI::Group group;
     MPI::Datatype etype, filetype;
-    char datarep[25], *filename;
+    char datarep[25];
+    INIT_FILENAME;
 
     MTEST_VG_MEM_INIT(buf, 1024 * sizeof(int));
 
     MPI::Init();
+    GET_TEST_FILENAME;
 
     try {
         mynod = MPI::COMM_WORLD.Get_rank();
-
-        /* process 0 takes the file name as a command-line argument and
-         * broadcasts it to other processes */
-        if (!mynod) {
-            i = 1;
-            while ((i < argc) && strcmp("-fname", *argv)) {
-                i++;
-                argv++;
-            }
-            if (i >= argc) {
-                len = (int) strlen("iotest.txt");
-                filename = new char[len + 1];
-                strcpy(filename, "iotest.txt");
-            } else {
-                argv++;
-                len = (int) strlen(*argv);
-                filename = new char[len + 1];
-                strcpy(filename, *argv);
-            }
-            MPI::COMM_WORLD.Bcast(&len, 1, MPI::INT, 0);
-            MPI::COMM_WORLD.Bcast(filename, len + 1, MPI::CHAR, 0);
-        } else {
-            MPI::COMM_WORLD.Bcast(&len, 1, MPI::INT, 0);
-            filename = new char[len + 1];
-            MPI::COMM_WORLD.Bcast(filename, len + 1, MPI::CHAR, 0);
-        }
-
 
         fh = MPI::File::Open(MPI::COMM_WORLD, filename,
                              MPI::MODE_CREATE | MPI::MODE_RDWR, MPI::INFO_NULL);
@@ -247,7 +223,6 @@ int main(int argc, char **argv)
         filetype.Free();
         group.Free();
 
-        delete[]filename;
     }
     catch(MPI::Exception e) {
         cout << "Unhandled MPI exception caught: code " << e.

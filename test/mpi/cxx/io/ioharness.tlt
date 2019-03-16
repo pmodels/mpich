@@ -19,6 +19,7 @@ using namespace std;
 #endif
 #include <string.h>
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 #define MAX_FPARM 5
 #define MAX_BUFFER 65536
@@ -41,18 +42,18 @@ int main( int argc, char *argv[] )
     int wrank, wsize;
     fileparm fparms[MAX_FPARM] = { 
 	1,4000,  4000,8,  4096,8,  64000,8,  65536,8 };
-    char filename[1024];
+    INIT_FILENAME;
     
     <writefiledecl/>
     <readfiledecl/>
 
     MTest_Init();
+    GET_TEST_FILENAME;
 
     wrank = MPI::COMM_WORLD.Get_rank();
     wsize = MPI::COMM_WORLD.Get_size();
 
     for (ftype=0; ftype<MAX_FTYPE; ftype++) {
-	strcpy( filename, "iotest.txt" );
 	switch (ftype) {
 	case 0:
 	    comm = MPI::COMM_WORLD;

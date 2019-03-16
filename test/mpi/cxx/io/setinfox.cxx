@@ -21,6 +21,7 @@ using namespace std;
 #include <string.h>
 #endif
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 static char MTEST_Descrip[] = "Test file_set_view";
 
@@ -42,14 +43,16 @@ int main(int argc, char *argv[])
     char value[1024];
     bool flag;
     int count;
+    INIT_FILENAME;
 
     MTest_Init();
     comm = MPI::COMM_WORLD;
+    GET_TEST_FILENAME;
 
     rank = comm.Get_rank();
     infoin = MPI::Info::Create();
     infoin.Set("access_style", "write_once,random");
-    fh = MPI::File::Open(comm, "testfile", MPI::MODE_RDWR | MPI::MODE_CREATE, infoin);
+    fh = MPI::File::Open(comm, filename, MPI::MODE_RDWR | MPI::MODE_CREATE, infoin);
     buf[0] = rank;
     try {
         fh.Write_ordered(buf, 1, MPI::INT);
@@ -125,7 +128,7 @@ int main(int argc, char *argv[])
     rank = comm.Get_rank();
     if (rank == 0) {
         try {
-            MPI::File::Delete("testfile", MPI::INFO_NULL);
+            MPI::File::Delete(filename, MPI::INFO_NULL);
         }
         catch(MPI::Exception e) {
             errs++;

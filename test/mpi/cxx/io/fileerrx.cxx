@@ -22,6 +22,7 @@ using namespace std;
 #include <string.h>
 #endif
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 static int codesSeen[3], callcount;
 void myerrhanfunc(MPI::File & fh, int *errcode, ...);
@@ -32,11 +33,12 @@ int main(int argc, char **argv)
     MPI::File fh;
     MPI::Intracomm comm;
     MPI::Errhandler myerrhan, qerr;
-    char filename[50];
     char *errstring;
     int code[2], newerrclass, eclass, rlen;
+    INIT_FILENAME;
 
     MTest_Init();
+    GET_TEST_FILENAME;
 
     errstring = new char[MPI::MAX_ERROR_STRING];
 
@@ -57,7 +59,7 @@ int main(int argc, char **argv)
     // more separation from comm_world
 
     comm = MPI::COMM_WORLD.Dup();
-    fh = MPI::File::Open(comm, "testfile.txt", MPI::MODE_RDWR | MPI::MODE_CREATE, MPI::INFO_NULL);
+    fh = MPI::File::Open(comm, filename, MPI::MODE_RDWR | MPI::MODE_CREATE, MPI::INFO_NULL);
 
     fh.Set_errhandler(myerrhan);
     qerr = fh.Get_errhandler();
@@ -94,7 +96,7 @@ int main(int argc, char **argv)
 
     fh.Close();
     comm.Free();
-    MPI::File::Delete("testfile.txt", MPI::INFO_NULL);
+    MPI::File::Delete(filename, MPI::INFO_NULL);
 
     // Check error strings while we're here...
     MPI::Get_error_string(newerrclass, errstring, rlen);

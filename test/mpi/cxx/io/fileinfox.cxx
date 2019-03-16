@@ -21,6 +21,7 @@ using namespace std;
 #include <string.h>
 #endif
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 int main(int argc, char **argv)
 {
@@ -28,17 +29,17 @@ int main(int argc, char **argv)
     MPI::File fh;
     MPI::Info info1, info2;
     bool flag;
-    char filename[50];
     char *mykey;
     char *myvalue;
+    INIT_FILENAME;
 
     MTest_Init();
+    GET_TEST_FILENAME;
 
     mykey = new char[MPI::MAX_INFO_KEY];
     myvalue = new char[MPI::MAX_INFO_VAL];
 
     // Open a simple file
-    strcpy(filename, "iotest.txt");
     fh = MPI::File::Open(MPI::COMM_WORLD, filename, MPI::MODE_RDWR |
                          MPI::MODE_CREATE, MPI::INFO_NULL);
 

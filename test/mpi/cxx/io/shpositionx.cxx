@@ -21,6 +21,7 @@ using namespace std;
 #include <string.h>
 #endif
 #include "mpitestcxx.h"
+#include "test_io.h"
 
 int main(int argc, char **argv)
 {
@@ -29,12 +30,12 @@ int main(int argc, char **argv)
     int r, s, i;
     int fileintsize;
     int errs = 0;
-    char filename[1024];
     MPI::Offset offset;
+    INIT_FILENAME;
 
     MTest_Init();
+    GET_TEST_FILENAME;
 
-    strcpy(filename, "iotest.txt");
     comm = MPI::COMM_WORLD;
     s = comm.Get_size();
     r = comm.Get_rank();
