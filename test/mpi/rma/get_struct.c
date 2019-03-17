@@ -53,6 +53,8 @@ int main(int argc, char **argv)
             testCases = TWO_STRUCT;
         } else if (strcmp(argv[i], "-onelevel") == 0) {
             isOneLevel = 1;
+        } else if (strncmp(argv[i], "-id=", 4) == 0) {
+            /* skip */
         } else {
             printf("Unrecognized argument %s\n", argv[i]);
         }

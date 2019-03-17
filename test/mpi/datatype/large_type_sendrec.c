@@ -106,7 +106,12 @@ int main(int argc, char *argv[])
 
     int rank, size;
 
-    int logn = (argc > 1) ? atoi(argv[1]) : 32;
+    int logn = 32;
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] >= '0' && argv[i][0] <= '9') {
+            logn = atoi(argv[i]);
+        }
+    }
     size_t count = (size_t) 1 << logn;  /* explicit cast required */
 
     MPI_Datatype bigtype;

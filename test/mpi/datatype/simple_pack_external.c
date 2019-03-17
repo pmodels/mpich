@@ -355,13 +355,11 @@ int struct_of_basics_test(void)
 
 int parse_args(int argc, char **argv)
 {
-    int ret;
-
-    while ((ret = getopt(argc, argv, "v")) >= 0) {
-        switch (ret) {
-            case 'v':
-                verbose = 1;
-                break;
+    int i;
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-v") == 0) {
+            verbose = 1;
+            break;
         }
     }
     return 0;

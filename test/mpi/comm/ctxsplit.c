@@ -35,8 +35,6 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "--loopcount") == 0) {
             i++;
             nLoop = atoi(argv[i]);
-        } else {
-            fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
         }
     }
 

@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     // This test must be invoked with two arguments: myarg1 myarg2
     provided = MPI::Init_thread(argc, argv, MPI::THREAD_MULTIPLE);
 
-    if (argc != 3) {
+    if (argc < 3) {
         errs++;
         cout << "Expected argc=3 but saw argc=" << argc << "\n";
     } else {

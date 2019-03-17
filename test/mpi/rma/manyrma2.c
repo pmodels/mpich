@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "-maxcount") == 0) {
             i++;
             maxCount = atoi(argv[i]);
+        } else if (strncmp(argv[i], "-id=", 4) == 0) {
+            /* skip */
         } else {
             fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
             fprintf(stderr,

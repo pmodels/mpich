@@ -394,10 +394,12 @@ int main(int argc, char **argv)
      * Note that the product tests may fail if the count is very large.
      */
     if (argc >= 2) {
-        count = atoi(argv[1]);
-        if (count <= 0) {
-            fprintf(stderr, "Invalid count argument %s\n", argv[1]);
-            MPI_Abort(MPI_COMM_WORLD, 1);
+        int i;
+        for (i = 1; i < argc; i++) {
+            if (argv[i][0] >= '0' && argv[i][0] <= '9') {
+                count = atoi(argv[1]);
+                break;
+            }
         }
     }
 

@@ -41,9 +41,6 @@ int main(int argc, char *argv[])
             case 'm':
                 chunk = atoi(argv[++i]);
                 break;
-            default:
-                fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
-                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         }
     }
 

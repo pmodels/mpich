@@ -8,8 +8,8 @@ spawnintra 2
 spawnargv 1
 spawnmanyarg 1
 spawnmult2 2
-spaconacc 1
-spaconacc2 1
+spaconacc 1 skip_id
+spaconacc2 1 skip_id
 selfconacc 2
 spaiccreate 2
 spaiccreate2 2
@@ -17,7 +17,7 @@ taskmaster 1 timeLimit=600
 taskmaster 2 timeLimit=600
 join 2
 disconnect_reconnect 3
-disconnect_reconnect2 3
+disconnect_reconnect2 3 skip_id
 disconnect_reconnect3 3
 multiple_ports 3
 multiple_ports2 4

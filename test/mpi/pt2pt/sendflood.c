@@ -41,6 +41,8 @@ int main(int argc, char *argv[])
             verbose = 1;
         else if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--progress") == 0)
             loopProgress = 1;
+        else if (strncmp(argv[i], "-id=", 4) == 0)
+            continue;
         else {
             if (rank == 0) {
                 fprintf(stderr, "%s: [ -v | --verbose ] [ -p | --progress ]\n", argv[0]);
