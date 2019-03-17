@@ -1,0 +1,234 @@
+page: testlist.cvar2
+    module: general
+
+    $call test_icoll, bcast
+    $call test_icoll, reduce
+    $call test_icoll, allreduce
+    $call test_icoll, allgather
+    $call test_icoll, allgatherv
+    $call test_icoll, reduce_scatter_block
+    $call test_icoll, reduce_scatter
+    $call test_icoll, scatter
+    $call test_icoll, gather
+    $call test_icoll, alltoall
+    $call test_icoll, scan
+    $call test_icoll, neighbor_alltoallw
+    $call test_icoll, alltoallv
+    $call test_icoll, neighbor_allgather
+    $call test_icoll, neighbor_allgatherv
+    $call test_icoll, neighbor_alltoall
+    $call test_icoll, neighbor_alltoallv
+
+#---------------------------------------- 
+macros:
+    ibcast_algos: tree, scatter_recexch_allgather, ring
+    ireduce_algos: tree, ring
+    iallreduce_algos: recexch_single_buffer, recexch_multiple_buffer, tree
+    iallgather_algos: recexch_distance_doubling, recexch_distance_halving, gentran_brucks, gentran_ring
+    iallgatherv_algos: recexch_distance_doubling, recexch_distance_halving, gentran_ring, gentran_brucks # FIXME
+    ireduce_scatter_block_algos: recexch
+    ireduce_scatter_algos: recexch
+    iscatter_algos: tree
+    igather_algos: tree
+    ialltoall_algos: gentran_ring, gentran_brucks
+    iscan_algos: gentran_recursive_doubling
+    ineighbor_allgather_algos: gentran_linear
+    ineighbor_allgatherv_algos: gentran_linear
+    ineighbor_alltoall_algos: gentran_linear
+    ineighbor_alltoallv_algos: gentran_linear
+    ineighbor_alltoallw_algos: gentran_linear
+    ialltoallv_algos: gentran_scattered
+
+    bcast_tests:: bcasttest 10
+    bcast_tests:: bcastzerotype 5
+
+    reduce_tests:: reduce 5
+    reduce_tests:: reduce 10
+    reduce_tests:: red3 10
+    reduce_tests:: red4 10
+
+    allreduce_tests:: allred 4 arg=100
+    allreduce_tests:: allred 7
+    allreduce_tests:: allredmany 4
+    allreduce_tests:: allred2 4
+    allreduce_tests:: allred3 10
+    allreduce_tests:: allred4 4
+    allreduce_tests:: allred5 5
+    allreduce_tests:: allred6 4
+    allreduce_tests:: allred6 7
+
+    allgather_tests:: allgather2 10
+    allgather_tests:: allgather3 10
+
+    allgatherv_tests:: allgatherv2 10
+    allgatherv_tests:: allgatherv3 10
+    allgatherv_tests:: allgatherv4 4 timeLimit=600
+
+    V2: mpiversion=2.2
+    reduce_scatter_block_tests:: red_scat_block 4 $(V2)
+    reduce_scatter_block_tests:: red_scat_block 5 $(V2)
+    reduce_scatter_block_tests:: red_scat_block 8 $(V2)
+    reduce_scatter_block_tests:: red_scat_block2 4 $(V2)
+    reduce_scatter_block_tests:: red_scat_block2 5 $(V2)
+    reduce_scatter_block_tests:: red_scat_block2 10 $(V2)
+    reduce_scatter_block_tests:: redscatblk3 8 $(V2)
+    reduce_scatter_block_tests:: redscatblk3 10 $(V2)
+
+    reduce_scatter_tests:: redscat 4
+    reduce_scatter_tests:: redscat 6
+    reduce_scatter_tests:: redscat2 4
+    reduce_scatter_tests:: redscat2 5
+    reduce_scatter_tests:: redscat2 10
+    reduce_scatter_tests:: redscat3 8
+
+    scatter_tests:: scattern 4
+    scatter_tests:: scatter2 4
+    scatter_tests:: scatter3 4
+
+    gather_tests:: gather 4
+    gather_tests:: gather2 4
+
+    alltoall_tests:: alltoall1 8
+
+    alltoallv_tests:: alltoallv 8
+    alltoallv_tests:: alltoallv0 10
+
+    scan_tests:: scantst 4
+
+    V3: mpiversion=3.0
+    neighbor_allgather_tests:: neighb_allgather 4 $(V3)
+    neighbor_allgatherv_tests:: neighb_allgatherv 4 $(V3)
+    neighbor_alltoall_tests:: neighb_alltoall 4 $(V3)
+    neighbor_alltoallv_tests:: neighb_alltoallv 4 $(V3)
+    neighbor_alltoallw_tests:: neighb_alltoallw 4 $(V3)
+
+#---------------------------------------- 
+subcode: test_icoll(coll)
+    # NEWLINE
+    $(set:C=env=MPIR_CVAR_$(coll:uc))
+    $(set:I=env=MPIR_CVAR_I$(coll:uc))
+    $(set:e0=$(C)_DEVICE_COLLECTIVE=0)
+    $(set:e0.= $(C)_INTRA_ALGORITHM=nb)
+    $(set:e0.= $(I)_DEVICE_COLLECTIVE=0)
+    $(for:algo in $(i$(coll)_algos))
+        $(set:e1=$(I)_INTRA_ALGORITHM=$(algo))
+        $(if:hascode:each_$(coll)_$(algo))
+            &call each_$(coll)_$(algo)
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(elif:coll=allgather or coll=allgatherv) # FIXME
+            &call each_$(coll)_recexch_brucks
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(elif:algo=tree)
+            &call each_tree_arg
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(elif:algo=ring)
+            &call each_ring_arg
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(elif:algo~recexch)
+            &call each_recexch_arg
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(elif:algo~gentran_brucks)
+            &call each_brucks_arg
+                $(for:t in $($(coll)_tests))
+                    $(t) $(e0) $(e1) $(e2)
+        $(else)
+            $(for:t in $($(coll)_tests))
+                $(t) $(e0) $(e1)
+
+subcode: each_tree_arg
+    $(set:klist=3)
+    $(for:type in kary, knomial_1, knomial_2)
+        $(for:kval in $(klist))
+            $(for:chunk in 4096)
+                $(set:e2=$(I)_TREE_TYPE=$(type))
+                $(set:e2.= $(I)_TREE_KVAL=$(kval))
+                $(set:e2.= $(I)_TREE_PIPELINE_CHUNK_SIZE=$(chunk))
+                $(if:coll=bcast)
+                    $(set:e2.= $(I)_RING_CHUNK_SIZE=$(chunk))
+                BLOCK
+
+subcode: each_ring_arg
+    $(for:chunk in 4096)
+        $(set:e2=$(I)_RING_CHUNK_SIZE=$(chunk))
+        BLOCK
+
+subcode: each_recexch_arg
+    $(for:kval in 2,3,4)
+        $(set:e2=$(I)_RECEXCH_KVAL=$(kval))
+        BLOCK
+
+subcode: each_brucks_arg
+    $(for:kval in 2,3,4)
+        $(set:e2=$(I)_BRUCKS_KVAL=$(kval))
+        BLOCK
+
+#---------------------------------------- 
+subcode: each_bcast_ring # FIXME
+    $(for:kval in 3)
+        $(set:e2=$(I)_SCATTER_KVAL=$(kval))
+        $(set:e2.= $(I)_ALLGATHER_RECEXCH_KVAL=$(kval))
+        BLOCK
+subcode: each_bcast_scatter_recexch_allgather
+    $(for:kval in 3)
+        $(set:e2=$(I)_SCATTER_KVAL=$(kval))
+        $(set:e2.= $(I)_ALLGATHER_RECEXCH_KVAL=$(kval))
+        BLOCK
+
+subcode: each_allreduce_tree 
+    $(set:klist=2,3,4)
+    $(for:kval in $(klist))
+        $(for:type in kary, knomial_1, knomial_2)
+            $(for:chunk in 4096)
+                $(set:e2=$(I)_TREE_TYPE=$(type))
+                $(set:e2.= $(I)_TREE_PIPELINE_CHUNK_SIZE=$(chunk))
+                $(set:e2.= $(I)_TREE_KVAL=$(kval))
+                BLOCK
+
+subcode: each_allgather_recexch_brucks # FIXME
+    $(for:kval in 2,3,4)
+        $(set:e2=$(I)_RECEXCH_KVAL=$(kval))
+        $(set:e2.= $(I)_BRUCKS_KVAL=$(kval))
+        BLOCK
+
+subcode: each_allgatherv_recexch_brucks # FIXME
+    $(for:kval in 2,3,4)
+        $(set:e2.= $(I)_BRUCKS_KVAL=$(kval))
+        BLOCK
+
+subcode: each_allgatherv_gentran_brucks
+    $(for:kval in 2,3,4)
+        $(set:e2.= $(I)_RECEXCH_KVAL=$(kval))
+        BLOCK
+
+subcode: each_allgatherv_gentran_ring
+    $(set:e2=)
+    BLOCK
+
+subcode: each_scatter_tree
+    $(for:kval in 2,3,4)
+        $(set:e2.= $(I)_TREE_KVAL=$(kval))
+        BLOCK
+
+subcode: each_gather_tree
+    $(for:kval in 2,3,4)
+        $(set:e2.= $(I)_TREE_KVAL=$(kval))
+        BLOCK
+
+subcode: each_alltoall_gentran_brucks
+    $(for:kval in 2,3,4)
+        $(for:b in 0, 1)
+            $(set:e2=$(I)_BRUCKS_KVAL=$(kval))
+            $(set:e2.= $(I)_BRUCKS_BUFFER_PER_NBR=$(b))
+            BLOCK
+
+subcode: each_alltoallv_gentran_scattered
+    $(for:a in 4, 8)
+        $(for:b in 1,2,4)
+            $(set:e2=$(I)_SCATTERED_BATCH_SIZE=$(b))
+            $(set:e2.= $(I)_SCATTERED_OUTSTANDING_TASKS=$(a))
+            BLOCK
