@@ -115,6 +115,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
      * different values */
+    MPID_Comm_init_hook(comm_p);
     return mpi_errno;
 }
 

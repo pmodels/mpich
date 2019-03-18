@@ -157,6 +157,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPID_Comm_init_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_init_hook(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_INIT_HOOK);
+
+    /* These values will be overwritten in the case of MPID_Comm_create_endpoint */
+    comm->dev.endpoint = MPIDI_CH4_COMM_REGULAR; /* means not an Endpoints communicator */
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_INIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -170,7 +190,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 
     /* These values will be overwritten in the case of MPID_Comm_create_endpoint */
     MPIDI_comm_set_vci(comm);
-    comm->dev.endpoint = MPIDI_CH4_COMM_REGULAR; /* means not an Endpoints communicator */
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
