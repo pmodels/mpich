@@ -486,6 +486,7 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
     } ch4;
+    MPIR_Comm *parent_comm;
     int vci;
     int endpoint;
 } MPIDI_Devcomm_t;

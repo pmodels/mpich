@@ -309,6 +309,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     }
 #endif
 
+    if (comm->dev.endpoint != MPIDI_CH4_COMM_REGULAR) {
+        /* This communicator is part of an Endpoints communicator;
+         * release a reference to its parent communicator. */
+        MPIR_Comm_add_ref(comm->dev.parent_comm);
+    }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     return mpi_errno;
@@ -550,6 +556,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     goto fn_exit;
 }
 
+
+/* FIXME: we currently ignore the info object. We could use some shortcuts if
+ * it was set by the user. */
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_create_endpoints
 #undef FCNAME
@@ -557,43 +566,134 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, int num_eps,
                                                         MPI_Info info, MPIR_Comm ***newcomm_ptrs) {
     int mpi_errno = MPI_SUCCESS;
-    int new_size = 0, parent_size, i, *num_eps_array, rank_offset;
+    MPIR_Comm *local_comm;
+    int parent_size, parent_remote_size, new_size, new_remote_size, i, rank_offset;
+    int *num_eps_array, *num_remote_eps_array;
     MPIR_Comm **new_comms;
+    MPIR_Comm_map_t *mapper;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_CREATE_ENDPOINTS);
-
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_COMM_CREATE_ENDPOINTS);
+
+    parent_size = parent_comm->local_size;
+    parent_remote_size = parent_comm->remote_size;
 
     new_comms = (MPIR_Comm**) MPL_malloc(num_eps * sizeof(MPIR_Comm*), MPL_MEM_OTHER);
     num_eps_array = (int*) MPL_malloc(parent_size * sizeof(int), MPL_MEM_OTHER);
-    /* The endpoints communicator size equals the sum of the endpoints across all process
-     * of the parent comm. */
-    mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_eps_array, parent_size, MPI_INT, parent_comm, &errflag);
+    num_remote_eps_array = (int*) MPL_malloc(parent_remote_size * sizeof(int), MPL_MEM_OTHER);
+    /* Step 1: gather information about the endpoint count at each process */
+
+    /* Get the communicator to use in collectives on the local group of
+     * processes */
+    if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        if (!parent_comm->local_comm) {
+            MPII_Setup_intercomm_localcomm(parent_comm);
+        }
+        local_comm = parent_comm->local_comm;
+    } else {
+        local_comm = parent_comm;
+    }
+    /* Gather information on the local group of processes */
+    /* The endpoints communicator size equals the sum of the endpoints across
+     * all process of the parent comm. */
+
+    mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_eps_array, 1, MPI_INT, local_comm, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    for (i = 0; i < parent_size; i++) {
-        new_size += num_eps_array[i];
-        if (i == parent_comm->rank)
-            rank_offset = new_size;
+    /* If we're an intercomm, we need to do the same thing for the remote
+     * group */
+    if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_remote_eps_array, parent_remote_size, MPI_INT, parent_comm, &errflag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
+    /* Step 2: compute endpoint communicator sizes and my local offset */
+
+    /* local group */
+    new_size = 0;
+    for (i = 0; i < parent_size; i++) {
+        if (i == parent_comm->rank)
+            rank_offset = new_size;
+        new_size += num_eps_array[i];
+    }
+
+    if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        new_remote_size = 0;
+        for (i = 0; i < parent_remote_size; i++)
+            new_remote_size += num_remote_eps_array[i];
+    }
+
+    /* Step 3: create communicators and populate mapping information  */
+
     for (i = 0; i < num_eps; i++) {
-        mpi_errno = MPII_Comm_copy_data(parent_comm, &new_comms[i]);
+        mpi_errno = MPIR_Comm_create(&new_comms[i]);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         /* the parent context ids will be used as the base*/
         new_comms[i]->context_id = parent_comm->context_id;
         new_comms[i]->recvcontext_id = parent_comm->recvcontext_id;
-        new_comms[i]->local_size = new_size;
-        new_comms[i]->rank = rank_offset + i;
-        new_comms[i]->dev.vci = i % MPIDI_CH4_Global.num_nm_vcis;
-        new_comms[i]->dev.endpoint = i;
 
-         if (mpi_errno)
+        new_comms[i]->local_size = new_size;
+        new_comms[i]->pof2 = MPL_pof2(new_size);
+        new_comms[i]->rank = rank_offset + i;
+        /* FIXME: these need to be performed by device-level hooks */
+        new_comms[i]->dev.endpoint = i;
+        new_comms[i]->dev.parent_comm = parent_comm;
+
+        /* refcount the parent comm to keep the context id alive even
+         * if the user freed the corresponding handle. */
+        MPIR_Comm_add_ref(parent_comm);
+
+        if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+            int map_idx, j, k;
+
+            MPIR_Comm_map_irregular(new_comms[i], parent_comm, NULL,
+                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+            map_idx = 0;
+            for (j = 0; j < parent_size; j++) {
+                for (k = 0; k < num_eps_array[j]; k++)
+                    mapper->src_mapping[map_idx++] = j;
+            }
+
+            MPIR_Comm_map_irregular(new_comms[i], parent_comm, NULL,
+                                    new_remote_size, MPIR_COMM_MAP_DIR__R2R, &mapper);
+
+            map_idx = 0;
+            for (j = 0; j < parent_remote_size; j++) {
+                for (k = 0; k < num_remote_eps_array[j]; k++)
+                    mapper->src_mapping[map_idx++] = j;
+            }
+
+            new_comms[i]->remote_size = new_remote_size;
+            new_comms[i]->local_comm = 0;
+            new_comms[i]->is_low_group = parent_comm->is_low_group;
+
+        } else {
+            int map_idx, j, k;
+
+            MPIR_Comm_map_irregular(new_comms[i], parent_comm, NULL,
+                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+            map_idx = 0;
+            for (j = 0; j < parent_size; j++) {
+                for (k = 0; k < num_eps_array[j]; k++)
+                    mapper->src_mapping[map_idx++] = j;
+            }
+            new_comms[i]->remote_size = new_size;
+
+        }
+
+        /* Inherit the error handler (if any) */
+        new_comms[i]->errhandler = parent_comm->errhandler;
+        if (parent_comm->errhandler) {
+            MPIR_Errhandler_add_ref(parent_comm->errhandler);
+        }
+
+        mpi_errno = MPIR_Comm_commit(new_comms[i]);
+        if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
     *newcomm_ptrs = new_comms;
