@@ -25,10 +25,10 @@ void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* part of the open call */
 	MPI_Info_create(&(fd->info));
 
-        ADIOI_Info_set(fd->info, "romio_daos_chunk_size", "1048576");
-        fd->hints->fs_hints.daos.chunk_size = 1048576;
+        ADIOI_Info_set(fd->info, "romio_daos_chunk_size", "0");
+        fd->hints->fs_hints.daos.chunk_size = 0;
 
-        ADIOI_Info_set(fd->info, "romio_daos_obj_class", "DAOS_OC_LARGE_RW");
+        ADIOI_Info_set(fd->info, "romio_daos_obj_class", "DAOS_OC_UNKNOWN");
         fd->hints->fs_hints.daos.obj_class = DAOS_OC_UNKNOWN;
 
 	if (users_info != MPI_INFO_NULL) {

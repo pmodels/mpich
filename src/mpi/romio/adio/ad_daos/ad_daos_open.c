@@ -217,7 +217,7 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
 
 int
 get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
-                    daos_oclass_id_t *oclass)
+                    daos_oclass_id_t *oclass, daos_size_t *chunk_size)
 {
     bool use_duns = false;
     char *uuid_str;
@@ -243,6 +243,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
         uuid_copy(*cuuid, attr.da_cuuid);
         *oclass = (attr.da_oclass == DAOS_OC_UNKNOWN) ?
             DAOS_OC_LARGE_RW : attr.da_oclass;
+        *chunk_size = attr.da_chunk_size;
 
         return 0;
     }
@@ -258,6 +259,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
     /* Hash container name to create uuid */
     duuid_hash128(path, cuuid, NULL, NULL);
     *oclass = DAOS_OC_LARGE_RW;
+    *chunk_size = 0;
 
     return 0;
 }
@@ -273,7 +275,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     *error_code = MPI_SUCCESS;
 
     rc = get_pool_cont_uuids(cont->cont_name, &cont->puuid, &cont->cuuid,
-                             &cont->obj_class);
+                             &cont->obj_class, &cont->chunk_size);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
         return;
@@ -282,6 +284,8 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     /** Info object setting should override */
     if (fd->hints->fs_hints.daos.obj_class != DAOS_OC_UNKNOWN)
         cont->obj_class = fd->hints->fs_hints.daos.obj_class;
+    if (fd->hints->fs_hints.daos.chunk_size != 0)
+        cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
 
 #if 0
     {
@@ -291,7 +295,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
         fprintf(stderr, "File %s\n", cont->obj_name);
     }
-    fprintf(stderr, "chunk_size  = %d\n", fd->hints->fs_hints.daos.chunk_size);
+    fprintf(stderr, "chunk_size  = %d\n", cont->chunk_size);
     fprintf(stderr, "OCLASS  = %d\n", cont->obj_class);
 #endif
 
@@ -350,7 +354,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     perm = S_IFREG | perm;
 
     rc = dfs_open(cont->dfs, NULL, cont->obj_name, perm, amode,
-                  cont->obj_class, NULL, &cont->obj);
+                  cont->obj_class, cont->chunk_size, NULL, &cont->obj);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
         goto err_dfs;
@@ -469,7 +473,6 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     fd->access_mode = access_mode;
     cont->amode = amode;
     parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
-    cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
     cont->p = NULL;
     cont->c = NULL;
     fd->fs_ptr = cont;
@@ -557,11 +560,12 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     dfs_t *dfs;
     char *obj_name, *cont_name;
     daos_oclass_id_t oclass;
+    daos_size_t chunk_size;
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
 
     parse_filename(filename, &obj_name, &cont_name);
-    rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass);
+    rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass, &chunk_size);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         return;
