@@ -94,14 +94,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
 #define FUNCNAME MPIDI_OFI_send_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,        /* data_sz is passed in here for reusing */
                                                 int rank, uint64_t match_bits, MPIR_Comm * comm,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * sreq,
                                                 MPIR_Datatype * dt_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), INT64_MAX);
+    size_t countp =
+        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, INT64_MAX);
     size_t omax = MPIDI_OFI_global.tx_iov_limit;
     size_t o_size = sizeof(struct iovec);
     size_t cur_o = 0;
@@ -287,7 +288,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
-            mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, addr, sreq, dt_ptr);
+            mpi_errno =
+                MPIDI_OFI_send_iov(buf, count, data_sz, rank, match_bits, comm, addr, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
