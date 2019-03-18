@@ -116,8 +116,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     if (target_rank == MPI_PROC_NULL)
         goto fn_exit;
 
-    MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
-    MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
+    MPIDI_Datatype_check_origin_target_size(origin_datatype, target_datatype,
+                                            origin_count, target_count,
+                                            origin_data_sz, target_data_sz);
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
@@ -165,8 +166,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     if (target_rank == MPI_PROC_NULL)
         goto fn_exit;
 
-    MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
-    MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
+    MPIDI_Datatype_check_origin_target_size(origin_datatype, target_datatype,
+                                            origin_count, target_count,
+                                            origin_data_sz, target_data_sz);
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
