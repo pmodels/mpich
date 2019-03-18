@@ -298,6 +298,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
                                         target_contig, target_bytes, target_true_lb);
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
                                         origin_contig, origin_bytes, origin_true_lb);
+    MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
     if (unlikely(origin_bytes == 0))
         goto fn_exit;
