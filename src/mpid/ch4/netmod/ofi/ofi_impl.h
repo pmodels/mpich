@@ -616,11 +616,12 @@ struct MPIDI_OFI_contig_blocks_params {
 #define FUNCNAME MPIDI_OFI_count_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* number of data elements in dt_datatype */
+                                                    MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
+                                                    size_t max_pipe)
 {
     MPIR_Segment *dt_seg;
-    ssize_t rem_size;
+    ssize_t rem_size = total_bytes;
     size_t num_iov, total_iov = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
@@ -630,7 +631,6 @@ MPL_STATIC_INLINE_PREFIX
         goto fn_exit;
 
     dt_seg = MPIR_Segment_alloc(NULL, dt_count, dt_datatype);
-    MPIDI_Datatype_check_size(dt_datatype, dt_count, rem_size);
 
     do {
         size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
