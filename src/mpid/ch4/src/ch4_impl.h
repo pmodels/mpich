@@ -400,6 +400,42 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                       \
     } while (0)
 
+/* Check both origin|target buffers' size. */
+#define MPIDI_Datatype_check_origin_target_size(_o_datatype, _t_datatype,         \
+                                                _o_count, _t_count,               \
+                                                _o_data_sz_out, _t_data_sz_out)   \
+    do {                                                                          \
+        MPIDI_Datatype_check_size(_o_datatype, _o_count, _o_data_sz_out);         \
+        if (_t_datatype == _o_datatype && _t_count == _o_count)                   \
+        {                                                                         \
+            _t_data_sz_out = _o_data_sz_out;                                      \
+        }                                                                         \
+        else                                                                      \
+        {                                                                         \
+            MPIDI_Datatype_check_size(_t_datatype, _t_count, _t_data_sz_out);     \
+        }                                                                         \
+    } while (0)
+
+/* Check both origin|target buffers' size, contig and lb. */
+#define MPIDI_Datatype_check_origin_target_contig_size_lb(_o_datatype, _t_datatype,             \
+                                                          _o_count, _t_count,                   \
+                                                          _o_dt_contig_out, _t_dt_contig_out,   \
+                                                          _o_data_sz_out, _t_data_sz_out,       \
+                                                          _o_dt_true_lb, _t_dt_true_lb)         \
+    do {                                                                                        \
+        MPIDI_Datatype_check_contig_size_lb(_o_datatype, _o_count, _o_dt_contig_out,            \
+                                            _o_data_sz_out, _o_dt_true_lb);                     \
+        if (_t_datatype == _o_datatype && _t_count == _o_count) {                               \
+            _t_dt_contig_out = _o_dt_contig_out;                                                \
+            _t_data_sz_out = _o_data_sz_out;                                                    \
+            _t_dt_true_lb = _o_dt_true_lb;                                                      \
+        }                                                                                       \
+        else {                                                                                  \
+            MPIDI_Datatype_check_contig_size_lb(_t_datatype, _t_count, _t_dt_contig_out,        \
+                                                _t_data_sz_out, _t_dt_true_lb);                 \
+        }                                                                                       \
+    } while (0)
+
 #define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)        \
     do {                                                                \
         (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);         \

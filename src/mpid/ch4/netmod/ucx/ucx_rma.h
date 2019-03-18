@@ -233,10 +233,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_DO_PUT);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
-                                        target_contig, target_bytes, target_true_lb);
-    MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
-                                        origin_contig, origin_bytes, origin_true_lb);
+    MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
+                                                      origin_count, target_count,
+                                                      origin_contig, target_contig,
+                                                      origin_bytes, target_bytes,
+                                                      origin_true_lb, target_true_lb);
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
     if (unlikely(origin_bytes == 0))
@@ -294,10 +295,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_DO_GET);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
-                                        target_contig, target_bytes, target_true_lb);
-    MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
-                                        origin_contig, origin_bytes, origin_true_lb);
+    MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
+                                                      origin_count, target_count,
+                                                      origin_contig, target_contig,
+                                                      origin_bytes, target_bytes,
+                                                      origin_true_lb, target_true_lb);
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
     if (unlikely(origin_bytes == 0))
