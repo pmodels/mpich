@@ -30,7 +30,7 @@
 #define FUNCNAME MPIDI_OFI_recv_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * rreq,
@@ -40,7 +40,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t max_pipe = INT64_MAX;
     size_t omax = MPIDI_OFI_global.rx_iov_limit;
-    size_t countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), max_pipe);
+    size_t countp =
+        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), data_sz, max_pipe);
     size_t o_size = sizeof(struct iovec);
     unsigned map_size;
     int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
@@ -224,8 +225,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
-                MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, addr,
-                                   rreq, dt_ptr, flags);
+                MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
+                                   context_id, addr, rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS)       /* Receive posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_RECV_NEEDS_UNPACK)

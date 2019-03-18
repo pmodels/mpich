@@ -165,11 +165,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
     return num_contig == 0 ? 1 : 0;
 }
 
+/* _count: count of data elements of certain datatype
+ * _type: the datatype
+ * _bytes: total byte size
+ * Note: _bytes is calculated based on _count & _type and passed in here for reusing. */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                        const void *origin,
                                                        const MPI_Aint target,
                                                        size_t origin_count,
                                                        size_t target_count,
+                                                       size_t origin_bytes,
+                                                       size_t target_bytes,
                                                        size_t buf_limit,
                                                        MPI_Datatype origin_type,
                                                        MPI_Datatype target_type)
@@ -185,11 +191,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
     seg_state->buf_limit_left = buf_limit;
 
     seg_state->origin_cursor = 0;
-    MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
+    seg_state->origin_end = origin_bytes;
     seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
-    MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
+    seg_state->target_end = target_bytes;
     seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
@@ -202,6 +208,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state(MPIDI_OFI_seg_state_t
     MPIR_Segment_free(seg_state.target_seg);
 }
 
+/* _count: count of data elements of certain datatype
+ * _type: the datatype
+ * _bytes: total byte size
+ * Note: _bytes is calculated based on _count & _type and passed in here for reusing. */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * seg_state,
                                                         const void *origin,
                                                         const void *result,
@@ -212,7 +222,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
                                                         size_t buf_limit,
                                                         MPI_Datatype origin_type,
                                                         MPI_Datatype result_type,
-                                                        MPI_Datatype target_type)
+                                                        MPI_Datatype target_type,
+                                                        size_t origin_bytes,
+                                                        size_t result_bytes, size_t target_bytes)
 {
     /* `seg_state->buflimit` is `MPI_Aint` == `MPI_Aint` (typically, long or other signed types)
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
@@ -225,15 +237,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
     seg_state->buf_limit_left = buf_limit;
 
     seg_state->origin_cursor = 0;
-    MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
+    seg_state->origin_end = origin_bytes;
     seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
 
     seg_state->target_cursor = 0;
-    MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
+    seg_state->target_end = target_bytes;
     seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
 
     seg_state->result_cursor = 0;
-    MPIDI_Datatype_check_size(result_type, result_count, seg_state->result_end);
+    seg_state->result_end = result_bytes;
     seg_state->result_seg = MPIR_Segment_alloc(result, result_count, result_type);
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
