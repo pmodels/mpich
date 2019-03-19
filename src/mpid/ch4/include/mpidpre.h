@@ -23,7 +23,9 @@
 #include "mpid_sched.h"
 #include "mpid_timers_fallback.h"
 #include "netmodpre.h"
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "shmpre.h"
+#endif
 #include "uthash.h"
 #include "ch4_coll_params.h"
 #include "ch4i_workq_types.h"
@@ -172,8 +174,10 @@ typedef struct MPIDIG_req_ext_t {
 typedef struct MPIDIG_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     union {
     MPIDI_SHM_REQUEST_AM_DECL} shm_am;
+#endif
     MPIDIG_req_ext_t *req;
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
@@ -201,8 +205,10 @@ typedef struct {
         union {
         MPIDI_NM_REQUEST_DECL} netmod;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
+#endif
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
         MPIDI_workq_elemt_t command;
@@ -390,9 +396,11 @@ typedef struct {
     MPIDIG_win_t am;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct {
         /* multiple shmmods may co-exist. */
     MPIDI_SHM_WIN_DECL} shm;
+#endif
 } MPIDI_Devwin_t;
 
 #define MPIDIG_WIN(win,field)        (((win)->dev.am).field)
@@ -477,8 +485,10 @@ typedef struct MPIDI_Devcomm_t {
         union {
         MPIDI_NM_COMM_DECL} netmod;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         union {
         MPIDI_SHM_COMM_DECL} shm;
+#endif
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
