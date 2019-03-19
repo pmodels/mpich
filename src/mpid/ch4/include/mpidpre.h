@@ -187,11 +187,9 @@ typedef struct MPIDIG_req_t {
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
-#endif
     /* Anysource handling. Netmod and shm specific requests are cross
      * referenced. This must be present all of the time to avoid lots of extra
      * ifdefs in the code. */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct MPIR_Request *anysource_partner_request;
 #endif
 
