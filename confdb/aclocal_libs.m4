@@ -58,9 +58,8 @@ dnl
 dnl NOTE: This macro expects a corresponding PAC_SET_HEADER_LIB_PATH
 dnl macro (or equivalent logic) to be used before this macro is used.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
-    failure=no
+    AC_CHECK_LIB($2,$3,failure=no,failure=yes,$6)
     AC_CHECK_HEADER([$1],,failure=yes)
-    AC_CHECK_LIB($2,$3,,failure=yes,$6)
     if test "$failure" = "no" ; then
        $4
     else
