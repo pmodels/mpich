@@ -814,20 +814,6 @@ if test -n "$file_system_daos" ; then
     fi
 fi
 
-##DAOS=no
-##if test -n "$file_system_daos" ; then
-##    DAOS=yes
-##    AC_CHECK_LIB([cart], [d_rank_list_alloc],, [unset DAOS])
-##    AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
-##    AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
-##    AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
-##    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
-##fi
-##
-##AS_IF([test "x$DAOS" == xyes],
-##    AC_MSG_NOTICE("Building with DAOS $DAOS") 
-##    AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS]))
-
 #############################################
 # This PVFS2 logic is special because it's hard to get it right if it comes
 # before the known_filesystems check loop above.  So we handle it down here,

@@ -7,12 +7,6 @@
 #include "adio.h"
 #include "adio_extern.h"
 
-#ifdef ROMIO_DAOS
-#include "../ad_daos/ad_daos.h"
-
-extern bool daos_initialized;
-#endif /* ROMIO_DAOS */
-
 void ADIO_End(int *error_code)
 {
     ADIOI_Datarep *datarep, *datarep_next;
@@ -45,14 +39,6 @@ void ADIO_End(int *error_code)
         MPI_Info_free(&ADIOI_syshints);
 
     MPI_Op_free(&ADIO_same_amode);
-
-#ifdef ROMIO_DAOS
-    if (daos_initialized) {
-        adio_daos_hash_finalize();
-        daos_fini();
-        daos_initialized = false;
-    }
-#endif
 
     *error_code = MPI_SUCCESS;
 }

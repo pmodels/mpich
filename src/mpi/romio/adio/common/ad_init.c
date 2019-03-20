@@ -8,12 +8,6 @@
 #include "adio.h"
 #include "adio_extern.h"
 
-#ifdef ROMIO_DAOS
-#include "../ad_daos/ad_daos.h"
-
-bool daos_initialized = false;
-#endif /* ROMIO_DAOS */
-
 ADIOI_Datarep *ADIOI_Datarep_head = NULL;
     /* list of datareps registered by the user */
 
@@ -78,24 +72,6 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     else
         ADIOI_Direct_write = 0;
 #endif
-
-#ifdef ROMIO_DAOS
-    int rc;
-
-    rc = daos_init();
-    if (rc) {
-        fprintf(stderr, "daos_init() failed with %d\n", rc);
-        return;
-    }
-
-    rc = adio_daos_hash_init();
-    if (rc < 0) {
-        fprintf(stderr, "Failed to init daos handle hash table\n");
-        return;
-    }
-
-    daos_initialized = true;
-#endif /* ROMIO_DAOS */
 
 #ifdef ADIOI_MPE_LOGGING
     {

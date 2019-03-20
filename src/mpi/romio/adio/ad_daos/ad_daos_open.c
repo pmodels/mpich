@@ -456,6 +456,10 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     int rc;
     static char myname[] = "ADIOI_DAOS_OPENCOLL";
 
+    ADIOI_DAOS_Init(error_code);
+    if (*error_code != MPI_SUCCESS)
+        return;
+
     MPI_Comm_size(comm, &mpi_size);
 
     amode = 0;
@@ -563,6 +567,10 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     daos_size_t chunk_size;
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
+
+    ADIOI_DAOS_Init(error_code);
+    if (*error_code != MPI_SUCCESS)
+        return;
 
     parse_filename(filename, &obj_name, &cont_name);
     rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass, &chunk_size);

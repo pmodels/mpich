@@ -169,6 +169,9 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
     MPI_Barrier(comm);
 }
 
+/** initialize the DAOS library and hashtables for handles */
+void ADIOI_DAOS_Init(int *error_code);
+
 /** Container/Pool Handle Hash functions */
 int adio_daos_hash_init(void);
 void adio_daos_hash_finalize(void);

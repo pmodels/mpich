@@ -14,6 +14,57 @@
 #include "ad_daos.h"
 #include <daos_errno.h>
 
+int ADIOI_DAOS_Initialized = MPI_KEYVAL_INVALID;
+
+int ADIOI_DAOS_End(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+{
+    int error_code = MPI_SUCCESS;
+    static char myname[] = "ADIOI_DAOS_END";
+    int rc;
+
+    adio_daos_hash_finalize();
+    rc = daos_fini();
+
+    if (rc != 0) {
+        error_code = ADIOI_DAOS_err(myname, "DAOS Finalize Error", __LINE__, rc);
+        return error_code;
+    }
+
+    MPI_Keyval_free(&keyval);
+    return error_code;
+}
+
+void ADIOI_DAOS_Init(int *error_code)
+{
+    static char myname[] = "ADIOI_DAOS_INIT";
+    int rc;
+
+    *error_code = MPI_SUCCESS;
+
+    /** nothing to do if already initialized */
+    if (ADIOI_DAOS_Initialized != MPI_KEYVAL_INVALID)
+        return;
+
+    rc = daos_init();
+    if (rc) {
+        *error_code = ADIOI_DAOS_err(myname, "DAOS Init Error", __LINE__, rc);
+        fprintf(stderr, "daos_init() failed with %d\n", rc);
+        return;
+    }
+
+    rc = adio_daos_hash_init();
+    if (rc < 0) {
+        *error_code = ADIOI_DAOS_err(myname, "DAOS Init Error", __LINE__, rc);
+        fprintf(stderr, "Failed to init daos handle hash table\n");
+        return;
+    }
+
+    /** attach to comm_self destroy to finalize DAOS */
+    MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_DAOS_End,
+                      &ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Attr_put(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
+}
+
 int ADIOI_DAOS_error_convert(int error)
 {
     switch (error)
