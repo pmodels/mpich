@@ -10,7 +10,7 @@
 ##  Contributor License Agreement dated February 8, 2012.
 ##
 
-if BUILD_SHM_POSIX
+if BUILD_CH4_SHM_POSIX_EAGER_STUB
 
 noinst_HEADERS += src/mpid/ch4/shm/posix/eager/stub/stub_init.h \
                   src/mpid/ch4/shm/posix/eager/stub/stub_send.h \
