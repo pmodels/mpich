@@ -50,7 +50,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
 ])
 
 
-dnl PAC_CHECK_HEADER_LIB(header.h, libname, function, action-if-yes, action-if-no)
+dnl PAC_CHECK_HEADER_LIB(header.h, libname, function, action-if-yes, action-if-no, other-libraries)
 dnl This macro checks for a header and lib.  It is assumed that the
 dnl user can specify a path to the includes and libs using --with-xxx=.
 dnl The xxx is specified in the "with_option" parameter.
@@ -60,7 +60,7 @@ dnl macro (or equivalent logic) to be used before this macro is used.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
-    AC_CHECK_LIB($2,$3,,failure=yes)
+    AC_CHECK_LIB($2,$3,,failure=yes,$6)
     if test "$failure" = "no" ; then
        $4
     else
