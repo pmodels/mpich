@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ssend(const void *buf, MPI_Aint cou
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SEND_INIT)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND_INIT)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_send_init(const void *buf, MPI_Aint count,
                                                        MPI_Datatype datatype, int rank, int tag,
                                                        MPIR_Comm * comm, int context_offset,
@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rsend_init(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_ISEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_ISEND)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint count,
                                                    MPI_Datatype datatype, int rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_ISSEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_ISSEND)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_issend(const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, int rank, int tag,
                                                     MPIR_Comm * comm, int context_offset,
@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_issend(const void *buf, MPI_Aint co
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_CANCEL_SEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_CANCEL_SEND)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_cancel_send(MPIR_Request * sreq)
 {
     return MPIDIG_mpi_cancel_send(sreq);
