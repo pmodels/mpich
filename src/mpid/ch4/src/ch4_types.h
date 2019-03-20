@@ -235,8 +235,12 @@ typedef struct MPIDIG_acc_ack_msg_t {
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct MPIDIG_comm_req_list_t {
-    MPIR_Comm *comm[2][4];
-    MPIDIG_rreq_t *uelist[2][4];
+    MPIR_Comm *comm[MPIR_CONTEXT_MAX_ENDPOINTS]
+                   [MPIR_CONTEXT_MAX_LOCALITY_TYPES]
+                   [MPIR_CONTEXT_MAX_SUBCOMM_TYPES];
+    MPIDIG_rreq_t *uelist[MPIR_CONTEXT_MAX_ENDPOINTS]
+                         [MPIR_CONTEXT_MAX_LOCALITY_TYPES]
+                         [MPIR_CONTEXT_MAX_SUBCOMM_TYPES];;
 } MPIDIG_comm_req_list_t;
 
 typedef struct MPIDIU_buf_pool_t {
@@ -278,7 +282,7 @@ typedef struct {
 
 #define MPIDI_CH4_MAX_NM_VCIS 32
 /* FIXME: this needs to coordinate with the endpoint bits provided by the netmod */
-#define MPIDI_CH4_COMM_REGULAR (0X3F)
+#define MPIDI_CH4_COMM_REGULAR (0X0)
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;

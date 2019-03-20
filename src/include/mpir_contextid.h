@@ -61,6 +61,11 @@ typedef uint16_t MPIR_Context_id_t;
 #define MPIR_CONTEXT_IS_LOCALCOMM_SHIFT (MPIR_CONTEXT_SUBCOMM_SHIFT + MPIR_CONTEXT_SUBCOMM_WIDTH)
 #define MPIR_CONTEXT_IS_LOCALCOMM_MASK (((1 << MPIR_CONTEXT_IS_LOCALCOMM_WIDTH) - 1) << MPIR_CONTEXT_IS_LOCALCOMM_SHIFT)
 
+/* this field (ENDPOINT) is used to derive an endpoint ID */
+#define MPIR_CONTEXT_ENDPOINT_WIDTH (4)
+#define MPIR_CONTEXT_ENDPOINT_SHIFT (MPIR_CONTEXT_IS_LOCALCOMM_SHIFT + MPIR_CONTEXT_IS_LOCALCOMM_WIDTH)
+#define MPIR_CONTEXT_ENDPOINT_MASK (((1 << MPIR_CONTEXT_ENDPOINT_WIDTH) - 1) << MPIR_CONTEXT_ENDPOINT_SHIFT)
+
 /* MPIR_MAX_CONTEXT_MASK is the number of ints that make up the bit vector that
  * describes the context ID prefix space.
  *
@@ -76,7 +81,7 @@ typedef uint16_t MPIR_Context_id_t;
  */
 
 /* number of bits to shift right by in order to obtain the context ID prefix */
-#define MPIR_CONTEXT_PREFIX_SHIFT (MPIR_CONTEXT_IS_LOCALCOMM_SHIFT + MPIR_CONTEXT_IS_LOCALCOMM_WIDTH)
+#define MPIR_CONTEXT_PREFIX_SHIFT (MPIR_CONTEXT_ENDPOINT_SHIFT + MPIR_CONTEXT_ENDPOINT_WIDTH)
 #define MPIR_CONTEXT_PREFIX_WIDTH (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))
 #define MPIR_CONTEXT_PREFIX_MASK (((1 << MPIR_CONTEXT_PREFIX_WIDTH) - 1) << MPIR_CONTEXT_PREFIX_SHIFT)
 
@@ -89,6 +94,12 @@ typedef uint16_t MPIR_Context_id_t;
 #define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8)      /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
+
+/* The below macros denote the maximum number of distinct values each
+ * sub-portion of the mask can take. Useful for array allocation for example. */
+#define MPIR_CONTEXT_MAX_SUBCOMM_TYPES  (1 << MPIR_CONTEXT_SUBCOMM_WIDTH)
+#define MPIR_CONTEXT_MAX_LOCALITY_TYPES (1 << MPIR_CONTEXT_IS_LOCALCOMM_WIDTH)
+#define MPIR_CONTEXT_MAX_ENDPOINTS      (1 << MPIR_CONTEXT_ENDPOINT_WIDTH)
 
 /* Utility routines.  Where possible, these are kept in the source directory
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,

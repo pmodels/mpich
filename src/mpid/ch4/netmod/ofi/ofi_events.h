@@ -145,7 +145,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
         uint64_t ss_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_REQUEST(rreq, util_id),
                                                   MPIDI_OFI_REQUEST(rreq, util_comm->rank),
-                                                  MPIDI_OFI_REQUEST(rreq, util_comm->dev.endpoint),
                                                   rreq->status.MPI_TAG,
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);

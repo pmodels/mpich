@@ -91,10 +91,8 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
 
     mpi_errno = MPIDIG_destroy_comm(comm);
-    if (comm->dev.endpoint == MPIDI_CH4_COMM_REGULAR) {
-        MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
-        MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
-    }
+    MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
+    MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_FREE_HOOK);
     return mpi_errno;

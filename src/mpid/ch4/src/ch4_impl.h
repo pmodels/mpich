@@ -53,14 +53,16 @@ static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
     int is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id);
+    int endpoint_idx = MPIR_CONTEXT_READ_FIELD(ENDPOINT, context_id);
     MPIR_Comm *ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CONTEXT_ID_TO_COMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CONTEXT_ID_TO_COMM);
 
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 2);
-    ret = MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type];
+    MPIR_Assert(subcomm_type < MPIR_CONTEXT_MAX_SUBCOMM_TYPES);
+    MPIR_Assert(is_localcomm < MPIR_CONTEXT_MAX_LOCALITY_TYPES);
+    MPIR_Assert(endpoint_idx < MPIR_CONTEXT_MAX_ENDPOINTS);
+    ret = MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint_idx][is_localcomm][subcomm_type];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CONTEXT_ID_TO_COMM);
     return ret;
@@ -71,15 +73,17 @@ static inline MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
     int is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id);
+    int endpoint_idx = MPIR_CONTEXT_READ_FIELD(ENDPOINT, context_id);
     MPIDIG_rreq_t **ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
 
-    MPIR_Assert(subcomm_type <= 3);
-    MPIR_Assert(is_localcomm <= 2);
+    MPIR_Assert(subcomm_type < MPIR_CONTEXT_MAX_SUBCOMM_TYPES);
+    MPIR_Assert(is_localcomm < MPIR_CONTEXT_MAX_LOCALITY_TYPES);
+    MPIR_Assert(endpoint_idx < MPIR_CONTEXT_MAX_ENDPOINTS);
 
-    ret = &MPIDI_CH4_Global.comm_req_lists[comm_idx].uelist[is_localcomm][subcomm_type];
+    ret = &MPIDI_CH4_Global.comm_req_lists[comm_idx].uelist[endpoint_idx][is_localcomm][subcomm_type];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CONTEXT_ID_TO_UELIST);
     return ret;

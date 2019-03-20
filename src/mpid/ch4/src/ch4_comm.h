@@ -157,26 +157,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Comm_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_init_hook(MPIR_Comm * comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_INIT_HOOK);
-
-    /* These values will be overwritten in the case of MPID_Comm_create_endpoint */
-    comm->dev.endpoint = MPIDI_CH4_COMM_REGULAR; /* means not an Endpoints communicator */
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_INIT_HOOK);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -327,12 +307,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIR_ERR_POP(mpi_errno);
     }
 #endif
-
-    if (comm->dev.endpoint != MPIDI_CH4_COMM_REGULAR) {
-        /* This communicator is part of an Endpoints communicator;
-         * release a reference to its parent communicator. */
-        MPIR_Comm_add_ref(comm->dev.parent_comm);
-    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FREE_HOOK);
@@ -590,10 +564,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
     int *num_eps_array, *num_remote_eps_array;
     MPIR_Comm **new_comms;
     MPIR_Comm_map_t *mapper;
+    MPIR_Context_id_t new_context_id, remote_context_id;
+    OPA_int_t *context_refcount;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_CREATE_ENDPOINTS);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_COMM_CREATE_ENDPOINTS);
+
+    MPIR_Assert(num_eps < MPIR_CONTEXT_MAX_ENDPOINTS);
 
     parent_size = parent_comm->local_size;
     parent_remote_size = parent_comm->remote_size;
@@ -601,6 +579,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
     new_comms = (MPIR_Comm**) MPL_malloc(num_eps * sizeof(MPIR_Comm*), MPL_MEM_OTHER);
     num_eps_array = (int*) MPL_malloc(parent_size * sizeof(int), MPL_MEM_OTHER);
     num_remote_eps_array = (int*) MPL_malloc(parent_remote_size * sizeof(int), MPL_MEM_OTHER);
+    context_refcount = (OPA_int_t*) MPL_malloc(sizeof(OPA_int_t), MPL_MEM_OTHER);
+    OPA_store_int(context_refcount, 0);
     /* Step 1: gather information about the endpoint count at each process */
 
     /* Get the communicator to use in collectives on the local group of
@@ -624,7 +604,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
     /* If we're an intercomm, we need to do the same thing for the remote
      * group */
     if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_remote_eps_array, parent_remote_size, MPI_INT, parent_comm, &errflag);
+        mpi_errno = MPIR_Allgather(&num_eps, 1, MPI_INT, num_remote_eps_array, parent_remote_size, MPI_INT, local_comm, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -645,27 +625,54 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
             new_remote_size += num_remote_eps_array[i];
     }
 
-    /* Step 3: create communicators and populate mapping information  */
+    /* Step 3: allocate a new context id */
+    mpi_errno = MPIR_Get_contextid_sparse(local_comm, &new_context_id, 0);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_Assert(new_context_id != 0);
+
+    /* In the intercomm case, we need to exchange the context ids */
+    if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        if (parent_comm->rank == 0) {
+            mpi_errno = MPIC_Sendrecv(&new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
+                                      &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                                      0, 0, parent_comm, MPI_STATUS_IGNORE, &errflag);
+            if (mpi_errno) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+            mpi_errno =
+                MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm,
+                           &errflag);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        } else {
+            /* Broadcast to the other members of the local group */
+            mpi_errno =
+                MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm,
+                           &errflag);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        }
+    }
+
+    /* Step 4: create communicators and populate mapping information  */
 
     for (i = 0; i < num_eps; i++) {
         mpi_errno = MPIR_Comm_create(&new_comms[i]);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        /* the parent context ids will be used as the base*/
-        new_comms[i]->context_id = parent_comm->context_id;
-        new_comms[i]->recvcontext_id = parent_comm->recvcontext_id;
+        MPL_free(new_comms[i]->context_refcount);
+        new_comms[i]->context_refcount = context_refcount;
+        OPA_incr_int(context_refcount);
+
+        new_comms[i]->recvcontext_id = MPIR_CONTEXT_SET_FIELD(ENDPOINT, new_context_id, i + 1);
 
         new_comms[i]->local_size = new_size;
         new_comms[i]->pof2 = MPL_pof2(new_size);
         new_comms[i]->rank = rank_offset + i;
-        /* FIXME: these need to be performed by device-level hooks */
-        new_comms[i]->dev.endpoint = i;
-        new_comms[i]->dev.parent_comm = parent_comm;
-
-        /* refcount the parent comm to keep the context id alive even
-         * if the user freed the corresponding handle. */
-        MPIR_Comm_add_ref(parent_comm);
 
         if (parent_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
             int map_idx, j, k;
@@ -690,7 +697,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
             new_comms[i]->remote_size = new_remote_size;
             new_comms[i]->local_comm = 0;
             new_comms[i]->is_low_group = parent_comm->is_low_group;
-
+            new_comms[i]->context_id = MPIR_CONTEXT_SET_FIELD(ENDPOINT, remote_context_id, i + 1);
         } else {
             int map_idx, j, k;
 
@@ -702,7 +709,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
                     mapper->src_mapping[map_idx++] = j;
             }
             new_comms[i]->remote_size = new_size;
-
+            new_comms[i]->context_id = MPIR_CONTEXT_SET_FIELD(ENDPOINT, new_context_id, i + 1);
         }
 
         /* Inherit the error handler (if any) */
@@ -714,6 +721,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
         mpi_errno = MPIR_Comm_commit(new_comms[i]);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
+        new_comms[i]->dev.vci = i;
     }
     *newcomm_ptrs = new_comms;
 

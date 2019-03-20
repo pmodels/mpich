@@ -184,6 +184,8 @@ struct MPIR_Comm {
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
 
+    OPA_int_t *context_refcount;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
      MPID_DEV_COMM_DECL

@@ -105,6 +105,11 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_head = NULL;
     comm_p->mapper_tail = NULL;
 
+    /* FIXME: This should be done when setting the context id,
+     * not here. */
+    comm_p->context_refcount = (OPA_int_t*) MPL_malloc(sizeof(OPA_int_t), MPL_MEM_OTHER);
+    OPA_store_int(comm_p->context_refcount, 1);
+
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     {
         int thr_err;
@@ -115,7 +120,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
      * different values */
-    MPID_Comm_init_hook(comm_p);
     return mpi_errno;
 }
 
@@ -823,7 +827,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         /* This must be the recvcontext_id (i.e. not the (send)context_id)
          * because in the case of intercommunicators the send context ID is
          * allocated out of the remote group's bit vector, not ours. */
-        MPIR_Free_contextid(comm_ptr->recvcontext_id);
+        int refcount = OPA_fetch_and_decr_int(comm_ptr->context_refcount) - 1;
+        if (refcount == 0) {
+            MPIR_Free_contextid(comm_ptr->recvcontext_id);
+            MPL_free(comm_ptr->context_refcount);
+        }
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
         {
