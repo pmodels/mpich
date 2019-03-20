@@ -11,6 +11,7 @@
 #ifndef POSIX_PROBE_H_INCLUDED
 #define POSIX_PROBE_H_INCLUDED
 
+#include "mpidch4r.h"
 #include "posix_impl.h"
 
 
