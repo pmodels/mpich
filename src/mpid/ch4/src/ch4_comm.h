@@ -593,6 +593,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_create_endpoints(MPIR_Comm *parent_comm, 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_CREATE_ENDPOINTS);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_COMM_CREATE_ENDPOINTS);
 
+    MPIR_Assert(num_eps < MPIDI_CH4_MAX_ENDPOINTS - 1);
+
     parent_size = parent_comm->local_size;
     parent_remote_size = parent_comm->remote_size;
 
