@@ -25,7 +25,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_init_comm(MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
+    int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm, endpoint;
     MPIDIG_rreq_t **uelist;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
@@ -48,14 +48,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_init_comm(MPIR_Comm * comm)
     comm_idx = MPIDIG_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
+    endpoint = comm->dev.endpoint;
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = comm;
+    MPIR_Assert(endpoint < MPIDI_CH4_MAX_ENDPOINTS);
+
+    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type] = comm;
     MPIDIG_COMM(comm, posted_list) = NULL;
     MPIDIG_COMM(comm, unexp_list) = NULL;
 
-    uelist = MPIDIG_context_id_to_uelist(comm->context_id);
+    uelist = MPIDIG_context_id_to_uelist(comm->context_id, endpoint);
     if (*uelist) {
         MPIDIG_rreq_t *curr, *tmp;
         DL_FOREACH_SAFE(*uelist, curr, tmp) {
@@ -78,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_init_comm(MPIR_Comm * comm)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
+    int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm, endpoint;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DESTROY_COMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DESTROY_COMM);
 
@@ -87,20 +90,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_destroy_comm(MPIR_Comm * comm)
     comm_idx = MPIDIG_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
+    endpoint = comm->dev.endpoint;
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-    MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
+    MPIR_Assert(endpoint < MPIDI_CH4_MAX_ENDPOINTS);
 
-    if (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
+    MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type] != NULL);
+
+    if (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type]) {
         MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type],
                      posted_list) == NULL);
         MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type],
                      unexp_list) == NULL);
     }
-    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
+    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[endpoint][is_localcomm][subcomm_type] = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);

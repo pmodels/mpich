@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     }
 
     POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
+                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d, endpoint = %d ] to %d\n",
                 (uint64_t) msg_hdr_p->handler_id,
                 (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz,
 #ifdef POSIX_AM_DEBUG
@@ -198,7 +198,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 #else /* POSIX_AM_DEBUG */
                 -1,
 #endif /* POSIX_AM_DEBUG */
-                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
+                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank,
+                ((MPIDIG_hdr_t *) am_hdr)->endpoint, grank);
 
     result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
 
@@ -303,8 +304,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ISEND_REPLY);
 
-    mpi_errno = MPIDI_POSIX_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
-                                     am_hdr, am_hdr_sz, data, count, datatype, sreq);
+    mpi_errno = MPIDI_POSIX_am_isend(src_rank,
+                                     MPIDIG_context_id_to_comm(context_id, MPIDIG_REQUEST(sreq, req->lreq).endpoint),
+                                     handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ISEND_REPLY);
 
@@ -442,7 +444,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
 #define FUNCNAME MPIDI_POSIX_am_send_am_hdr_reply
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id, int endpoint,
                                                            int src_rank, int handler_id,
                                                            const void *am_hdr, size_t am_hdr_sz)
 {
@@ -451,8 +453,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
 
-    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
-                                        am_hdr, am_hdr_sz);
+    mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank,
+                                        MPIDIG_context_id_to_comm(context_id, endpoint),
+                                        handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
 
@@ -475,7 +478,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = (uint64_t) req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
-    mpi_errno = MPIDI_POSIX_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
+    mpi_errno = MPIDI_POSIX_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id), MPIDIG_REQUEST(req, endpoint),
                                               MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
                                               sizeof(msg));
     if (mpi_errno)

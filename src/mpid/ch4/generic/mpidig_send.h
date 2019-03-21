@@ -64,6 +64,7 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
+    am_hdr.endpoint = comm->dev.endpoint;
 
     /* Synchronous send requires a special kind of AM header to track the return message so check
      * for that and fill in the appropriate struct if necessary. */

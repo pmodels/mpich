@@ -120,11 +120,13 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_REPLY);
     if (count)
-        mpi_errno = MPIDI_OFI_do_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id),
+        mpi_errno = MPIDI_OFI_do_am_isend(src_rank,
+                                          MPIDIG_context_id_to_comm(context_id, MPIDIG_REQUEST(sreq, req->lreq).endpoint),
                                           handler_id, am_hdr, am_hdr_sz, data, count, datatype,
                                           sreq, TRUE);
     else
-        mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank, MPIDIG_context_id_to_comm(context_id),
+        mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank,
+                                                 MPIDIG_context_id_to_comm(context_id, MPIDIG_REQUEST(sreq, req->lreq).endpoint),
                                                  handler_id, am_hdr, am_hdr_sz, sreq, TRUE);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_REPLY);
     return mpi_errno;
@@ -162,14 +164,14 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
 
 static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                              int src_rank,
-                                             int handler_id, const void *am_hdr, size_t am_hdr_sz)
+                                             int handler_id, const void *am_hdr, size_t am_hdr_sz, int endpoint)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR_REPLY);
 
-    mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
+    mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id, endpoint), handler_id,
                                     am_hdr, am_hdr_sz, TRUE, TRUE, FALSE);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -196,7 +198,7 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     mpi_errno =
         MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
                                    MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
-                                   sizeof(msg));
+                                   sizeof(msg), MPIDIG_REQUEST(req, endpoint));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

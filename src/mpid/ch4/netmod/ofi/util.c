@@ -128,7 +128,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
 
     /* Look up the communicator */
-    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
+    comm_ptr = MPIDIG_context_id_to_comm(info->comm_id, info->endpoint_id);
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */

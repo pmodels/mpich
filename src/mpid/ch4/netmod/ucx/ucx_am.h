@@ -101,6 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
         MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
         MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
+        MPIDIG_REQUEST(sreq, req->lreq).endpoint = lreq_hdr.hdr.endpoint;
         MPIDIG_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr));

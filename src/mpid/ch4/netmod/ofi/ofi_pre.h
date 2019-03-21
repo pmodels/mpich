@@ -57,6 +57,7 @@ typedef struct {
     /* context id and src rank so the target side can
      * issue RDMA read operation */
     MPIR_Context_id_t context_id;
+    int endpoint;
     int src_rank;
 
     uint64_t src_offset;

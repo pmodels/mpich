@@ -35,6 +35,7 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = exit_code;
     am_hdr.context_id = comm->context_id + MPIR_CONTEXT_INTRA_PT2PT;
+    am_hdr.endpoint = comm->dev.endpoint;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         size = comm->local_size;

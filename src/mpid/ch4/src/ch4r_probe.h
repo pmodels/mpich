@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
         goto fn_exit;
     }
 
-    root_comm = MPIDIG_context_id_to_comm(comm->context_id);
+    root_comm = MPIDIG_context_id_to_comm(comm->context_id, comm->dev.endpoint);
 
     /* MPIDI_CS_ENTER(); */
     unexp_req = MPIDIG_find_unexp(source, tag, root_comm->recvcontext_id + context_offset,
@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
         goto fn_exit;
     }
 
-    root_comm = MPIDIG_context_id_to_comm(comm->context_id);
+    root_comm = MPIDIG_context_id_to_comm(comm->context_id, comm->dev.endpoint);
 
     /* MPIDI_CS_ENTER(); */
     unexp_req = MPIDIG_dequeue_unexp(source, tag, root_comm->recvcontext_id + context_offset,

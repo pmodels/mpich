@@ -116,7 +116,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
     }
     /* MPIDI_CS_EXIT(); */
 
-    root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+    root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id), MPIDIG_REQUEST(rreq, endpoint));
 
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
@@ -459,7 +459,7 @@ static inline int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
-    root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
+    root_comm = MPIDIG_context_id_to_comm(hdr->context_id, hdr->endpoint);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -510,6 +510,7 @@ static inline int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, endpoint) = hdr->endpoint;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_UNEXPECTED;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -520,7 +521,7 @@ static inline int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *
             MPIR_Comm_add_ref(root_comm);
             MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
         } else {
-            MPIDIG_enqueue_unexp(rreq, MPIDIG_context_id_to_uelist(hdr->context_id));
+            MPIDIG_enqueue_unexp(rreq, MPIDIG_context_id_to_uelist(hdr->context_id, hdr->endpoint));
         }
         /* MPIDI_CS_EXIT(); */
     } else {
@@ -531,6 +532,7 @@ static inline int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, endpoint) = hdr->endpoint;
     }
 
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
@@ -575,7 +577,7 @@ static inline int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hd
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
 
-    root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
+    root_comm = MPIDIG_context_id_to_comm(hdr->context_id, hdr->endpoint);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -619,6 +621,7 @@ static inline int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hd
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, endpoint) = hdr->endpoint;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -631,7 +634,7 @@ static inline int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hd
             MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
         } else {
             MPIDIG_enqueue_unexp(rreq,
-                                 MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id)));
+                                 MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id), hdr->endpoint));
         }
         /* MPIDI_CS_EXIT(); */
     } else {
@@ -642,6 +645,7 @@ static inline int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hd
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, endpoint) = hdr->endpoint;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD

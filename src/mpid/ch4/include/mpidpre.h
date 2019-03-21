@@ -86,6 +86,7 @@ typedef struct MPIDIG_lreq_t {
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int endpoint;
 } MPIDIG_lreq_t;
 
 typedef struct MPIDIG_rreq_t {
@@ -182,6 +183,7 @@ typedef struct MPIDIG_req_t {
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int endpoint;
     MPI_Datatype datatype;
 } MPIDIG_req_t;
 

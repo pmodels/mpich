@@ -51,6 +51,11 @@ typedef struct progress_hook_slot {
 
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
+/* FIXME: this needs to coordinate with the endpoint bits provided by the netmod */
+#define MPIDI_CH4_MAX_NM_VCIS 32
+#define MPIDI_CH4_MAX_ENDPOINTS (1 << 6)
+#define MPIDI_CH4_COMM_REGULAR (0X0)
+
 enum {
     MPIDIG_SEND = 0,            /* Eager send */
 
@@ -126,6 +131,7 @@ typedef struct MPIDIG_hdr_t {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int endpoint;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_long_req_mst_t {
@@ -235,8 +241,8 @@ typedef struct MPIDIG_acc_ack_msg_t {
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct MPIDIG_comm_req_list_t {
-    MPIR_Comm *comm[2][4];
-    MPIDIG_rreq_t *uelist[2][4];
+    MPIR_Comm *comm[MPIDI_CH4_MAX_ENDPOINTS][2][4];
+    MPIDIG_rreq_t *uelist[MPIDI_CH4_MAX_ENDPOINTS][2][4];
 } MPIDIG_comm_req_list_t;
 
 typedef struct MPIDIU_buf_pool_t {
@@ -275,10 +281,6 @@ typedef struct MPIDIU_map_t {
 typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
-
-#define MPIDI_CH4_MAX_NM_VCIS 32
-/* FIXME: this needs to coordinate with the endpoint bits provided by the netmod */
-#define MPIDI_CH4_COMM_REGULAR (0X3F)
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;

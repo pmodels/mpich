@@ -130,7 +130,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_IRECV);
 
-    root_comm = MPIDIG_context_id_to_comm(context_id);
+    root_comm = MPIDIG_context_id_to_comm(context_id, comm->dev.endpoint);
     unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
@@ -197,6 +197,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     MPIDIG_REQUEST(rreq, rank) = rank;
     MPIDIG_REQUEST(rreq, tag) = tag;
     MPIDIG_REQUEST(rreq, context_id) = context_id;
+    MPIDIG_REQUEST(rreq, endpoint) = comm->dev.endpoint;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
 
     mpi_errno = MPIDIG_prepare_recv_req(buf, count, datatype, rreq);
@@ -281,6 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     MPIDIG_REQUEST(rreq, rank) = rank;
     MPIDIG_REQUEST(rreq, tag) = tag;
     MPIDIG_REQUEST(rreq, context_id) = comm->context_id + context_offset;
+    MPIDIG_REQUEST(rreq, endpoint) = comm->dev.endpoint;
     rreq->u.persist.real_request = NULL;
     MPID_Request_complete(rreq);
     MPIDIG_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
@@ -382,7 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
-        root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+        root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id), MPIDIG_REQUEST(rreq, endpoint));
 
         /* MPIDI_CS_ENTER(); */
         found =

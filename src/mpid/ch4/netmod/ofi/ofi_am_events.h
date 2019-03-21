@@ -150,7 +150,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);
         am_req->event_id = MPIDI_OFI_EVENT_AM_READ;
-        comm = MPIDIG_context_id_to_comm(context_id);
+        comm = MPIDIG_context_id_to_comm(context_id, MPIDIG_REQUEST(rreq, endpoint));
         MPIR_Assert(comm);
         MPIDI_OFI_cntr_incr();
 
@@ -362,7 +362,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
 #define FUNCNAME MPIDI_OFI_dispatch_ack
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr, int am_type)
+static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, int endpoint, uint64_t sreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;
@@ -371,7 +371,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
 
-    comm = MPIDIG_context_id_to_comm(context_id);
+    comm = MPIDIG_context_id_to_comm(context_id, endpoint);
 
     msg.hdr.am_hdr_sz = sizeof(msg.pyld);
     msg.hdr.data_sz = 0;

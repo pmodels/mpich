@@ -110,6 +110,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_request_copy(MPIR_Request * dest, MPIR_Requ
     MPIDIG_REQUEST(dest, rank) = MPIDIG_REQUEST(src, rank);
     MPIDIG_REQUEST(dest, tag) = MPIDIG_REQUEST(src, tag);
     MPIDIG_REQUEST(dest, context_id) = MPIDIG_REQUEST(src, context_id);
+    MPIDIG_REQUEST(dest, endpoint) = MPIDIG_REQUEST(src, endpoint);
     MPIDIG_REQUEST(dest, req->status) = MPIDIG_REQUEST(src, req->status);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_REQUEST_COPY);
