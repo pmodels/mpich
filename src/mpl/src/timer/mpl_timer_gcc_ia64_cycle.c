@@ -49,6 +49,16 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
     return MPL_TIMER_SUCCESS;
 }
 
+int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
+{
+    /* This returns the number of cycles as the "time".  This isn't correct
+     * for implementing MPI_Wtime, but it does allow us to insert cycle
+     * counters into test programs */
+    *val = (unsigned int) *t;
+
+    return MPL_TIMER_SUCCESS;
+}
+
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     /* This returns the number of cycles as the "time".  This isn't correct

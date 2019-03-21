@@ -123,16 +123,15 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 
 #if 0
-/*   From common code - not implemented for bg. */
+    /* From common code - not implemented for bg. */
     if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
         ADIOI_IOStridedColl(fd, buf, count, ADIOI_READ, datatype,
                             file_ptr_type, offset, status, error_code);
         return;
     }
-    */
 #endif
 #ifdef PROFILE
-        MPE_Log_event(13, 0, "start computation");
+    MPE_Log_event(13, 0, "start computation");
 #endif
 
     MPI_Comm_size(fd->comm, &nprocs);
@@ -142,24 +141,23 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     nprocs_for_coll = fd->hints->cb_nodes;
     orig_fp = fd->fp_ind;
 
-    GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_MPIO_CRW, GPFSMPIO_CIO_LAST)
-        GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_LCOMP, GPFSMPIO_CIO_LAST)
+    GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_MPIO_CRW, GPFSMPIO_CIO_LAST);
+    GPFSMPIO_T_CIO_SET_GET(r, 1, 0, GPFSMPIO_CIO_T_LCOMP, GPFSMPIO_CIO_LAST);
 
-        /* only check for interleaving if cb_read isn't disabled */
-        if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
+    /* only check for interleaving if cb_read isn't disabled */
+    if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
         /* For this process's request, calculate the list of offsets and
-         * lengths in the file and determine the start and end offsets. */
-
-        /* Note: end_offset points to the last byte-offset that will be accessed.
-         * e.g., if start_offset=0 and 100 bytes to be read, end_offset=99 */
-
+         * lengths in the file and determine the start and end offsets.
+         * Note: end_offset points to the last byte-offset to be accessed.
+         * e.g., if start_offset=0 and 100 bytes to be read, end_offset=99
+         */
         ADIOI_Calc_my_off_len(fd, count, datatype, file_ptr_type, offset,
                               &offset_list, &len_list, &start_offset,
                               &end_offset, &contig_access_count);
 
-        GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_GATHER, GPFSMPIO_CIO_T_LCOMP)
+        GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_GATHER, GPFSMPIO_CIO_T_LCOMP);
 #ifdef RDCOLL_DEBUG
-            for (i = 0; i < contig_access_count; i++) {
+        for (i = 0; i < contig_access_count; i++) {
             DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n",
                         myrank, offset_list[i], len_list[i]);
         }
@@ -169,12 +167,13 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
          * processes. The result is an array each of start and end offsets
          * stored in order of process rank. */
 
-        st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
-        end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
+        st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
+        end_offsets = st_offsets + nprocs;
 
         ADIO_Offset my_count_size = 0;
-        /* One-sided aggregation needs the amount of data per rank as well because the difference in
-         * starting and ending offsets for 1 byte is 0 the same as 0 bytes so it cannot be distiguished.
+        /* One-sided aggregation needs the amount of data per rank as well
+         * because the difference in starting and ending offsets for 1 byte is
+         * 0 the same as 0 bytes so it cannot be distiguished.
          */
         if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
             count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
@@ -184,8 +183,8 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         }
         if (romio_tunegather) {
             if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
-                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(3 * nprocs * sizeof(ADIO_Offset));
-                gpfs_offsets = (ADIO_Offset *) ADIOI_Malloc(3 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(6 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets = gpfs_offsets0 + 3 * nprocs;
                 for (ii = 0; ii < nprocs; ii++) {
                     gpfs_offsets0[ii * 3] = 0;
                     gpfs_offsets0[ii * 3 + 1] = 0;
@@ -202,8 +201,8 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                     count_sizes[ii] = gpfs_offsets[ii * 3 + 2];
                 }
             } else {
-                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2 * nprocs * sizeof(ADIO_Offset));
-                gpfs_offsets = (ADIO_Offset *) ADIOI_Malloc(2 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(4 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets = gpfs_offsets0 + 2 * nprocs;
                 for (ii = 0; ii < nprocs; ii++) {
                     gpfs_offsets0[ii * 2] = 0;
                     gpfs_offsets0[ii * 2 + 1] = 0;
@@ -220,7 +219,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                 }
             }
             ADIOI_Free(gpfs_offsets0);
-            ADIOI_Free(gpfs_offsets);
         } else {
             MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
             MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
@@ -229,10 +227,10 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
             }
         }
 
-        GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER)
+        GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER);
 
-            /* are the accesses of different processes interleaved? */
-            for (i = 1; i < nprocs; i++)
+        /* are the accesses of different processes interleaved? */
+        for (i = 1; i < nprocs; i++)
             if ((st_offsets[i] < end_offsets[i - 1]) && (st_offsets[i] <= end_offsets[i]))
                 interleave_count++;
         /* This is a rudimentary check for interleaving, but should suffice
@@ -246,9 +244,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         /* don't do aggregation */
         if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
             ADIOI_Free(offset_list);
-            ADIOI_Free(len_list);
             ADIOI_Free(st_offsets);
-            ADIOI_Free(end_offsets);
         }
 
         fd->fp_ind = orig_fp;
@@ -267,24 +263,24 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         return;
     }
 
-    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_FD_PART, GPFSMPIO_CIO_T_PATANA)
+    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_FD_PART, GPFSMPIO_CIO_T_PATANA);
 
-        /* We're going to perform aggregation of I/O.  Here we call
-         * ADIOI_Calc_file_domains() to determine what processes will handle I/O
-         * to what regions.  We pass nprocs_for_coll into this function; it is
-         * used to determine how many processes will perform I/O, which is also
-         * the number of regions into which the range of bytes must be divided.
-         * These regions are called "file domains", or FDs.
-         *
-         * When this function returns, fd_start, fd_end, fd_size, and
-         * min_st_offset will be filled in.  fd_start holds the starting byte
-         * location for each file domain.  fd_end holds the ending byte location.
-         * min_st_offset holds the minimum byte location that will be accessed.
-         *
-         * Both fd_start[] and fd_end[] are indexed by an aggregator number; this
-         * needs to be mapped to an actual rank in the communicator later.
-         *
-         */
+    /* We're going to perform aggregation of I/O.  Here we call
+     * ADIOI_Calc_file_domains() to determine what processes will handle I/O
+     * to what regions.  We pass nprocs_for_coll into this function; it is
+     * used to determine how many processes will perform I/O, which is also
+     * the number of regions into which the range of bytes must be divided.
+     * These regions are called "file domains", or FDs.
+     *
+     * When this function returns, fd_start, fd_end, fd_size, and
+     * min_st_offset will be filled in.  fd_start holds the starting byte
+     * location for each file domain.  fd_end holds the ending byte location.
+     * min_st_offset holds the minimum byte location that will be accessed.
+     *
+     * Both fd_start[] and fd_end[] are indexed by an aggregator number; this
+     * needs to be mapped to an actual rank in the communicator later.
+     *
+     */
     int currentNonZeroDataIndex = 0;
     if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
         /* Take out the 0-data offsets by shifting the indexes with data to the
@@ -330,19 +326,16 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_MYREQ, GPFSMPIO_CIO_T_FD_PART);
     if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
-        /* If the user has specified to use a one-sided aggregation method then do that at
-         * this point instead of the two-phase I/O.
+        /* If the user has specified to use a one-sided aggregation method then
+         * do that at this point instead of the two-phase I/O.
          */
         ADIOI_OneSidedReadAggregation(fd, offset_list, len_list, contig_access_count, buf,
                                       datatype, error_code, st_offsets, end_offsets,
                                       currentNonZeroDataIndex, fd_start, fd_end);
-        GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs)
-            ADIOI_Free(offset_list);
-        ADIOI_Free(len_list);
+        GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs);
+        ADIOI_Free(offset_list);
         ADIOI_Free(st_offsets);
-        ADIOI_Free(end_offsets);
         ADIOI_Free(fd_start);
-        ADIOI_Free(fd_end);
         ADIOI_Free(count_sizes);
         goto fn_exit;
     }
@@ -366,16 +359,12 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                                            error_code, st_offsets, end_offsets, fd_start, fd_end);
 
             /* NOTE: we are skipping the rest of two-phase in this path */
-            GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs)
+            GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs);
 
-                ADIOI_Free(offset_list);
-            ADIOI_Free(len_list);
+            ADIOI_Free(offset_list);
             ADIOI_Free(st_offsets);
-            ADIOI_Free(end_offsets);
             ADIOI_Free(fd_start);
-            ADIOI_Free(fd_end);
             goto fn_exit;
-
         }
     }
 
@@ -401,38 +390,32 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                           min_st_offset, fd_start, fd_end, fd_size,
                           nprocs, &count_my_req_procs, &count_my_req_per_proc, &my_req, &buf_idx);
 
-    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ)
+    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ);
 
-        /* perform a collective communication in order to distribute the
-         * data calculated above.  fills in the following:
-         * count_others_req_procs - number of processes (including this
-         *     one) which have requests in this process's file domain.
-         * count_others_req_per_proc[] - number of separate contiguous
-         *     requests from proc i lie in this process's file domain.
-         */
-        if (gpfsmpio_tuneblocking)
+    /* perform a collective communication in order to distribute the
+     * data calculated above.  fills in the following:
+     * count_others_req_procs - number of processes (including this
+     *     one) which have requests in this process's file domain.
+     * count_others_req_per_proc[] - number of separate contiguous
+     *     requests from proc i lie in this process's file domain.
+     */
+    if (gpfsmpio_tuneblocking)
         ADIOI_GPFS_Calc_others_req(fd, count_my_req_procs,
                                    count_my_req_per_proc, my_req,
                                    nprocs, myrank, &count_others_req_procs, &others_req);
-
     else
         ADIOI_Calc_others_req(fd, count_my_req_procs,
                               count_my_req_per_proc, my_req,
                               nprocs, myrank, &count_others_req_procs, &others_req);
 
-    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ)
+    GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ);
 
-        /* my_req[] and count_my_req_per_proc aren't needed at this point, so
-         * let's free the memory
-         */
-        ADIOI_Free(count_my_req_per_proc);
-    for (i = 0; i < nprocs; i++) {
-        if (my_req[i].count) {
-            ADIOI_Free(my_req[i].offsets);
-        }
-    }
+    /* my_req[] and count_my_req_per_proc aren't needed at this point, so
+     * let's free the memory
+     */
+    ADIOI_Free(count_my_req_per_proc);
+    ADIOI_Free(my_req[0].offsets);
     ADIOI_Free(my_req);
-
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
      * communicate, and fill user buf.
@@ -442,28 +425,19 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                         len_list, contig_access_count, min_st_offset,
                         fd_size, fd_start, fd_end, buf_idx, error_code);
 
-    GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_DEXCH)
-        GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_MPIO_CRW)
+    GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_DEXCH);
+    GPFSMPIO_T_CIO_SET_GET(r, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_MPIO_CRW);
+    GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs);
 
-        GPFSMPIO_T_CIO_REPORT(0, fd, myrank, nprocs)
-
-
-        /* free all memory allocated for collective I/O */
-        for (i = 0; i < nprocs; i++) {
-        if (others_req[i].count) {
-            ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].mem_ptrs);
-        }
-    }
+    /* free all memory allocated for collective I/O */
+    ADIOI_Free(others_req[0].offsets);
+    ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
-    ADIOI_Free(len_list);
     ADIOI_Free(st_offsets);
-    ADIOI_Free(end_offsets);
     ADIOI_Free(fd_start);
-    ADIOI_Free(fd_end);
 
   fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES

@@ -25,6 +25,12 @@ double MPL_wtick(void)
     return seconds_per_tick;
 }
 
+void MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
+{
+    *val = (unsigned int) (t->QuadPart & 0xffffffffUL);
+}
+
+
 void MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) t->QuadPart * seconds_per_tick;

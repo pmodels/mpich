@@ -114,9 +114,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         _retry--;                                           \
@@ -139,9 +139,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
@@ -299,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 {
-    MPIDI_Global.rma_issued_cntr++;
+    MPIDI_OFI_global.rma_issued_cntr++;
 }
 
 /* Externs:  see util.c for definition */
@@ -323,20 +323,20 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
 {
     /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
-        && MPIDI_Global.max_order_war != -1) {
+        && MPIDI_OFI_global.max_order_war != -1) {
         /* An order size value of 0 indicates that ordering is not guaranteed. */
-        MPIR_Assert(MPIDI_Global.max_order_war != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
+        MPIR_Assert(MPIDI_OFI_global.max_order_war != 0);
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_war);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW)
-        && MPIDI_Global.max_order_waw != -1) {
-        MPIR_Assert(MPIDI_Global.max_order_waw != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
+        && MPIDI_OFI_global.max_order_waw != -1) {
+        MPIR_Assert(MPIDI_OFI_global.max_order_waw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_waw);
     }
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW)
-        && MPIDI_Global.max_order_raw != -1) {
-        MPIR_Assert(MPIDI_Global.max_order_raw != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
+        && MPIDI_OFI_global.max_order_raw != -1) {
+        MPIR_Assert(MPIDI_OFI_global.max_order_raw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_raw);
     }
     return max_size;
 }
@@ -488,35 +488,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
 
     /* We've run out of space in the connection table. Allocate more. */
-    if (MPIDI_Global.conn_mgr.next_conn_id == -1) {
+    if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
         int old_max, new_max, i;
-        old_max = MPIDI_Global.conn_mgr.max_n_conn;
+        old_max = MPIDI_OFI_global.conn_mgr.max_n_conn;
         new_max = old_max + 1;
-        MPIDI_Global.conn_mgr.free_conn_id =
-            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int),
+        MPIDI_OFI_global.conn_mgr.free_conn_id =
+            (int *) MPL_realloc(MPIDI_OFI_global.conn_mgr.free_conn_id, new_max * sizeof(int),
                                 MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; ++i) {
-            MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
+            MPIDI_OFI_global.conn_mgr.free_conn_id[i] = i + 1;
         }
-        MPIDI_Global.conn_mgr.free_conn_id[new_max - 1] = -1;
-        MPIDI_Global.conn_mgr.max_n_conn = new_max;
-        MPIDI_Global.conn_mgr.next_conn_id = old_max;
+        MPIDI_OFI_global.conn_mgr.free_conn_id[new_max - 1] = -1;
+        MPIDI_OFI_global.conn_mgr.max_n_conn = new_max;
+        MPIDI_OFI_global.conn_mgr.next_conn_id = old_max;
     }
 
-    conn_id = MPIDI_Global.conn_mgr.next_conn_id;
-    MPIDI_Global.conn_mgr.next_conn_id = MPIDI_Global.conn_mgr.free_conn_id[conn_id];
-    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = -1;
-    MPIDI_Global.conn_mgr.n_conn++;
+    conn_id = MPIDI_OFI_global.conn_mgr.next_conn_id;
+    MPIDI_OFI_global.conn_mgr.next_conn_id = MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id];
+    MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id] = -1;
+    MPIDI_OFI_global.conn_mgr.n_conn++;
 
-    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn <= MPIDI_Global.conn_mgr.max_n_conn);
+    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn);
 
-    MPIDI_Global.conn_mgr.conn_list[conn_id].dest = conn;
-    MPIDI_Global.conn_mgr.conn_list[conn_id].rank = rank;
-    MPIDI_Global.conn_mgr.conn_list[conn_id].state = state;
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest = conn;
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank = rank;
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state = state;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
-                     conn_id, conn, rank, MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+                     conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
     return conn_id;
@@ -528,10 +528,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
 
-    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn > 0);
-    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = MPIDI_Global.conn_mgr.next_conn_id;
-    MPIDI_Global.conn_mgr.next_conn_id = conn_id;
-    MPIDI_Global.conn_mgr.n_conn--;
+    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn > 0);
+    MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id] = MPIDI_OFI_global.conn_mgr.next_conn_id;
+    MPIDI_OFI_global.conn_mgr.next_conn_id = conn_id;
+    MPIDI_OFI_global.conn_mgr.n_conn--;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
 
@@ -547,14 +547,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
     MPIDI_OFI_dynamic_process_request_t req;
     uint64_t match_bits = 0;
     int close_msg = 0xcccccccc;
-    int rank = MPIDI_Global.conn_mgr.conn_list[conn_id].rank;
+    int rank = MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank;
     struct fi_msg_tagged msg;
     struct iovec msg_iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
 
-    if (MPIDI_Global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+    if (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
@@ -569,24 +569,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.msg_iov = &msg_iov;
         msg.desc = NULL;
         msg.iov_count = 0;
-        msg.addr = MPIDI_Global.conn_mgr.conn_list[conn_id].dest;
+        msg.addr = MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest;
         msg.tag = match_bits;
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
         msg.data = 0;
-        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
+        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
                              tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
-    switch (MPIDI_Global.conn_mgr.conn_list[conn_id].state) {
+    switch (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state) {
         case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-            MPIDI_Global.conn_mgr.conn_list[conn_id].state =
+            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
                 MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
             break;
         case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-            MPIDI_Global.conn_mgr.conn_list[conn_id].state =
+            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
                 MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
             break;
         default:
@@ -595,7 +595,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
-                     conn_id, MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+                     conn_id, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
@@ -667,7 +667,8 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 #define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
-    return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
+    size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
+    return (void *) (uintptr_t) aligned_iov;
 }
 
 #undef  FUNCNAME

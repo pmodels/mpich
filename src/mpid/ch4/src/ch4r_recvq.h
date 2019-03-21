@@ -275,7 +275,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_posted(MPIR_Request * req, MPIDIG_r
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
     MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(MPIDI_CH4_Global.posted_list, &req->dev.ch4.am.req->rreq);
+    DL_APPEND(MPIDI_global.posted_list, &req->dev.ch4.am.req->rreq);
     MPIR_T_PVAR_LEVEL_INC(RECVQ, posted_recvq_length, 1);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_POSTED);
 }
@@ -289,7 +289,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_unexp(MPIR_Request * req, MPIDIG_rr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
     MPIDIG_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    DL_APPEND(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
+    DL_APPEND(MPIDI_global.unexp_list, &req->dev.ch4.am.req->rreq);
     MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_length, 1);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ENQUEUE_UNEXP);
 }
@@ -302,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_delete_unexp(MPIR_Request * req, MPIDIG_rre
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_UNEXP);
-    DL_DELETE(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
+    DL_DELETE(MPIDI_global.unexp_list, &req->dev.ch4.am.req->rreq);
     MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DELETE_UNEXP);
 }
@@ -321,12 +321,12 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp_strict(int rank, int
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP_STRICT);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (!(MPIDIG_REQUEST(req, req->status) & MPIDIG_REQ_BUSY) &&
             MPIDIG_match_unexp(rank, tag, context_id, req)) {
-            DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+            DL_DELETE(MPIDI_global.unexp_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
         }
@@ -351,11 +351,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_unexp(int rank, int tag,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (MPIDIG_match_unexp(rank, tag, context_id, req)) {
-            DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
+            DL_DELETE(MPIDI_global.unexp_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
         }
@@ -380,7 +380,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_find_unexp(int rank, int tag,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_FIND_UNEXP);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (MPIDIG_match_unexp(rank, tag, context_id, req)) {
@@ -407,11 +407,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DEQUEUE_POSTED);
 
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.posted_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_global.posted_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (MPIDIG_match_posted(rank, tag, context_id, req)) {
-            DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+            DL_DELETE(MPIDI_global.posted_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
             break;
         }
@@ -435,10 +435,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_delete_posted(MPIDIG_rreq_t * req, MPIDIG_rr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DELETE_POSTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DELETE_POSTED);
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.posted_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_global.posted_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         if (curr == req) {
-            DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
+            DL_DELETE(MPIDI_global.posted_list, curr);
             found = 1;
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
             break;

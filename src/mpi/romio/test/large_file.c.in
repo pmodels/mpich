@@ -17,6 +17,18 @@
 #define SIZE 1048576*4  /* no. of long longs in each write/read */
 #define NTIMES 128      /* no. of writes/reads */
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 int main(int argc, char **argv)
 {
     MPI_File fh;
@@ -58,7 +70,8 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_SELF, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 
     for (i = 0; i < NTIMES; i++) {
         for (j = 0; j < SIZE; j++)
@@ -73,10 +86,10 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_get_size(fh, &size);
+    MPI_CHECK(MPI_File_get_size(fh, &size));
     fprintf(stderr, "file size = %@LL@ bytes\n", size);
 
-    MPI_File_seek(fh, 0, MPI_SEEK_SET);
+    MPI_CHECK(MPI_File_seek(fh, 0, MPI_SEEK_SET));
 
     for (j = 0; j < SIZE; j++)
         buf[j] = -1;
@@ -100,7 +113,7 @@ int main(int argc, char **argv)
 
     if (!flag)
         fprintf(stderr, "Data read back is correct\n");
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     free(buf);
     free(filename);

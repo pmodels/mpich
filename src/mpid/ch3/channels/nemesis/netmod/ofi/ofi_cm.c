@@ -124,7 +124,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
-                        mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &direct_addr, 0ULL, NULL), avmap);
     VC_OFI(vc)->direct_addr = direct_addr;
@@ -419,7 +419,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
-                        mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(vc)->direct_addr), 0ULL, NULL), avmap);
     VC_OFI(vc)->ready = 1;
 
@@ -544,7 +544,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     ret = MPL_str_get_binary_arg(business_card, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
-                        mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+                        mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(new_vc)->direct_addr), 0ULL, NULL), avmap);
 
     VC_OFI(new_vc)->ready = 1;

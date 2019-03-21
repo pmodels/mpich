@@ -8,6 +8,18 @@
 #include <string.h>
 #include <stdlib.h>
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 /* The file name is taken as a command-line argument. */
 
 /* Measures the I/O bandwidth for writing/reading a 3D
@@ -91,24 +103,26 @@ int main(int argc, char **argv)
 /* to eliminate paging effects, do the operations once but don't time
    them */
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
-    MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status);
-    MPI_File_seek(fh, 0, MPI_SEEK_SET);
-    MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status);
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
+    MPI_CHECK(MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_seek(fh, 0, MPI_SEEK_SET));
+    MPI_CHECK(MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 /* now time write_all */
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
 
     MPI_Barrier(MPI_COMM_WORLD);
     stim = MPI_Wtime();
-    MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status);
+    MPI_CHECK(MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status));
     write_tim = MPI_Wtime() - stim;
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Allreduce(&write_tim, &new_write_tim, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
@@ -126,14 +140,15 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 /* now time read_all */
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
 
     MPI_Barrier(MPI_COMM_WORLD);
     stim = MPI_Wtime();
-    MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status);
+    MPI_CHECK(MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status));
     read_tim = MPI_Wtime() - stim;
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Allreduce(&read_tim, &new_read_tim, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 

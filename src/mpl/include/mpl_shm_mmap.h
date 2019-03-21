@@ -7,6 +7,12 @@
 #ifndef MPL_SHM_MMAP_H_INCLUDED
 #define MPL_SHM_MMAP_H_INCLUDED
 
+#include <fcntl.h>
+
+#ifdef MPL_HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
+
 typedef intptr_t MPLI_shm_lhnd_t;
 
 typedef char *MPLI_shm_ghnd_t;

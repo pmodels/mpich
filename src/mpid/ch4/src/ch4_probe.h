@@ -11,6 +11,7 @@
 #ifndef CH4_PROBE_H_INCLUDED
 #define CH4_PROBE_H_INCLUDED
 
+#include "ch4r_proc.h"
 #include "ch4_impl.h"
 
 #undef FUNCNAME
@@ -123,12 +124,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_iprobe_unsafe(source, tag, comm, context_offset, av, flag, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -156,12 +157,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_improbe_unsafe(source, tag, comm, context_offset, av, flag, message, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_CH4_Global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);

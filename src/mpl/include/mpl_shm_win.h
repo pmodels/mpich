@@ -7,7 +7,10 @@
 #ifndef MPL_SHM_WIN_H_INCLUDED
 #define MPL_SHM_WIN_H_INCLUDED
 
-typedef HANDLE MPL_shm_lhnd_t;
+#include <winsock2.h>
+#include <windows.h>
+
+typedef HANDLE MPLI_shm_lhnd_t;
 
 typedef char *MPLI_shm_ghnd_t;
 /* The local handle, lhnd, is valid only for the current process,

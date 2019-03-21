@@ -79,7 +79,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
         am_hdr_buf = (char *) MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (char *) MPIDIU_get_buf(MPIDI_Global.am_buf_pool);
+        am_hdr_buf = (char *) MPIDIU_get_buf(MPIDI_OFI_global.am_buf_pool);
         is_allocated = 0;
     }
 

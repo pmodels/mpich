@@ -23,7 +23,9 @@
 #include "mpid_sched.h"
 #include "mpid_timers_fallback.h"
 #include "netmodpre.h"
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "shmpre.h"
+#endif
 #include "uthash.h"
 #include "ch4_coll_params.h"
 #include "ch4i_workq_types.h"
@@ -35,7 +37,7 @@
 #elif defined MPIDI_CH4_USE_MT_TRYLOCK
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
-#define MPIDI_CH4_MT_MODEL MPIDI_CH4_Global.settings.mt_model
+#define MPIDI_CH4_MT_MODEL MPIDI_global.settings.mt_model
 #else
 #error "Unknown MT model or MT model not defined"
 #endif
@@ -172,8 +174,10 @@ typedef struct MPIDIG_req_ext_t {
 typedef struct MPIDIG_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     union {
     MPIDI_SHM_REQUEST_AM_DECL} shm_am;
+#endif
     MPIDIG_req_ext_t *req;
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
@@ -187,11 +191,9 @@ typedef struct MPIDIG_req_t {
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
-#endif
     /* Anysource handling. Netmod and shm specific requests are cross
      * referenced. This must be present all of the time to avoid lots of extra
      * ifdefs in the code. */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct MPIR_Request *anysource_partner_request;
 #endif
 
@@ -203,8 +205,10 @@ typedef struct {
         union {
         MPIDI_NM_REQUEST_DECL} netmod;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
+#endif
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
         MPIDI_workq_elemt_t command;
@@ -392,9 +396,11 @@ typedef struct {
     MPIDIG_win_t am;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct {
         /* multiple shmmods may co-exist. */
     MPIDI_SHM_WIN_DECL} shm;
+#endif
 } MPIDI_Devwin_t;
 
 #define MPIDIG_WIN(win,field)        (((win)->dev.am).field)
@@ -479,8 +485,10 @@ typedef struct MPIDI_Devcomm_t {
         union {
         MPIDI_NM_COMM_DECL} netmod;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         union {
         MPIDI_SHM_COMM_DECL} shm;
+#endif
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
@@ -519,7 +527,7 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
 
-#define MPIDIU_get_node_map(avtid)   (MPIDI_CH4_Global.node_map[(avtid)])
+#define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
 
 #define MPID_Progress_register_hook(fn_, id_) MPID_Progress_register(fn_, id_)
 #define MPID_Progress_deregister_hook(id_) MPID_Progress_deregister(id_)

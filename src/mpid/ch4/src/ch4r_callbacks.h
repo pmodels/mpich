@@ -36,8 +36,8 @@ static inline int MPIDIG_check_cmpl_order(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
 
-    if (MPIDIG_REQUEST(req, req->seq_no) == (uint64_t) OPA_load_int(&MPIDI_CH4_Global.exp_seq_no)) {
-        OPA_incr_int(&MPIDI_CH4_Global.exp_seq_no);
+    if (MPIDIG_REQUEST(req, req->seq_no) == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
+        OPA_incr_int(&MPIDI_global.exp_seq_no);
         ret = 1;
         goto fn_exit;
     }
@@ -45,7 +45,7 @@ static inline int MPIDIG_check_cmpl_order(MPIR_Request * req,
     MPIDIG_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
     MPIDIG_REQUEST(req, req->request) = (uint64_t) req;
     /* MPIDI_CS_ENTER(); */
-    DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
+    DL_APPEND(MPIDI_global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
@@ -68,9 +68,9 @@ static inline void MPIDIG_progress_compl_list(void)
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
-    DL_FOREACH_SAFE(MPIDI_CH4_Global.cmpl_list, curr, tmp) {
-        if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_CH4_Global.exp_seq_no)) {
-            DL_DELETE(MPIDI_CH4_Global.cmpl_list, curr);
+    DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
+        if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
+            DL_DELETE(MPIDI_global.cmpl_list, curr);
             req = (MPIR_Request *) curr->request;
             target_cmpl_cb = (MPIDIG_am_target_cmpl_cb) curr->target_cmpl_cb;
             target_cmpl_cb(req);
@@ -90,7 +90,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
-    size_t count;
+    size_t nbytes;
     MPI_Aint last;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -204,31 +204,31 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
                             MPIDIG_REQUEST(match_req, datatype),
                             dt_contig, dt_sz, dt_ptr, dt_true_lb);
     MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(match_req, datatype), dt_sz);
-    MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
     /* Make sure this request has the right amount of data in it. */
     if (MPIDIG_REQUEST(rreq, count) > dt_sz * MPIDIG_REQUEST(match_req, count)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        count = MPIDIG_REQUEST(match_req, count);
+        nbytes = dt_sz * MPIDIG_REQUEST(match_req, count);
     } else {
         rreq->status.MPI_ERROR = MPI_SUCCESS;
-        count = MPIDIG_REQUEST(rreq, count) / dt_sz;
+        nbytes = MPIDIG_REQUEST(rreq, count);   /* incoming message is always count of bytes. */
     }
 
-    MPIR_STATUS_SET_COUNT(match_req->status, count * dt_sz);
-    MPIDIG_REQUEST(rreq, count) = count;
+    MPIR_STATUS_SET_COUNT(match_req->status, nbytes);
+    MPIDIG_REQUEST(rreq, count) = dt_sz > 0 ? nbytes / dt_sz : 0;
 
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer), count,
+        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer),
+                                         MPIDIG_REQUEST(match_req, count),
                                          MPIDIG_REQUEST(match_req, datatype));
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
 
-        last = count * dt_sz;
+        last = nbytes;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
         MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) (count * dt_sz)) {
+        if (last != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
@@ -236,7 +236,7 @@ static inline int MPIDIG_handle_unexp_cmpl(MPIR_Request * rreq)
         }
     } else {
         MPIR_Memcpy((char *) MPIDIG_REQUEST(match_req, buffer) + dt_true_lb,
-                    MPIDIG_REQUEST(rreq, buffer), count * dt_sz);
+                    MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
     /* Now that the unexpected message has been completed, unset the status bit. */
@@ -285,7 +285,7 @@ static inline int MPIDIG_do_send_target(void **data, size_t * p_data_sz, int *is
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
 
     *target_cmpl_cb = MPIDIG_recv_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
 
     if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
         return MPI_SUCCESS;

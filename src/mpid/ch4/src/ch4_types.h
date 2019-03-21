@@ -287,7 +287,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_ch4u_initialized;
     int **node_map, max_node_id;
     MPIDIG_comm_req_list_t *comm_req_lists;
-    OPA_int_t registered_progress_hooks;
+    int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[3];
@@ -314,15 +314,15 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     MPIDI_CH4_configurations_t settings;
 } MPIDI_CH4_Global_t;
-extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
+extern MPIDI_CH4_Global_t MPIDI_global;
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;
 extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif
-#define MPIDIU_THREAD_PROGRESS_MUTEX  MPIDI_CH4_Global.m[0]
-#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX  MPIDI_CH4_Global.m[1]
-#define MPIDIU_THREAD_UTIL_MUTEX  MPIDI_CH4_Global.m[2]
+#define MPIDIU_THREAD_PROGRESS_MUTEX  MPIDI_global.m[0]
+#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX  MPIDI_global.m[1]
+#define MPIDIU_THREAD_UTIL_MUTEX  MPIDI_global.m[2]
 
 #endif /* CH4_TYPES_H_INCLUDED */

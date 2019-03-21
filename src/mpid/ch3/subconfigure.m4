@@ -8,12 +8,6 @@ dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_CH3],[test "$device_name" = "ch3"])
 
-dnl this subconfigure.m4 handles the configure work for the ftb subdir too
-dnl this AM_CONDITIONAL only works because enable_ftb is set very early on by
-dnl autoconf's argument parsing code.  The "action-if-given" from the
-dnl AC_ARG_ENABLE has not yet run
-AM_CONDITIONAL([BUILD_CH3_UTIL_FTB],[test "x$enable_ftb" = "xyes"])
-
 AM_COND_IF([BUILD_CH3],[
 
 # Set a value for the maximum processor name.
@@ -67,19 +61,6 @@ build_mpid_common_thread=yes
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH3 DEVICE])
-
-# ----------------------------------------------------------------------------
-# include ftb functionality
-# ----------------------------------------------------------------------------
-AC_ARG_ENABLE([ftb],
-  [AS_HELP_STRING([[--enable-ftb]],
-    [Enable FTB support (default is no)])],
-  [AC_DEFINE([ENABLE_FTB], 1, [Define if FTB is enabled])
-   PAC_PUSH_FLAG(LIBS)
-   PAC_CHECK_HEADER_LIB_FATAL([ftb], [libftb.h], [ftb], [FTB_Connect])
-   PAC_APPEND_FLAG([-lftb],[WRAPPER_LIBS])
-   PAC_POP_FLAG(LIBS)]
-)
 
 AC_ARG_WITH(ch3-rank-bits, [--with-ch3-rank-bits=16/32     Number of bits allocated to the rank field (16 or 32)],
 			   [ rankbits=$withval ],

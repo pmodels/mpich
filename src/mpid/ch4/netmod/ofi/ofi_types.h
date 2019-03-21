@@ -79,10 +79,10 @@
 #endif
 #define MPIDI_OFI_OP_SIZES 15
 
-#define MPIDI_OFI_THREAD_UTIL_MUTEX     MPIDI_Global.mutexes[0].m
-#define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_Global.mutexes[1].m
-#define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_Global.mutexes[2].m
-#define MPIDI_OFI_THREAD_SPAWN_MUTEX    MPIDI_Global.mutexes[3].m
+#define MPIDI_OFI_THREAD_UTIL_MUTEX     MPIDI_OFI_global.mutexes[0].m
+#define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_OFI_global.mutexes[1].m
+#define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_OFI_global.mutexes[2].m
+#define MPIDI_OFI_THREAD_SPAWN_MUTEX    MPIDI_OFI_global.mutexes[3].m
 
 /* Field accessor macros */
 #define MPIDI_OFI_OBJECT_HEADER_SIZE       offsetof(MPIDI_OFI_offset_checker_t,  pad)
@@ -437,7 +437,7 @@ typedef struct MPIDI_OFI_win_acc_hint {
     uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
                                                          * atomicity support of all OFI datatypes. A datatype
                                                          * is supported only when all enabled ops are valid atomic
-                                                         * provided by the OFI provider (recored in MPIDI_Global.win_op_table).
+                                                         * provided by the OFI provider (recored in MPIDI_OFI_global.win_op_table).
                                                          * Invalid <dtype, op> defined in MPI standard are excluded.
                                                          * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
@@ -514,7 +514,7 @@ typedef struct MPIDI_OFI_huge_recv_list {
 } MPIDI_OFI_huge_recv_list_t;
 
 /* Externs */
-extern MPIDI_OFI_global_t MPIDI_Global;
+extern MPIDI_OFI_global_t MPIDI_OFI_global;
 extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head;
 extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail;
 extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head;

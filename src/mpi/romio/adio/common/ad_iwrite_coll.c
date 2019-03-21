@@ -298,8 +298,8 @@ void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
          * processes. The result is an array each of start and end offsets
          * stored in order of process rank. */
 
-        vars->st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
-        vars->end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
+        vars->st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * 2 * sizeof(ADIO_Offset));
+        vars->end_offsets = vars->st_offsets + nprocs;
 
         *error_code = MPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
                                      vars->st_offsets, 1, ADIO_OFFSET,
@@ -362,9 +362,7 @@ static void ADIOI_GEN_IwriteStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *
         /* use independent accesses */
         if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
             ADIOI_Free(vars->offset_list);
-            ADIOI_Free(vars->len_list);
             ADIOI_Free(vars->st_offsets);
-            ADIOI_Free(vars->end_offsets);
         }
 
         fd->fp_ind = vars->orig_fp;
@@ -453,15 +451,9 @@ static void ADIOI_GEN_IwriteStridedColl_exch(ADIOI_NBC_Request * nbc_req, int *e
     ADIOI_GEN_IwriteStridedColl_vars *vars = nbc_req->data.wr.wsc_vars;
     ADIOI_Iexch_and_write_vars *eaw_vars = NULL;
     ADIOI_Access *my_req = vars->my_req;
-    int nprocs = vars->nprocs;
-    int i;
 
     ADIOI_Free(vars->count_my_req_per_proc);
-    for (i = 0; i < nprocs; i++) {
-        if (my_req[i].count) {
-            ADIOI_Free(my_req[i].offsets);
-        }
-    }
+    ADIOI_Free(my_req[0].offsets);
     ADIOI_Free(my_req);
 
     /* exchange data and write in sizes of no more than coll_bufsize. */
@@ -530,9 +522,7 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request * nbc_req, int *e
     ADIOI_GEN_IwriteStridedColl_vars *vars = nbc_req->data.wr.wsc_vars;
     ADIO_File fd = vars->fd;
     ADIOI_Access *others_req = vars->others_req;
-    int nprocs = vars->nprocs;
     int old_error = vars->old_error;
-    int i;
 
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event(ADIOI_MPE_postwrite_b, 0, NULL);
@@ -544,23 +534,15 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request * nbc_req, int *e
     if ((old_error != MPI_SUCCESS) && (old_error != MPI_ERR_IO))
         *error_code = old_error;
 
-
     /* free all memory allocated for collective I/O */
-    for (i = 0; i < nprocs; i++) {
-        if (others_req[i].count) {
-            ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].mem_ptrs);
-        }
-    }
+    ADIOI_Free(others_req[0].offsets);
+    ADIOI_Free(others_req[0].mem_ptrs);
     ADIOI_Free(others_req);
 
     ADIOI_Free(vars->buf_idx);
     ADIOI_Free(vars->offset_list);
-    ADIOI_Free(vars->len_list);
     ADIOI_Free(vars->st_offsets);
-    ADIOI_Free(vars->end_offsets);
     ADIOI_Free(vars->fd_start);
-    ADIOI_Free(vars->fd_end);
 
     fd->fp_sys_posn = -1;       /* set it to null. */
 #ifdef AGGREGATION_PROFILE
@@ -681,9 +663,9 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
     /* amount of data sent to each proc so far. Used in
      * ADIOI_Fill_send_buffer. initialized to 0 here. */
 
-    vars->send_buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
-    vars->curr_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
-    vars->done_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    vars->send_buf_idx = (int *) ADIOI_Malloc(nprocs * 3 * sizeof(int));
+    vars->curr_to_proc = vars->send_buf_idx + nprocs;
+    vars->done_to_proc = vars->curr_to_proc + nprocs;
     /* Above three are used in ADIOI_Fill_send_buffer */
 
     vars->start_pos = (int *) ADIOI_Malloc(nprocs * sizeof(int));
@@ -997,8 +979,6 @@ static void ADIOI_Iexch_and_write_fini(ADIOI_NBC_Request * nbc_req, int *error_c
     ADIOI_Free(vars->sent_to_proc);
     ADIOI_Free(vars->start_pos);
     ADIOI_Free(vars->send_buf_idx);
-    ADIOI_Free(vars->curr_to_proc);
-    ADIOI_Free(vars->done_to_proc);
 
     next_fn = vars->next_fn;
 
@@ -1205,11 +1185,14 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
             }
     } else if (nprocs_send) {
         /* buftype is not contig */
-        send_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
-        vars->send_buf = send_buf;
+        size_t msgLen = 0;
         for (i = 0; i < nprocs; i++)
-            if (send_size[i])
-                send_buf[i] = (char *) ADIOI_Malloc(send_size[i]);
+            msgLen += send_size[i];
+        send_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
+        send_buf[0] = (char *) ADIOI_Malloc(msgLen * sizeof(char));
+        for (i = 1; i < nprocs; i++)
+            send_buf[i] = send_buf[i - 1] + send_size[i - 1];
+        vars->send_buf = send_buf;
 
         ADIOI_Fill_send_buffer(fd, buf, vars->flat_buf, send_buf,
                                vars->offset_list, vars->len_list, send_size,
@@ -1278,10 +1261,7 @@ static void ADIOI_W_Iexchange_data_fini(ADIOI_NBC_Request * nbc_req, int *error_
     ADIOI_W_Iexchange_data_vars *vars = nbc_req->data.wr.wed_vars;
     void (*next_fn) (ADIOI_NBC_Request *, int *);
     ADIO_File fd = vars->fd;
-    int *send_size = vars->send_size;
-    int nprocs = vars->nprocs;
     char **send_buf = vars->send_buf;
-    int i;
 
     if (fd->atomicity)
         ADIOI_Free(vars->req3);
@@ -1291,9 +1271,7 @@ static void ADIOI_W_Iexchange_data_fini(ADIOI_NBC_Request * nbc_req, int *error_
 #endif
     ADIOI_Free(vars->requests);
     if (!vars->buftype_is_contig && vars->nprocs_send) {
-        for (i = 0; i < nprocs; i++)
-            if (send_size[i])
-                ADIOI_Free(send_buf[i]);
+        ADIOI_Free(send_buf[0]);
         ADIOI_Free(send_buf);
     }
 

@@ -20,13 +20,17 @@
 #define FUNCNAME MPIDIG_prepare_recv_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIG_prepare_recv_req(void *buf, MPI_Aint count, MPI_Datatype datatype,
+static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
+                                          void *buf, MPI_Aint count, MPI_Datatype datatype,
                                           MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 
+    MPIDIG_REQUEST(rreq, rank) = rank;
+    MPIDIG_REQUEST(rreq, tag) = tag;
+    MPIDIG_REQUEST(rreq, context_id) = context_id;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
     MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
     MPIDIG_REQUEST(rreq, count) = count;
@@ -194,12 +198,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     }
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIDIG_REQUEST(rreq, rank) = rank;
-    MPIDIG_REQUEST(rreq, tag) = tag;
-    MPIDIG_REQUEST(rreq, context_id) = context_id;
-    MPIDIG_REQUEST(rreq, datatype) = datatype;
-
-    mpi_errno = MPIDIG_prepare_recv_req(buf, count, datatype, rreq);
+    mpi_errno = MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

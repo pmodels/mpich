@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_init_comm(MPIR_Comm * comm)
      * If there is an early arrival of an unexpected message before the second visit,
      * the following code will wipe out the unexpected queue andthe message is lost forever.
      */
-    if (unlikely(MPIDI_CH4_Global.is_ch4u_initialized &&
+    if (unlikely(MPIDI_global.is_ch4u_initialized &&
                  (comm == MPIR_Process.comm_world || comm == MPIR_Process.comm_self)))
         goto fn_exit;
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
@@ -51,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_init_comm(MPIR_Comm * comm)
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = comm;
+    MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = comm;
     MPIDIG_COMM(comm, posted_list) = NULL;
     MPIDIG_COMM(comm, unexp_list) = NULL;
 
@@ -90,17 +90,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_destroy_comm(MPIR_Comm * comm)
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-    MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
+    MPIR_Assert(MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
 
-    if (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
+    if (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
         MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                    (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
                      posted_list) == NULL);
         MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                    (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
                      unexp_list) == NULL);
     }
-    MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
+    MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);
@@ -145,7 +145,7 @@ static inline int MPIDIU_update_node_map(int avtid, int size, int node_map[])
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPDATE_NODE_MAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPDATE_NODE_MAP);
     for (i = 0; i < size; i++) {
-        MPIDI_CH4_Global.node_map[avtid][i] = node_map[i];
+        MPIDI_global.node_map[avtid][i] = node_map[i];
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_UPDATE_NODE_MAP);
     return MPI_SUCCESS;

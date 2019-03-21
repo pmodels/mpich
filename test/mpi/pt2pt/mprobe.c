@@ -559,6 +559,85 @@ int main(int argc, char **argv)
         check(msg == MPI_MESSAGE_NULL);
     }
 
+    /* test 13: simple send & mprobe+mrecv with zero count */
+    if (rank == 0) {
+        MPI_Send(sendbuf, 0, MPI_INT, 1, 13, MPI_COMM_WORLD);
+    } else {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 13, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 13);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 0);
+
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPI_Mrecv(recvbuf, 0, MPI_INT, &msg, &s2);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 13);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, MPI_INT, &count);
+        check(count == 0);
+    }
+
+    /* test 14: simple send & mprobe+mrecv with zero-size datatype */
+    if (rank == 0) {
+        MPI_Send(sendbuf, 0, MPI_BYTE, 1, 14, MPI_COMM_WORLD);
+    } else {
+        MPI_Datatype zero_dtype;
+
+        MPI_Type_contiguous(0, MPI_INT, &zero_dtype);
+        MPI_Type_commit(&zero_dtype);
+
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 14, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 14);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, zero_dtype, &count);
+        check(count == 0);
+
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPI_Mrecv(recvbuf, 1, zero_dtype, &msg, &s2);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 14);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, zero_dtype, &count);
+        check(count == 0);
+
+        MPI_Type_free(&zero_dtype);
+    }
+
     free(sendbuf);
     free(recvbuf);
 

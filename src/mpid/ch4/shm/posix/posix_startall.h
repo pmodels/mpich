@@ -15,7 +15,7 @@
 #include "ch4_impl.h"
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_STARTALL)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_STARTALL)
 static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
 {
     return MPIDIG_mpi_startall(count, requests);

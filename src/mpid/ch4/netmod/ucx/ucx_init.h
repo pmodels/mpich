@@ -72,16 +72,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_UCX_CHK_STATUS(ucx_status);
     MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
 
-    MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0], MPIDI_UCX_global.if_address,
-                          (int) MPIDI_UCX_global.addrname_len, FALSE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                          (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+    mpi_errno =
+        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
+                              (int) MPIDI_UCX_global.addrname_len, FALSE,
+                              MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
+                              (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         int *node_roots, num_nodes;
 
-        MPIR_NODEMAP_get_node_roots(MPIDI_CH4_Global.node_map[0], size, &node_roots, &num_nodes);
+        MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];

@@ -79,6 +79,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_tcp="no"
         enable_shm="no"
         enable_mlx="no"
+        enable_perf="no"
+        enable_rstream="no"
+        enable_mrail="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -93,6 +96,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_tcp="yes"
         enable_shm="yes"
         enable_mlx="yes"
+        enable_perf="yes"
+        enable_rstream="yes"
+        enable_mrail="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -235,6 +241,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-tcp=${enable_tcp}"
             prov_config+=" --enable-shm=${enable_shm}"
             prov_config+=" --enable-mlx=${enable_mlx}"
+            prov_config+=" --enable-perf=${enable_perf}"
+            prov_config+=" --enable-rstream=${enable_rstream}"
+            prov_config+=" --enable-mrail=${enable_mrail}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
@@ -276,7 +285,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
         pcdir="${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric"
-    elif [ -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ] ; then
+    elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
     PAC_LIB_DEPS(fabric, $pcdir)
