@@ -19,4 +19,5 @@ noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h  \
         src/mpid/ch4/shm/src/shm_startall.h\
         src/mpid/ch4/shm/src/shm_rma.h
 
-mpi_core_sources   += src/mpid/ch4/shm/src/func_table.c
+mpi_core_sources   += src/mpid/ch4/shm/src/func_table.c \
+                      src/mpid/ch4/shm/src/shm_vsi.c

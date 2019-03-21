@@ -16,11 +16,16 @@
 
 #define MPIDI_MAX_SHM_STRING_LEN 64
 
+#define MPIDI_SHM_VSI_INVALID -1
+
 /* These typedef function definitions are used when not inlining the shared memory module along
  * with the struct of function pointers below. */
 typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vsis_provided, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
 typedef MPIDI_vci_resource_t(*MPIDI_SHM_vsi_get_resource_info_t) (int vsi);
+typedef int (*MPIDI_SHM_vsi_alloc_t) (MPIDI_vci_resource_t resources,
+                                      MPIDI_vci_property_t properties, int *vsi);
+typedef int (*MPIDI_SHM_vsi_free_t) (int vsi);
 typedef int (*MPIDI_SHM_progress_t) (int vsi, int blocking);
 typedef int (*MPIDI_SHM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info,
                                              int root, int timeout, MPIR_Comm * comm,
@@ -433,6 +438,8 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_hook_t mpi_init;
     MPIDI_SHM_mpi_finalize_hook_t mpi_finalize;
     MPIDI_SHM_vsi_get_resource_info_t vsi_get_resource_info;
+    MPIDI_SHM_vsi_alloc_t vsi_alloc;
+    MPIDI_SHM_vsi_free_t vsi_free;
     MPIDI_SHM_progress_t progress;
     MPIDI_SHM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_SHM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -592,6 +599,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size,
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_SHM_vsi_get_resource_info(int vsi)
     MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_SHM_vsi_alloc(MPIDI_vci_resource_t resources, MPIDI_vci_property_t properties, int *vsi);
+int MPIDI_SHM_vsi_free(int vsi);
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vsi, int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                         int root, int timeout, MPIR_Comm * comm,

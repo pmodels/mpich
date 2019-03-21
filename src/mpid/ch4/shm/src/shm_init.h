@@ -10,6 +10,7 @@
 
 #include <shm.h>
 #include "../posix/shm_inline.h"
+#include "shm_vsi.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vsis_provided,
                                                      int *tag_bits)
@@ -18,6 +19,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
+
+    MPIDI_SHM_vsi_pool_init();
 
     ret = MPIDI_POSIX_mpi_init_hook(rank, size, n_vsis_provided, tag_bits);
 
