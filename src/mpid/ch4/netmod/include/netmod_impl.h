@@ -58,6 +58,32 @@ MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int
     return ret;
 }
 
+int MPIDI_NM_vni_alloc(MPIDI_vci_resource_t resources, MPIDI_vci_property_t properties, int *vni)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VNI_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VNI_ALLOC);
+
+    ret = MPIDI_NM_func->vni_alloc(resources, properties, vni);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VNI_ALLOC);
+    return ret;
+}
+
+int MPIDI_NM_vni_free(int vni)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VNI_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VNI_FREE);
+
+    ret = MPIDI_NM_func->vni_free(vni);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VNI_FREE);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int ret;
