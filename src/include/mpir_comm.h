@@ -184,6 +184,8 @@ struct MPIR_Comm {
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
 
+    OPA_int_t *context_refcount;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
      MPID_DEV_COMM_DECL
@@ -259,6 +261,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
+#define MPIR_Comm_is_endpoints_comm(comm_ptr) MPID_Comm_is_endpoints_comm(comm_ptr)
 
 /* Communicator info hint functions */
 typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, MPIR_Info *, void *);

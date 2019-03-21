@@ -105,6 +105,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_head = NULL;
     comm_p->mapper_tail = NULL;
 
+    comm_p->context_refcount = NULL;
+
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     {
         int thr_err;
@@ -414,6 +416,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             comm->node_comm->context_id = comm->context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
+            /* FIXME: device hook must set the endpoint id */
+            comm->node_comm->dev.endpoint = comm->dev.endpoint;
             comm->node_comm->rank = local_rank;
             comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
             comm->node_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
@@ -815,15 +819,21 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPL_free(comm_ptr->intranode_table);
         if (comm_ptr->internode_table != NULL)
             MPL_free(comm_ptr->internode_table);
-
-        /* Free the context value.  This should come after freeing the
-         * intra/inter-node communicators since those free calls won't
-         * release this context ID and releasing this before then could lead
-         * to races once we make threading finer grained. */
-        /* This must be the recvcontext_id (i.e. not the (send)context_id)
-         * because in the case of intercommunicators the send context ID is
-         * allocated out of the remote group's bit vector, not ours. */
-        MPIR_Free_contextid(comm_ptr->recvcontext_id);
+        int isubcomm = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm_ptr->context_id);
+        if (MPIR_Comm_is_endpoints_comm(comm_ptr) && !isubcomm) {
+            int refcount = OPA_fetch_and_decr_int(comm_ptr->context_refcount) - 1;
+            if (refcount == 0) {
+                /* Free the context value.  This should come after freeing the
+                 * intra/inter-node communicators since those free calls won't
+                 * release this context ID and releasing this before then could lead
+                 * to races once we make threading finer grained. */
+                /* This must be the recvcontext_id (i.e. not the (send)context_id)
+                 * because in the case of intercommunicators the send context ID is
+                 * allocated out of the remote group's bit vector, not ours. */
+                MPIR_Free_contextid(comm_ptr->recvcontext_id);
+                MPL_free(comm_ptr->context_refcount);
+            }
+        }
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
         {
