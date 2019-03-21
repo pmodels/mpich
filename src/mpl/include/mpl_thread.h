@@ -31,7 +31,7 @@
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
 #include "mpl_thread_argobots.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_QTHREADS)
-#include "mpl_thread_qthread.h"
+#include "mpl_thread_qthreads.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE)
 typedef int MPL_thread_mutex_t;
 typedef int MPL_thread_cond_t;
