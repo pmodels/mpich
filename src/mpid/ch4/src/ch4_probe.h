@@ -11,6 +11,7 @@
 #ifndef CH4_PROBE_H_INCLUDED
 #define CH4_PROBE_H_INCLUDED
 
+#include "ch4r_proc.h"
 #include "ch4_impl.h"
 
 #undef FUNCNAME
