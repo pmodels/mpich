@@ -18,7 +18,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .mpi_init = MPIDI_STUBNM_mpi_init_hook,
     .mpi_finalize = MPIDI_STUBNM_mpi_finalize_hook,
-    .progress = MPIDI_NM_progress,
+    .progress = MPIDI_STUBNM_progress,
     .mpi_comm_connect = MPIDI_STUBNM_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_STUBNM_mpi_comm_disconnect,
     .mpi_open_port = MPIDI_STUBNM_mpi_open_port,

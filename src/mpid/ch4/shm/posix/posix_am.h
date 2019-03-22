@@ -12,6 +12,7 @@
 
 #include "posix_impl.h"
 #include "posix_am_impl.h"
+#include "posix_eager.h"
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */

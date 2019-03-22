@@ -473,5 +473,18 @@ int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
     return ret;
 }
 
+int MPIDI_SHM_progress(int vci, int blocking)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
+
+    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
+    return ret;
+}
+
 #endif
 #endif

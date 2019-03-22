@@ -46,12 +46,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
     return op_index;
 }
 
+int MPIDI_OFI_progress(int vci, int blocking);
 /*
  * Helper routines and macros for request completion
  */
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        mpi_errno = MPIDI_NM_progress(0, 0);                      \
+        mpi_errno = MPIDI_OFI_progress(0, 0);                     \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)

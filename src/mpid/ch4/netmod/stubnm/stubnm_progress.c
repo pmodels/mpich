@@ -8,69 +8,65 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef STUBNM_PROGRESS_H_INCLUDED
-#define STUBNM_PROGRESS_H_INCLUDED
 
-#include "stubnm_impl.h"
+#include "mpidimpl.h"
 
-static inline int MPIDI_NM_progress(int vci, int blocking)
+int MPIDI_STUBNM_progress(int vci, int blocking)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_test(void)
+int MPIDI_STUBNM_progress_test(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_poke(void)
+int MPIDI_STUBNM_progress_poke(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline void MPIDI_NM_progress_start(MPID_Progress_state * state)
+void MPIDI_STUBNM_progress_start(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline void MPIDI_NM_progress_end(MPID_Progress_state * state)
+void MPIDI_STUBNM_progress_end(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline int MPIDI_NM_progress_wait(MPID_Progress_state * state)
+int MPIDI_STUBNM_progress_wait(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_register(int (*progress_fn) (int *), int *id)
+int MPIDI_STUBNM_progress_register(int (*progress_fn) (int *), int *id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_deregister(int id)
+int MPIDI_STUBNM_progress_deregister(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_activate(int id)
+int MPIDI_STUBNM_progress_activate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_progress_deactivate(int id)
+int MPIDI_STUBNM_progress_deactivate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
-
-#endif /* STUBNM_PROGRESS_H_INCLUDED */

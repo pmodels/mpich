@@ -8,20 +8,18 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef OFI_PROGRESS_H_INCLUDED
-#define OFI_PROGRESS_H_INCLUDED
 
+#include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "ofi_events.h"
-#include "ofi_am_events.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+int MPIDI_OFI_progress(int vci, int blocking)
 {
     int mpi_errno;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS);
 
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
@@ -36,9 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
             mpi_errno = MPIDI_OFI_handle_cq_error(vci, ret);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
 
     return mpi_errno;
 }
-
-#endif /* OFI_PROGRESS_H_INCLUDED */

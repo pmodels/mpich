@@ -9,7 +9,6 @@
 #ifndef NETMOD_INLINE_H_INCLUDED
 #define NETMOD_INLINE_H_INCLUDED
 
-#include "ucx_progress.h"
 #include "ucx_request.h"
 #ifdef MPICH_UCX_AM_ONLY
 #include "ucx_am_send.h"

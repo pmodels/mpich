@@ -55,6 +55,7 @@ int MPIDI_SHMI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, co
 
 void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_SHMI_mpi_free_mem(void *ptr);
+int MPIDI_SHMI_progress(int vci, int blocking);
 
 #ifdef SHM_INLINE
 #define MPIDI_SHM_mpi_init_hook MPIDI_SHMI_mpi_init_hook
@@ -92,6 +93,7 @@ int MPIDI_SHMI_mpi_free_mem(void *ptr);
 #define MPIDI_SHM_create_intercomm_from_lpids MPIDI_SHMI_create_intercomm_from_lpids
 #define MPIDI_SHM_mpi_alloc_mem MPIDI_SHMI_mpi_alloc_mem
 #define MPIDI_SHM_mpi_free_mem MPIDI_SHMI_mpi_free_mem
+#define MPIDI_SHM_progress MPIDI_SHMI_progress
 #endif
 
 #endif

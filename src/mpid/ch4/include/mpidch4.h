@@ -57,15 +57,15 @@ MPIDI_CH4I_API_NOINLINE(int, Comm_connect, const char *, MPIR_Info *, int, MPIR_
 MPIDI_CH4I_API(int, Probe, int, int, MPIR_Comm *, int, MPI_Status *);
 MPIDI_CH4I_API(int, Mprobe, int, int, MPIR_Comm *, int, MPIR_Request **, MPI_Status *);
 MPIDI_CH4I_API(int, Improbe, int, int, MPIR_Comm *, int, int *, MPIR_Request **, MPI_Status *);
-MPIDI_CH4I_API(int, Progress_test, void);
-MPIDI_CH4I_API(int, Progress_poke, void);
-MPIDI_CH4I_API(void, Progress_start, MPID_Progress_state *);
-MPIDI_CH4I_API(void, Progress_end, MPID_Progress_state *);
-MPIDI_CH4I_API(int, Progress_wait, MPID_Progress_state *);
-MPIDI_CH4I_API(int, Progress_register, int (*progress_fn) (int *), int *id);
-MPIDI_CH4I_API(int, Progress_deregister, int id);
-MPIDI_CH4I_API(int, Progress_activate, int id);
-MPIDI_CH4I_API(int, Progress_deactivate, int id);
+MPIDI_CH4I_API_NOINLINE(int, Progress_test, void);
+MPIDI_CH4I_API_NOINLINE(int, Progress_poke, void);
+MPIDI_CH4I_API_NOINLINE(void, Progress_start, MPID_Progress_state *);
+MPIDI_CH4I_API_NOINLINE(void, Progress_end, MPID_Progress_state *);
+MPIDI_CH4I_API_NOINLINE(int, Progress_wait, MPID_Progress_state *);
+MPIDI_CH4I_API_NOINLINE(int, Progress_register, int (*progress_fn) (int *), int *id);
+MPIDI_CH4I_API_NOINLINE(int, Progress_deregister, int id);
+MPIDI_CH4I_API_NOINLINE(int, Progress_activate, int id);
+MPIDI_CH4I_API_NOINLINE(int, Progress_deactivate, int id);
 MPIDI_CH4I_API(int, Recv, void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int, MPI_Status *,
                MPIR_Request **);
 MPIDI_CH4I_API(int, Recv_init, void *, int, MPI_Datatype, int, int, MPIR_Comm *, int,
@@ -281,7 +281,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "ch4_comm.h"
 #include "ch4_win.h"
 #include "ch4_rma.h"
-#include "ch4_progress.h"
 #include "ch4_proc.h"
 #include "ch4_coll.h"
 

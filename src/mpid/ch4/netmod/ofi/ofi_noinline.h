@@ -114,4 +114,10 @@ int MPIDI_OFI_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 #define MPIDI_NM_mpi_type_commit_hook MPIDI_OFI_mpi_type_commit_hook
 #endif
 
+int MPIDI_OFI_progress(int vci, int blocking);
+
+#ifdef NETMOD_INLINE
+#define MPIDI_NM_progress MPIDI_OFI_progress
+#endif
+
 #endif

@@ -8,12 +8,10 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef CH4_PROGRESS_H_INCLUDED
-#define CH4_PROGRESS_H_INCLUDED
 
-#include "ch4_impl.h"
+#include "mpidimpl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
+int MPIDI_Progress_test(int flags)
 {
     int mpi_errno, made_progress, i;
     mpi_errno = MPI_SUCCESS;
@@ -80,12 +78,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
+int MPID_Progress_test(void)
 {
     return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
+int MPID_Progress_poke(void)
 {
     int ret;
 
@@ -98,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
+void MPID_Progress_start(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
@@ -107,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
+void MPID_Progress_end(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
@@ -116,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
+int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int ret;
 
@@ -151,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), int *id)
+int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -183,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
+int MPID_Progress_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEREGISTER);
@@ -201,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
+int MPID_Progress_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_ACTIVATE);
@@ -225,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
+int MPID_Progress_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
@@ -246,5 +244,3 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
     return mpi_errno;
 }
-
-#endif /* CH4_PROGRESS_H_INCLUDED */

@@ -114,4 +114,10 @@ int MPIDI_UCX_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 #define MPIDI_NM_mpi_type_commit_hook MPIDI_UCX_mpi_type_commit_hook
 #endif
 
+int MPIDI_UCX_progress(int vci, int blocking);
+
+#ifdef NETMOD_INLINE
+#define MPIDI_NM_progress MPIDI_UCX_progress
+#endif
+
 #endif

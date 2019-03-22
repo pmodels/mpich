@@ -573,7 +573,7 @@ extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
 int MPIDI_SHM_mpi_finalize_hook(void);
 int MPIDI_SHM_get_vci_attr(int vci);
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking) MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_SHM_progress(int vci, int blocking);
 int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm * comm_ptr);
