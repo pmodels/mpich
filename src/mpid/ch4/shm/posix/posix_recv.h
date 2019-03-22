@@ -14,6 +14,20 @@
 #include "posix_impl.h"
 #include "ch4_impl.h"
 
+/* Hook triggered after posting a SHM receive request.
+ * It hints the SHM/POSIX internal transport that the user is expecting
+ * an incoming message from a specific rank, thus allowing the transport
+ * to optimize progress polling (i.e., in POSIX/eager/fbox, the polling
+ * will start from this rank at the next progress polling, see
+ * MPIDI_POSIX_eager_recv_begin). */
+#undef FCNAME
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_recv_posted_hook)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_recv_posted_hook(MPIR_Request * request, int rank,
+                                                           MPIR_Comm * comm)
+{
+    MPIDI_POSIX_EAGER_RECV_POSTED_HOOK(request, rank, comm);
+}
+
 #undef FCNAME
 #define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_recv)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
@@ -27,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
 {
     int mpi_errno =
         MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
-    MPIDI_POSIX_EAGER_RECV_POSTED_HOOK(*request, rank, comm);
+    MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }
 
@@ -64,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
 {
     int mpi_errno =
         MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-    MPIDI_POSIX_EAGER_RECV_POSTED_HOOK(*request, rank, comm);
+    MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }
 
