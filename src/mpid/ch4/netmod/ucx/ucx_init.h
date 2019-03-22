@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
                                                     int *tag_bits,
                                                     MPIR_Comm * comm_world,
                                                     MPIR_Comm * comm_self, int spawned,
-                                                    int *n_vcis_provided)
+                                                    int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
 
-    *n_vcis_provided = 1;
+    *n_vnis_provided = 1;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
 
-    MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
+    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
@@ -209,12 +209,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_vci_get_resource_info
+#define FUNCNAME MPIDI_NM_vni_get_resource_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni)
 {
-    MPIR_Assert(0 <= vci && vci < 1);
+    MPIR_Assert(0 <= vni && vni < 1);
     return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 

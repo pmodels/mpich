@@ -221,7 +221,7 @@ cvars:
         minor version of the OFI library used with MPICH. If using this CVAR,
         it is recommended that the user also specifies a specific OFI provider.
 
-    - name        : MPIR_CVAR_CH4_OFI_MAX_VCIS
+    - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
       category    : CH4_OFI
       type        : int
       default     : 1
@@ -229,7 +229,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If set to positive, this CVAR specifies the maximum number of CH4 VCIs
+        If set to positive, this CVAR specifies the maximum number of CH4 VNIs
         that OFI netmod exposes.
 
     - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
@@ -415,7 +415,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int appnum,
                                          int *tag_bits,
                                          MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
+                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0;
@@ -757,13 +757,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* completion queues, etc.                                                  */
     /* ------------------------------------------------------------------------ */
 
-    MPIDI_OFI_global.max_ch4_vcis = 1;
+    MPIDI_OFI_global.max_vnis = 1;
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
                                   prov_use->domain_attr->rx_ctx_cnt);
-        if (MPIR_CVAR_CH4_OFI_MAX_VCIS > 0)
-            MPIDI_OFI_global.max_ch4_vcis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VCIS, max_by_prov);
-        if (MPIDI_OFI_global.max_ch4_vcis < 1) {
+        if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 0)
+            MPIDI_OFI_global.max_vnis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VNIS, max_by_prov);
+        if (MPIDI_OFI_global.max_vnis < 1) {
             MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
                                       MPI_ERR_OTHER,
                                       "**ofid_ep",
@@ -772,11 +772,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */
-        prov_use->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
-        prov_use->ep_attr->rx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
+        prov_use->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_vnis;
+        prov_use->ep_attr->rx_ctx_cnt = MPIDI_OFI_global.max_vnis;
     }
 
-    for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
+    for (i = 0; i < MPIDI_OFI_global.max_vnis; i++) {
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
                                                          MPIDI_OFI_global.domain,
                                                          MPIDI_OFI_global.p2p_cq,
@@ -785,7 +785,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                          i));
     }
 
-    *n_vcis_provided = MPIDI_OFI_global.max_ch4_vcis;
+    *n_vnis_provided = MPIDI_OFI_global.max_vnis;
 
     if (do_av_insert) {
         /* ---------------------------------- */
@@ -855,7 +855,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ---------------------------------- */
     /* Initialize Active Message          */
     /* ---------------------------------- */
-    mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
+    mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -980,7 +980,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
+        for (i = 0; i < MPIDI_OFI_global.max_vnis; i++) {
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].tx), epclose);
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].rx), epclose);
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].cq), cqclose);
@@ -1042,9 +1042,9 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-static inline MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+static inline MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni)
 {
-    MPIR_Assert(0 <= vci && vci < 1);
+    MPIR_Assert(0 <= vni && vni < 1);
     return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 

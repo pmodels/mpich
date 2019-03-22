@@ -18,7 +18,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
                                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                                    int spawned, int *n_vcis_provided)
+                                                    int spawned, int *n_vnis_provided)
 {
     int ret;
 
@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appn
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
 
     ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, comm_world, comm_self, spawned,
-                                  n_vcis_provided);
+                                  n_vnis_provided);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
     return ret;
@@ -45,27 +45,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni)
 {
     MPIDI_vci_resource_t ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VNI);
 
-    ret = MPIDI_NM_func->vci_get_resource_info(vci);
+    ret = MPIDI_NM_func->vni_get_resource_info(vni);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VNI);
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
 
-    ret = MPIDI_NM_func->progress(vci, blocking);
+    ret = MPIDI_NM_func->progress(vni, blocking);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
     return ret;
