@@ -218,18 +218,26 @@ typedef struct {
         struct {
             int stride;         /* stride in basic types */
             int blklen;         /* # of blocks in stride */
+            int count;          /* count in vector */
+            int nesting;        /* levels of vector nesting */
         } vector;
         struct {
             MPI_Aint stride;
             int blklen;
+            int count;
+            int nesting;
         } hvector;
         struct {
             int stride;
             int blklen;
+            int count;
+            int nesting;
         } indexed;
         struct {
             MPI_Aint stride;
             int blklen;
+            int count;
+            int nesting;
         } hindexed;
         struct {
             int stride;
@@ -274,6 +282,7 @@ struct DTPI_Par {
         MPI_Aint type_stride;   /* # of basic types between start of each block */
         MPI_Aint type_totlen;   /* tot # of basic types in datatype */
         MPI_Aint type_displ;    /* displ of first elem in buffer in bytes */
+        MPI_Aint type_nesting;  /* level of nesting of the datatype */
     } core;
 };
 
