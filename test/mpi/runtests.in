@@ -732,7 +732,7 @@ sub RunMPIProgram {
     my $extraArgs = "";
     my $runtime = 0;
 
-    &RunPreMsg( $programname, $np, $curdir );
+    &RunPreMsg( $programname, $np, $progArgs, $curdir );
 
     unlink "err";
 
@@ -1163,9 +1163,10 @@ sub TestErrFatal {
 #  RunPostMsg               - Call at end of each test
 #
 sub RunPreMsg {
-    my ($programname,$np,$workdir) = @_;
+    my ($programname,$np,$progArgs,$workdir) = @_;
     if ($xmloutput) {
 	print XMLOUT "<MPITEST>$newline<NAME>$programname</NAME>$newline";
+    print XMLOUT "<ARGS>$progArgs</ARGS>$newline";
 	print XMLOUT "<NP>$np</NP>$newline";
 	print XMLOUT "<WORKDIR>$workdir</WORKDIR>$newline";
     }
