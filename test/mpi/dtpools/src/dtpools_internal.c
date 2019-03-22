@@ -46,6 +46,72 @@
         }                                                                    \
     } while (0)
 
+/*
+ * Vector-like nested datatypes are built recursively along the block length
+ * The following count = 2, blocklen = 16, stride = 17 vector can be built
+ * using a 3 level nested vector type as following:
+ * target  -> OOOOOOOOOOOOOOOO-OOOOOOOOOOOOOOOO-
+ * level-0 -> OO---------------OO--------------- blklen = blocklen / 2^3 = 2
+ * level-1 -> OOOO-------------OOOO-------------
+ * level-2 -> OOOOOOOO---------OOOOOOOO---------
+ * level-3 -> OOOOOOOOOOOOOOOO-OOOOOOOOOOOOOOOO-
+ *
+ * In order to have elements in the pack buffer following the same ordering
+ * the send buffer has to be initialized using the ordering of the nested
+ * type as following:
+ * level-0 -> 12---------------34---------------
+ * level-1 -> 1256-------------3478-------------
+ * [...]
+ */
+#define DTPI_NESTED_OBJ_INIT_BUF(par, c_type, type_ptr)                      \
+    do {                                                                     \
+        int k;                                                               \
+        MPI_Aint off = 0;                                                    \
+        MPI_Aint b, c, i, str;                                               \
+        MPI_Aint blklen = par->core.type_blklen /                            \
+                          (MPI_Aint) (1 << par->core.type_nesting);          \
+        type_ptr = (c_type *) buf_ptr;                                       \
+        k = par->user.val_start;                                             \
+        for (b = 0; b < par->core.type_blklen / blklen; b++) {               \
+            for (c = 0; c < par->core.type_count; c++) {                     \
+                str = c * par->core.type_stride;                             \
+                for (i = 0; i < blklen; i++) {                               \
+                    type_ptr[off+str+i] = (c_type) k;                        \
+                    k += par->user.val_stride;                               \
+                    if (--count == 0) {                                      \
+                        return;                                              \
+                    }                                                        \
+                }                                                            \
+            }                                                                \
+            off += blklen;                                                   \
+        }                                                                    \
+    } while (0)
+
+#define DTPI_NESTED_OBJ_INIT_COMP_BUF(par, c_type, a_type, b_type, type_ptr) \
+    do {                                                                     \
+        int k;                                                               \
+        MPI_Aint off = 0;                                                    \
+        MPI_Aint b, c, i, str;                                               \
+        MPI_Aint blklen = par->core.type_blklen /                            \
+                          (MPI_Aint) (1 << par->core.type_nesting);          \
+        type_ptr = (c_type *) buf_ptr;                                       \
+        k = par->user.val_start;                                             \
+        for (b = 0; b < par->core.type_blklen / blklen; b++) {               \
+            for (c = 0; c < par->core.type_count; c++) {                     \
+                str = c * par->core.type_stride;                             \
+                for (i = 0; i < blklen; i++) {                               \
+                    type_ptr[off+str+i].a = (a_type) k;                      \
+                    type_ptr[off+str+i].b = (b_type) k;                      \
+                    k += par->user.val_stride;                               \
+                    if (--count == 0) {                                      \
+                        return;                                              \
+                    }                                                        \
+                }                                                            \
+            }                                                                \
+            off += blklen;                                                   \
+        }                                                                    \
+    } while (0)
+
 #define DTPI_OBJ_CHECK_BUF_AND_JUMP(par, c_type, type_ptr)                   \
     do {                                                                     \
         int i, j, k;                                                         \
@@ -84,6 +150,66 @@
                     goto fn_exit;                                            \
                 }                                                            \
             }                                                                \
+        }                                                                    \
+    } while (0)
+
+#define DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, c_type, type_ptr)            \
+    do {                                                                     \
+        int k;                                                               \
+        MPI_Aint off = 0;                                                    \
+        MPI_Aint b, c, i, str;                                               \
+        MPI_Aint blklen = par->core.type_blklen /                            \
+                          (MPI_Aint) (1 << par->core.type_nesting);          \
+        type_ptr = (c_type *) buf_ptr;                                       \
+        k = par->user.val_start;                                             \
+        for (b = 0; b < par->core.type_blklen / blklen; b++) {               \
+            for (c = 0; c < par->core.type_count; c++) {                     \
+                str = c * par->core.type_stride;                             \
+                for (i = 0; i < blklen; i++) {                               \
+                    if (type_ptr[off+str+i] != (c_type) k) {                 \
+                        fprintf(stdout, "recv buf[%d]=%d != %d\n",           \
+                                (int) (off+str+i),                           \
+                                (int) type_ptr[off+str+i], k);               \
+                        goto fn_fail;                                        \
+                    }                                                        \
+                    k += par->user.val_stride;                               \
+                    if (--count == 0) {                                      \
+                        goto fn_exit;                                        \
+                    }                                                        \
+                }                                                            \
+            }                                                                \
+            off += blklen;                                                   \
+        }                                                                    \
+    } while (0)
+
+#define DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, c_type, a_type, b_type, type_ptr) \
+    do {                                                                     \
+        int k;                                                               \
+        MPI_Aint off = 0;                                                    \
+        MPI_Aint b, c, i, str;                                               \
+        MPI_Aint blklen = par->core.type_blklen /                            \
+                          (MPI_Aint) (1 << par->core.type_nesting);          \
+        type_ptr = (c_type *) buf_ptr;                                       \
+        k = par->user.val_start;                                             \
+        for (b = 0; b < par->core.type_blklen / blklen; b++) {               \
+            for (c = 0; c < par->core.type_count; c++) {                     \
+                str = c * par->core.type_stride;                             \
+                for (i = 0; i < blklen; i++) {                               \
+                    if (type_ptr[off+str+i].a != (a_type) k ||               \
+                        type_ptr[off+str+i].b != (b_type) k) {               \
+                        FPRINTF(stdout, "recv buf[%d].{a=%d,b=%d} != %d\n",  \
+                                (int) (off+str+i),                           \
+                                (int) type_ptr[off+str+i].a,                 \
+                                (int) type_ptr[off+str+i].b, k);             \
+                        goto fn_fail;                                        \
+                    }                                                        \
+                    k += par->user.val_stride;                               \
+                    if (--count == 0) {                                      \
+                        goto fn_exit;                                        \
+                    }                                                        \
+                }                                                            \
+            }                                                                \
+            off += blklen;                                                   \
         }                                                                    \
     } while (0)
 
@@ -421,6 +547,194 @@ static int DTPI_Basic_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_ty
     } else if (basic_type == MPI_LONG_DOUBLE_INT) {
         DTPI_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_double_int, long double, int,
                                          ptrs.long_double_int_ptr);
+    }
+
+  fn_exit:
+    return err;
+
+  fn_fail:
+    err = DTP_ERR_OTHER;
+    goto fn_exit;
+}
+
+static void DTPI_Nested_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+{
+    int count;
+    char *buf_ptr;
+    union DTPI_Cast_ptr ptrs;
+
+    FPRINTF(stdout, "init type_displ=%li\n", par->core.type_displ);
+    FPRINTF(stdout, "init type_stride=%li\n", par->core.type_stride);
+    FPRINTF(stdout, "init type_blklen=%li\n", par->core.type_blklen);
+    FPRINTF(stdout, "init type_count=%li\n", par->core.type_count);
+    FPRINTF(stdout, "init type_nesting=%li\n", par->core.type_nesting);
+    FPRINTF(stdout, "init user count=%d\n", par->user.val_count);
+
+    if (par->user.val_count <= 0) {
+        return;
+    }
+
+    count = par->user.val_count;
+
+    buf_ptr = (char *) buf + par->core.type_displ;
+    if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, char, ptrs.char_ptr);
+    } else if (basic_type == MPI_WCHAR) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, wchar_t, ptrs.wchar_ptr);
+    } else if (basic_type == MPI_SHORT) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, short int, ptrs.short_ptr);
+    } else if (basic_type == MPI_INT) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, int, ptrs.int_ptr);
+    } else if (basic_type == MPI_LONG) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, long int, ptrs.long_ptr);
+    } else if (basic_type == MPI_LONG_LONG_INT) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, long long int, ptrs.long_long_ptr);
+    } else if (basic_type == MPI_UNSIGNED_CHAR) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, unsigned char, ptrs.uchar_ptr);
+    } else if (basic_type == MPI_UNSIGNED_SHORT) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, unsigned short int, ptrs.ushort_ptr);
+    } else if (basic_type == MPI_UNSIGNED) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, unsigned int, ptrs.uint_ptr);
+    } else if (basic_type == MPI_UNSIGNED_LONG) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, unsigned long int, ptrs.ulong_ptr);
+    } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, unsigned long long int, ptrs.ulong_long_ptr);
+    } else if (basic_type == MPI_FLOAT) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, float, ptrs.float_ptr);
+    } else if (basic_type == MPI_DOUBLE) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, double, ptrs.double_ptr);
+    } else if (basic_type == MPI_LONG_DOUBLE) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, long double, ptrs.long_double_ptr);
+    } else if (basic_type == MPI_INT8_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, int8_t, ptrs.int8_ptr);
+    } else if (basic_type == MPI_INT16_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, int16_t, ptrs.int16_ptr);
+    } else if (basic_type == MPI_INT32_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, int32_t, ptrs.int32_ptr);
+    } else if (basic_type == MPI_INT64_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, int64_t, ptrs.int64_ptr);
+    } else if (basic_type == MPI_UINT8_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, uint8_t, ptrs.uint8_ptr);
+    } else if (basic_type == MPI_UINT16_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, uint16_t, ptrs.uint16_ptr);
+    } else if (basic_type == MPI_UINT32_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, uint32_t, ptrs.uint32_ptr);
+    } else if (basic_type == MPI_UINT64_T) {
+        DTPI_NESTED_OBJ_INIT_BUF(par, uint64_t, ptrs.uint64_ptr);
+    } else if (basic_type == MPI_C_COMPLEX) {   /* composite types */
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_c_complex, float, float, ptrs.c_complex_ptr);
+    } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_c_float_complex, float, float,
+                                      ptrs.c_float_complex_ptr);
+    } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_c_double_complex, double, double,
+                                      ptrs.c_double_complex_ptr);
+    } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_c_long_double_complex, long double, long double,
+                                      ptrs.c_long_double_complex_ptr);
+    } else if (basic_type == MPI_FLOAT_INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_float_int, float, int, ptrs.float_int_ptr);
+    } else if (basic_type == MPI_DOUBLE_INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_double_int, double, int, ptrs.double_int_ptr);
+    } else if (basic_type == MPI_LONG_INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_long_int, long, int, ptrs.long_int_ptr);
+    } else if (basic_type == MPI_2INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_2int, int, int, ptrs.int_int_ptr);
+    } else if (basic_type == MPI_SHORT_INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_short_int, short, int, ptrs.short_int_ptr);
+    } else if (basic_type == MPI_LONG_DOUBLE_INT) {
+        DTPI_NESTED_OBJ_INIT_COMP_BUF(par, dtp_long_double_int, long double, int,
+                                      ptrs.long_double_int_ptr);
+    }
+}
+
+static int DTPI_Nested_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+{
+    int err = DTP_SUCCESS;
+    int count;
+    char *buf_ptr;
+    union DTPI_Cast_ptr ptrs;
+
+    FPRINTF(stdout, "check type_displ=%li\n", par->core.type_displ);
+    FPRINTF(stdout, "check type_stride=%li\n", par->core.type_stride);
+    FPRINTF(stdout, "check type_blklen=%li\n", par->core.type_blklen);
+    FPRINTF(stdout, "check type_count=%li\n", par->core.type_count);
+    FPRINTF(stdout, "check type_nesting=%li\n", par->core.type_nesting);
+    FPRINTF(stdout, "check user count=%d\n", par->user.val_count);
+
+    count = par->user.val_count;
+
+    buf_ptr = (char *) buf + par->core.type_displ;
+    if (basic_type == MPI_CHAR || basic_type == MPI_BYTE) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, char, ptrs.char_ptr);
+    } else if (basic_type == MPI_WCHAR) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, wchar_t, ptrs.wchar_ptr);
+    } else if (basic_type == MPI_SHORT) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, short int, ptrs.short_ptr);
+    } else if (basic_type == MPI_INT) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, int, ptrs.int_ptr);
+    } else if (basic_type == MPI_LONG) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, long int, ptrs.long_ptr);
+    } else if (basic_type == MPI_LONG_LONG_INT) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, long long int, ptrs.long_long_ptr);
+    } else if (basic_type == MPI_UNSIGNED_CHAR) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, unsigned char, ptrs.uchar_ptr);
+    } else if (basic_type == MPI_UNSIGNED_SHORT) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, unsigned short int, ptrs.ushort_ptr);
+    } else if (basic_type == MPI_UNSIGNED) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, unsigned int, ptrs.uint_ptr);
+    } else if (basic_type == MPI_UNSIGNED_LONG) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long int, ptrs.ulong_ptr);
+    } else if (basic_type == MPI_UNSIGNED_LONG_LONG) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, unsigned long long int, ptrs.ulong_long_ptr);
+    } else if (basic_type == MPI_FLOAT) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, float, ptrs.float_ptr);
+    } else if (basic_type == MPI_DOUBLE) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, double, ptrs.double_ptr);
+    } else if (basic_type == MPI_LONG_DOUBLE) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, long double, ptrs.long_double_ptr);
+    } else if (basic_type == MPI_INT8_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, int8_t, ptrs.int8_ptr);
+    } else if (basic_type == MPI_INT16_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, int16_t, ptrs.int16_ptr);
+    } else if (basic_type == MPI_INT32_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, int32_t, ptrs.int32_ptr);
+    } else if (basic_type == MPI_INT64_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, int64_t, ptrs.int64_ptr);
+    } else if (basic_type == MPI_UINT8_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, uint8_t, ptrs.uint8_ptr);
+    } else if (basic_type == MPI_UINT16_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, uint16_t, ptrs.uint16_ptr);
+    } else if (basic_type == MPI_UINT32_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, uint32_t, ptrs.uint32_ptr);
+    } else if (basic_type == MPI_UINT64_T) {
+        DTPI_NESTED_OBJ_CHECK_BUF_AND_JUMP(par, uint64_t, ptrs.uint64_ptr);
+    } else if (basic_type == MPI_C_COMPLEX) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_complex, float, float,
+                                                ptrs.c_complex_ptr);
+    } else if (basic_type == MPI_C_FLOAT_COMPLEX) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_float_complex, float, float,
+                                                ptrs.c_float_complex_ptr);
+    } else if (basic_type == MPI_C_DOUBLE_COMPLEX) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_double_complex, double, double,
+                                                ptrs.c_double_complex_ptr);
+    } else if (basic_type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_c_long_double_complex, long double,
+                                                long double, ptrs.c_long_double_complex_ptr);
+    } else if (basic_type == MPI_FLOAT_INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_float_int, float, int, ptrs.float_int_ptr);
+    } else if (basic_type == MPI_DOUBLE_INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_double_int, double, int,
+                                                ptrs.double_int_ptr);
+    } else if (basic_type == MPI_LONG_INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_int, long, int, ptrs.long_int_ptr);
+    } else if (basic_type == MPI_2INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_2int, int, int, ptrs.int_int_ptr);
+    } else if (basic_type == MPI_SHORT_INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_short_int, short, int, ptrs.short_int_ptr);
+    } else if (basic_type == MPI_LONG_DOUBLE_INT) {
+        DTPI_NESTED_OBJ_CHECK_COMP_BUF_AND_JUMP(par, dtp_long_double_int, long double, int,
+                                                ptrs.long_double_int_ptr);
     }
 
   fn_exit:
