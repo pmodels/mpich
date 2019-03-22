@@ -1042,10 +1042,10 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_vci_get_attr(int vci)
+static inline MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
+    return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)

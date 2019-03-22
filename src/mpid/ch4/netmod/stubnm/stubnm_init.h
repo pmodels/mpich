@@ -34,7 +34,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_vci_get_attr(int vci)
+static inline MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0);
     return 0;

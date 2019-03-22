@@ -16,7 +16,7 @@
 MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_mpi_init_hook,
     MPIDI_NM_mpi_finalize_hook,
-    MPIDI_NM_vci_get_attr,
+    MPIDI_NM_vci_get_resource_info,
     MPIDI_NM_progress,
     MPIDI_NM_mpi_comm_connect,
     MPIDI_NM_mpi_comm_disconnect,

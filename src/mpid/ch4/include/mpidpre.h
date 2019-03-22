@@ -29,6 +29,7 @@
 #include "uthash.h"
 #include "ch4_coll_params.h"
 #include "ch4i_workq_types.h"
+#include "ch4_vci_types.h"
 
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT

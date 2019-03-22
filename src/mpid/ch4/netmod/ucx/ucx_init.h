@@ -209,13 +209,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_vci_get_attr
+#define FUNCNAME MPIDI_NM_vci_get_resource_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_vci_get_attr(int vci)
+MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
+    return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 
 #undef FUNCNAME

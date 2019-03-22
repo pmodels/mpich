@@ -20,7 +20,7 @@ typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bit
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
                                     int *n_vcis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
-typedef int (*MPIDI_NM_vci_get_attr_t) (int vci);
+typedef MPIDI_vci_resource_t(*MPIDI_NM_vci_get_resource_info_t) (int vci);
 typedef int (*MPIDI_NM_progress_t) (int vci, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                             int timeout, MPIR_Comm * comm,
@@ -475,7 +475,7 @@ typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
     MPIDI_NM_mpi_finalize_t mpi_finalize;
-    MPIDI_NM_vci_get_attr_t vci_get_attr;
+    MPIDI_NM_vci_get_resource_info_t vci_get_resource_info;
     MPIDI_NM_progress_t progress;
     MPIDI_NM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_NM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -660,7 +660,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appn
                                                     int spawned, int *n_vcis_provided)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_vci_get_attr(int vci) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                        int root, int timeout,
