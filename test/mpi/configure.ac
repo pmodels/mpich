@@ -774,6 +774,12 @@ case $with_thread_package in
         threadlib="-labt"
         THREAD_PACKAGE_NAME=THREAD_PACKAGE_ARGOBOTS
         ;;
+    qt|qthreads)
+        with_thread_package=qthreads
+        PAC_CHECK_HEADER_LIB_FATAL([qthreads], [qthread/qthread.h], [qthread], [qthread_fork])
+        threadlib="-lqthread"
+        THREAD_PACKAGE_NAME=THREAD_PACKAGE_QTHREADS
+        ;;
     no|none)
         with_thread_package=none
         THREAD_PACKAGE_NAME=THREAD_PACKAGE_NONE
