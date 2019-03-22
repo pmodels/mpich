@@ -110,6 +110,7 @@ enum {
 enum {
     DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_VECTOR_3L = DTPI_OBJ_LAYOUT_LARGE__NUM,
     DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_HVECTOR_3L,
+    DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_INDEXED_3L,
     DTPI_OBJ_LAYOUT_LARGE_NESTED__NUM
 };
 
@@ -137,6 +138,7 @@ typedef enum {
     DTPI_OBJ_TYPE__SUBARRAY_F,
     DTPI_OBJ_TYPE__NESTED_VECTOR,
     DTPI_OBJ_TYPE__NESTED_HVECTOR,
+    DTPI_OBJ_TYPE__NESTED_INDEXED,
     DTPI_OBJ_TYPE__STRUCT,
     DTPI_OBJ_TYPE__NUM
 } DTPI_obj_type_e;
@@ -215,6 +217,9 @@ typedef enum {
                 break;                                                  \
             case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_HVECTOR_3L:          \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##NESTED_HVECTOR;  \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_INDEXED_3L:          \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##NESTED_INDEXED;  \
                 break;                                                  \
             default:                                                    \
                 obj_type = DTPI_OBJ_TYPE__NONE;                         \
@@ -325,6 +330,7 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Nested_vector_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Nested_hvector_create(struct DTPI_Par *par, DTP_t dtp);
+int DTPI_Nested_indexed_create(struct DTPI_Par *par, DTP_t dtp);
 
 int DTPI_Struct_free(DTP_t dtp, int obj_idx);
 int DTPI_Basic_free(DTP_t dtp, int obj_idx);
@@ -351,6 +357,7 @@ int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Nested_vector_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Nested_hvector_check_buf(struct DTPI_Par *par, DTP_t dtp);
+int DTPI_Nested_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp);
 
 void DTPI_Print_error(int errcode);
 void DTPI_Init_creators(DTPI_Creator * creators);

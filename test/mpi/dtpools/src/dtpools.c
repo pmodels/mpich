@@ -346,6 +346,7 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
                 break;
             case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_VECTOR_3L:
             case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_HVECTOR_3L:
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_INDEXED_3L:
                 /*
                  * NOTE 1: this is a three level nested vector type.
                  *         This means that, including level 0, we
