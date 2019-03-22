@@ -15,6 +15,7 @@
 #include "dtpools.h"
 
 #define ERR_STRING_MAX_LEN (512)
+#define DTPI_MAX_TYPE_NESTING (3)
 
 #ifdef DEBUG_DTPOOLS
 #define FPRINTF(fd,...)         \
@@ -100,6 +101,18 @@ enum {
 };
 
 /*
+ * Nested derived datatype layouts:
+ * - block length = implementation defined
+ * - stride       = implementation defined
+ * - count        = implementation defined
+ * - nesting level= implementation defined
+ */
+enum {
+    DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_VECTOR_3L = DTPI_OBJ_LAYOUT_LARGE__NUM,
+    DTPI_OBJ_LAYOUT_LARGE_NESTED__NUM
+};
+
+/*
  * Only one layouts for struct datatype.
  * TODO: extend struct with multiple
  *       additional layouts ... ?
@@ -121,6 +134,7 @@ typedef enum {
     DTPI_OBJ_TYPE__HINDEXED,
     DTPI_OBJ_TYPE__SUBARRAY_C,
     DTPI_OBJ_TYPE__SUBARRAY_F,
+    DTPI_OBJ_TYPE__NESTED_VECTOR,
     DTPI_OBJ_TYPE__STRUCT,
     DTPI_OBJ_TYPE__NUM
 } DTPI_obj_type_e;
@@ -193,6 +207,9 @@ typedef enum {
             case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:            \
             case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:            \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##SUBARRAY_F;      \
+                break;                                                  \
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_VECTOR_3L:           \
+                obj_type = DTPI_OBJ_TYPE__##pool_type##NESTED_VECTOR;   \
                 break;                                                  \
             default:                                                    \
                 obj_type = DTPI_OBJ_TYPE__NONE;                         \
@@ -301,6 +318,7 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp);
+int DTPI_Nested_vector_create(struct DTPI_Par *par, DTP_t dtp);
 
 int DTPI_Struct_free(DTP_t dtp, int obj_idx);
 int DTPI_Basic_free(DTP_t dtp, int obj_idx);
@@ -325,6 +343,7 @@ int DTPI_Block_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Block_hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp);
 int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp);
+int DTPI_Nested_vector_check_buf(struct DTPI_Par *par, DTP_t dtp);
 
 void DTPI_Print_error(int errcode);
 void DTPI_Init_creators(DTPI_Creator * creators);

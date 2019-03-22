@@ -84,12 +84,35 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
     int i, err = DTP_SUCCESS;
     int num_objs;
     int min_obj_idx, max_obj_idx;
+    int real_max_idx;
+    int factor;
+    int log_2 = 0;
     struct DTP_obj_array_s *obj_array = NULL;
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    int real_max_idx = basic_type_count == 1 ? DTPI_OBJ_LAYOUT_SIMPLE__NUM - 1 :
-        DTPI_OBJ_LAYOUT_LARGE__NUM - 1;
+    /*
+     * For nested types, e.g., MPI_Type_vector,
+     * we use factor as blklen. The blklen at
+     * level-i is a 2^i power, therefore factor
+     * has to be a power of 2.
+     * Check `dtpools_internal.c` for more details.
+     */
+    factor = DTPI_Get_max_fact(basic_type_count);
+    while (factor > 1) {
+        if (factor % 2 != 0)
+            break;
+        factor >>= 1;
+        log_2++;
+    }
+
+    if (basic_type_count == 1) {
+        real_max_idx = DTPI_OBJ_LAYOUT_SIMPLE__NUM - 1;
+    } else if (log_2 >= DTPI_MAX_TYPE_NESTING) {
+        real_max_idx = DTPI_OBJ_LAYOUT_LARGE_NESTED__NUM - 1;
+    } else {
+        real_max_idx = DTPI_OBJ_LAYOUT_LARGE__NUM - 1;
+    }
     get_obj_id_range(real_max_idx, &min_obj_idx, &max_obj_idx);
     num_objs = max_obj_idx - min_obj_idx + 1;
 
@@ -320,6 +343,21 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
                     par.core.type_blklen = factor;
                 }
                 par.core.type_stride = par.core.type_blklen * 4;
+                break;
+            case DTPI_OBJ_LAYOUT_LARGE_BLK__NESTED_VECTOR_3L:
+                /*
+                 * NOTE 1: this is a three level nested vector type.
+                 *         This means that, including level 0, we
+                 *         have four (4) calls to `MPI_Type_vector`.
+                 * NOTE 2: right now max factor is 64, thus we can
+                 *         nest up to 6 vector calls. To increase
+                 *         the nesting level max factor should be
+                 *         increased first.
+                 */
+                par.core.type_count = basic_type_count / factor;
+                par.core.type_blklen = factor;
+                par.core.type_stride = par.core.type_blklen + 1;
+                par.core.type_nesting = 3;
                 break;
             default:
                 err = DTP_ERR_OTHER;

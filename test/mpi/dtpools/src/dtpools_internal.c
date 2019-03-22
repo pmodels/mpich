@@ -342,6 +342,7 @@ void DTPI_Init_creators(DTPI_Creator * creators)
     creators[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
     creators[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_create;
     creators[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_create;
+    creators[DTPI_OBJ_TYPE__NESTED_VECTOR] = DTPI_Nested_vector_create;
 }
 
 void DTPI_Init_destructors(DTPI_Destructor * destructors)
@@ -357,6 +358,7 @@ void DTPI_Init_destructors(DTPI_Destructor * destructors)
     destructors[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_free;
     destructors[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_free;
     destructors[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_free;
+    destructors[DTPI_OBJ_TYPE__NESTED_VECTOR] = DTPI_Vector_free;
 }
 
 void DTPI_Init_checkers(DTPI_Checker * checkers)
@@ -372,6 +374,7 @@ void DTPI_Init_checkers(DTPI_Checker * checkers)
     checkers[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_check_buf;
     checkers[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_check_buf;
     checkers[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_check_buf;
+    checkers[DTPI_OBJ_TYPE__NESTED_VECTOR] = DTPI_Nested_vector_check_buf;
 }
 
 static void DTPI_Basic_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
@@ -1957,6 +1960,163 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
     goto fn_exit;
 }
 
+int DTPI_Nested_vector_create(struct DTPI_Par *par, DTP_t dtp)
+{
+    int err = DTP_SUCCESS;
+    int len;
+    int i, j;
+    int obj_idx;
+    int count;
+    int blklen;
+    int stride;
+    MPI_Aint lb, extent, basic_type_size;
+    MPI_Datatype basic_type;
+    MPI_Datatype *type_at_level = NULL;
+    MPI_Datatype tmp_type;
+    void *buf = NULL;
+    DTPI_t *dtpi = NULL;
+    char type_name[TYPE_NAME_MAXLEN] = { 0 };
+    char basic_type_name[BASIC_TYPE_NAME_MAXLEN] = { 0 };
+
+    /* get basic type for pool */
+    basic_type = dtp->DTP_type_signature.DTP_pool_basic.DTP_basic_type;
+
+    /* get object index in the pool */
+    obj_idx = par->user.obj_idx;
+
+    /* allocate space for holding intermediate datatypes */
+    DTPI_OBJ_ALLOC_OR_FAIL(type_at_level, sizeof(MPI_Datatype) * (par->core.type_nesting + 1));
+
+    err = MPI_Type_get_extent(basic_type, &lb, &basic_type_size);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+
+    /* create level-0 vector datatype */
+    count = par->core.type_count;
+    blklen = par->core.type_blklen / (int) (1 << par->core.type_nesting);
+    stride = par->core.type_stride;
+    err = MPI_Type_vector(count, blklen, stride, basic_type, &type_at_level[0]);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+
+    /* resize level-0 vector to make it end after first block of blklen */
+    extent = basic_type_size * blklen;
+    err = MPI_Type_create_resized(type_at_level[0], 0, extent, &tmp_type);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+    MPI_Type_free(&type_at_level[0]);
+    type_at_level[0] = tmp_type;
+
+    /*
+     * create level-i vector datatype by interleaving
+     * two level-(i - 1) datatypes.
+     */
+    for (i = 1; i <= par->core.type_nesting; i++) {
+        err = MPI_Type_vector(2, 1, 1, type_at_level[i - 1], &type_at_level[i]);
+        if (err) {
+            DTPI_Print_error(err);
+            goto fn_fail;
+        }
+    }
+
+    /* adjust level-(nesting) vector datatype extent */
+    MPI_Type_get_true_extent(type_at_level[par->core.type_nesting], &lb, &extent);
+    err = MPI_Type_create_resized(type_at_level[par->core.type_nesting], lb, extent, &tmp_type);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+    MPI_Type_free(&type_at_level[par->core.type_nesting]);
+    type_at_level[par->core.type_nesting] = tmp_type;
+
+    dtp->DTP_obj_array[obj_idx].DTP_obj_type = type_at_level[par->core.type_nesting];
+
+    err = MPI_Type_commit(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+
+    dtp->DTP_obj_array[obj_idx].DTP_obj_count = 1;
+
+    err = MPI_Type_get_extent(dtp->DTP_obj_array[obj_idx].DTP_obj_type, &lb, &extent);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+
+    /* allocate buffer */
+    DTPI_OBJ_ALLOC_OR_FAIL(buf, lb + extent);
+
+    /* initialize totlen and displ for buf init */
+    par->core.type_displ = 0;
+
+    /* initialize buffer with requested DTPI_Par */
+    DTPI_Nested_type_init_buf(par, basic_type, buf);
+
+    /* allocate space for private datatype info */
+    DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
+
+    /* initialize private datatype info data */
+    dtpi->obj_type = DTPI_OBJ_TYPE__NESTED_VECTOR;
+    dtpi->type_basic_size = basic_type_size;
+    dtpi->type_extent = extent;
+    dtpi->type_lb = lb;
+    dtpi->type_ub = lb + extent;
+    dtpi->u.vector.stride = par->core.type_stride;
+    dtpi->u.vector.blklen = par->core.type_blklen;
+    dtpi->u.vector.count = par->core.type_count;
+    dtpi->u.vector.nesting = par->core.type_nesting;
+
+    dtp->DTP_obj_array[obj_idx].DTP_obj_buf = buf;
+    dtp->DTP_obj_array[obj_idx].private_info = dtpi;
+
+    /* set type name for debug information */
+    err = MPI_Type_get_name(basic_type, basic_type_name, &len);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+    sprintf(type_name, "nested_vector_%dl (%s basic_type %li count %li blocklen %li stride)",
+            (int) par->core.type_nesting, basic_type_name, par->core.type_count,
+            par->core.type_blklen, par->core.type_stride);
+    err = MPI_Type_set_name(dtp->DTP_obj_array[obj_idx].DTP_obj_type, (char *) type_name);
+    if (err) {
+        DTPI_Print_error(err);
+        goto fn_fail;
+    }
+
+    /* free intermediate datatypes */
+    for (i = 0; i < par->core.type_nesting; i++)
+        MPI_Type_free(&type_at_level[i]);
+    free(type_at_level);
+
+  fn_exit:
+    return err;
+
+  fn_fail:
+    /* cleanup datatype */
+    if (dtp->DTP_obj_array[obj_idx].DTP_obj_type != MPI_DATATYPE_NULL) {
+        MPI_Type_free(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);
+    }
+
+    /* clean up buffers */
+    free(dtpi);
+    free(buf);
+
+    /* clean up intermediate datatypes */
+    for (j = 0; j < i; j++)
+        MPI_Type_free(&type_at_level[j]);
+    free(type_at_level);
+
+    goto fn_exit;
+}
 
 /* --------------------------------------------------------- */
 /* Datatype Pool Object Free Functions                       */
@@ -2310,4 +2470,25 @@ int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_blklen = dtpi->u.subarray.arr_subsizes[0];
 
     return DTPI_Basic_type_check_buf(par, basic_type, buf);
+}
+
+int DTPI_Nested_vector_check_buf(struct DTPI_Par *par, DTP_t dtp)
+{
+    int obj_idx;
+    MPI_Datatype basic_type;
+    void *buf;
+    DTPI_t *dtpi;
+
+    obj_idx = par->user.obj_idx;
+    buf = dtp->DTP_obj_array[obj_idx].DTP_obj_buf;
+    basic_type = dtp->DTP_type_signature.DTP_pool_basic.DTP_basic_type;
+
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    par->core.type_stride = dtpi->u.vector.stride;
+    par->core.type_blklen = dtpi->u.vector.blklen;
+    par->core.type_count = dtpi->u.vector.count;
+    par->core.type_displ = 0;
+    par->core.type_nesting = dtpi->u.vector.nesting;
+
+    return DTPI_Nested_type_check_buf(par, basic_type, buf);
 }
