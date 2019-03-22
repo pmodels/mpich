@@ -1099,8 +1099,8 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
 
     /* Make sure that all of the local processes now have this
      * id */
-    mpi_errno = MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                           0, comm_ptr->local_comm, &errflag);
+    mpi_errno = MPIR_Bcast_impl(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+                                0, comm_ptr->local_comm, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
