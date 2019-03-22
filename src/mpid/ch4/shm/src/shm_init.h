@@ -11,17 +11,4 @@
 #include <shm.h>
 #include "../posix/shm_inline.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
-
-    ret = MPIDI_POSIX_progress(blocking);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
-    return ret;
-}
-
 #endif /* SHM_INIT_H_INCLUDED */

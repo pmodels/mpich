@@ -8,12 +8,11 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef STUBSHM_PROGRESS_H_INCLUDED
-#define STUBSHM_PROGRESS_H_INCLUDED
 
+#include "mpidimpl.h"
 #include "stubshm_impl.h"
 
-static inline int MPIDI_STUBSHM_do_progress_recv(int blocking, int *completion_count)
+int MPIDI_STUBSHM_do_progress_recv(int blocking, int *completion_count)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_DO_PROGRESS_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_DO_PROGRESS_RECV);
@@ -24,7 +23,7 @@ static inline int MPIDI_STUBSHM_do_progress_recv(int blocking, int *completion_c
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_count)
+int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_count)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_DO_PROGRESS_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_DO_PROGRESS_SEND);
@@ -35,7 +34,7 @@ static inline int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_c
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress(int vci, int blocking)
+int MPIDI_STUBSHM_progress(int vci, int blocking)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS);
@@ -46,7 +45,7 @@ static inline int MPIDI_STUBSHM_progress(int vci, int blocking)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_test(void)
+int MPIDI_STUBSHM_progress_test(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_TEST);
@@ -57,7 +56,7 @@ static inline int MPIDI_STUBSHM_progress_test(void)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_poke(void)
+int MPIDI_STUBSHM_progress_poke(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_POKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_POKE);
@@ -68,7 +67,7 @@ static inline int MPIDI_STUBSHM_progress_poke(void)
     return MPI_SUCCESS;
 }
 
-static inline void MPIDI_STUBSHM_progress_start(MPID_Progress_state * state)
+void MPIDI_STUBSHM_progress_start(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_START);
@@ -79,7 +78,7 @@ static inline void MPIDI_STUBSHM_progress_start(MPID_Progress_state * state)
     return MPI_SUCCESS;
 }
 
-static inline void MPIDI_STUBSHM_progress_end(MPID_Progress_state * state)
+void MPIDI_STUBSHM_progress_end(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_END);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_END);
@@ -90,7 +89,7 @@ static inline void MPIDI_STUBSHM_progress_end(MPID_Progress_state * state)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_wait(MPID_Progress_state * state)
+int MPIDI_STUBSHM_progress_wait(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_WAIT);
@@ -101,7 +100,7 @@ static inline int MPIDI_STUBSHM_progress_wait(MPID_Progress_state * state)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_register(int (*progress_fn) (int *))
+int MPIDI_STUBSHM_progress_register(int (*progress_fn) (int *))
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_REGISTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_REGISTER);
@@ -112,7 +111,7 @@ static inline int MPIDI_STUBSHM_progress_register(int (*progress_fn) (int *))
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_deregister(int id)
+int MPIDI_STUBSHM_progress_deregister(int id)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_DEREGISTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_DEREGISTER);
@@ -123,7 +122,7 @@ static inline int MPIDI_STUBSHM_progress_deregister(int id)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_activate(int id)
+int MPIDI_STUBSHM_progress_activate(int id)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_ACTIVATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_ACTIVATE);
@@ -134,7 +133,7 @@ static inline int MPIDI_STUBSHM_progress_activate(int id)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress_deactivate(int id)
+int MPIDI_STUBSHM_progress_deactivate(int id)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS_DEACTIVATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS_DEACTIVATE);
@@ -144,5 +143,3 @@ static inline int MPIDI_STUBSHM_progress_deactivate(int id)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_PROGRESS_DEACTIVATE);
     return MPI_SUCCESS;
 }
-
-#endif /* STUBSHM_PROGRESS_H_INCLUDED */

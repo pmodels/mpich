@@ -19,19 +19,6 @@
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
-
-    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    const void *am_hdr, size_t am_hdr_sz)
 {

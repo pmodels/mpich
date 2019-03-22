@@ -645,7 +645,7 @@ int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_C
                            MPIR_Comm * comm_self, int spawned, int *n_vcis_provided);
 int MPIDI_NM_mpi_finalize_hook(void);
 int MPIDI_NM_get_vci_attr(int vci);
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking) MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_NM_progress(int vci, int blocking);
 int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                               MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr);

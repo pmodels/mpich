@@ -18,7 +18,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .mpi_init = MPIDI_UCX_mpi_init_hook,
     .mpi_finalize = MPIDI_UCX_mpi_finalize_hook,
-    .progress = MPIDI_NM_progress,
+    .progress = MPIDI_UCX_progress,
     .mpi_comm_connect = MPIDI_UCX_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_UCX_mpi_comm_disconnect,
     .mpi_open_port = MPIDI_UCX_mpi_open_port,

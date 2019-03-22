@@ -477,5 +477,18 @@ int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
     return ret;
 }
 
+int MPIDI_NM_progress(int vci, int blocking)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
+
+    ret = MPIDI_NM_func->progress(vci, blocking);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
+    return ret;
+}
+
 #endif
 #endif
