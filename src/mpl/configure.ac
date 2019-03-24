@@ -671,7 +671,7 @@ case $with_thread_package in
         ;;
     qt|qthreads)
         with_thread_package=qthreads
-        AC_CHECK_HEADER([qthread.h],[],AC_MSG_ERROR([unable to find Qthreads header file]))
+        AC_CHECK_HEADER([qthread/qthread.h],[],AC_MSG_ERROR([unable to find Qthreads header file]))
         AC_CHECK_LIB([qthread],[qthread_fork],[],AC_MSG_ERROR([unable to find Qthreads library]))
         PAC_PREPEND_FLAG([-lqthread],[LIBS])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_QTHREADS
