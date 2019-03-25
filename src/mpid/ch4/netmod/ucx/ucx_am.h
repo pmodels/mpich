@@ -123,20 +123,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
         MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     } else {
-        size_t segment_first;
-        struct MPIR_Segment *segment_ptr;
-        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-        segment_first = 0;
-        last = data_sz;
         send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
 
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-        MPIR_Segment_pack(segment_ptr, segment_first, &last,
-                          send_buf + am_hdr_sz + sizeof(ucx_hdr));
-        MPIR_Segment_free(segment_ptr);
+
+        MPI_Aint actual_pack_bytes;
+        mpi_errno =
+            MPIR_Pack_impl(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
+                           data_sz, &actual_pack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
     }
 
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
@@ -217,17 +215,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     if (dt_contig) {
         MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     } else {
-        size_t segment_first;
-        struct MPIR_Segment *segment_ptr;
-        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
-        segment_first = 0;
-        last = data_sz;
-        MPIR_Segment_pack(segment_ptr, segment_first, &last,
-                          send_buf + sizeof(ucx_hdr) + am_hdr_sz);
-        MPIR_Segment_free(segment_ptr);
+        MPI_Aint actual_pack_bytes;
+        mpi_errno =
+            MPIR_Pack_impl(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
+                           data_sz, &actual_pack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
@@ -302,17 +296,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     if (dt_contig) {
         MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     } else {
-        size_t segment_first;
-        struct MPIR_Segment *segment_ptr;
-        MPI_Aint last;
-        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-        segment_first = 0;
-        last = data_sz;
-        MPIR_Segment_pack(segment_ptr, segment_first, &last,
-                          send_buf + am_hdr_sz + sizeof(ucx_hdr));
-        MPIR_Segment_free(segment_ptr);
+        MPI_Aint actual_pack_bytes;
+        mpi_errno =
+            MPIR_Pack_impl(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
+                           data_sz, &actual_pack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz +

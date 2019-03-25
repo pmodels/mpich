@@ -17,9 +17,9 @@
 #endif
 
 struct MPIDI_UCX_pack_state {
-    MPIR_Segment *segment_ptr;
+    void *buffer;
+    size_t count;
     MPI_Datatype datatype;
-    MPI_Aint packsize;
 };
 
 #undef FUNCNAME
@@ -28,18 +28,14 @@ struct MPIDI_UCX_pack_state {
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size_t count)
 {
-    MPI_Datatype *datatype = (MPI_Datatype *) context;
-    MPIR_Segment *segment_ptr;
     struct MPIDI_UCX_pack_state *state;
-    MPI_Aint packsize;
 
-    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
-    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
-    MPIR_Pack_size_impl(count, *datatype, &packsize);
     /* Todo: Add error handling */
-    state->packsize = packsize;
-    state->segment_ptr = segment_ptr;
-    state->datatype = *datatype;
+    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
+
+    state->buffer = (void *) buffer;
+    state->count = count;
+    state->datatype = *((MPI_Datatype *) context);
 
     return (void *) state;
 }
@@ -50,18 +46,14 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_pack(void *context, const void *b
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t count)
 {
-    MPI_Datatype *datatype = (MPI_Datatype *) context;
-    MPIR_Segment *segment_ptr;
     struct MPIDI_UCX_pack_state *state;
-    MPI_Aint packsize;
 
-    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
-    MPIR_Pack_size_impl(count, *datatype, &packsize);
-    segment_ptr = MPIR_Segment_alloc(buffer, count, *datatype);
     /* Todo: Add error handling */
-    state->packsize = packsize;
-    state->segment_ptr = segment_ptr;
-    state->datatype = *datatype;
+    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
+
+    state->buffer = buffer;
+    state->count = count;
+    state->datatype = *((MPI_Datatype *) context);
 
     return (void *) state;
 }
@@ -73,8 +65,11 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_UCX_Start_unpack(void *context, void *buffe
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Packed_size(void *state)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
+    MPI_Aint packsize;
 
-    return (size_t) pack_state->packsize;
+    MPIR_Pack_size_impl(pack_state->count, pack_state->datatype, &packsize);
+
+    return (size_t) packsize;
 }
 
 #undef FUNCNAME
@@ -85,11 +80,12 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_UCX_Pack(void *state, size_t offset, void 
                                                size_t max_length)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
-    MPI_Aint last = MPL_MIN(pack_state->packsize, offset + max_length);
+    MPI_Aint actual_pack_bytes;
 
-    MPIR_Segment_pack(pack_state->segment_ptr, offset, &last, dest);
+    MPIR_Pack_impl(pack_state->buffer, pack_state->count, pack_state->datatype, offset,
+                   dest, max_length, &actual_pack_bytes);
 
-    return (size_t) last - offset;
+    return actual_pack_bytes;
 }
 
 #undef FUNCNAME
@@ -100,11 +96,16 @@ MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offse
                                                        size_t count)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
-    MPI_Aint last = MPL_MIN(pack_state->packsize, offset + count);
-    MPI_Aint last_pack = last;
+    MPI_Aint max_unpack_bytes;
+    MPI_Aint actual_unpack_bytes;
+    MPI_Aint packsize;
 
-    MPIR_Segment_unpack(pack_state->segment_ptr, offset, &last, (void *) src);
-    if (unlikely(last != last_pack)) {
+    MPIR_Pack_size_impl(pack_state->count, pack_state->datatype, &packsize);
+    max_unpack_bytes = MPL_MIN(packsize, count);
+
+    MPIR_Unpack_impl(src, max_unpack_bytes, pack_state->buffer, pack_state->count,
+                     pack_state->datatype, offset, &actual_unpack_bytes);
+    if (unlikely(actual_unpack_bytes != max_unpack_bytes)) {
         return UCS_ERR_MESSAGE_TRUNCATED;
     }
 
@@ -120,7 +121,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Finish_pack(void *state)
     MPIR_Datatype *dt_ptr;
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     MPIR_Datatype_get_ptr(pack_state->datatype, dt_ptr);
-    MPIR_Segment_free(pack_state->segment_ptr);
     MPIR_Datatype_ptr_release(dt_ptr);
     MPL_free(pack_state);
 }

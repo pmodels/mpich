@@ -113,25 +113,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
                                                      MPIR_Request ** reqptr ATTRIBUTE((unused)))
 {
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
-    MPI_Aint segment_first, last;
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
-    struct MPIR_Segment *segment_ptr;
     char *buffer = NULL;
     MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
-    segment_ptr = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
-    MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                         MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-    segment_first = 0;
-    last = size;
-
     buffer = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(buffer);
-    MPIR_Segment_pack(segment_ptr, segment_first, &last, buffer);
-    MPIR_Segment_free(segment_ptr);
+
+    MPI_Aint actual_pack_bytes;
+    mpi_errno = MPIR_Pack_impl(origin_addr, origin_count, origin_datatype, 0, buffer, size,
+                               &actual_pack_bytes);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == size);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
