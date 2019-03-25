@@ -130,17 +130,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     /* If the data being sent is not contiguous, pack it into a contiguous buffer using the datatype
      * engine. */
     if (unlikely(!dt_contig && (data_sz > 0))) {
-        size_t segment_first;
-        MPI_Aint last;
-        struct MPIR_Segment *segment_ptr = NULL;
-
-        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-
-        segment_first = 0;
-        last = data_sz;
-
         MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
 
         /* Prepare private storage with information about the pack buffer. */
@@ -156,9 +145,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         MPIR_ERR_CHKANDJUMP1(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPIR_Segment_pack(segment_ptr, segment_first, &last,
-                          MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIR_Segment_free(segment_ptr);
+        MPI_Aint actual_pack_bytes;
+        mpi_errno = MPIR_Pack_impl(data, count, datatype, 0,
+                                   MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer),
+                                   data_sz, &actual_pack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
 
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
