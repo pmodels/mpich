@@ -552,11 +552,13 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
                           MPI_Datatype * newtype_p);
 int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
                           const MPI_Datatype old_types[], MPI_Datatype * newtype);
-int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf,
-                   MPI_Aint outcount, MPI_Aint * position);
+int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
+                   MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
+                   MPI_Aint * actual_pack_bytes);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
-int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
-                     void *outbuf, int outcount, MPI_Datatype datatype);
+int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize,
+                     void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                     MPI_Aint * actual_unpack_bytes);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */

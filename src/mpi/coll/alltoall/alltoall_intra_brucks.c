@@ -38,7 +38,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     int block, *displs, count;
-    MPI_Aint pack_size, position;
+    MPI_Aint pack_size;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(6);
@@ -115,12 +115,12 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        position = 0;
-        mpi_errno = MPIR_Pack_impl(recvbuf, 1, newtype, tmp_buf, pack_size, &position);
+        MPI_Aint actual_pack_bytes;
+        mpi_errno = MPIR_Pack_impl(recvbuf, 1, newtype, 0, tmp_buf, pack_size, &actual_pack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIC_Sendrecv(tmp_buf, position, MPI_PACKED, dst,
+        mpi_errno = MPIC_Sendrecv(tmp_buf, actual_pack_bytes, MPI_PACKED, dst,
                                   MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
                                   src, MPIR_ALLTOALL_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {

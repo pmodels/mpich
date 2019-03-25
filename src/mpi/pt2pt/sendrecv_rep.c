@@ -142,7 +142,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         MPIR_Request *rreq = NULL;
         void *tmpbuf = NULL;
         MPI_Aint tmpbuf_size = 0;
-        MPI_Aint tmpbuf_count = 0;
+        MPI_Aint actual_pack_bytes = 0;
 
         if (count > 0 && dest != MPI_PROC_NULL) {
             MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
@@ -150,7 +150,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             MPIR_CHKLMEM_MALLOC_ORJUMP(tmpbuf, void *, tmpbuf_size, mpi_errno,
                                        "temporary send buffer", MPL_MEM_BUFFER);
 
-            mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
+            mpi_errno =
+                MPIR_Pack_impl(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
         }
@@ -160,7 +161,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
-        mpi_errno = MPID_Isend(tmpbuf, tmpbuf_count, MPI_PACKED, dest,
+        mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
                                sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */

@@ -30,20 +30,22 @@ int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int o
 #define FUNCNAME MPIR_Unpack_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
-                     void *outbuf, int outcount, MPI_Datatype datatype)
+int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize,
+                     void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
+                     MPI_Aint * actual_unpack_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint first, last;
     MPIR_Segment *segp;
     int contig;
-    MPI_Aint dt_true_lb;
+    MPI_Aint last;
     MPI_Aint data_sz;
+    MPI_Aint dt_true_lb;
 
-    if (insize == 0)
+    if (insize == 0) {
+        *actual_unpack_bytes = 0;
         goto fn_exit;
+    }
 
-    /* Handle contig case quickly */
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
         contig = TRUE;
         dt_true_lb = 0;
@@ -56,33 +58,29 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
         data_sz = outcount * dt_ptr->size;
     }
 
+    /* make sure we are not unpacking more than the provided buffer
+     * length */
+    /* FIXME: we need to make sure to unpack each basic datatype
+     * atomically, even if the max_unpack_bytes allows us to split
+     * it */
+    if (data_sz > insize)
+        data_sz = insize;
+
+    /* Handle contig case quickly */
     if (contig) {
-        MPIR_Memcpy((char *) outbuf + dt_true_lb, (char *) inbuf + *position, data_sz);
-        *position = (int) ((MPI_Aint) * position + data_sz);
-        goto fn_exit;
+        MPIR_Memcpy((char *) outbuf + dt_true_lb + outoffset, inbuf, data_sz);
+        *actual_unpack_bytes = data_sz;
+    } else {
+        segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
+        MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPIR_Segment_alloc");
+
+        last = data_sz + outoffset;
+        MPIR_Segment_unpack(segp, outoffset, &last, inbuf);
+        MPIR_Segment_free(segp);
+
+        *actual_unpack_bytes = last - outoffset;
     }
-
-
-    /* non-contig case */
-    segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
-    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "MPIR_Segment_alloc");
-
-    /* NOTE: the use of buffer values and positions in MPI_Unpack and in
-     * MPIR_Segment_unpack are quite different.  See code or docs or something.
-     */
-    first = 0;
-    last = MPIR_SEGMENT_IGNORE_LAST;
-
-    MPIR_Segment_unpack(segp, first, &last, (void *) ((char *) inbuf + *position));
-
-    /* Ensure that calculation fits into an int datatype. */
-    MPIR_Ensure_Aint_fits_in_int((MPI_Aint) * position + last);
-
-    *position = (int) ((MPI_Aint) * position + last);
-
-    MPIR_Segment_free(segp);
-
 
   fn_exit:
     return mpi_errno;
@@ -190,9 +188,14 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
     /* ... body of routine ...  */
 
     position_x = *position;
-    mpi_errno = MPIR_Unpack_impl(inbuf, insize, &position_x, outbuf, outcount, datatype);
+
+    MPI_Aint actual_unpack_bytes;
+    void *buf = (void *) ((char *) inbuf + position_x);
+    mpi_errno = MPIR_Unpack_impl(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
     if (mpi_errno)
         goto fn_fail;
+
+    position_x += actual_unpack_bytes;
     MPIR_Assign_trunc(*position, position_x, int);
 
     /* ... end of body of routine ... */

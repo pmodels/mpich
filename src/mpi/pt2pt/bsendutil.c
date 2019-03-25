@@ -272,10 +272,13 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
              * use MPIR_Memcpy and the provided datatype */
             msg->count = 0;
             if (dtype != MPI_PACKED) {
+                MPI_Aint actual_pack_bytes;
+                void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
-                    MPIR_Pack_impl(buf, count, dtype, p->msg.msgbuf, packsize, &p->msg.count);
+                    MPIR_Pack_impl(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
+                p->msg.count += actual_pack_bytes;
             } else {
                 MPIR_Memcpy(p->msg.msgbuf, buf, count);
                 p->msg.count = count;
