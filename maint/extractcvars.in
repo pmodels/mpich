@@ -586,7 +586,7 @@ sub ExpandDir {
     my @subdirs = ();
     my $DIR_HANDLE;
     opendir $DIR_HANDLE, "$dir" or die "Error: open directory $dir -- $!\n";
-    while (my $filename = readdir $DIR_HANDLE) {
+    for my $filename (sort readdir $DIR_HANDLE) {
         if ($filename =~ /^\./) {
             next;
         } elsif (-d "$dir/$filename") {
