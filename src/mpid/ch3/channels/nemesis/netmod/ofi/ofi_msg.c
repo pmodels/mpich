@@ -287,6 +287,12 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
+
+    sreq->dev.segment_ptr =
+        MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype);
+    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPIR_Segment_alloc");
+
     MPID_nem_ofi_init_req(sreq);
     first = sreq->dev.segment_first;
     last = sreq->dev.segment_size;
