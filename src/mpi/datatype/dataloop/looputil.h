@@ -126,7 +126,7 @@
 /* changed the argument types to be char* instead of uint64_t* because the Sun compiler
    prints out warnings that the function expects unsigned long long, but is being passed
    signed long long in mpid_ext32_segment.c. */
-static inline void BASIC_convert64(char *src, char *dest)
+static inline void BASIC_convert64(const char *src, char *dest)
 {
     uint32_t tmp_src[2];
     uint32_t tmp_dest[2];
@@ -142,7 +142,7 @@ static inline void BASIC_convert64(char *src, char *dest)
     *((uint64_t *) dest) |= (uint64_t) tmp_dest[1];
 }
 
-static inline void BASIC_convert96(char *src, char *dest)
+static inline void BASIC_convert96(const char *src, char *dest)
 {
     uint32_t tmp_src[3];
     uint32_t tmp_dest[3];
@@ -164,7 +164,7 @@ static inline void BASIC_convert96(char *src, char *dest)
     *((uint32_t *) ptr) = tmp_dest[2];
 }
 
-static inline void BASIC_convert128(char *src, char *dest)
+static inline void BASIC_convert128(const char *src, char *dest)
 {
     uint64_t tmp_src[2];
     uint64_t tmp_dest[2];
@@ -343,19 +343,19 @@ static inline void BASIC_convert128(char *src, char *dest)
         break;                                \
         case 8:                               \
         {                                     \
-           BASIC_convert64((char *)&src,  \
+           BASIC_convert64((const char *)&src,\
                            (char *)&dest);\
         }                                     \
         break;                                \
         case 12:                              \
         {                                     \
-           BASIC_convert96((char *)&src,      \
+           BASIC_convert96((const char *)&src,\
                            (char *)&dest);    \
         }                                     \
         break;                                \
         case 16:                              \
         {                                     \
-           BASIC_convert128((char *)&src,     \
+           BASIC_convert128((const char *)&src,\
                             (char *)&dest);   \
         }                                     \
         break;                                \

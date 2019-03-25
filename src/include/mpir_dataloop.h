@@ -38,7 +38,7 @@ void MPIR_Segment_count_contig_blocks(MPIR_Segment * segp,
 void MPIR_Segment_pack(struct MPIR_Segment *segp,
                        MPI_Aint first, MPI_Aint * lastp, void *streambuf);
 void MPIR_Segment_unpack(struct MPIR_Segment *segp,
-                         MPI_Aint first, MPI_Aint * lastp, void *streambuf);
+                         MPI_Aint first, MPI_Aint * lastp, const void *streambuf);
 
 void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
                          MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
@@ -50,6 +50,6 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer);
 
 void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
-                                    MPI_Aint first, MPI_Aint * lastp, void *unpack_buffer);
+                                    MPI_Aint first, MPI_Aint * lastp, const void *unpack_buffer);
 
 #endif /* MPIR_DATALOOP_H_INCLUDED */
