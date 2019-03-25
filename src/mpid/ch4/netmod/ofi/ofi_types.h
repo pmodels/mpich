@@ -348,7 +348,7 @@ typedef struct {
     size_t max_order_war;
     size_t max_order_waw;
 
-    /* Mutexex and endpoints */
+    /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
