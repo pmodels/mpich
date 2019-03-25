@@ -67,8 +67,6 @@ int MPIR_Pack_impl(const void *inbuf,
 
     /* non-contig case */
 
-    /* TODO: CHECK RETURN VALUES?? */
-    /* TODO: SHOULD THIS ALL BE IN A MPID_PACK??? */
     segp = MPIR_Segment_alloc(inbuf, incount, datatype);
     MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPIR_Segment");
