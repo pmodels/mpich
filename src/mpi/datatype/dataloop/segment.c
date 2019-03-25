@@ -11,6 +11,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : DATALOOP
+      description : Dataloop-related CVARs
+
+cvars:
+    - name        : MPIR_CVAR_DATALOOP_FAST_SEEK
+      category    : DATALOOP
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        use a datatype-specialized algorithm to shortcut seeking to
+        the correct location in a noncontiguous buffer
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #undef MPII_DATALOOP_DEBUG_MANIPULATE
 
 /* Notes on functions:
@@ -111,6 +133,322 @@
 #define STACKELM_STRUCT_DATALOOP(elmp_, curcount_)                \
     (elmp_)->loop_p->loop_params.s_t.dataloop_array[(curcount_)]
 
+static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
+                         MPI_Aint(*sizefn) (MPI_Datatype el_type))
+{
+    struct MPII_Dataloop_stackelm *cur_elmp;
+    struct MPII_Dataloop_stackelm *next_elmp;
+    int cur_sp;
+
+    MPIR_Assert(segp->stream_off < position);
+
+    if (segp->stream_off || sizefn || !MPIR_CVAR_DATALOOP_FAST_SEEK) {
+        goto fallback_path;
+    }
+
+    SEGMENT_RESET_VALUES;
+    cur_sp = segp->cur_sp;
+
+    /* in the common case where this is a new segment and user wants
+     * to pack or unpack from a non-zero offset, try to skip through
+     * large blocks and setup the segment cursor at the correct
+     * position */
+    /* in the below code, at the leaf-level, the curblocks is setup to
+     * point to the remaining blocks.  But at the upper levels, the
+     * curblocks are setup to be one lesser than the remaining blocks
+     * (even if the lower-level block is completely unused). */
+    cur_elmp->orig_offset = 0;
+    cur_elmp->curoffset = 0;
+    while (1) {
+        switch ((cur_elmp->loop_p->kind & MPII_DATALOOP_KIND_MASK)) {
+
+            case MPII_DATALOOP_KIND_CONTIG:
+                {
+                    int blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+
+                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    if (num_elems > blocksize)
+                        num_elems = blocksize;
+                    segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
+
+                    /* contig should have exactly one block */
+                    MPIR_Assert(cur_elmp->orig_count == 1);
+
+                    /* current (remaining) block count */
+                    cur_elmp->curcount = (num_elems == blocksize ? 0 : 1);
+
+                    /* current (remaining) block size */
+                    cur_elmp->curblock = blocksize - num_elems;
+
+                    /* current offset */
+                    cur_elmp->curoffset = cur_elmp->orig_offset +
+                        num_elems * cur_elmp->loop_p->el_extent;
+
+                    /* if there is a child element, setup its
+                     * parameters */
+                    if ((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0) {
+                        next_elmp = &(segp->stackelm[cur_sp + 1]);
+                        next_elmp->orig_offset = cur_elmp->curoffset;
+                        cur_elmp->curoffset = cur_elmp->orig_offset;
+
+                        cur_elmp->curblock--;
+                        segp->cur_sp++;
+
+                        /* we can't skip any large blocks at this
+                         * level anymore; move one level lower and
+                         * repeat the same process */
+                        SEGMENT_PUSH;
+
+                        continue;
+                    } else {
+                        goto fn_exit;
+                    }
+
+                    break;
+                }
+
+            case MPII_DATALOOP_KIND_VECTOR:
+                {
+                    int blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+
+                    MPI_Aint num_blocks =
+                        (position - segp->stream_off) / (cur_elmp->loop_p->el_size * blocksize);
+                    if (num_blocks > cur_elmp->orig_count)
+                        num_blocks = cur_elmp->orig_count;
+                    segp->stream_off += num_blocks * cur_elmp->loop_p->el_size * blocksize;
+
+                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    MPIR_Assert(num_elems < blocksize);
+                    segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
+
+                    /* current (remaining) block count */
+                    cur_elmp->curcount = cur_elmp->orig_count - num_blocks;
+
+                    /* current (remaining) block size */
+                    cur_elmp->curblock = blocksize - num_elems;
+
+                    /* current offset */
+                    cur_elmp->curoffset = cur_elmp->orig_offset +
+                        num_blocks * cur_elmp->loop_p->loop_params.v_t.stride +
+                        num_elems * cur_elmp->loop_p->el_extent;
+
+                    /* if there is a child element, setup its
+                     * parameters */
+                    if ((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0) {
+                        next_elmp = &(segp->stackelm[cur_sp + 1]);
+                        next_elmp->orig_offset = cur_elmp->curoffset;
+                        cur_elmp->curoffset = cur_elmp->orig_offset;
+
+                        cur_elmp->curblock--;
+                        segp->cur_sp++;
+
+                        /* we can't skip any large blocks at this
+                         * level anymore; move one level lower and
+                         * repeat the same process */
+                        SEGMENT_PUSH;
+
+                        continue;
+                    } else {
+                        goto fn_exit;
+                    }
+
+                    break;
+                }
+
+            case MPII_DATALOOP_KIND_BLOCKINDEXED:
+                {
+                    int blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+
+                    MPI_Aint num_blocks =
+                        (position - segp->stream_off) / (cur_elmp->loop_p->el_size * blocksize);
+                    if (num_blocks > cur_elmp->orig_count)
+                        num_blocks = cur_elmp->orig_count;
+                    segp->stream_off += num_blocks * cur_elmp->loop_p->el_size * blocksize;
+
+                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    MPIR_Assert(num_elems < blocksize);
+                    segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
+
+                    /* current (remaining) block count */
+                    cur_elmp->curcount = cur_elmp->orig_count - num_blocks;
+
+                    /* current (remaining) block size */
+                    cur_elmp->curblock = blocksize - num_elems;
+
+                    /* current offset */
+                    cur_elmp->curoffset = cur_elmp->orig_offset +
+                        num_elems * cur_elmp->loop_p->el_extent +
+                        STACKELM_BLOCKINDEXED_OFFSET(cur_elmp, num_blocks);
+
+                    /* if there is a child element, setup its
+                     * parameters */
+                    if ((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0) {
+                        next_elmp = &(segp->stackelm[cur_sp + 1]);
+                        next_elmp->orig_offset = cur_elmp->curoffset;
+                        cur_elmp->curoffset = cur_elmp->orig_offset;
+
+                        cur_elmp->curblock--;
+                        segp->cur_sp++;
+
+                        /* we can't skip any large blocks at this
+                         * level anymore; move one level lower and
+                         * repeat the same process */
+                        SEGMENT_PUSH;
+
+                        continue;
+                    } else {
+                        goto fn_exit;
+                    }
+
+                    break;
+                }
+
+            case MPII_DATALOOP_KIND_INDEXED:
+                {
+                    int blocksize;
+                    MPI_Aint num_blocks;
+
+                    for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
+                        blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
+
+                        if (position - segp->stream_off < cur_elmp->loop_p->el_size * blocksize)
+                            break;
+
+                        segp->stream_off += cur_elmp->loop_p->el_size * blocksize;
+                    }
+
+                    blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
+
+                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    MPIR_Assert(num_elems < blocksize);
+                    segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
+
+                    /* current (remaining) block count */
+                    cur_elmp->curcount = cur_elmp->orig_count - num_blocks;
+
+                    /* current (remaining) block size */
+                    cur_elmp->curblock = blocksize - num_elems;
+
+                    /* current offset */
+                    cur_elmp->curoffset = cur_elmp->orig_offset +
+                        num_elems * cur_elmp->loop_p->el_extent +
+                        STACKELM_INDEXED_OFFSET(cur_elmp, num_blocks);
+
+                    /* if there is a child element, setup its
+                     * parameters */
+                    if ((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0) {
+                        next_elmp = &(segp->stackelm[cur_sp + 1]);
+                        next_elmp->orig_offset = cur_elmp->curoffset;
+                        cur_elmp->curoffset = cur_elmp->orig_offset;
+
+                        cur_elmp->curblock--;
+                        segp->cur_sp++;
+
+                        /* we can't skip any large blocks at this
+                         * level anymore; move one level lower and
+                         * repeat the same process */
+                        SEGMENT_PUSH;
+
+                        continue;
+                    } else {
+                        goto fn_exit;
+                    }
+
+                    break;
+                }
+
+            case MPII_DATALOOP_KIND_STRUCT:
+                {
+                    int blocksize;
+                    MPI_Aint num_blocks;
+                    MPIR_Dataloop *dloop;
+
+                    for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
+                        blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
+                        dloop = STACKELM_STRUCT_DATALOOP(cur_elmp, num_blocks);
+
+                        if (position - segp->stream_off < dloop->el_size * blocksize)
+                            break;
+
+                        segp->stream_off += cur_elmp->loop_p->el_size * blocksize;
+                    }
+
+                    blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
+                    dloop = STACKELM_STRUCT_DATALOOP(cur_elmp, num_blocks);
+
+                    MPI_Aint num_elems = (position - segp->stream_off) / dloop->el_size;
+                    MPIR_Assert(num_elems < blocksize);
+                    segp->stream_off += num_elems * dloop->el_size;
+
+                    /* current (remaining) block count */
+                    cur_elmp->curcount = cur_elmp->orig_count - num_blocks;
+
+                    /* current (remaining) block size */
+                    cur_elmp->curblock = blocksize - num_elems;
+
+                    /* current offset */
+                    cur_elmp->curoffset = cur_elmp->orig_offset +
+                        num_elems * STACKELM_STRUCT_EL_EXTENT(cur_elmp, num_blocks) +
+                        STACKELM_STRUCT_OFFSET(cur_elmp, num_blocks);
+
+                    /* structs cannot be leaves */
+                    MPIR_Assert((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0);
+
+                    /* if there is a child element, setup its
+                     * parameters */
+                    if ((cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) == 0) {
+                        next_elmp = &(segp->stackelm[cur_sp + 1]);
+                        next_elmp->orig_offset = cur_elmp->curoffset;
+                        cur_elmp->curoffset = cur_elmp->orig_offset;
+
+                        cur_elmp->curblock--;
+                        segp->cur_sp++;
+
+                        /* we can't skip any large blocks at this
+                         * level anymore; move one level lower and
+                         * repeat the same process */
+                        SEGMENT_PUSH;
+
+                        continue;
+                    } else {
+                        goto fn_exit;
+                    }
+
+                    break;
+                }
+
+            default:
+                goto fallback_path;
+        }
+
+        MPIR_Assert(segp->stream_off == position);
+        break;
+    }
+
+    goto fn_exit;
+
+  fallback_path:
+    {
+        MPI_Aint tmp_last = position;
+
+        /* use manipulate function with a NULL piecefn to advance
+         * stream offset */
+        MPII_Segment_manipulate(segp, segp->stream_off, &tmp_last, NULL,        /* contig fn */
+                                NULL,   /* vector fn */
+                                NULL,   /* blkidx fn */
+                                NULL,   /* index fn */
+                                sizefn, NULL);
+
+        /* --BEGIN ERROR HANDLING-- */
+        /* verify that we're in the right location */
+        MPIR_Assert(tmp_last == position);
+        /* --END ERROR HANDLING-- */
+    }
+
+  fn_exit:
+    return;
+}
+
 void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                              MPI_Aint first,
                              MPI_Aint * lastp,
@@ -178,21 +516,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
         }
 
         if (first != stream_off) {
-            MPI_Aint tmp_last = first;
-
-            /* use manipulate function with a NULL piecefn to advance
-             * stream offset
-             */
-            MPII_Segment_manipulate(segp, stream_off, &tmp_last, NULL,  /* contig fn */
-                                    NULL,       /* vector fn */
-                                    NULL,       /* blkidx fn */
-                                    NULL,       /* index fn */
-                                    sizefn, NULL);
-
-            /* --BEGIN ERROR HANDLING-- */
-            /* verify that we're in the right location */
-            MPIR_Assert(tmp_last == first);
-            /* --END ERROR HANDLING-- */
+            segment_seek(segp, first, sizefn);
         }
 
         SEGMENT_LOAD_LOCAL_VALUES;
