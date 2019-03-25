@@ -122,7 +122,7 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
             mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq,
                                                       MPIDI_CH3_PKT_READY_SEND,
                                                       buf, count, datatype,
-                                                      data_sz, rank, tag,
+                                                      rank, tag,
                                                       comm, context_offset );
         }
     } else {

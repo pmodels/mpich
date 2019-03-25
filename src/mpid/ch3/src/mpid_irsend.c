@@ -120,7 +120,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
             mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq,
                                                       MPIDI_CH3_PKT_READY_SEND,
                                                       buf, count, datatype,
-                                                      data_sz, rank, tag,
+                                                      rank, tag,
                                                       comm, context_offset );
             /* If we're not complete, then add a reference to the datatype */
             if (sreq) {

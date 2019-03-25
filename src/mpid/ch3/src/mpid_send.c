@@ -152,7 +152,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	    mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq, 
                                                       MPIDI_CH3_PKT_EAGER_SEND,
                                                       buf, count, datatype,
-                                                      data_sz, rank, tag, 
+                                                      rank, tag,
                                                       comm, context_offset );
 	}
     }

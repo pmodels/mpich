@@ -1766,7 +1766,7 @@ int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt );
 /* Routines to create packets (used in implementing MPI communications */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
 				  const void *, MPI_Aint,
-				  MPI_Datatype, intptr_t, int, int, MPIR_Comm *,
+				  MPI_Datatype, int, int, MPIR_Comm *,
 				  int );
 int MPIDI_CH3_EagerContigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
 			       const void *, intptr_t, int,
