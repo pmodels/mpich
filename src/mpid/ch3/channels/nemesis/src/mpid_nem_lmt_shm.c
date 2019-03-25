@@ -444,7 +444,6 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
     intptr_t first;
-    intptr_t last;
     int buf_num;
     intptr_t data_sz, copy_limit;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_LMT_SHM_SEND_PROGRESS);
@@ -490,17 +489,24 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             copy_limit = PIPELINE_MAX_SIZE;
         else
             copy_limit = MPID_NEM_COPY_BUF_LEN;
-        last = (data_sz - first <= copy_limit) ? data_sz : first + copy_limit;
-	MPIR_Segment_pack(req->dev.segment_ptr, first, &last, (void *)copy_buf->buf[buf_num]); /* cast away volatile */
-        OPA_write_barrier();
-        MPIR_Assign_trunc(copy_buf->len[buf_num].val, (last - first), volatile int);
 
-        first = last;
+        MPI_Aint max_pack_bytes;
+        max_pack_bytes = (data_sz - first <= copy_limit) ? data_sz - first : copy_limit;
+
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(req->dev.user_buf, req->dev.user_count, req->dev.datatype, first,
+                       (void *)copy_buf->buf[buf_num], max_pack_bytes, &actual_pack_bytes);
+        MPIR_Assert(max_pack_bytes == actual_pack_bytes);
+
+        OPA_write_barrier();
+        MPIR_Assign_trunc(copy_buf->len[buf_num].val, actual_pack_bytes, volatile int);
+
+        first += actual_pack_bytes;
         buf_num = (buf_num+1) % NUM_BUFS;
 
-        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "sent data.  last=%" PRIdPTR " data_sz=%" PRIdPTR, last, data_sz));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "sent data.  actual_pack_bytes=%" PRIdPTR " data_sz=%" PRIdPTR, actual_pack_bytes, data_sz));
     }
-    while (last < data_sz);
+    while (first < data_sz);
 
     *done = TRUE;
     mpi_errno = MPID_Request_complete(req);
@@ -583,7 +589,11 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         src_buf = ((char *)copy_buf->buf[buf_num]) - surfeit; /* cast away volatile */
         last = expected_last = (data_sz - first <= surfeit + len) ? data_sz : first + surfeit + len;
 
-	MPIR_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Unpack_impl(src_buf, last - first,
+                         req->dev.user_buf, req->dev.user_count, req->dev.datatype,
+                         first, &actual_unpack_bytes);
+        last = first + actual_unpack_bytes;
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "recvd data.  last=%" PRIdPTR " data_sz=%" PRIdPTR, last, data_sz));
 

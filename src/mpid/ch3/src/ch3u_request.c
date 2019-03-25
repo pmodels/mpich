@@ -153,19 +153,21 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	}
 	sreq->dev.segment_first = last;
 
-	last = (data_sz <= sreq->dev.tmpbuf_sz - iov_data_copied) ? 
-	    sreq->dev.segment_size :
-	    sreq->dev.segment_first + sreq->dev.tmpbuf_sz - iov_data_copied;
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
-               "pre-pack: first=%" PRIdPTR ", last=%" PRIdPTR,
-			  sreq->dev.segment_first, last));
-	MPIR_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, 
-			  &last, (char*) sreq->dev.tmpbuf + iov_data_copied);
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
-              "post-pack: first=%" PRIdPTR ", last=%" PRIdPTR,
-			   sreq->dev.segment_first, last));
+        MPI_Aint max_pack_bytes;
+        MPI_Aint actual_pack_bytes;
+
+        if (data_sz > sreq->dev.tmpbuf_sz - iov_data_copied)
+            max_pack_bytes = sreq->dev.tmpbuf_sz - iov_data_copied;
+        else
+            max_pack_bytes = sreq->dev.segment_size - sreq->dev.segment_first;
+
+        MPIR_Pack_impl(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                       sreq->dev.segment_first, (char*) sreq->dev.tmpbuf + iov_data_copied,
+                       max_pack_bytes, &actual_pack_bytes);
+        last = sreq->dev.segment_first + actual_pack_bytes;
+
 	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)sreq->dev.tmpbuf;
-	iov[0].MPL_IOV_LEN = last - sreq->dev.segment_first + iov_data_copied;
+	iov[0].MPL_IOV_LEN = actual_pack_bytes + iov_data_copied;
 	*iov_n = 1;
 	if (last == sreq->dev.segment_size)
 	{
@@ -420,9 +422,13 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
     {
 	tmpbuf_last = (int)rreq->dev.segment_size;
     }
-    last = tmpbuf_last;
-    MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
-			&last, rreq->dev.tmpbuf);
+
+    MPI_Aint actual_unpack_bytes;
+    MPIR_Unpack_impl(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.segment_first,
+                     rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
+                     rreq->dev.segment_first, &actual_unpack_bytes);
+    last = rreq->dev.segment_first + actual_unpack_bytes;
+
     if (last == 0 || last == rreq->dev.segment_first)
     {
 	/* --BEGIN ERROR HANDLING-- */
@@ -535,19 +541,22 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	else
 	{
 	    MPIR_Segment *seg;
-	    MPI_Aint last;
+            MPI_Aint actual_unpack_bytes;
 
 	    seg = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
                                      rreq->dev.datatype);
-	    last = unpack_sz;
-	    MPIR_Segment_unpack(seg, 0, &last, rreq->dev.tmpbuf);
-	    if (last != unpack_sz)
+
+            MPIR_Unpack_impl(rreq->dev.tmpbuf, unpack_sz,
+                             rreq->dev.user_buf, rreq->dev.user_count,
+                             rreq->dev.datatype, 0, &actual_unpack_bytes);
+
+	    if (actual_unpack_bytes != unpack_sz)
 	    {
 		/* --BEGIN ERROR HANDLING-- */
 		/* received data was not entirely consumed by unpack() 
 		   because too few bytes remained to fill the next basic
 		   datatype */
-		MPIR_STATUS_SET_COUNT(rreq->status, last);
+		MPIR_STATUS_SET_COUNT(rreq->status, actual_unpack_bytes);
 		rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
                          MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE,
 			 "**dtypemismatch", 0);

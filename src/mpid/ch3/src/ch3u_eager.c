@@ -406,7 +406,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 	    }
 	    else {
 		intptr_t recv_data_sz;
-		MPI_Aint last;
 		/* user buffer is not contiguous.  Use the segment
 		   code to unpack it, handling various errors and 
 		   exceptional cases */
@@ -417,15 +416,17 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
                 MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
 		recv_data_sz = rreq->dev.recv_data_sz;
-		last    = recv_data_sz;
-		MPIR_Segment_unpack( rreq->dev.segment_ptr, 0, 
-				     &last, eagershort_pkt->data );
-		if (last != recv_data_sz) {
+
+                MPI_Aint actual_unpack_bytes;
+                MPIR_Unpack_impl(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
+                                 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes);
+
+		if (actual_unpack_bytes != recv_data_sz) {
 		    /* --BEGIN ERROR HANDLING-- */
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
 		       need to distinguish between these two types. */
-		    MPIR_STATUS_SET_COUNT(rreq->status, last);
+		    MPIR_STATUS_SET_COUNT(rreq->status, actual_unpack_bytes);
 		    if (rreq->dev.recv_data_sz <= userbuf_sz) {
 			MPIR_ERR_SETSIMPLE(rreq->status.MPI_ERROR,MPI_ERR_TYPE,
 					   "**dtypemismatch");

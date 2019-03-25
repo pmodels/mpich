@@ -280,7 +280,6 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPI_Aint data_sz;
     uint64_t match_bits;
     MPIR_Request *cts_req;
-    intptr_t first, last;
     intptr_t buf_offset = 0;
     void *data = NULL;
     size_t pkt_len;
@@ -288,14 +287,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
-    sreq->dev.segment_ptr =
-        MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPIR_Segment_alloc");
-
     MPID_nem_ofi_init_req(sreq);
-    first = sreq->dev.segment_first;
-    last = sreq->dev.segment_size;
     data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
@@ -307,7 +299,10 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
         MPIR_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
         buf_offset += sreq->dev.ext_hdr_sz;
     }
-    MPIR_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
+    MPI_Aint actual_pack_bytes;
+    MPIR_Pack_impl(strq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                   sreq->dev.segment_start, pack_buffer + buf_offset, data_sz, &actual_pack_bytes);
+    MPIR_Assert(actual_pack_bytes == max_send_bytes);
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
   fn_exit:

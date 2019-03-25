@@ -80,54 +80,32 @@ void MPIDI_CH3U_Buffer_copy(
     }
     else if (sdt_contig)
     {
-	MPIR_Segment *seg;
-	MPI_Aint last;
-
-	seg = MPIR_Segment_alloc(rbuf, rcount, rdt);
-	last = sdata_sz;
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                          "pre-unpack last=%" PRIdPTR, last ));
-	MPIR_Segment_unpack(seg, 0, &last, (char*)sbuf + sdt_true_lb);
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-			 "pre-unpack last=%" PRIdPTR, last ));
-	/* --BEGIN ERROR HANDLING-- */
-	if (last != sdata_sz)
-	{
-	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
-	}
-	/* --END ERROR HANDLING-- */
-
-	*rsz = last;
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Unpack_impl((char*) sbuf + sdt_true_lb, sdata_sz, rbuf, rcount, rdt, 0, &actual_unpack_bytes);
+        /* --BEGIN ERROR HANDLING-- */
+        if (actual_unpack_bytes != sdata_sz)
+        {
+            *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
+        }
+        /* --END ERROR HANDLING-- */
+        *rsz = actual_unpack_bytes;
     }
     else if (rdt_contig)
     {
-	MPIR_Segment *seg;
-	MPI_Aint last;
-
-	seg = MPIR_Segment_alloc(sbuf, scount, sdt);
-	last = sdata_sz;
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-			       "pre-pack last=%" PRIdPTR, last ));
-	MPIR_Segment_pack(seg, 0, &last, (char*)rbuf + rdt_true_lb);
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-			    "post-pack last=%" PRIdPTR, last ));
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(sbuf, scount, sdt, 0, (char*)rbuf + rdt_true_lb, sdata_sz, &actual_pack_bytes);
 	/* --BEGIN ERROR HANDLING-- */
-	if (last != sdata_sz)
+        if (actual_pack_bytes != sdata_sz)
 	{
 	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
 	}
 	/* --END ERROR HANDLING-- */
-
-	*rsz = last;
-        MPIR_Segment_free(seg);
+	*rsz = actual_pack_bytes;
     }
     else
     {
 	char * buf;
-	MPIR_Segment *sseg;
 	intptr_t sfirst;
-	MPIR_Segment *rseg;
 	intptr_t rfirst;
 
 	buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ, MPL_MEM_BUFFER);
@@ -142,75 +120,47 @@ void MPIDI_CH3U_Buffer_copy(
 	}
 	/* --END ERROR HANDLING-- */
 
-	sseg = MPIR_Segment_alloc(sbuf, scount, sdt);
-	rseg = MPIR_Segment_alloc(rbuf, rcount, rdt);
-
 	sfirst = 0;
 	rfirst = 0;
 	
 	for(;;)
 	{
-	    MPI_Aint last;
-	    char * buf_end;
+            MPI_Aint max_pack_bytes;
+            MPI_Aint actual_pack_bytes;
+            MPI_Aint actual_unpack_bytes;
 
-	    if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ)
-	    {
-		last = sfirst + MPIDI_COPY_BUFFER_SZ;
-	    }
-	    else
-	    {
-		last = sdata_sz;
-	    }
-	    
-	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-               "pre-pack first=%" PRIdPTR ", last=%" PRIdPTR,
-						sfirst, last ));
-	    MPIR_Segment_pack(sseg, sfirst, &last, buf);
-	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-               "post-pack first=%" PRIdPTR ", last=%" PRIdPTR,
-               sfirst, last ));
-	    /* --BEGIN ERROR HANDLING-- */
-	    MPIR_Assert(last > sfirst);
-	    /* --END ERROR HANDLING-- */
-	    
-	    buf_end = buf + last - sfirst;
-	    sfirst = last;
-	    
-	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-             "pre-unpack first=%" PRIdPTR ", last=%" PRIdPTR,
-						rfirst, last ));
-	    MPIR_Segment_unpack(rseg, rfirst, &last, buf);
-	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-             "post-unpack first=%" PRIdPTR ", last=%" PRIdPTR,
-						rfirst, last ));
-	    /* --BEGIN ERROR HANDLING-- */
-	    MPIR_Assert(last > rfirst);
-	    /* --END ERROR HANDLING-- */
+            /* rdata_sz is allowed to be larger than sdata_sz, so if
+             * we copied everything from the source buffer to the
+             * receive buffer, we are done */
 
-	    rfirst = last;
-            MPIR_Assert(rfirst == sfirst);
+            if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ) {
+                max_pack_bytes = MPIDI_COPY_BUFFER_SZ;
+            } else {
+                max_pack_bytes = sdata_sz - sfirst;
+            }
 
-	    if (rfirst == sdata_sz)
-	    {
-		/* successful completion */
-		break;
-	    }
+            /* nothing left to copy, break out */
+            if (max_pack_bytes == 0)
+                break;
+
+            MPIR_Pack_impl(sbuf, scount, sdt, sfirst, buf, max_pack_bytes, &actual_pack_bytes);
+            MPIR_Unpack_impl(buf, actual_pack_bytes, rbuf, rcount, rdt, rfirst, &actual_unpack_bytes);
+            MPIR_Assert(actual_pack_bytes == actual_unpack_bytes);
+
+            sfirst += actual_pack_bytes;
+            rfirst += actual_unpack_bytes;
 
 	    /* --BEGIN ERROR HANDLING-- */
-	    if (sfirst == sdata_sz)
-	    {
+            if (rfirst == sdata_sz && sfirst != sdata_sz) {
 		/* datatype mismatch -- remaining bytes could not be unpacked */
 		*rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
 		break;
-	    }
+            }
 	    /* --END ERROR HANDLING-- */
 	}
 
 	*rsz = rfirst;
 	MPL_free(buf);
-
-        MPIR_Segment_free(sseg);
-        MPIR_Segment_free(rseg);
     }
 
   fn_exit:
