@@ -258,6 +258,7 @@ static const UT_icd ut_ptr_icd _UNUSED_ = { sizeof(void *), NULL, NULL, NULL };
 #define ut_int_array(a) ((int*)(a)->d)
 #define ut_str_array(a) ((char**)(a)->d)
 #define ut_ptr_array(a) ((void**)(a)->d)
+#define ut_type_array(a, type) ((type)(a)->d)
 
 
 #endif /* UTARRAY_H_INCLUDED */

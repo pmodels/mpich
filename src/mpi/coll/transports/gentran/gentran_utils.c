@@ -165,6 +165,20 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
+            default:{
+                    int mpi_errno, done;
+                    MPII_Genutil_vtx_type_t *vtype = ut_type_array(&sched->generic_types,
+                                                                   MPII_Genutil_vtx_type_t *) +
+                        vtxp->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
+                    MPIR_Assert(vtype != NULL);
+                    mpi_errno = vtype->issue_fn(vtxp, &done);
+                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    if (done)
+                        vtx_record_completion(vtxp, sched);
+                    else
+                        vtx_record_issue(vtxp, sched);
+                    break;
+                }
         }
 
 #ifdef MPL_USE_DBG_LOGGING
@@ -492,6 +506,21 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                 break;
 
             default:
+                if (vtxp->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
+                    int is_completed;
+                    MPII_Genutil_vtx_type_t *vtype = ut_type_array(&sched->generic_types,
+                                                                   MPII_Genutil_vtx_type_t *) +
+                        vtxp->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
+                    MPIR_Assert(vtype != NULL);
+                    mpi_errno = vtype->complete_fn(vtxp, &is_completed);
+                    MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno,
+                                        MPI_ERR_OTHER, "**other");
+                    if (is_completed) {
+                        vtx_record_completion(vtxp, sched);
+                        if (made_progress)
+                            *made_progress = TRUE;
+                    }
+                }
                 break;
         }
     }
@@ -529,9 +558,13 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
         utarray_free(sched->vtcs);
         utarray_free(sched->buffers);
+        utarray_done(&sched->generic_types);
         MPL_free(sched);
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
