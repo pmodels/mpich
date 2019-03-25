@@ -154,7 +154,7 @@ extern "C" {
         pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \
         if (pointer_) {                                                 \
             MPIR_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);     \
-            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_;       \
+            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = (void *) pointer_; \
         } else if (nbytes_ > 0) {                                       \
             MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
             stmt_;                                                      \
