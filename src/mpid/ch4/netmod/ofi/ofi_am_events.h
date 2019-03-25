@@ -174,7 +174,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
             .data = 0
         };
 
-        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[0].tx,
+        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_CTX(0).tx,
                                            &msg, FI_COMPLETION), FALSE /* no lock */ , read);
 
         done += curr_len;
@@ -375,7 +375,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
     msg.hdr.data_sz = 0;
     msg.hdr.am_type = am_type;
     msg.pyld.sreq_ptr = sreq_ptr;
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, &msg, sizeof(msg),
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_CTX(0).tx, &msg, sizeof(msg),
                                       MPIDI_OFI_comm_to_phys(comm, rank)),
                             FALSE /* no lock */ , inject);
   fn_exit:

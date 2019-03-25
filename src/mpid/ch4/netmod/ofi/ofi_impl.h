@@ -574,7 +574,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
         msg.data = 0;
-        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
+        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_CTX(0).tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
                              tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
