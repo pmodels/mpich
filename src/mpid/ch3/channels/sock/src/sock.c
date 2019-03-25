@@ -3416,7 +3416,6 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
 
                     if (n_fds == 0 && millisecond_timeout != 0) {
                         int pollfds_active_elems = sock_set->poll_array_elems;
-                        int err;
 
                         /* The abstraction here is a shared (blocking) resource that
                          * the threads must coordinate.  That means not holding
