@@ -412,6 +412,10 @@ typedef struct MPIDIG_comm_t {
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
     uint32_t window_instance;
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIDIG_rreq_t **posted_head_ptr;
+    MPIDIG_rreq_t **unexp_head_ptr;
+#endif
 } MPIDIG_comm_t;
 
 #define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
