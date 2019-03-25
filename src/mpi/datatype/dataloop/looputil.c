@@ -42,7 +42,7 @@ struct piece_params {
             int count;
         } contig_blocks;
         struct {
-            char *unpack_buffer;
+            const char *unpack_buffer;
         } unpack;
         struct {
             int stream_off;
@@ -114,18 +114,19 @@ static inline int is_float_type(MPI_Datatype el_type)
 }
 
 static int external32_basic_convert(char *dest_buf,
-                                    char *src_buf,
+                                    const char *src_buf,
                                     int dest_el_size, int src_el_size, MPI_Aint count)
 {
-    char *src_ptr = src_buf, *dest_ptr = dest_buf;
-    char *src_end = (char *) (src_buf + ((int) count * src_el_size));
+    const char *src_ptr = src_buf;
+    char *dest_ptr = dest_buf;
+    const char *src_end = src_buf + ((int) count * src_el_size);
 
     MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size) {
         if (src_el_size == 2) {
             while (src_ptr != src_end) {
-                BASIC_convert16((*(TWO_BYTE_BASIC_TYPE *) src_ptr),
+                BASIC_convert16((*(const TWO_BYTE_BASIC_TYPE *) src_ptr),
                                 (*(TWO_BYTE_BASIC_TYPE *) dest_ptr));
 
                 src_ptr += src_el_size;
@@ -133,7 +134,7 @@ static int external32_basic_convert(char *dest_buf,
             }
         } else if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                BASIC_convert32((*(FOUR_BYTE_BASIC_TYPE *) src_ptr),
+                BASIC_convert32((*(const FOUR_BYTE_BASIC_TYPE *) src_ptr),
                                 (*(FOUR_BYTE_BASIC_TYPE *) dest_ptr));
 
                 src_ptr += src_el_size;
@@ -160,17 +161,19 @@ static int external32_basic_convert(char *dest_buf,
 }
 
 static int external32_float_convert(char *dest_buf,
-                                    char *src_buf, int dest_el_size, int src_el_size, int count)
+                                    const char *src_buf, int dest_el_size, int src_el_size,
+                                    int count)
 {
-    char *src_ptr = src_buf, *dest_ptr = dest_buf;
-    char *src_end = (char *) (src_buf + ((int) count * src_el_size));
+    const char *src_ptr = src_buf;
+    char *dest_ptr = dest_buf;
+    const char *src_end = src_buf + ((int) count * src_el_size);
 
     MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size) {
         if (src_el_size == 4) {
             while (src_ptr != src_end) {
-                FLOAT_convert((*(FOUR_BYTE_FLOAT_TYPE *) src_ptr),
+                FLOAT_convert((*(const FOUR_BYTE_FLOAT_TYPE *) src_ptr),
                               (*(FOUR_BYTE_FLOAT_TYPE *) dest_ptr));
 
                 src_ptr += src_el_size;
@@ -178,7 +181,7 @@ static int external32_float_convert(char *dest_buf,
             }
         } else if (src_el_size == 8) {
             while (src_ptr != src_end) {
-                FLOAT_convert((*(EIGHT_BYTE_FLOAT_TYPE *) src_ptr),
+                FLOAT_convert((*(const EIGHT_BYTE_FLOAT_TYPE *) src_ptr),
                               (*(EIGHT_BYTE_FLOAT_TYPE *) dest_ptr));
 
                 src_ptr += src_el_size;
@@ -397,7 +400,8 @@ void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, vo
     return;
 }
 
-void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, void *streambuf)
+void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp,
+                         const void *streambuf)
 {
     struct MPII_Dataloop_m2m_params params;
 
@@ -407,7 +411,7 @@ void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, 
      * bit.
      */
     params.userbuf = segp->ptr;
-    params.streambuf = streambuf;
+    params.streambuf = (void *) streambuf;
     params.direction = M2M_TO_USERBUF;
 
     MPII_Segment_manipulate(segp, first, lastp, contig_m2m, vector_m2m, blkidx_m2m, index_m2m, NULL,    /* size fn */
@@ -768,7 +772,7 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
-                                    MPI_Aint first, MPI_Aint * lastp, void *unpack_buffer)
+                                    MPI_Aint first, MPI_Aint * lastp, const void *unpack_buffer)
 {
     struct piece_params pack_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
