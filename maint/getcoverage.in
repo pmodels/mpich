@@ -774,7 +774,7 @@ sub ExpandDir {
     my @otherdirs = ();
     my @files = ();
     opendir DIR, "$dir";
-    while ($filename = readdir DIR) {
+    for $filename (sort readdir DIR) {
 	if ($filename =~ /^\./ || $filename eq ".svn") {
 	    next;
 	}

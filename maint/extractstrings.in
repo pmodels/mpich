@@ -73,7 +73,7 @@ sub GetFileNamesInDirectory {
     my @filesFound = ();
 
     opendir DIR, $dir || die "Could not open $dir\n";
-    while (my $file = readdir DIR) {
+    for my $file (sort readdir DIR) {
 	if (! -f "$dir/$file") { next; }
 	if ($file =~ /^\.$/ || $file =~ /^\.\.$/) { next; }
 	if ($file =~ /$pattern/) {
@@ -246,7 +246,7 @@ sub processDirs {
     my @dirs = ();
     # Find the directories
     opendir DIR, "$dir" || die "Cannot open $dir\n";
-    while (my $file = readdir DIR) {
+    for my $file (sort readdir DIR) {
 	if (! -d "$dir/$file") { next; }
 	if ($file =~ /^\./) { next; }
 	if ($file =~ /^.svn/) { next; }
@@ -273,7 +273,7 @@ sub processDirsAndAction {
     my @dirs = ();
     # Find the directories
     opendir DIR, "$dir" || die "Cannot open $dir\n";
-    while (my $file = readdir DIR) {
+    for my $file (sort readdir DIR) {
 	if (! -d "$dir/$file") { next; }
 	if ($file =~ /^\./) { next; }
 	if ($file =~ /^.svn/) { next; }
