@@ -1351,6 +1351,8 @@ HWLOC_DO_AM_CONDITIONALS
 AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
 AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
 
+AM_CONDITIONAL([HAVE_HWLOC], [test x$have_hwloc = xyes])
+
 # ----------------------------------------------------------------------------
 # NETLOC
 # ----------------------------------------------------------------------------
