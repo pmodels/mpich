@@ -121,7 +121,6 @@ void MPIDI_CH3U_Buffer_copy(
     else
     {
 	char * buf;
-	intptr_t buf_off;
 	MPIR_Segment *sseg;
 	intptr_t sfirst;
 	MPIR_Segment *rseg;
@@ -144,16 +143,15 @@ void MPIDI_CH3U_Buffer_copy(
 
 	sfirst = 0;
 	rfirst = 0;
-	buf_off = 0;
 	
 	for(;;)
 	{
 	    MPI_Aint last;
 	    char * buf_end;
 
-	    if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ - buf_off)
+	    if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ)
 	    {
-		last = sfirst + (MPIDI_COPY_BUFFER_SZ - buf_off);
+		last = sfirst + MPIDI_COPY_BUFFER_SZ;
 	    }
 	    else
 	    {
@@ -163,7 +161,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "pre-pack first=%" PRIdPTR ", last=%" PRIdPTR,
 						sfirst, last ));
-	    MPIR_Segment_pack(sseg, sfirst, &last, buf + buf_off);
+	    MPIR_Segment_pack(sseg, sfirst, &last, buf);
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "post-pack first=%" PRIdPTR ", last=%" PRIdPTR,
                sfirst, last ));
@@ -171,7 +169,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    MPIR_Assert(last > sfirst);
 	    /* --END ERROR HANDLING-- */
 	    
-	    buf_end = buf + buf_off + (last - sfirst);
+	    buf_end = buf + last - sfirst;
 	    sfirst = last;
 	    
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -186,6 +184,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    /* --END ERROR HANDLING-- */
 
 	    rfirst = last;
+            MPIR_Assert(rfirst == sfirst);
 
 	    if (rfirst == sdata_sz)
 	    {
@@ -201,14 +200,6 @@ void MPIDI_CH3U_Buffer_copy(
 		break;
 	    }
 	    /* --END ERROR HANDLING-- */
-
-	    buf_off = sfirst - rfirst;
-	    if (buf_off > 0)
-	    {
-		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST,
-                  "moved %" PRIdPTR " bytes to the beginning of the tmp buffer", buf_off));
-		memmove(buf, buf_end - buf_off, buf_off);
-	    }
 	}
 
 	*rsz = rfirst;
