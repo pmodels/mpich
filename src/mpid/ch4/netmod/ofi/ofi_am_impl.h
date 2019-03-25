@@ -195,7 +195,6 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
     int mpi_errno = MPI_SUCCESS, c;
-    int need_lock ATTRIBUTE((unused)) = !is_reply;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
@@ -231,7 +230,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 2,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
-                                     &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
+                                     &MPIDI_OFI_AMREQUEST(sreq, context)), !is_reply, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     return mpi_errno;
