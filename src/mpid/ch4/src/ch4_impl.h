@@ -246,193 +246,166 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_HASH_CLEAR);
 }
 
-#define MPIDI_Datatype_get_info(_count, _datatype,              \
-                                _dt_contig_out, _data_sz_out,   \
-                                _dt_ptr, _dt_true_lb)           \
+#define MPIDI_Datatype_get_info(count_, datatype_,              \
+                                dt_contig_out_, data_sz_out_,   \
+                                dt_ptr_, dt_true_lb_)           \
     do {                                                        \
-        if (IS_BUILTIN(_datatype))                              \
-        {                                                       \
-            (_dt_ptr)        = NULL;                            \
-            (_dt_contig_out) = TRUE;                            \
-            (_dt_true_lb)    = 0;                               \
-            (_data_sz_out)   = (size_t)(_count) *               \
-                MPIR_Datatype_get_basic_size(_datatype);        \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));      \
-            if (_dt_ptr)                                        \
+        if (IS_BUILTIN(datatype_)) {                            \
+            (dt_ptr_)        = NULL;                            \
+            (dt_contig_out_) = TRUE;                            \
+            (dt_true_lb_)    = 0;                               \
+            (data_sz_out_)   = (size_t)(count_) *               \
+                MPIR_Datatype_get_basic_size(datatype_);        \
+        } else {                                                \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
+            if (dt_ptr_)                                        \
             {                                                   \
-                (_dt_contig_out) = (_dt_ptr)->is_contig;        \
-                (_dt_true_lb)    = (_dt_ptr)->true_lb;          \
-                (_data_sz_out)   = (size_t)(_count) *           \
-                    (_dt_ptr)->size;                            \
+                (dt_contig_out_) = (dt_ptr_)->is_contig;        \
+                (dt_true_lb_)    = (dt_ptr_)->true_lb;          \
+                (data_sz_out_)   = (size_t)(count_) *           \
+                    (dt_ptr_)->size;                            \
             }                                                   \
             else                                                \
             {                                                   \
-                (_dt_contig_out) = 1;                           \
-                (_dt_true_lb)    = 0;                           \
-                (_data_sz_out)   = 0;                           \
+                (dt_contig_out_) = 1;                           \
+                (dt_true_lb_)    = 0;                           \
+                (data_sz_out_)   = 0;                           \
             }                                                   \
         }                                                       \
     } while (0)
 
-#define MPIDI_Datatype_get_size_dt_ptr(_count, _datatype,       \
-                                       _data_sz_out, _dt_ptr)   \
+#define MPIDI_Datatype_get_size_dt_ptr(count_, datatype_,       \
+                                       data_sz_out_, dt_ptr_)   \
     do {                                                        \
-        if (IS_BUILTIN(_datatype))                              \
-        {                                                       \
-            (_dt_ptr)        = NULL;                            \
-            (_data_sz_out)   = (size_t)(_count) *               \
-                MPIR_Datatype_get_basic_size(_datatype);        \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));      \
-            (_data_sz_out)   = (_dt_ptr) ? (size_t)(_count) *   \
-                (_dt_ptr)->size : 0;                            \
+        if (IS_BUILTIN(datatype_)) {                            \
+            (dt_ptr_)        = NULL;                            \
+            (data_sz_out_)   = (size_t)(count_) *               \
+                MPIR_Datatype_get_basic_size(datatype_);        \
+        } else {                                                \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
+            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *   \
+                (dt_ptr_)->size : 0;                            \
         }                                                       \
     } while (0)
 
-#define MPIDI_Datatype_check_contig(_datatype,_dt_contig_out)           \
+#define MPIDI_Datatype_check_contig(datatype_,dt_contig_out_)           \
     do {                                                                \
-        if (IS_BUILTIN(_datatype))                                      \
-        {                                                               \
-            (_dt_contig_out) = TRUE;                                    \
-        }                                                               \
-        else                                                            \
-        {                                                               \
-            MPIR_Datatype *_dt_ptr;                                     \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));              \
-            (_dt_contig_out) = (_dt_ptr) ? (_dt_ptr)->is_contig : 1;    \
-        }                                                               \
-    } while (0)
-
-#define MPIDI_Datatype_check_contig_size(_datatype,_count,      \
-                                         _dt_contig_out,        \
-                                         _data_sz_out)          \
-    do {                                                        \
-        if (IS_BUILTIN(_datatype))                              \
-        {                                                       \
-            (_dt_contig_out) = TRUE;                            \
-            (_data_sz_out)   = (size_t)(_count) *               \
-                MPIR_Datatype_get_basic_size(_datatype);        \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            MPIR_Datatype *_dt_ptr;                             \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));      \
-            if (_dt_ptr)                                        \
-            {                                                   \
-                (_dt_contig_out) = (_dt_ptr)->is_contig;        \
-                (_data_sz_out)   = (size_t)(_count) *           \
-                    (_dt_ptr)->size;                            \
-            }                                                   \
-            else                                                \
-            {                                                   \
-                (_dt_contig_out) = 1;                           \
-                (_data_sz_out)   = 0;                           \
-            }                                                   \
-        }                                                       \
-    } while (0)
-
-#define MPIDI_Datatype_check_size(_datatype,_count,_data_sz_out)        \
-    do {                                                                \
-        if (IS_BUILTIN(_datatype))                                      \
-        {                                                               \
-            (_data_sz_out)   = (size_t)(_count) *                       \
-                MPIR_Datatype_get_basic_size(_datatype);                \
-        }                                                               \
-        else                                                            \
-        {                                                               \
-            MPIR_Datatype *_dt_ptr;                                     \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));              \
-            (_data_sz_out)   = (_dt_ptr) ? (size_t)(_count) *           \
-                (_dt_ptr)->size : 0;                                    \
-        }                                                               \
-    } while (0)
-
-#define MPIDI_Datatype_check_size_lb(_datatype,_count,_data_sz_out,     \
-                                     _dt_true_lb)                       \
-    do {                                                                \
-        if (IS_BUILTIN(_datatype)) {                                    \
-            (_data_sz_out)   = (size_t)(_count) *                       \
-                MPIR_Datatype_get_basic_size(_datatype);                \
-            (_dt_true_lb)    = 0;                                       \
+        if (IS_BUILTIN(datatype_)) {                                    \
+            (dt_contig_out_) = TRUE;                                    \
         } else {                                                        \
-            MPIR_Datatype *_dt_ptr;                                     \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));              \
-            (_data_sz_out)   = (_dt_ptr) ? (size_t)(_count) *           \
-                (_dt_ptr)->size : 0;                                    \
-            (_dt_true_lb)    = (_dt_ptr) ? (_dt_ptr)->true_lb : 0;      \
+            MPIR_Datatype *dt_ptr_;                                     \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));              \
+            (dt_contig_out_) = (dt_ptr_) ? (dt_ptr_)->is_contig : 1;    \
         }                                                               \
     } while (0)
 
-#define MPIDI_Datatype_check_contig_size_lb(_datatype,_count,   \
-                                            _dt_contig_out,     \
-                                            _data_sz_out,       \
-                                            _dt_true_lb)        \
+#define MPIDI_Datatype_check_contig_size(datatype_,count_,      \
+                                         dt_contig_out_,        \
+                                         data_sz_out_)          \
     do {                                                        \
-        if (IS_BUILTIN(_datatype))                              \
-        {                                                       \
-            (_dt_contig_out) = TRUE;                            \
-            (_data_sz_out)   = (size_t)(_count) *               \
-                MPIR_Datatype_get_basic_size(_datatype);        \
-            (_dt_true_lb)    = 0;                               \
-        }                                                       \
-        else                                                    \
-        {                                                       \
-            MPIR_Datatype *_dt_ptr;                             \
-            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));      \
-            if (_dt_ptr)                                        \
-            {                                                   \
-                (_dt_contig_out) = (_dt_ptr)->is_contig;        \
-                (_data_sz_out)   = (size_t)(_count) *           \
-                    (_dt_ptr)->size;                            \
-                (_dt_true_lb)    = (_dt_ptr)->true_lb;          \
+        if (IS_BUILTIN(datatype_)) {                            \
+            (dt_contig_out_) = TRUE;                            \
+            (data_sz_out_)   = (size_t)(count_) *               \
+                MPIR_Datatype_get_basic_size(datatype_);        \
+        } else {                                                \
+            MPIR_Datatype *dt_ptr_;                             \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
+            if (dt_ptr_) {                                      \
+                (dt_contig_out_) = (dt_ptr_)->is_contig;        \
+                (data_sz_out_)   = (size_t)(count_) *           \
+                    (dt_ptr_)->size;                            \
+            } else {                                            \
+                (dt_contig_out_) = 1;                           \
+                (data_sz_out_)   = 0;                           \
             }                                                   \
-            else                                                \
-            {                                                   \
-                (_dt_contig_out) = 1;                           \
-                (_data_sz_out)   = 0;                           \
-                (_dt_true_lb)    = 0;                           \
+        }                                                       \
+    } while (0)
+
+#define MPIDI_Datatype_check_size(datatype_,count_,data_sz_out_)        \
+    do {                                                                \
+        if (IS_BUILTIN(datatype_)) {                                    \
+            (data_sz_out_)   = (size_t)(count_) *                       \
+                MPIR_Datatype_get_basic_size(datatype_);                \
+        } else {                                                        \
+            MPIR_Datatype *dt_ptr_;                                     \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));              \
+            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *           \
+                (dt_ptr_)->size : 0;                                    \
+        }                                                               \
+    } while (0)
+
+#define MPIDI_Datatype_check_size_lb(datatype_,count_,data_sz_out_,     \
+                                     dt_true_lb_)                       \
+    do {                                                                \
+        if (IS_BUILTIN(datatype_)) {                                    \
+            (data_sz_out_)   = (size_t)(count_) *                       \
+                MPIR_Datatype_get_basic_size(datatype_);                \
+            (dt_true_lb_)    = 0;                                       \
+        } else {                                                        \
+            MPIR_Datatype *dt_ptr_;                                     \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));              \
+            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *           \
+                (dt_ptr_)->size : 0;                                    \
+            (dt_true_lb_)    = (dt_ptr_) ? (dt_ptr_)->true_lb : 0;      \
+        }                                                               \
+    } while (0)
+
+#define MPIDI_Datatype_check_contig_size_lb(datatype_,count_,   \
+                                            dt_contig_out_,     \
+                                            data_sz_out_,       \
+                                            dt_true_lb_)        \
+    do {                                                        \
+        if (IS_BUILTIN(datatype_)) {                            \
+            (dt_contig_out_) = TRUE;                            \
+            (data_sz_out_)   = (size_t)(count_) *               \
+                MPIR_Datatype_get_basic_size(datatype_);        \
+            (dt_true_lb_)    = 0;                               \
+        } else {                                                \
+            MPIR_Datatype *dt_ptr_;                             \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
+            if (dt_ptr_) {                                      \
+                (dt_contig_out_) = (dt_ptr_)->is_contig;        \
+                (data_sz_out_)   = (size_t)(count_) *           \
+                    (dt_ptr_)->size;                            \
+                (dt_true_lb_)    = (dt_ptr_)->true_lb;          \
+            } else {                                            \
+                (dt_contig_out_) = 1;                           \
+                (data_sz_out_)   = 0;                           \
+                (dt_true_lb_)    = 0;                           \
             }                                                   \
         }                                                       \
     } while (0)
 
 /* Check both origin|target buffers' size. */
-#define MPIDI_Datatype_check_origin_target_size(_o_datatype, _t_datatype,         \
-                                                _o_count, _t_count,               \
-                                                _o_data_sz_out, _t_data_sz_out)   \
+#define MPIDI_Datatype_check_origin_target_size(o_datatype_, t_datatype_,         \
+                                                o_count_, t_count_,               \
+                                                o_data_sz_out_, t_data_sz_out_)   \
     do {                                                                          \
-        MPIDI_Datatype_check_size(_o_datatype, _o_count, _o_data_sz_out);         \
-        if (_t_datatype == _o_datatype && _t_count == _o_count)                   \
-        {                                                                         \
-            _t_data_sz_out = _o_data_sz_out;                                      \
-        }                                                                         \
-        else                                                                      \
-        {                                                                         \
-            MPIDI_Datatype_check_size(_t_datatype, _t_count, _t_data_sz_out);     \
+        MPIDI_Datatype_check_size(o_datatype_, o_count_, o_data_sz_out_);         \
+        if (t_datatype_ == o_datatype_ && t_count_ == o_count_) {                 \
+            t_data_sz_out_ = o_data_sz_out_;                                      \
+        } else {                                                                  \
+            MPIDI_Datatype_check_size(t_datatype_, t_count_, t_data_sz_out_);     \
         }                                                                         \
     } while (0)
 
 /* Check both origin|target buffers' size, contig and lb. */
-#define MPIDI_Datatype_check_origin_target_contig_size_lb(_o_datatype, _t_datatype,             \
-                                                          _o_count, _t_count,                   \
-                                                          _o_dt_contig_out, _t_dt_contig_out,   \
-                                                          _o_data_sz_out, _t_data_sz_out,       \
-                                                          _o_dt_true_lb, _t_dt_true_lb)         \
+#define MPIDI_Datatype_check_origin_target_contig_size_lb(o_datatype_, t_datatype_,             \
+                                                          o_count_, t_count_,                   \
+                                                          o_dt_contig_out_, t_dt_contig_out_,   \
+                                                          o_data_sz_out_, t_data_sz_out_,       \
+                                                          o_dt_true_lb_, t_dt_true_lb_)         \
     do {                                                                                        \
-        MPIDI_Datatype_check_contig_size_lb(_o_datatype, _o_count, _o_dt_contig_out,            \
-                                            _o_data_sz_out, _o_dt_true_lb);                     \
-        if (_t_datatype == _o_datatype && _t_count == _o_count) {                               \
-            _t_dt_contig_out = _o_dt_contig_out;                                                \
-            _t_data_sz_out = _o_data_sz_out;                                                    \
-            _t_dt_true_lb = _o_dt_true_lb;                                                      \
+        MPIDI_Datatype_check_contig_size_lb(o_datatype_, o_count_, o_dt_contig_out_,            \
+                                            o_data_sz_out_, o_dt_true_lb_);                     \
+        if (t_datatype_ == o_datatype_ && t_count_ == o_count_) {                               \
+            t_dt_contig_out_ = o_dt_contig_out_;                                                \
+            t_data_sz_out_ = o_data_sz_out_;                                                    \
+            t_dt_true_lb_ = o_dt_true_lb_;                                                      \
         }                                                                                       \
         else {                                                                                  \
-            MPIDI_Datatype_check_contig_size_lb(_t_datatype, _t_count, _t_dt_contig_out,        \
-                                                _t_data_sz_out, _t_dt_true_lb);                 \
+            MPIDI_Datatype_check_contig_size_lb(t_datatype_, t_count_, t_dt_contig_out_,        \
+                                                t_data_sz_out_, t_dt_true_lb_);                 \
         }                                                                                       \
     } while (0)
 
