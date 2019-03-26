@@ -186,7 +186,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     int mpi_errno = MPI_SUCCESS, n_iov, c;
     size_t offset;
     MPIR_Request *sreq = NULL;
-    MPIDIG_put_req_msg_t am_hdr;
+    MPIDIG_get_msg_t am_hdr;
     size_t data_sz;
     MPI_Aint last, num_iov;
     MPIR_Segment *segment_ptr;
