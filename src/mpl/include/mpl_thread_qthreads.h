@@ -82,9 +82,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)         \
     do {                                                                  \
         int err__;                                                        \
-        err__ = qthread_key_create((exit_func_ptr_), (tls_ptr_));             \
+        err__ = qthread_key_create((tls_ptr_), (exit_func_ptr_));             \
         if (unlikely(err__))                                              \
-        MPL_internal_sys_error_printf("ABT_key_create", err__,            \
+        MPL_internal_sys_error_printf("qthread_key_create", err__,            \
                                       "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = 0;                                           \
     } while (0)
@@ -92,9 +92,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_tls_destroy(tls_ptr_, err_ptr_)                        \
     do {                                                                  \
         int err__;                                                        \
-        err__ = qthread_key_delete(tls_ptr_);                                   \
+        err__ = qthread_key_delete(*(tls_ptr_));                                   \
         if (unlikely(err__))                                              \
-        MPL_internal_sys_error_printf("ABT_key_free", err__,              \
+        MPL_internal_sys_error_printf("qthread_key_free", err__,              \
                                       "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                       \
     } while (0)
@@ -102,9 +102,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_tls_set(tls_ptr_, value_, err_ptr_)                    \
     do {                                                                  \
         int err__;                                                        \
-        err__ = qthread_setspecific(*(tls_ptr_), (value_));                       \
+        err__ = qthread_setspecific(*(tls_ptr_), *(void **)(value_));                       \
         if (unlikely(err__))                                              \
-        MPL_internal_sys_error_printf("ABT_key_set", err__,               \
+        MPL_internal_sys_error_printf("qthread_setspecific", err__,               \
                                       "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                       \
     } while (0)
@@ -112,9 +112,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)                \
     do {                                                                  \
         int err__;                                                        \
-        err__ = qthread_getspecific((value_ptr_));                   \
-        if (unlikely(err__))                                              \
-        MPL_internal_sys_error_printf("ABT_key_get", err__,               \
+        *(void **)(value_ptr_) = qthread_getspecific(*(tls_ptr_));                   \
+        if (unlikely(value_ptr_ == NULL))                                              \
+        MPL_internal_sys_error_printf("qthread_getspecific", err__,               \
                                       "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                       \
     } while (0)
