@@ -2072,7 +2072,7 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    MPIDIG_put_req_msg_t *msg_hdr = (MPIDIG_put_req_msg_t *) am_hdr;
+    MPIDIG_get_msg_t *msg_hdr = (MPIDIG_get_msg_t *) am_hdr;
     struct iovec *iov;
     MPIR_Win *win;
     uintptr_t base;
