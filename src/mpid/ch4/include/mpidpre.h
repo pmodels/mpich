@@ -111,6 +111,7 @@ typedef struct MPIDIG_put_req_t {
     int origin_count;
     MPI_Datatype origin_datatype;
     int n_iov;
+    void *target_addr;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
