@@ -1144,6 +1144,7 @@ static int get_ack_target_cmpl_cb(MPIR_Request * get_req)
     win = MPIDIG_REQUEST(get_req, req->greq.win_ptr);
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(get_req, rank));
 
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(get_req, req->greq.datatype));
     MPID_Request_complete(get_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
     return mpi_errno;
