@@ -390,27 +390,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
     return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint32_t src, fi_addr_t dest_addr,
-                                                    uint64_t tag, void *context, int is_inject,
-                                                    int do_eagain)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (is_inject) {
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                             do_eagain);
-    } else {
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                             tsenddata, do_eagain);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 struct MPIDI_OFI_contig_blocks_params {
     size_t max_pipe;
     MPI_Aint count;

@@ -167,8 +167,6 @@ static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 #endif
 }
 
-#define MPIDI_OFI_DO_SEND        0
-#define MPIDI_OFI_DO_INJECT      1
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
 
 /* Typedefs */
