@@ -146,12 +146,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);
         int r = rreq->status.MPI_SOURCE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, NULL, 0, NULL,
-                                           MPIDI_OFI_REQUEST(rreq, util_comm->rank),
-                                           MPIDI_OFI_comm_to_phys(c, r),
-                                           ss_bits, NULL, MPIDI_OFI_DO_INJECT, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
+                                            0 /* len */ ,
+                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
+                                            MPIDI_OFI_comm_to_phys(c, r),
+                                            ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
     MPIDIU_request_complete(rreq);
