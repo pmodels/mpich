@@ -779,9 +779,14 @@ static void handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPI
     base = (uintptr_t) MPIDIG_REQUEST(rreq, req->areq.target_addr);
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->areq.origin_datatype),
                               MPIDIG_REQUEST(rreq, req->areq.origin_count), data_sz);
+
+    /* The origin_data can be NULL only with no-op.
+     * TODO: when no-op is set, we do not need send origin_data at all. */
     if (data_sz) {
         p_data = MPL_malloc(data_sz, MPL_MEM_RMA);
         MPIR_Assert(p_data);
+    } else {
+        MPIR_Assert(MPIDIG_REQUEST(rreq, req->areq.op) == MPI_NO_OP);
     }
 
     MPIDIG_REQUEST(rreq, req->areq.data) = p_data;
