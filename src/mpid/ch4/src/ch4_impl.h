@@ -136,6 +136,7 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * w
 
     MPIDIG_win_target_t *target_ptr = NULL;
     target_ptr = (MPIDIG_win_target_t *) MPL_malloc(sizeof(MPIDIG_win_target_t), MPL_MEM_RMA);
+    MPIR_Assert(target_ptr);
     target_ptr->rank = rank;
     MPIR_cc_set(&target_ptr->local_cmpl_cnts, 0);
     MPIR_cc_set(&target_ptr->remote_cmpl_cnts, 0);
