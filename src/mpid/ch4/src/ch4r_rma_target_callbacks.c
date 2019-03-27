@@ -35,7 +35,7 @@ static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq);
 static int cswap_target_cmpl_cb(MPIR_Request * rreq);
 static int acc_target_cmpl_cb(MPIR_Request * rreq);
 static int get_acc_target_cmpl_cb(MPIR_Request * rreq);
-static int get_ack_target_cmpl_cb(MPIR_Request * rreq);
+static int get_ack_target_cmpl_cb(MPIR_Request * get_req);
 static int get_acc_ack_target_cmpl_cb(MPIR_Request * areq);
 static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq);
 
@@ -1129,25 +1129,22 @@ static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
+static int get_ack_target_cmpl_cb(MPIR_Request * get_req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *greq;
     MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
 
-    greq = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->greq.greq_ptr);
-    if (MPIDIG_REQUEST(greq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
-        MPL_free(MPIDIG_REQUEST(greq, req->iov));
+    if (MPIDIG_REQUEST(get_req, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
+        MPL_free(MPIDIG_REQUEST(get_req, req->iov));
     }
 
-    win = MPIDIG_REQUEST(greq, req->greq.win_ptr);
-    MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(greq, rank));
+    win = MPIDIG_REQUEST(get_req, req->greq.win_ptr);
+    MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(get_req, rank));
 
-    MPID_Request_complete(greq);
-    MPID_Request_complete(rreq);
+    MPID_Request_complete(get_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
     return mpi_errno;
 }
@@ -2135,7 +2132,7 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq = NULL, *greq;
+    MPIR_Request *get_req;
     size_t data_sz;
 
     int dt_contig, n_iov;
@@ -2148,50 +2145,46 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACK_TARGET_MSG_CB);
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_ack);
 
-    greq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_ERR_CHKANDSTMT(greq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    *req = greq;
+    get_req = (MPIR_Request *) msg_hdr->greq_ptr;
+    MPIR_Assert(get_req->kind == MPIR_REQUEST_KIND__RMA);
+    *req = get_req;
 
-    rreq = (MPIR_Request *) msg_hdr->greq_ptr;
-    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__RMA);
-    MPIDIG_REQUEST(greq, req->greq.greq_ptr) = (uint64_t) rreq;
-
-    MPL_free(MPIDIG_REQUEST(rreq, req->greq.dt_iov));
+    MPL_free(MPIDIG_REQUEST(get_req, req->greq.dt_iov));
 
     *target_cmpl_cb = get_ack_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_REQUEST(greq, is_local) = is_local;
+    MPIDI_REQUEST(get_req, is_local) = is_local;
 #endif
 
-    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, req->greq.count),
-                            MPIDIG_REQUEST(rreq, req->greq.datatype),
+    MPIDI_Datatype_get_info(MPIDIG_REQUEST(get_req, req->greq.count),
+                            MPIDIG_REQUEST(get_req, req->greq.datatype),
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     *is_contig = dt_contig;
 
     if (dt_contig) {
         *p_data_sz = data_sz;
-        *data = (char *) (MPIDIG_REQUEST(rreq, req->greq.addr) + dt_true_lb);
+        *data = (char *) (MPIDIG_REQUEST(get_req, req->greq.addr) + dt_true_lb);
     } else {
-        segment_ptr = MPIR_Segment_alloc((void *) MPIDIG_REQUEST(rreq, req->greq.addr),
-                                         MPIDIG_REQUEST(rreq, req->greq.count),
-                                         MPIDIG_REQUEST(rreq, req->greq.datatype));
+        segment_ptr = MPIR_Segment_alloc((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
+                                         MPIDIG_REQUEST(get_req, req->greq.count),
+                                         MPIDIG_REQUEST(get_req, req->greq.datatype));
         MPIR_Assert(segment_ptr);
 
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
-        MPIDIG_REQUEST(rreq, req->iov) =
+        MPIDIG_REQUEST(get_req, req->iov) =
             (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
-        MPIR_Assert(MPIDIG_REQUEST(rreq, req->iov));
+        MPIR_Assert(MPIDIG_REQUEST(get_req, req->iov));
 
         last = data_sz;
-        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, req->iov), &n_iov);
+        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDIG_REQUEST(get_req, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
-        *data = MPIDIG_REQUEST(rreq, req->iov);
+        *data = MPIDIG_REQUEST(get_req, req->iov);
         *p_data_sz = n_iov;
-        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
+        MPIDIG_REQUEST(get_req, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
         MPL_free(segment_ptr);
     }
 
