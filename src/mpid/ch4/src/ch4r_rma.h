@@ -231,6 +231,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
