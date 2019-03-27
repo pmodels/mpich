@@ -284,7 +284,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     # check for libfabric depedence libs
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
-        pcdir="${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric"
+        pcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
     elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
