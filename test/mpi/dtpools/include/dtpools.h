@@ -47,6 +47,10 @@ typedef struct {
 
     int DTP_num_objs;
     struct DTP_obj_array_s *DTP_obj_array;
+
+    /* private fields */
+    int min_obj_idx;
+    int max_obj_idx;
 } *DTP_t;
 
 /* DTP manipulation functions */
@@ -54,9 +58,10 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
 int DTP_pool_create_struct(int num_types, MPI_Datatype * basic_types, int *basic_type_counts,
                            DTP_t * dtp);
 int DTP_pool_free(DTP_t dtp);
-int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
-int DTP_obj_free(DTP_t dtp, int obj_idx);
-int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count);
+int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, MPI_Aint val_count);
+int DTP_obj_free(DTP_t dtp, int user_obj_idx);
+int DTP_obj_buf_check(DTP_t dtp, int user_obj_idx, int val_start, int val_stride,
+                      MPI_Aint val_count);
 
 /* Define a list of MPI Datatypes.
    Used in both test/mpi/util/mtest.c and test/mpi/cxx/util/mtest.cxx.

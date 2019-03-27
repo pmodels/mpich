@@ -6,6 +6,7 @@
  */
 
 #include <limits.h>
+#include <assert.h>
 #include "dtpools_internal.h"
 
 #define DTPI_MAX_FACTOR (64)
@@ -35,6 +36,35 @@ static int DTPI_Get_max_fact(int count)
     return i;
 }
 
+static void get_obj_id_range(int real_max_idx, int *min_obj_idx_, int *max_obj_idx_)
+{
+    char *obj_id_str = NULL;
+    int min_obj_idx, max_obj_idx;
+
+    /* get number of objects from environment */
+    obj_id_str = getenv("DTP_MIN_OBJ_ID");
+    if (obj_id_str) {
+        min_obj_idx = atoi(obj_id_str);
+        assert(min_obj_idx >= 0);
+    } else {
+        min_obj_idx = 0;
+    }
+
+    obj_id_str = getenv("DTP_MAX_OBJ_ID");
+    if (obj_id_str) {
+        max_obj_idx = atoi(obj_id_str);
+        if (max_obj_idx > real_max_idx)
+            max_obj_idx = real_max_idx;
+    } else {
+        max_obj_idx = real_max_idx;
+    }
+
+    assert(max_obj_idx >= min_obj_idx);
+
+    *min_obj_idx_ = min_obj_idx;
+    *max_obj_idx_ = max_obj_idx;
+}
+
 /*
  * DTP_pool_create - create a new datatype pool with specified signature
  *
@@ -46,26 +76,15 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
 {
     int i, err = DTP_SUCCESS;
     int num_objs;
-    int env_num_objs = INT_MAX;
-    char *env_num_objs_str = NULL;
+    int min_obj_idx, max_obj_idx;
     struct DTP_obj_array_s *obj_array = NULL;
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    /* get number of objects from environment */
-    if ((env_num_objs_str = getenv("DTP_NUM_OBJS"))) {
-        env_num_objs = atoi(env_num_objs_str);
-    }
-
-    if (basic_type_count == 1) {
-        num_objs =
-            (env_num_objs < DTPI_OBJ_LAYOUT_SIMPLE__NUM &&
-             env_num_objs > 0) ? env_num_objs : DTPI_OBJ_LAYOUT_SIMPLE__NUM;
-    } else {
-        num_objs =
-            (env_num_objs < DTPI_OBJ_LAYOUT_LARGE__NUM &&
-             env_num_objs > 0) ? env_num_objs : DTPI_OBJ_LAYOUT_LARGE__NUM;
-    }
+    int real_max_idx = basic_type_count == 1 ? DTPI_OBJ_LAYOUT_SIMPLE__NUM - 1 :
+        DTPI_OBJ_LAYOUT_LARGE__NUM - 1;
+    get_obj_id_range(real_max_idx, &min_obj_idx, &max_obj_idx);
+    num_objs = max_obj_idx - min_obj_idx + 1;
 
     DTPI_OBJ_ALLOC_OR_FAIL(obj_array, sizeof(*obj_array) * num_objs);
 
@@ -76,6 +95,8 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
         obj_array[i].private_info = NULL;
     }
 
+    (*dtp)->min_obj_idx = min_obj_idx;
+    (*dtp)->max_obj_idx = max_obj_idx;
     (*dtp)->DTP_num_objs = num_objs;
     (*dtp)->DTP_pool_type = DTP_POOL_TYPE__BASIC;
     (*dtp)->DTP_type_signature.DTP_pool_basic.DTP_basic_type = basic_type;
@@ -116,19 +137,13 @@ int DTP_pool_create_struct(int num_types, MPI_Datatype * basic_types, int *basic
 {
     int i, err = DTP_SUCCESS;
     int num_objs;
-    int env_num_objs = INT_MAX;
-    char *env_num_objs_str = NULL;
+    int min_obj_idx, max_obj_idx;
     struct DTP_obj_array_s *obj_array = NULL;
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    /* get number of objects from environment */
-    if ((env_num_objs_str = getenv("DTP_NUM_OBJS"))) {
-        env_num_objs = atoi(env_num_objs_str);
-    }
-
-    num_objs = (env_num_objs < DTPI_OBJ_LAYOUT__STRUCT_NUM && env_num_objs > 0) ?
-        env_num_objs : DTPI_OBJ_LAYOUT__STRUCT_NUM;
+    get_obj_id_range(DTPI_OBJ_LAYOUT__STRUCT_NUM - 1, &min_obj_idx, &max_obj_idx);
+    num_objs = max_obj_idx - min_obj_idx + 1;
 
     DTPI_OBJ_ALLOC_OR_FAIL(obj_array, sizeof(*obj_array) * num_objs);
 
@@ -192,19 +207,20 @@ int DTP_pool_free(DTP_t dtp)
  *        'val_count' should be set to > 0 only for send datatypes.
  *
  */
-int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count)
+int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, MPI_Aint val_count)
 {
     int err = DTP_SUCCESS;
     int basic_type_count;
     int factor;
     int obj_type;
+    int obj_idx = user_obj_idx + dtp->min_obj_idx;
     struct DTPI_Par par;
 
     /* init user defined params */
     par.user.val_start = val_start;
     par.user.val_stride = val_stride;
     par.user.val_count = val_count;
-    par.user.obj_idx = obj_idx;
+    par.user.obj_idx = user_obj_idx;
 
     if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
         /* get type signature for pool */
@@ -330,17 +346,18 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
 /*
  * DTP_obj_free - free previously created datatype obj_idx
  */
-int DTP_obj_free(DTP_t dtp, int obj_idx)
+int DTP_obj_free(DTP_t dtp, int user_obj_idx)
 {
     int err = DTP_SUCCESS;
     int obj_type;
+    int obj_idx = user_obj_idx + dtp->min_obj_idx;
     DTPI_t *dtpi;
 
-    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[user_obj_idx].private_info;
     obj_type = dtpi->obj_type;
 
     if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
-        err = destructors[obj_type] (dtp, obj_idx);
+        err = destructors[obj_type] (dtp, user_obj_idx);
     } else {
         err = DTPI_Struct_free(dtp, obj_idx);
     }
@@ -361,20 +378,22 @@ int DTP_obj_free(DTP_t dtp, int obj_idx)
  *       disregarded, `basic_type_counts` passed to the pool create
  *       function is used instead to check buffer.
  */
-int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Aint val_count)
+int DTP_obj_buf_check(DTP_t dtp, int user_obj_idx, int val_start, int val_stride,
+                      MPI_Aint val_count)
 {
     int err = DTP_SUCCESS;
     struct DTPI_Par par;
     DTPI_t *dtpi;
     DTP_pool_type pool_type;
     DTPI_obj_type_e obj_type;
+    int obj_idx = user_obj_idx + dtp->min_obj_idx;
 
     par.user.val_start = val_start;
     par.user.val_count = val_count;
     par.user.val_stride = val_stride;
-    par.user.obj_idx = obj_idx;
+    par.user.obj_idx = user_obj_idx;
 
-    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[user_obj_idx].private_info;
     obj_type = dtpi->obj_type;
 
     if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
