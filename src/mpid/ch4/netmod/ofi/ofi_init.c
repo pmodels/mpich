@@ -637,7 +637,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             prov_use->domain_attr->av_type == FI_AV_TABLE;
         MPIDI_OFI_global.settings.enable_scalable_endpoints =
             MPIDI_OFI_global.settings.enable_scalable_endpoints &&
-            prov_use->domain_attr->max_ep_tx_ctx > 1;
+            prov_use->domain_attr->max_ep_tx_ctx > 1 &&
+            (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX;
         MPIDI_OFI_global.settings.enable_mr_scalable =
             MPIDI_OFI_global.settings.enable_mr_scalable &&
             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
@@ -1302,6 +1303,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
             tx_attr.caps |= FI_ATOMICS;
         /* MSG */
         tx_attr.caps |= FI_MSG;
+        tx_attr.caps |= FI_NAMED_RX_CTX;        /* Required for scalable endpoints indexing */
 
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx, &tx_attr, &MPIDI_OFI_global.ctx[idx].tx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
@@ -1324,6 +1326,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
             rx_attr.caps |= FI_ATOMICS;
         rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
+        rx_attr.caps |= FI_NAMED_RX_CTX;        /* Required for scalable endpoints indexing */
 
         MPIDI_OFI_CALL(fi_rx_context(*ep, idx, &rx_attr, &MPIDI_OFI_global.ctx[idx].rx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
@@ -1573,6 +1576,8 @@ static int init_hints(struct fi_info *hints)
     /*           MSG|MULTI_RECV:  Supports synchronization protocol for 1-sided */
     /*           FI_DIRECTED_RECV: Support not putting the source in the match  */
     /*                             bits                                         */
+    /*           FI_NAMED_RX_CTX: Necessary to specify receiver-side SEP index  */
+    /*                            when scalable endpoint (SEP) is enabled.      */
     /*           We expect to register all memory up front for use with this    */
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
@@ -1615,6 +1620,11 @@ static int init_hints(struct fi_info *hints)
         hints->caps |= FI_MSG;  /* Message Queue apis      */
         hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
     }
+
+    /* With scalable endpoints, FI_NAMED_RX_CTX is needed to specify a destination receive context
+     * index */
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
+        hints->caps |= FI_NAMED_RX_CTX;
 
     /* ------------------------------------------------------------------------ */
     /* Set object options to be filtered by getinfo                             */
@@ -1706,7 +1716,9 @@ static struct fi_info *pick_provider(struct fi_info *hints, const char *provname
                                                          prov_use->fabric_attr->prov_name));
 
         /* Check that this provider meets the minimum requirements for the user */
-        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS &&
+            (prov_use->domain_attr->max_ep_tx_ctx <= 1 ||
+             (prov_use->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
             prov = prov_use->next;
