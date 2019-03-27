@@ -419,10 +419,6 @@ sub RunList {
     my @TYPES = "";
     my $DTP_SWITCH = "@DTP_SWITCH@";
 
-    if (! defined $ENV{"DTP_MAX_OBJ_ID"}) {
-        $ENV{"DTP_MAX_OBJ_ID"} = "4";
-    }
-
     if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
         @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
     }
