@@ -419,8 +419,8 @@ sub RunList {
     my @TYPES = "";
     my $DTP_SWITCH = "@DTP_SWITCH@";
 
-    if (! defined $ENV{"DTP_NUM_OBJS"}) {
-        $ENV{"DTP_NUM_OBJS"} = "5";
+    if (! defined $ENV{"DTP_MAX_OBJ_ID"}) {
+        $ENV{"DTP_MAX_OBJ_ID"} = "4";
     }
 
     if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {

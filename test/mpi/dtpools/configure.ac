@@ -44,8 +44,11 @@ AM_PROG_AR
 LT_PREREQ([2.2.6])
 LT_INIT
 
-AC_ARG_VAR([DTP_NUM_OBJS],
-           [used to limit the number of objects to test from each pool])
+AC_ARG_VAR([DTP_MIN_OBJ_ID],
+           [used to min object ID to test from each pool])
+
+AC_ARG_VAR([DTP_MAX_OBJ_ID],
+           [used to max object ID to test from each pool])
 
 # begin framework MPI datatype initialization
 AC_ARG_VAR([DTP_DATATYPE_FILE],
