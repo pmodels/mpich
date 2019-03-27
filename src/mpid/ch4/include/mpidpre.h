@@ -493,10 +493,13 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+
+        MPIDI_vci_hash_t vci_hash;
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_COMM_VCI(comm,field) ((comm)->dev.ch4).vci_hash.u.single.field
 
 typedef struct {
     union {

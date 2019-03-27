@@ -262,6 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #endif
 
 #include "ch4i_workq.h"
+#include "ch4_vci.h"
 
 #include "ch4_init.h"
 #include "ch4_probe.h"

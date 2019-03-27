@@ -69,4 +69,14 @@ typedef struct MPIDI_vci_pool {
     MPIDI_vci_t *vci;           /* array of VCIs */
 } MPIDI_vci_pool_t;
 
+/* VCI hash */
+typedef struct MPIDI_vci_hash {
+    union {
+        struct {
+            int vci;
+        } single;
+        /* TODO: struct multi */
+    } u;
+} MPIDI_vci_hash_t;
+
 #endif /* CH4_VCI_TYPES_H_INCLUDED */

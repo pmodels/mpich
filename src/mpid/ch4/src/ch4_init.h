@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_vnis_provided;
+    int n_vnis_provided, vci;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_vsis_provided;
 #endif
@@ -331,7 +331,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_workq_init(&MPIDI_global.workqueue);
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
-
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         MPIDI_print_runtime_configurations();
 
@@ -438,10 +437,40 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_vci_pool_create_and_init(n_vsis_provided, n_vnis_provided);
+#else
+        mpi_errno = MPIDI_vci_pool_create_and_init(n_vnis_provided);
+#endif
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
 
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    /* Allocate the root VCI and store in comm_world */
+    mpi_errno =
+        MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                        MPIDI_VCI_PROPERTY__GENERIC, &vci);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    if (MPIDI_VCI(MPIDI_VCI_ROOT).is_free) {
+        mpi_errno = MPI_ERR_OTHER;
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    MPIDI_COMM_VCI(MPIR_Process.comm_world, vci) = vci;
+
+    /* Allocate a shared VCI for comm_self */
+    mpi_errno =
+        MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                        MPIDI_VCI_PROPERTY__GENERIC, &vci);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    MPIDI_COMM_VCI(MPIR_Process.comm_self, vci) = vci;
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
@@ -529,6 +558,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
             MPIDIU_avt_release_ref(i);
         }
     }
+
+    mpi_errno = MPIDI_vci_pool_destroy();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_global.jobid);
