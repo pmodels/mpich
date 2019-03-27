@@ -36,6 +36,9 @@ static int DTPI_Get_max_fact(int count)
     return i;
 }
 
+/* default number of objects to keep the testing time reasonable */
+#define DEFAULT_NUM_OBJS  (5)
+
 static void get_obj_id_range(int real_max_idx, int *min_obj_idx_, int *max_obj_idx_)
 {
     char *obj_id_str = NULL;
@@ -53,11 +56,13 @@ static void get_obj_id_range(int real_max_idx, int *min_obj_idx_, int *max_obj_i
     obj_id_str = getenv("DTP_MAX_OBJ_ID");
     if (obj_id_str) {
         max_obj_idx = atoi(obj_id_str);
-        if (max_obj_idx > real_max_idx)
-            max_obj_idx = real_max_idx;
     } else {
-        max_obj_idx = real_max_idx;
+        /* if the user did not give a max, pick a small count to keep
+         * the tests run in a reasonable amount of time */
+        max_obj_idx = min_obj_idx + DEFAULT_NUM_OBJS - 1;
     }
+    if (max_obj_idx > real_max_idx)
+        max_obj_idx = real_max_idx;
 
     assert(max_obj_idx >= min_obj_idx);
 
