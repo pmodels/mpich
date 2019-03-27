@@ -792,9 +792,13 @@ static void handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPI
     for (i = 0; i < MPIDIG_REQUEST(rreq, req->areq.n_iov); i++)
         iov[i].iov_base = (char *) iov[i].iov_base + base;
 
-    *data = p_data;
-    *is_contig = 1;
-    *p_data_sz = data_sz;
+    /* Progress engine may pass NULL here if received data sizeis zero */
+    if (data)
+        *data = p_data;
+    if (is_contig)
+        *is_contig = 1;
+    if (p_data_sz)
+        *p_data_sz = data_sz;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_ACC_DATA);
 }
