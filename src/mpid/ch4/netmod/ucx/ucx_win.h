@@ -149,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t leng
             continue;
         }
 
-        status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i),
+        status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i, 0),
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
         if (status == UCS_ERR_UNREACHABLE) {
@@ -588,7 +588,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
         /* maybe we just flush all eps here? More efficient for smaller communicators... */
-        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        ucp_status = ucp_worker_flush(MPIDI_UCX_VNI(0).worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_win_unset_sync(win);
     }
@@ -617,7 +617,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
-        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        ucp_status = ucp_worker_flush(MPIDI_UCX_VNI(0).worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */
@@ -648,7 +648,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
 
         ucs_status_t ucp_status;
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank, 0);
         /* only flush the endpoint */
         ucp_status = ucp_ep_flush(ep);
         MPIDI_UCX_CHK_STATUS(ucp_status);
@@ -678,7 +678,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync == MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
         ucs_status_t ucp_status;
 
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank, 0);
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
         ucp_status = ucp_ep_flush(ep);

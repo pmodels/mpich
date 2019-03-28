@@ -27,6 +27,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     mpi_errno = MPIDIG_init_comm(comm);
 
     /* if this is MPI_COMM_WORLD, finish bc exchange */
+    /* TODO: extend the following to support multiple VNIs. Currently non-functional
+     * and program will fail if run with ROOTS_ONLY. Putting in placeholder value of
+     * 0 so that build doesn't fail. */
     if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         ucs_status_t ucx_status;
         ucp_ep_params_t ep_params;
@@ -34,8 +37,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         size_t *bc_indices;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
-        MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
-                           (int) MPIDI_UCX_global.addrname_len, FALSE,
+        MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], MPIDI_UCX_VNI(0 /*WRONG*/).if_address,
+                           (int) MPIDI_UCX_VNI(0 /*WRONG*/).addrname_len, FALSE,
                            (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
 
         /* insert new addresses, skipping over node roots */
@@ -48,8 +51,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
             ep_params.address =
                 (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[curr]];
             ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                ucp_ep_create(MPIDI_UCX_VNI(0 /*WRONG*/).worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0 /*WRONG*/]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
             curr++;
         }

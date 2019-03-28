@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
-    int i;
+    int i, vni;
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
@@ -40,6 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
 
     *n_vnis_provided = 1;
+    MPIDI_UCX_VNI_POOL(total_vnis) = *n_vnis_provided;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -50,11 +51,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
     ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
+    ucp_params.estimated_num_eps = size * MPIDI_UCX_VNI_POOL(total_vnis);
+    /* multiple threads can access the context from different workers in the same context */
+    ucp_params.mt_workers_shared = 1;
 
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
         UCP_PARAM_FIELD_REQUEST_SIZE |
-        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
+        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT |
+        UCP_PARAM_FIELD_MT_WORKERS_SHARED;
 
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -63,24 +67,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
     worker_params.thread_mode = UCS_THREAD_MODE_SERIALIZED;
 
-    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
-                                   &MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucx_status =
-        ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
-                               &MPIDI_UCX_global.addrname_len);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
-
-    mpi_errno =
-        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
-                              (int) MPIDI_UCX_global.addrname_len, FALSE,
-                              MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                              (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
+                                       &MPIDI_UCX_VNI(vni).worker);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+        ucx_status =
+            ucp_worker_get_address(MPIDI_UCX_VNI(vni).worker, &MPIDI_UCX_VNI(vni).if_address,
+                                   &MPIDI_UCX_VNI(vni).addrname_len);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+        MPIR_Assert(MPIDI_UCX_VNI(vni).addrname_len <= INT_MAX);
+    }
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        /* TODO: implement this for multiple workers */
         int *node_roots, num_nodes;
 
         MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
@@ -88,19 +87,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
             ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
+                ucp_ep_create(MPIDI_UCX_VNI(0 /*WRONG*/).worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0 /*WRONG*/]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPL_free(node_roots);
     } else {
-        for (i = 0; i < size; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
+        for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+            mpi_errno =
+                MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      MPIDI_UCX_VNI(vni).if_address,
+                                      (int) MPIDI_UCX_VNI(vni).addrname_len, FALSE,
+                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
+                                      (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
+            for (i = 0; i < size; i++) {
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address =
+                    (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+                ucx_status =
+                    ucp_ep_create(MPIDI_UCX_VNI(vni).worker, &ep_params,
+                                  &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[vni]);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
         }
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
@@ -113,9 +124,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
-
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        if (MPIDI_UCX_VNI(vni).worker != NULL)
+            ucp_worker_destroy(MPIDI_UCX_VNI(vni).worker);
+    }
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
 
@@ -130,20 +142,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
-    int i, p = 0, completed;
+    int i, vni, p = 0, completed;
     MPIR_Comm *comm;
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
     comm = MPIR_Process.comm_world;
-    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size, MPL_MEM_OTHER);
+    pending =
+        MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size * MPIDI_UCX_VNI_POOL(total_vnis),
+                   MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
-        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-        MPIDI_UCX_CHK_REQUEST(ucp_request);
-        if (ucp_request != UCS_OK) {
-            pending[p] = ucp_request;
-            p++;
+        for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+            ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[vni]);
+            MPIDI_UCX_CHK_REQUEST(ucp_request);
+            if (ucp_request != UCS_OK) {
+                pending[p] = ucp_request;
+                p++;
+            }
         }
     }
 
@@ -151,7 +167,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
      * deadlock! */
     completed = p;
     while (completed != 0) {
-        ucp_worker_progress(MPIDI_UCX_global.worker);
+        for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+            ucp_worker_progress(MPIDI_UCX_VNI(vni).worker);
+        }
         completed = p;
         for (i = 0; i < p; i++) {
             if (ucp_request_is_completed(pending[i]) != 0)
@@ -187,8 +205,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 #endif
 
 
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        if (MPIDI_UCX_VNI(vni).worker != NULL)
+            ucp_worker_destroy(MPIDI_UCX_VNI(vni).worker);
+    }
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
