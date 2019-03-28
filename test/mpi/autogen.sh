@@ -90,7 +90,7 @@ do
                 # do combination of different send recv count where recv count >= send count
                 for recvcount in $recvcounts
                 do
-                    echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} $timelimit" >> ${dir}/testlist.dtp
+                    echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} $timelimit env=DTP_MIN_OBJ_ID=4 env=DTP_MAX_OBJ_ID=8" >> ${dir}/testlist.dtp
                      # limit the mixed pool case to only one
                      # TODO: this should be defined in the config file
                     if [ $recvcount -gt $sendcount ]; then
@@ -99,7 +99,7 @@ do
                 done
                 recvcounts=`echo $recvcounts | sed -e "s|$sendcount||"` # update recv counts
             else
-                echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-count=${sendcount} $timelimit" >> ${dir}/testlist.dtp
+                echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-count=${sendcount} $timelimit env=DTP_MIN_OBJ_ID=4 env=DTP_MAX_OBJ_ID=8" >> ${dir}/testlist.dtp
             fi
         done
     done
