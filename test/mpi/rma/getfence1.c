@@ -19,6 +19,7 @@ static char MTEST_Descrip[] = "Get with Fence";
 #define MAX_COUNT_SIZE (16000000)
 #define MAX_TYPE_SIZE  (16)
 
+int count;
 
 static inline int test(MPI_Comm comm, int rank, int orig, int target,
                        int i, int j, DTP_t orig_dtp, DTP_t target_dtp)
@@ -26,7 +27,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     int errs = 0, err;
     int disp_unit;
     int len;
-    MPI_Aint origcount, targetcount, count;
+    MPI_Aint origcount, targetcount;
     MPI_Aint extent, lb;
     MPI_Win win;
     MPI_Datatype origtype, targettype;
@@ -34,7 +35,6 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     char target_name[MPI_MAX_OBJECT_NAME] = { 0 };
     void *origbuf, *targetbuf;
 
-    count = orig_dtp->DTP_type_signature.DTP_pool_basic.DTP_basic_type_count;
     origtype = orig_dtp->DTP_obj_array[i].DTP_obj_type;
     targettype = target_dtp->DTP_obj_array[j].DTP_obj_type;
     origcount = orig_dtp->DTP_obj_array[i].DTP_obj_count;
@@ -104,7 +104,6 @@ int main(int argc, char *argv[])
     int rank, size, orig, target;
     int minsize = 2;
     int i, j;
-    int count;
     MPI_Aint bufsize;
     MPI_Comm comm;
     DTP_t orig_dtp, target_dtp;
