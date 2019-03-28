@@ -52,6 +52,8 @@ static void get_obj_id_range(int real_max_idx, int *min_obj_idx_, int *max_obj_i
     } else {
         min_obj_idx = 0;
     }
+    if (min_obj_idx > real_max_idx)
+        min_obj_idx = real_max_idx;
 
     obj_id_str = getenv("DTP_MAX_OBJ_ID");
     if (obj_id_str) {
