@@ -426,6 +426,9 @@ sub RunList {
         @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
     }
 
+    $ENV{"DTP_MIN_OBJ_ID"} = 40;
+    $ENV{"DTP_MAX_OBJ_ID"} = 50;
+
     print "Looking in $curdir/$listfile\n" if $debug;
     if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
 	$listfileSource = "$srcdir/$curdir/$listfile";
