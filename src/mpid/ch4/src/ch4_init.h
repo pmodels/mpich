@@ -467,6 +467,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+#ifdef MPIDI_CH4_ULFM
+    /* Initialize ULFM */
+    MPIDI_failed_procs_group = NULL;
+    MPIDI_last_known_failed = MPI_PROC_NULL;
+    MPIDI_failed_procs_string = NULL;
+
+    MPIDI_COMM(MPIR_Process.comm_self, last_ack_rank) = MPI_PROC_NULL;
+    MPIDI_COMM(MPIR_Process.comm_self, anysource_enabled) = 1;
+    MPIDIU_COMM_LIST_ADD(MPIR_Process.comm_self);
+
+    MPIDI_COMM(MPIR_Process.comm_world, last_ack_rank) = MPI_PROC_NULL;
+    MPIDI_COMM(MPIR_Process.comm_world, anysource_enabled) = 1;
+    MPIDIU_COMM_LIST_ADD(MPIR_Process.comm_world);
+#endif
+
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */
@@ -515,6 +530,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
+
+#ifdef MPIDI_CH4_ULFM
+    MPIDIU_COMM_LIST_DEL(MPIR_Process.comm_world);
+    MPIDIU_COMM_LIST_DEL(MPIR_Process.comm_self);
+#endif
 
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
     if (mpi_errno)

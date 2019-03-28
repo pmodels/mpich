@@ -11,9 +11,23 @@
 #ifndef CH4_COMM_H_INCLUDED
 #define CH4_COMM_H_INCLUDED
 
+#include "pmi.h"
+#include "utarray.h"
+
 #include "ch4_impl.h"
 #include "ch4r_comm.h"
 #include "ch4i_comm.h"
+
+#ifdef MPIDI_CH4_ULFM
+#define parse_rank(r_p) do {                                                                \
+        while (isspace(*c)) /* skip spaces */                                               \
+            ++c;                                                                            \
+        MPIR_ERR_CHKINTERNAL(!isdigit(*c), mpi_errno, "error parsing failed process list"); \
+        *(r_p) = (int)strtol(c, &c, 0);                                                     \
+        while (isspace(*c)) /* skip spaces */                                               \
+            ++c;                                                                            \
+    } while (0)
+#endif
 
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {
@@ -62,27 +76,307 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_group_failed(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
+#ifdef MPIDI_CH4_ULFM
+#undef FUNCNAME
+#define FUNCNAME MPIDIU_get_failed_group
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIU_get_failed_group(int last_rank, MPIR_Group ** failed_group)
+{
+    char *c;
+    int i, mpi_errno = MPI_SUCCESS, rank;
+    UT_array *failed_procs = NULL;
+    MPIR_Group *world_group;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_FAILED_GROUP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_FAILED_GROUP);
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                    (MPL_DBG_FDEST, "Getting failed group with %d as last acknowledged\n",
+                     last_rank));
+
+    if (-1 == last_rank) {
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE, (MPL_DBG_FDEST, "No failure acknowledged"));
+
+        *failed_group = MPIR_Group_empty;
+        goto fn_exit;
+    }
+
+    if (*MPIDI_failed_procs_string == '\0') {
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE, (MPL_DBG_FDEST, "Found no failed ranks"));
+        *failed_group = MPIR_Group_empty;
+        goto fn_exit;
+    }
+
+    utarray_new(failed_procs, &ut_int_icd, MPL_MEM_OTHER);
+
+    /* parse list of failed processes.  This is a comma separated list
+     * of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
+    i = 0;
+    c = MPIDI_failed_procs_string;
+    while (1) {
+        parse_rank(&rank);
+        ++i;
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                        (MPL_DBG_FDEST, "Found failed rank: %d", rank));
+
+        utarray_push_back(failed_procs, &rank, MPL_MEM_OTHER);
+        MPIDI_last_known_failed = rank;
+        MPIR_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno,
+                             "error parsing failed process list");
+        if (*c == '\0' || last_rank == rank)
+            break;
+        ++c;    /* skip ',' */
+    }
+
+    /* Create group of failed processes for comm_world.  Failed groups for other
+     * communicators can be created from this one using group_intersection. */
+    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world, &world_group);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_incl_impl(world_group, i, ut_int_array(failed_procs), failed_group);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_release(world_group);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_FAILED_GROUP);
+    if (failed_procs)
+        utarray_free(failed_procs);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME nonempty_intersection
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static int nonempty_intersection(MPIR_Comm * comm, MPIR_Group * group, int *flag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i_g, i_c;
+    int lpid_g, lpid_c;
+
+
+
+    /* handle common case fast */
+    if (comm == MPIR_Process.comm_world || comm == MPIR_Process.icomm_world) {
+        *flag = TRUE;
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "comm is comm_world or icomm_world"));
+        goto fn_exit;
+    }
+    *flag = FALSE;
+
+    /* FIXME: This algorithm assumes that the number of processes in group is
+     * very small (like 1).  So doing a linear search for them in comm is better
+     * than sorting the procs in comm and group then doing a binary search */
+
+    for (i_g = 0; i_g < group->size; ++i_g) {
+        lpid_g = group->lrank_to_lpid[i_g].lpid;
+        for (i_c = 0; i_c < comm->remote_size; ++i_c) {
+            MPID_Comm_get_lpid(comm, i_c, &lpid_c, FALSE);
+            if (lpid_g == lpid_c) {
+                *flag = TRUE;
+                goto fn_exit;
+            }
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIU_comm_handle_failed_procs
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIU_comm_handle_failed_procs(MPIR_Group * new_failed_procs)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *comm;
+    int flag = FALSE;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_HANDLE_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_HANDLE_FAILED_PROCS);
+
+    /* mark communicators with new failed processes as collectively inactive and
+     * disable posting anysource receives */
+    MPIDIU_COMM_LIST_FOREACH(comm) {
+        /* if this comm is already collectively inactive and
+         * anysources are disabled, there's no need to check */
+        if (!MPIDI_COMM(comm, anysource_enabled))
+            continue;
+
+        mpi_errno = nonempty_intersection(comm, new_failed_procs, &flag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        if (flag) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "disabling AS on communicator %p (%#08x)",
+                             comm, comm->handle));
+            MPIDI_COMM(comm, anysource_enabled) = FALSE;
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_HANDLE_FAILED_PROCS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIU_check_for_failed_procs
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIU_check_for_failed_procs(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int len;
+    char *kvsname;
+    MPIR_Group *prev_failed_group, *new_failed_group;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CHECK_FOR_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CHECK_FOR_FAILED_PROCS);
+
+#ifdef USE_PMI2_API
+    int vallen = 0;
+    pmi_errno + PMI2_KVS_Get(MPICH_CH4_Global.jobid, "PMI_dead_processes",
+                             MPIDI_failed_procs_string, PMI2_MAX_VALLEN, &vallen);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+#else
+    pmi_errno = PMI_KVS_Get_value_length_max(&len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+    pmi_errno = PMI_KVS_Get(MPIDI_CH4_Global.jobid, "PMI_dead_processes",
+                            MPIDI_failed_procs_string, len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+#endif
+
+    if (*MPIDI_failed_procs_string == '\0') {
+        /* there are no failed processes */
+        MPIDI_failed_procs_group = MPIR_Group_empty;
+        goto fn_exit;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
+                    (MPL_DBG_FDEST, "Received proc fail notification: %d",
+                     MPIDI_failed_procs_string));
+
+
+    /* save reference to previous group so we can identify new failures */
+    prev_failed_group = MPIDI_failed_procs_group;
+
+    /* Parse the list of failed processes */
+    MPIDIU_get_failed_group(-2, &MPIDI_failed_procs_group);
+
+    /* get group of newly failed processes */
+    mpi_errno =
+        MPIR_Group_difference_impl(MPIDI_failed_procs_group, prev_failed_group, &new_failed_group);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (new_failed_group != MPIR_Group_empty) {
+        mpi_errno = MPIDIU_comm_handle_failed_procs(new_failed_group);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Group_release(new_failed_group);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+    /* free prev group */
+    if (prev_failed_group != MPIR_Group_empty) {
+        mpi_errno = MPIR_Group_release(prev_failed_group);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CHECK_FOR_FAILED_PROCS);
+    return mpi_errno;
+  fn_oom:      /* out-of-memory handler for utarray operations */
+    MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
+  fn_fail:
+    goto fn_exit;
+}
+#endif
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_failure_ack
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FAILURE_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FAILURE_ACK);
 
-    MPIR_Assert(0);
+#ifdef MPIDI_CH4_ULFM
+    MPIDIU_check_for_failed_procs();
 
+    MPIDI_COMM(comm_ptr, last_ack_rank) = MPIDI_last_known_failed;
+    MPIDI_COMM(comm_ptr, anysource_enabled) = 1;
+#else
+    MPIR_Assert(0);
+#endif
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FAILURE_ACK);
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_failure_get_acked
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
                                                          MPIR_Group ** failed_group_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *failed_group, *comm_group;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
 
-    MPIR_Assert(0);
+#ifdef MPIDI_CH4_ULFM
+    /* Get the group of all failed processes */
+    MPIDIU_check_for_failed_procs();
+    MPIDIU_get_failed_group(MPIDI_COMM(comm_ptr, last_ack_rank), &failed_group);
+    if (failed_group == MPIR_Group_empty) {
+        *failed_group_ptr = MPIR_Group_empty;
+        goto fn_exit;
+    }
 
+    MPIR_Comm_group_impl(comm_ptr, &comm_group);
+
+    /* Get the intersection of all falied processes in this communicator */
+    MPIR_Group_intersection_impl(failed_group, comm_group, failed_group_ptr);
+
+    MPIR_Group_release(comm_group);
+    MPIR_Group_release(failed_group);
+#else
+    MPIR_Assert(0);
+#endif
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
-    return 0;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
@@ -96,6 +390,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remot
     return 0;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_get_all_failed_procs
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr,
                                                             MPIR_Group ** failed_group, int tag)
 {
@@ -222,6 +520,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     }
 #endif
 
+#ifdef MPIDI_CH4_ULFM
+    MPIDI_COMM(comm, last_ack_rank) = -1;
+    MPIDI_COMM(comm, anysource_enabled) = 1;
+
+    MPIDIU_COMM_LIST_ADD(comm);
+#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     return mpi_errno;
@@ -303,6 +608,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
+#endif
+
+#ifdef MPIDI_CH4_ULFM
+    MPIDIU_COMM_LIST_DEL(comm);
 #endif
 
   fn_exit:
