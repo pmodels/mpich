@@ -679,18 +679,8 @@ AC_C_RESTRICT
 AC_PROG_RANLIB
 AM_PROG_AR
 
-# Enable STRICT CFLAGS
-AC_ARG_ENABLE(stricttest,
-AC_HELP_STRING([--enable-stricttest], [Turn on strict GCC compilation]))
-dnl Initialize enable_strict_done so PAC_CC_STRICT won't exit right away
-dnl When it is configuring from within MPICH, because enable_strict_done=yes
-dnl is set in the environment by MPICH.
-enable_strict_done=no
-PAC_CC_STRICT($enable_stricttest)
-# -Wfloat-equal isn't meaningful in testsuite,
-# remove it if it is in strict flags.
-pac_cc_strict_flags="`echo $pac_cc_strict_flags | sed -e 's|-Wfloat-equal||g'`"
-CFLAGS="$CFLAGS $pac_cc_strict_flags"
+# Check for --enable-strict
+PAC_ARG_STRICT
 
 # General headers
 AC_HEADER_STDC
