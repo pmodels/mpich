@@ -88,8 +88,8 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    int real_max_idx = basic_type_count == 1 ? DTPI_OBJ_LAYOUT_SIMPLE__NUM - 1 :
-        DTPI_OBJ_LAYOUT_LARGE__NUM - 1;
+    int real_max_idx = basic_type_count == 1 ? DTPI_OBJ_LAYOUT__LAST__SIMPLE - 1 :
+        DTPI_OBJ_LAYOUT__LAST__LARGE - 1;
     get_obj_id_range(real_max_idx, &min_obj_idx, &max_obj_idx);
     num_objs = max_obj_idx - min_obj_idx + 1;
 
@@ -149,7 +149,7 @@ int DTP_pool_create_struct(int num_types, MPI_Datatype * basic_types, int *basic
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    get_obj_id_range(DTPI_OBJ_LAYOUT__STRUCT_NUM - 1, &min_obj_idx, &max_obj_idx);
+    get_obj_id_range(DTPI_OBJ_LAYOUT__STRUCT__LAST - 1, &min_obj_idx, &max_obj_idx);
     num_objs = max_obj_idx - min_obj_idx + 1;
 
     DTPI_OBJ_ALLOC_OR_FAIL(obj_array, sizeof(*obj_array) * num_objs);
@@ -237,30 +237,30 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
         factor = DTPI_Get_max_fact(basic_type_count);
 
         switch (obj_idx) {
-            case DTPI_OBJ_LAYOUT_SIMPLE__BASIC:
-            case DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:
+            case DTPI_OBJ_LAYOUT__BASIC__SIMPLE:
+            case DTPI_OBJ_LAYOUT__CONTIG__SIMPLE:
                 par.core.type_count = basic_type_count;
                 par.core.type_blklen = 1;
                 par.core.type_stride = 1;
                 break;
-            case DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:
-            case DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:
-            case DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:
+            case DTPI_OBJ_LAYOUT__VECTOR__SIMPLE:
+            case DTPI_OBJ_LAYOUT__HVECTOR__SIMPLE:
+            case DTPI_OBJ_LAYOUT__INDEXED__SIMPLE:
+            case DTPI_OBJ_LAYOUT__HINDEXED__SIMPLE:
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__SIMPLE:
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__SIMPLE:
                 par.core.type_count = basic_type_count;
                 par.core.type_blklen = 1;
                 par.core.type_stride = 2;
                 break;
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK:
                 if (factor > (basic_type_count / factor)) {
                     par.core.type_count = basic_type_count / factor;
                     par.core.type_blklen = factor;
@@ -270,14 +270,14 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
                 }
                 par.core.type_stride = par.core.type_blklen + 1;
                 break;
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT:
                 if (factor > (basic_type_count / factor)) {
                     par.core.type_count = factor;
                     par.core.type_blklen = basic_type_count / factor;
@@ -287,14 +287,14 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
                 }
                 par.core.type_stride = par.core.type_blklen + 1;
                 break;
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK_STRD:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK_STRD:
                 if (factor > (basic_type_count / factor)) {
                     par.core.type_count = basic_type_count / factor;
                     par.core.type_blklen = factor;
@@ -304,14 +304,14 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
                 }
                 par.core.type_stride = par.core.type_blklen * 4;
                 break;
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT_STRD:
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT_STRD:
                 if (factor > (basic_type_count / factor)) {
                     par.core.type_count = factor;
                     par.core.type_blklen = basic_type_count / factor;
@@ -334,7 +334,7 @@ int DTP_obj_create(DTP_t dtp, int user_obj_idx, int val_start, int val_stride, M
         err = creators[obj_type] (&par, dtp);
     } else {
         switch (obj_idx) {
-            case DTPI_OBJ_LAYOUT_SIMPLE__STRUCT:
+            case DTPI_OBJ_LAYOUT__STRUCT__SIMPLE:
                 /* TODO: add other struct layouts here */
                 break;
             default:

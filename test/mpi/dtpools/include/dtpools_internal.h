@@ -45,15 +45,15 @@
  * - count        = N
  */
 enum {
-    DTPI_OBJ_LAYOUT_SIMPLE__BASIC,
-    DTPI_OBJ_LAYOUT_SIMPLE__CONTIG,
-    DTPI_OBJ_LAYOUT_SIMPLE__VECTOR,
-    DTPI_OBJ_LAYOUT_SIMPLE__INDEXED,
-    DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED,
-    DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR,
-    DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED,
-    DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED,
-    DTPI_OBJ_LAYOUT_SIMPLE__NUM
+    DTPI_OBJ_LAYOUT__BASIC__SIMPLE,
+    DTPI_OBJ_LAYOUT__CONTIG__SIMPLE,
+    DTPI_OBJ_LAYOUT__VECTOR__SIMPLE,
+    DTPI_OBJ_LAYOUT__INDEXED__SIMPLE,
+    DTPI_OBJ_LAYOUT__BLOCK_INDEXED__SIMPLE,
+    DTPI_OBJ_LAYOUT__HVECTOR__SIMPLE,
+    DTPI_OBJ_LAYOUT__HINDEXED__SIMPLE,
+    DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__SIMPLE,
+    DTPI_OBJ_LAYOUT__LAST__SIMPLE
 };
 
 /*
@@ -63,40 +63,40 @@ enum {
  * - count        = implementation defined
  */
 enum {
-    DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR = DTPI_OBJ_LAYOUT_SIMPLE__NUM,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C,
-    DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C,
-    DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C,
-    DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C,
-    DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F,
+    DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK = DTPI_OBJ_LAYOUT__LAST__SIMPLE,
+    DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK,
+    DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT,
+    DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK_STRD,
+    DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT_STRD,
+    DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT_STRD,
     /* TODO: add LOWER BOUND use case */
-    DTPI_OBJ_LAYOUT_LARGE__NUM
+    DTPI_OBJ_LAYOUT__LAST__LARGE
 };
 
 /*
@@ -105,8 +105,8 @@ enum {
  *       additional layouts ... ?
  */
 enum {
-    DTPI_OBJ_LAYOUT_SIMPLE__STRUCT,
-    DTPI_OBJ_LAYOUT__STRUCT_NUM
+    DTPI_OBJ_LAYOUT__STRUCT__SIMPLE,
+    DTPI_OBJ_LAYOUT__STRUCT__LAST
 };
 
 typedef enum {
@@ -134,64 +134,64 @@ typedef enum {
 #define DTPI_GET_OBJ_TYPE_FROM_IDX(pool_type, obj_idx, obj_type)        \
     do {                                                                \
         switch(obj_idx) {                                               \
-            case DTPI_OBJ_LAYOUT_SIMPLE__BASIC:                         \
+            case DTPI_OBJ_LAYOUT__BASIC__SIMPLE:                         \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##BASIC;           \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:                        \
+            case DTPI_OBJ_LAYOUT__CONTIG__SIMPLE:                        \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##CONTIG;          \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:                        \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:                     \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:                     \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:                \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:                \
+            case DTPI_OBJ_LAYOUT__VECTOR__SIMPLE:                        \
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK:                     \
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT:                     \
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK_STRD:                \
+            case DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT_STRD:                \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##VECTOR;          \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:                       \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:                    \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:                    \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:               \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:               \
+            case DTPI_OBJ_LAYOUT__HVECTOR__SIMPLE:                       \
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK:                    \
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT:                    \
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK_STRD:               \
+            case DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT_STRD:               \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##HVECTOR;         \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:                       \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:                    \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:                    \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:               \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:               \
+            case DTPI_OBJ_LAYOUT__INDEXED__SIMPLE:                       \
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK:                    \
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT:                    \
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK_STRD:               \
+            case DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT_STRD:               \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##INDEXED;         \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:                      \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:                   \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:                   \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:              \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:              \
+            case DTPI_OBJ_LAYOUT__HINDEXED__SIMPLE:                      \
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK:                   \
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT:                   \
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK_STRD:              \
+            case DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT_STRD:              \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##HINDEXED;        \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:                 \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:              \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:              \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:         \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:         \
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__SIMPLE:                 \
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK:              \
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT:              \
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK_STRD:         \
+            case DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT_STRD:         \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##BLOCK_INDEXED;   \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:                \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:             \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:             \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:        \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:        \
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__SIMPLE:                \
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK:             \
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT:             \
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK_STRD:        \
+            case DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT_STRD:        \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##BLOCK_HINDEXED;  \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:                 \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:                 \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:            \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:            \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK:                 \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT:                 \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK_STRD:            \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT_STRD:            \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##SUBARRAY_C;      \
                 break;                                                  \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:                 \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:                 \
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:            \
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:            \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK:                 \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT:                 \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK_STRD:            \
+            case DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT_STRD:            \
                 obj_type = DTPI_OBJ_TYPE__##pool_type##SUBARRAY_F;      \
                 break;                                                  \
             default:                                                    \

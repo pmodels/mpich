@@ -207,47 +207,47 @@ The following native datatypes are also supported:
 The following layouts for derived datatypes are currently supported:
 
 * Simple layout
-  - DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:                  type_count = 1; type_stride = -; type_blklen = basic_type_count;
-  - DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:                  type_count = basic_type_count; type_stride = 2; type_blklen = 1;
-  - DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
-  - DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
-  - DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:                type_count = basic_type_count; type_stride = 2; type_blklen = 1;
-  - DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:           type_count = basic_type_count; type_stride = 2; type_blklen = 1;
-  - DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:          type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__CONTIG__SIMPLE:                  type_count = 1; type_stride = -; type_blklen = basic_type_count;
+  - DTPI_OBJ_LAYOUT__VECTOR__SIMPLE:                  type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__HVECTOR__SIMPLE:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__INDEXED__SIMPLE:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__HINDEXED__SIMPLE:                type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_INDEXED__SIMPLE:           type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__SIMPLE:          type_count = basic_type_count; type_stride = 2; type_blklen = 1;
 
 * Complex layout
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:               type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:             type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:        type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:       type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:               type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:             type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:        type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:       type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:          type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:        type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:   type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:  type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:          type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:        type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:   type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:  type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
-  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK:               type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK:             type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK:        type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK:       type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT:               type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT:             type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT:        type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT:       type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT__VECTOR__LARGE_BLK_STRD:          type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__HVECTOR__LARGE_BLK_STRD:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__INDEXED__LARGE_BLK_STRD:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__HINDEXED__LARGE_BLK_STRD:        type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_BLK_STRD:   type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_BLK_STRD:  type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_BLK_STRD:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_BLK_STRD:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT__VECTOR__LARGE_CNT_STRD:          type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__HVECTOR__LARGE_CNT_STRD:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__INDEXED__LARGE_CNT_STRD:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__HINDEXED__LARGE_CNT_STRD:        type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__BLOCK_INDEXED__LARGE_CNT_STRD:   type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__BLOCK_HINDEXED__LARGE_CNT_STRD:  type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_C__LARGE_CNT_STRD:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT__SUBARRAY_F__LARGE_CNT_STRD:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
 
 
 ----------------------------------------------------------------------------
