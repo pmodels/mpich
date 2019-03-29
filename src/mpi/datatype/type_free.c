@@ -87,7 +87,7 @@ int MPI_Type_free(MPI_Datatype * datatype)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ARGNULL(datatype, "datatype", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(*datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(*datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -120,13 +120,6 @@ int MPI_Type_free(MPI_Datatype * datatype)
                                                  FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypeperm", 0);
                 goto fn_fail;
             }
-            /* Validate parameters, especially handles needing to be converted */
-            MPIR_Datatype_get_ptr(*datatype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

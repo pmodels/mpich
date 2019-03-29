@@ -73,31 +73,12 @@ int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_EXTENT);
 
-    /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif
-
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
-            /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(lb, "lb", mpi_errno);
             MPIR_ERRTEST_ARGNULL(extent, "extent", mpi_errno);
         }

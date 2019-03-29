@@ -103,20 +103,9 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
             MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-
-            /* Validate datatype_ptr */
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-                /* Q: Must the type be committed to be used with this function? */
-            }
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

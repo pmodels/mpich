@@ -150,7 +150,8 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(oldtype, "datatype", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -158,20 +159,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-
-    /* Convert MPI object handles to object pointers */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            /* If comm_ptr is not valid, it will be reset to null */
-            MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
     MPIR_Assert(datatype_ptr != NULL);
 
     /* ... body of routine ...  */

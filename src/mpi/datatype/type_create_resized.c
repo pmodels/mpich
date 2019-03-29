@@ -158,16 +158,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
-            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            /* If datatype_ptr is not valid, it will be reset to null */
-            if (mpi_errno)
-                goto fn_fail;
+            MPIR_ERRTEST_DATATYPE_PTR(oldtype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

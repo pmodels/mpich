@@ -87,14 +87,7 @@ int MPI_Type_create_hindexed(int count,
                 MPIR_ERRTEST_ARGNULL(array_of_displacements, "array_of_displacements", mpi_errno);
             }
 
-            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-
-            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-            }
+            MPIR_ERRTEST_DATATYPE_PTR(oldtype, "datatype", mpi_errno);
             for (j = 0; j < count; j++) {
                 MPIR_ERRTEST_ARGNEG(array_of_blocklengths[j], "blocklength", mpi_errno);
             }

@@ -77,37 +77,14 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_EXTENT_X);
 
-    /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-
-            /* TODO more checks may be appropriate */
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype *datatype_ptr = NULL;
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            }
-
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-            MPIR_ERRTEST_ARGNULL(extent, "extent", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(lb, "lb", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(extent, "extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

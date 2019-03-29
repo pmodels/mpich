@@ -124,30 +124,11 @@ int MPI_Type_commit(MPI_Datatype * datatype)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ARGNULL(datatype, "datatype", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(*datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(*datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
 #endif
-
-    /* Validate parameters and objects (post conversion) */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_Datatype *datatype_ptr = NULL;
-
-            /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr(*datatype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
 

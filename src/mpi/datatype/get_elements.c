@@ -67,39 +67,14 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_ELEMENTS);
 
-    /* Validate parameters, especially handles needing to be converted */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif
-
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
+            MPIR_ERRTEST_DATATYPE_COMMITTED(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
-            /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-            /* Validate datatype_ptr */
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-            }
         }
         MPID_END_ERROR_CHECKS;
     }

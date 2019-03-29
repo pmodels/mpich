@@ -245,18 +245,9 @@ int MPI_Type_vector(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *old_ptr = NULL;
-
             MPIR_ERRTEST_COUNT(count, mpi_errno);
             MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-
-            if (oldtype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(oldtype, old_ptr);
-                MPIR_Datatype_valid_ptr(old_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-            }
+            MPIR_ERRTEST_DATATYPE_PTR(oldtype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

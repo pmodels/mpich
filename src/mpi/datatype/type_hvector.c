@@ -103,19 +103,9 @@ int MPI_Type_hvector(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
             MPIR_ERRTEST_COUNT(count, mpi_errno);
             MPIR_ERRTEST_ARGNEG(blocklength, "blocklength", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-
-            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-            }
-
+            MPIR_ERRTEST_DATATYPE_PTR(oldtype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

@@ -85,19 +85,7 @@ int MPI_Unpack_external(const char datarep[],
             MPIR_ERRTEST_COUNT(insize, mpi_errno);
             MPIR_ERRTEST_COUNT(outcount, mpi_errno);
 
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-
-            if (datatype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype *datatype_ptr = NULL;
-
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-            }
-
-            /* If datatye_ptr is not valid, it will be reset to null */
-            if (mpi_errno)
-                goto fn_fail;
+            MPIR_ERRTEST_DATATYPE_COMMITTED(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

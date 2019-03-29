@@ -150,7 +150,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -161,8 +161,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
-
             /* Check for built-in type */
             if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
@@ -185,15 +183,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
                                                  MPI_ERR_TYPE, "**contentspredef", 0);
                 goto fn_fail;
             }
-
-            /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            /* If comm_ptr is not value, it will be reset to null */
-            if (mpi_errno)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

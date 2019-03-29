@@ -80,32 +80,13 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint * true_lb, MPI_Aint
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#endif
-
-    /* Validate parameters and objects (post conversion) */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_Datatype *datatype_ptr = NULL;
-
-            /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(true_lb, "true_lb", mpi_errno);
             MPIR_ERRTEST_ARGNULL(true_extent, "true_extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#endif /* HAVE_ERROR_CHECKING */
+#endif
 
     /* ... body of routine ...  */
 

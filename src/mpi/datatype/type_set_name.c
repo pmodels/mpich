@@ -65,7 +65,7 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_PTR(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -81,9 +81,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
         {
             int slen;
 
-            /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            /* If datatype_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_ARGNULL(type_name, "type_name", mpi_errno);
 
             slen = (int) strlen(type_name);
