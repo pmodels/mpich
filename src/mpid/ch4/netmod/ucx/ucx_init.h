@@ -12,6 +12,7 @@
 #include "ucx_impl.h"
 #include "mpir_cvars.h"
 #include "ucx_types.h"
+#include "ucx_vni.h"
 #include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 #undef FUNCNAME
@@ -116,7 +117,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank,
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
 
-    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
+    /* Initialize the pool of VNIs */
+    MPIDI_UCX_vni_pool_init();
+
+    MPIDIG_init(comm_world, comm_self);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
