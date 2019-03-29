@@ -393,6 +393,35 @@ cvars:
         }                                                               \
     }
 
+/* MPIR_ERRTEST_DATATYPE plus test for valid ptr */
+#define MPIR_ERRTEST_DATATYPE_PTR(datatype, name_, err_) \
+    do { \
+        MPIR_ERRTEST_DATATYPE(datatype, name_, err_); \
+        if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) { \
+            MPIR_Datatype *datatype_ptr = NULL; \
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr); \
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno); \
+            if (mpi_errno) \
+                goto fn_fail; \
+        } \
+    } while (0)
+
+/* MPIR_ERRTEST_DATATYPE plus test for valid and committed ptr */
+#define MPIR_ERRTEST_DATATYPE_COMMITTED(datatype, name_, err_) \
+    do { \
+        MPIR_ERRTEST_DATATYPE(datatype, name_, err_); \
+        if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) { \
+            MPIR_Datatype *datatype_ptr = NULL; \
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr); \
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno); \
+            if (mpi_errno) \
+                goto fn_fail; \
+            MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno); \
+            if (mpi_errno) \
+                goto fn_fail; \
+        } \
+    } while (0)
+
 #define MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype_, err_)                   \
     do {                                                                \
         if (!MPIR_Type_is_rma_atomic(datatype_)) {                      \
