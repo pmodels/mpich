@@ -1210,14 +1210,14 @@ static inline int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s)
 }
 
 static inline int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count, MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm, MPIR_Sched_t s)
+                                            int root, MPIR_Comm * comm, void *s)
 {
     int mpi_errno;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
 
-    mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm, s);
+    mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm, *(void *) s);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
     return mpi_errno;

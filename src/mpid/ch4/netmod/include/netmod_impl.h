@@ -1800,7 +1800,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
                                                        MPI_Datatype datatype, int root,
-                                                       MPIR_Comm * comm, MPIR_Sched_t s)
+                                                       MPIR_Comm * comm, void *s)
 {
     int ret;
 

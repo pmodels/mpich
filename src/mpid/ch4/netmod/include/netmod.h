@@ -388,7 +388,7 @@ typedef int (*MPIDI_NM_mpi_iscatterv_t) (const void *sendbuf, const int *sendcou
                                          MPIR_Comm * comm_ptr, MPIR_Request ** req);
 typedef int (*MPIDI_NM_mpi_ibarrier_sched_t) (MPIR_Comm * comm, MPIR_Sched_t s);
 typedef int (*MPIDI_NM_mpi_ibcast_sched_t) (void *buffer, int count, MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm, MPIR_Sched_t s);
+                                            int root, MPIR_Comm * comm, void *s);
 typedef int (*MPIDI_NM_mpi_iallgather_sched_t) (const void *sendbuf, int sendcount,
                                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                 MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -1197,7 +1197,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
                                                        MPI_Datatype datatype, int root,
                                                        MPIR_Comm * comm,
-                                                       MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+                                                       void *s) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, int sendcount,
                                                            MPI_Datatype sendtype, void *recvbuf,
                                                            int recvcount, MPI_Datatype recvtype,
