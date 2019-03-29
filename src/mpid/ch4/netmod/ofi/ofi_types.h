@@ -173,18 +173,6 @@ static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 
 /* Typedefs */
 enum {
-    MPIDI_OFI_CTRL_ASSERT,    /**< Lock acknowledge      */
-    MPIDI_OFI_CTRL_LOCKACK,   /**< Lock acknowledge      */
-    MPIDI_OFI_CTRL_LOCKALLACK,/**< Lock all acknowledge  */
-    MPIDI_OFI_CTRL_LOCKREQ,   /**< Lock window           */
-    MPIDI_OFI_CTRL_LOCKALLREQ,/**< Lock all window       */
-    MPIDI_OFI_CTRL_UNLOCK,    /**< Unlock window         */
-    MPIDI_OFI_CTRL_UNLOCKACK, /**< Unlock window         */
-    MPIDI_OFI_CTRL_UNLOCKALL, /**< Unlock window         */
-    MPIDI_OFI_CTRL_UNLOCKALLACK,
-    /**< Unlock window         */
-    MPIDI_OFI_CTRL_COMPLETE,  /**< End a START epoch     */
-    MPIDI_OFI_CTRL_POST,      /**< Begin POST epoch      */
     MPIDI_OFI_CTRL_HUGE,      /**< Huge message          */
     MPIDI_OFI_CTRL_HUGEACK    /**< Huge message ack      */
     /**< Huge message cleanup  */
@@ -211,11 +199,6 @@ enum {
     MPIDI_OFI_EVENT_INJECT_EMU,
     MPIDI_OFI_EVENT_DYNPROC_DONE,
     MPIDI_OFI_EVENT_ACCEPT_PROBE
-};
-
-enum {
-    MPIDI_OFI_REQUEST_LOCK,
-    MPIDI_OFI_REQUEST_LOCKALL
 };
 
 enum {
