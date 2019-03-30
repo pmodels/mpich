@@ -376,7 +376,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Datatype *datatype_ptr = NULL;
             MPIR_Op *op_ptr = NULL;
 
             MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
@@ -385,17 +384,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 
             MPIR_ERRTEST_COUNT(recvcount, mpi_errno);
 
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-            }
-
+            MPIR_ERRTEST_DATATYPE_COMMITTED(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcount, mpi_errno);
             if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, recvcount, mpi_errno);

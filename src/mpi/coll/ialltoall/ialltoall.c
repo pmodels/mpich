@@ -401,10 +401,10 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         {
             if (sendbuf != MPI_IN_PLACE) {
                 MPIR_ERRTEST_COUNT(sendcount, mpi_errno);
-                MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
+                MPIR_ERRTEST_DATATYPE_COMMITTED(sendtype, "sendtype", mpi_errno);
             }
             MPIR_ERRTEST_COUNT(recvcount, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_COMMITTED(recvtype, "recvtype", mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */

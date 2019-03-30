@@ -223,18 +223,8 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             MPIR_ERRTEST_COUNT(count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_COMMITTED(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_OP(op, mpi_errno);
-
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-            }
 
             rank = comm_ptr->rank;
 

@@ -235,8 +235,8 @@ int MPI_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendt
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_COMMITTED(sendtype, "sendtype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE_COMMITTED(recvtype, "recvtype", mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
@@ -253,20 +253,6 @@ int MPI_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendt
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype *sendtype_ptr = NULL;
-                MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
-                MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
-                MPIR_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
-            }
-
-            if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
-                MPIR_Datatype *recvtype_ptr = NULL;
-                MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
-                MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
-                MPIR_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
-            }
-
             MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS)
