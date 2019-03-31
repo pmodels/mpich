@@ -59,6 +59,8 @@ int main(int argc, char *argv[])
     int i, j, key[32], keyval, saveKeyval;
     int obj_idx;
     int count;
+    int testsize;
+    unsigned seed;
     MPI::Datatype type, duptype;
     MPI::Datatype basic_type;
     DTP_t dtp;
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
 
     MTest_Init();
 
-    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type);
+    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type, &seed, &testsize);
     if (err)
         return 1;
 

@@ -22,13 +22,13 @@ extern "C" {
 #include "dtpools.h"
 }
 #include <stdlib.h>
-
-
 int main(int argc, char *argv[])
 {
     int err, errs = 0;
     int i, j;
     int count;
+    int testsize;
+    unsigned seed;
     MPI::Datatype type;
     MPI::Datatype basic_type;
     MPI::Intracomm comm;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     comm = MPI::COMM_WORLD;
 
-    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type);
+    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type, &seed, &testsize);
     if (err)
         return 1;
 
