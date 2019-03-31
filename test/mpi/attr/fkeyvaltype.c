@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
     int obj_idx;
     int count;
     int tnlen;
+    int testsize;
+    unsigned seed;
     MPI_Datatype type, duptype;
     DTP_t dtp;
     char typename[MPI_MAX_OBJECT_NAME];
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     MPI_Datatype basic_type;
 
-    err = MTestInitBasicSignature(argc, argv, &count, &basic_type);
+    err = MTestInitBasicSignature(argc, argv, &count, &basic_type, &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
@@ -74,7 +76,9 @@ int main(int argc, char *argv[])
     int basic_type_num;
     int *basic_type_counts = NULL;
 
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
+    err =
+        MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types,
+                                 &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
