@@ -101,8 +101,10 @@ int main(int argc, char *argv[])
     int err, errs = 0;
     int rank, size, orig, target;
     int minsize = 2;
-    int i, j;
+    int i, j, x, y;
     int count;
+    int testsize;
+    unsigned seed;
     MPI_Aint bufsize;
     MPI_Comm comm;
     DTP_t orig_dtp, target_dtp;
@@ -115,7 +117,7 @@ int main(int argc, char *argv[])
     int len;
     char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
-    err = MTestInitBasicSignature(argc, argv, &count, &basic_type);
+    err = MTestInitBasicSignature(argc, argv, &count, &basic_type, &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
@@ -141,7 +143,9 @@ int main(int argc, char *argv[])
     int *basic_type_counts = NULL;
     int basic_type_num;
 
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
+    err =
+        MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types,
+                                 &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
@@ -166,6 +170,8 @@ int main(int argc, char *argv[])
     count = 0;
 #endif
 
+    srand(seed);
+
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
      * Use subsets of these for tests that do not involve combinations
@@ -179,14 +185,17 @@ int main(int argc, char *argv[])
         orig = 0;
         target = size - 1;
 
-        for (i = 0; i < orig_dtp->DTP_num_objs; i++) {
+        for (x = 0; x < testsize; x++) {
+            i = rand() % orig_dtp->DTP_num_objs;
+            MPI_Bcast(&i, 1, MPI_INT, orig, comm);
             err = DTP_obj_create(orig_dtp, i, 0, 1, count);
             if (err != DTP_SUCCESS) {
                 errs++;
                 break;
             }
 
-            for (j = 0; j < target_dtp->DTP_num_objs; j++) {
+            for (y = 0; y < testsize; y++) {
+                j = rand() % target_dtp->DTP_num_objs;
                 err = DTP_obj_create(target_dtp, j, 0, 0, 0);
                 if (err != DTP_SUCCESS) {
                     errs++;

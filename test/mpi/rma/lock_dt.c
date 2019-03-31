@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
     int err, errs = 0;
     int rank, size, orig, target;
     int minsize = 2, count;
-    int i, j;
+    int i, j, x, y;
+    int testsize;
+    unsigned seed;
     MPI_Aint origcount, targetcount;
     MPI_Comm comm;
     MPI_Win win;
@@ -37,7 +39,7 @@ int main(int argc, char *argv[])
     int len;
     char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
-    err = MTestInitBasicSignature(argc, argv, &count, &basic_type);
+    err = MTestInitBasicSignature(argc, argv, &count, &basic_type, &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
@@ -59,7 +61,9 @@ int main(int argc, char *argv[])
     int *basic_type_counts = NULL;
     int basic_type_num;
 
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
+    err =
+        MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types,
+                                 &seed, &testsize);
     if (err)
         return MTestReturnValue(1);
 
@@ -79,6 +83,8 @@ int main(int argc, char *argv[])
     count = 0;
 #endif
 
+    srand(seed);
+
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL)
             continue;
@@ -88,7 +94,9 @@ int main(int argc, char *argv[])
         orig = 0;
         target = size - 1;
 
-        for (i = 0; i < target_dtp->DTP_num_objs; i++) {
+        for (x = 0; x < testsize; x++) {
+            i = rand() % target_dtp->DTP_num_objs;
+            MPI_Bcast(&i, 1, MPI_INT, orig, comm);
             err = DTP_obj_create(target_dtp, i, 0, 0, 0);
             if (err != DTP_SUCCESS) {
                 errs++;
@@ -104,7 +112,8 @@ int main(int argc, char *argv[])
             MPI_Win_create(targetbuf, lb + targetcount * extent,
                            (int) extent, MPI_INFO_NULL, comm, &win);
 
-            for (j = 0; j < orig_dtp->DTP_num_objs; j++) {
+            for (y = 0; y < testsize; y++) {
+                j = rand() % orig_dtp->DTP_num_objs;
                 err = DTP_obj_create(orig_dtp, j, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
