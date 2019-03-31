@@ -6,6 +6,8 @@
 # Generate datatype testing build instructions for every line in
 # configuration file basictypetest.txt and structtypetest.txt
 
+seed=""      # seed for obj idx random selection
+testsize=""  # number of objs to randomly pick from pool
 types=""     # basic MPI datatypes for type signature
 counts=""    # counts for type signature
 pathname=""  # source file pathname
@@ -31,15 +33,17 @@ while read -r line
 do
     if [ ! `echo $line | head -c 1` = "#" ] ; then
         # the line is not a comment
-        pathname=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\1|'`
-        macros=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\2|'`
-        counts=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\3|'`
-        timelimit=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\4|'`
-        procs=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\5|'`
+        pathname=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\1|'`
+        macros=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\2|'`
+        seed=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\3|'`
+        testsize=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\4|'`
+        counts=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\5|'`
+        timelimit=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\6|'`
+        procs=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\7|'`
         other_macros=""
     else
         # the line is a comment
-        pathname=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\1|'`
+        pathname=`echo $line | sed -E 's|(.+):(.*):(.*):(.*):(.+):(.*):(.+)|\1|'`
         ln=$((ln+1)) # increment line number
         continue
     fi
@@ -71,6 +75,14 @@ do
         other_macros="$other_macros -D$macro "
     done
 
+    if [ ! -z "$seed" ] ; then
+        seed="arg=-seed=${seed}"
+    fi
+
+    if [ ! -z "$testsize" ] ; then
+        testsize="arg=-testsize=${testsize}"
+    fi
+
     printf "basictypetest.txt:${ln}: Generate tests for: ${source}.${ext} ... "
 
     # generate Makefile.dtp
@@ -90,7 +102,7 @@ do
                 # do combination of different send recv count where recv count >= send count
                 for recvcount in $recvcounts
                 do
-                    echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} $timelimit" >> ${dir}/testlist.dtp
+                    echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} ${seed} ${testsize} $timelimit" >> ${dir}/testlist.dtp
                      # limit the mixed pool case to only one
                      # TODO: this should be defined in the config file
                     if [ $recvcount -gt $sendcount ]; then
@@ -99,7 +111,7 @@ do
                 done
                 recvcounts=`echo $recvcounts | sed -e "s|$sendcount||"` # update recv counts
             else
-                echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-count=${sendcount} $timelimit" >> ${dir}/testlist.dtp
+                echo "${source}__BASIC__L${ln} $procs arg=-type=${type} arg=-count=${sendcount} ${seed} ${testsize} $timelimit" >> ${dir}/testlist.dtp
             fi
         done
     done

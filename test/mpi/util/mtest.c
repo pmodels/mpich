@@ -1396,12 +1396,29 @@ struct _dt_type {
 };
 static struct _dt_type typelist[] = { DTPOOLS_TYPE_LIST };
 
-int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type,
+                            unsigned *seed, int *testsize)
 {
     int i, j;
+    char *seed_str = NULL;
+    char *testsize_str = NULL;
+
+    /* set defaults for seed and testsize */
+    seed_str = getenv("MTEST_SEED");
+    if (seed_str)
+        *seed = (unsigned) atoi(seed_str);
+    else
+        *seed = 1;
+
+    testsize_str = getenv("MTEST_TESTSIZE");
+    if (testsize_str)
+        *testsize = atoi(testsize_str);
+    else
+        *testsize = 5;
 
     if (argc < 3) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
+        fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT] -seed=[OPT] -testsize=[OPT]\n",
+                argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
@@ -1420,6 +1437,10 @@ int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * b
                 }
             } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
                 *count = atoi(argv[i] + strlen("-count="));
+            } else if (!strncmp(argv[i], "-seed=", strlen("-seed="))) {
+                *seed = (unsigned) atoi(argv[i] + strlen("-seed="));
+            } else if (!strncmp(argv[i], "-testsize=", strlen("-testsize="))) {
+                *testsize = atoi(argv[i] + strlen("-testsize="));
             }
         }
     }
@@ -1427,12 +1448,30 @@ int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * b
     return MTestReturnValue(0);
 }
 
-int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type,
+                                 unsigned *seed, int *testsize)
 {
     int i, j;
+    char *seed_str = NULL;
+    char *testsize_str = NULL;
+
+    /* set defaults for seed and testsize */
+    seed_str = getenv("MTEST_SEED");
+    if (seed_str)
+        *seed = (unsigned) atoi(seed_str);
+    else
+        *seed = 1;
+
+    testsize_str = getenv("MTEST_TESTSIZE");
+    if (testsize_str)
+        *testsize = atoi(testsize_str);
+    else
+        *testsize = 5;
 
     if (argc < 4) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT]\n", argv[0]);
+        fprintf(stdout,
+                "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT] -seed=[OPT] -testsize=[OPT]\n",
+                argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
@@ -1453,6 +1492,10 @@ int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatyp
                 count[0] = atoi(argv[i] + strlen("-sendcnt="));
             } else if (!strncmp(argv[i], "-recvcnt=", strlen("-recvcnt="))) {
                 count[1] = atoi(argv[i] + strlen("-recvcnt="));
+            } else if (!strncmp(argv[i], "-seed=", strlen("-seed="))) {
+                *seed = (unsigned) atoi(argv[i] + strlen("-seed="));
+            } else if (!strncmp(argv[i], "-testsize=", strlen("-testsize="))) {
+                *testsize = atoi(argv[i] + strlen("-testsize="));
             }
         }
     }
@@ -1461,13 +1504,30 @@ int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatyp
 }
 
 int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts,
-                             MPI_Datatype ** basic_types)
+                             MPI_Datatype ** basic_types, unsigned *seed, int *testsize)
 {
     int i, j, k;
     char *input_string, *token;
+    char *seed_str = NULL;
+    char *testsize_str = NULL;
+
+    /* set defaults for seed and testsize */
+    seed_str = getenv("MTEST_SEED");
+    if (seed_str)
+        *seed = (unsigned) atoi(seed_str);
+    else
+        *seed = 1;
+
+    testsize_str = getenv("MTEST_TESTSIZE");
+    if (testsize_str)
+        *testsize = atoi(testsize_str);
+    else
+        *testsize = 5;
 
     if (argc < 4) {
-        fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
+        fprintf(stdout,
+                "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS] -seed=[OPT] -testsize=[OPT]\n",
+                argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
@@ -1503,6 +1563,10 @@ int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts
                 }
 
                 free(input_string);
+            } else if (!strncmp(argv[i], "-seed=", strlen("-seed="))) {
+                *seed = (unsigned) atoi(argv[i] + strlen("-seed="));
+            } else if (!strncmp(argv[i], "-testsize=", strlen("-testsize="))) {
+                *testsize = atoi(argv[i] + strlen("-testsize="));
             }
         }
     }
