@@ -23,8 +23,6 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size;
-    MPI_Aint recvtype_sz;
-    void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
@@ -46,6 +44,9 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
     } else {
         /* remote group. rank 0 receives data from root. need to
          * allocate temporary buffer to store this data. */
+        MPI_Aint recvtype_sz;
+        void *tmp_buf = NULL;
+
         rank = comm_ptr->rank;
 
         if (rank == 0) {
@@ -60,6 +61,9 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
+        } else {
+            /* silience -Wmaybe-uninitialized due to MPIR_Iscatter_sched by non-zero ranks */
+            recvtype_sz = 0;
         }
 
         /* Get the local intracommunicator */
