@@ -34,6 +34,9 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
         MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount * local_size * sendtype_sz, mpi_errno,
                                   "tmp_buf", MPL_MEM_BUFFER);
+    } else {
+        /* silence -Wmaybe-uninitialized due to MPIR_{Igather,Ibcast}_sched by non-zero ranks */
+        sendtype_sz = 0;
     }
 
     /* Get the local intracommunicator */

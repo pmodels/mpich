@@ -23,8 +23,6 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint recvtype_sz;
-    void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
 
@@ -53,6 +51,8 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
     } else {
         /* remote group. rank 0 receives data from root. need to
          * allocate temporary buffer to store this data. */
+        MPI_Aint recvtype_sz;
+        void *tmp_buf = NULL;
 
         rank = comm_ptr->rank;
 
@@ -72,6 +72,9 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
+        } else {
+            /* silience -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */
+            recvtype_sz = 0;
         }
 
         /* Get the local intracommunicator */
