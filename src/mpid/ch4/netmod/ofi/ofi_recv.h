@@ -190,10 +190,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
-    int src_vni;
+    int my_vni, src_vni;
 
+    my_vni = MPIDI_VCI(vci).vni;
     /* For now, VCI i communicates only with VCI i on other ranks */
-    src_vni = MPIDI_VCI(vci).vni;
+    src_vni = my_vni;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -258,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_CTX(0).rx,
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_CTX(my_vni).rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
@@ -266,7 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                        rank) ? FI_ADDR_UNSPEC :
                                       MPIDI_OFI_av_to_phys_target_vni(addr, src_vni), match_bits,
                                       mask_bits, (void *) &(MPIDI_OFI_REQUEST(rreq, context))),
-                             trecv, MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
+                             trecv, MPIDI_OFI_CALL_LOCK, FALSE, vci);
     else {
         MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
         MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
@@ -300,7 +301,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int tag,
                                                MPIR_Comm * comm,
                                                int context_offset, MPIDI_av_entry_t * addr,
-                                               MPI_Status * status, MPIR_Request ** request)
+                                               MPI_Status * status, MPIR_Request ** request,
+                                               int vci)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV);
@@ -314,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
 #endif
     {
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                       context_offset, addr, 0, request, MPIDI_OFI_ON_HEAP, 0ULL);
+                                       context_offset, addr, vci, request, MPIDI_OFI_ON_HEAP, 0ULL);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
@@ -375,7 +377,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 int rank,
                                                 int tag,
                                                 MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
+                                                MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                int vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IRECV);
@@ -389,7 +392,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 #endif
     {
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                       context_offset, addr, 0, request, MPIDI_OFI_ON_HEAP, 0ULL);
+                                       context_offset, addr, vci, request, MPIDI_OFI_ON_HEAP, 0ULL);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
