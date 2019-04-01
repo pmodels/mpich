@@ -27,7 +27,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size;
-    MPI_Aint recvtype_sz;
+    MPI_Aint recvtype_sz = 0;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);

@@ -27,7 +27,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint recvtype_sz;
+    MPI_Aint recvtype_sz = 0;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);

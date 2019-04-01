@@ -25,7 +25,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, int send
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint sendtype_sz;
+    MPI_Aint sendtype_sz = 0;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
 

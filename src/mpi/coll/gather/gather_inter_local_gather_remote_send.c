@@ -27,7 +27,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint sendtype_sz;
+    MPI_Aint sendtype_sz = 0;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);

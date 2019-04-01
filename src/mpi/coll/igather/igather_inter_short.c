@@ -25,7 +25,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
     int mpi_errno = MPI_SUCCESS;
     int rank;
     MPI_Aint local_size, remote_size;
-    MPI_Aint sendtype_sz;
+    MPI_Aint sendtype_sz = 0;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
