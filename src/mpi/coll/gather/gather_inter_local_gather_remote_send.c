@@ -23,8 +23,6 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint sendtype_sz;
-    void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
 
@@ -53,6 +51,8 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator gather, and then sends the data
          * to root. */
+        MPI_Aint sendtype_sz;
+        void *tmp_buf = NULL;
 
         rank = comm_ptr->rank;
 
@@ -61,6 +61,9 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
                                 sendcount * local_size * sendtype_sz, mpi_errno,
                                 "tmp_buf", MPL_MEM_BUFFER);
+        } else {
+            /* silence -Wmaybe-uninitialized due to MPIR_Gather by non-zero ranks */
+            sendtype_sz = 0;
         }
 
         /* all processes in remote group form new intracommunicator */
