@@ -168,7 +168,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 
     MPIR_Dataloop_create(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
 
-#ifdef MPID_Type_commit_hook
     int err = MPID_Type_commit_hook(new_dtp);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -181,7 +180,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 
     }
     /* --END ERROR HANDLING-- */
-#endif /* MPID_Type_commit_hook */
 
     return mpi_errno;
 }
