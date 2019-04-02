@@ -99,9 +99,7 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         if (old_dtp->is_committed) {
             MPIR_Assert(old_dtp->dataloop != NULL);
             MPIR_Dataloop_dup(old_dtp->dataloop, old_dtp->dataloop_size, &new_dtp->dataloop);
-#ifdef MPID_Type_commit_hook
             MPID_Type_commit_hook(new_dtp);
-#endif /* MPID_Type_commit_hook */
         }
     }
 

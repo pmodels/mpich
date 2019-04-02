@@ -53,9 +53,7 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
         MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
                       (int) datatype_ptr->max_contig_blocks);
 
-#ifdef MPID_Type_commit_hook
         MPID_Type_commit_hook(datatype_ptr);
-#endif /* MPID_Type_commit_hook */
 
     }
     return mpi_errno;
