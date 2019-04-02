@@ -146,6 +146,8 @@ int MPIR_Type_indexed(int count,
 
         new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
         new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
+
+        new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->builtin_element_size = (MPI_Aint) el_sz;
         new_dtp->basic_type = el_type;
 
