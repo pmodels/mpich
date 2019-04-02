@@ -251,6 +251,8 @@ AC_ARG_ENABLE(collalgo-tests,
                               [Run extended collective algorithm tests])],,
               [enable_collalgo_tests=no])
 
+AC_CONFIG_COMMANDS_POST($srcdir/gentests.sh)
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,

@@ -1,0 +1,7 @@
+noinst_PROGRAMS += fkeyvaltype fkeyvaltype_struct
+
+fkeyvaltype_CPPFLAGS = $(AM_CPPFLAGS)
+fkeyvaltype_SOURCES = fkeyvaltype.c
+
+fkeyvaltype_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+fkeyvaltype_struct_SOURCES = fkeyvaltype.c

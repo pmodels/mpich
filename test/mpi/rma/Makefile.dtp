@@ -1,0 +1,121 @@
+noinst_PROGRAMS += accfence1                       \
+                   accpscw1                        \
+                   epochtest                       \
+                   getfence1                       \
+                   lock_contention_dt              \
+                   lock_dt                         \
+                   lock_dt_flush                   \
+                   lock_dt_flushlocal              \
+                   lockall_dt                      \
+                   lockall_dt_flush                \
+                   lockall_dt_flushall             \
+                   lockall_dt_flushlocal           \
+                   lockall_dt_flushlocalall        \
+                   putfence1                       \
+                   putpscw1                        \
+                   accfence1_struct                \
+                   accpscw1_struct                 \
+                   epochtest_struct                \
+                   getfence1_struct                \
+                   lock_contention_dt_struct       \
+                   lock_dt_struct                  \
+                   lock_dt_flush_struct            \
+                   lock_dt_flushlocal_struct       \
+                   lockall_dt_struct               \
+                   lockall_dt_flush_struct         \
+                   lockall_dt_flushall_struct      \
+                   lockall_dt_flushlocal_struct    \
+                   lockall_dt_flushlocalall_struct \
+                   putfence1_struct                \
+                   putpscw1_struct
+
+
+accfence1_CPPFLAGS = $(AM_CPPFLAGS)
+accfence1_SOURCES = accfence1.c
+
+accpscw1_CPPFLAGS = $(AM_CPPFLAGS)
+accpscw1_SOURCES = accpscw1.c
+
+epochtest_CPPFLAGS = $(AM_CPPFLAGS)
+epochtest_SOURCES = epochtest.c
+
+getfence1_CPPFLAGS = $(AM_CPPFLAGS)
+getfence1_SOURCES = getfence1.c
+
+lock_contention_dt_CPPFLAGS = $(AM_CPPFLAGS)
+lock_contention_dt_SOURCES = lock_contention_dt.c
+
+lock_dt_CPPFLAGS = $(AM_CPPFLAGS)
+lock_dt_SOURCES = lock_dt.c
+
+lock_dt_flush_CPPFLAGS = $(AM_CPPFLAGS)
+lock_dt_flush_SOURCES = lock_dt_flush.c
+
+lock_dt_flushlocal_CPPFLAGS = $(AM_CPPFLAGS)
+lock_dt_flushlocal_SOURCES = lock_dt_flushlocal.c
+
+lockall_dt_CPPFLAGS = $(AM_CPPFLAGS)
+lockall_dt_SOURCES = lockall_dt.c
+
+lockall_dt_flush_CPPFLAGS = $(AM_CPPFLAGS)
+lockall_dt_flush_SOURCES = lockall_dt_flush.c
+
+lockall_dt_flushall_CPPFLAGS = $(AM_CPPFLAGS)
+lockall_dt_flushall_SOURCES = lockall_dt_flushall.c
+
+lockall_dt_flushlocal_CPPFLAGS = $(AM_CPPFLAGS)
+lockall_dt_flushlocal_SOURCES = lockall_dt_flushlocal.c
+
+lockall_dt_flushlocalall_CPPFLAGS = $(AM_CPPFLAGS)
+lockall_dt_flushlocalall_SOURCES = lockall_dt_flushlocalall.c
+
+putfence1_CPPFLAGS = $(AM_CPPFLAGS)
+putfence1_SOURCES = putfence1.c
+
+putpscw1_CPPFLAGS = $(AM_CPPFLAGS)
+putpscw1_SOURCES = putpscw1.c
+
+accfence1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+accfence1_struct_SOURCES = accfence1.c
+
+accpscw1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT FLAGS)
+accpscw1_struct_SOURCES = accpscw1.c
+
+epochtest_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+epochtest_struct_SOURCES = epochtest.c
+
+getfence1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+getfence1_struct_SOURCES = getfence1.c
+
+lock_contention_dt_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lock_contention_dt_struct_SOURCES = lock_contention_dt.c
+
+lock_dt_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lock_dt_struct_SOURCES = lock_dt.c
+
+lock_dt_flush_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lock_dt_flush_struct_SOURCES = lock_dt_flush.c
+
+lock_dt_flushlocal_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lock_dt_flushlocal_struct_SOURCES = lock_dt_flushlocal.c
+
+lockall_dt_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lockall_dt_struct_SOURCES = lockall_dt.c
+
+lockall_dt_flush_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lockall_dt_flush_struct_SOURCES = lockall_dt_flush.c
+
+lockall_dt_flushall_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lockall_dt_flushall_struct_SOURCES = lockall_dt_flushall.c
+
+lockall_dt_flushlocal_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lockall_dt_flushlocal_struct_SOURCES = lockall_dt_flushlocal.c
+
+lockall_dt_flushlocalall_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+lockall_dt_flushlocalall_struct_SOURCES = lockall_dt_flushlocalall.c
+
+putfence1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+putfence1_struct_SOURCES = putfence1.c
+
+putpscw1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+putpscw1_struct_SOURCES = putpscw1.c
