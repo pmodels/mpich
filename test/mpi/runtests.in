@@ -415,7 +415,6 @@ sub RunList {
     my $listfile = $_[0];
     my $ResultTest = "";
     my $InitForRun = "";
-    my $listfileSource = $listfile;
     my @TYPES = "";
     my $DTP_SWITCH = "@DTP_SWITCH@";
 
@@ -426,10 +425,19 @@ sub RunList {
         @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
     }
 
-    print "Looking in $curdir/$listfile\n" if $debug;
-    if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
-	$listfileSource = "$srcdir/$curdir/$listfile";
-    }
+    # eg: runtests -tests='testlist,testlist.dtp'
+    my @all_listfiles = split /,\s*/, $listfile;
+    foreach my $_f (@all_listfiles){
+        print "Looking in $curdir/$_f\n" if $debug;
+        my $listfileSource = $_f;
+        if (! -s "$_f" && -s "$srcdir/$curdir/$_f" ) {
+            $listfileSource = "$srcdir/$curdir/$_f";
+        }
+        if (!-f $listfileSource && $_f ne "testlist") {
+            # just skip, do not complain missing unless it is "testlist"
+            next;
+        }
+        # FIXME: keeping the indentation to facilitate review, indent back on merge
     open( $LIST, "<$listfileSource" ) || 
 	die "Could not open $listfileSource\n";
     while (<$LIST>) {
@@ -642,6 +650,7 @@ sub RunList {
 	}
     }
     close( $LIST );
+    }
 }
 #
 # This routine tries to run all of the files in the current
