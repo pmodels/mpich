@@ -735,4 +735,9 @@ int MPID_Free_mem( void *ptr );
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
 int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
 
+int MPID_Type_commit_hook(MPIR_Datatype * type);
+int MPID_Type_free_hook(MPIR_Datatype * type);
+int MPID_Op_commit_hook(MPIR_Op * op);
+int MPID_Op_free_hook(MPIR_Op * op);
+
 #endif /* MPIDPRE_H_INCLUDED */
