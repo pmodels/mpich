@@ -1,15 +1,15 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
+ *  (C) 2019 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2019 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-/* Header protection (i.e., IBCAST_TSP_SCATTER_RECEXCH_ALLGATHER_ALGOS_H_INCLUDED) is
+/* Header protection (i.e., IBCAST_TSP_SCATTERV_ALLGATHERV_ALGOS_H_INCLUDED) is
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
@@ -18,10 +18,10 @@
 #include "../iallgatherv/iallgatherv_tsp_recexch_algos_prototypes.h"
 
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
-int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int count,
-                                                          MPI_Datatype datatype, int root,
-                                                          MPIR_Comm * comm, int scatter_k,
-                                                          int allgather_k, MPIR_TSP_sched_t * sched)
+int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
+                                                    MPI_Datatype datatype, int root,
+                                                    MPIR_Comm * comm, int scatterv_k,
+                                                    int allgatherv_k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t extent, type_size;
@@ -44,8 +44,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
@@ -101,7 +101,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
     /* knomial scatter for bcast */
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for scatter */
-    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, scatter_k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, scatterv_k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -112,7 +112,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     /* get tree information of the parent */
     if (my_tree.parent != -1) {
         mpi_errno =
-            MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, scatter_k, root,
+            MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, scatterv_k, root,
                                       &parents_tree);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -179,7 +179,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     /* Schedule Allgatherv */
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf, cnts,
-                                                 displs, MPI_BYTE, comm, 0, allgather_k, sched);
+                                                 displs, MPI_BYTE, comm, 0, allgatherv_k,
+                                                 sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -198,7 +199,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTER_RECEXCH_ALLGATHER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -206,15 +207,15 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
 
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
-int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
-                                                    int root, MPIR_Comm * comm, int scatter_k,
-                                                    int allgather_k, MPIR_Request ** req)
+int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datatype datatype,
+                                              int root, MPIR_Comm * comm, int scatterv_k,
+                                              int allgatherv_k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
 
     *req = NULL;
 
@@ -225,8 +226,8 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
 
     /* schedule scatter followed by recursive exchange allgather algo */
     mpi_errno =
-        MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                              comm, scatter_k, allgather_k, sched);
+        MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root, comm,
+                                                        scatterv_k, allgatherv_k, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -236,7 +237,7 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTER_RECEXCH_ALLGATHER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
