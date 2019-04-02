@@ -16,7 +16,7 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
-algo_names="gentran_tree gentran_scatter_recexch_allgather gentran_ring"
+algo_names="gentran_tree gentran_scatterv_recexch_allgatherv gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 

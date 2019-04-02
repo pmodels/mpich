@@ -765,10 +765,10 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, M
                      MPIR_Request ** request);
 int MPIR_Ibcast_intra_gentran_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
-int MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(void *buffer, int count,
-                                                        MPI_Datatype datatype, int root,
-                                                        MPIR_Comm * comm_ptr,
-                                                        MPIR_Request ** request);
+int MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv(void *buffer, int count,
+                                                          MPI_Datatype datatype, int root,
+                                                          MPIR_Comm * comm_ptr,
+                                                          MPIR_Request ** request);
 int MPIR_Ibcast_intra_gentran_ring(void *buffer, int count, MPI_Datatype datatype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
