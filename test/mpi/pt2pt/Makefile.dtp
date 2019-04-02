@@ -1,0 +1,24 @@
+noinst_PROGRAMS += pingping         \
+                   sendrecv1        \
+                   sendself         \
+                   pingping_struct  \
+                   sendrecv1_struct \
+                   sendself_struct
+
+pingping_CPPFLAGS = $(AM_CPPFLAGS)
+pingping_SOURCES = pingping.c
+
+sendrecv1_CPPFLAGS = $(AM_CPPFLAGS)
+sendrecv1_SOURCES = sendrecv1.c
+
+sendself_CPPFLAGS = $(AM_CPPFLAGS)
+sendself_SOURCES = sendself.c
+
+pingping_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+pingping_struct_SOURCES = pingping.c
+
+sendrecv1_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+sendrecv1_struct_SOURCES = sendrecv1.c
+
+sendself_struct_CPPFLAGS = -DUSE_DTP_POOL_TYPE__STRUCT $(AM_CPPFLAGS)
+sendself_struct_SOURCES = sendself.c
