@@ -93,9 +93,7 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
     MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
 
-#ifdef MPID_Op_commit_hook
     MPID_Op_commit_hook(op_ptr);
-#endif
 
   fn_exit:
     return mpi_errno;

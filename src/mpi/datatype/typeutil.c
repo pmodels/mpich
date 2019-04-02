@@ -573,3 +573,42 @@ MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
     }
     return contig_count;
 }
+
+/*@
+  MPIR_Datatype_free
+
+Input Parameters:
+. MPIR_Datatype ptr - pointer to MPID datatype structure that is no longer
+  referenced
+
+Output Parameters:
+  none
+
+  Return Value:
+  none
+
+  This function handles freeing dynamically allocated memory associated with
+  the datatype.  In the process MPIR_Datatype_free_contents() is also called,
+  which handles decrementing reference counts to constituent types (in
+  addition to freeing the space used for contents information).
+  MPIR_Datatype_free_contents() will call MPIR_Datatype_free() on constituent
+  types that are no longer referenced as well.
+
+  @*/
+void MPIR_Datatype_free(MPIR_Datatype * ptr)
+{
+    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "type %x freed.", ptr->handle);
+
+    MPID_Type_free_hook(ptr);
+
+    /* before freeing the contents, check whether the pointer is not
+     * null because it is null in the case of a datatype shipped to the target
+     * for RMA ops */
+    if (ptr->contents) {
+        MPIR_Datatype_free_contents(ptr);
+    }
+    if (ptr->dataloop) {
+        MPIR_Dataloop_free(&(ptr->dataloop));
+    }
+    MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
+}

@@ -150,7 +150,7 @@ extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
-static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
+void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
 #define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
@@ -360,47 +360,6 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 
     MPL_free(dtp->contents);
     dtp->contents = NULL;
-}
-
-/*@
-  MPIR_Datatype_free
-
-Input Parameters:
-. MPIR_Datatype ptr - pointer to MPID datatype structure that is no longer
-  referenced
-
-Output Parameters:
-  none
-
-  Return Value:
-  none
-
-  This function handles freeing dynamically allocated memory associated with
-  the datatype.  In the process MPIR_Datatype_free_contents() is also called,
-  which handles decrementing reference counts to constituent types (in
-  addition to freeing the space used for contents information).
-  MPIR_Datatype_free_contents() will call MPIR_Datatype_free() on constituent
-  types that are no longer referenced as well.
-
-  @*/
-static inline void MPIR_Datatype_free(MPIR_Datatype * ptr)
-{
-    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "type %x freed.", ptr->handle);
-
-#ifdef MPID_Type_free_hook
-    MPID_Type_free_hook(ptr);
-#endif /* MPID_Type_free_hook */
-
-    /* before freeing the contents, check whether the pointer is not
-     * null because it is null in the case of a datatype shipped to the target
-     * for RMA ops */
-    if (ptr->contents) {
-        MPIR_Datatype_free_contents(ptr);
-    }
-    if (ptr->dataloop) {
-        MPIR_Dataloop_free(&(ptr->dataloop));
-    }
-    MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
 }
 
 /*@

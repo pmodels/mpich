@@ -41,9 +41,7 @@ void MPIR_Op_free_impl(MPI_Op * op)
     MPIR_Op_ptr_release_ref(op_ptr, &in_use);
     if (!in_use) {
         MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
-#ifdef MPID_Op_free_hook
         MPID_Op_free_hook(op_ptr);
-#endif
     }
     *op = MPI_OP_NULL;
 }
