@@ -15,8 +15,10 @@
 #include <mpidch4.h>
 #include "mpidig.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_vci(int flags, int vci);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(MPIDI_hook_flags_t hook_flags,
+                                                 MPIDI_progress_type_t progress_type, int vci);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_global(MPIDI_hook_flags_t hook_flags);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_vci(MPIDI_hook_flags_t hook_flags, int vci);
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_hooks(void);
 
 /* Static inlines */
