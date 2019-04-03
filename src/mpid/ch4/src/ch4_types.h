@@ -32,7 +32,7 @@ typedef struct progress_hook_slot {
 
 /* Flags for MPIDI_Progress_test
  *
- * Flags argument allows to control execution of different parts of progress function,
+ * hook_flags argument allows to control execution of different parts of progress function,
  * for aims of prioritization of different transports and reentrant-safety of progress call.
  *
  * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internally,
