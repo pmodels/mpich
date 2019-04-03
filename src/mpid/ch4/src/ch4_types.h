@@ -30,7 +30,25 @@ typedef struct progress_hook_slot {
     int active;
 } progress_hook_slot_t;
 
-/* Flags for MPIDI_Progress_test
+/* Flags for the type of progress in MPIDI_Progress_test
+ *
+ * progress_type argument allows to control the type of progress to execute to avoid
+ * executing global progress in every execution of the progress function.
+ *
+ * MPIDI_PROGRESS_TYPE__GLOBAL - performs the global progress, that is, it progresses
+ * all the hooks, and all VCIs. Note that it will progress the progress hooks, VNIs,
+ * and VSIs only if the corresponding hook flags are set (see below).
+ *
+ * MPIDI_PROGRESS_TYPE__VCI - performs progress on only 1 VCI (specified). The VNIs
+ * and VSIs of the VCI will be progressed only if the corresponding hook flags are
+ * set.
+ */
+typedef enum {
+    MPIDI_PROGRESS_TYPE__GLOBAL,
+    MPIDI_PROGRESS_TYPE__VCI
+} MPIDI_progress_type_t;
+
+/* Flags for hooks in MPIDI_Progress_test
  *
  * hook_flags argument allows to control execution of different parts of progress function,
  * for aims of prioritization of different transports and reentrant-safety of progress call.
@@ -39,9 +57,11 @@ typedef struct progress_hook_slot {
  *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
  * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
  */
-#define MPIDI_PROGRESS_HOOKS  (1)
-#define MPIDI_PROGRESS_NM     (1<<1)
-#define MPIDI_PROGRESS_SHM    (1<<2)
+typedef enum {
+    MPIDI_PROGRESS_HOOKS = 0x1,
+    MPIDI_PROGRESS_NM = 0x2,
+    MPIDI_PROGRESS_SHM = 0x4,
+} MPIDI_hook_flags_t;
 
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
