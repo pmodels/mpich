@@ -9,6 +9,7 @@
  */
 
 #include "mpidimpl.h"
+#include "posix_noinline.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_comm_create_hook

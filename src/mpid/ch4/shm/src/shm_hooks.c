@@ -6,6 +6,7 @@
  */
 
 #include "mpidimpl.h"
+#include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
 int MPIDI_SHMI_mpi_comm_create_hook(MPIR_Comm * comm)

@@ -13,6 +13,7 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "mpidu_bc.h"
+#include "ofi_noinline.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

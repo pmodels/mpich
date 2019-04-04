@@ -6,6 +6,7 @@
  */
 
 #include "mpidimpl.h"
+#include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
 int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)

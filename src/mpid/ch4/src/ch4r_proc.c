@@ -70,7 +70,7 @@ int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap,
 #define FUNCNAME MPIDIU_get_n_avts
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_get_n_avts()
+int MPIDIU_get_n_avts(void)
 {
     int ret;
 
@@ -87,7 +87,7 @@ int MPIDIU_get_n_avts()
 #define FUNCNAME MPIDIU_get_max_n_avts
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_get_max_n_avts()
+int MPIDIU_get_max_n_avts(void)
 {
     int ret;
 
@@ -304,7 +304,7 @@ int MPIDIU_avt_release_ref(int avtid)
 #define FUNCNAME MPIDIU_avt_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_avt_init()
+int MPIDIU_avt_init(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
 
@@ -349,7 +349,7 @@ int MPIDIU_avt_init()
 #define FUNCNAME MPIDIU_avt_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDIU_avt_destroy()
+int MPIDIU_avt_destroy(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);

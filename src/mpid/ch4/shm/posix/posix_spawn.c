@@ -10,6 +10,7 @@
  */
 
 #include "mpidimpl.h"
+#include "posix_noinline.h"
 
 int MPIDI_POSIX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                  MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
