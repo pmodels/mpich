@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     predefined_dtp_count = total_len / predefined_dtp_size;
 
 #if defined(HAVE_ERROR_CHECKING)
-    MPI_Aint predefined_dtp_extent = 0;
+    MPI_Aint predefined_dtp_extent ATTRIBUTE((unused)) = 0;
     MPIR_Datatype_get_extent_macro(basic_type, predefined_dtp_extent);
     MPIR_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 #endif
