@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
 int MPIDI_SHMI_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)

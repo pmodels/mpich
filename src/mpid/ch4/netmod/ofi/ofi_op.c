@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_noinline.h"
 
 int MPIDI_OFI_mpi_op_free_hook(MPIR_Op * op_p)
 {

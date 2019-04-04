@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_noinline.h"
 
 static int accu_op_hint_get_index(MPIDIG_win_info_accu_op_shift_t hint_shift);
 static void load_acc_hint(MPIR_Win * win);

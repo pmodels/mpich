@@ -12,6 +12,7 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "mpidu_bc.h"
+#include "ofi_noinline.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_mpi_comm_create_hook

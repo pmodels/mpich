@@ -6,6 +6,7 @@
  */
 
 #include "mpidimpl.h"
+#include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
 int MPIDI_SHMI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)

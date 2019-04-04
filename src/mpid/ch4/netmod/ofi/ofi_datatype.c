@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_noinline.h"
 
 int MPIDI_OFI_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {

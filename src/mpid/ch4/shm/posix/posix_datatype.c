@@ -10,6 +10,7 @@
  */
 
 #include "mpidimpl.h"
+#include "posix_noinline.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_type_commit_hook
