@@ -327,10 +327,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
 
-    MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &mpi_errno);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
@@ -562,8 +558,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_CS_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
 
-    MPID_Thread_mutex_destroy(&MPIDI_global.vci_lock, &thr_err);
-    MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
