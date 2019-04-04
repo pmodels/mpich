@@ -121,7 +121,10 @@ static _opa_inline int OPA_shmemi_fetch_add_4(volatile int *v, int inc)
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+ #if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+ #endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # fetch_add_4           \n"
                              "       ll      %0, %2          # fetch_add_4           \n"
@@ -137,7 +140,10 @@ static _opa_inline int OPA_shmemi_fetch_add_4(volatile int *v, int inc)
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # fetch_add_4           \n"
                              "       addu    %1, %0, %3                              \n"
@@ -161,7 +167,10 @@ static _opa_inline long int OPA_shmemi_fetch_add_8(volatile long int *v, long in
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # fetch_add_8           \n"
                              "       lld     %0, %2          # fetch_add_8           \n"
@@ -177,7 +186,10 @@ static _opa_inline long int OPA_shmemi_fetch_add_8(volatile long int *v, long in
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # fetch_add_8           \n"
                              "       daddu   %1, %0, %3                              \n"
@@ -201,7 +213,10 @@ static _opa_inline int OPA_shmemi_swap_4(volatile int *v, int val)
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # swap_4                \n"
                              "       ll      %0, %2          # swap_4                \n"
@@ -217,7 +232,10 @@ static _opa_inline int OPA_shmemi_swap_4(volatile int *v, int val)
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # swap_4                \n"
                              "       move    %1, %3                                  \n"
@@ -241,7 +259,10 @@ static _opa_inline long int OPA_shmemi_swap_8(volatile long int *v, long int val
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # swap_8                \n"
                              "       lld     %0, %2          # swap_8                \n"
@@ -257,7 +278,10 @@ static _opa_inline long int OPA_shmemi_swap_8(volatile long int *v, long int val
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # swap_8                \n"
                              "       move    %1, %3                                  \n"
@@ -282,7 +306,10 @@ static _opa_inline int OPA_shmemi_cswap_4(volatile int *v, int expect, int val)
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # cswap_4               \n"
                              "       ll      %0, %2          # cswap_4               \n"
@@ -300,7 +327,10 @@ static _opa_inline int OPA_shmemi_cswap_4(volatile int *v, int expect, int val)
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     ll      %0, %2          # cswap_4               \n"
                              "       bne     %0, %4, 1f                              \n"
@@ -327,7 +357,10 @@ static _opa_inline long int OPA_shmemi_cswap_8(volatile long int *v, long int ex
     if (ICE9A_LLSC_WAR) {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # cswap_8               \n"
                              "       lld     %0, %2          # cswap_8               \n"
@@ -345,7 +378,10 @@ static _opa_inline long int OPA_shmemi_cswap_8(volatile long int *v, long int ex
     } else {
         unsigned long temp;
 
-        __asm__ __volatile__("       .set    mips3                                   \n"
+        __asm__ __volatile__(
+#if __mips_isa_rev < 6
+                             "       .set    mips3                                   \n"
+#endif
                              "       .set    noreorder                               \n"
                              "1:     lld     %0, %2          # cswap_8               \n"
                              "       bne     %0, %4, 1f                              \n"
