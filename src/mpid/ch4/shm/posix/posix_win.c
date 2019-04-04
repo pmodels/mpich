@@ -10,6 +10,7 @@
  */
 
 #include "mpidimpl.h"
+#include "posix_noinline.h"
 
 int MPIDI_POSIX_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {

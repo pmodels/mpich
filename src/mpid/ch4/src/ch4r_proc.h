@@ -13,8 +13,8 @@
 
 #include "ch4_types.h"
 
-int MPIDIU_get_n_avts();
-int MPIDIU_get_max_n_avts();
+int MPIDIU_get_n_avts(void);
+int MPIDIU_get_max_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
 int MPIDIU_alloc_globals_for_avtid(int avtid);
 int MPIDIU_free_globals_for_avtid(int avtid);
@@ -24,8 +24,8 @@ int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);
 int MPIDIU_avt_add_ref(int avtid);
 int MPIDIU_avt_release_ref(int avtid);
-int MPIDIU_avt_init();
-int MPIDIU_avt_destroy();
+int MPIDIU_avt_init(void);
+int MPIDIU_avt_destroy(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
 int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p);
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out);

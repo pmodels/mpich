@@ -31,6 +31,7 @@ cvars:
 #include "ch4_types.h"
 
 #include "posix_eager.h"
+#include "posix_noinline.h"
 
 static int choose_posix_eager(void);
 

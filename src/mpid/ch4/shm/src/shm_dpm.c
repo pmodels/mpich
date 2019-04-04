@@ -6,6 +6,7 @@
  */
 
 #include "mpidimpl.h"
+#include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
 int MPIDI_SHMI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,

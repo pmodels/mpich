@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "ofi_impl.h"
+#include "ofi_noinline.h"
 
 #define PORT_NAME_TAG_KEY "tag"
 #define CONNENTR_TAG_KEY "connentry"
