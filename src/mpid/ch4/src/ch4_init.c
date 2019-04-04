@@ -147,12 +147,18 @@ static int choose_netmod(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
+static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
+    "direct",
+    "handoff",
+    "trylock",
+};
+
 static const char *get_mt_model_name(int mt)
 {
     if (mt < 0 || mt >= MPIDI_CH4_NUM_MT_MODELS)
         return "(invalid)";
 
-    return MPIDI_CH4_mt_model_names[mt];
+    return mt_model_names[mt];
 }
 
 static void print_runtime_configurations(void)
@@ -171,7 +177,7 @@ static int parse_mt_model(const char *name)
         return 0;       /* default */
 
     for (i = 0; i < MPIDI_CH4_NUM_MT_MODELS; i++) {
-        if (!strcasecmp(name, MPIDI_CH4_mt_model_names[i]))
+        if (!strcasecmp(name, mt_model_names[i]))
             return i;
     }
     return -1;
