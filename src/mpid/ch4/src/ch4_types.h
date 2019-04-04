@@ -303,6 +303,7 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
+    MPIDI_vci_pool_t vci_pool;
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif
