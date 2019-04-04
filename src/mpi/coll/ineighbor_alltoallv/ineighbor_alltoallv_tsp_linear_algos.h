@@ -33,7 +33,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int comm_size;
     int tag;
     MPI_Aint sendtype_extent, recvtype_extent;
 
@@ -41,8 +40,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALLV_SCHED_ALLCOMM_LINEAR);
 
     MPIR_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

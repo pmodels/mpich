@@ -27,11 +27,8 @@ int MPIR_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int send
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int comm_size;
     MPI_Aint recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
