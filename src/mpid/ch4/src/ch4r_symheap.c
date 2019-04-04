@@ -22,7 +22,7 @@ enum {
     MPIDIU_SYMSHM_OTHER_FAIL    /* other failure reported by MPL shm */
 };
 
-static int is_valid_mapaddr(void *start);
+#ifdef USE_SYM_HEAP
 static inline int check_maprange_ok(void *start, size_t size);
 static void *generate_random_addr(size_t size);
 static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
@@ -31,6 +31,7 @@ static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segmen
 static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype);
 static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
                             int *maxsz_loc);
+#endif
 
 /* Returns aligned size and the page size. The page size parameter must
  * be always initialized to 0 or a previously returned value. If page size
@@ -57,15 +58,7 @@ size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
     return mapsize;
 }
 
-#undef FUNCNAME
-#define FUNCNAME is_valid_mapaddr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int is_valid_mapaddr(void *start)
-{
-    return ((uintptr_t) start == -1ULL) ? 0 : 1;
-}
-
+#ifdef USE_SYM_HEAP
 #undef FUNCNAME
 #define FUNCNAME check_maprange_ok
 #undef FCNAME
@@ -112,7 +105,6 @@ static void *generate_random_addr(size_t size)
      */
 #define MPIDIU_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
-#ifdef USE_SYM_HEAP
     char random_state[256];
     size_t page_sz = 0;
     uint64_t random_unsigned;
@@ -122,15 +114,9 @@ static void *generate_random_addr(size_t size)
     int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
     int32_t rh, rl;
     struct random_data rbuf;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
-
-#ifndef USE_SYM_HEAP
-    map_pointer = -1ULL;
-    goto fn_exit;
-#else
 
     /* rbuf must be zero-cleared otherwise it results in SIGSEGV in glibc
      * (http://stackoverflow.com/questions/4167034/c-initstate-r-crashing) */
@@ -157,8 +143,6 @@ static void *generate_random_addr(size_t size)
             goto fn_exit;
         }
     }
-
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GENERATE_RANDOM_ADDR);
@@ -384,6 +368,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
   fn_fail:
     goto fn_exit;
 }
+#endif /* end of USE_SYM_HEAP */
 
 /* Allocate a symmetric heap over a communicator with same starting address
  * on each process and shared memory over processes of each node. The MPL_shm
