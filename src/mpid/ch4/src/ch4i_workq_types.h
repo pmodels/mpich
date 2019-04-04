@@ -29,12 +29,6 @@ enum {
 #define MPIDI_CH4_USE_WORK_QUEUES
 #endif
 
-static const char *MPIDI_CH4_mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
-    "direct",
-    "handoff",
-    "trylock",
-};
-
 /* Define the work queue implementation type */
 #if defined(ENABLE_IZEM_QUEUE)
 #include <queue/zm_queue.h>
