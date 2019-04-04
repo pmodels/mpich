@@ -13,6 +13,8 @@
 
 #include "ch4_impl.h"
 
+#define MPIDI_MAX_VCI_PROGRESS_ATTEMPTS 100
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_test_hooks
 #undef FCNAME
@@ -207,6 +209,42 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
     return;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait_req(MPIR_Request * req)
+{
+    int ret, vci_progress_attempts, vci;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT_REQ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT_REQ);
+    
+    ret = MPI_SUCCESS;
+    vci_progress_attempts = 0;
+    vci = MPIDI_REQUEST(req, vci);
+
+    /* Progress the VCI on which the operation was stored for
+     * MAX_VCI_PROGRESS_ATTEMPTS before calling global progress */
+    do {
+        if (vci_progress_attempts == MPIDI_MAX_VCI_PROGRESS_ATTEMPTS) {
+            ret = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__GLOBAL, 0);
+            if (ret != MPI_SUCCESS) {
+                MPIR_ERR_POP(ret);
+            }
+            vci_progress_attempts = 0;
+        } else {
+            ret = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+            if (ret != MPI_SUCCESS) {
+                MPIR_ERR_POP(ret);
+            }
+            vci_progress_attempts++;
+        }
+    } while (!MPIR_Request_is_complete(req));
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT_REQ);
+    return ret;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
