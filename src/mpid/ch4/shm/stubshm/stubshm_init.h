@@ -24,7 +24,7 @@ static inline int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_pr
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_vci_attr(int vci)
+static inline int MPIDI_STUBSHM_vci_get_attr(int vci)
 {
     int ret = 0;
 

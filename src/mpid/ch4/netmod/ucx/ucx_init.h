@@ -209,10 +209,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_get_vci_attr
+#define FUNCNAME MPIDI_NM_vci_get_attr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_vci_attr(int vci)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_vci_get_attr(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
