@@ -33,7 +33,6 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                 size_t ** remote_upid_size, char **remote_upids,
                                 int **remote_node_ids);
 static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state);
-static int conn_manager_remove_conn(int conn_id);
 
 #undef FUNCNAME
 #define FUNCNAME free_port_name_tag
@@ -580,23 +579,6 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
     return conn_id;
-}
-
-static int conn_manager_remove_conn(int conn_id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
-
-    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn > 0);
-    MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id] = MPIDI_OFI_global.conn_mgr.next_conn_id;
-    MPIDI_OFI_global.conn_mgr.next_conn_id = conn_id;
-    MPIDI_OFI_global.conn_mgr.n_conn--;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
-    return mpi_errno;
 }
 
 #undef FUNCNAME

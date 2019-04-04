@@ -92,7 +92,9 @@ cvars:
 static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name);
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 static int set_runtime_configurations(void);
 
 #undef FUNCNAME
@@ -169,6 +171,7 @@ static void print_runtime_configurations(void)
     printf("================================\n");
 }
 
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name)
 {
     int i;
@@ -182,6 +185,7 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
