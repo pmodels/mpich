@@ -17,8 +17,6 @@ enum MPIDI_src_mapper_models {
 
 static int map_size(MPIR_Comm_map_t map);
 static int detect_regular_model(int *lpid, int size, int *offset, int *blocksize, int *stride);
-static int src_comm_to_lut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest, int size,
-                           int total_mapper_size, int mapper_offset);
 static int src_comm_to_mlut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest, int size,
                             int total_mapper_size, int mapper_offset);
 static int src_mlut_to_mlut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest,
@@ -115,94 +113,6 @@ static int detect_regular_model(int *lpid, int size, int *offset, int *blocksize
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DETECT_REGULAR_MODEL);
     return ret;
-}
-
-#undef FUNCNAME
-#define FUNCNAME src_comm_to_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int src_comm_to_lut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest, int size,
-                           int total_mapper_size, int mapper_offset)
-{
-    int mpi_errno = MPI_SUCCESS, i;
-    MPIDI_rank_map_lut_t *lut = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SRC_COMM_TO_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_COMM_TO_LUT);
-
-    if (!mapper_offset) {
-        mpi_errno = MPIDIU_alloc_lut(&lut, total_mapper_size);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        dest->size = total_mapper_size;
-        dest->mode = MPIDI_RANK_MAP_LUT;
-        dest->avtid = src->avtid;
-        dest->irreg.lut.t = lut;
-        dest->irreg.lut.lpid = lut->lpid;
-    }
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                    (MPL_DBG_FDEST, " source mode %d", (int) src->mode));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, " size %d", size));
-    switch (src->mode) {
-        case MPIDI_RANK_MAP_DIRECT:
-        case MPIDI_RANK_MAP_DIRECT_INTRA:
-            for (i = 0; i < size; i++) {
-                dest->irreg.lut.lpid[i + mapper_offset] = i;
-            }
-            break;
-        case MPIDI_RANK_MAP_OFFSET:
-        case MPIDI_RANK_MAP_OFFSET_INTRA:
-            for (i = 0; i < size; i++) {
-                dest->irreg.lut.lpid[i + mapper_offset] = i + src->reg.offset;
-            }
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, " source offset %d", src->reg.offset));
-            break;
-        case MPIDI_RANK_MAP_STRIDE:
-        case MPIDI_RANK_MAP_STRIDE_INTRA:
-            for (i = 0; i < size; i++) {
-                dest->irreg.lut.lpid[i + mapper_offset] = MPIDI_CALC_STRIDE_SIMPLE(i,
-                                                                                   src->reg.stride.
-                                                                                   stride,
-                                                                                   src->reg.stride.
-                                                                                   offset);
-            }
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, " source stride %d blocksize %d offset %d",
-                             src->reg.stride.stride, src->reg.stride.blocksize,
-                             src->reg.stride.offset));
-            break;
-        case MPIDI_RANK_MAP_STRIDE_BLOCK:
-        case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-            for (i = 0; i < size; i++) {
-                dest->irreg.lut.lpid[i + mapper_offset] = MPIDI_CALC_STRIDE(i,
-                                                                            src->reg.stride.stride,
-                                                                            src->reg.
-                                                                            stride.blocksize,
-                                                                            src->reg.stride.offset);
-            }
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, " source stride %d blocksize %d offset %d",
-                             src->reg.stride.stride, src->reg.stride.blocksize,
-                             src->reg.stride.offset));
-            break;
-        case MPIDI_RANK_MAP_LUT:
-        case MPIDI_RANK_MAP_LUT_INTRA:
-            for (i = 0; i < size; i++) {
-                dest->irreg.lut.lpid[i + mapper_offset] = src->irreg.lut.lpid[i];
-            }
-            break;
-        case MPIDI_RANK_MAP_MLUT:
-        case MPIDI_RANK_MAP_NONE:
-            MPIR_Assert(0);
-            break;
-    }
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SRC_COMM_TO_LUT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
