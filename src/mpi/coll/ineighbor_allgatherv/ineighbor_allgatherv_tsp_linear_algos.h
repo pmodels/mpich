@@ -32,15 +32,12 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int comm_size;
     int tag;
     MPI_Aint recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
