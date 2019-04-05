@@ -82,7 +82,7 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
                 MPIR_Comm_release(vtx->u.imcast.comm);
                 MPIR_Datatype_release_if_not_builtin(vtx->u.imcast.dt);
                 MPL_free(vtx->u.imcast.req);
-                utarray_free(vtx->u.imcast.dests);
+                utarray_done(&vtx->u.imcast.dests);
                 break;
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:
                 MPIR_Op_release_if_not_builtin(vtx->u.reduce_local.op);
@@ -292,7 +292,7 @@ int MPIR_TSP_sched_irecv_status(void *buf,
 int MPIR_TSP_sched_imcast(const void *buf,
                           int count,
                           MPI_Datatype dt,
-                          UT_array * dests,
+                          int *dests,
                           int num_dests,
                           int tag,
                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
@@ -311,8 +311,9 @@ int MPIR_TSP_sched_imcast(const void *buf,
     vtxp->u.imcast.count = count;
     vtxp->u.imcast.dt = dt;
     vtxp->u.imcast.num_dests = num_dests;
-    utarray_new(vtxp->u.imcast.dests, &ut_int_icd, MPL_MEM_COLL);
-    utarray_concat(vtxp->u.imcast.dests, dests, MPL_MEM_COLL);
+    utarray_init(&vtxp->u.imcast.dests, &ut_int_icd);
+    utarray_reserve(&vtxp->u.imcast.dests, num_dests, MPL_MEM_COLL);
+    memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
     vtxp->u.imcast.tag = tag;
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =

@@ -137,11 +137,12 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                 break;
 
             case MPII_GENUTIL_VTX_KIND__IMCAST:{
+                    int *dests = ut_int_array(&vtxp->u.imcast.dests);
                     for (i = 0; i < vtxp->u.imcast.num_dests; i++)
                         MPIC_Isend(vtxp->u.imcast.buf,
                                    vtxp->u.imcast.count,
                                    vtxp->u.imcast.dt,
-                                   *(int *) utarray_eltptr(vtxp->u.imcast.dests, i),
+                                   dests[i],
                                    vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
                                    &r->u.nbc.errflag);
 

@@ -75,7 +75,7 @@ typedef struct MPII_Genutil_vtx_t {
             const void *buf;
             int count;
             MPI_Datatype dt;
-            UT_array *dests;
+            UT_array dests;
             int num_dests;
             int tag;
             MPIR_Comm *comm;
