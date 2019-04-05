@@ -11,7 +11,7 @@
 #include "treealgo.h"
 #include "treeutil.h"
 
-int MPII_Treealgo_init()
+int MPII_Treealgo_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
