@@ -12,12 +12,12 @@
 #include "mpiimpl.h"
 #include "tsp_stubtran.h"
 
-int MPII_Stubtran_init()
+int MPII_Stubtran_init(void)
 {
     return MPI_SUCCESS;
 }
 
-int MPII_Stubtran_finalize()
+int MPII_Stubtran_finalize(void)
 {
     return MPI_SUCCESS;
 }
