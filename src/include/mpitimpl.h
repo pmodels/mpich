@@ -1173,7 +1173,7 @@ static inline int MPIR_T_pvar_unset_first(MPIR_T_pvar_handle_t * handle)
 /* A counter that keeps track of the relative balance of calls to
  * MPI_T_init_thread and MPI_T_finalize */
 extern int MPIR_T_init_balance;
-static inline int MPIR_T_is_initialized()
+static inline int MPIR_T_is_initialized(void)
 {
     return MPIR_T_init_balance > 0;
 }
