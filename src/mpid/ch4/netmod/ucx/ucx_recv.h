@@ -160,6 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
         ucp_request->req = req;
     }
+    MPIDI_REQUEST(req, vci) = vci;
     *request = req;
 
   fn_exit:
