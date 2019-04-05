@@ -290,6 +290,11 @@ done
 
 #disable device collectives for allgather to test MPIR algorithms
 testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+kvalues="2 3 4"
+env="${testing_env} env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=k_brucks "
+for kval in ${kvalues}; do
+    coll_algo_alltoall+="alltoall1 8 ${env} env=MPIR_CVAR_ALLTOALL_BRUCKS_KVAL=${kval}${nl}"
+done
 
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb "
