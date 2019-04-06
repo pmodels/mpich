@@ -103,8 +103,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PUT);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_origin_target_size(origin_datatype, target_datatype,
                                             origin_count, target_count,
@@ -149,8 +147,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_GET);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_origin_target_size(origin_datatype, target_datatype,
                                             origin_count, target_count,
@@ -199,8 +195,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_GET_ACCUMULATE);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -265,8 +259,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_ACCUMULATE);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -419,8 +411,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     }
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0)
@@ -577,8 +567,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     }
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0)

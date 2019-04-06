@@ -135,6 +135,11 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(target_rank == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Get(origin_addr, origin_count, origin_datatype,

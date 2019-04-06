@@ -120,6 +120,15 @@ int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Create a completed request and return immediately for dummy process */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT((request_ptr) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Irsend(buf, count, datatype, dest, tag, comm_ptr,

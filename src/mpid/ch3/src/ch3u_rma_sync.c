@@ -1111,13 +1111,11 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win * win_ptr)
                             mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
 
-    if (dest != MPI_PROC_NULL) {
-        /* check if we lock the same target window more than once. */
-        mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
-        MPIR_ERR_CHKANDJUMP(target != NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-    }
+    /* check if we lock the same target window more than once. */
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(target != NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Error handling is finished. */
 
@@ -1126,9 +1124,6 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_PER_TARGET;
     }
     win_ptr->lock_epoch_count++;
-
-    if (dest == MPI_PROC_NULL)
-        goto finish_lock;
 
     if (win_ptr->shm_allocated == TRUE) {
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
@@ -1207,9 +1202,6 @@ int MPID_Win_unlock(int dest, MPIR_Win * win_ptr)
     if (win_ptr->shm_allocated) {
         OPA_read_write_barrier();
     }
-
-    if (dest == MPI_PROC_NULL)
-        goto finish_unlock;
 
     /* Find or recreate target. */
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
@@ -1306,9 +1298,6 @@ int MPID_Win_flush(int dest, MPIR_Win * win_ptr)
         OPA_read_write_barrier();
     }
 
-    if (dest == MPI_PROC_NULL)
-        goto finish_flush;
-
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -1392,9 +1381,6 @@ int MPID_Win_flush_local(int dest, MPIR_Win * win_ptr)
     if (win_ptr->shm_allocated) {
         OPA_read_write_barrier();
     }
-
-    if (dest == MPI_PROC_NULL)
-        goto fn_exit;
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)

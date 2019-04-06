@@ -194,6 +194,11 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(target_rank == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Get_accumulate(origin_addr, origin_count,

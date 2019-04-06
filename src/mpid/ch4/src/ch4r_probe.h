@@ -22,12 +22,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IPROBE);
 
-    if (unlikely(source == MPI_PROC_NULL)) {
-        MPIR_Status_set_procnull(status);
-        *flag = true;
-        goto fn_exit;
-    }
-
     root_comm = MPIDIG_context_id_to_comm(comm->context_id);
 
     /* MPIDI_CS_ENTER(); */
@@ -64,12 +58,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMPROBE);
-
-    if (unlikely(source == MPI_PROC_NULL)) {
-        MPIR_Status_set_procnull(status);
-        *flag = true;
-        goto fn_exit;
-    }
 
     root_comm = MPIDIG_context_id_to_comm(comm->context_id);
 
