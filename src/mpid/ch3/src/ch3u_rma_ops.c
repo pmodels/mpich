@@ -53,10 +53,6 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     if (data_sz == 0) {
@@ -226,10 +222,6 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, orig_data_sz, dtp,
                             dt_true_lb);
 
@@ -391,10 +383,6 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
@@ -600,10 +588,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
 
     MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, target_data_sz, dtp,
                             dt_true_lb);
@@ -940,10 +924,6 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     rank = win_ptr->comm_ptr->rank;
 
     if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
@@ -1069,10 +1049,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
 
     rank = win_ptr->comm_ptr->rank;
 

@@ -45,29 +45,19 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 	goto fn_exit;
     }
 
-    if (rank != MPI_PROC_NULL) {
-        MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
+    MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 #ifdef ENABLE_COMM_OVERRIDES
-        /* this needs to come before the sreq is created, since the override
-         * function is responsible for creating its own request */
-        if (vc->comm_ops && vc->comm_ops->irsend)
-        {
-            mpi_errno = vc->comm_ops->irsend( vc, buf, count, datatype, rank, tag, comm, context_offset, &sreq);
-            goto fn_exit;
-        }
-#endif
-        MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
-        MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
-        MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
-    } else {
-        /* sreq creation code is duplicated here, but it is better than add separate branch later. */
-        MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
-        MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
-        MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
-	MPIR_Object_set_ref(sreq, 1);
-        MPIR_cc_set(&sreq->cc, 0);
-	goto fn_exit;
+    /* this needs to come before the sreq is created, since the override
+     * function is responsible for creating its own request */
+    if (vc->comm_ops && vc->comm_ops->irsend)
+    {
+        mpi_errno = vc->comm_ops->irsend( vc, buf, count, datatype, rank, tag, comm, context_offset, &sreq);
+        goto fn_exit;
     }
+#endif
+    MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
+    MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
     
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 

@@ -183,14 +183,6 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     }
 
     *request = rreq;
-    if (unlikely(rank == MPI_PROC_NULL)) {
-        rreq->kind = MPIR_REQUEST_KIND__RECV;
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
-        rreq->status.MPI_SOURCE = rank;
-        rreq->status.MPI_TAG = tag;
-        MPID_Request_complete(rreq);
-        goto fn_exit;
-    }
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     mpi_errno = MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);

@@ -47,11 +47,6 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
 	goto fn_exit;
     }
 
-    if (rank == MPI_PROC_NULL)
-    {
-	goto fn_exit;
-    }
-
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 
 #ifdef ENABLE_COMM_OVERRIDES

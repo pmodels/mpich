@@ -325,9 +325,6 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
 
-    if (rank == MPI_PROC_NULL)
-        goto fn_exit0;
-
     MPIDIG_LOCK_EPOCH_CHECK_NONE(win, rank, mpi_errno, goto fn_fail);
 
     MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_get(win, rank);
@@ -362,7 +359,6 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
   no_check:
     target_ptr->sync.access_epoch_type = MPIDIG_EPOTYPE_LOCK;
 
-  fn_exit0:
     MPIDIG_WIN(win, sync).access_epoch_type = MPIDIG_EPOTYPE_LOCK;
     MPIDIG_WIN(win, sync).lock.count++;
 
@@ -382,11 +378,8 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
 
-    /* Check window lock epoch.
-     * PROC_NULL does not update per-target epoch. */
+    /* Check window lock epoch. */
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
-    if (rank == MPI_PROC_NULL)
-        goto fn_exit0;
 
     MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, rank);
     MPIR_Assert(target_ptr);
@@ -444,7 +437,6 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
         MPIDIG_win_target_delete(win, target_ptr);
 
-  fn_exit0:
     MPIR_Assert(MPIDIG_WIN(win, sync).lock.count > 0);
     MPIDIG_WIN(win, sync).lock.count--;
 
@@ -567,11 +559,8 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
 
-    /* Check window lock epoch.
-     * PROC_NULL does not update per-target epoch. */
+    /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
-    if (rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_target_cmpl_hook(rank, win);
@@ -725,11 +714,8 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
 
-    /* Check window lock epoch.
-     * PROC_NULL does not update per-target epoch. */
+    /* Check window lock epoch. */
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, return mpi_errno);
-    if (rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     /* Ensure op local completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_target_local_cmpl_hook(rank, win);

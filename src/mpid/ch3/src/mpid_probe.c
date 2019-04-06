@@ -16,12 +16,6 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
 
-    if (source == MPI_PROC_NULL)
-    {
-	MPIR_Status_set_procnull(status);
-	goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
