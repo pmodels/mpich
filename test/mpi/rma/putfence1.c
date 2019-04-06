@@ -109,19 +109,20 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     MPI_Datatype basic_type;
     MPI_Aint lb, extent;
     int len;
     char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
-    err = MTestInitBasicSignature(argc, argv, &count, &basic_type);
-    if (err)
-        return MTestReturnValue(1);
-
     /* compute bufsize to limit number of comm in test */
     MPI_Type_get_extent(basic_type, &lb, &extent);
     bufsize = extent * count;
+
+    basic_type = MTestArgListGetDatatype(head, "type");
+    count = MTestArgListGetInt(head, "count");
 
     err = DTP_pool_create(basic_type, count, &orig_dtp);
     if (err != DTP_SUCCESS) {
@@ -141,9 +142,9 @@ int main(int argc, char *argv[])
     int *basic_type_counts = NULL;
     int basic_type_num;
 
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
-    if (err)
-        return MTestReturnValue(1);
+    basic_types = MTestArgListGetDatatypeList(head, "types");
+    basic_type_counts = MTestArgListGetIntList(head, "counts");
+    basic_type_num = MTestArgListGetInt(head, "numtypes");
 
     /* TODO: ignore bufsize for structs for now;
      *       we need to compute bufsize also for
@@ -165,6 +166,8 @@ int main(int argc, char *argv[])
     /* this is ignored */
     count = 0;
 #endif
+
+    MTestArgListDestroy(head);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
