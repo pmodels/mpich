@@ -40,9 +40,12 @@ int main(int argc, char *argv[])
 
     comm = MPI::COMM_WORLD;
 
-    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type);
-    if (err)
-        return 1;
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
+    basic_type = MTestArgListGetDatatype(head, "type");
+    count = MTestArgListGetInt(head, "count");
+
+    MTestArgListDestroy(head);
 
     /* TODO: struct types are currently not supported for C++ */
 

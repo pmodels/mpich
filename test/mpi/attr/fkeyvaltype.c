@@ -56,12 +56,13 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     MPI_Datatype basic_type;
 
-    err = MTestInitBasicSignature(argc, argv, &count, &basic_type);
-    if (err)
-        return MTestReturnValue(1);
+    basic_type = MTestArgListGetString(head, "type");
+    count = MTestArgListGetInt(head, "count");
 
     err = DTP_pool_create(basic_type, count, &dtp);
     if (err != DTP_SUCCESS) {
@@ -70,13 +71,9 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 #else
-    MPI_Datatype *basic_types = NULL;
-    int basic_type_num;
-    int *basic_type_counts = NULL;
-
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
-    if (err)
-        return MTestReturnValue(1);
+    basic_types = MTestArgListGetDatatypeList(head, "types");
+    basic_type_counts = MTestArgListGetIntList(head, "counts");
+    basic_type_num = MTestArgListGetInt(head, "numtypes");
 
     err = DTP_pool_create_struct(basic_type_num, basic_types, basic_type_counts, &dtp);
     if (err != DTP_SUCCESS) {
@@ -86,6 +83,8 @@ int main(int argc, char *argv[])
 
     count = 0;
 #endif
+
+    MTestArgListDestroy(head);
 
     for (obj_idx = 0; obj_idx < dtp->DTP_num_objs; obj_idx++) {
         err = DTP_obj_create(dtp, obj_idx, 0, 0, 0);

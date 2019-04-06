@@ -35,13 +35,15 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     MPI_Datatype basic_type;
     char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
-    err = MTestInitBasicPt2ptSignature(argc, argv, count, &basic_type);
-    if (err)
-        return MTestReturnValue(1);
+    basic_type = MTestArgListGetDatatype(head, "type");
+    count[0] = MTestArgListGetInt(head, "sendcnt");
+    count[1] = MTestArgListGetInt(head, "recvcnt");
 
     err = DTP_pool_create(basic_type, count[0], &send_dtp);
     if (err != DTP_SUCCESS) {
@@ -61,9 +63,9 @@ int main(int argc, char *argv[])
     int *basic_type_counts = NULL;
     int basic_type_num;
 
-    err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
-    if (err)
-        return MTestReturnValue(1);
+    basic_types = MTestArgListGetDatatypeList(head, "types");
+    basic_type_counts = MTestArgListGetIntList(head, "counts");
+    basic_type_num = MTestArgListGetInt(head, "numtypes");
 
     err = DTP_pool_create_struct(basic_type_num, basic_types, basic_type_counts, &send_dtp);
     if (err != DTP_SUCCESS) {
@@ -81,6 +83,8 @@ int main(int argc, char *argv[])
     count[0] = 0;
     count[1] = 0;
 #endif
+
+    MTestArgListDestroy(head);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.

@@ -30,9 +30,16 @@ int MTestReturnValue(int);
 void MTestSleep(int);
 void MTestGetDbgInfo(int *dbgflag, int *verbose);
 
-int MTestInitBasicSignature(int, char **, int *, MPI_Datatype *);
-int MTestInitBasicPt2ptSignature(int, char **, int *, MPI_Datatype *);
-int MTestInitStructSignature(int, char **, int *, int **, MPI_Datatype **);
+typedef void MTestArgList;
+MTestArgList *MTestArgListCreate(int argc, char *argv[]);
+char *MTestArgListGetString(MTestArgList * head, const char *arg);
+MPI_Datatype MTestArgListGetDatatype(MTestArgList * head, const char *arg);
+MPI_Datatype *MTestArgListGetDatatypeList(MTestArgList * head, const char *arg);
+int MTestArgListGetInt(MTestArgList * head, const char *arg);
+int *MTestArgListGetIntList(MTestArgList * head, const char *arg);
+long MTestArgListGetLong(MTestArgList * head, const char *arg);
+long *MTestArgListGetLongList(MTestArgList * head, const char *arg);
+void MTestArgListDestroy(MTestArgList * head);
 
 int MTestGetIntracomm(MPI_Comm *, int);
 int MTestGetIntracommGeneral(MPI_Comm *, int, int);

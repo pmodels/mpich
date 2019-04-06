@@ -36,13 +36,15 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     MPI_Datatype basic_type;
     char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
-    err = MTestInitBasicPt2ptSignature(argc, argv, count, &basic_type);
-    if (err)
-        return MTestReturnValue(1);
+    basic_type = MTestArgListGetDatatype(head, "type");
+    count[0] = MTestArgListGetInt(head, "sendcnt");
+    count[1] = MTestArgListGetInt(head, "recvcnt");
 
     err = DTP_pool_create(basic_type, count[0], &send_dtp);
     if (err != DTP_SUCCESS) {
@@ -61,6 +63,10 @@ int main(int argc, char *argv[])
     MPI_Datatype *basic_types = NULL;
     int *basic_type_counts = NULL;
     int basic_type_num;
+
+    basic_types = MTestArgListGetDatatypeList(head, "types");
+    basic_type_counts = MTestArgListGetIntList(head, "counts");
+    basic_type_num = MTestArgListGetInt(head, "numtypes");
 
     err = MTestInitStructSignature(argc, argv, &basic_type_num, &basic_type_counts, &basic_types);
     if (err)
@@ -82,6 +88,8 @@ int main(int argc, char *argv[])
     count[0] = 0;
     count[1] = 0;
 #endif
+
+    MTestArgListDestroy(head);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */

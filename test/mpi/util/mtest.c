@@ -1396,116 +1396,183 @@ struct _dt_type {
 };
 static struct _dt_type typelist[] = { DTPOOLS_TYPE_LIST };
 
-int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+typedef struct MTestArgListEntry {
+    char *arg;
+    char *val;
+    struct MTestArgListEntry *next;
+} MTestArgListEntry;
+
+static char *progname;
+
+static void MTestArgListInsert(MTestArgListEntry ** head, char *arg, char *val)
 {
-    int i, j;
+    MTestArgListEntry *tmp = *head;
 
-    if (argc < 3) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
-                j = 0;
-                while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                       strcmp(argv[i] + strlen("-type="), typelist[j].name)) {
-                    j++;
-                }
-
-                if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                    *basic_type = typelist[j].type;
-                } else {
-                    fprintf(stdout, "Error: datatype not recognized\n");
-                    return MTestReturnValue(1);
-                }
-            } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
-                *count = atoi(argv[i] + strlen("-count="));
-            }
-        }
+    if (!tmp) {
+        tmp = malloc(sizeof(MTestArgListEntry));
+        tmp->arg = arg;
+        tmp->val = val;
+        tmp->next = NULL;
+        *head = tmp;
+        return;
     }
 
-    return MTestReturnValue(0);
+    while (tmp->next)
+        tmp = tmp->next;
+
+    tmp->next = malloc(sizeof(MTestArgListEntry));
+    tmp->next->arg = arg;
+    tmp->next->val = val;
+    tmp->next->next = NULL;
 }
 
-int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+static char *MTestArgListSearch(MTestArgListEntry * head, const char *arg)
 {
-    int i, j;
+    char *val = NULL;
 
-    if (argc < 4) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
-                j = 0;
-                while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                       strcmp(argv[i] + strlen("-type="), typelist[j].name)) {
-                    j++;
-                }
+    while (head && strcmp(head->arg, arg))
+        head = head->next;
 
-                if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                    *basic_type = typelist[j].type;
-                } else {
-                    fprintf(stdout, "Error: datatype not recognized\n");
-                    return MTestReturnValue(1);
-                }
-            } else if (!strncmp(argv[i], "-sendcnt=", strlen("-sendcnt="))) {
-                count[0] = atoi(argv[i] + strlen("-sendcnt="));
-            } else if (!strncmp(argv[i], "-recvcnt=", strlen("-recvcnt="))) {
-                count[1] = atoi(argv[i] + strlen("-recvcnt="));
-            }
-        }
-    }
+    if (head)
+        val = head->val;
 
-    return MTestReturnValue(0);
+    return val;
 }
 
-int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts,
-                             MPI_Datatype ** basic_types)
+static void MTestArgListPrintError(const char *arg)
 {
-    int i, j, k;
-    char *input_string, *token;
+    fprintf(stdout, "Error: '%s' has not been defined!\n\n", arg);
+    fprintf(stdout, "Usage: %s [options]\n", progname);
+    fprintf(stdout, "options:\n");
+    fprintf(stdout, "  -type=[string]          MPI_Datatype string (e.g., \"MPI_INT\")\n");
+    fprintf(stdout, "  -count=[integer]        number of 'type' in non pt2pt tests\n");
+    fprintf(stdout, "  -sendcnt=[integer]      number of send 'type' in pt2pt tests\n");
+    fprintf(stdout, "  -recvcnt=[integer]      number of recv 'type' in pt2pt tests\n");
 
-    if (argc < 4) {
-        fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-numtypes=", strlen("-numtypes="))) {
-                *numtypes = atoi(argv[i] + strlen("-numtypes="));
-                /* allocate arrays */
-                *counts = (int *) malloc(*numtypes * sizeof(int));
-                *basic_types = (MPI_Datatype *) malloc(*numtypes * sizeof(MPI_Datatype));
-            } else if (!strncmp(argv[i], "-types=", strlen("-types="))) {
-                input_string = strdup(argv[i] + strlen("-types="));
+    exit(-1);
+}
 
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
-                    j = 0;
-                    while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                           strcmp(token, typelist[j].name)) {
-                        j++;
-                    }
+void MTestArgListDestroy(MTestArgList * head)
+{
+    MTestArgListEntry *cur = (MTestArgListEntry *) head;
 
-                    if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                        (*basic_types)[k++] = typelist[j].type;
-                    } else {
-                        fprintf(stdout, "Error: datatype not recognized\n");
-                        return MTestReturnValue(1);
-                    }
-                }
-
-                free(input_string);
-            } else if (!strncmp(argv[i], "-counts=", strlen("-counts="))) {
-                input_string = strdup(argv[i] + strlen("-counts="));
-
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
-                    (*counts)[k++] = atoi(token);
-                }
-
-                free(input_string);
-            }
-        }
+    while (cur) {
+        MTestArgListEntry *prev = cur;
+        cur = cur->next;
+        free(prev->arg);
+        free(prev->val);
+        free(prev);
     }
 
-    return MTestReturnValue(0);
+    free(progname);
+}
+
+/*
+ * following args are expected to be of the form: -arg=val
+ */
+MTestArgList *MTestArgListCreate(int argc, char *argv[])
+{
+    int i;
+    char *string = NULL;
+    char *tmp = NULL;
+    char *arg = NULL;
+    char *val = NULL;
+
+    MTestArgListEntry *head = NULL;
+
+    for (i = 1; i < argc; i++) {
+        /* extract arg and val */
+        string = strdup(argv[i]);
+        tmp = strtok(string, "=");
+        arg = strdup(tmp + 1);  /* skip prepending '-' */
+        tmp = strtok(NULL, "=");
+        val = strdup(tmp);
+
+        MTestArgListInsert(&head, arg, val);
+
+        free(string);
+    }
+
+    progname = strdup(argv[0]);
+
+    return head;
+}
+
+char *MTestArgListGetString(MTestArgList * head, const char *arg)
+{
+    char *tmp;
+
+    if (!(tmp = MTestArgListSearch((MTestArgListEntry *) head, arg)))
+        MTestArgListPrintError(arg);
+
+    return tmp;
+}
+
+MPI_Datatype MTestArgListGetDatatype(MTestArgList * head, const char *arg)
+{
+    int i = 0;
+    char *tmp = MTestArgListGetString(head, arg);
+    MPI_Datatype type = MPI_DATATYPE_NULL;
+
+    while (strcmp(typelist[i].name, "MPI_DATATYPE_NULL") && strcmp(tmp, typelist[i].name))
+        i++;
+
+    if (strcmp(typelist[i].name, "MPI_DATATYPE_NULL"))
+        type = typelist[i].type;
+
+    return type;
+}
+
+MPI_Datatype *MTestArgListGetDatatypeList(MTestArgList * head, const char *arg)
+{
+    int i, j;
+    char *token;
+    char *tmp = MTestArgListGetString(head, arg);
+    MPI_Datatype *ret = malloc(sizeof(MPI_Datatype) * 64);
+
+    for (i = j = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ",")) {
+        while (strcmp(typelist[i].name, "MPI_DATATYPE_NULL") && strcmp(token, typelist[i].name))
+            i++;
+
+        if (strcmp(typelist[i].name, "MPI_DATATYPE_NULL"))
+            ret[j++] = typelist[i].type;
+    }
+
+    return ret;
+}
+
+int MTestArgListGetInt(MTestArgList * head, const char *arg)
+{
+    return atoi(MTestArgListGetString(head, arg));
+}
+
+int *MTestArgListGetIntList(MTestArgList * head, const char *arg)
+{
+    int i;
+    char *token;
+    char *tmp = MTestArgListGetString(head, arg);
+    int *ret = malloc(sizeof(int) * 64);
+
+    for (i = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ","))
+        ret[i++] = atoi(token);
+
+    return ret;
+}
+
+long MTestArgListGetLong(MTestArgList * head, const char *arg)
+{
+    return atol(MTestArgListGetString(head, arg));
+}
+
+long *MTestArgListGetLongList(MTestArgList * head, const char *arg)
+{
+    int i;
+    char *token;
+    char *tmp = MTestArgListGetString(head, arg);
+    long *ret = malloc(sizeof(long) * 64);
+
+    for (i = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ","))
+        ret[i++] = atol(token);
+
+    return ret;
 }
