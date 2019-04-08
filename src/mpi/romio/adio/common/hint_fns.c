@@ -146,7 +146,7 @@ int ADIOI_Info_check_and_install_str(ADIO_File fd, MPI_Info info, const char *ke
 
     ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL, value, &flag);
     if (flag) {
-        ADIOI_Info_set(fd->info, "cb_config_list", value);
+        ADIOI_Info_set(fd->info, key, value);
         len = (strlen(value) + 1) * sizeof(char);
         *local_cache = ADIOI_Malloc(len);
         if (*local_cache == NULL) {
