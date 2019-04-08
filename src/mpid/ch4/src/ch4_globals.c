@@ -12,7 +12,6 @@
 /* All global ADI data structures need to go in this file */
 /* reference them with externs from other files           */
 
-#include "pmi.h"
 #include <mpidimpl.h>
 #include "ch4_impl.h"
 
