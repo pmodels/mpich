@@ -74,10 +74,6 @@ int MPI_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[], const in
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallv_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallv_intra_auto(const void *sendbuf, const int sendcounts[],
                                        const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                        const int recvcounts[], const int rdispls[],
@@ -98,10 +94,6 @@ int MPIR_Neighbor_alltoallv_intra_auto(const void *sendbuf, const int sendcounts
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallv_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallv_inter_auto(const void *sendbuf, const int sendcounts[],
                                        const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                        const int recvcounts[], const int rdispls[],
@@ -122,10 +114,6 @@ int MPIR_Neighbor_alltoallv_inter_auto(const void *sendbuf, const int sendcounts
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                                  const int sdispls[], MPI_Datatype sendtype,
                                  void *recvbuf, const int recvcounts[],
@@ -177,10 +165,6 @@ int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[],
                             const int sdispls[], MPI_Datatype sendtype,
                             void *recvbuf, const int recvcounts[],
@@ -203,10 +187,6 @@ int MPIR_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[],
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Neighbor_alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Neighbor_alltoallv - The vector variant of MPI_Neighbor_alltoall allows
 sending/receiving different numbers of elements to and from each neighbor.

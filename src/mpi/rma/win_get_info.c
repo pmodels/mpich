@@ -28,10 +28,6 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_get_info - Returns a new info object containing the hints of the window
 associated with win.

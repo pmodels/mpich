@@ -34,10 +34,6 @@
  *
  * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_intra_recursive_halving
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_sched_intra_recursive_halving(const void *sendbuf, void *recvbuf,
                                                        const int recvcounts[],
                                                        MPI_Datatype datatype, MPI_Op op,

@@ -11,10 +11,6 @@
 
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Type_commit_hook(MPIR_Datatype * type)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
@@ -25,10 +21,6 @@ int MPID_Type_commit_hook(MPIR_Datatype * type)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Type_free_hook(MPIR_Datatype * type)
 {
 

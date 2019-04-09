@@ -36,10 +36,6 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
 /* Returns aligned size and the page size. The page size parameter must
  * be always initialized to 0 or a previously returned value. If page size
  * is set, we can reuse the value and skip sysconf. */
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_mapsize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 {
     size_t page_sz, mapsize;
@@ -59,10 +55,6 @@ size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 }
 
 #ifdef USE_SYM_HEAP
-#undef FUNCNAME
-#define FUNCNAME check_maprange_ok
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int check_maprange_ok(void *start, size_t size)
 {
     int rc = 0;
@@ -93,10 +85,6 @@ static int check_maprange_ok(void *start, size_t size)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME generate_random_addr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void *generate_random_addr(size_t size)
 {
     /* starting position for pointer to map
@@ -160,10 +148,6 @@ static void *generate_random_addr(size_t size)
  * If it is MPIDIU_SYMSHM_MAP_FAIL, the caller can try it again with a different
  * start address; if it is MPIDIU_SYMSHM_OTHER_FAIL, it usually means no more shm
  * segment can be allocated, thus the caller should stop retrying. */
-#undef FUNCNAME
-#define FUNCNAME allocate_symshm_segment
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
                                    MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                    int *map_result_ptr)
@@ -313,10 +297,6 @@ static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Dataty
  * supports only pairtypes with signed {short, int, long}. We internally
  * cast size_t to unsigned long long which is large enough to hold size type
  * and matches an MPI basic datatype. */
-#undef FUNCNAME
-#define FUNCNAME allreduce_maxloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
                             int *maxsz_loc)
 {
@@ -379,10 +359,6 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
  * Input shm_size is the total mapping size of shared memory on local node, and
  * shm_offsets presents the expected offset of local process's start address in
  * the mapped shared memory. */
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_shm_symheap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm * comm,
                            MPIR_Win * win, bool * fail_flag)
 {

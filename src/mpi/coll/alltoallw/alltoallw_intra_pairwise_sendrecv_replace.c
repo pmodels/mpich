@@ -19,10 +19,6 @@
  * single buffer across the whole loop.  Something like MADRE is probably the
  * best solution for the MPI_IN_PLACE scenario.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_intra_pairwise_sendrecv_replace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[],
                                                    const int sdispls[],
                                                    const MPI_Datatype sendtypes[], void *recvbuf,

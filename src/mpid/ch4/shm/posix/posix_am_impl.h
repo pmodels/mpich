@@ -14,10 +14,6 @@
 #include "posix_types.h"
 #include "posix_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_release_req_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t ** req_hdr_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -35,10 +31,6 @@ static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_init_req_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
                                               size_t am_hdr_sz,
                                               MPIDI_POSIX_am_request_header_t ** req_hdr_ptr,

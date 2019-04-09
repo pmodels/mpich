@@ -28,10 +28,6 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_lock - Begin an RMA access epoch at the target process.
 

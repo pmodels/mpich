@@ -81,10 +81,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id,
@@ -231,10 +227,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    MPIR_Comm * comm,
                                                    int handler_id,
@@ -286,10 +278,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isend_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
                                                         int handler_id,
                                                         const void *am_hdr,
@@ -311,10 +299,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_hdr_max_sz
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
@@ -328,10 +312,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     return MPL_MIN(max_shortsend, max_representable);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_enqueue_req_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
@@ -373,10 +353,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_send_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                      MPIR_Comm * comm,
                                                      int handler_id,
@@ -438,10 +414,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_send_am_hdr_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                            int src_rank, int handler_id,
                                                            const void *am_hdr, size_t am_hdr_sz)
@@ -459,10 +431,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;

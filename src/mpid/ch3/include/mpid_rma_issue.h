@@ -16,10 +16,6 @@
 
 /* immed_copy() copys data from origin buffer to
    IMMED packet header. */
-#undef FUNCNAME
-#define FUNCNAME immed_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -64,10 +60,6 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 /* =========================================================== */
 
 /* Set extended header for ACC operation and return its real size. */
-#undef FUNCNAME
-#define FUNCNAME init_stream_dtype_ext_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                               MPIR_Datatype* target_dtp, intptr_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz, int *flattened_type_size)
@@ -138,10 +130,6 @@ static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 
 /* issue_from_origin_buffer() issues data from origin
    buffer (i.e. non-IMMED operation). */
-#undef FUNCNAME
-#define FUNCNAME issue_from_origin_buffer
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
                                     intptr_t stream_offset, intptr_t stream_size,
@@ -309,10 +297,6 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
 
 /* issue_put_op() issues PUT packet header and data. */
-#undef FUNCNAME
-#define FUNCNAME issue_put_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -387,10 +371,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 #define ALL_STREAM_UNITS_ISSUED (-1)
 
 /* issue_acc_op() send ACC packet header and data. */
-#undef FUNCNAME
-#define FUNCNAME issue_acc_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -553,10 +533,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
 
 /* issue_get_acc_op() send GACC packet header and data. */
-#undef FUNCNAME
-#define FUNCNAME issue_get_acc_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                             MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -789,10 +765,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME issue_get_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -911,10 +883,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME issue_cas_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -974,10 +942,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME issue_fop_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -1049,10 +1013,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
 /* issue_rma_op() is called by ch3u_rma_progress.c, it triggers
    proper issuing functions according to packet type. */
-#undef FUNCNAME
-#define FUNCNAME issue_rma_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {

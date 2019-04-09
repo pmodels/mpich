@@ -10,10 +10,6 @@
    cancel message, once the code decides that the request can still
    be cancelled */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Cancel_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Cancel_send(MPIR_Request * sreq)
 {
     MPIDI_VC_t * vc;

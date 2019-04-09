@@ -18,10 +18,6 @@
 #include "recexchalgo.h"
 
 /* Routine to schedule a recursive exchange based allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_sched_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, int tag,
                                             MPIR_Comm * comm, int per_nbr_buffer, int k,
@@ -358,10 +354,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
 
 /* Non-blocking recexch based ALLREDUCE */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                       MPIR_Request ** req, int recexch_type, int k)

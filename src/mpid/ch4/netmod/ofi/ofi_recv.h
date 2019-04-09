@@ -26,10 +26,6 @@
       due to limitations with iovec. Needs to fall back to the unpack path.
   Other: An error occurred as indicated in the code.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_recv_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
@@ -173,10 +169,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -296,10 +288,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -328,10 +316,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int count,
                                                     MPI_Datatype datatype,
@@ -352,10 +336,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_imrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -384,10 +364,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -415,10 +391,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_cancel_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
 

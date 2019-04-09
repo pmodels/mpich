@@ -26,10 +26,6 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #undef MPI_Pack
 #define MPI_Pack PMPI_Pack
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Pack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Pack_impl(const void *inbuf,
                    MPI_Aint incount,
                    MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
@@ -96,10 +92,6 @@ int MPIR_Pack_impl(const void *inbuf,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 

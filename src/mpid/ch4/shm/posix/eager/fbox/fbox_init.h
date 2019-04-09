@@ -17,10 +17,6 @@
 
 extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -132,10 +128,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 {
     int mpi_errno = MPI_SUCCESS;

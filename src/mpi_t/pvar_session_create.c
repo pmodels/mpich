@@ -27,10 +27,6 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_pvar_session_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,10 +54,6 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_pvar_session_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_session_create - Create a new session for accessing performance variables
 

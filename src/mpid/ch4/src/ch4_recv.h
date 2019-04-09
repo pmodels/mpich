@@ -13,10 +13,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_recv_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -94,10 +90,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_irecv_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -174,10 +166,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_imrecv_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
                                                  MPI_Aint count, MPI_Datatype datatype,
                                                  MPIR_Request * message, MPIR_Request ** rreqp)
@@ -199,10 +187,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_cancel_recv_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
 {
     int mpi_errno;
@@ -227,10 +211,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_recv_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
                                              int count,
                                              MPI_Datatype datatype,
@@ -271,10 +251,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_irecv_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -314,10 +290,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_imrecv_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                                MPI_Aint count, MPI_Datatype datatype,
                                                MPIR_Request * message, MPIR_Request ** rreqp)
@@ -351,10 +323,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_cancel_recv_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -379,10 +347,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -424,10 +388,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
                                             int count,
                                             MPI_Datatype datatype,
@@ -493,10 +453,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype, MPIR_Request * message,
@@ -531,10 +487,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Imrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                          MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -563,10 +515,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -607,10 +555,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Cancel_Recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno;

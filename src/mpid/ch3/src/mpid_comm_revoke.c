@@ -15,10 +15,6 @@
  *             be set to true. This way we'll know to decrement the counter twice
  *             (once for our local revocation and once for the remote).
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_revoke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
 {
     MPIDI_VC_t *vc;

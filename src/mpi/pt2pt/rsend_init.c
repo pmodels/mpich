@@ -29,10 +29,6 @@ int MPI_Rsend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Rsend_init - Creates a persistent request for a ready send
 

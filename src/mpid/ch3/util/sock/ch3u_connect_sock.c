@@ -90,10 +90,6 @@ static MPIDI_CH3I_Connection_t * MPIDI_CH3I_listener_conn = NULL;
 /* Required for (socket version) upcall to Connect_to_root (see FIXME) */
 extern MPIDI_CH3I_Sock_set_t MPIDI_CH3I_sock_set;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_CH3I_SetupListener
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_CH3I_SetupListener( MPIDI_CH3I_Sock_set_t sock_set )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -124,10 +120,6 @@ int MPIDU_CH3I_SetupListener( MPIDI_CH3I_Sock_set_t sock_set )
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_CH3I_ShutdownListener
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_CH3I_ShutdownListener( void )
 {
     int mpi_errno;
@@ -155,10 +147,6 @@ int MPIDU_CH3I_ShutdownListener( void )
    Called by routines that create connections, used in this
    file and in ch3_progress*.c in various channels.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Connection_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -201,10 +189,6 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 /* FIXME: Why does the name include "to_root"?  */
 
 /* FIXME: Describe the algorithm for the connection logic */
-#undef FUNCNAME
-#define FUNCNAME  MPIDI_CH3I_Connect_to_root_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Connect_to_root_sock(const char * port_name, 
 				    MPIDI_VC_t ** new_vc)
 {
@@ -328,10 +312,6 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 
 /* The host_description should be of length MAX_HOST_DESCRIPTION_LEN */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_get_conninfo_from_bc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 				     char *host_description, int maxlen,
 				     int *port, MPIDI_CH3I_Sock_ifaddr_t *ifaddr,
@@ -424,10 +404,6 @@ int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
  *                               
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Get_business_card_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Get_business_card_sock(int myRank, 
 				      char **bc_val_p, int *val_max_sz_p)
 {
@@ -536,10 +512,6 @@ static void connection_destroy(MPIDI_CH3I_Connection_t * conn);
 
 /* This routine is called in response to an MPIDI_CH3I_SOCK_OP_ACCEPT event
    in ch3_progress */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_accept_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_accept_event( void )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -577,10 +549,6 @@ int MPIDI_CH3_Sockconn_handle_accept_event( void )
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_connect_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn, 
 					     int event_error )
 {
@@ -643,10 +611,6 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_close_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -720,10 +684,6 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 /* Cycle through the connection setup states */
 /* FIXME: separate out the accept and connect sides to make it easier
    to follow the logic */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_conn_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -872,10 +832,6 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 }
 
 /* FIXME: This should really be combined with handle_conn_event */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_connopen_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1006,10 +962,6 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 }
 
 /* FIXME: This routine is called when?  What is valid in conn? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Sockconn_handle_connwrite
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1081,10 +1033,6 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 
 /* ----------------------------------------------------------------------- */
 /* FIXME: What does this do? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_VC_post_sockconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1151,10 +1099,6 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 
    vallen = sizeof(val)
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 {
     char host_description[MAX_HOST_DESCRIPTION_LEN];
@@ -1258,10 +1202,6 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 /* Guess: Setup a wait-to-read on the socket that was set after the accept 
    was handled */
 /* Wrong guess.  */
-#undef FUNCNAME
-#define FUNCNAME connection_post_recv_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1281,10 +1221,6 @@ static int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME connection_post_send_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connection_post_send_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1304,10 +1240,6 @@ static int connection_post_send_pkt(MPIDI_CH3I_Connection_t * conn)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME connection_post_send_pkt_and_pgid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno;
@@ -1333,10 +1265,6 @@ static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: This function also used in channels/sock/src/ch3_progress.c */
-#undef FUNCNAME
-#define FUNCNAME connection_post_sendq_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1369,10 +1297,6 @@ static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
    It is named destroy instead of free because routines with name "free" 
    should have MPI semantics - free means to 
    decrement reference count and free if reference count is zero */
-#undef FUNCNAME
-#define FUNCNAME connection_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void connection_destroy(MPIDI_CH3I_Connection_t * conn)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONNECTION_DESTROY);

@@ -12,10 +12,6 @@
 #include "ucx_impl.h"
 #include "ucx_types.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_send_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -33,10 +29,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_SEND_CMPL_CB);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
@@ -114,10 +106,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -130,10 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
                           addr, request, 0, 0);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -146,10 +130,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
                           addr, request, 0, 1);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf,
                                                     int count,
                                                     MPI_Datatype datatype,
@@ -163,10 +143,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf,
                                 context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_ssend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -180,10 +156,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf,
                                  context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_bsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -197,10 +169,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf,
                                  context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -214,10 +182,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf,
                                  context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -230,10 +194,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                           addr, request, 1, 0);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype,
@@ -246,10 +206,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                           addr, request, 1, 1);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_cancel_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
     if (!MPIR_Request_is_complete(sreq)) {

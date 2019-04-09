@@ -27,10 +27,6 @@ int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_cvar_read_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -81,10 +77,6 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_cvar_read
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_read - Read the value of a control variable
 

@@ -28,10 +28,6 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Probe - Blocking test for a message
 

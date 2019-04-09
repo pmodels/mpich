@@ -30,10 +30,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_begin
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
@@ -106,10 +102,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_memcpy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction,
                               void *dst, const void *src, size_t size)
@@ -117,10 +109,6 @@ MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIR_Memcpy(dst, src, size);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {

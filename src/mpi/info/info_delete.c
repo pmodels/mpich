@@ -27,10 +27,6 @@ int MPI_Info_delete(MPI_Info info, const char *key)
 #define MPI_Info_delete PMPI_Info_delete
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Info_delete - Deletes a (key,value) pair from info
 

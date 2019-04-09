@@ -26,10 +26,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
 #undef MPI_Cart_shift
 #define MPI_Cart_shift PMPI_Cart_shift
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_shift_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *rank_source,
                          int *rank_dest)
 {
@@ -86,10 +82,6 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_shift
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_shift - Returns the shifted source and destination ranks, given a
                  shift direction and amount

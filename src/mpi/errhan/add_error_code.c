@@ -29,10 +29,6 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Add_error_code
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Add_error_code - Add an MPI error code to an MPI error class
 

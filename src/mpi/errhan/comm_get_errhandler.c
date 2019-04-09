@@ -28,10 +28,6 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
 
 /* MPIR_Comm_get_errhandler_impl
    returning NULL for errhandler_ptr means the default handler, MPI_ERRORS_ARE_FATAL is used */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_get_errhandler_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
@@ -45,10 +41,6 @@ void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errh
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_errhandler - Get the error handler attached to a communicator
 

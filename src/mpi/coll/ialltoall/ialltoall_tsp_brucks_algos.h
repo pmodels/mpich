@@ -119,10 +119,6 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     return sink_id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_sched_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -389,10 +385,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 }
 
 /* Non-blocking brucks based Alltoall */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Request ** req, int k,

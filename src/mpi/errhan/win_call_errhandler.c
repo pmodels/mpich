@@ -28,10 +28,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_call_errhandler
-#undef FCNAME
-#define FCNAME "MPI_Win_call_errhander"
 
 /*@
    MPI_Win_call_errhandler - Call the error handler installed on a

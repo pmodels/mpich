@@ -62,10 +62,6 @@ struct MPID_NS_Handle {
 
 /* Create a structure that we will use to remember files created for
    publishing.  */
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
     const char *dirname;
@@ -113,10 +109,6 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Publish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
@@ -194,10 +186,6 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
@@ -240,10 +228,6 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Unpublish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
     char filename[MAXPATHLEN];
@@ -282,10 +266,6 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     int i;

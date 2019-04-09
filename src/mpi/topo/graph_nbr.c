@@ -28,10 +28,6 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Graph_neighbors_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, int neighbors[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -65,10 +61,6 @@ int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graph_neighbors
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
  MPI_Graph_neighbors - Returns the neighbors of a node associated

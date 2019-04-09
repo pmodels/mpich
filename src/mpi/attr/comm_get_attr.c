@@ -26,10 +26,6 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 #undef MPI_Comm_get_attr
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Find the requested attribute.  If it exists, return either the attribute
    entry or the address of the entry, based on whether the request is for
    a pointer-valued attribute (C or C++) or an integer-valued attribute
@@ -298,10 +294,6 @@ int MPII_Comm_get_attr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /* FIXME: Attributes must be visable from all languages */
 /*@

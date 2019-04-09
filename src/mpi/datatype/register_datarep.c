@@ -25,10 +25,6 @@
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Register_datarep
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Register_datarep - Register a set of user-provided data conversion
    functions

@@ -27,10 +27,6 @@ int MPI_Win_test(MPI_Win win, int *flag) __attribute__ ((weak, alias("PMPI_Win_t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_test - Test whether an RMA exposure epoch has completed
 

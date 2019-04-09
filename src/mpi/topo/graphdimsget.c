@@ -28,10 +28,6 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graphdims_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Graphdims_get - Retrieves graph topology information associated with a

@@ -27,10 +27,6 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #undef MPI_Comm_dup_with_info
 #define MPI_Comm_dup_with_info PMPI_Comm_dup_with_info
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_dup_with_info_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
                                  MPIR_Comm ** newcomm_p_p)
 {
@@ -51,10 +47,6 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_dup_with_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_dup_with_info - Duplicates an existing communicator with all its cached

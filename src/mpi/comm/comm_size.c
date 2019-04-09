@@ -25,10 +25,6 @@ int MPI_Comm_size(MPI_Comm comm, int *size) __attribute__ ((weak, alias("PMPI_Co
 #define MPI_Comm_size PMPI_Comm_size
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

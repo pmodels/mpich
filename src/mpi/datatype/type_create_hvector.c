@@ -29,10 +29,6 @@ int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Dat
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_hvector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_hvector - Create a datatype with a constant stride given
      in bytes

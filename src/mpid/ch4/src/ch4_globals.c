@@ -76,10 +76,6 @@ void MPIDI_sigusr1_handler(int sig)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
     char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
@@ -132,10 +128,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_for_failed_procs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;

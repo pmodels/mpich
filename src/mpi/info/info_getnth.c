@@ -26,10 +26,6 @@ int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
 #undef MPI_Info_get_nthkey
 #define MPI_Info_get_nthkey PMPI_Info_get_nthkey
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_get_nthkey_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -80,10 +76,6 @@ Output Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_get_nthkey
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;

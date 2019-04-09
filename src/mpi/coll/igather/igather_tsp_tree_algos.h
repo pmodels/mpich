@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a tree based gather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Igathert_sched_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm,
@@ -202,10 +198,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking tree based gather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Igather_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,

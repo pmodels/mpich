@@ -6,10 +6,6 @@
 
 #include "mpidi_ch3_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME update_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
                            int iov_offset, size_t nb)
 {
@@ -34,10 +30,6 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iSendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;

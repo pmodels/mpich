@@ -29,10 +29,6 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Request_get_status
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 

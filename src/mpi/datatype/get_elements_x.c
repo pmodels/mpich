@@ -261,10 +261,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_elements_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIR_Get_elements_x_impl
  *
  * Arguments:
@@ -339,10 +335,6 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_elements_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* N.B. "count" is the name mandated by the MPI-3 standard, but it should
  * probably be called "elements" instead and is handled that way in the _impl
  * routine [goodell@ 2012-11-05 */

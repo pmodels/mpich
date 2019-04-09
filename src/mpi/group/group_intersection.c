@@ -27,10 +27,6 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgr
 #undef MPI_Group_intersection
 #define MPI_Group_intersection PMPI_Group_intersection
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_intersection_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                                  MPIR_Group ** new_group_ptr)
 {
@@ -105,10 +101,6 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_intersection
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

@@ -59,10 +59,6 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_commit_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -88,10 +84,6 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_commit - Commits the datatype
 

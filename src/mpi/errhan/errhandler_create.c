@@ -28,10 +28,6 @@ int MPI_Errhandler_create(MPI_Handler_function * function, MPI_Errhandler * errh
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Errhandler_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_create - Creates an MPI-style errorhandler
 

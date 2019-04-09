@@ -28,10 +28,6 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Errhandler_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_get - Gets the error handler for a communicator
 

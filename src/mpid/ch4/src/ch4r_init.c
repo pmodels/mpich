@@ -12,10 +12,6 @@
 #include "mpidimpl.h"
 #include "ch4r_init.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_init_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_init_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
@@ -65,10 +61,6 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_destroy_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
@@ -100,10 +92,6 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
@@ -114,10 +102,6 @@ void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
     return p;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;

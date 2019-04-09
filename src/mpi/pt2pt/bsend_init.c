@@ -29,10 +29,6 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Bsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Bsend_init - Builds a handle for a buffered send
 

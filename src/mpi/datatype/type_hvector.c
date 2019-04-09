@@ -26,10 +26,6 @@ int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype o
 #undef MPI_Type_hvector
 #define MPI_Type_hvector PMPI_Type_hvector
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_hvector_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
                            MPI_Datatype * newtype)
 {
@@ -64,10 +60,6 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_hvector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_hvector - type_hvector
 

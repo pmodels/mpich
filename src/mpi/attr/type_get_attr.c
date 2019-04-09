@@ -27,10 +27,6 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #undef MPI_Type_get_attr
 #define MPI_Type_get_attr PMPI_Type_get_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Type_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
                        int *flag, MPIR_Attr_type outAttrType)
 {
@@ -146,10 +142,6 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
    MPI_Type_get_attr - Retrieves attribute value by key

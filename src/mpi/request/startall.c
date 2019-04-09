@@ -32,10 +32,6 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Startall - Starts a collection of persistent requests
 

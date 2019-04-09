@@ -19,10 +19,6 @@
  * bypass the standard PMI implementations, it is the responsibility of the
  * channel to provide an implementation of the PMI routines.
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_universe_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_universe_size(int  * universe_size)
 {
     int mpi_errno = MPI_SUCCESS;

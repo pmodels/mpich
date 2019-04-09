@@ -25,10 +25,6 @@ int MPI_Group_free(MPI_Group * group) __attribute__ ((weak, alias("PMPI_Group_fr
 #undef MPI_Group_free
 #define MPI_Group_free PMPI_Group_free
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_free_impl(MPIR_Group * group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,10 +44,6 @@ int MPIR_Group_free_impl(MPIR_Group * group_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_free - Frees a group

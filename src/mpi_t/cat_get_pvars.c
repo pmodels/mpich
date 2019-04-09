@@ -27,10 +27,6 @@ int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_category_get_pvars_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -50,10 +46,6 @@ int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[])
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_category_get_pvars
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_get_pvars - Get performance variables in a category
 

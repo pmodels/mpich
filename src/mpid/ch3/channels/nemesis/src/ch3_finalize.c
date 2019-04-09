@@ -6,10 +6,6 @@
 
 #include "mpid_nem_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

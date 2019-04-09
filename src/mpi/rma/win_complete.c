@@ -27,10 +27,6 @@ int MPI_Win_complete(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_complete
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_complete - Completes an RMA operations begun after an MPI_Win_start.
 

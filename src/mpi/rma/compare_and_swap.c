@@ -30,10 +30,6 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Compare_and_swap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Compare_and_swap - Perform one-sided atomic compare-and-swap.
 

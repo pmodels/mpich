@@ -72,10 +72,6 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #undef MPI_Igatherv
 #define MPI_Igatherv PMPI_Igatherv
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const int recvcounts[], const int displs[],
                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -96,10 +92,6 @@ int MPIR_Igatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datat
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const int recvcounts[], const int displs[],
                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -120,10 +112,6 @@ int MPIR_Igatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, const int recvcounts[], const int displs[],
                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -167,10 +155,6 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                         const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
                         MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -188,10 +172,6 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        const int recvcounts[], const int displs[], MPI_Datatype recvtype,
                        int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -225,10 +205,6 @@ int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                   const int recvcounts[], const int displs[], MPI_Datatype recvtype,
                   int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -248,10 +224,6 @@ int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Igatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Igatherv - Gathers into specified locations from all processes in a group
                in a nonblocking way

@@ -38,10 +38,6 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[], const int 
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Graph_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
                       const int indx[], const int edges[], int reorder, MPI_Comm * comm_graph)
 {
@@ -132,10 +128,6 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graph_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_create - Makes a new communicator to which topology information
                  has been attached

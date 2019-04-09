@@ -39,10 +39,6 @@ static int get_ack_target_cmpl_cb(MPIR_Request * rreq);
 static int get_acc_ack_target_cmpl_cb(MPIR_Request * areq);
 static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq);
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4_RMA_Init_targetcb_pvars
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_RMA_Init_targetcb_pvars(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -229,10 +225,6 @@ int MPIDIG_RMA_Init_targetcb_pvars(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ack_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ack_put(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -268,10 +260,6 @@ static int ack_put(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ack_cswap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ack_cswap(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -316,10 +304,6 @@ static int ack_cswap(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ack_acc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ack_acc(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -355,10 +339,6 @@ static int ack_acc(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ack_get_acc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ack_get_acc(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -401,10 +381,6 @@ static int ack_get_acc(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME win_lock_advance
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_lock_advance(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -464,10 +440,6 @@ static int win_lock_advance(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_lock_req_proc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_LOCK_REQ_PROC);
@@ -496,10 +468,6 @@ static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * inf
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_lock_ack_proc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_lock_ack_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_LOCK_ACK_PROC);
@@ -520,10 +488,6 @@ static void win_lock_ack_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * inf
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_LOCK_ACK_PROC);
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_unlock_proc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, MPIR_Win * win)
 {
 
@@ -563,10 +527,6 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_complete_proc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_complete_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_COMPLETE_PROC);
@@ -577,10 +537,6 @@ static void win_complete_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * wi
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_COMPLETE_PROC);
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_post_proc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_post_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_POST_PROC);
@@ -592,10 +548,6 @@ static void win_post_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME win_unlock_done
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void win_unlock_done(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_UNLOCK_DONE);
@@ -617,10 +569,6 @@ static void win_unlock_done(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_UNLOCK_DONE);
 }
 
-#undef FUNCNAME
-#define FUNCNAME handle_acc_cmpl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handle_acc_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -714,10 +662,6 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handle_get_acc_cmpl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handle_get_acc_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -821,10 +765,6 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handle_acc_data
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq)
 {
     void *p_data = NULL;
@@ -858,10 +798,6 @@ static void handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPI
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_ACC_DATA);
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_target_cmpl_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS, i, c;
@@ -951,10 +887,6 @@ static int get_target_cmpl_cb(MPIR_Request * req)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME put_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int put_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -980,10 +912,6 @@ static int put_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME put_iov_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int put_iov_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1023,10 +951,6 @@ static int put_iov_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME acc_iov_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int acc_iov_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1065,10 +989,6 @@ static int acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_acc_iov_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1107,10 +1027,6 @@ static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME cswap_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1170,10 +1086,6 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME acc_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int acc_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1195,10 +1107,6 @@ static int acc_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_acc_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1220,10 +1128,6 @@ static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_ack_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1248,10 +1152,6 @@ static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME get_acc_ack_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1275,10 +1175,6 @@ static int get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME cswap_ack_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1298,10 +1194,6 @@ static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_put_ack_taget_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_put_ack_taget_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                 int is_local, int *is_contig,
                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1334,10 +1226,6 @@ int MPIDIG_put_ack_taget_msg_cb(int handler_id, void *am_hdr, void **data, size_
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                  int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1371,10 +1259,6 @@ int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_acc_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                      int is_local, int *is_contig,
                                      MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1436,10 +1320,6 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_cswap_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                    int is_local, int *is_contig,
                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1468,10 +1348,6 @@ int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_ctrl_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                   int is_local, int *is_contig,
                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1533,10 +1409,6 @@ int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_put_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                              int is_local, int *is_contig,
                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1635,10 +1507,6 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_put_iov_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_put_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                  int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1690,10 +1558,6 @@ int MPIDIG_put_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_put_iov_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                      int is_local, int *is_contig,
                                      MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1751,10 +1615,6 @@ int MPIDIG_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_iov_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                      int is_local, int *is_contig,
                                      MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1814,10 +1674,6 @@ int MPIDIG_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_acc_iov_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
                                          size_t * p_data_sz, int is_local, int *is_contig,
                                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1878,10 +1734,6 @@ int MPIDIG_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_put_data_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                   int is_local, int *is_contig,
                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1918,10 +1770,6 @@ int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_data_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                   int is_local, int *is_contig,
                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -1945,10 +1793,6 @@ int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_acc_data_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                       int is_local, int *is_contig,
                                       MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -1973,10 +1817,6 @@ int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_cswap_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                int is_local, int *is_contig,
                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2037,10 +1877,6 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                              int is_local, int *is_contig,
                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2125,10 +1961,6 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_acc_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                  int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2151,10 +1983,6 @@ int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_iov_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                  int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2217,10 +2045,6 @@ int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_acc_iov_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                      int is_local, int *is_contig,
                                      MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2242,10 +2066,6 @@ int MPIDIG_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                              int is_local, int *is_contig,
                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -2304,10 +2124,6 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_get_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                  int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)

@@ -28,10 +28,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader, MPI_Comm peer_co
 #undef MPI_Intercomm_create
 #define MPI_Intercomm_create PMPI_Intercomm_create
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Intercomm_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm ** new_intercomm_ptr)
@@ -160,10 +156,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Intercomm_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Intercomm_create - Creates an intercommuncator from two intracommunicators

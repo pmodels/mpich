@@ -36,10 +36,6 @@ typedef int ssize_t;
 #define MPIU_SOCKW_SOCKFD_INVALID    INVALID_SOCKET
 #define MPIU_SOCKW_EINTR WSAEINTR
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Inet_addr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Inet_addr(ipv4_dd_str, inaddr) (\
         ((*(inaddr) = inet_addr(ipv4_dd_str))                       \
             != INADDR_NONE)                                         \
@@ -51,10 +47,6 @@ typedef int ssize_t;
                 MPIU_OSW_Get_errno())                                \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Init(void)
 {
     WSADATA wsaData;
@@ -75,10 +67,6 @@ static inline int MPIU_SOCKW_Init(void)
         ((sockfd) != INVALID_SOCKET) ? 1 : 0                        \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Finalize()    (\
         (WSACleanup() == 0)                                         \
         ? MPI_SUCCESS                                               \
@@ -89,10 +77,6 @@ static inline int MPIU_SOCKW_Init(void)
                 MPIU_OSW_Get_errno())                                \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_open
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Sock_open(domain, type, protocol, sock_ptr) (\
         ((*sock_ptr = WSASocket(domain, type, protocol, NULL, 0,    \
             WSA_FLAG_OVERLAPPED)) != INVALID_SOCKET)                \
@@ -104,10 +88,6 @@ static inline int MPIU_SOCKW_Init(void)
             MPIU_OSW_Get_errno())                                    \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_close
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Sock_close(sock)    (\
         (closesocket(sock) != SOCKET_ERROR)                         \
         ? MPI_SUCCESS                                               \
@@ -118,10 +98,6 @@ static inline int MPIU_SOCKW_Init(void)
             MPIU_OSW_Get_errno())                                    \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Bind
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Bind(sock, addr, addr_len) (\
         (bind(sock, (struct sockaddr *)addr, addr_len)              \
             != SOCKET_ERROR)                                        \
@@ -134,10 +110,6 @@ static inline int MPIU_SOCKW_Init(void)
 )
 
 /* Bind to 1st port available in the range [low_port, high_port] */
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Bind_port_range
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct sockaddr_in *sin,
                                              unsigned short int low_port,
                                              unsigned short int high_port)
@@ -170,10 +142,6 @@ static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct so
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Listen
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Listen(sock, backlog)  (\
         (listen(sock, backlog) != SOCKET_ERROR)                     \
         ? MPI_SUCCESS                                               \
@@ -184,10 +152,6 @@ static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct so
             MPIU_OSW_Get_errno())                                    \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Accept(sock, addr, addr_len,                  \
         new_sock_ptr)(\
         ((*new_sock_ptr = accept(sock, addr, addr_len))             \
@@ -204,10 +168,6 @@ static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct so
 )                                                           \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Connect(MPIU_SOCKW_Sockfd_t sockfd, struct sockaddr *addr,
                                      int addr_len, int *is_pending)
 {
@@ -230,10 +190,6 @@ static inline int MPIU_SOCKW_Connect(MPIU_SOCKW_Sockfd_t sockfd, struct sockaddr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Read
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Read(sock, buf, buf_len, nb_rd_ptr)(\
         ((*nb_rd_ptr = recv(sock, buf, buf_len, 0x0))               \
             != SOCKET_ERROR)                                        \
@@ -250,10 +206,6 @@ static inline int MPIU_SOCKW_Connect(MPIU_SOCKW_Sockfd_t sockfd, struct sockaddr
 )                                                           \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Readv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
                                    MPL_IOV * iov, int iov_cnt, int *nb_rd_ptr)
 {
@@ -279,10 +231,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Write
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Write(sock, buf, buf_len, nb_wr_ptr)(\
         ((*nb_wr_ptr = send(sock, buf, buf_len, 0x0))               \
             != SOCKET_ERROR)                                        \
@@ -300,10 +248,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
 )
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Writev
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Writev(sock, iov, iov_cnt, nb_wr_ptr)(\
         (WSASend(sock, iov, iov_cnt, nb_wr_ptr, 0x0, NULL, NULL)    \
             != SOCKET_ERROR)                                        \
@@ -320,10 +264,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
 )                                                           \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_cntrl_nb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Sock_cntrl_nb(sock, is_nb)(\
         (ioctlsocket(sock, FIONBIO, (u_long *)&is_nb)               \
             != SOCKET_ERROR)                                        \
@@ -335,10 +275,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
             MPIU_OSW_Get_errno())                                   \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_setopt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Sock_setopt(sock, level, opt_name,opt_val_ptr,\
         opt_len) (\
         (setsockopt(sock, level, opt_name,                          \
@@ -352,10 +288,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
             MPIU_OSW_Get_errno())                                   \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_getopt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Sock_getopt(sock, level, opt_name,opt_val_ptr,\
         opt_len_ptr) (\
         (getsockopt(sock, level, opt_name, opt_val_ptr, opt_len_ptr)\
@@ -368,10 +300,6 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
             MPIU_OSW_Get_errno())                                   \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Sock_has_error
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Sock_has_error(MPIU_SOCKW_Sockfd_t sock)
 {
     int has_error = 0;
@@ -467,10 +395,6 @@ typedef MPIU_SOCKW_Timeval_t_ *MPIU_SOCKW_Timeval_hnd_t;
 #define MPIU_SOCKW_Waitset_hnd_is_init_(hnd)  ((hnd) ? 1 : 0)
 #define MPIU_SOCKW_Waitset_sock_hnd_is_init_(hnd)   ((hnd) ? 1 : 0)
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Timeval_hnd_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Timeval_hnd_init(MPIU_SOCKW_Timeval_hnd_t * hnd_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -491,10 +415,6 @@ static inline int MPIU_SOCKW_Timeval_hnd_init(MPIU_SOCKW_Timeval_hnd_t * hnd_ptr
 /* For portability with poll() timeval now has a milli sec
  * time resolution - instead of a micro sec resolution
  */
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Timeval_hnd_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Timeval_hnd_set(MPIU_SOCKW_Timeval_hnd_t hnd, int tv_msec)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -507,10 +427,6 @@ static inline int MPIU_SOCKW_Timeval_hnd_set(MPIU_SOCKW_Timeval_hnd_t hnd, int t
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Timeval_hnd_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Timeval_hnd_finalize(MPIU_SOCKW_Timeval_hnd_t * hnd_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -540,10 +456,6 @@ static inline int MPIU_SOCKW_Timeval_hnd_finalize(MPIU_SOCKW_Timeval_hnd_t * hnd
     static inline int MPIU_SOCKW_Waitset_hndArr_create()
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_hnd_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_hnd_init(MPIU_SOCKW_Waitset_hnd_t * hnd_ptr, int nfds)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -584,10 +496,6 @@ static inline int MPIU_SOCKW_Waitset_hnd_init(MPIU_SOCKW_Waitset_hnd_t * hnd_ptr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_hnd_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_hnd_finalize(MPIU_SOCKW_Waitset_hnd_t * hnd_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -603,18 +511,10 @@ static inline int MPIU_SOCKW_Waitset_hnd_finalize(MPIU_SOCKW_Waitset_hnd_t * hnd
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_has_more_evnts
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Waitset_has_more_evnts(waitset_hnd) (\
         waitset_hnd->nevents                                         \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_wait(MPIU_SOCKW_Waitset_hnd_t hnd,
                                           MPIU_SOCKW_Timeval_hnd_t timeout)
 {
@@ -650,10 +550,6 @@ static inline int MPIU_SOCKW_Waitset_wait(MPIU_SOCKW_Waitset_hnd_t hnd,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_get_sock_evnts
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_get_sock_evnts_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                                      MPIU_SOCKW_Sockfd_t sock, int *flag_ptr)
 {
@@ -691,10 +587,6 @@ static inline int MPIU_SOCKW_Waitset_get_sock_evnts_(MPIU_SOCKW_Waitset_hnd_t wa
     return has_events;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_get_nxt_sock_with_evnt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_get_nxt_sock_with_evnt(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                                             MPIU_SOCKW_Waitset_sock_hnd_t *
                                                             sock_hnd_ptr)
@@ -725,10 +617,6 @@ static inline int MPIU_SOCKW_Waitset_get_nxt_sock_with_evnt(MPIU_SOCKW_Waitset_h
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_add_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_add_sock(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                               MPIU_SOCKW_Sockfd_t sock, int flag, void *user_ptr,
                                               MPIU_SOCKW_Waitset_sock_hnd_t * sock_hnd_ptr)
@@ -772,10 +660,6 @@ static inline int MPIU_SOCKW_Waitset_add_sock(MPIU_SOCKW_Waitset_hnd_t waitset_h
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_set_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_set_sock(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                               MPIU_SOCKW_Waitset_sock_hnd_t sock_hnd, int flag)
 {
@@ -802,10 +686,6 @@ static inline int MPIU_SOCKW_Waitset_set_sock(MPIU_SOCKW_Waitset_hnd_t waitset_h
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_clr_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_clr_sock(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                               MPIU_SOCKW_Waitset_sock_hnd_t sock_hnd, int flag)
 {
@@ -833,10 +713,6 @@ static inline int MPIU_SOCKW_Waitset_clr_sock(MPIU_SOCKW_Waitset_hnd_t waitset_h
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_rem_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_rem_sock(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
                                               MPIU_SOCKW_Waitset_sock_hnd_t * sock_hnd_ptr)
 {
@@ -869,10 +745,6 @@ static inline int MPIU_SOCKW_Waitset_rem_sock(MPIU_SOCKW_Waitset_hnd_t waitset_h
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_sock_hnd_get_sockfd
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_sock_hnd_get_sockfd(MPIU_SOCKW_Waitset_sock_hnd_t sock_hnd,
                                                          MPIU_SOCKW_Sockfd_t * sockfd_ptr)
 {
@@ -886,10 +758,6 @@ static inline int MPIU_SOCKW_Waitset_sock_hnd_get_sockfd(MPIU_SOCKW_Waitset_sock
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_sock_hnd_get_user_ptr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_sock_hnd_get_user_ptr(MPIU_SOCKW_Waitset_sock_hnd_t sock_hnd,
                                                            void **userp_ptr)
 {
@@ -903,10 +771,6 @@ static inline int MPIU_SOCKW_Waitset_sock_hnd_get_user_ptr(MPIU_SOCKW_Waitset_so
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_sock_hnd_set_user_ptr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Waitset_sock_hnd_set_user_ptr(MPIU_SOCKW_Waitset_sock_hnd_t sock_hnd,
                                                            void *user_ptr)
 {
@@ -919,20 +783,12 @@ static inline int MPIU_SOCKW_Waitset_sock_hnd_set_user_ptr(MPIU_SOCKW_Waitset_so
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_is_sock_readable
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Waitset_is_sock_readable(sock_hnd)(\
         (MPIU_SOCKW_Waitset_sock_hnd_is_init_(sock_hnd))                \
         ? (sock_hnd->event_flag & MPIU_SOCKW_FLAG_SOCK_IS_READABLE_) \
         : 0                                                         \
 )
 
-#undef FUNCNAME
-#define FUNCNAME MPIU_SOCKW_Waitset_is_sock_writeable
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #define MPIU_SOCKW_Waitset_is_sock_writeable(sock_hnd)(\
         (MPIU_SOCKW_Waitset_sock_hnd_is_init_(sock_hnd))                \
         ? (sock_hnd->event_flag & MPIU_SOCKW_FLAG_SOCK_IS_WRITEABLE_)\
@@ -946,6 +802,4 @@ typedef int MPIU_SOCKW_Sockfd_t;
 
 #endif /* USE_NT_SOCK */
 
-#undef FUNCNAME
-#undef FCNAME
 #endif /* MPIU_SOCK_WRAPPERS_H_INCLUDED */

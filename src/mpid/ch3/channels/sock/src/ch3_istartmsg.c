@@ -6,10 +6,6 @@
 
 #include "mpidi_ch3_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME create_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 {
     MPIR_Request *sreq;
@@ -43,10 +39,6 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
  * An error condition also results in a request be allocated and the errror
  * being returned in the status field of the request.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iStartMsg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Request ** sreq_ptr)
 {
     MPIR_Request *sreq = NULL;

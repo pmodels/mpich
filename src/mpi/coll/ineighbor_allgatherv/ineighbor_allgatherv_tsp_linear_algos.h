@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm fir neighbor_allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
                                                        const int recvcounts[], const int displs[],
@@ -77,10 +73,6 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
 
 /* Non-blocking linear algo based neighbor_allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ineighbor_allgatherv_allcomm_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  const int recvcounts[], const int displs[],

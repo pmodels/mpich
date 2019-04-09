@@ -39,10 +39,6 @@ MPIR_T_pvar_handle_t *const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_ob
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_pvar_handle_alloc_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
                                   void *obj_handle, MPI_T_pvar_handle * handle, int *count)
 {
@@ -171,10 +167,6 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_pvar_handle_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_handle_alloc - Allocate a handle for a performance variable
 

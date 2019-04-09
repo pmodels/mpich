@@ -26,10 +26,6 @@ int MPI_Comm_free_keyval(int *comm_keyval) __attribute__ ((weak, alias("PMPI_Com
 #undef MPI_Comm_free_keyval
 #define MPI_Comm_free_keyval PMPI_Comm_free_keyval
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_free_keyval_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_free_keyval_impl(int keyval)
 {
     int in_use;
@@ -49,10 +45,6 @@ void MPIR_Comm_free_keyval_impl(int keyval)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_free_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 

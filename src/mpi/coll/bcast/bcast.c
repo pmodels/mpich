@@ -155,10 +155,6 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #undef MPI_Bcast
 #define MPI_Bcast PMPI_Bcast
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast_intra_auto(void *buffer,
                           int count,
                           MPI_Datatype datatype,
@@ -236,10 +232,6 @@ int MPIR_Bcast_intra_auto(void *buffer,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast_inter_auto(void *buffer,
                           int count,
                           MPI_Datatype datatype,
@@ -253,10 +245,6 @@ int MPIR_Bcast_inter_auto(void *buffer,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                     MPIR_Errflag_t * errflag)
 {
@@ -315,10 +303,6 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                MPIR_Errflag_t * errflag)
 {
@@ -336,10 +320,6 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Bcast - Broadcasts a message from the process with rank "root" to

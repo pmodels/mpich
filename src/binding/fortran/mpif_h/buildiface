@@ -4592,8 +4592,6 @@ MPIR_Comm_delete_attr_f77_proxy(
 #define MPI_Status_f2c PMPI_Status_f2c
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_f2c
 
 int MPI_Status_f2c( const MPI_Fint *f_status, MPI_Status *c_status )
 {
@@ -4665,8 +4663,6 @@ print $OUTFD "\
 #define MPI_Status_c2f PMPI_Status_c2f
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_c2f
 
 int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
 {

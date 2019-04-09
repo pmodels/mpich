@@ -17,10 +17,6 @@
 
 /* Routine to schedule a scattered based alltoallv */
 /* Alltoallv doesn't support MPI_IN_PLACE */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_sched_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
@@ -120,10 +116,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 }
 
 /* Scattered sliding window based Alltoallv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                         const int recvcounts[], const int rdispls[],

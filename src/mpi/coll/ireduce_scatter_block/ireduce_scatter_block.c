@@ -86,10 +86,6 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #undef MPI_Ireduce_scatter_block
 #define MPI_Ireduce_scatter_block PMPI_Ireduce_scatter_block
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -149,10 +145,6 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -167,10 +159,6 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s)
@@ -236,10 +224,6 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -257,10 +241,6 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                     int recvcount, MPI_Datatype datatype,
                                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -318,10 +298,6 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                int recvcount, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -341,10 +317,6 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ireduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ireduce_scatter_block - Combines values and scatters the results in
                             a nonblocking way

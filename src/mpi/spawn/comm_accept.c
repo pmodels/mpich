@@ -26,10 +26,6 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
 #undef MPI_Comm_accept
 #define MPI_Comm_accept PMPI_Comm_accept
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_accept_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -39,10 +35,6 @@ int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_accept - Accept a request to form a new intercommunicator
 

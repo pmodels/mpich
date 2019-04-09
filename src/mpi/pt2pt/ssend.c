@@ -28,10 +28,6 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Ssend - Blocking synchronous send
 

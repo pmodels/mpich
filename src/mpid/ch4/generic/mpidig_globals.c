@@ -17,10 +17,6 @@
 MPIDIG_global_t MPIDIG_global = { {0}
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_comm_abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
 {
     int mpi_errno = MPI_SUCCESS;

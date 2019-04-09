@@ -17,10 +17,6 @@
  * max_size if dst < remote_size.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_sched_inter_pairwise_exchange
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,

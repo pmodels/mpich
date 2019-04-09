@@ -169,10 +169,6 @@ void MPIR_T_env_finalize(void)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_finalize - Finalize the MPI tool information interface
 

@@ -28,10 +28,6 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_remote_size
-#undef FCNAME
-#define FCNAME "MPI_Comm_remote_size"
 
 /*@
 

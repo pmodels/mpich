@@ -7,10 +7,6 @@
 
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_pairwise
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /* Algorithm: Pairwise Exchange
  *

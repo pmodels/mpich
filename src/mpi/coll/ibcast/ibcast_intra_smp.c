@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-#undef FUNCNAME
-#define FUNCNAME sched_test_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -28,10 +28,6 @@ int MPI_Type_free_keyval(int *type_keyval) __attribute__ ((weak, alias("PMPI_Typ
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_free_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_free_keyval - Frees an attribute key for datatypes
 

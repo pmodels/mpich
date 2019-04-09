@@ -15,10 +15,6 @@
 
 static void request_init_callback(void *request);
 
-#undef FUNCNAME
-#define FUNCNAME request_init_callback
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void request_init_callback(void *request)
 {
 
@@ -27,10 +23,6 @@ static void request_init_callback(void *request)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
                             MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
 {
@@ -131,10 +123,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_finalize_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
@@ -216,20 +204,12 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_get_vci_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_get_vci_attr(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_comm_get_lpid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
@@ -246,20 +226,12 @@ int MPIDI_UCX_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool i
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_get_local_upids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_upids_to_lupids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                               int **remote_lupids)
 {
@@ -267,28 +239,16 @@ int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_create_intercomm_from_lpids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
 {
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);

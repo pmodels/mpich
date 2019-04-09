@@ -27,10 +27,6 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group * group)
 #undef MPI_Comm_group
 #define MPI_Comm_group PMPI_Comm_group
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_group_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -82,10 +78,6 @@ int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_group - Accesses the group associated with given communicator

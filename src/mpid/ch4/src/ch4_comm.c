@@ -91,10 +91,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Group ** failed_gr
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                           MPIR_Comm ** newcomm_ptr)
 {
@@ -137,10 +133,6 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
@@ -210,10 +202,6 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
@@ -293,10 +281,6 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Intercomm_exchange_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_Comm * peer_comm,
                                 int remote_leader, int *remote_size, int **remote_lupids,
                                 int *is_low_group)

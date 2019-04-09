@@ -41,10 +41,6 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
 #undef MPIX_Comm_shrink
 #define MPIX_Comm_shrink PMPIX_Comm_shrink
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_shrink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm shrink impl; assumes that standard error checking has already taken
  * place in the calling function */
 int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
@@ -118,10 +114,6 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_shrink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPIX_Comm_shrink - Creates a new communitor from an existing communicator while
                   excluding failed processes

@@ -27,8 +27,6 @@ int MPI_Pcontrol(const int level, ...) __attribute__ ((weak, alias("PMPI_Pcontro
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pcontrol
 
 /*@
   MPI_Pcontrol - Controls profiling

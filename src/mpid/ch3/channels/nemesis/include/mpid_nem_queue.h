@@ -33,10 +33,6 @@ int MPID_nem_network_poll(int in_blocking_progress);
     do {/*nothing*/} while (0)
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_cell_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
@@ -51,10 +47,6 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 
 #if defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_queue_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
@@ -239,10 +231,6 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 #define MPID_nem_queue_mutex_unlock MPID_Thread_mutex_unlock
 
 /* must be called by exactly one process per queue */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_queue_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);

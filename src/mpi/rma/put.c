@@ -29,10 +29,6 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Put - Put data into a memory window on a remote process
 

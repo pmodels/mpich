@@ -27,10 +27,6 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 #undef MPI_Comm_delete_attr
 #define MPI_Comm_delete_attr PMPI_Comm_delete_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_delete_attr_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -84,10 +80,6 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_delete_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_delete_attr - Deletes an attribute value associated with a key on
    a  communicator

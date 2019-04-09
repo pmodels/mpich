@@ -28,10 +28,6 @@ int MPI_T_pvar_session_free(MPI_T_pvar_session * session)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_pvar_session_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -55,10 +51,6 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session * session)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_pvar_session_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_session_free - Free an existing performance variable session
 

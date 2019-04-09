@@ -46,10 +46,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode) __attribute__ ((weak, alias("PMPI_Ab
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Abort - Terminates MPI execution environment
 

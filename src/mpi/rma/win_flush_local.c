@@ -28,10 +28,6 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_flush_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_flush_local - Complete locally all outstanding RMA operations at the
 given target

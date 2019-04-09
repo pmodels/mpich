@@ -142,10 +142,6 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
    End Algorithm: MPI_Allgather
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -184,10 +180,6 @@ int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dat
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount,
                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -201,10 +193,6 @@ int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
                                MPI_Datatype sendtype, void *recvbuf,
                                int recvcount, MPI_Datatype recvtype,
@@ -260,10 +248,6 @@ int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                           int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                           MPIR_Sched_t s)
@@ -281,10 +265,6 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                          MPI_Datatype sendtype, void *recvbuf, int recvcount,
                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -367,10 +347,6 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -390,10 +366,6 @@ int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iallgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iallgather - Gathers data from all tasks and distribute the combined data
                  to all tasks in a nonblocking way

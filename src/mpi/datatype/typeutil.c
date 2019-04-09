@@ -140,10 +140,6 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) - 1
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init(void)
 {
     int i;
@@ -189,10 +185,6 @@ int MPIR_Datatype_init(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
 {
     int i;
@@ -212,10 +204,6 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
    That routine calls it from within a single-init section to
    ensure thread-safety. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_builtin_fillin
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;

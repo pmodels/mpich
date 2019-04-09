@@ -26,10 +26,6 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #undef MPI_Test
 #define MPI_Test PMPI_Test
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Test_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -56,10 +52,6 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -102,10 +94,6 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Test  - Tests for the completion of a request
 

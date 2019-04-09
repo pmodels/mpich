@@ -9,10 +9,6 @@
 int (*MPIDI_Anysource_iprobe_fn)(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                  MPI_Status * status) = NULL;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 		int *flag, MPI_Status *status)
 {

@@ -39,10 +39,6 @@ typedef struct intModel {
     int range, kind, bytes;
 } intModel;
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_f90_integer
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_f90_integer - Return a predefined type that matches
    the specified range

@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Ibcast_sched_test_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,10 +26,6 @@ int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Ibcast_sched_test_curr_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -51,10 +43,6 @@ int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Ibcast_sched_add_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -75,10 +63,6 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 /* This is a binomial scatter operation, but it does *not* take
  * typical scatter arguments.  At the moment this function always
  * scatters a buffer of nbytes starting at tmp_buf address. */
-#undef FUNCNAME
-#define FUNCNAME MPII_Iscatter_for_bcast_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, int nbytes,
                                   MPIR_Sched_t s)
 {

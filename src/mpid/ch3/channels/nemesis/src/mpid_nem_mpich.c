@@ -23,10 +23,6 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 
 unsigned short *MPID_nem_recv_seqno = 0;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_init(void)
 {
@@ -75,10 +71,6 @@ fn_fail:
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_send_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;

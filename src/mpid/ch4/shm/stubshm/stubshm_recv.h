@@ -13,8 +13,6 @@
 
 #include "stubshm_impl.h"
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_STUBSHM_mpi_recv)
 static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
                                          MPI_Aint count,
                                          MPI_Datatype datatype,
@@ -65,8 +63,6 @@ static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
     return MPI_SUCCESS;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_STUBSHM_mpi_irecv)
 static inline int MPIDI_STUBSHM_mpi_irecv(void *buf,
                                           MPI_Aint count,
                                           MPI_Datatype datatype,

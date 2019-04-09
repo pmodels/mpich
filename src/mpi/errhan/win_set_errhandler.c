@@ -28,10 +28,6 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_set_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_set_errhandler - Set window error handler
 

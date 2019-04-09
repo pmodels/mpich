@@ -29,10 +29,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_set_name
-#undef FCNAME
-#define FCNAME "MPI_Type_set_name"
 
 /*@
    MPI_Type_set_name - set datatype name

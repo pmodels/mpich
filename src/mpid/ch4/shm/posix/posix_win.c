@@ -158,10 +158,6 @@ int MPIDI_POSIX_mpi_win_create_hook(MPIR_Win * win)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_win_allocate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -202,10 +198,6 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_win_allocate_shared_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -243,10 +235,6 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_win_create_dynamic_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -278,10 +266,6 @@ int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win ATTRIBUTE((unused)),
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_win_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

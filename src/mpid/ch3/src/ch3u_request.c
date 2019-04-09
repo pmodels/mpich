@@ -24,10 +24,6 @@
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
-#undef FUNCNAME
-#define FUNCNAME MPID_Request_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_Request_create_hook(MPIR_Request *req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_INIT);
@@ -83,10 +79,6 @@ void MPID_Request_create_hook(MPIR_Request *req)
  *
  * Expects sreq->dev.OnFinal to be initialized (even if it's NULL).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_load_send_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 				     MPL_IOV * const iov, int * const iov_n)
 {
@@ -194,10 +186,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
  * structure).  If the density of IOV is not sufficient, allocate a 
  * send/receive buffer and point the IOV at the buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_load_recv_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
     MPI_Aint last;
@@ -402,10 +390,6 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
  *
  * Unpack data from a send/receive buffer into the user buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_unpack_srbuf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 {
     MPI_Aint last;
@@ -479,10 +463,6 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
  *
  * Copy/unpack data from an "unexpected eager buffer" into the user buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_unpack_uebuf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 {
     int dt_contig;

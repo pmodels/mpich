@@ -26,10 +26,6 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
 #undef MPI_Comm_set_errhandler
 #define MPI_Comm_set_errhandler PMPI_Comm_set_errhandler
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_set_errhandler_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr)
 {
     int in_use;
@@ -55,10 +51,6 @@ void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errha
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_set_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
    MPI_Comm_set_errhandler - Set the error handler for a communicator

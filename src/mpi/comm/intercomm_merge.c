@@ -32,10 +32,6 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
  * basing on network addresses of existing communicator.
  */
 
-#undef FUNCNAME
-#define FUNCNAME create_and_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int create_and_map(MPIR_Comm * comm_ptr, int local_high, MPIR_Comm * new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -64,10 +60,6 @@ static int create_and_map(MPIR_Comm * comm_ptr, int local_high, MPIR_Comm * new_
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Intercomm_merge_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -208,10 +200,6 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Intercomm_merge
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Intercomm_merge - Creates an intracommuncator from an intercommunicator

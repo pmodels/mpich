@@ -11,10 +11,6 @@
    rather than direct routine calls.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -105,10 +105,6 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_contents
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_contents - get type contents
 

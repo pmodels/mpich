@@ -36,10 +36,6 @@ void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultl
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_name
-#undef FCNAME
-#define FCNAME "MPI_Comm_get_name"
 
 /*@
   MPI_Comm_get_name - Return the print name from the communicator

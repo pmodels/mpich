@@ -28,10 +28,6 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_address
-#undef FCNAME
-#define FCNAME "MPI_Get_address"
 
 /*@
    MPI_Get_address - Get the address of a location in memory

@@ -28,10 +28,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_test_inter
-#undef FCNAME
-#define FCNAME "MPI_Comm_test_inter"
 
 /*@
 

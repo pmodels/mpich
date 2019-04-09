@@ -21,10 +21,6 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt)
 #define MPIDI_CH3U_Pkt_send_container_alloc() (MPL_malloc(sizeof(MPIDI_CH3_Pkt_send_container_t), MPL_MEM_BUFFER))
 #define MPIDI_CH3U_Pkt_send_container_free(pc_) MPL_free(pc_)
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_unordered_recv_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 					 MPIR_Request ** rreqp)
 {

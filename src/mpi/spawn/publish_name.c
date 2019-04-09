@@ -29,10 +29,6 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Publish_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Publish_name - Publish a service name for use with MPI_Comm_connect
 

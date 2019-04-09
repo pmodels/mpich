@@ -16,10 +16,6 @@ static size_t *indices;
 static int local_size;
 static char *segment;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_destroy(void *bc_table)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -40,10 +36,6 @@ int MPIDU_bc_table_destroy(void *bc_table)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
                        void **bc_table, size_t ** bc_indices)
 {
@@ -97,10 +89,6 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 #define VALLEN 1024
 #define KEYLEN 64
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {
@@ -216,10 +204,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #elif defined(USE_PMI2_API)
 #include <pmi2.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {
@@ -321,10 +305,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #else
 #include <pmi.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {

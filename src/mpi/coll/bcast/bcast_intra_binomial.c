@@ -12,10 +12,6 @@
  * For short messages, we use a binomial tree algorithm.
  * Cost = lgp.alpha + n.lgp.beta
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast_intra_binomial(void *buffer,
                               int count,
                               MPI_Datatype datatype,

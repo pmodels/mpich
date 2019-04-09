@@ -27,10 +27,6 @@ int MPI_Win_unlock(int rank, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_unlock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_unlock - Completes an RMA access epoch at the target process
 

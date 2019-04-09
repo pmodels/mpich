@@ -27,10 +27,6 @@ int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, v
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_pvar_readreset_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -51,10 +47,6 @@ int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle han
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_pvar_readreset
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_readreset - Read the value of a performance variable and then reset it
 

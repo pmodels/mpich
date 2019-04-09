@@ -29,10 +29,6 @@ int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datat
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack_external_size
-#undef FCNAME
-#define FCNAME "MPI_Pack_external_size"
 
 /*@
   MPI_Pack_external_size - Returns the upper bound on the amount of

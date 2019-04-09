@@ -431,10 +431,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
     return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_send_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
                                                     void *desc, uint32_t src, fi_addr_t dest_addr,
                                                     uint64_t tag, void *context, int is_inject,
@@ -464,10 +460,6 @@ struct MPIDI_OFI_contig_blocks_params {
     size_t last_chunk;
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_count_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* number of data elements in dt_datatype */
                                                     MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
                                                     size_t max_pipe)
@@ -500,10 +492,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
 }
 
 /* Find the nearest length of iov that meets alignment requirement */
-#undef  FUNCNAME
-#define FUNCNAME MPIDI_OFI_align_iov_len
-#undef  FCNAME
-#define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 {
     size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
@@ -513,20 +501,12 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 }
 
 /* Find the minimum address that is >= ptr && meets alignment requirement */
-#undef  FUNCNAME
-#define FUNCNAME MPIDI_OFI_aligned_next_iov
-#undef  FCNAME
-#define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
     size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
     return (void *) (uintptr_t) aligned_iov;
 }
 
-#undef  FUNCNAME
-#define FUNCNAME MPIDI_OFI_request_util_iov
-#undef  FCNAME
-#define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
 {
 #if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)

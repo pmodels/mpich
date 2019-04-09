@@ -28,10 +28,6 @@ int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Irsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Irsend - Starts a nonblocking ready send
 

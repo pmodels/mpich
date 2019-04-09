@@ -6,10 +6,6 @@
 
 #include "mpidi_ch3_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME create_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset, size_t nb)
 {
     MPIR_Request *sreq;
@@ -66,10 +62,6 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
    be described by a single iovec of size
    MPL_IOV_LIMIT. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iStartMsgv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request ** sreq_ptr)
 {
     MPIR_Request *sreq = NULL;

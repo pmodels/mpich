@@ -12,10 +12,6 @@
 #include "mpidimpl.h"
 #include "posix_noinline.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -26,10 +22,6 @@ int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;

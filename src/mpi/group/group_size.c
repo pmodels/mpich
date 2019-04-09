@@ -27,10 +27,6 @@ int MPI_Group_size(MPI_Group group, int *size) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_size
-#undef FCNAME
-#define FCNAME "MPI_Group_size"
 
 /*@
 

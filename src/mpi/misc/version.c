@@ -28,10 +28,6 @@ int MPI_Get_version(int *version, int *subversion)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_version
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get_version - Return the version number of MPI
 

@@ -47,10 +47,6 @@
  * bytes and knows how to deal with a "ragged edge" vector length and we
  * implement the recursive doubling algorithm here.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,

@@ -38,10 +38,6 @@ MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Coll_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -104,10 +100,6 @@ int MPII_Coll_init(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Coll_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -115,10 +115,6 @@ static int MPID_nem_delete_shm_region(MPID_nem_copy_buf_t **buf, MPL_shm_hnd_t *
 /* number of iterations to wait for the other side to process a buffer */
 #define LMT_POLLS_BEFORE_GIVING_UP 5000
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_initiate_lmt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -156,10 +152,6 @@ int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Req
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_start_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -236,10 +228,6 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_coo
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_start_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -327,10 +315,6 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_coo
     goto fn_return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_next_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_next_req(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -434,10 +418,6 @@ static int get_next_req(MPIDI_VC_t *vc)
    (i.e., won't copy three bytes of an int) we may not fill the entire
    buffer each time. */
 
-#undef FUNCNAME
-#define FUNCNAME lmt_shm_send_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -526,10 +506,6 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
    buffer is filled, we start copying where we just copied the
    leftover data from last time.  */
 
-#undef FUNCNAME
-#define FUNCNAME lmt_shm_recv_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -660,10 +636,6 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_handle_cookie
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_HANDLE_COOKIE);
@@ -674,10 +646,6 @@ int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV co
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_done_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPIR_Request *req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_DONE_SEND);
@@ -688,10 +656,6 @@ int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPIR_Request *req)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_done_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPIR_Request *req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_DONE_RECV);
@@ -702,10 +666,6 @@ int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPIR_Request *req)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_progress_vc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -754,10 +714,6 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -802,10 +758,6 @@ int MPID_nem_lmt_shm_progress(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_shm_vc_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -863,10 +815,6 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_allocate_shm_region
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_allocate_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -890,10 +838,6 @@ static int MPID_nem_allocate_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_attach_shm_region
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_attach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -920,10 +864,6 @@ static int MPID_nem_attach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_detach_shm_region
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_detach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -941,10 +881,6 @@ static int MPID_nem_detach_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_delete_shm_region
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_delete_shm_region(MPID_nem_copy_buf_t **buf_p, MPL_shm_hnd_t *handle_p)
 {
     int mpi_errno = MPI_SUCCESS;

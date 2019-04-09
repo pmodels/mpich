@@ -75,10 +75,6 @@ static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
  * _datatype: the datatype
  * _bytes: total byte size
  * Note: _bytes is calculated based on _count & _datatype and passed in here for reusing. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_count_iovecs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_count_iovecs(int origin_count,
                                                     int target_count,
                                                     int result_count,
@@ -104,10 +100,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_count_iovecs(int origin_count,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_query_acc_atomic_support
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query_type,
                                                       MPI_Op op,
                                                       MPIR_Win * win,
@@ -377,10 +369,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
@@ -536,10 +524,6 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
@@ -569,10 +553,6 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
@@ -714,10 +694,6 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
@@ -748,10 +724,6 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rput
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     int origin_count,
                                     MPI_Datatype origin_datatype,
@@ -783,10 +755,6 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_compare_and_swap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                 const void *compare_addr,
                                                 void *result_addr,
@@ -895,10 +863,6 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                        target_rank, target_disp, win);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                           int origin_count,
                                           MPI_Datatype origin_datatype,
@@ -1036,10 +1000,6 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_get_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
@@ -1230,10 +1190,6 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_raccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                            int origin_count,
                                            MPI_Datatype origin_datatype,
@@ -1276,10 +1232,6 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rget_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                int origin_count,
                                                MPI_Datatype origin_datatype,
@@ -1324,10 +1276,6 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_fetch_and_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             void *result_addr,
                                             MPI_Datatype datatype,
@@ -1442,10 +1390,6 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                    win);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rget
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     int origin_count,
                                     MPI_Datatype origin_datatype,
@@ -1477,10 +1421,6 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_get_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
@@ -1524,10 +1464,6 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                           int origin_count,
                                           MPI_Datatype origin_datatype,

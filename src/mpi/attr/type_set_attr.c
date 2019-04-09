@@ -27,10 +27,6 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #undef MPI_Type_set_attr
 #define MPI_Type_set_attr PMPI_Type_set_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Type_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
                        MPIR_Attr_type attrType)
 {
@@ -162,10 +158,6 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_set_attr - Stores attribute value associated with a key
 

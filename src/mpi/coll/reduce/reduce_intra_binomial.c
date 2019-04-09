@@ -11,10 +11,6 @@
 
    Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                void *recvbuf,
                                int count,

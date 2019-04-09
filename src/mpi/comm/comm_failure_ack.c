@@ -28,10 +28,6 @@ int MPIX_Comm_failure_ack(MPI_Comm comm) __attribute__ ((weak, alias("PMPIX_Comm
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_failure_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPIX_Comm_failure_ack - Acknowledge the current group of failed processes

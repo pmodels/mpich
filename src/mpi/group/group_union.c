@@ -27,10 +27,6 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
 #undef MPI_Group_union
 #define MPI_Group_union PMPI_Group_union
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_union_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                           MPIR_Group ** new_group_ptr)
 {
@@ -140,10 +136,6 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_union
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

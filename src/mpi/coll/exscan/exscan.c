@@ -61,10 +61,6 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #undef MPI_Exscan
 #define MPI_Exscan PMPI_Exscan
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -85,10 +81,6 @@ int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                      MPIR_Errflag_t * errflag)
@@ -123,10 +115,6 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count,
                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -143,10 +131,6 @@ int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Exscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Exscan - Computes the exclusive scan (partial reductions) of data on a

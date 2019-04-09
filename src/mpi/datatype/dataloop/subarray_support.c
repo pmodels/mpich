@@ -10,10 +10,6 @@
 #include "mpiimpl.h"
 #include "dataloop.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Dataloop_convert_subarray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Dataloop_convert_subarray(int ndims,
                                    int *array_of_sizes,
                                    int *array_of_subsizes,
