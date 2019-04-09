@@ -109,7 +109,7 @@ int MPI_Group_free(MPI_Group * group)
              * because otherwise many tests fail */
             if ((HANDLE_GET_KIND(*group) == HANDLE_KIND_BUILTIN) && *group != MPI_GROUP_EMPTY) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_GROUP, "**groupperm", 0);
             }
             if (mpi_errno)
@@ -138,11 +138,11 @@ int MPI_Group_free(MPI_Group * group)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_free", "**mpi_group_free %p", group);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

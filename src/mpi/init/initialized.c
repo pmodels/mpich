@@ -82,12 +82,12 @@ int MPI_Initialized(int *flag)
     if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
         OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
         {
-            mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                              MPI_ERR_OTHER, "**mpi_initialized",
                                              "**mpi_initialized %p", flag);
         }
 
-        mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+        mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     }
     goto fn_exit;
 #endif

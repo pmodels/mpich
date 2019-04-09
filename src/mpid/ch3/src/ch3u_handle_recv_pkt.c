@@ -128,7 +128,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
 					    PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+                     MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TRUNCATE,
 		     "**truncate", "**truncate %d %d %d %d", 
 		     rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, 
 		     rreq->dev.recv_data_sz, userbuf_sz );
@@ -318,7 +318,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 					    PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+                     MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TRUNCATE,
 		     "**truncate", "**truncate %d %d %d %d", 
 		     rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, 
 		     rreq->dev.recv_data_sz, userbuf_sz );

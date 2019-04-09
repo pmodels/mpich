@@ -108,13 +108,13 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
     /* --BEGIN ERROR HANDLING-- */
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_t_category_get_info",
                                  "**mpi_t_category_get_info %d %p %p %p %p %p %p %p", cat_index,
                                  name, name_len, desc, desc_len, num_cvars, num_pvars,
                                  num_categories);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif

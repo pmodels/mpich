@@ -38,7 +38,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx);
                                    "**ofi_"#STR" %s %d %s %s",          \
                                    __SHORT_FILE__,                      \
                                    __LINE__,                            \
-                                   FCNAME,                              \
+                                   __func__,                              \
                                    fi_strerror(-_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \

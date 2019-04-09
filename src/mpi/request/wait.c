@@ -213,10 +213,10 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                     FCNAME, __LINE__, MPI_ERR_OTHER,
+                                     __func__, __LINE__, MPI_ERR_OTHER,
                                      "**mpi_wait", "**mpi_wait %p %p", request, status);
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -247,7 +247,7 @@ int MPIR_Datatype_builtin_fillin(void)
             if (dptr < MPIR_Datatype_builtin ||
                 dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_FATAL, FCNAME,
+                                                 MPIR_ERR_FATAL, __func__,
                                                  __LINE__, MPI_ERR_INTERN,
                                                  "**typeinitbadmem", "**typeinitbadmem %d", i);
                 return mpi_errno;
@@ -268,7 +268,7 @@ int MPIR_Datatype_builtin_fillin(void)
         if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
             /* We did not hit the end-of-list */
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__,
+                                             __func__, __LINE__,
                                              MPI_ERR_INTERN, "**typeinitfail",
                                              "**typeinitfail %d", i - 1);
             return mpi_errno;

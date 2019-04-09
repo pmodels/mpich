@@ -46,7 +46,7 @@ void MPIR_BXOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
                                                  MPIR_Per_thread, per_thread, &err);
                     MPIR_Assert(err == 0);
                     per_thread->op_errno =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                              MPI_ERR_OP, "**opundefined", "**opundefined %s",
                                              "MPI_BXOR");
                 }
@@ -77,7 +77,7 @@ int MPIR_BXOR_check_dtype(MPI_Datatype type)
                 return MPI_SUCCESS;
             /* --BEGIN ERROR HANDLING-- */
         default:
-            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                         MPI_ERR_OP, "**opundefined", "**opundefined %s",
                                         "MPI_BXOR");
             /* --END ERROR HANDLING-- */

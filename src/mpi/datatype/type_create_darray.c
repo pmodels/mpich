@@ -80,7 +80,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
         if (blksize <= 0) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                              MPIR_ERR_RECOVERABLE,
-                                             FCNAME,
+                                             __func__,
                                              __LINE__,
                                              MPI_ERR_ARG,
                                              "**darrayblock", "**darrayblock %d", blksize);
@@ -89,7 +89,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
         if (blksize * nprocs < global_size) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                              MPIR_ERR_RECOVERABLE,
-                                             FCNAME,
+                                             __func__,
                                              __LINE__,
                                              MPI_ERR_ARG,
                                              "**darrayblock2",
@@ -111,7 +111,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**fail", 0);
                 return mpi_errno;
             }
@@ -124,7 +124,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**fail", 0);
                 return mpi_errno;
             }
@@ -136,7 +136,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**fail", 0);
                 return mpi_errno;
             }
@@ -149,7 +149,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**fail", 0);
                 return mpi_errno;
             }
@@ -195,7 +195,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
     if (blksize <= 0) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                          MPIR_ERR_RECOVERABLE,
-                                         FCNAME,
+                                         __func__,
                                          __LINE__,
                                          MPI_ERR_ARG,
                                          "**darraycyclic", "**darraycyclic %d", blksize);
@@ -230,7 +230,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**fail", 0);
         return mpi_errno;
     }
@@ -254,7 +254,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             mpi_errno =
-                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**fail", 0);
             return mpi_errno;
         }
@@ -280,7 +280,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             mpi_errno =
-                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**fail", 0);
             return mpi_errno;
         }
@@ -295,7 +295,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             mpi_errno =
-                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**fail", 0);
             return mpi_errno;
         }
@@ -411,7 +411,7 @@ int MPI_Type_create_darray(int size,
             if (order != MPI_ORDER_C && order != MPI_ORDER_FORTRAN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME,
+                                                 __func__,
                                                  __LINE__,
                                                  MPI_ERR_ARG, "**arg", "**arg %s", "order");
                 goto fn_fail;
@@ -427,7 +427,7 @@ int MPI_Type_create_darray(int size,
                     (array_of_distribs[i] != MPI_DISTRIBUTE_CYCLIC)) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME,
+                                                     __func__,
                                                      __LINE__, MPI_ERR_ARG, "**darrayunknown", 0);
                     goto fn_fail;
                 }
@@ -435,7 +435,7 @@ int MPI_Type_create_darray(int size,
                 if ((array_of_dargs[i] != MPI_DISTRIBUTE_DFLT_DARG) && (array_of_dargs[i] <= 0)) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME,
+                                                     __func__,
                                                      __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**arg", "**arg %s", "array_of_dargs");
@@ -445,7 +445,7 @@ int MPI_Type_create_darray(int size,
                 if ((array_of_distribs[i] == MPI_DISTRIBUTE_NONE) && (array_of_psizes[i] != 1)) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME,
+                                                     __func__,
                                                      __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**darraydist",
@@ -473,7 +473,7 @@ int MPI_Type_create_darray(int size,
             if (size_with_aint != size_with_offset) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_FATAL,
-                                                 FCNAME,
+                                                 __func__,
                                                  __LINE__,
                                                  MPI_ERR_ARG,
                                                  "**darrayoverflow",
@@ -707,14 +707,14 @@ int MPI_Type_create_darray(int size,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_darray",
                                  "**mpi_type_create_darray %d %d %d %p %p %p %p %d %D %p", size,
                                  rank, ndims, array_of_gsizes, array_of_distribs, array_of_dargs,
                                  array_of_psizes, order, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

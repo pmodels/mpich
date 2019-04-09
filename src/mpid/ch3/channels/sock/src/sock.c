@@ -246,7 +246,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
     mpi_errno_ = MPIDI_CH3I_Socki_event_enqueue((pollinfo_), (op_), (nb_), (user_ptr_), (event_mpi_errno_));		\
     if (mpi_errno_ != MPI_SUCCESS)					\
     {									\
-	mpi_errno_ = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,	\
+	mpi_errno_ = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,	\
 					  "**sock|poll|eqfail", "**sock|poll|eqfail %d %d %d",			\
 					  pollinfo->sock_set->id, pollinfo->sock_id, (op_));			\
 	goto fail_label_;						\
@@ -327,13 +327,13 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	if (errno == ENOMEM || errno == ENOBUFS)		\
 	{							\
 	    mpi_errno_ = MPIR_Err_create_code(			\
-		MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|osnomem",	\
+		MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|osnomem",	\
 		"**sock|osnomem %s %d %d", "getsockopt", pollinfo->sock_set->id, pollinfo->sock_id);		\
 	}							\
 	else							\
 	{							\
 	    mpi_errno = MPIR_Err_create_code(			\
-		MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|oserror",		\
+		MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|oserror",		\
 		"**sock|poll|oserror %s %d %d %d %s", "getsockopt", pollinfo->sock_set->id, pollinfo->sock_id,	\
 		 (os_errno_), MPIR_Strerror(os_errno_));	\
 	}							\
@@ -353,7 +353,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 {								        \
     if (MPIDI_CH3I_Socki_initialized <= 0)					\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_INIT,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_INIT,	\
 					 "**sock|uninit", NULL);	\
 	goto fail_label_;						\
     }									\
@@ -370,7 +370,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
     if ((sock_) == NULL || (sock_)->sock_set == NULL || (sock_)->elem < 0 ||							\
 	(sock_)->elem >= (sock_)->sock_set->poll_array_elems)		\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
 					    "**sock|badsock", NULL);	\
 	goto fail_label_;						\
     }									\
@@ -380,7 +380,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
     if (pollinfo__->type <= MPIDI_CH3I_SOCKI_TYPE_FIRST || pollinfo__->type >= MPIDI_CH3I_SOCKI_TYPE_INTERRUPTER ||			\
 	pollinfo__->state <= MPIDI_CH3I_SOCKI_STATE_FIRST || pollinfo__->state >= MPIDI_CH3I_SOCKI_STATE_LAST)				\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
 					    "**sock|badsock", NULL);	\
 	goto fail_label_;						\
     }									\
@@ -394,7 +394,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	if ((pollinfo_)->state == MPIDI_CH3I_SOCKI_STATE_CONNECTING)		\
 	{								\
 	    (mpi_errno_) = MPIR_Err_create_code(			\
-		(mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|notconnected",		\
+		(mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|notconnected",		\
 		"**sock|notconnected %d %d", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					\
 	    goto fail_label_;						\
 	}								\
@@ -403,13 +403,13 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	    if ((pollinfo_)->os_errno == 0)				\
 	    {								\
 		(mpi_errno_) = MPIR_Err_create_code(			\
-		    (mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",	\
+		    (mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",	\
 		    "**sock|connclosed %d %d", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);				\
 	    }								\
 	    else							\
 	    {								\
 		(mpi_errno_) = MPIR_Err_create_code(			\
-		    (mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",	\
+		    (mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",	\
 		    "**sock|poll|connfailed %d %d %d %s", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id,			\
 		    (pollinfo_)->os_errno, MPIR_Strerror((pollinfo_)->os_errno));						\
 	    }								\
@@ -418,14 +418,14 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	else if ((pollinfo_)->state == MPIDI_CH3I_SOCKI_STATE_CLOSING)	\
 	{								\
 	    (mpi_errno_) = MPIR_Err_create_code(			\
-		(mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS, "**sock|closing",		\
+		(mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS, "**sock|closing",		\
 		"**sock|closing %d %d", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					\
 									\
 	    goto fail_label_;						\
 	}								\
 	else if ((pollinfo_)->state != MPIDI_CH3I_SOCKI_STATE_CONNECTED_RW && (pollinfo_)->state != MPIDI_CH3I_SOCKI_STATE_CONNECTED_RO)	\
 	{								\
-	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
+	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
 						"**sock|badsock", NULL);							\
 	    goto fail_label_;						\
 	}								\
@@ -433,7 +433,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
     else if ((pollinfo_)->type == MPIDI_CH3I_SOCKI_TYPE_LISTENER)		\
     {									\
 	(mpi_errno_) = MPIR_Err_create_code(				\
-	    (mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|listener_read",		\
+	    (mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|listener_read",		\
 	    "**sock|listener_read %d %d", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					\
 									\
 	goto fail_label_;						\
@@ -447,7 +447,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
     {									\
 	if ((pollinfo_)->state == MPIDI_CH3I_SOCKI_STATE_CONNECTING)		\
 	{								\
-	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
+	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
 						"**sock|notconnected", "**sock|notconnected %d %d",				 \
 						(pollinfo_)->sock_set->id, (pollinfo_)->sock_id);				 \
 	    goto fail_label_;						\
@@ -457,13 +457,13 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	    if ((pollinfo_)->os_errno == 0)				\
 	    {								\
 		(mpi_errno_) = MPIR_Err_create_code(			\
-		    (mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",	 \
+		    (mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",	 \
 		    "**sock|connclosed %d %d", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);				 \
 	    }								\
 	    else							\
 	    {								\
 		(mpi_errno_) = MPIR_Err_create_code(										 \
-		    (mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",	 \
+		    (mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",	 \
 		    "**sock|poll|connfailed %d %d %d %s", (pollinfo_)->sock_set->id, (pollinfo_)->sock_id,			 \
 		    (pollinfo_)->os_errno, MPIR_Strerror((pollinfo_)->os_errno));						 \
 	    }								\
@@ -471,7 +471,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	}								\
 	else if ((pollinfo_)->state == MPIDI_CH3I_SOCKI_STATE_CLOSING)	\
 	{								\
-	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS, \
+	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS, \
 						"**sock|closing", "**sock|closing %d %d",					 \
 						(pollinfo_)->sock_set->id, (pollinfo_)->sock_id);				 \
 									\
@@ -479,14 +479,14 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 	}								\
 	else if ((pollinfo_)->state != MPIDI_CH3I_SOCKI_STATE_CONNECTED_RW)	\
 	{								\
-	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
+	    (mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
 						"**sock|badsock", NULL);							 \
 	    goto fail_label_;						\
 	}								\
     }									\
     else if ((pollinfo_)->type == MPIDI_CH3I_SOCKI_TYPE_LISTENER)		\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	 \
 					    "**sock|listener_write", "**sock|listener_write %d %d",				 \
 					    (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					 \
 									\
@@ -499,7 +499,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 {									\
     if ((pollinfo_)->fd < 0)						\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,	\
 					    "**sock|badhandle", "**sock|poll|badhandle %d %d %d",				\
 					    (pollinfo_)->sock_set->id, (pollinfo_)->sock_id, (pollinfo_)->fd);			\
 	goto fail_label_;						\
@@ -511,7 +511,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 {									\
     if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET((pollfd_), (pollinfo_), POLLIN))	\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS,	\
 					    "**sock|reads", "**sock|reads %d %d",						\
 					    (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					\
 	goto fail_label_;						\
@@ -523,7 +523,7 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 {									\
     if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET((pollfd_), (pollinfo_), POLLOUT))	\
     {									\
-	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS,	\
+	(mpi_errno_) = MPIR_Err_create_code((mpi_errno_), MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_INPROGRESS,	\
 					    "**sock|writes", "**sock|writes %d %d",						\
 					    (pollinfo_)->sock_set->id, (pollinfo_)->sock_id);					\
 	goto fail_label_;						\
@@ -769,7 +769,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
     /* --BEGIN ERROR HANDLING-- */
     if (sock == NULL) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_NOMEM, "**nomem", 0);
         goto fn_fail;
     }
@@ -801,7 +801,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
         /* --BEGIN ERROR HANDLING-- */
         if (pollfds == NULL) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_NOMEM, "**nomem", 0);
             goto fn_fail;
         }
@@ -813,7 +813,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
         /* --BEGIN ERROR HANDLING-- */
         if (pollinfos == NULL) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_NOMEM, "**nomem", 0);
             goto fn_fail;
         }
@@ -1028,7 +1028,7 @@ static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo, MPIDI_CH3I_
         eventq_table = MPL_malloc(sizeof(struct MPIDI_CH3I_Socki_eventq_table), MPL_MEM_OTHER);
         /* --BEGIN ERROR HANDLING-- */
         if (eventq_table == NULL) {
-            mpi_errno = MPIR_Err_create_code(errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+            mpi_errno = MPIR_Err_create_code(errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
                                              "**sock|poll|eqmalloc", 0);
             goto fn_exit;
         }
@@ -1311,7 +1311,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
     /* --BEGIN ERROR HANDLING-- */
     if (sock_set == NULL) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|setalloc", 0);
         goto fn_fail;
     }
@@ -1364,7 +1364,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         /* --BEGIN ERROR HANDLING-- */
         if (rc != 0) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|pipe",
                                      "**sock|poll|pipe %d %s", errno, MPIR_Strerror(errno));
             goto fn_fail;
@@ -1375,7 +1375,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         /* --BEGIN ERROR HANDLING-- */
         if (flags == -1) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|pipenonblock",
                                      "**sock|poll|pipenonblock %d %s", errno, MPIR_Strerror(errno));
             goto fn_fail;
@@ -1386,7 +1386,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         /* --BEGIN ERROR HANDLING-- */
         if (rc == -1) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|pipenonblock",
                                      "**sock|poll|pipenonblock %d %s", errno, MPIR_Strerror(errno));
             goto fn_fail;
@@ -1400,7 +1400,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|sockalloc", NULL);
             goto fn_fail;
         }
@@ -1725,7 +1725,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
         if (errno == ECONNREFUSED) {
             MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_CONNECT, 0, user_ptr,
                                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                                                FCNAME, __LINE__,
+                                                                __func__, __LINE__,
                                                                 MPIDI_CH3I_SOCK_ERR_CONN_FAILED,
                                                                 "**sock|connrefused",
                                                                 "**sock|poll|connrefused %d %d %s",
@@ -1735,7 +1735,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
         } else {
             MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_CONNECT, 0, user_ptr,
                                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                                                FCNAME, __LINE__,
+                                                                __func__, __LINE__,
                                                                 MPIDI_CH3I_SOCK_ERR_CONN_FAILED,
                                                                 "**sock|oserror",
                                                                 "**sock|poll|oserror %d %d %d %s",
@@ -1839,7 +1839,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (*port < 0 || *port > USHRT_MAX) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_PORT, "**sock|badport",
                                  "**sock|badport %d", *port);
         goto fn_exit;
@@ -1853,7 +1853,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (fd == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|socket",
                                  "**sock|poll|socket %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1867,7 +1867,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
         /* --BEGIN ERROR HANDLING-- */
         if (rc == -1) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|reuseaddr",
                                      "**sock|poll|reuseaddr %d %s", errno, MPIR_Strerror(errno));
             goto fn_fail;
@@ -1880,7 +1880,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (flags == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|nonblock",
                                  "**sock|poll|nonblock %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1890,7 +1890,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|nonblock",
                                  "**sock|poll|nonblock %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1936,7 +1936,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|bind",
                                  "**sock|poll|bind %d %d %s", *port, errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1958,7 +1958,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|listen",
                                  "**sock|poll|listen %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1974,7 +1974,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|getport",
                                  "**sock|poll|getport %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -1991,7 +1991,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|sockalloc", NULL);
         goto fn_fail;
     }
@@ -2054,7 +2054,7 @@ int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t mi
     /* --BEGIN ERROR HANDLING-- */
     if (minlen < 1 || minlen > maxlen) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_LEN, "**sock|badlen",
                                  "**sock|badlen %d %d %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id, minlen, maxlen);
@@ -2106,7 +2106,7 @@ int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int 
     /* --BEGIN ERROR HANDLING-- */
     if (iov_n < 1 || iov_n > MPL_IOV_LIMIT) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_LEN, "**sock|badiovn",
                                  "**sock|badiovn %d %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id, iov_n);
@@ -2158,7 +2158,7 @@ int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t m
     /* --BEGIN ERROR HANDLING-- */
     if (minlen < 1 || minlen > maxlen) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_LEN, "**sock|badlen",
                                  "**sock|badlen %d %d %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id, minlen, maxlen);
@@ -2210,7 +2210,7 @@ int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int
     /* --BEGIN ERROR HANDLING-- */
     if (iov_n < 1 || iov_n > MPL_IOV_LIMIT) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_LEN, "**sock|badiovn",
                                  "**sock|badiovn %d %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id, iov_n);
@@ -2260,7 +2260,7 @@ int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
     /* --BEGIN ERROR HANDLING-- */
     if (pollinfo->state == MPIDI_CH3I_SOCKI_STATE_CLOSING) {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|closing_already",
                                  "**sock|closing_already %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id);
@@ -2274,7 +2274,7 @@ int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
             int event_mpi_errno;
 
             event_mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_SOCK_CLOSED, "**sock|close_cancel",
                                      "**sock|close_cancel %d %d", pollinfo->sock_set->id,
                                      pollinfo->sock_id);
@@ -2358,7 +2358,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /* --BEGIN ERROR HANDLING-- */
     if (pollinfo->type != MPIDI_CH3I_SOCKI_TYPE_LISTENER) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
                                          "**sock|listener_bad_sock",
                                          "**sock|listener_bad_sock %d %d", pollinfo->sock_set->id,
                                          pollinfo->sock_id);
@@ -2368,7 +2368,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     if (pollinfo->state != MPIDI_CH3I_SOCKI_STATE_CONNECTED_RO &&
         pollinfo->state != MPIDI_CH3I_SOCKI_STATE_CLOSING) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
                                          "**sock|listener_bad_state",
                                          "**sock|listener_bad_state %d %d %d",
                                          pollinfo->sock_set->id, pollinfo->sock_id,
@@ -2399,21 +2399,21 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     if (fd == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                             FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_NO_NEW_SOCK,
+                                             __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_NO_NEW_SOCK,
                                              "**sock|nosock", NULL);
         } else if (errno == ENOBUFS || errno == ENOMEM) {
             mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                             FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_NOMEM,
+                                             __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_NOMEM,
                                              "**sock|osnomem", NULL);
         } else if (errno == EBADF || errno == ENOTSOCK || errno == EOPNOTSUPP) {
             mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                             FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
+                                             __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_SOCK,
                                              "**sock|badhandle", "**sock|poll|badhandle %d %d %d",
                                              pollinfo->sock_set->id, pollinfo->sock_id,
                                              pollinfo->fd);
         } else {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_NO_NEW_SOCK,
+                                             __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_NO_NEW_SOCK,
                                              "**sock|poll|accept", "**sock|poll|accept %d %s",
                                              errno, MPIR_Strerror(errno));
         }
@@ -2427,7 +2427,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /* --BEGIN ERROR HANDLING-- */
     if (flags == -1) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
                                          "**sock|poll|nonblock", "**sock|poll|nonblock %d %s",
                                          errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -2437,7 +2437,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
                                          "**sock|poll|nonblock", "**sock|poll|nonblock %d %s",
                                          errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -2449,7 +2449,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
                                          "**sock|poll|nodelay", "**sock|poll|nodelay %d %s",
                                          errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -2520,7 +2520,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|sockalloc", NULL);
         goto fn_fail;
     }
@@ -2604,7 +2604,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
     else if (nb == 0) {
         *num_read = 0;
 
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_CONN_CLOSED,
                                          "**sock|connclosed", "**sock|connclosed %d %d",
                                          pollinfo->sock_set->id, pollinfo->sock_id);
@@ -2627,7 +2627,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
         *num_read = 0;
 
         mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno,
-                                                     FCNAME, __LINE__, &disconnected);
+                                                     __func__, __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(mpi_errno)) {
             /*
              * A serious error occurred.  There is no guarantee that the
@@ -2705,7 +2705,7 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
     else if (nb == 0) {
         *num_read = 0;
 
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_CONN_CLOSED,
                                          "**sock|connclosed", "**sock|connclosed %d %d",
                                          pollinfo->sock_set->id, pollinfo->sock_id);
@@ -2728,7 +2728,7 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
 
         *num_read = 0;
 
-        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, FCNAME,
+        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, __func__,
                                                      __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(mpi_errno)) {
             /*
@@ -2810,7 +2810,7 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 
         *num_written = 0;
 
-        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, FCNAME,
+        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, __func__,
                                                      __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(mpi_errno)) {
             /*
@@ -2889,7 +2889,7 @@ int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, siz
 
         *num_written = 0;
 
-        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, FCNAME,
+        mpi_errno = MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, __func__,
                                                      __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(mpi_errno)) {
             /*
@@ -2987,7 +2987,7 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
     /* --BEGIN ERROR HANDLING-- */
     if (len < 0) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_LEN,
+                                         __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_BAD_LEN,
                                          "**sock|badhdmax", NULL);
         goto fn_exit;
     }
@@ -3013,7 +3013,7 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
         /* --BEGIN ERROR HANDLING-- */
         if (rc != 0) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_BAD_HOST, "**sock|badhdlen", NULL);
         }
         /* --END ERROR HANDLING-- */
@@ -3023,15 +3023,15 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
         if (rc == -1) {
             if (errno == EINVAL) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_BAD_HOST, "**sock|badhdlen", NULL);
             } else if (errno == EFAULT) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_BAD_HOST, "**sock|badhdbuf", NULL);
             } else {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|oserror",
                                          "**sock|poll|oserror %d %s", errno, MPIR_Strerror(errno));
             }
@@ -3070,7 +3070,7 @@ int MPIDI_CH3I_Sock_native_to_sock(struct MPIDI_CH3I_Sock_set *sock_set,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|sockalloc", NULL);
         goto fn_fail;
     }
@@ -3084,7 +3084,7 @@ int MPIDI_CH3I_Sock_native_to_sock(struct MPIDI_CH3I_Sock_set *sock_set,
     /* --BEGIN ERROR HANDLING-- */
     if (flags == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|nonblock",
                                  "**sock|poll|nonblock %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -3094,7 +3094,7 @@ int MPIDI_CH3I_Sock_native_to_sock(struct MPIDI_CH3I_Sock_set *sock_set,
     /* --BEGIN ERROR HANDLING-- */
     if (rc == -1) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|nonblock",
                                  "**sock|poll|nonblock %d %s", errno, MPIR_Strerror(errno));
         goto fn_fail;
@@ -3147,7 +3147,7 @@ int MPIDI_CH3I_Sock_set_user_ptr(struct MPIDI_CH3I_Sock *sock, void *user_ptr)
     /* --BEGIN ERROR HANDLING-- */
     else {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_BAD_SOCK, "**sock|badsock", NULL);
     }
     /* --END ERROR HANDLING-- */
@@ -3484,12 +3484,12 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
             /* --BEGIN ERROR HANDLING-- */
             else if (errno == ENOMEM || errno == EAGAIN) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_NOMEM, "**sock|osnomem", NULL);
                 goto fn_exit;
             } else {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|oserror",
                                          "**sock|poll|oserror %d %s", errno, MPIR_Strerror(errno));
                 goto fn_exit;
@@ -3526,7 +3526,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
 
             if (pollfd->revents & POLLNVAL) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                          MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|badhandle",
                                          "**sock|poll|badhandle %d %d %d %d",
                                          pollinfo->sock_set->id, pollinfo->sock_id, pollfd->fd,
@@ -3566,7 +3566,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                     /* --BEGIN ERROR HANDLING-- */
                     else {
                         mpi_errno =
-                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                                  MPIDI_CH3I_SOCK_ERR_FAIL,
                                                  "**sock|poll|unhandledstate",
                                                  "**sock|poll|unhandledstate %d", pollinfo->state);
@@ -3592,7 +3592,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                 /* --BEGIN ERROR HANDLING-- */
                 else {
                     mpi_errno =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                              MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|unhandledtype",
                                              "**sock|poll|unhandledtype %d", pollinfo->type);
                     goto fn_exit;
@@ -3620,7 +3620,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                     /* --BEGIN ERROR HANDLING-- */
                     else {
                         mpi_errno =
-                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                                  MPIDI_CH3I_SOCK_ERR_FAIL,
                                                  "**sock|poll|unhandledstate",
                                                  "**sock|poll|unhandledstate %d", pollinfo->state);
@@ -3631,7 +3631,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                 /* --BEGIN ERROR HANDLING-- */
                 else {
                     mpi_errno =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                              MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|unhandledtype",
                                              "**sock|poll|unhandledtype %d", pollinfo->type);
                     goto fn_exit;
@@ -3672,7 +3672,7 @@ static int MPIDI_CH3I_Socki_handle_pollhup(struct pollfd *const pollfd,
             int event_mpi_errno;
 
             event_mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",
                                      "**sock|connclosed %d %d", pollinfo->sock_set->id,
                                      pollinfo->sock_id);
@@ -3709,7 +3709,7 @@ static int MPIDI_CH3I_Socki_handle_pollhup(struct pollfd *const pollfd,
     /* --BEGIN ERROR HANDLING-- */
     else {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|unhandledstate",
                                  "**sock|poll|unhandledstate %d", pollinfo->state);
         goto fn_exit;
@@ -3739,7 +3739,7 @@ static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
     /* --BEGIN ERROR HANDLING-- */
     if (pollinfo->type != MPIDI_CH3I_SOCKI_TYPE_COMMUNICATION) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|unhandledtype",
                                  "**sock|poll|unhandledtype %d", pollinfo->type);
         goto fn_exit;
@@ -3763,7 +3763,7 @@ static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
             MPIDI_CH3I_SOCKI_GET_SOCKET_ERROR(pollinfo, os_errno, mpi_errno, fn_exit);
 
             event_mpi_errno =
-                MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, os_errno, FCNAME, __LINE__,
+                MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, os_errno, __func__, __LINE__,
                                                  &disconnected);
             /* --BEGIN ERROR HANDLING-- */
             if (MPIR_Err_is_fatal(event_mpi_errno)) {
@@ -3802,7 +3802,7 @@ static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
     /* --BEGIN ERROR HANDLING-- */
     else {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|unhandledstate",
                                  "**sock|poll|unhandledstate %d", pollinfo->state);
         goto fn_exit;
@@ -3868,7 +3868,7 @@ static int MPIDI_CH3I_Socki_handle_read(struct pollfd *const pollfd,
         int event_mpi_errno;
 
         event_mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_CONN_CLOSED, "**sock|connclosed",
                                  "**sock|connclosed %d %d", pollinfo->sock_set->id,
                                  pollinfo->sock_id);
@@ -3894,7 +3894,7 @@ static int MPIDI_CH3I_Socki_handle_read(struct pollfd *const pollfd,
         int event_mpi_errno;
 
         event_mpi_errno =
-            MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, FCNAME, __LINE__, &disconnected);
+            MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, __func__, __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(event_mpi_errno)) {
             /*
              * A serious error occurred.  There is no guarantee that the data
@@ -3986,7 +3986,7 @@ static int MPIDI_CH3I_Socki_handle_write(struct pollfd *const pollfd,
         int event_mpi_errno;
 
         event_mpi_errno =
-            MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, FCNAME, __LINE__, &disconnected);
+            MPIDI_CH3I_Socki_os_to_mpi_errno(pollinfo, errno, __func__, __LINE__, &disconnected);
         if (MPIR_Err_is_fatal(event_mpi_errno)) {
             /*
              * A serious error occurred.  There is no guarantee that the data structures are still intact.  Therefore, we avoid
@@ -4045,7 +4045,7 @@ static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
 
         MPIDI_CH3I_SOCKI_GET_SOCKET_ERROR(pollinfo, pollinfo->os_errno, mpi_errno, fn_exit);
         event_mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",
                                  "**sock|poll|connfailed %d %d %d %s", pollinfo->sock_set->id,
                                  pollinfo->sock_id, pollinfo->os_errno,
