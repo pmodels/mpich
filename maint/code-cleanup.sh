@@ -53,7 +53,7 @@ indent_code()
         --leave-optional-blank-lines \
         --dont-space-special-semicolon \
         `# End of K&R expansion` \
-        --line-length100 \
+        `# --line-length100` \
         --else-endif-column1 \
         --start-left-side-of-comments \
         --break-after-boolean-operator \
