@@ -29,10 +29,6 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Mprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Mprobe - Blocking matched probe.
 

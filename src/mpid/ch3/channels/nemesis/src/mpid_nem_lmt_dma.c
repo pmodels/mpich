@@ -74,10 +74,6 @@ static void free_status_index(int index)
 
 /* Opens the knem device and sets knem_fd accordingly.  Uses mpich errhandling
    conventions. */
-#undef FUNCNAME
-#define FUNCNAME open_knem_dev
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int open_knem_dev(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -109,10 +105,6 @@ fn_fail:
 
 /* Sends as much data from the request as possible via the knem ioctl.
    s_cookiep is an output parameter */
-#undef FUNCNAME
-#define FUNCNAME do_dma_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int do_dma_send(MPIDI_VC_t *vc,  MPIR_Request *sreq, int send_iov_n,
                        MPL_IOV send_iov[], knem_cookie_t *s_cookiep)
 {
@@ -160,10 +152,6 @@ fn_exit:
 }
 
 /* s_cookie is an input parameter */
-#undef FUNCNAME
-#define FUNCNAME do_dma_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int do_dma_recv(int iov_n, MPL_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -224,10 +212,6 @@ fn_fail:
    the request in a single shot as possible.
    
    s_cookiep is an output parameter. */
-#undef FUNCNAME
-#define FUNCNAME send_sreq_data
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_sreq_data(MPIDI_VC_t *vc, MPIR_Request *sreq, knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -288,10 +272,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME check_req_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int check_req_complete(MPIDI_VC_t *vc, MPIR_Request *req, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -315,10 +295,6 @@ fn_fail:
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_initiate_lmt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -346,10 +322,6 @@ fn_fail:
 /* This function is called initially when an RTS message comes in, but may also
    be called by the COOKIE handler in the non-contiguous case to process
    additional IOVs. */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_start_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -456,10 +428,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_done_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -509,10 +477,6 @@ fn_fail:
 }
 
 /* called when a COOKIE message is received */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_handle_cookie
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -551,10 +515,6 @@ fn_fail:
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -657,10 +617,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_vc_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -683,10 +639,6 @@ int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
    -------------------------------------------------------------------------- */
 
 /* called when a CTS message is received */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_start_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -699,10 +651,6 @@ int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_coo
 }
 
 /* called when a DONE message is received for a receive request */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_dma_done_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);

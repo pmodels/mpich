@@ -47,10 +47,6 @@
 /*
  * MPID_Startall()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int i;
@@ -157,10 +153,6 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 /*
  * MPID_Send_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		   MPIR_Request ** request)
 {
@@ -187,10 +179,6 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
 /*
  * MPID_Ssend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Ssend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -217,10 +205,6 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Rsend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Rsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -247,10 +231,6 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Bsend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Bsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -285,10 +265,6 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Recv_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		   MPIR_Request ** request)
 {

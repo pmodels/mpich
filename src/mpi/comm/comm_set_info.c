@@ -28,10 +28,6 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 #undef MPI_Comm_set_info
 #define MPI_Comm_set_info PMPI_Comm_set_info
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_set_info_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -73,10 +69,6 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_set_info - Set new values for the hints of the
    communicator associated with comm.  The call is collective on the

@@ -27,10 +27,6 @@ int MPI_Group_rank(MPI_Group group, int *rank) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_rank
-#undef FCNAME
-#define FCNAME "MPI_Group_rank"
 
 /*@
 

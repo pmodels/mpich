@@ -115,10 +115,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_resized
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_resized - Create a datatype with a new lower bound and
      extent from an existing datatype

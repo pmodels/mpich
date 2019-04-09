@@ -204,10 +204,6 @@ extern MPIDI_SHM_Wins_list_t shm_wins_list;
 
 #define MPIDI_SHM_Wins_next_and_continue(elem) {elem = elem->next; continue;}
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_SHM_Wins_append
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -236,10 +232,6 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
  * @param IN    list      Pointer to the SHM window list
  * @param IN    elem      Pointer to the element to be unlinked
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_SHM_Wins_unlink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR_Win * shm_win)
 {
     MPIDI_SHM_Win_t *elem = NULL;

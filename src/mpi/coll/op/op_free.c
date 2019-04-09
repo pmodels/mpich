@@ -26,10 +26,6 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #define MPI_Op_free PMPI_Op_free
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Op_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Op_free_impl(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
@@ -48,10 +44,6 @@ void MPIR_Op_free_impl(MPI_Op * op)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
 

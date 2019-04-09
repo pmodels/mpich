@@ -27,10 +27,6 @@ int MPI_Request_free(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Re
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Request_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Request_free - Frees a communication request object
 

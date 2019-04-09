@@ -16,10 +16,6 @@
 
 static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched);
 
-#undef FUNCNAME
-#define FUNCNAME vtx_extend_utarray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
 {
     int i;
@@ -29,20 +25,12 @@ static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME vtx_record_issue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
     LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
 }
 
-#undef FUNCNAME
-#define FUNCNAME vtx_issue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
     int i;
@@ -176,10 +164,6 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME vtx_record_completion
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
     int i;
@@ -217,10 +201,6 @@ static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_progress_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_progress_hook(int *made_progress)
 {
     int count = 0;
@@ -260,10 +240,6 @@ int MPII_Genutil_progress_hook(int *made_progress)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_vtx_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
 {
     vtx_t *dst = (vtx_t *) _dst;
@@ -284,10 +260,6 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_vtx_dtor
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Genutil_vtx_dtor(void *_elt)
 {
     vtx_t *elt = (vtx_t *) _elt;
@@ -297,10 +269,6 @@ void MPII_Genutil_vtx_dtor(void *_elt)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_vtx_add_dependencies
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
                                        int n_in_vtcs, int *in_vtcs)
 {
@@ -358,10 +326,6 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_vtx_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** vtx)
 {
     MPII_Genutil_vtx_t *vtxp;
@@ -383,10 +347,6 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_poke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;

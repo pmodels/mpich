@@ -27,10 +27,6 @@ int MPI_Address(void *location, MPI_Aint * address) __attribute__ ((weak, alias(
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Address
-#undef FCNAME
-#define FCNAME "MPI_Address"
 
 /*@
     MPI_Address - Gets the address of a location in memory

@@ -6,10 +6,6 @@
 
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int recvcounts[], const int displs[],

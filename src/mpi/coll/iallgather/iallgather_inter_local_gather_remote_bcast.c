@@ -12,10 +12,6 @@
  * intracommunicator, and then does an intercommunicator broadcast.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_inter_local_gather_remote_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           int recvcount, MPI_Datatype recvtype,

@@ -30,10 +30,6 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Fetch_and_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Fetch_and_op - Perform one-sided read-modify-write.
 

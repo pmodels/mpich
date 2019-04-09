@@ -33,10 +33,6 @@ cvars:
 */
 
 #if defined(USE_PMIX_API) || defined(USE_PMI2_API)
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_spawn_multiple
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
                              MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
                              MPIR_Comm ** intercomm, int errcodes[])
@@ -47,10 +43,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
 static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
 
-#undef FUNCNAME
-#define FUNCNAME mpi_to_pmi_keyvals
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
 {
     char key[MPI_MAX_INFO_KEY];
@@ -90,10 +82,6 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME free_pmi_keyvals
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
 {
     int i, j;
@@ -112,10 +100,6 @@ static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_spawn_multiple
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
                              MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
                              MPIR_Comm ** intercomm, int errcodes[])
@@ -241,10 +225,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                       MPIR_Comm ** newcomm_ptr)
 {
@@ -274,10 +254,6 @@ int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Co
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
@@ -296,10 +272,6 @@ int MPID_Comm_disconnect(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno;
@@ -318,10 +290,6 @@ int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Close_port(const char *port_name)
 {
     int mpi_errno;
@@ -340,10 +308,6 @@ int MPID_Close_port(const char *port_name)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                      MPIR_Comm ** newcomm_ptr)
 {

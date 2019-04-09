@@ -16,10 +16,6 @@
 #include "iallgatherv_tsp_brucks_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_intra_gentran_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                           void *recvbuf, const int recvcounts[], const int displs[],
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr,

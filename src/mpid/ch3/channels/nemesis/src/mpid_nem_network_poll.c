@@ -7,10 +7,6 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_nets.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_network_poll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_network_poll(int in_blocking_progress)
 {
     return MPID_nem_netmod_func->poll(in_blocking_progress);

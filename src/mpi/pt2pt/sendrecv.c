@@ -30,10 +30,6 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Sendrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv - Sends and receives a message
 

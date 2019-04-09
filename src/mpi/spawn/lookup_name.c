@@ -35,10 +35,6 @@ MPID_NS_Handle MPIR_Namepub = 0;
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Lookup_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Lookup_name - Lookup a port given a service name
 

@@ -32,10 +32,6 @@ int MPI_Get_processor_name(char *name, int *resultlen)
    into nothing otherwise. */
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_processor_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Get_processor_name - Gets the name of the processor
 

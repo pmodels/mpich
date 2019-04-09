@@ -12,10 +12,6 @@
 #include "stubnm_impl.h"
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBNM_mpi_comm_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_STUBNM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -23,10 +19,6 @@ int MPIDI_STUBNM_mpi_comm_create_hook(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBNM_mpi_comm_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_STUBNM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

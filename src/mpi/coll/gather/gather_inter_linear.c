@@ -15,10 +15,6 @@
  * Cost: p.alpha + n.beta
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)

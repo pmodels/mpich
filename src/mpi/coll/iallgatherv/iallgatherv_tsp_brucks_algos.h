@@ -35,10 +35,6 @@
    CC=icc LDFLAGS=" -Wl,-z,muldefs -Wl,-z,now" CXX=icpc FC=ifort F77=ifort --disable-checkerrors
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgatherv_sched_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, const int recvcounts[], const int displs[],
@@ -326,10 +322,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking brucks based Allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgatherv_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr,

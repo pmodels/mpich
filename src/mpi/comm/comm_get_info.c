@@ -27,10 +27,6 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info)
 #undef MPI_Comm_get_info
 #define MPI_Comm_get_info PMPI_Comm_get_info
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_get_info_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,10 +44,6 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_info - Returns a new info object containing the hints
    of the communicator associated with comm. The current setting of

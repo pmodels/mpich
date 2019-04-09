@@ -27,10 +27,6 @@ int MPI_Win_wait(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_wait")));
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_wait - Completes an RMA exposure epoch begun with MPI_Win_post
 

@@ -66,10 +66,6 @@ void MPID_Attr_free(MPIR_Attribute * attr_ptr)
     MPIR_Handle_obj_free(&MPID_Attr_mem, attr_ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Call_attr_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*
   This function deletes a single attribute.
   It is called by both the function to delete a list and attribute set/put
@@ -135,10 +131,6 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
 
   Note that this simply invokes the attribute copy function.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Call_attr_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -172,10 +164,6 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Attr_dup_list
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Routine to duplicate an attribute list */
 int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute ** new_attr)
 {
@@ -233,10 +221,6 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Attr_delete_list
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Routine to delete an attribute list */
 int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
 {

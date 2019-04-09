@@ -77,10 +77,6 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls
 #undef MPI_Alltoallv
 #define MPI_Alltoallv PMPI_Alltoallv
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallv_intra_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                               MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                               const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -114,10 +110,6 @@ int MPIR_Alltoallv_intra_auto(const void *sendbuf, const int *sendcounts, const 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallv_inter_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                               MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                               const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -133,10 +125,6 @@ int MPIR_Alltoallv_inter_auto(const void *sendbuf, const int *sendcounts, const 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *sdispls,
                         MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                         const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -204,10 +192,6 @@ int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls,
                    MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -228,10 +212,6 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Alltoallv - Sends data from all to all processes; each process may
    send a different amount of data and provide displacements for the input

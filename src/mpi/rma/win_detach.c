@@ -27,10 +27,6 @@ int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("P
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_detach - Detach memory from a dynamic window
 

@@ -38,10 +38,6 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
 #undef MPI_Comm_create_keyval
 #define MPI_Comm_create_keyval PMPI_Comm_create_keyval
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_keyval_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function * comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state)
@@ -81,10 +77,6 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_create_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_create_keyval - Create a new attribute key
 

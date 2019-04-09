@@ -28,10 +28,6 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_ub
-#undef FCNAME
-#define FCNAME "MPI_Type_ub"
 
 /*@
     MPI_Type_ub - Returns the upper bound of a datatype

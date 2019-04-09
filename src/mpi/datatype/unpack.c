@@ -26,10 +26,6 @@ int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int o
 #undef MPI_Unpack
 #define MPI_Unpack PMPI_Unpack
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Unpack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
                      void *outbuf, int outcount, MPI_Datatype datatype)
 {
@@ -93,10 +89,6 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Unpack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Unpack - Unpack a buffer according to a datatype into contiguous memory
 

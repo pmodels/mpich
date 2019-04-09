@@ -408,10 +408,6 @@ static int conn_manager_destroy()
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME dynproc_send_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dynproc_send_disconnect(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -477,10 +473,6 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
                             MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
 {
@@ -1009,10 +1001,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_finalize_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_finalize_hook(void)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
@@ -1254,10 +1242,6 @@ int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME create_endpoint
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
                            struct fid_cq *p2p_cq, struct fid_cntr *rma_ctr, struct fid_av *av,
                            struct fid_ep **ep, int index)

@@ -27,10 +27,6 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count * size)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_size_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -42,10 +38,6 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_size_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Type_size_x - Return the number of bytes occupied by entries
                   in the datatype

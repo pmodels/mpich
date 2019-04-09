@@ -28,10 +28,6 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_name
-#undef FCNAME
-#define FCNAME "MPI_Win_get_name"
 
 /*@
    MPI_Win_get_name - Get the print name associated with the MPI RMA window

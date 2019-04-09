@@ -27,10 +27,6 @@ int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_disconnect - Disconnect from a communicator
 

@@ -29,10 +29,6 @@ int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_failure_get_acked
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPIX_Comm_failure_get_acked - Get the group of acknowledged failures.

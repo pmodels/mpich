@@ -40,10 +40,6 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_keyval - Create an attribute keyval for MPI datatypes
 

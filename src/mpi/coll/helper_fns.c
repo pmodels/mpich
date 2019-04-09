@@ -17,10 +17,6 @@
    sends/receives by setting the context offset to
    MPIR_CONTEXT_INTRA_COLL or MPIR_CONTEXT_INTER_COLL. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -49,10 +45,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
    the global lock is *not* held when this routine is called. (unless we change
    progress_start/end to grab the lock, in which case we must *still* make
    sure that the lock is not held when this routine is called). */
-#undef FUNCNAME
-#define FUNCNAME MPIC_Wait
-#undef FCNAME
-#define FCNAME "MPIC_Wait"
 int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -107,10 +99,6 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
    collective will not communicate failure information this way, but
    this is OK since there is no data that can be received corrupted. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -170,10 +158,6 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
               MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t * errflag)
 {
@@ -232,10 +216,6 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -295,10 +275,6 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Sendrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
@@ -381,10 +357,6 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
 /* NOTE: for regular collectives (as opposed to irregular collectives) calling
  * this function repeatedly will almost always be slower than performing the
  * equivalent inline because of the overhead of the repeated malloc/free */
-#undef FUNCNAME
-#define FUNCNAME MPIC_Sendrecv_replace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
                           int source, int recvtag,
@@ -484,10 +456,6 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
 {
@@ -528,10 +496,6 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                 MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
 {
@@ -572,10 +536,6 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
 {
@@ -605,10 +565,6 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
                  MPIR_Errflag_t * errflag)
 {

@@ -109,10 +109,6 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_alloc ATTRIBUTE((unused));
      &(win_ptr_)->slots[(rank_) % (win_ptr_)->num_slots] :              \
      &(win_ptr_)->slots[(rank_)])
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_set_active
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_set_active(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -136,10 +132,6 @@ static inline int MPIDI_CH3I_Win_set_active(MPIR_Win * win_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_set_inactive
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_set_inactive(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -164,10 +156,6 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPIR_Win * win_ptr)
 
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_op_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *e;
@@ -201,10 +189,6 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPIR_Win * win_ptr)
 
 /* MPIDI_CH3I_Win_op_free(): put an op element back to the op pool which
  * it belongs to. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_op_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_op_free(MPIR_Win * win_ptr, MPIDI_RMA_Op_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -226,10 +210,6 @@ static inline int MPIDI_CH3I_Win_op_free(MPIR_Win * win_ptr, MPIDI_RMA_Op_t * e)
 
 /* MPIDI_CH3I_Win_target_alloc(): get a target element from the target pool.
  * If we cannot get one, return NULL. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_target_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Target_t *e;
@@ -269,10 +249,6 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPIR_Win * win_ptr
 
 /* MPIDI_CH3I_Win_target_free(): put a target element back to the target pool
  * it belongs to. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_target_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_free(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -295,10 +271,6 @@ static inline int MPIDI_CH3I_Win_target_free(MPIR_Win * win_ptr, MPIDI_RMA_Targe
 
 /* MPIDI_CH3I_Win_create_target(): given a rank, create
  * corresponding target in RMA slots. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_create_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_create_target(MPIR_Win * win_ptr, int target_rank,
                                                MPIDI_RMA_Target_t ** e)
 {
@@ -331,10 +303,6 @@ static inline int MPIDI_CH3I_Win_create_target(MPIR_Win * win_ptr, int target_ra
 
 /* MPIDI_CH3I_Win_find_target(): given a rank, find
  * corresponding target in RMA slots. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_find_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_find_target(MPIR_Win * win_ptr, int target_rank,
                                              MPIDI_RMA_Target_t ** e)
 {
@@ -362,10 +330,6 @@ static inline int MPIDI_CH3I_Win_find_target(MPIR_Win * win_ptr, int target_rank
 /* MPIDI_CH3I_Win_enqueue_op(): given an operation, enqueue it to the
  * corresponding operation lists in corresponding target element. This
  * routines is only called from operation routines. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_enqueue_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_enqueue_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t * op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -444,10 +408,6 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t *
 
 /* MPIDI_CH3I_Win_target_dequeue_and_free(): dequeue and free
  * the target in RMA slots. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_target_dequeue_and_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -468,10 +428,6 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPIR_Win * win_ptr, MPI
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_targets_win
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Target_t *target = NULL, *next_target = NULL;
@@ -493,10 +449,6 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPIR_Win * win_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_get_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_get_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 {
     MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -528,10 +480,6 @@ static inline int MPIDI_CH3I_Win_get_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t ** e)
  * @param IN    list      Pointer to the RMA ops list
  * @param IN    curr_ptr  Pointer to the element to be freed.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Ops_free_elem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIR_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
                                                 MPIDI_RMA_Op_t * curr_ptr)
 {

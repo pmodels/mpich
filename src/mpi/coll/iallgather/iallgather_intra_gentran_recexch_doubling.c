@@ -16,14 +16,10 @@
 #include "iallgather_tsp_recexch_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_intra_recexch_single_buffer
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_intra_gentran_recexch_doubling(const void *sendbuf, int sendcount,
-                                                    MPI_Datatype sendtype, void *recvbuf,
-                                                    int recvcount, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm, MPIR_Request ** req)
+                                                   MPI_Datatype sendtype, void *recvbuf,
+                                                   int recvcount, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -6,10 +6,6 @@
 
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_failure_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -38,10 +34,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_failure_get_acked
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

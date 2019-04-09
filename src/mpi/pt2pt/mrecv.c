@@ -29,10 +29,6 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Mrecv - Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
 

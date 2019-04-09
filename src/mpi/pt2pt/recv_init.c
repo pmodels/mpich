@@ -29,10 +29,6 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Recv_init - Create a persistent request for a receive
 

@@ -106,10 +106,6 @@ int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void *flattened_dataloop)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Dataloop_unflatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
 {
     struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;

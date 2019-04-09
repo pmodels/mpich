@@ -12,10 +12,6 @@
    particularly contiguous ones?  See also the FIXME about buffering
    short messages */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Isend_self
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		     int type, MPIR_Request ** request)
 {

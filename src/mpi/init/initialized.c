@@ -25,10 +25,6 @@ int MPI_Initialized(int *flag) __attribute__ ((weak, alias("PMPI_Initialized")))
 #define MPI_Initialized PMPI_Initialized
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Initialized
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Initialized - Indicates whether 'MPI_Init' has been called.
 

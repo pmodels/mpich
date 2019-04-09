@@ -28,10 +28,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[], MPI_G
 #undef MPI_Group_translate_ranks
 #define MPI_Group_translate_ranks PMPI_Group_translate_ranks
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_translate_ranks_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
                                     MPIR_Group * gp2, int ranks2[])
 {
@@ -107,10 +103,6 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_translate_ranks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to
                              those in another group

@@ -102,10 +102,6 @@ PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_join
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_join - Create a communicator by joining two processes connected by
      a socket.

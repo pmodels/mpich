@@ -25,10 +25,6 @@ int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm co
 #undef MPI_Comm_connect
 #define MPI_Comm_connect PMPI_Comm_connect
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_connect_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -37,10 +33,6 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_connect - Make a request to form a new intercommunicator
 

@@ -13,10 +13,6 @@
  * binomial broadcast.  It does _not_ start the schedule.  This permits callers
  * to build up a larger hierarchical broadcast from multiple invocations of this
  * function. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

@@ -31,10 +31,6 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #define MPI_Testall PMPI_Testall
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testall_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[], int requests_property)
 {
@@ -91,10 +87,6 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                  MPI_Status array_of_statuses[])
 {
@@ -265,10 +257,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testall - Tests for the completion of all previously initiated
     requests

@@ -122,10 +122,6 @@ static void MPIU_Sort_inttable(sorttype * keytable, int size)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -400,10 +396,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_split
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_split - Creates new communicators based on colors and keys

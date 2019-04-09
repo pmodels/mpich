@@ -48,10 +48,6 @@ uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr)
  * The parameter *mapfail_flag_ptr is set to true and MPI_SUCCESS is returned
  * if mapping fails (e.g., no memory resource, or opened too many files), thus the
  * caller can choose fallback if exists. If communication fails it returns an MPI error.*/
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_allocate_shm_segment
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
                                 MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                 bool * mapfail_flag_ptr)
@@ -164,10 +160,6 @@ int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_l
 
 /* Destroy shared memory region on the local process.
  * MPL_shm routines are internally used. */
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_destroy_shm_segment
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_segment_hdl_ptr,
                                void **base_ptr)
 {

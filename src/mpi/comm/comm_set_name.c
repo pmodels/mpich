@@ -28,10 +28,6 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_set_name
-#undef FCNAME
-#define FCNAME "MPI_Comm_set_name"
 
 /*@
    MPI_Comm_set_name - Sets the print name for a communicator

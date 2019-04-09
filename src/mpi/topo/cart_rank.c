@@ -26,10 +26,6 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 #undef MPI_Cart_rank
 #define MPI_Cart_rank PMPI_Cart_rank
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_rank_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank)
 {
     int i, ndims, coord, multiplier;
@@ -57,10 +53,6 @@ void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_rank - Determines process rank in communicator given Cartesian
                 location

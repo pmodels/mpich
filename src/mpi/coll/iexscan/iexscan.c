@@ -59,10 +59,6 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef MPI_Iexscan
 #define MPI_Iexscan PMPI_Iexscan
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
@@ -82,10 +78,6 @@ int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                             MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -109,10 +101,6 @@ int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -127,10 +115,6 @@ int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                       MPIR_Request ** request)
@@ -162,10 +146,6 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -182,10 +162,6 @@ int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iexscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iexscan - Computes the exclusive scan (partial reductions) of data on a
               collection of processes in a nonblocking way

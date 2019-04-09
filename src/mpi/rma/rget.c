@@ -30,10 +30,6 @@ int MPI_Rget(void *origin_addr, int origin_count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rget
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Rget - Get data from a memory window on a remote process
 

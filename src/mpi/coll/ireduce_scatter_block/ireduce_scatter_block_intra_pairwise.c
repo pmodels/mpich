@@ -8,10 +8,6 @@
 
 /* A pairwise exchange algorithm for MPI_Ireduce_scatter_block.  Requires a
  * commutative op and is intended for use with large messages. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_pairwise
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *recvbuf,
                                                     int recvcount, MPI_Datatype datatype, MPI_Op op,
                                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)

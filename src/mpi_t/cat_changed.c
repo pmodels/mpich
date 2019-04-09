@@ -25,10 +25,6 @@ int MPI_T_category_changed(int *stamp) __attribute__ ((weak, alias("PMPI_T_categ
 #define MPI_T_category_changed PMPI_T_category_changed
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_category_changed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_changed - Get the timestamp indicating the last change to the categories
 

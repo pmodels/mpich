@@ -29,10 +29,6 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #define MPI_Info_set PMPI_Info_set
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_set - Adds a (key,value) pair to info
 
@@ -132,10 +128,6 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 
 #ifndef MPICH_MPI_FROM_PMPI
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_set_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;

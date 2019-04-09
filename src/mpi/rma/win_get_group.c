@@ -28,10 +28,6 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_group - Get the MPI Group of the window object
 

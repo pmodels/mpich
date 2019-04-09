@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_sched_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op,
                                          MPIR_Comm * comm, int tree_type, int k, int maxbytes,
@@ -238,10 +234,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
 
 /* Non-blocking tree based allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                    MPIR_Request ** req, int tree_type, int k, int maxbytes)

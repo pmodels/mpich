@@ -28,10 +28,6 @@ int MPI_Errhandler_free(MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Errhandler_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_free - Frees an MPI-style errorhandler
 

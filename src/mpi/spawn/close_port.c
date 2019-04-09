@@ -33,10 +33,6 @@ int MPIR_Close_port_impl(const char *port_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Close_port - close port
 

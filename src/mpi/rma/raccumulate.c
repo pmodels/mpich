@@ -31,10 +31,6 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Raccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Raccumulate - Accumulate data into the target process using remote memory
 access and return a request handle for the operation.

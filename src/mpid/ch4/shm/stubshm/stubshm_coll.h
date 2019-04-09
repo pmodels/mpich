@@ -14,10 +14,6 @@
 #include "stubshm_impl.h"
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_barrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                             const void *algo_parameters_container
                                             ATTRIBUTE((unused)))
@@ -31,10 +27,6 @@ static inline int MPIDI_STUBSHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                           int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                           const void *algo_parameters_container ATTRIBUTE((unused)))
@@ -48,10 +40,6 @@ static inline int MPIDI_STUBSHM_mpi_bcast(void *buffer, int count, MPI_Datatype 
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_allreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                               MPI_Datatype datatype, MPI_Op op,
                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
@@ -67,10 +55,6 @@ static inline int MPIDI_STUBSHM_mpi_allreduce(const void *sendbuf, void *recvbuf
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_allgather(const void *sendbuf, int sendcount,
                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -87,10 +71,6 @@ static inline int MPIDI_STUBSHM_mpi_allgather(const void *sendbuf, int sendcount
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_allgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_allgatherv(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int *recvcounts, const int *displs,
@@ -108,10 +88,6 @@ static inline int MPIDI_STUBSHM_mpi_allgatherv(const void *sendbuf, int sendcoun
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_gather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_gather(const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -128,10 +104,6 @@ static inline int MPIDI_STUBSHM_mpi_gather(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_gatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_gatherv(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
                                             const int *recvcounts, const int *displs,
@@ -149,10 +121,6 @@ static inline int MPIDI_STUBSHM_mpi_gatherv(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_scatter(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -169,10 +137,6 @@ static inline int MPIDI_STUBSHM_mpi_scatter(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_scatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_scatterv(const void *sendbuf, const int *sendcounts,
                                              const int *displs, MPI_Datatype sendtype,
                                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -190,10 +154,6 @@ static inline int MPIDI_STUBSHM_mpi_scatterv(const void *sendbuf, const int *sen
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_alltoall(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -210,10 +170,6 @@ static inline int MPIDI_STUBSHM_mpi_alltoall(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_alltoallv(const void *sendbuf, const int *sendcounts,
                                               const int *sdispls, MPI_Datatype sendtype,
                                               void *recvbuf, const int *recvcounts,
@@ -231,10 +187,6 @@ static inline int MPIDI_STUBSHM_mpi_alltoallv(const void *sendbuf, const int *se
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_alltoallw(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], const MPI_Datatype sendtypes[],
                                               void *recvbuf, const int recvcounts[],
@@ -252,10 +204,6 @@ static inline int MPIDI_STUBSHM_mpi_alltoallw(const void *sendbuf, const int sen
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_reduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                            MPI_Datatype datatype, MPI_Op op, int root,
                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
@@ -271,10 +219,6 @@ static inline int MPIDI_STUBSHM_mpi_reduce(const void *sendbuf, void *recvbuf, i
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_reduce_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                                    const int recvcounts[], MPI_Datatype datatype,
                                                    MPI_Op op, MPIR_Comm * comm_ptr,
@@ -291,10 +235,6 @@ static inline int MPIDI_STUBSHM_mpi_reduce_scatter(const void *sendbuf, void *re
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_reduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                          int recvcount, MPI_Datatype datatype,
                                                          MPI_Op op, MPIR_Comm * comm_ptr,
@@ -311,10 +251,6 @@ static inline int MPIDI_STUBSHM_mpi_reduce_scatter_block(const void *sendbuf, vo
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_scan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                          MPIR_Errflag_t * errflag,
@@ -329,10 +265,6 @@ static inline int MPIDI_STUBSHM_mpi_scan(const void *sendbuf, void *recvbuf, int
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_exscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                            MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                            MPIR_Errflag_t * errflag,
@@ -348,10 +280,6 @@ static inline int MPIDI_STUBSHM_mpi_exscan(const void *sendbuf, void *recvbuf, i
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_neighbor_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_neighbor_allgather(const void *sendbuf, int sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
                                                        int recvcount, MPI_Datatype recvtype,
@@ -367,10 +295,6 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_allgather(const void *sendbuf, int 
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_neighbor_allgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_neighbor_allgatherv(const void *sendbuf, int sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         const int recvcounts[], const int displs[],
@@ -386,10 +310,6 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_allgatherv(const void *sendbuf, int
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_neighbor_alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_neighbor_alltoall(const void *sendbuf, int sendcount,
                                                       MPI_Datatype sendtype, void *recvbuf,
                                                       int recvcount, MPI_Datatype recvtype,
@@ -405,10 +325,6 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_alltoall(const void *sendbuf, int s
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_neighbor_alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallv(const void *sendbuf, const int sendcounts[],
                                                        const int sdispls[], MPI_Datatype sendtype,
                                                        void *recvbuf, const int recvcounts[],
@@ -425,10 +341,6 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallv(const void *sendbuf, cons
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_neighbor_alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
                                                        const MPI_Aint sdispls[],
                                                        const MPI_Datatype sendtypes[],
@@ -447,10 +359,6 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallw(const void *sendbuf, cons
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ineighbor_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ineighbor_allgather(const void *sendbuf, int sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         int recvcount, MPI_Datatype recvtype,
@@ -465,10 +373,6 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_allgather(const void *sendbuf, int
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ineighbor_allgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ineighbor_allgatherv(const void *sendbuf, int sendcount,
                                                          MPI_Datatype sendtype, void *recvbuf,
                                                          const int recvcounts[], const int displs[],
@@ -484,10 +388,6 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_allgatherv(const void *sendbuf, in
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ineighbor_alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoall(const void *sendbuf, int sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
                                                        int recvcount, MPI_Datatype recvtype,
@@ -502,10 +402,6 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoall(const void *sendbuf, int 
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ineighbor_alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallv(const void *sendbuf, const int sendcounts[],
                                                         const int sdispls[], MPI_Datatype sendtype,
                                                         void *recvbuf, const int recvcounts[],
@@ -521,10 +417,6 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallv(const void *sendbuf, con
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ineighbor_alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
                                                         const MPI_Aint sdispls[],
                                                         const MPI_Datatype sendtypes[],
@@ -542,10 +434,6 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallw(const void *sendbuf, con
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ibarrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPI_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IBARRIER);
@@ -557,10 +445,6 @@ static inline int MPIDI_STUBSHM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPI_Request *
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ibcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
                                            int root, MPIR_Comm * comm_ptr, MPI_Request * req)
 {
@@ -573,10 +457,6 @@ static inline int MPIDI_STUBSHM_mpi_ibcast(void *buffer, int count, MPI_Datatype
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iallgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iallgather(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -591,10 +471,6 @@ static inline int MPIDI_STUBSHM_mpi_iallgather(const void *sendbuf, int sendcoun
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iallgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iallgatherv(const void *sendbuf, int sendcount,
                                                 MPI_Datatype sendtype, void *recvbuf,
                                                 const int *recvcounts, const int *displs,
@@ -610,10 +486,6 @@ static inline int MPIDI_STUBSHM_mpi_iallgatherv(const void *sendbuf, int sendcou
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ialltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ialltoall(const void *sendbuf, int sendcount,
                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -628,10 +500,6 @@ static inline int MPIDI_STUBSHM_mpi_ialltoall(const void *sendbuf, int sendcount
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ialltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ialltoallv(const void *sendbuf, const int *sendcounts,
                                                const int *sdispls, MPI_Datatype sendtype,
                                                void *recvbuf, const int *recvcounts,
@@ -647,10 +515,6 @@ static inline int MPIDI_STUBSHM_mpi_ialltoallv(const void *sendbuf, const int *s
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ialltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ialltoallw(const void *sendbuf, const int *sendcounts,
                                                const int *sdispls, const MPI_Datatype sendtypes[],
                                                void *recvbuf, const int *recvcounts,
@@ -666,10 +530,6 @@ static inline int MPIDI_STUBSHM_mpi_ialltoallw(const void *sendbuf, const int *s
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iexscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iexscan(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                             MPI_Request * req)
@@ -683,10 +543,6 @@ static inline int MPIDI_STUBSHM_mpi_iexscan(const void *sendbuf, void *recvbuf, 
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_igather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_igather(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -701,10 +557,6 @@ static inline int MPIDI_STUBSHM_mpi_igather(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_igatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_igatherv(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const int *recvcounts, const int *displs,
@@ -720,10 +572,6 @@ static inline int MPIDI_STUBSHM_mpi_igatherv(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ireduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                           int recvcount, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
@@ -738,10 +586,6 @@ static inline int MPIDI_STUBSHM_mpi_ireduce_scatter_block(const void *sendbuf, v
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ireduce_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ireduce_scatter(const void *sendbuf, void *recvbuf,
                                                     const int recvcounts[], MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm_ptr,
@@ -756,10 +600,6 @@ static inline int MPIDI_STUBSHM_mpi_ireduce_scatter(const void *sendbuf, void *r
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_ireduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ireduce(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, int root,
                                             MPIR_Comm * comm_ptr, MPI_Request * req)
@@ -773,10 +613,6 @@ static inline int MPIDI_STUBSHM_mpi_ireduce(const void *sendbuf, void *recvbuf, 
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iallreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iallreduce(const void *sendbuf, void *recvbuf, int count,
                                                MPI_Datatype datatype, MPI_Op op,
                                                MPIR_Comm * comm_ptr, MPI_Request * req)
@@ -790,10 +626,6 @@ static inline int MPIDI_STUBSHM_mpi_iallreduce(const void *sendbuf, void *recvbu
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iscan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iscan(const void *sendbuf, void *recvbuf, int count,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPI_Request * req)
@@ -807,10 +639,6 @@ static inline int MPIDI_STUBSHM_mpi_iscan(const void *sendbuf, void *recvbuf, in
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iscatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iscatter(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              int recvcount, MPI_Datatype recvtype,
@@ -825,10 +653,6 @@ static inline int MPIDI_STUBSHM_mpi_iscatter(const void *sendbuf, int sendcount,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_iscatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_iscatterv(const void *sendbuf, const int *sendcounts,
                                               const int *displs, MPI_Datatype sendtype,
                                               void *recvbuf, int recvcount,

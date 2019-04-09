@@ -29,10 +29,6 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Win_allocate_shared - Create an MPI Window object for one-sided

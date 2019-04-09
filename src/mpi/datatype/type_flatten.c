@@ -25,10 +25,6 @@ struct flatten_hdr {
  * datatype_ptr        - (IN)  datatype to flatten
  * flattened_type_size - (OUT) buffer size needed for the flattened representation
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_flatten_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size)
 {
     int flattened_dataloop_size;
@@ -48,10 +44,6 @@ int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_siz
  * datatype_ptr   - (IN)  datatype to flatten
  * flattened_type - (OUT) buffer that will contain the flattened representation
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
@@ -88,10 +80,6 @@ int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
  * datatype_ptr   - (OUT) datatype into which the buffer will be unflattened
  * flattened_type - (IN)  buffer that contains the flattened representation
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_unflatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;

@@ -548,10 +548,6 @@ static struct MPIDI_CH3I_Socki_eventq_table *MPIDI_CH3I_Socki_eventq_table_head 
 /*
  * MPIDI_CH3I_Socki_wakeup()
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_wakeup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_wakeup(struct MPIDI_CH3I_Sock_set *sock_set)
 {
     MPIR_THREAD_CHECK_BEGIN;
@@ -576,10 +572,6 @@ static int MPIDI_CH3I_Socki_wakeup(struct MPIDI_CH3I_Sock_set *sock_set)
 
 /* end MPIDI_CH3I_Socki_wakeup() */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Sock_update_sock_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Sock_update_sock_set(struct MPIDI_CH3I_Sock_set *sock_set, int pollfds_active_elems)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -628,10 +620,6 @@ int MPIDI_Sock_update_sock_set(struct MPIDI_CH3I_Sock_set *sock_set, int pollfds
  * This routine assumes that no thread can change the state between state check before the nonblocking OS operation and the call
  * to this routine.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_os_to_mpi_errno
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* --BEGIN ERROR HANDLING-- */
 static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo, int os_errno,
                                             const char *fcname, int line, int *disconnected)
@@ -720,10 +708,6 @@ static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo, int os_er
  * making a copy to shift down elements when only part of the iov is
  * consumed.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_adjust_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov, const int count,
                                        int *const offsetp)
 {
@@ -748,10 +732,6 @@ static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov, const in
 /* end MPIDI_CH3I_Socki_adjust_iov() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_sock_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
                                        struct MPIDI_CH3I_Sock **sockp)
 {
@@ -937,10 +917,6 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
 /* end MPIDI_CH3I_Socki_sock_alloc() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_sock_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void MPIDI_CH3I_Socki_sock_free(struct MPIDI_CH3I_Sock *sock)
 {
     struct pollfd *pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
@@ -1004,10 +980,6 @@ static void MPIDI_CH3I_Socki_sock_free(struct MPIDI_CH3I_Sock *sock)
 /* end MPIDI_CH3I_Socki_sock_free() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_event_enqueue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo, MPIDI_CH3I_Sock_op_t op,
                                           size_t num_bytes, void *user_ptr, int error)
 {
@@ -1069,10 +1041,6 @@ static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo, MPIDI_CH3I_
 /* end MPIDI_CH3I_Socki_event_enqueue() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_event_dequeue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Socki_event_dequeue(struct MPIDI_CH3I_Sock_set *sock_set,
                                                  int *set_elem,
                                                  struct MPIDI_CH3I_Sock_event *eventp)
@@ -1113,10 +1081,6 @@ static inline int MPIDI_CH3I_Socki_event_dequeue(struct MPIDI_CH3I_Sock_set *soc
 
 /* FIXME: Who allocates eventq tables?  Should there be a check that these
    tables are empty first? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_free_eventq_mem
-#undef FCNAME
-#define FCNAME "MPIDI_CH3I_Socki_free_eventq_mem"
 static void MPIDI_CH3I_Socki_free_eventq_mem(void)
 {
     struct MPIDI_CH3I_Socki_eventq_table *eventq_table, *eventq_table_next;
@@ -1240,10 +1204,6 @@ MPL_dbg_class MPIDI_CH3I_DBG_SOCK_CONNECT;
 
 /* FIXME: The usual missing documentation (what are these routines for?
    preconditions?  who calls? post conditions? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_init(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_INIT);
@@ -1261,10 +1221,6 @@ int MPIDI_CH3I_Sock_init(void)
 }
 
 /* FIXME: Who calls?  When?  Should this be a finalize handler instead? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1290,10 +1246,6 @@ int MPIDI_CH3I_Sock_finalize(void)
 
 /*********** sock_set.i *****************/
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_create_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
 {
     struct MPIDI_CH3I_Sock_set *sock_set = NULL;
@@ -1453,10 +1405,6 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_close_open_sockets
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_close_open_sockets(struct MPIDI_CH3I_Sock_set *sock_set, void **user_ptr)
 {
 
@@ -1487,10 +1435,6 @@ int MPIDI_CH3I_Sock_close_open_sockets(struct MPIDI_CH3I_Sock_set *sock_set, voi
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_destroy_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set *sock_set)
 {
     int elem;
@@ -1570,10 +1514,6 @@ int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set *sock_set)
 
 /*********** sock_post.i *****************/
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_connect_ifaddr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*
  This routine connects to a particular address (in byte form; for ipv4,
  the address is four bytes, typically the value of h_addr_list[0] in
@@ -1769,10 +1709,6 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
 
 /* FIXME: What does this routine do?  Why does it take a host description
    instead of an interface name or address? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
                                  char *host_description, int port, struct MPIDI_CH3I_Sock **sockp)
 {
@@ -1811,10 +1747,6 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *use
 /* end MPIDI_CH3I_Sock_post_connect() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_listen
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 #ifndef USHRT_MAX
 #define USHRT_MAX 65535 /* 2^16-1 */
 #endif
@@ -2027,10 +1959,6 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
 
 
 /* FIXME: What does this function do? */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_read
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t minlen, size_t maxlen,
                               MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
@@ -2079,10 +2007,6 @@ int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t mi
 /* end MPIDI_CH3I_Sock_post_read() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_readv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int iov_n,
                                MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
@@ -2131,10 +2055,6 @@ int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int 
 /* end MPIDI_CH3I_Sock_post_readv() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_write
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t minlen,
                                size_t maxlen, MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
@@ -2183,10 +2103,6 @@ int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t m
 /* end MPIDI_CH3I_Sock_post_write() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_writev
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int iov_n,
                                 MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
@@ -2235,10 +2151,6 @@ int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int
 /* end MPIDI_CH3I_Sock_post_writev() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_post_close
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
 {
     struct pollfd *pollfd;
@@ -2326,10 +2238,6 @@ int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
 
 /* FIXME: What does this function do?  What are its arguments?
    It appears to execute a nonblocking accept call */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
                            struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
                            struct MPIDI_CH3I_Sock **sockp)
@@ -2554,10 +2462,6 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
 /* end MPIDI_CH3I_Sock_accept() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_read
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_read)
 {
     struct pollfd *pollfd;
@@ -2660,10 +2564,6 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
 /* end MPIDI_CH3I_Sock_read() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_readv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read)
 {
     struct pollfd *pollfd;
@@ -2762,10 +2662,6 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
 /* end MPIDI_CH3I_Sock_readv() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_write
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_written)
 {
     struct pollfd *pollfd;
@@ -2840,10 +2736,6 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 /* end MPIDI_CH3I_Sock_write() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_writev
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
 {
     struct pollfd *pollfd;
@@ -2919,10 +2811,6 @@ int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, siz
 /* end MPIDI_CH3I_Sock_writev() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_wakeup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_wakeup(struct MPIDI_CH3I_Sock_set *sock_set)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -2970,10 +2858,6 @@ int MPIDI_CH3I_Sock_wakeup(struct MPIDI_CH3I_Sock_set *sock_set)
    case where there are several networks available to the calling process,
    this picks one but even in the current code can pick a different
    interface if a particular environment variable is set) .  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_get_host_description
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int len)
 {
     char *env_hostname;
@@ -3045,10 +2929,6 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_native_to_sock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_native_to_sock(struct MPIDI_CH3I_Sock_set *sock_set,
                                    MPIDI_CH3I_SOCK_NATIVE_FD fd, void *user_ptr,
                                    struct MPIDI_CH3I_Sock **sockp)
@@ -3128,10 +3008,6 @@ int MPIDI_CH3I_Sock_native_to_sock(struct MPIDI_CH3I_Sock_set *sock_set,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_set_user_ptr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_set_user_ptr(struct MPIDI_CH3I_Sock *sock, void *user_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -3160,10 +3036,6 @@ int MPIDI_CH3I_Sock_set_user_ptr(struct MPIDI_CH3I_Sock *sock, void *user_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_get_sock_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_get_sock_id(struct MPIDI_CH3I_Sock *sock)
 {
     int id;
@@ -3185,10 +3057,6 @@ int MPIDI_CH3I_Sock_get_sock_id(struct MPIDI_CH3I_Sock *sock)
     return id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_get_sock_set_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_get_sock_set_id(struct MPIDI_CH3I_Sock_set *sock_set)
 {
     int id;
@@ -3215,10 +3083,6 @@ int MPIDI_CH3I_Sock_get_sock_set_id(struct MPIDI_CH3I_Sock_set *sock_set)
 /* FIXME: It appears that this function was used instead of making use of the
    existing MPI-2 features to extend MPI error classes and code, of to export
    messages to non-MPI application */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_get_error_class_string
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* --BEGIN ERROR HANDLING-- */
 int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, size_t length)
 {
@@ -3325,10 +3189,6 @@ static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
  * To permit progress by other threads, it will release any global lock or
  * coarse-grain critical section.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Sock_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_timeout,
                          struct MPIDI_CH3I_Sock_event *eventp)
 {
@@ -3650,10 +3510,6 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_handle_pollhup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_pollhup(struct pollfd *const pollfd,
                                            struct pollinfo *const pollinfo)
 {
@@ -3724,10 +3580,6 @@ static int MPIDI_CH3I_Socki_handle_pollhup(struct pollfd *const pollfd,
 /* end MPIDI_CH3I_Socki_handle_pollhup() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_handle_pollerr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
                                            struct pollinfo *const pollinfo)
 {
@@ -3817,10 +3669,6 @@ static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
 /* end MPIDI_CH3I_Socki_handle_pollerr() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_handle_read
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_read(struct pollfd *const pollfd,
                                         struct pollinfo *const pollinfo)
 {
@@ -3930,10 +3778,6 @@ static int MPIDI_CH3I_Socki_handle_read(struct pollfd *const pollfd,
 /* end MPIDI_CH3I_Socki_handle_read() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_handle_write
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_write(struct pollfd *const pollfd,
                                          struct pollinfo *const pollinfo)
 {
@@ -4017,10 +3861,6 @@ static int MPIDI_CH3I_Socki_handle_write(struct pollfd *const pollfd,
 /* end MPIDI_CH3I_Socki_handle_write() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Socki_handle_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
                                            struct pollinfo *const pollinfo)
 {

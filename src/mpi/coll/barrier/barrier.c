@@ -81,10 +81,6 @@ int MPI_Barrier(MPI_Comm comm) __attribute__ ((weak, alias("PMPI_Barrier")));
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int size, mpi_errno = MPI_SUCCESS;
@@ -119,10 +115,6 @@ int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier_inter_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -132,10 +124,6 @@ int MPIR_Barrier_inter_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -180,10 +168,6 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -202,10 +186,6 @@ int MPIR_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Barrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

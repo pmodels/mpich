@@ -28,10 +28,6 @@ int MPI_Keyval_free(int *keyval) __attribute__ ((weak, alias("PMPI_Keyval_free")
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Keyval_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Keyval_free - Frees an attribute key for communicators

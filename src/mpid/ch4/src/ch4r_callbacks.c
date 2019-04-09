@@ -18,10 +18,6 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_check_cmpl_order
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't
  * supposed to finish next, it is appended to a list of requests to be retrieved later. */
 int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_cmpl_cb)
@@ -48,10 +44,6 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_progress_compl_list
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDIG_progress_compl_list(void)
 {
     MPIR_Request *req;
@@ -76,10 +68,6 @@ void MPIDIG_progress_compl_list(void)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
 }
 
-#undef FUNCNAME
-#define FUNCNAME handle_unexp_cmpl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, in_use;
@@ -262,10 +250,6 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME do_send_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
 {
@@ -323,10 +307,6 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME recv_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* This function is called when a receive has completed on the receiver side. The input is the
  * request that has been completed. */
 static int recv_target_cmpl_cb(MPIR_Request * rreq)
@@ -389,10 +369,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -403,10 +379,6 @@ int MPIDIG_send_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_long_lmt_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -418,10 +390,6 @@ int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_ssend_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -433,10 +401,6 @@ int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                               int is_local, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -545,10 +509,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_long_req_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data,
                                        size_t * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -662,10 +622,6 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_long_lmt_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data,
                                        size_t * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -688,10 +644,6 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_ssend_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                int is_local, int *is_contig,
                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -718,10 +670,6 @@ int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_ssend_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                    int is_local, int *is_contig,
                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -744,10 +692,6 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_send_long_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
                                        size_t * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
@@ -800,10 +744,6 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_comm_abort_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
@@ -813,10 +753,6 @@ int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_comm_abort_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
                                     int is_local, int *is_contig,
                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)

@@ -136,10 +136,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_contiguous_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,10 +163,6 @@ int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * ne
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_contiguous_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     /* to make 'count' fit MPI-3 type processing routines (which take integer
@@ -220,10 +212,6 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_contiguous
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_contiguous - Creates a contiguous datatype
 

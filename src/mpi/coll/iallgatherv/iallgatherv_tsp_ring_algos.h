@@ -17,10 +17,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgatherv_sched_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
@@ -152,10 +148,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking ring based Allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgatherv_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, const int *recvcounts, const int *displs,
                                     MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)

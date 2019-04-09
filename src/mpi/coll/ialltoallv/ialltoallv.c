@@ -98,10 +98,6 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const int recvcounts[], const int rdispls[],
@@ -124,10 +120,6 @@ int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const int recvcounts[], const int rdispls[],
@@ -142,10 +134,6 @@ int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                                MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                                const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -196,10 +184,6 @@ int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const int sendcounts[], cons
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                           const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -218,10 +202,6 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -284,10 +264,6 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
                     MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                     const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -308,10 +284,6 @@ int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdisp
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ialltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ialltoallv - Sends data from all to all processes in a nonblocking way;
    each process may send a different amount of data and provide displacements

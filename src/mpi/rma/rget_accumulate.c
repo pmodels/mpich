@@ -32,10 +32,6 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rget_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Rget_accumulate - Perform an atomic, one-sided read-and-accumulate
 operation and return a request handle for the operation.

@@ -12,10 +12,6 @@
 #include "mpidimpl.h"
 #include "ch4r_recvq.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_recvq_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

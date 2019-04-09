@@ -28,10 +28,6 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_create - Create an MPI Window object for one-sided communication
 

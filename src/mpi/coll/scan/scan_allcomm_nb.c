@@ -6,10 +6,6 @@
 
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_allcomm_nb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_allcomm_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

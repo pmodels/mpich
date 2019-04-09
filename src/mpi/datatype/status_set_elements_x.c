@@ -27,10 +27,6 @@ int MPI_Status_set_elements_x(MPI_Status * status, MPI_Datatype datatype, MPI_Co
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Status_set_elements_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -51,10 +47,6 @@ int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, 
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_set_elements_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Status_set_elements_x - Set the number of elements in a status
 

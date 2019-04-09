@@ -16,10 +16,6 @@
 #include "ineighbor_allgather_tsp_linear_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgather_intra_gentran_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgather_allcomm_gentran_linear(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     int recvcount, MPI_Datatype recvtype,

@@ -13,10 +13,6 @@
  * intracommunicator broadcast.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_inter_remote_send_local_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
                                              int count,
                                              MPI_Datatype datatype,

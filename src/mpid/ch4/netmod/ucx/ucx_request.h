@@ -11,19 +11,11 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_request_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_request_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
     MPL_free((req)->dev.ch4.am.netmod_am.ucx.pack_buffer);

@@ -75,10 +75,6 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 #undef MPI_Ineighbor_alltoallw
 #define MPI_Ineighbor_alltoallw PMPI_Ineighbor_alltoallw
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[],
                                               const MPI_Aint sdispls[],
                                               const MPI_Datatype sendtypes[], void *recvbuf,
@@ -102,10 +98,6 @@ int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sen
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[],
                                               const MPI_Aint sdispls[],
                                               const MPI_Datatype sendtypes[], void *recvbuf,
@@ -129,10 +121,6 @@ int MPIR_Ineighbor_alltoallw_sched_inter_auto(const void *sendbuf, const int sen
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcounts[],
                                         const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[],
@@ -180,10 +168,6 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const int recvcounts[],
@@ -204,10 +188,6 @@ int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                                   const MPI_Aint sdispls[],
                                   const MPI_Datatype sendtypes[],
@@ -287,10 +267,6 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
                              const MPI_Aint sdispls[],
                              const MPI_Datatype sendtypes[], void *recvbuf,
@@ -314,10 +290,6 @@ int MPIR_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ineighbor_alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ineighbor_alltoallw - Nonblocking version of MPI_Neighbor_alltoallw.
 

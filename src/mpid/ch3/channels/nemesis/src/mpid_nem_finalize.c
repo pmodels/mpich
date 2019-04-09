@@ -12,10 +12,6 @@
 
 #include "mpidi_nem_statistics.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

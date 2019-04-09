@@ -6,10 +6,6 @@
 
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Mprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
                 MPIR_Request **message, MPI_Status *status)
 {

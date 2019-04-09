@@ -16,10 +16,6 @@
 #include "ialltoallv_tsp_scattered_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_intra_gentran_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallv_intra_gentran_scattered(const void *sendbuf, const int sendcounts[],
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],

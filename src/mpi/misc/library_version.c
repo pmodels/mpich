@@ -42,10 +42,6 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_library_version
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Get_library_version(char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;

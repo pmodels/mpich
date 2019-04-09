@@ -27,10 +27,6 @@ int MPI_Type_create_indexed_block(int count, int blocklength, const int array_of
 #undef MPI_Type_create_indexed_block
 #define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_create_indexed_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_indexed_block_impl(int count,
                                         int blocklength,
                                         const int array_of_displacements[],
@@ -76,10 +72,6 @@ int MPIR_Type_create_indexed_block_impl(int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_indexed_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_indexed_block - Create an indexed
      datatype with constant-sized blocks

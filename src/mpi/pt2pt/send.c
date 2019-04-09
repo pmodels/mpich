@@ -28,10 +28,6 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Send - Performs a blocking send
 

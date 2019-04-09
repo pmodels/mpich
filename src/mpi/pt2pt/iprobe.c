@@ -28,10 +28,6 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * statu
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Iprobe - Nonblocking test for a message
 

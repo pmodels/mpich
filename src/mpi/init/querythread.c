@@ -25,10 +25,6 @@ int MPI_Query_thread(int *provided) __attribute__ ((weak, alias("PMPI_Query_thre
 #define MPI_Query_thread PMPI_Query_thread
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Query_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Query_thread - Return the level of thread support provided by the MPI
     library

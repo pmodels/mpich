@@ -28,10 +28,6 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosit
 #define MPI_T_cvar_get_info PMPI_T_cvar_get_info
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_cvar_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_get_info - Get the information about a control variable
 

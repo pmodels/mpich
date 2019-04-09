@@ -12,10 +12,6 @@
  * In MPI-2.1, this operation is valid only for C integer, Fortran integer,
  * and floating point types (5.9.2 Predefined reduce operations)
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_MINF
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_MINF(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
@@ -53,10 +49,6 @@ void MPIR_MINF(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_MINF_check_dtype
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_MINF_check_dtype(MPI_Datatype type)
 {
     switch (type) {

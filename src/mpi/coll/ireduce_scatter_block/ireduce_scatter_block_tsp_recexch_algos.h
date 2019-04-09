@@ -18,10 +18,6 @@
 #include "recexchalgo.h"
 
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                        int recvcount, MPI_Datatype datatype,
                                                        MPI_Op op, int tag, MPIR_Comm * comm, int k,
@@ -205,10 +201,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
 
 /* Non-blocking recexch based REDUCE_SCATTER_BLOCK */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ireduce_scatter_block_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recvbuf, int recvcount,
                                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                                  MPIR_Request ** req, int k)

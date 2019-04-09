@@ -14,10 +14,6 @@
  */
 #define MPIR_LSUM(a,b) ((a)+(b))
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_SUM
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
@@ -76,10 +72,6 @@ void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_SUM_check_dtype
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_SUM_check_dtype(MPI_Datatype type)
 {
     switch (type) {

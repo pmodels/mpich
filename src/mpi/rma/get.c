@@ -29,10 +29,6 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get - Get data from a memory window on a remote process
 

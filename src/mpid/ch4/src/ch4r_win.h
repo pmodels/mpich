@@ -51,10 +51,6 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_fill_ranks_in_win_grp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
                                                int *ranks_in_win_grp)
 {
@@ -92,10 +88,6 @@ static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -126,10 +118,6 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -212,10 +200,6 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_post
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -277,10 +261,6 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -305,10 +285,6 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -341,10 +317,6 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -401,10 +373,6 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_unlock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -493,10 +461,6 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_fence
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -551,10 +515,6 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_shared_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
                                               int *disp_unit, void *baseptr)
 {
@@ -601,10 +561,6 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_flush
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -651,10 +607,6 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_flush_local_all
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -693,10 +645,6 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_unlock_all
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -771,10 +719,6 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_flush_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -821,10 +765,6 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_sync
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -841,10 +781,6 @@ static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_flush_all
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -883,10 +819,6 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_lock_all
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

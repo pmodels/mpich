@@ -43,10 +43,6 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 */
 
 /* Routine to schedule a ring based allgather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_sched_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
@@ -190,10 +186,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking ring based Alltoall */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                   MPIR_Comm * comm, MPIR_Request ** req)

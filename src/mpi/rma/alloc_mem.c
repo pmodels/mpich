@@ -28,10 +28,6 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Alloc_mem - Allocate memory for message passing and RMA
 

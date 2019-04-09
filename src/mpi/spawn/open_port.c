@@ -31,10 +31,6 @@ int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Open_port - Establish an address that can be used to establish
    connections between groups of MPI processes

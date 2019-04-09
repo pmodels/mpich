@@ -27,10 +27,6 @@ int MPI_Win_flush_local_all(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_f
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_flush_local_all
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_flush_local_all - Complete locally all outstanding RMA operations at all targets
 

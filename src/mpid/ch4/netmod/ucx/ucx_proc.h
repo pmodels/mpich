@@ -11,10 +11,6 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_rank_is_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
@@ -27,10 +23,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_av_is_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret;
@@ -43,10 +35,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_get_lpid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
                                                     int idx, int *lpid_ptr, bool is_remote)
 {

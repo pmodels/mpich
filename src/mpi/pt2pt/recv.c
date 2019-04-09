@@ -28,10 +28,6 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Recv - Blocking receive for a message
 

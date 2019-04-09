@@ -13,10 +13,6 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_handle_cq_error_util
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
 {
     int mpi_errno;
@@ -246,10 +242,6 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
 
-#undef FUNCNAME
-#define FUNCNAME check_mpi_acc_valid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(check_mpi_acc_valid)
 MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 {
     bool valid_flag = false;
@@ -273,10 +265,6 @@ MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-#undef FUNCNAME
-#define FUNCNAME mpi_to_ofi
-#undef FCNAME
-#define FCNAME MPL_QUOTE(mpi_to_ofi)
 static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;

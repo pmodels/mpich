@@ -78,10 +78,6 @@ int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, in
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_compare
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_compare - Compares two groups

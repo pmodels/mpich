@@ -19,10 +19,6 @@
  * process i sends to process (i + 2^k) % p and receives from process
  * (i - 2^k + p) % p.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

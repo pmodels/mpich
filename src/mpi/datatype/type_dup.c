@@ -40,10 +40,6 @@ Output Parameters:
   Return Value:
   0 on success, MPI error code on failure.
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -126,10 +122,6 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;

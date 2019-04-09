@@ -29,10 +29,6 @@ int MPI_Add_error_string(int errorcode, const char *string)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Add_error_string
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Add_error_string - Associates an error string with an MPI error code or
    class

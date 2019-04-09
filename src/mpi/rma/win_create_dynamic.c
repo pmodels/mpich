@@ -28,10 +28,6 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_create_dynamic - Create an MPI Window object for one-sided
 communication.  This window allows memory to be dynamically exposed and

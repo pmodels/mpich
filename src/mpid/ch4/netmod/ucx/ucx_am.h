@@ -11,10 +11,6 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_am_isend_callback
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -36,10 +32,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_sta
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_am_send_callback
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -58,10 +50,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,
@@ -166,10 +154,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 MPIR_Comm * comm,
                                                 int handler_id,
@@ -258,10 +242,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                                      int src_rank,
                                                      int handler_id,
@@ -341,10 +321,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_hdr_max_sz
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
@@ -358,10 +334,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
@@ -409,10 +381,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                         int src_rank,
                                                         int handler_id, const void *am_hdr,
@@ -460,10 +428,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;

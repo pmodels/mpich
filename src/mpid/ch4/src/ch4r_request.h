@@ -14,10 +14,6 @@
 #include "ch4_types.h"
 #include "ch4r_buf.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_request_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
     MPIR_Request *req;
@@ -59,10 +55,6 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_request_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                                            MPIR_Request_kind_t kind)
 {
@@ -87,10 +79,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_request_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_request_copy(MPIR_Request * dest, MPIR_Request * src)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_REQUEST_COPY);

@@ -28,10 +28,6 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_errhandler - Get the error handler for the MPI RMA window
 

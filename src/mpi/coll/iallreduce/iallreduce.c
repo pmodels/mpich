@@ -135,10 +135,6 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef MPI_Iallreduce
 #define MPI_Iallreduce PMPI_Iallreduce
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -185,10 +181,6 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -202,10 +194,6 @@ int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int cou
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -263,10 +251,6 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                           MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -281,10 +265,6 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Request ** request)
@@ -355,10 +335,6 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -375,10 +351,6 @@ int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iallreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iallreduce - Combines values from all processes and distributes the result
                  back to all processes in a nonblocking way

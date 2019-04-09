@@ -83,10 +83,6 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -98,10 +94,6 @@ int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 
 /* It will choose between several different algorithms based on the given
  * parameters. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
@@ -111,10 +103,6 @@ int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -148,10 +136,6 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -165,10 +149,6 @@ int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -220,10 +200,6 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -239,10 +215,6 @@ int MPIR_Ibarrier(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ibarrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ibarrier - Notifies the process that it has reached the barrier and returns
                immediately

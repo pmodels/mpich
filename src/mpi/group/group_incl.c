@@ -27,10 +27,6 @@ int MPI_Group_incl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 #undef MPI_Group_incl
 #define MPI_Group_incl PMPI_Group_incl
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_incl_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
                          MPIR_Group ** new_group_ptr)
 {
@@ -71,10 +67,6 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_incl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

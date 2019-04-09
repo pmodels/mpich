@@ -73,10 +73,6 @@ int MPI_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendt
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoall_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm_ptr)
@@ -95,10 +91,6 @@ int MPIR_Neighbor_alltoall_intra_auto(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoall_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm_ptr)
@@ -117,10 +109,6 @@ int MPIR_Neighbor_alltoall_inter_auto(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf,
                                 int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
@@ -167,10 +155,6 @@ int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoall(const void *sendbuf, int sendcount,
                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
                            MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
@@ -190,10 +174,6 @@ int MPIR_Neighbor_alltoall(const void *sendbuf, int sendcount,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Neighbor_alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Neighbor_alltoall - In this function, each process i receives data items
 from each process j if an edge (j,i) exists in the topology graph or Cartesian

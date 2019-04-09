@@ -27,10 +27,6 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgrou
 #undef MPI_Group_difference
 #define MPI_Group_difference PMPI_Group_difference
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_difference_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                                MPIR_Group ** new_group_ptr)
 {
@@ -105,10 +101,6 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_difference
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

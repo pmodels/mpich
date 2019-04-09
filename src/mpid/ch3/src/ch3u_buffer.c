@@ -28,10 +28,6 @@ Used indirectly by mpid_irecv, mpid_recv (through MPIDI_CH3_RecvFromSelf) and
  and receive from self.  We may want to put all of the "from self" routines
  into a single file, and make MPIDI_CH3U_Buffer_copy static to this file. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Buffer_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3U_Buffer_copy(
     const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt, int * smpi_errno,
     void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, intptr_t * rsz,

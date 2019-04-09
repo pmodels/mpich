@@ -28,10 +28,6 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_set_cancelled
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Status_set_cancelled - Sets the cancelled state associated with a
    Status object

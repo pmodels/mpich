@@ -12,10 +12,6 @@
 #include "mpidimpl.h"
 #include "ch4r_comm.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_upids_to_lupids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                            int **remote_lupids, int *remote_node_ids)
 {
@@ -63,10 +59,6 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_Intercomm_map_bcast_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      size_t * remote_upid_size, char *remote_upids,
@@ -170,10 +162,6 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_alloc_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -202,10 +190,6 @@ int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_release_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -224,10 +208,6 @@ int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_alloc_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -256,10 +236,6 @@ int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_release_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
 {
     int mpi_errno = MPI_SUCCESS;

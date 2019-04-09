@@ -638,10 +638,6 @@ static int index_m2m(MPI_Aint * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME contig_pack_external32_to_buf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
                                          MPI_Datatype el_type,
                                          MPI_Aint rel_off, void *bufp, void *v_paramp)
@@ -688,10 +684,6 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME contig_unpack_external32_to_buf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
                                            MPI_Datatype el_type,
                                            MPI_Aint rel_off, void *bufp, void *v_paramp)
@@ -741,10 +733,6 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_pack_external32
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer)
 {
@@ -763,10 +751,6 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_unpack_external32
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
                                     MPI_Aint first, MPI_Aint * lastp, void *unpack_buffer)
 {
@@ -838,10 +822,6 @@ void MPIR_Type_release_contents(MPI_Datatype type,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_to_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIR_Segment_to_iov
 *
 * Parameters:
@@ -883,10 +863,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 *
 * Q: Should this be any different from pack vector?
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_from_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
                            MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
 {
@@ -905,10 +881,6 @@ void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
 
 /********** FUNCTIONS FOR CREATING AN IOV DESCRIBING BUFFER **********/
 
-#undef FUNCNAME
-#define FUNCNAME contig_pack_to_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int contig_pack_to_iov(MPI_Aint * blocks_p,
                               MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp)
 {
@@ -956,10 +928,6 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME vector_pack_to_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* vector_pack_to_iov
  *
  * Input Parameters:

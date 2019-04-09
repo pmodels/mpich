@@ -257,8 +257,6 @@ static int ndivisors_from_factor(int nf, const Factors * factors)
     return ndiv;
 }
 
-#undef FCNAME
-#define FCNAME "factor_to_divisors"
 static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
 {
     int i, powers[MAX_FACTORS], curbase[MAX_FACTORS], nd, idx, val, mpi_errno;
@@ -833,10 +831,6 @@ extern volatile int MPIR_DIMS_initPCVars;
 
 #endif /* PMPI Local */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dims_create
-#undef FCNAME
-#define FCNAME "MPI_Dims_create"
 
 /*@
     MPI_Dims_create - Creates a division of processors in a cartesian grid

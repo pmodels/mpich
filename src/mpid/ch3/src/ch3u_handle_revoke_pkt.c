@@ -6,10 +6,6 @@
 
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Revoke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                 void *data ATTRIBUTE((unused)),
                                 intptr_t *buflen, MPIR_Request **rreqp)

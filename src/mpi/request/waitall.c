@@ -31,10 +31,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 #undef MPI_Waitall
 #define MPI_Waitall PMPI_Waitall
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitall_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
                       int requests_property)
 {
@@ -88,10 +84,6 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -260,10 +252,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitall - Waits for all given MPI Requests to complete
 

@@ -17,13 +17,10 @@
 #include "ibcast_tsp_scatter_recexch_allgather_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_gentran_scatter_recexch_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(void *buffer, int count,
-                                                MPI_Datatype datatype, int root,
-                                                MPIR_Comm * comm_ptr, MPIR_Request ** request)
+                                                        MPI_Datatype datatype, int root,
+                                                        MPIR_Comm * comm_ptr,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 

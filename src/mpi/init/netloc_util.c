@@ -24,10 +24,6 @@ typedef struct tree {
     int num_edges;
 } tree;
 
-#undef FUNCNAME
-#define FUNCNAME get_tree_attributes
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_tree_attributes(netloc_topology_t topology,
                                MPIR_Netloc_network_attributes * network_attr)
 {
@@ -1456,10 +1452,6 @@ static int get_torus_attributes(netloc_topology_t topology,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Netloc_parse_topology
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Netloc_parse_topology(netloc_topology_t netloc_topology,
                                MPIR_Netloc_network_attributes * network_attr)
 {
@@ -1505,10 +1497,6 @@ static int get_physical_address(hwloc_obj_t hwloc_obj, char **device_physical_ad
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Netloc_get_network_end_point
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_attributes,
                                       netloc_topology_t netloc_topology,
                                       hwloc_topology_t hwloc_topology, netloc_node_t ** end_point)
@@ -1566,10 +1554,6 @@ int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_att
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Netloc_get_hostnode_index_in_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attributes,
                                            netloc_topology_t topology,
                                            netloc_node_t * network_endpoint,
@@ -1641,10 +1625,6 @@ int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attrib
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Netloc_get_switches_at_level
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Netloc_get_switches_at_level(netloc_topology_t topology,
                                       MPIR_Netloc_network_attributes attributes, int level,
                                       netloc_node_t *** switches_at_level, int *switch_count)

@@ -27,10 +27,6 @@ int MPI_Win_fence(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_fence
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_fence - Perform an MPI fence synchronization on a MPI window
 

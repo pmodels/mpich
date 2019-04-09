@@ -14,10 +14,6 @@
 
 #define COPY_BUFFER_SZ 16384
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Localcopy
-#undef FCNAME
-#define FCNAME "MPIR_Localcopy"
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype)
 {

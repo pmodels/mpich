@@ -30,10 +30,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
 #undef MPI_Waitany
 #define MPI_Waitany PMPI_Waitany
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitany
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,10 +106,6 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Waitany
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitany - Waits for any specified MPI Request to complete
 

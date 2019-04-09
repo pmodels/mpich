@@ -29,10 +29,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Sendrecv_replace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 

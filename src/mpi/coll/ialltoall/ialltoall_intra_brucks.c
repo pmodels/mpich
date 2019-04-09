@@ -19,10 +19,6 @@
  * where n is the total amount of data a process needs to send to all
  * other processes.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_sched_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)

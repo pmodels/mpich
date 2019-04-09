@@ -16,10 +16,6 @@
 #include "../iallreduce/iallreduce_tsp_recexch_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_intra_gentran_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_intra_gentran_recexch(MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

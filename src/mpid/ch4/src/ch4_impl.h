@@ -107,10 +107,6 @@ static inline MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win * win)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_request_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 {
     int incomplete;
@@ -125,10 +121,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_target_add
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * win, int rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_ADD);
@@ -150,10 +142,6 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * w
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_target_find
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_find(MPIR_Win * win, int rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_FIND);
@@ -166,10 +154,6 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_find(MPIR_Win * 
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_target_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_get(MPIR_Win * win, int rank)
 {
     MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, rank);
@@ -178,10 +162,6 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_get(MPIR_Win * w
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_target_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_delete(MPIR_Win * win,
                                                        MPIDIG_win_target_t * target_ptr)
 {
@@ -194,10 +174,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_delete(MPIR_Win * win,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_DELETE);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_target_cleanall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_cleanall(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_TARGET_CLEANALL);
@@ -212,10 +188,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_target_cleanall(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_TARGET_CLEANALL);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_hash_clear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_HASH_CLEAR);
@@ -404,10 +376,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_valid_group_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
@@ -654,10 +622,6 @@ static inline uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * win)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_cmpl_cnts_incr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
                                              MPIR_cc_t ** local_cmpl_cnts_ptr)
 {
@@ -691,10 +655,6 @@ static inline void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
 }
 
 /* Increase counter for active message acc ops. */
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_remote_acc_cmpl_cnt_incr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -714,10 +674,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win
 }
 
 /* Decrease counter for active message acc ops. */
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_remote_acc_cmpl_cnt_decr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -738,10 +694,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_remote_cmpl_cnt_decr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -764,10 +716,6 @@ static inline void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_ra
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_check_all_targets_remote_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win, int *allcompleted)
 {
     int rank = 0;
@@ -785,10 +733,6 @@ static inline void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_check_all_targets_local_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win, int *allcompleted)
 {
     int rank = 0;
@@ -806,10 +750,6 @@ static inline void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win, 
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_win_check_group_local_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
                                                           int *ranks_in_win_grp,
                                                           int grp_siz, int *allcompleted)
@@ -831,10 +771,6 @@ static inline void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
 }
 
 /* Map function interfaces in CH4 level */
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_create(void **out_map, MPL_memory_class class)
 {
     MPIDIU_map_t *map;
@@ -844,10 +780,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_create(void **out_map, MPL_memory_class
     *out_map = map;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_destroy(void *in_map)
 {
     MPIDIU_map_t *map = in_map;
@@ -855,10 +787,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_destroy(void *in_map)
     MPL_free(map);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *val,
                                              MPL_memory_class class)
 {
@@ -872,10 +800,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *va
     HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry, class);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_erase
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_erase(void *in_map, uint64_t id)
 {
     MPIDIU_map_t *map;
@@ -887,10 +811,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_erase(void *in_map, uint64_t id)
     MPL_free(map_entry);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_lookup(void *in_map, uint64_t id)
 {
     void *rc;
@@ -906,10 +826,6 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_lookup(void *in_map, uint64_t id)
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_map_lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Wait until active message acc ops are done. */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
 {
@@ -932,10 +848,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank,
  * The source datatype can be only predefined; the target datatype can be
  * predefined or derived. If the source buffer has been packed by the caller,
  * src_kind must be set to MPIDIG_ACC_SRCBUF_PACKED.*/
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_compute_acc_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_count,
                                                    MPI_Datatype source_dtp, void *target_buf,
                                                    int target_count, MPI_Datatype target_dtp,

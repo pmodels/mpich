@@ -30,10 +30,6 @@ int MPI_Grequest_complete(MPI_Request request)
    are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Grequest_complete(MPIR_Request * request_ptr)
 {
     /* Set the request as completed.  This does not change the
@@ -46,10 +42,6 @@ void MPIR_Grequest_complete(MPIR_Request * request_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Grequest_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_complete - Notify MPI that a user-defined request is complete
 

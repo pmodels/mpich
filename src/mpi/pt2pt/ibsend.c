@@ -52,10 +52,6 @@ PMPI_LOCAL int MPIR_Ibsend_free(void *extra)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibsend_cancel
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -93,10 +89,6 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibsend_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPIR_Comm * comm_ptr, MPI_Request * request)
 {
@@ -134,10 +126,6 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ibsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Ibsend - Starts a nonblocking buffered send
 

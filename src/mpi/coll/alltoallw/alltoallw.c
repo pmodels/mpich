@@ -76,10 +76,6 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 #undef MPI_Alltoallw
 #define MPI_Alltoallw PMPI_Alltoallw
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_intra_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                               const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                               const int rdispls[], const MPI_Datatype recvtypes[],
@@ -112,10 +108,6 @@ int MPIR_Alltoallw_intra_auto(const void *sendbuf, const int sendcounts[], const
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_inter_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                               const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                               const int rdispls[], const MPI_Datatype recvtypes[],
@@ -130,10 +122,6 @@ int MPIR_Alltoallw_inter_auto(const void *sendbuf, const int sendcounts[], const
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                         const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                         const int rdispls[], const MPI_Datatype recvtypes[],
@@ -201,10 +189,6 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
                    const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                    const int rdispls[], const MPI_Datatype recvtypes[],
@@ -226,10 +210,6 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Alltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Alltoallw - Generalized all-to-all communication allowing different
    datatypes, counts, and displacements for each partner
