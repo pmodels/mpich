@@ -89,6 +89,8 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
         cell->payload_size = 0;
     }
 
+    transport->last_read_cell = NULL;
+
     /* Run local procs barrier */
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);

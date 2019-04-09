@@ -17,6 +17,14 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
 
+    /* Grab the most recently read cell since it's probably still in cache. */
+    if (transport->last_read_cell) {
+        MPIDI_POSIX_eager_iqueue_cell_t *cell = transport->last_read_cell;
+        transport->last_read_cell = NULL;
+        MPIR_Assert(cell->type != MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL);
+        return cell;
+    }
+
     for (i = 0; i < transport->num_cells; i++) {
         cell = MPIDI_POSIX_EAGER_IQUEUE_THIS_CELL(transport, i);
         if (cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL) {

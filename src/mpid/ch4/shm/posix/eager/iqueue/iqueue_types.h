@@ -52,6 +52,8 @@ typedef struct MPIDI_POSIX_eager_iqueue_transport {
                                                          * cells. */
     MPIDI_POSIX_eager_iqueue_cell_t *last_cell; /* Internal variable to track the last cell to be
                                                  * received when receiving multiple cells. */
+    MPIDI_POSIX_eager_iqueue_cell_t *last_read_cell;    /* Internal variable to track the last cell to
+                                                         * be read, which is probably still in cache. */
 } MPIDI_POSIX_eager_iqueue_transport_t;
 
 extern MPIDI_POSIX_eager_iqueue_transport_t MPIDI_POSIX_eager_iqueue_transport_global;

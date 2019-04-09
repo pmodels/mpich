@@ -137,16 +137,27 @@ MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
+    MPIDI_POSIX_eager_iqueue_transport_t *transport;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 
+    /* Get the transport from the global variables */
+    transport = MPIDI_POSIX_eager_iqueue_get_transport();
+
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
-    MPIR_Assert(cell != NULL);
+    MPIR_Assert(cell != NULL && cell->type != MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL);
     cell->next = NULL;
     cell->prev = 0;
-    MPL_atomic_compiler_barrier();
-    cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
+
+    if (transport->last_read_cell) {
+        /* Free previously last read cell */
+        MPIR_Assert(transport->last_read_cell->type != MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL);
+        transport->last_read_cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
+    }
+
+    /* Save a new last read cell */
+    transport->last_read_cell = cell;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 }
