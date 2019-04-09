@@ -116,7 +116,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         {
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"SRBuf allocation failure");
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                             __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
             sreq->status.MPI_ERROR = mpi_errno;
             goto fn_exit;
         }

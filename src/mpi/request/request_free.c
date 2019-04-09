@@ -158,7 +158,7 @@ int MPI_Request_free(MPI_Request * request)
         default:
             {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 __func__, __LINE__, MPI_ERR_OTHER,
                                                  "**request_invalid_kind",
                                                  "**request_invalid_kind %d", request_ptr->kind);
                 break;
@@ -184,11 +184,11 @@ int MPI_Request_free(MPI_Request * request)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_request_free",
+                                         __func__, __LINE__, MPI_ERR_OTHER, "**mpi_request_free",
                                          "**mpi_request_free %p", request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

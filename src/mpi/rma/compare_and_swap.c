@@ -152,14 +152,14 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_compare_and_swap",
                                  "**mpi_compare_and_swap %p %p %p %D %d %d %W", origin_addr,
                                  compare_addr, result_addr, datatype, target_rank, target_disp,
                                  win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

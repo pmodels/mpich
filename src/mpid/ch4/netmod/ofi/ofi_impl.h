@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               "**ofid_"#STR" %s %d %s %s",  \
                               __SHORT_FILE__,               \
                               __LINE__,                     \
-                              FCNAME,                       \
+                              __func__,                       \
                               fi_strerror(-_ret));          \
     } while (0)
 
@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               "**ofid_"#STR" %s %d %s %s",  \
                               __SHORT_FILE__,               \
                               __LINE__,                     \
-                              FCNAME,                       \
+                              __func__,                       \
                               fi_strerror(-_ret));          \
     } while (0)
 
@@ -104,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               "**ofid_"#STR" %s %d %s %s",  \
                               __SHORT_FILE__,               \
                               __LINE__,                     \
-                              FCNAME,                       \
+                              __func__,                       \
                               fi_strerror(-_ret));          \
         MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
                             mpi_errno,                      \
@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               "**ofid_"#STR" %s %d %s %s",  \
                               __SHORT_FILE__,               \
                               __LINE__,                     \
-                              FCNAME,                       \
+                              __func__,                       \
                               fi_strerror(-_ret));          \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                             "**ofid_"#STR" %s %d %s %s",      \
                             __SHORT_FILE__,                   \
                             __LINE__,                         \
-                            FCNAME,                           \
+                            __func__,                           \
                             #STR);                            \
     } while (0)
 
@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                             "**"#STR" %s %d %s %s",             \
                             __SHORT_FILE__,                     \
                             __LINE__,                           \
-                            FCNAME,                             \
+                            __func__,                             \
                             #STR);                              \
     } while (0)
 

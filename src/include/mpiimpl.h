@@ -239,7 +239,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 
 #include "mpidpost.h"
 
-/* avoid conflicts in source files with old-style "char FCNAME[]" vars */
+/* avoid conflicts in source files with old-style "char __func__[]" vars */
 #undef FUNCNAME
 #undef FCNAME
 

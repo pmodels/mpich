@@ -20,7 +20,7 @@
 #define MPIR_Valid_ptr_class(kind,ptr,errclass,err) \
     do {                                                                \
         if (!(ptr)) {                                                   \
-            err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, errclass, \
+            err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, errclass, \
                                        "**nullptrtype", "**nullptrtype %s", #kind); \
             /* Explicitly tell Coverity that errclass != MPI_SUCCESS => err != MPI_SUCCESS */ \
             MPIR_Assert((errclass) == MPI_SUCCESS || ((err) != MPI_SUCCESS)); \

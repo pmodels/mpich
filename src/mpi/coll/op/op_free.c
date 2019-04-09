@@ -94,7 +94,7 @@ int MPI_Op_free(MPI_Op * op)
             if (!mpi_errno) {
                 if (op_ptr->kind < MPIR_OP_KIND__USER_NONCOMMUTE) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                     MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                      MPI_ERR_OP, "**permop", 0);
                 }
             }
@@ -123,10 +123,10 @@ int MPI_Op_free(MPI_Op * op)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_op_free", "**mpi_op_free %p", op);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

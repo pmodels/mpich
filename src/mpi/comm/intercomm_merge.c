@@ -287,7 +287,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
             /* If comm_ptr is not valid, it will be reset to null */
             if (comm_ptr && comm_ptr->comm_kind != MPIR_COMM_KIND__INTERCOMM) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_COMM, "**commnotinter", 0);
             }
             if (mpi_errno)
@@ -320,7 +320,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
             /* acthigh must either == 0 or the size of the local comm */
             if (acthigh != 0 && acthigh != comm_ptr->local_size) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_ARG, "**notsame", "**notsame %s %s",
                                                  "high", "MPI_Intercomm_merge");
                 goto fn_fail;
@@ -350,12 +350,12 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_intercomm_merge", "**mpi_intercomm_merge %C %d %p",
                                  intercomm, high, newintracomm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

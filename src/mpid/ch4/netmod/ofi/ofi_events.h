@@ -873,7 +873,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
                         default:
                             MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
                                                       "**ofid_poll %s %d %s %s", __SHORT_FILE__,
-                                                      __LINE__, FCNAME, fi_strerror(e.err));
+                                                      __LINE__, __func__, fi_strerror(e.err));
                     }
 
                     break;
@@ -891,7 +891,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
                 default:
                     MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
                                               "**ofid_poll %s %d %s %s", __SHORT_FILE__,
-                                              __LINE__, FCNAME, fi_strerror(e.err));
+                                              __LINE__, __func__, fi_strerror(e.err));
                     break;
             }
 
@@ -900,7 +900,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
         default:
             MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
                                       "**ofid_poll %s %d %s %s", __SHORT_FILE__, __LINE__,
-                                      FCNAME, fi_strerror(errno));
+                                      __func__, fi_strerror(errno));
             break;
     }
 

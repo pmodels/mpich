@@ -306,14 +306,14 @@ int MPI_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[], const in
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_neighbor_alltoallv",
                                  "**mpi_neighbor_alltoallv %p %p %p %D %p %p %p %D %C", sendbuf,
                                  sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                  recvtype, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

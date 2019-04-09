@@ -714,7 +714,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
                 if (req->dev.tmpbuf_sz == 0) {
                     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, TYPICAL, "SRBuf allocation failure");
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                                     FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
+                                                     __func__, __LINE__, MPI_ERR_OTHER, "**nomem",
                                                      "**nomem %d", MPIDI_CH3U_SRBuf_size);
                     req->status.MPI_ERROR = mpi_errno;
                     goto fn_fail;
@@ -1007,7 +1007,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
                     if (req->dev.tmpbuf_sz == 0) {
                         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, TYPICAL, "SRBuf allocation failure");
                         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                                         FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
+                                                         __func__, __LINE__, MPI_ERR_OTHER, "**nomem",
                                                          "**nomem %d", MPIDI_CH3U_SRBuf_size);
                         req->status.MPI_ERROR = mpi_errno;
                         goto fn_fail;

@@ -73,7 +73,7 @@ int MPID_nem_tcp_set_sockopts(int fd)
     int ret;
     socklen_t len;
 
-/*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* I heard you have to read the options after setting them in some implementations */
 
     option = 1;
@@ -100,7 +100,7 @@ int MPID_nem_tcp_set_sockopts(int fd)
                          MPIR_Strerror(errno), errno);
 
   fn_exit:
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     return mpi_errno;
   fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */

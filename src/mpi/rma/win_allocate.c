@@ -112,18 +112,18 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
             if (size < 0)
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_SIZE, "**rmasize", "**rmasize %d", size);
             if (disp_unit <= 0)
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_ARG,
                                                  "**arg", "**arg %s", "disp_unit must be positive");
             if (size > 0 && baseptr == NULL)
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_ARG,
                                                  "**nullptr",
                                                  "**nullptr %s",
@@ -160,12 +160,12 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_allocate", "**mpi_win_allocate %d %d %I %C %p %p", size,
                                  disp_unit, info, comm, baseptr, win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
