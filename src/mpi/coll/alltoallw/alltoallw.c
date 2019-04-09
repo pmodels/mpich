@@ -398,13 +398,13 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_alltoallw", "**mpi_alltoallw %p %p %p %p %p %p %p %p %C",
                                  sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
                                  rdispls, recvtypes, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

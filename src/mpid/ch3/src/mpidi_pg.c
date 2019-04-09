@@ -149,7 +149,7 @@ int MPIDI_PG_Finalize(void)
     { 
 	
 	/* --BEGIN ERROR HANDLING-- */
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_INTERN,
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_INTERN,
         "**dev|pg_finalize|list_not_empty", NULL); 
 	/* --END ERROR HANDLING-- */
     }

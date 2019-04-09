@@ -87,7 +87,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                             /* --BEGIN ERROR HANDLING-- */
                             if (mpi_errno != MPI_SUCCESS) {
                                 mpi_errno =
-                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME,
+                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__,
                                                          __LINE__, MPI_ERR_OTHER,
                                                          "**ch3|sock|postwrite",
                                                          "ch3|sock|postwrite %p %p %p", sreq,
@@ -113,7 +113,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
                         mpi_errno =
-                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__,
                                                  MPI_ERR_OTHER, "**ch3|sock|postwrite",
                                                  "ch3|sock|postwrite %p %p %p", sreq, vcch->conn,
                                                  vc);
@@ -135,7 +135,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                 /* FIXME: Shouldn't the vc->state also change? */
                 vcch->state = MPIDI_CH3I_VC_STATE_FAILED;
                 sreq->status.MPI_ERROR = MPIR_Err_create_code(rc,
-                                                              MPIR_ERR_RECOVERABLE, FCNAME,
+                                                              MPIR_ERR_RECOVERABLE, __func__,
                                                               __LINE__, MPI_ERR_INTERN,
                                                               "**ch3|sock|writefailed",
                                                               "**ch3|sock|writefailed %d", rc);

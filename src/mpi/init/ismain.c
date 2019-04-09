@@ -87,11 +87,11 @@ int MPI_Is_thread_main(int *flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
-        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**mpi_is_thread_main",
                                          "**mpi_is_thread_main %p", flag);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

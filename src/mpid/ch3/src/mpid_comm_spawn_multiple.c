@@ -59,7 +59,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 					  array_of_errcodes);
 #   else
     MPIR_ERR_SET1(mpi_errno,MPI_ERR_OTHER, "**notimpl",
-		  "**notimpl %s", FCNAME);
+		  "**notimpl %s", __func__);
 #   endif
     
 fn_fail:

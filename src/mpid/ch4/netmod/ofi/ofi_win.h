@@ -49,7 +49,7 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
                           MPI_ERR_RMA_RANGE,
                           "**ofid_cntr_wait",
                           "**ofid_cntr_wait %s %d %s %s",
-                          __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
+                          __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
             itercount = 0;
         }
     }

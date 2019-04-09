@@ -835,7 +835,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                       MPI_ERR_OTHER,
                                       "**ofid_ep",
                                       "**ofid_ep %s %d %s %s",
-                                      __SHORT_FILE__, __LINE__, FCNAME,
+                                      __SHORT_FILE__, __LINE__, __func__,
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */

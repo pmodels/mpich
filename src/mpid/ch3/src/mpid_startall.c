@@ -119,7 +119,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    default:
 	    {
 		/* --BEGIN ERROR HANDLING-- */
-		rc = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
+		rc = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
 					  "**ch3|badreqtype %d", MPIDI_Request_get_type(preq));
 		/* --END ERROR HANDLING-- */
 	    }
@@ -302,7 +302,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     if (rreq == NULL)
     {
 	/* --BEGIN ERROR HANDLING-- */
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomemreq", 0);
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**nomemreq", 0);
 	/* --END ERROR HANDLING-- */
 	goto fn_exit;
     }

@@ -284,7 +284,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
             if (ndims < 0) {
                 /* Must have a non-negative number of dimensions */
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_DIMS, "**dims", "**dims %d", 0);
                 goto fn_fail;
             }
@@ -316,12 +316,12 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_cart_create", "**mpi_cart_create %C %d %p %p %d %p",
                                  comm_old, ndims, dims, periods, reorder, comm_cart);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }

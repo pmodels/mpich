@@ -965,7 +965,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     } else {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OP,
+                                         __func__, __LINE__, MPI_ERR_OP,
                                          "**opnotpredefined", "**opnotpredefined %d", acc_op);
         return mpi_errno;
         /* --END ERROR HANDLING-- */
@@ -992,7 +992,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             goto fn_exit;
         }
@@ -1009,7 +1009,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             goto fn_exit;
         }

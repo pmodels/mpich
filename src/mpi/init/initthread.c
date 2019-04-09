@@ -801,12 +801,12 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 #ifdef HAVE_ERROR_REPORTING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_init_thread", "**mpi_init_thread %p %p %d %p", argc, argv,
                                  required, provided);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

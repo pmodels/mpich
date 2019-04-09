@@ -610,7 +610,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                             /* --BEGIN ERROR HANDLING-- */
                             if (mpi_errno != MPI_SUCCESS) {
                                 mpi_errno =
-                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME,
+                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__,
                                                          __LINE__, MPI_ERR_OTHER,
                                                          "**ch3|sock|immedwrite",
                                                          "ch3|sock|immedwrite %p %p %p", sreq, conn,
@@ -657,7 +657,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                                 /* --BEGIN ERROR HANDLING-- */
                                 if (mpi_errno != MPI_SUCCESS) {
                                     mpi_errno =
-                                        MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME,
+                                        MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__,
                                                              __LINE__, MPI_ERR_OTHER,
                                                              "**ch3|sock|postwrite",
                                                              "ch3|sock|postwrite %p %p %p", sreq,
@@ -899,7 +899,7 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             mpi_errno =
-                MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
                                      "**ch3|sock|immedread", "ch3|sock|immedread %p %p %p", rreq,
                                      conn, conn->vc);
             goto fn_fail;
@@ -946,7 +946,7 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
                                          "**ch3|sock|postread", "ch3|sock|postread %p %p %p", rreq,
                                          conn, conn->vc);
                 goto fn_fail;

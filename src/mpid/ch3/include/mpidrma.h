@@ -904,7 +904,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     else {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OP,
+                                         __func__, __LINE__, MPI_ERR_OP,
                                          "**opnotpredefined", "**opnotpredefined %d", acc_op);
         return mpi_errno;
         /* --END ERROR HANDLING-- */
@@ -944,7 +944,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
             return mpi_errno;
@@ -961,7 +961,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
             return mpi_errno;

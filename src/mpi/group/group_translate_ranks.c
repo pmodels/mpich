@@ -185,7 +185,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
                 for (i = 0; i < n; i++) {
                     if ((ranks1[i] < 0 && ranks1[i] != MPI_PROC_NULL) || ranks1[i] >= size1) {
                         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                          MPI_ERR_RANK,
                                                          "**rank", "**rank %d %d",
                                                          ranks1[i], size1);
@@ -216,12 +216,12 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_translate_ranks",
                                  "**mpi_group_translate_ranks %G %d %p %G %p", group1, n, ranks1,
                                  group2, ranks2);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

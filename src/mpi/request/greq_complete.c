@@ -98,7 +98,7 @@ int MPI_Grequest_complete(MPI_Request request)
             MPIR_Request_valid_ptr(request_ptr, mpi_errno);
             if (request_ptr && request_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_ARG, "**notgenreq", 0);
             }
             if (mpi_errno)
@@ -126,10 +126,10 @@ int MPI_Grequest_complete(MPI_Request request)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_grequest_complete", "**mpi_grequest_complete %R", request);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

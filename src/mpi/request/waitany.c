@@ -278,12 +278,12 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                     FCNAME, __LINE__, MPI_ERR_OTHER,
+                                     __func__, __LINE__, MPI_ERR_OTHER,
                                      "**mpi_waitany",
                                      "**mpi_waitany %d %p %p %p",
                                      count, array_of_requests, indx, status);
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

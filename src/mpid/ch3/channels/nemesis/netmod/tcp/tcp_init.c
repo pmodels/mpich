@@ -215,7 +215,7 @@ int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_INIT);
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     return mpi_errno;
   fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -613,7 +613,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
 
-    /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
+    /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
      * ret = MPL_str_get_string_arg (business_card, MPIDI_CH3I_HOST_DESCRIPTION_KEY, desc_str, sizeof(desc_str));
      * MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
@@ -636,7 +636,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     MPIR_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
 
   fn_exit:
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
     return mpi_errno;
   fn_fail:
@@ -691,7 +691,7 @@ int MPID_nem_tcp_bind(int sockfd)
   fn_exit:
 /*     if (ret == 0) */
 /*         fprintf(stdout, "sockfd=%d  port=%d bound\n", sockfd, port); */
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_BIND);
     return mpi_errno;
   fn_fail:

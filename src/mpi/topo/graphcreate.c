@@ -121,12 +121,12 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_graph_create", "**mpi_graph_create %C %d %p %p %d %p",
                                  comm_ptr->handle, nnodes, indx, edges, reorder, comm_graph);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm((MPIR_Comm *) comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm((MPIR_Comm *) comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -229,7 +229,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
             if (nnodes > comm_size) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_ARG,
                                                  "**topotoolarge", "**topotoolarge %d %d",
                                                  nnodes, comm_size);
@@ -248,14 +248,14 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
                 if (indx[i] < 0) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME, __LINE__,
+                                                     __func__, __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**indexneg", "**indexneg %d %d", i, indx[i]);
                 }
                 if (i + 1 < nnodes && indx[i] > indx[i + 1]) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME, __LINE__,
+                                                     __func__, __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**indexnonmonotone",
                                                      "**indexnonmonotone %d %d %d", i, indx[i],
@@ -271,7 +271,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
                     if (edges[i] > comm_size || edges[i] < 0) {
                         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                          MPIR_ERR_RECOVERABLE,
-                                                         FCNAME, __LINE__,
+                                                         __func__, __LINE__,
                                                          MPI_ERR_ARG,
                                                          "**edgeoutrange",
                                                          "**edgeoutrange %d %d %d", i, edges[i],
@@ -319,12 +319,12 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_graph_create", "**mpi_graph_create %C %d %p %p %d %p",
                                  comm_old, nnodes, indx, edges, reorder, comm_graph);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

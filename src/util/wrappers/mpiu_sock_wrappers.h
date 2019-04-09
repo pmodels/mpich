@@ -45,7 +45,7 @@ typedef int ssize_t;
             != INADDR_NONE)                                         \
         ? MPI_SUCCESS                                               \
         : MPIR_Err_create_code(MPI_SUCCESS,                         \
-                MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,    \
+                MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,    \
                 "**inet_addr", "**inet_addr %s %d",                 \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),             \
                 MPIU_OSW_Get_errno())                                \
@@ -63,7 +63,7 @@ static inline int MPIU_SOCKW_Init(void)
         int err;
         err = MPIU_OSW_Get_errno();
         return MPIR_Err_create_code(MPI_SUCCESS,
-                                    MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                    MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
                                     "**wsastartup", "**wsastartup %s %d",
                                     MPIU_OSW_Strerror(err), err);
     } else {
@@ -83,7 +83,7 @@ static inline int MPIU_SOCKW_Init(void)
         (WSACleanup() == 0)                                         \
         ? MPI_SUCCESS                                               \
         : MPIR_Err_create_code(MPI_SUCCESS,                         \
-                MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,    \
+                MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,    \
                 "**wsacleanup", "**wsacleanup %s %d",               \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),             \
                 MPIU_OSW_Get_errno())                                \
@@ -97,7 +97,7 @@ static inline int MPIU_SOCKW_Init(void)
         ((*sock_ptr = WSASocket(domain, type, protocol, NULL, 0,    \
             WSA_FLAG_OVERLAPPED)) != INVALID_SOCKET)                \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**sock_create",               \
             "**sock_create %s %d",                                  \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                 \
@@ -111,7 +111,7 @@ static inline int MPIU_SOCKW_Init(void)
 #define MPIU_SOCKW_Sock_close(sock)    (\
         (closesocket(sock) != SOCKET_ERROR)                         \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**sock_close",                \
             "**sock_close %s %d",                                   \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                 \
@@ -126,7 +126,7 @@ static inline int MPIU_SOCKW_Init(void)
         (bind(sock, (struct sockaddr *)addr, addr_len)              \
             != SOCKET_ERROR)                                        \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**bind",                      \
             "**bind %s %d",                                         \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                 \
@@ -177,7 +177,7 @@ static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct so
 #define MPIU_SOCKW_Listen(sock, backlog)  (\
         (listen(sock, backlog) != SOCKET_ERROR)                     \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**listen",                    \
             "**listen %s %d",                                       \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                 \
@@ -197,7 +197,7 @@ static inline int MPIU_SOCKW_Bind_port_range(MPIU_SOCKW_Sockfd_t sock, struct so
             (MPIU_OSW_Get_errno() == WSAEWOULDBLOCK)                 \
             ? MPI_SUCCESS                                           \
             : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,     \
-                FCNAME, __LINE__, MPI_ERR_OTHER, "**sock_accept",   \
+                __func__, __LINE__, MPI_ERR_OTHER, "**sock_accept",   \
                 "**sock_accept %s %d",                              \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),             \
                 MPIU_OSW_Get_errno())                                \
@@ -243,7 +243,7 @@ static inline int MPIU_SOCKW_Connect(MPIU_SOCKW_Sockfd_t sockfd, struct sockaddr
                 || (MPIU_OSW_Get_errno() == WSAEINTR))              \
             ? MPI_SUCCESS                                           \
             : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,     \
-                FCNAME, __LINE__, MPI_ERR_OTHER,                    \
+                __func__, __LINE__, MPI_ERR_OTHER,                    \
                 "**sock_read", "**sock_read %s %d",                 \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),            \
                 MPIU_OSW_Get_errno())                               \
@@ -292,7 +292,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
                 || (MPIU_OSW_Get_errno() == WSAEINTR))              \
             ? MPI_SUCCESS                                           \
             : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,     \
-                FCNAME, __LINE__, MPI_ERR_OTHER,                    \
+                __func__, __LINE__, MPI_ERR_OTHER,                    \
                 "**sock_write", "**sock_write %s %d",               \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),            \
                 MPIU_OSW_Get_errno())                               \
@@ -313,7 +313,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
                 || (MPIU_OSW_Get_errno() == WSAEINTR))              \
             ? MPI_SUCCESS                                           \
             : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,     \
-                FCNAME, __LINE__, MPI_ERR_OTHER,                    \
+                __func__, __LINE__, MPI_ERR_OTHER,                    \
                 "**sock_write", "**sock_write %s %d",               \
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),            \
                 MPIU_OSW_Get_errno())                               \
@@ -328,7 +328,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
         (ioctlsocket(sock, FIONBIO, (u_long *)&is_nb)               \
             != SOCKET_ERROR)                                        \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**ioctlsocket",               \
             "**ioctlsocket %s %d",                                  \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                \
@@ -345,7 +345,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
                     (const char *)opt_val_ptr, opt_len)             \
                     != SOCKET_ERROR)                                \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**setsockopt",                \
             "**setsockopt %s %d",                                   \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                \
@@ -361,7 +361,7 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
         (getsockopt(sock, level, opt_name, opt_val_ptr, opt_len_ptr)\
             != SOCKET_ERROR)                                        \
         ? MPI_SUCCESS                                               \
-        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, \
+        : MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, \
             __LINE__, MPI_ERR_OTHER, "**getsockopt",                \
             "**getsockopt %s %d",                                   \
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()),                \
@@ -380,7 +380,7 @@ static inline int MPIU_SOCKW_Sock_has_error(MPIU_SOCKW_Sockfd_t sock)
         return MPI_SUCCESS;
     } else {
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                    FCNAME, __LINE__, MPI_ERR_OTHER, "**getsockopt",
+                                    __func__, __LINE__, MPI_ERR_OTHER, "**getsockopt",
                                     "**getsockopt %s %d",
                                     MPIU_OSW_Strerror(MPIU_OSW_Get_errno()), MPIU_OSW_Get_errno());
     }
@@ -661,12 +661,12 @@ static inline int MPIU_SOCKW_Waitset_get_sock_evnts_(MPIU_SOCKW_Waitset_hnd_t wa
     /*
      * if (!MPIU_SOCKW_Waitset_hnd_is_init_(waitset_hnd)){
      * return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-     * FCNAME, __LINE__, MPI_ERR_OTHER, "**arg",
+     * __func__, __LINE__, MPI_ERR_OTHER, "**arg",
      * "**arg %s", "waitSet handle");
      * }
      * if (!flag_ptr){
      * return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-     * FCNAME, __LINE__, MPI_ERR_OTHER, "**arg",
+     * __func__, __LINE__, MPI_ERR_OTHER, "**arg",
      * "**arg %s", "pointer to event flag");
      * }
      */

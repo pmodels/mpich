@@ -76,8 +76,8 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     /* --BEGIN ERROR HANDLING-- */
     if (!*handle_ptr) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -136,7 +136,7 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     } else {
         /* --BEGIN ERROR HANDLING-- */
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                   FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                   __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
         return err;
         /* --END ERROR HANDLING-- */
     }
@@ -181,7 +181,7 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                 MPL_snprintf(rstr, sizeof(rstr), "errno = %d", errno);
         }
 #endif
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                    MPI_ERR_OTHER, "**namepubfile",
                                    "**namepubfile %s %s %s", service_name, filename, reason);
         return err;
@@ -270,7 +270,7 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     if (i == handle->nactive) {
         /* --BEGIN ERROR HANDLING-- */
         /* Error: this name was not found */
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                    MPI_ERR_SERVICE, "**namepubnotpub",
                                    "**namepubnotpub %s", service_name);
         return err;
