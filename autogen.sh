@@ -96,7 +96,7 @@ do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
 do_build_configure=yes
-do_genstates=yes
+do_genstates=no
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
@@ -110,7 +110,8 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl src/util/logging/rlog"
+amdirs=". src/mpl"
+# amdirs="$amdirs src/util/logging/rlog"
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -887,6 +888,7 @@ echo
 
 # Run some of the simple codes
 echo_n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
+touch src/include/mpiallstates.h # silience build errors when do_genstates is disabled
 if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
     ./maint/extractstates
 fi
