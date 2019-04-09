@@ -29,10 +29,6 @@ int MPI_Type_hindexed(int count, int *array_of_blocklengths,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_hindexed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_hindexed - Creates an indexed datatype with offsets in bytes
 

@@ -27,10 +27,6 @@ int MPI_Comm_get_parent(MPI_Comm * parent) __attribute__ ((weak, alias("PMPI_Com
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_parent
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_parent - Return the parent communicator for this process
 

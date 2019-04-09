@@ -28,10 +28,6 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_get - Retrieves Cartesian topology information associated with a

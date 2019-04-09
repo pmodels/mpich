@@ -14,10 +14,6 @@
 #include "../../common/hcoll/hcoll.h"
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_comm_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -66,10 +62,6 @@ int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_comm_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

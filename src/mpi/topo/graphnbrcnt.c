@@ -26,10 +26,6 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 #undef MPI_Graph_neighbors_count
 #define MPI_Graph_neighbors_count PMPI_Graph_neighbors_count
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Graph_neighbors_count_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighbors)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -57,10 +53,6 @@ int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighb
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graph_neighbors_count
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Graph_neighbors_count - Returns the number of neighbors of a node

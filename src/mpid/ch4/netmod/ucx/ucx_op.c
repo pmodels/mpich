@@ -10,19 +10,11 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_op_free_hook(MPIR_Op * op_p)
 {
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_op_commit_hook(MPIR_Op * op_p)
 {
     return 0;

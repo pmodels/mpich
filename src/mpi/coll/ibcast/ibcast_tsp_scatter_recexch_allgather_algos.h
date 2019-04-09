@@ -19,10 +19,6 @@
 #include "../iallgather/iallgather_tsp_recexch_algos_prototypes.h"
 
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int count,
                                                           MPI_Datatype datatype, int root,
                                                           MPIR_Comm * comm,
@@ -109,10 +105,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
 
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ibcast_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
                                                     int root, MPIR_Comm * comm, MPIR_Request ** req)
 {

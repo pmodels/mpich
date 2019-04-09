@@ -26,20 +26,12 @@ int MPI_Comm_free(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_free")
 #undef MPI_Comm_free
 #define MPI_Comm_free PMPI_Comm_free
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
 {
     return MPIR_Comm_release(comm_ptr);
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Comm_free - Marks the communicator object for deallocation
 

@@ -29,10 +29,6 @@ int MPI_Send_init(const void *buf, int count, MPI_Datatype datatype, int dest, i
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Send_init - Create a persistent request for a standard send
 

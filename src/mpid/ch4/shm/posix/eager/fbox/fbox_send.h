@@ -24,10 +24,6 @@
  * iov         - The array of iovec entries to be sent.
  * iov_num     - The number of entries in the iovec array.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_send(int grank,
                        MPIDI_POSIX_am_header_t ** msg_hdr, struct iovec **iov, size_t * iov_num)

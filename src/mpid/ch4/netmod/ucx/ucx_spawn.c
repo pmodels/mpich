@@ -10,10 +10,6 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -24,10 +20,6 @@ int MPIDI_UCX_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -38,10 +30,6 @@ int MPIDI_UCX_mpi_close_port(const char *port_name)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
@@ -56,10 +44,6 @@ int MPIDI_UCX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -76,10 +60,6 @@ int MPIDI_UCX_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_comm_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                               MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {

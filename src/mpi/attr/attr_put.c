@@ -28,10 +28,6 @@ int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Attr_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Attr_put - Stores attribute value associated with a key

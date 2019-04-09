@@ -56,10 +56,6 @@ MPL_dbg_class MPIDI_CH3_DBG_VC;
 MPL_dbg_class MPIDI_CH3_DBG_REFCOUNT;
 #endif /* MPL_USE_DBG_LOGGING */
 
-#undef FUNCNAME
-#define FUNCNAME finalize_failed_procs_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int finalize_failed_procs_group(void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -72,10 +68,6 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME set_eager_threshold
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -98,10 +90,6 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Init(int *argc, char ***argv, int requested, int *provided, 
 	      int *has_args, int *has_env)
 {

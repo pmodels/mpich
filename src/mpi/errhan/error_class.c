@@ -29,10 +29,6 @@ int MPI_Error_class(int errorcode, int *errorclass)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Error_class
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Error_class - Converts an error code into an error class
 

@@ -27,10 +27,6 @@ int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__ ((weak, alias("PMPI_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Topo_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Topo_test - Determines the type of topology (if any) associated with a

@@ -26,10 +26,6 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm) __attribute__ ((weak, alias(
 #undef MPI_Comm_dup
 #define MPI_Comm_dup PMPI_Comm_dup
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_dup_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -67,10 +63,6 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_dup - Duplicates an existing communicator with all its cached

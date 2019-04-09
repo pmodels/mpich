@@ -25,10 +25,6 @@ int MPI_Is_thread_main(int *flag) __attribute__ ((weak, alias("PMPI_Is_thread_ma
 #define MPI_Is_thread_main PMPI_Is_thread_main
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Is_thread_main
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Is_thread_main - Returns a flag indicating whether this thread called
                         'MPI_Init' or 'MPI_Init_thread'

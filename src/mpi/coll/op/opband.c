@@ -16,10 +16,6 @@
 #define MPIR_LBAND(a,b) ((a)&(b))
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_BAND
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_BAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
@@ -57,10 +53,6 @@ void MPIR_BAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_BAND_check_dtype
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_BAND_check_dtype(MPI_Datatype type)
 {
     switch (type) {

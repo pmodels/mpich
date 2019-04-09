@@ -28,10 +28,6 @@ int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Rsend - Blocking ready send
 

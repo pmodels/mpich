@@ -16,14 +16,10 @@
 #include "iscatter_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_intra_gentran_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_intra_gentran_tree(const void *sendbuf, int sendcount,
-                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                             MPIR_Request ** request)
+                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                     MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 

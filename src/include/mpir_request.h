@@ -382,10 +382,6 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Request_attach_sync(MPIR_Request * req_ptr,
  * routine (or some a variation of it) is an unfortunately necessary stunt to
  * get high message rates on key benchmarks for high-end systems.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_completion_processing_fastpath
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Request * request,
                                                                          MPIR_Request * request_ptr)
 {

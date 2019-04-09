@@ -61,7 +61,6 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
  * Allocate a new group and the group lrank to lpid array.  Does *not*
  * initialize any arrays, but does set the reference count.
  */
-#define FCNAME "MPIR_Group_create"
 int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -226,10 +225,6 @@ void MPIR_Group_setup_lpid_pairs(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
  * The following routines are needed only for error checking
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_check_valid_ranks
-#undef FCNAME
-#define FCNAME "MPIR_Group_check_valid_ranks"
 /*
  * This routine is for error checking for a valid ranks array, used
  * by Group_incl and Group_excl.
@@ -273,10 +268,6 @@ int MPIR_Group_check_valid_ranks(MPIR_Group * group_ptr, const int ranks[], int 
  be within the SINGLE_CS (the routines are group_range_incl and
  group_range_excl) */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_check_valid_ranges
-#undef FCNAME
-#define FCNAME "MPIR_Group_check_valid_ranges"
 int MPIR_Group_check_valid_ranges(MPIR_Group * group_ptr, int ranges[][3], int n)
 {
     int i, j, size, first, last, stride, mpi_errno = MPI_SUCCESS;

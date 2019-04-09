@@ -26,10 +26,6 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 #undef MPI_Info_get_nkeys
 #define MPI_Info_get_nkeys PMPI_Info_get_nkeys
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_get_nkeys_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 {
     int n;
@@ -66,10 +62,6 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_get_nkeys
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 {
     MPIR_Info *info_ptr = 0;

@@ -28,10 +28,6 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Isend - Begins a nonblocking send
 

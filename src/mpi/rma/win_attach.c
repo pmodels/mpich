@@ -28,10 +28,6 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_attach - Attach memory to a dynamic window.
 

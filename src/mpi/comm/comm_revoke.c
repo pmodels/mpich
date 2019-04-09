@@ -30,10 +30,6 @@ int MPIX_Comm_revoke(MPI_Comm comm) __attribute__ ((weak, alias("PMPIX_Comm_revo
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_revoke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPIX_Comm_revoke - Prevent a communicator from being used in the future
 

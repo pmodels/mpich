@@ -27,10 +27,6 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], MPI_Group * ne
 #undef MPI_Group_range_incl
 #define MPI_Group_range_incl PMPI_Group_range_incl
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_range_incl_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
                                MPIR_Group ** new_group_ptr)
 {
@@ -99,10 +95,6 @@ int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_range_incl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

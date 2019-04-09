@@ -66,10 +66,6 @@ void MPII_Op_set_fc(MPI_Op op)
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Op_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     MPIR_Op *op_ptr;
@@ -103,10 +99,6 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 

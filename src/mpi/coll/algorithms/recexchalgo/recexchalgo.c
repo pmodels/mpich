@@ -45,10 +45,6 @@ int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
  * participating in Step 2. In Step 3, the ranks that participated in Step 2 send
  * the final data to non-partcipating ranks.
 */
-#undef FUNCNAME
-#define FUNCNAME MPII_Recexchalgo_get_neighbors
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
                                    int *step1_sendto, int **step1_recvfrom_, int *step1_nrecvs,
                                    int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_)
@@ -196,10 +192,6 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Recexchalgo_origrank_to_step2rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 {
     int step2rank;
@@ -215,10 +207,6 @@ int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Recexchalgo_step2rank_to_origrank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
 {
     int orig_rank;
@@ -238,10 +226,6 @@ int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
  * phase in recursive exchange algorithms in collective operations like Allgather,
  * Allgatherv, Reducescatter.
 */
-#undef FUNCNAME
-#define FUNCNAME MPII_Recexchalgo_get_count_and_offset
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks, int *count,
                                           int *offset)
 {
@@ -290,10 +274,6 @@ int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks
  * 2. Calculates the digit reversed (in base 'k' representation) rank of the Step 2 rank
  * 3. Convert the digit reversed rank in the previous Step to the original rank.
 */
-#undef FUNCNAME
-#define FUNCNAME MPII_Recexchalgo_reverse_digits_step2
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
 {
     int i, T, rem, power, step2rank, step2_reverse_rank = 0;

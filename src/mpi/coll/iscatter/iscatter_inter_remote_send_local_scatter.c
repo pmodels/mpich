@@ -15,10 +15,6 @@
  * where n is the total size of the data to be scattered from the root.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_sched_inter_remote_send_local_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         int recvcount, MPI_Datatype recvtype,

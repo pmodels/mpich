@@ -9,10 +9,6 @@
 /*
  * MPID_Ssend()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 	       MPIR_Request ** request)
 {

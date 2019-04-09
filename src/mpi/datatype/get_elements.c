@@ -30,10 +30,6 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_elements
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get_elements - Returns the number of basic elements
                       in a datatype

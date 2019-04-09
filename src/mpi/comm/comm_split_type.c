@@ -35,10 +35,6 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef MPI_Comm_split_type
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_self
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -72,10 +68,6 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -833,10 +825,6 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node_topo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -915,10 +903,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_network_topo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr)
 {
@@ -946,10 +930,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -989,10 +969,6 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_nbhd_common_dir
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                          MPIR_Comm ** newcomm_ptr)
 {
@@ -1016,10 +992,6 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_neighborhood
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -1075,10 +1047,6 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -1105,10 +1073,6 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_split_type - Creates new communicators based on split types and keys

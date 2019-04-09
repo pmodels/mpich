@@ -28,10 +28,6 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_coords
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_coords - Determines process coords in cartesian topology given
                   rank in group

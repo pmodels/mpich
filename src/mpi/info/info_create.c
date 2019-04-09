@@ -26,10 +26,6 @@ int MPI_Info_create(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_crea
 #define MPI_Info_create PMPI_Info_create
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_create - Creates a new info object
 

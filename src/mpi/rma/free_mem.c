@@ -27,10 +27,6 @@ int MPI_Free_mem(void *base) __attribute__ ((weak, alias("PMPI_Free_mem")));
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Free_mem - Free memory allocated with MPI_Alloc_mem
 

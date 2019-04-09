@@ -164,10 +164,6 @@ int MPIR_Type_vector(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_vector_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype,
                           MPI_Datatype * newtype)
 {
@@ -203,10 +199,6 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_vector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_vector - Creates a vector (strided) datatype
 

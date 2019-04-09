@@ -16,13 +16,9 @@
 #include "ireduce_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_intra_gentran_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, int count,
-                            MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                            MPIR_Request ** request)
+                                    MPI_Datatype datatype, MPI_Op op, int root,
+                                    MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 

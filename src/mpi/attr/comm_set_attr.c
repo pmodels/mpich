@@ -27,10 +27,6 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 #undef MPI_Comm_set_attr
 #define MPI_Comm_set_attr PMPI_Comm_set_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_set_attr_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
                             MPIR_Attr_type attrType)
 {
@@ -104,10 +100,6 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR_Attr_type attrType)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,10 +175,6 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR
 }
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_set_attr - Stores attribute value associated with a key
 

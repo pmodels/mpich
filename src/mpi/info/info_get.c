@@ -26,10 +26,6 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 #undef MPI_Info_get
 #define MPI_Info_get PMPI_Info_get
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_get_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char *value, int *flag)
 {
     MPIR_Info *curr_ptr;
@@ -88,10 +84,6 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_INFO_VALUE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int *flag)
 {
     MPIR_Info *info_ptr = 0;

@@ -230,10 +230,6 @@ int MPIR_Type_indexed(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_indexed_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
                            const int *array_of_displacements,
                            MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -283,10 +279,6 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_indexed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_indexed - Creates an indexed datatype
 

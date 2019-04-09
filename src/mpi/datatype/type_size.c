@@ -28,10 +28,6 @@ int MPI_Type_size(MPI_Datatype datatype, int *size) __attribute__ ((weak, alias(
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_size - Return the number of bytes occupied by entries
                     in the datatype

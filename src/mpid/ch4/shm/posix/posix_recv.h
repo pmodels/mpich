@@ -20,16 +20,12 @@
  * to optimize progress polling (i.e., in POSIX/eager/fbox, the polling
  * will start from this rank at the next progress polling, see
  * MPIDI_POSIX_eager_recv_begin). */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_recv_posted_hook)
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_recv_posted_hook(MPIR_Request * request, int rank,
                                                            MPIR_Comm * comm)
 {
     MPIDI_POSIX_EAGER_RECV_POSTED_HOOK(request, rank, comm);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_recv)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
@@ -45,8 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_recv)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv_init(void *buf,
                                                        MPI_Aint count,
                                                        MPI_Datatype datatype,
@@ -58,16 +52,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv_init(void *buf,
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPIR_Request * message)
 {
     return MPIDIG_mpi_imrecv(buf, count, datatype, message);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_irecv)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
                                                    MPI_Aint count,
                                                    MPI_Datatype datatype,
@@ -82,8 +72,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_cancel_recv)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_cancel_recv(MPIR_Request * rreq)
 {
     return MPIDIG_mpi_cancel_recv(rreq);

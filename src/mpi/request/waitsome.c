@@ -31,10 +31,6 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Waitsome
 #define MPI_Waitsome PMPI_Waitsome
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitsome_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
 {
@@ -117,10 +113,6 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Waitsome
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitsome - Waits for some given MPI Requests to complete
 

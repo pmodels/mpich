@@ -27,10 +27,6 @@ static size_t pack(void *state, size_t offset, void *dest, size_t max_length);
 static ucs_status_t unpack(void *state, size_t offset, const void *src, size_t count);
 static void finish_pack(void *state);
 
-#undef FUNCNAME
-#define FUNCNAME start_pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void *start_pack(void *context, const void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
@@ -49,10 +45,6 @@ static void *start_pack(void *context, const void *buffer, size_t count)
     return (void *) state;
 }
 
-#undef FUNCNAME
-#define FUNCNAME start_unpack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void *start_unpack(void *context, void *buffer, size_t count)
 {
     MPI_Datatype *datatype = (MPI_Datatype *) context;
@@ -71,10 +63,6 @@ static void *start_unpack(void *context, void *buffer, size_t count)
     return (void *) state;
 }
 
-#undef FUNCNAME
-#define FUNCNAME pack_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static size_t pack_size(void *state)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
@@ -82,10 +70,6 @@ static size_t pack_size(void *state)
     return (size_t) pack_state->packsize;
 }
 
-#undef FUNCNAME
-#define FUNCNAME pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static size_t pack(void *state, size_t offset, void *dest, size_t max_length)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
@@ -96,10 +80,6 @@ static size_t pack(void *state, size_t offset, void *dest, size_t max_length)
     return (size_t) last - offset;
 }
 
-#undef FUNCNAME
-#define FUNCNAME unpack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static ucs_status_t unpack(void *state, size_t offset, const void *src, size_t count)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
@@ -114,10 +94,6 @@ static ucs_status_t unpack(void *state, size_t offset, const void *src, size_t c
     return UCS_OK;
 }
 
-#undef FUNCNAME
-#define FUNCNAME finish_pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void finish_pack(void *state)
 {
     MPIR_Datatype *dt_ptr;
@@ -128,10 +104,6 @@ static void finish_pack(void *state)
     MPL_free(pack_state);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
 {
     if (datatype_p->is_committed && (int) datatype_p->dev.netmod.ucx.ucp_datatype >= 0) {
@@ -145,10 +117,6 @@ int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     ucp_datatype_t ucp_datatype;

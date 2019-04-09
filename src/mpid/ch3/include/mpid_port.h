@@ -64,10 +64,6 @@ typedef struct MPIDI_CH3I_Port_q {
 /* Start VC closing protocol -- locally close VC.
  * It is the 1st step of VC closing protocol (see ch3u_handle_connection.c):
  *      local_closed / remote_closed -> close_acked -> closed. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_local_close_vc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Port_local_close_vc(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -84,10 +80,6 @@ static inline int MPIDI_CH3I_Port_local_close_vc(MPIDI_VC_t * vc)
 
 /*** Utility routines for connection request queues ***/
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_connreq_q_enqueue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_Port_connreq_q_enqueue(MPIDI_CH3I_Port_connreq_q_t * connreq_q,
                                                      MPIDI_CH3I_Port_connreq_t * connreq)
 {
@@ -95,10 +87,6 @@ static inline void MPIDI_CH3I_Port_connreq_q_enqueue(MPIDI_CH3I_Port_connreq_q_t
     connreq_q->size++;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_connreq_q_dequeue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_Port_connreq_q_dequeue(MPIDI_CH3I_Port_connreq_q_t * connreq_q,
                                                      MPIDI_CH3I_Port_connreq_t ** connreq_ptr)
 {
@@ -115,10 +103,6 @@ static inline void MPIDI_CH3I_Port_connreq_q_dequeue(MPIDI_CH3I_Port_connreq_q_t
     (*connreq_ptr) = connreq;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_connreq_q_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_Port_connreq_q_delete(MPIDI_CH3I_Port_connreq_q_t * connreq_q,
                                                     MPIDI_CH3I_Port_connreq_t * connreq)
 {
@@ -134,10 +118,6 @@ static inline void MPIDI_CH3I_Port_connreq_q_delete(MPIDI_CH3I_Port_connreq_q_t 
  * received an accept packet from server. Handled in MPIDI_CH3_PktHandler_AcceptAck.
  * ACK - True means client matched with server acceptance;
  * ACK - False means client already started revoking, thus acceptance fails. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_issue_accept_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Port_issue_accept_ack(MPIDI_VC_t * vc, int ack)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -168,10 +148,6 @@ static inline int MPIDI_CH3I_Port_issue_accept_ack(MPIDI_VC_t * vc, int ack)
  * ACK - True means server started accepting this connection request;
  * ACK - False means port does not exist or being closed on server, thus connection
  *       fails. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_issue_conn_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Port_issue_conn_ack(MPIDI_VC_t * vc, int ack)
 {
     int mpi_errno = MPI_SUCCESS;

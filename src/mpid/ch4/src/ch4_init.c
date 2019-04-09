@@ -97,10 +97,6 @@ static int parse_mt_model(const char *name);
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 static int set_runtime_configurations(void);
 
-#undef FUNCNAME
-#define FUNCNAME choose_netmod
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -208,10 +204,6 @@ static int set_runtime_configurations(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_args, int *has_env)
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
@@ -500,10 +492,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_InitCompleted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_InitCompleted(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
@@ -513,10 +501,6 @@ int MPID_InitCompleted(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -559,10 +543,6 @@ int MPID_Finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_CS_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_CS_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS, thr_err;
@@ -582,10 +562,6 @@ int MPID_CS_finalize(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_universe_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -640,10 +616,6 @@ int MPID_Get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_processor_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -682,10 +654,6 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *p;
@@ -698,10 +666,6 @@ void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
     return p;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Free_mem(void *ptr)
 {
     int mpi_errno;
@@ -720,10 +684,6 @@ int MPID_Free_mem(void *ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_get_lpid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -745,10 +705,6 @@ int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_rem
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -761,10 +717,6 @@ int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_max_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -777,10 +729,6 @@ int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Create_intercomm_from_lpids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -814,10 +762,6 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_add
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
@@ -828,10 +772,6 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
     return result;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_diff
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
@@ -843,10 +783,6 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
     return result;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno;
@@ -872,10 +808,6 @@ int MPID_Type_commit_hook(MPIR_Datatype * type)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno;
@@ -901,10 +833,6 @@ int MPID_Type_free_hook(MPIR_Datatype * type)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno;
@@ -930,10 +858,6 @@ int MPID_Op_commit_hook(MPIR_Op * op)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Op_free_hook(MPIR_Op * op)
 {
     int mpi_errno;

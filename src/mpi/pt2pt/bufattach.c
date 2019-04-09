@@ -28,10 +28,6 @@ int MPI_Buffer_attach(void *buffer, int size) __attribute__ ((weak, alias("PMPI_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Buffer_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Buffer_attach - Attaches a user-provided buffer for sending
 

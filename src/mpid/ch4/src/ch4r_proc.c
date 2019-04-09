@@ -13,10 +13,6 @@
 #include "ch4r_proc.h"
 #include "build_nodemap.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -32,10 +28,6 @@ int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_max_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -49,10 +41,6 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_build_nodemap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
 {
     int ret;
@@ -66,10 +54,6 @@ int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap,
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_n_avts
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_n_avts(void)
 {
     int ret;
@@ -83,10 +67,6 @@ int MPIDIU_get_n_avts(void)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_max_n_avts
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_max_n_avts(void)
 {
     int ret;
@@ -100,10 +80,6 @@ int MPIDIU_get_max_n_avts(void)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_avt_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_avt_size(int avtid)
 {
     int ret;
@@ -117,10 +93,6 @@ int MPIDIU_get_avt_size(int avtid)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_alloc_globals_for_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -139,10 +111,6 @@ int MPIDIU_alloc_globals_for_avtid(int avtid)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_free_globals_for_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
@@ -153,10 +121,6 @@ int MPIDIU_free_globals_for_avtid(int avtid)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_get_next_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_get_next_avtid(int *avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
@@ -189,10 +153,6 @@ int MPIDIU_get_next_avtid(int *avtid)
     return *avtid;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_free_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_free_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVTID);
@@ -214,10 +174,6 @@ int MPIDIU_free_avtid(int avtid)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_new_avt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_new_avt(int size, int *avtid)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -242,10 +198,6 @@ int MPIDIU_new_avt(int size, int *avtid)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_free_avt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_free_avt(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -262,10 +214,6 @@ int MPIDIU_free_avt(int avtid)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_avt_add_ref
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_avt_add_ref(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_ADD_REF);
@@ -278,10 +226,6 @@ int MPIDIU_avt_add_ref(int avtid)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_avt_release_ref
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_avt_release_ref(int avtid)
 {
     int in_use;
@@ -300,10 +244,6 @@ int MPIDIU_avt_release_ref(int avtid)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_avt_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_avt_init(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -345,10 +285,6 @@ int MPIDIU_avt_init(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_avt_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_avt_destroy(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
@@ -362,10 +298,6 @@ int MPIDIU_avt_destroy(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_build_nodemap_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid)
 {
     int ret;

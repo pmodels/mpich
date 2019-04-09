@@ -28,10 +28,6 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 #undef MPI_Comm_create_group
 #define MPI_Comm_create_group PMPI_Comm_create_group
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
 int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
@@ -126,10 +122,6 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_create_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_create_group - Creates a new communicator

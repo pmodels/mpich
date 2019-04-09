@@ -105,10 +105,6 @@ static void sigusr1_handler(int sig)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME check_terminating_vcs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int check_terminating_vcs(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -136,10 +132,6 @@ static int check_terminating_vcs(void)
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
    queued messages on the shared memory queues.  This function is
    nonblocking and does not call netmod functions..*/
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Shm_send_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Shm_send_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -292,10 +284,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_register_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -330,10 +318,6 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_deregister_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_deregister_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -357,10 +341,6 @@ int MPIDI_CH3I_Progress_deregister_hook(int id)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_activate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_activate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -383,10 +363,6 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_deactivate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_deactivate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -411,10 +387,6 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
 /* NOTE: it appears that this function is sometimes (inadvertently?) recursive.
  * Some packet handlers, such as MPIDI_CH3_PktHandler_Close, call iStartMsg,
  * which calls MPID_Progress_test. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -672,10 +644,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
 /* Note that this routine is only called if threads are enabled;
    it does not need to check whether runtime threads are enabled */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_delay
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS, err;
@@ -695,10 +663,6 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 /* end MPIDI_CH3I_Progress_delay() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_continue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 {
     int mpi_errno = MPI_SUCCESS,err;
@@ -719,10 +683,6 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 /* end MPIDI_CH3I_Progress_continue() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_wakeup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3I_Progress_wakeup(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_WAKEUP);
@@ -735,10 +695,6 @@ void MPIDI_CH3I_Progress_wakeup(void)
 }
 #endif /* MPICH_IS_THREADED */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_handle_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -965,10 +921,6 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));           \
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_init(void)
 {
     int i;
@@ -1033,10 +985,6 @@ int MPIDI_CH3I_Progress_init(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1058,10 +1006,6 @@ int MPIDI_CH3I_Progress_finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME shm_connection_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int shm_connection_terminated(MPIDI_VC_t * vc)
 {
     /* This function is called after all sends have completed */
@@ -1092,10 +1036,6 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Connection_terminate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1169,10 +1109,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 }
 /* end MPIDI_CH3_Connection_terminate() */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Complete_sendq_with_error
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1217,10 +1153,6 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME pkt_NETMOD_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1240,10 +1172,6 @@ fn_exit:
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Register_anysource_notification
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *rreq), int (*dequeue_fn)(MPIR_Request *rreq))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1265,10 +1193,6 @@ int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Anysource_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void anysource_posted(MPIR_Request *rreq)
 {
     qn_ent_t *ent = qn_head;
@@ -1284,10 +1208,6 @@ static void anysource_posted(MPIR_Request *rreq)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Anysource_matched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int anysource_matched(MPIR_Request *rreq)
 {
     int matched = FALSE;
@@ -1314,10 +1234,6 @@ static int anysource_matched(MPIR_Request *rreq)
     return matched;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Posted_recv_enqueued
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
@@ -1380,10 +1296,6 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 }
 
 /* returns non-zero when req has been matched by channel */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Posted_recv_dequeued
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
 {
     int local_rank = -1;

@@ -40,10 +40,6 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_create_keyval - Create an attribute keyval for MPI window objects
 

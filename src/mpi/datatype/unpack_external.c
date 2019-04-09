@@ -29,10 +29,6 @@ int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Unpack_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Unpack_external - Unpack a buffer (packed with MPI_Pack_external)
    according to a datatype into contiguous memory

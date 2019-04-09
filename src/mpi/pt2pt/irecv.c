@@ -28,10 +28,6 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Irecv - Begins a nonblocking receive
 

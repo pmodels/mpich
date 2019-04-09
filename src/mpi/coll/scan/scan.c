@@ -61,10 +61,6 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #undef MPI_Scan
 #define MPI_Scan PMPI_Scan
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_intra_auto(const void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Errflag_t * errflag)
@@ -96,10 +92,6 @@ int MPIR_Scan_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -132,10 +124,6 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -152,10 +140,6 @@ int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Scan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of

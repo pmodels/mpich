@@ -29,10 +29,6 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Improbe - Nonblocking matched probe.
 

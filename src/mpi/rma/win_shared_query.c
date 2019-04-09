@@ -28,10 +28,6 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_shared_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
 memory window.

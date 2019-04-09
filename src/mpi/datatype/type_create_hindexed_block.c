@@ -28,10 +28,6 @@ int MPI_Type_create_hindexed_block(int count, int blocklength,
 #undef MPI_Type_create_hindexed_block
 #define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_create_hindexed_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
                                          const MPI_Aint array_of_displacements[],
                                          MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -68,10 +64,6 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_hindexed_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_hindexed_block - Create an hindexed
      datatype with constant-sized blocks

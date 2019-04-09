@@ -27,10 +27,6 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_cvar_write_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -90,10 +86,6 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_cvar_write
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_write - Write a control variable
 

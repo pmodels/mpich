@@ -27,10 +27,6 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cartdim_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cartdim_get - Retrieves Cartesian topology information associated with a

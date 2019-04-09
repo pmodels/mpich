@@ -15,10 +15,6 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_inter_remote_send_local_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype, int root,

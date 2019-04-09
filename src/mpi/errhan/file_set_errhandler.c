@@ -29,10 +29,6 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_File_set_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_set_errhandler - Set the error handler for an MPI file
 
@@ -159,10 +155,6 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #ifndef MPICH_MPI_FROM_PMPI
 /* Export this routine only once (if we need to compile this file twice
    to get the PMPI and MPI versions without weak symbols */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_file_error_routine
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
 {
     MPIR_Errhandler *e_ptr = 0;

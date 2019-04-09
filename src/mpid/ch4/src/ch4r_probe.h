@@ -13,10 +13,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
                                                int context_offset, int *flag, MPI_Status * status)
 {
@@ -68,10 +64,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm * comm,
                                                 int context_offset, int *flag,
                                                 MPIR_Request ** message, MPI_Status * status)
@@ -130,10 +122,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_mprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_mprobe(int source, int tag, MPIR_Comm * comm,
                                                int context_offset, MPIR_Request ** message,
                                                MPI_Status * status)

@@ -28,10 +28,6 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Dist_graph_neighbors_count_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, int *outdegree,
                                          int *weighted)
 {
@@ -54,10 +50,6 @@ int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, in
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_neighbors_count
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_neighbors_count - Provides adjacency information for a distributed graph topology.
 

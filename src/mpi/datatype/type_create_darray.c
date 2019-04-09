@@ -50,10 +50,6 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 #undef MPI_Type_create_darray
 #define MPI_Type_create_darray PMPI_Type_create_darray
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
                                int dim,
                                int ndims,
@@ -165,10 +161,6 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_cyclic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
                                 int dim,
                                 int ndims,
@@ -316,10 +308,6 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_darray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_darray - Create a datatype representing a distributed array
 

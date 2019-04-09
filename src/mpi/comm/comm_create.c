@@ -38,10 +38,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
  *
  * Ownership of the (*mapping_out) array is transferred to the caller who is
  * responsible for freeing it. */
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_create_calculate_mapping
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
                                        MPIR_Comm * comm_ptr,
                                        int **mapping_out, MPIR_Comm ** mapping_comm)
@@ -152,10 +148,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
 /* WARNING: local_mapping and remote_mapping are stored in this
  * function.  The caller is responsible for their storage and will
  * need to retain them till Comm_commit. */
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_create_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Comm_create_map(int local_n,
                          int remote_n,
                          int *local_mapping,
@@ -173,10 +165,6 @@ int MPII_Comm_create_map(int local_n,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create impl for intracommunicators, assumes that the standard error
  * checking has already taken place in the calling function */
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr)
@@ -268,10 +256,6 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create impl for intercommunicators, assumes that the standard error
  * checking has already taken place in the calling function */
 PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr,
@@ -452,10 +436,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_create - Creates a new communicator

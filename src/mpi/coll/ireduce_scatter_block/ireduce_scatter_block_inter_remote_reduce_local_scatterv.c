@@ -13,10 +13,6 @@
  * by local intracommunicator scattervs in each group.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const void *sendbuf,
                                                                         void *recvbuf,
                                                                         int recvcount,

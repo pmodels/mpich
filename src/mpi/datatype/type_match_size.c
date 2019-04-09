@@ -28,10 +28,6 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_match_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_match_size - Find an MPI datatype matching a specified size
 

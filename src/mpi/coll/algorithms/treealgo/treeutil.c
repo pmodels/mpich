@@ -15,10 +15,6 @@
 #include "treeutil.h"
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME tree_add_child
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,10 +26,6 @@ static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_kary_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Treealgo_tree_t * ct)
 {
     int lrank, child;
@@ -83,10 +75,6 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
  *                     |
  *                     3
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_knomial_1_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                                       MPII_Treealgo_tree_t * ct)
 {
@@ -182,10 +170,6 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
  *                      |
  *                      7
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_knomial_2_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
                                       MPII_Treealgo_tree_t * ct)
 {

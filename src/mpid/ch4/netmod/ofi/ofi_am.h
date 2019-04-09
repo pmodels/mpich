@@ -26,10 +26,6 @@ static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
     MPIDI_OFI_am_clear_request(req);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_am_isend(int rank,
                                     MPIR_Comm * comm,
                                     int handler_id,
@@ -52,10 +48,6 @@ static inline int MPIDI_NM_am_isend(int rank,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_am_isendv(int rank,
                                      MPIR_Comm * comm,
                                      int handler_id,
@@ -103,10 +95,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           int src_rank,
                                           int handler_id,

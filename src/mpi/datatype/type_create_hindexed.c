@@ -30,10 +30,6 @@ int MPI_Type_create_hindexed(int count, const int array_of_blocklengths[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_hindexed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_hindexed - Create a datatype for an indexed datatype with
    displacements in bytes

@@ -34,10 +34,6 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                 int **remote_node_ids);
 static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state);
 
-#undef FUNCNAME
-#define FUNCNAME free_port_name_tag
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void free_port_name_tag(int tag)
 {
     int index, rem_tag;
@@ -53,10 +49,6 @@ static void free_port_name_tag(int tag)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FREE_PORT_NAME_TAG);
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_port_name_tag
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_port_name_tag(int *port_name_tag)
 {
     unsigned i, j;
@@ -90,10 +82,6 @@ static int get_port_name_tag(int *port_name_tag)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_tag_from_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_tag_from_port(const char *port_name, int *port_name_tag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -114,10 +102,6 @@ static int get_tag_from_port(const char *port_name, int *port_name_tag)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_conn_name_from_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_conn_name_from_port(const char *port_name, char *connname)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -133,10 +117,6 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME dynproc_create_intercomm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dynproc_create_intercomm(const char *port_name, int remote_size, int *remote_lupids,
                                     MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, int is_low_group,
                                     char *api)
@@ -235,10 +215,6 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME dynproc_handshake
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_addr_t * conn,
                              MPIR_Comm * comm_ptr)
 {
@@ -362,10 +338,6 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME dynproc_exchange_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * conn, char *conname,
                                 MPIR_Comm * comm_ptr, int *out_root, int *remote_size,
                                 size_t ** remote_upid_size, char **remote_upids,
@@ -581,10 +553,6 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
     return conn_id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
@@ -692,10 +660,6 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -712,10 +676,6 @@ int MPIDI_OFI_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_comm_open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -743,10 +703,6 @@ int MPIDI_OFI_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_comm_close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -768,10 +724,6 @@ int MPIDI_OFI_mpi_close_port(const char *port_name)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_comm_close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                               MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {

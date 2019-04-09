@@ -26,10 +26,6 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
 #undef MPI_Win_get_attr
 #define MPI_Win_get_attr PMPI_Win_get_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Win_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
                       int *flag, MPIR_Attr_type outAttrType)
 {
@@ -214,10 +210,6 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 

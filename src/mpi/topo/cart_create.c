@@ -32,10 +32,6 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[], const int pe
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
                      const int periods[], int reorder, MPI_Comm * comm_cart)
 {
@@ -170,10 +166,6 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
                           const int periods[], int reorder, MPI_Comm * comm_cart)
 {
@@ -202,10 +194,6 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_create - Makes a new communicator to which topology information

@@ -29,10 +29,6 @@ int MPI_Error_string(int errorcode, char *string, int *resultlen)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Error_string
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Error_string - Return a string for a given error code
 

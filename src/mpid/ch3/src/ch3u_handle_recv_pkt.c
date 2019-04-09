@@ -48,10 +48,6 @@
    currently do not support that in the CH3 device. */
 #define MPIDI_CH3U_Handle_ordered_recv_pkt MPIDI_CH3U_Handle_recv_pkt 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_ordered_recv_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 				       intptr_t *buflen, MPIR_Request ** rreqp)
 {
@@ -98,10 +94,6 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
  * data for the request has been received.  This function does not
  * actually complete the request.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Receive_data_found
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *buflen, int *complete)
 {
     int dt_contig;
@@ -230,10 +222,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Receive_data_unexpected
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t *buflen, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -288,10 +276,6 @@ int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t 
  * next data to arrive.  In turn, this request is attached to a virtual
  * connection.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Post_data_receive_found
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;	
@@ -364,10 +348,6 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Post_data_receive_unexpected
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -407,10 +387,6 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
    to do the same thing, e.g., the main thread in MPI_Win_lock(source=target) 
    and another thread in the progress engine.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Try_acquire_win_lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
 {
     int existing_lock;
@@ -478,9 +454,6 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
 /* FIXME: we still need to implement flow control.  As a reminder, 
    we don't mark these parameters as unused, because a full implementation
    of this routine will need to make use of all 4 parameters */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_FlowCntlUpdate
-#undef FCNAME
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					 intptr_t *buflen, MPIR_Request **rreqp)
 {
@@ -489,10 +462,6 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 }
 
 /* This is a dummy handler*/
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EndCH3
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 				 MPIDI_CH3_Pkt_t *pkt ATTRIBUTE((unused)),
 				 void *data ATTRIBUTE((unused)),
@@ -518,10 +487,6 @@ int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)),
    appropriate (this allows the compiler to reduce the cost in 
    accessing the elements of the array in some cases).
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[], 
 			       int arraySize  )
 {

@@ -13,10 +13,6 @@
  * datatype cases.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_SendNoncontig_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
    sreq->dev.segment as well as segment_first and segment_size. */
@@ -80,10 +76,6 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 
 /* This function will allocate a segment.  That segment must be freed when
    it is no longer needed */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerNoncontigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_EagerNoncontigSend - Eagerly send noncontiguous data */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 				  MPIDI_CH3_Pkt_type_t reqtype, 
@@ -146,10 +138,6 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
    Make sure that buf is at the beginning of the data to send; 
    adjust by adding dt_true_lb if necessary 
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
 			       MPIDI_CH3_Pkt_type_t reqtype, 
 			       const void * buf, intptr_t data_sz, int rank,
@@ -212,10 +200,6 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
    We may need a nonblocking (cancellable) version of this, which will 
    have a smaller payload.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigShortSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
 				    MPIDI_CH3_Pkt_type_t reqtype,
 				    const void * buf, intptr_t data_sz, int rank,
@@ -283,10 +267,6 @@ int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
 
 /* This is the matching handler for the EagerShort message defined above */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerShortSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					 intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -518,10 +498,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
    Make sure that buf is at the beginning of the data to send; 
    adjust by adding dt_true_lb if necessary 
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigIsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
 				MPIDI_CH3_Pkt_type_t reqtype, 
 				const void * buf, intptr_t data_sz, int rank,
@@ -597,10 +573,6 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
 /* FIXME: This is not optimized for short messages, which 
    should have the data in the same packet when the data is
    particularly short (e.g., one 8 byte long word) */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				    intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -685,10 +657,6 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_ReadySend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				    intptr_t *buflen, MPIR_Request **rreqp )
 {

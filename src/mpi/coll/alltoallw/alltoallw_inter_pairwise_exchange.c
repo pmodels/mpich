@@ -21,10 +21,6 @@
  * FIXME: change algorithm to match intracommunicator alltoallv
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_inter_pairwise_exchange
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
                                            const int sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const int recvcounts[],

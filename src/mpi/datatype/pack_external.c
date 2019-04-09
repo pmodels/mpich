@@ -29,10 +29,6 @@ int MPI_Pack_external(const char datarep[], const void *inbuf, int incount,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Pack_external - Packs a datatype into contiguous memory, using the
      external32 format

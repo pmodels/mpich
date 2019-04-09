@@ -12,10 +12,6 @@
 #include "mpidimpl.h"
 #include "ch4_win.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno;
@@ -41,10 +37,6 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     int mpi_errno;
@@ -70,10 +62,6 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno;
@@ -98,10 +86,6 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
@@ -126,10 +110,6 @@ int MPID_Win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno;
@@ -154,10 +134,6 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
                              MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
@@ -183,10 +159,6 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno;
@@ -210,10 +182,6 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_allocate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                       void *baseptr, MPIR_Win ** win)
 {
@@ -237,10 +205,6 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win)
 {
     int mpi_errno;

@@ -18,10 +18,6 @@ struct ucx_share {
 static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr);
 static int win_init(MPIR_Win * win);
 
-#undef FUNCNAME
-#define FUNCNAME win_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr)
 {
 
@@ -155,10 +151,6 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -174,94 +166,54 @@ static int win_init(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     return MPIDIG_mpi_win_set_info(win, info);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     return MPIDIG_mpi_win_get_info(win, info_p_p);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_free(MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_free(win_ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     return MPIDIG_mpi_win_attach(win, base, size);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
                                       MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_detach(MPIR_Win * win, const void *base)
 {
     return MPIDIG_mpi_win_detach(win, base);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_allocate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_allocate(MPI_Aint length, int disp_unit, MPIR_Info * info,
                                MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_allocate(length, disp_unit, info, comm_ptr, baseptr, win_ptr);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win)
 {
     return MPIDIG_mpi_win_create_dynamic(info, comm, win);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -286,10 +238,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_allocate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -314,46 +262,26 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_allocate_shared_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_create_dynamic_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_attach_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 {
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_detach_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_detach_hook(MPIR_Win * win, const void *base)
 {
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mpi_win_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

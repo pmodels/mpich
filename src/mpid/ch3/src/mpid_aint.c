@@ -16,10 +16,6 @@
   arguments, where base represents a base address returned by a call
   to MPI_GET_ADDRESS and disp represents a signed integer displacement.
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_add
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
@@ -43,10 +39,6 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
   addr2 arguments, where addr1 and addr2 represent addresses returned by calls
   to MPI_GET_ADDRESS.
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_diff
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;

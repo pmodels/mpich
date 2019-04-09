@@ -79,10 +79,6 @@ static int accu_op_hint_get_index(MPIDIG_win_info_accu_op_shift_t hint_shift)
     return op_index;
 }
 
-#undef FUNCNAME
-#define FUNCNAME load_acc_hint
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
@@ -166,10 +162,6 @@ static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 {
     int i, same_disp, mpi_errno = MPI_SUCCESS;
@@ -252,10 +244,6 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
  * MPIDI_OFI_EPERROR: OFI endpoint related failures.
  * MPI_ERR_OTHER: Other error occurs.
  */
-#undef FUNCNAME
-#define FUNCNAME win_set_per_win_sync
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_set_per_win_sync(MPIR_Win * win)
 {
     int ret, mpi_errno = MPI_SUCCESS;
@@ -308,10 +296,6 @@ static int win_set_per_win_sync(MPIR_Win * win)
  * MPIDI_OFI_EPERROR: OFI endpoint related failures.
  * MPI_ERR_OTHER: Other error occurs.
  */
-#undef FUNCNAME
-#define FUNCNAME win_init_sep
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init_sep(MPIR_Win * win)
 {
     int i, ret, mpi_errno = MPI_SUCCESS;
@@ -434,10 +418,6 @@ static int win_init_sep(MPIR_Win * win)
  * MPIDI_OFI_EPERROR: OFI endpoint related failures.
  * MPI_ERR_OTHER: Other error occurs.
  */
-#undef FUNCNAME
-#define FUNCNAME win_init_stx
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init_stx(MPIR_Win * win)
 {
     /* Activate per-window EP/counter using STX */
@@ -526,10 +506,6 @@ static int win_init_stx(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_init_global
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init_global(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
@@ -544,10 +520,6 @@ static int win_init_global(MPIR_Win * win)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -591,10 +563,6 @@ static int win_init(MPIR_Win * win)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno;
@@ -607,10 +575,6 @@ int MPIDI_OFI_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -623,10 +587,6 @@ int MPIDI_OFI_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -639,10 +599,6 @@ int MPIDI_OFI_mpi_win_free(MPIR_Win ** win_ptr)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
@@ -656,10 +612,6 @@ int MPIDI_OFI_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_In
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -672,10 +624,6 @@ int MPIDI_OFI_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
                                       MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
@@ -691,10 +639,6 @@ int MPIDI_OFI_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -707,10 +651,6 @@ int MPIDI_OFI_mpi_win_detach(MPIR_Win * win, const void *base)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_allocate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                                void *baseptr, MPIR_Win ** win_ptr)
 {
@@ -724,10 +664,6 @@ int MPIDI_OFI_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, M
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -740,10 +676,6 @@ int MPIDI_OFI_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Wi
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -769,10 +701,6 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_allocate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -798,10 +726,6 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_allocate_shared_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -827,10 +751,6 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_create_dynamic_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -861,10 +781,6 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_attach_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -877,10 +793,6 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_detach_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -893,10 +805,6 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_mpi_win_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

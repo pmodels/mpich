@@ -29,10 +29,6 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_delete_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_delete_attr - Deletes an attribute value associated with a key on
    a datatype

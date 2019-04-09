@@ -28,10 +28,6 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Attr_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Attr_delete - Deletes an attribute value associated with a key on a

@@ -26,10 +26,6 @@ int MPI_Info_free(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_free")
 #define MPI_Info_free PMPI_Info_free
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_free - Frees an info object
 

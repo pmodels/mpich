@@ -71,10 +71,6 @@ void MPIR_Ext_cs_yield(void)
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ext_datatype_iscommitted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;

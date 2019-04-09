@@ -27,10 +27,6 @@ int MPI_Win_free(MPI_Win * win) __attribute__ ((weak, alias("PMPI_Win_free")));
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_free - Free an MPI RMA window
 

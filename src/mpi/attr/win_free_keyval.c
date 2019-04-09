@@ -28,10 +28,6 @@ int MPI_Win_free_keyval(int *win_keyval) __attribute__ ((weak, alias("PMPI_Win_f
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_free_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_free_keyval - Frees an attribute key for MPI RMA windows
 

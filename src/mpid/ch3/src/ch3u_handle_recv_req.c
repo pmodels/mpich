@@ -7,10 +7,6 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_recv_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     static int in_routine ATTRIBUTE((unused)) = FALSE;
@@ -83,10 +79,6 @@ int MPIDI_CH3_ReqHandler_RecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_PutRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -145,10 +137,6 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_AccumRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -244,10 +232,6 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -416,10 +400,6 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_FOPRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -552,10 +532,6 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                                   MPIR_Request * rreq, int *complete)
 {
@@ -603,10 +579,6 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                                    MPIR_Request * rreq, int *complete)
 {
@@ -709,10 +681,6 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
                                                     MPIR_Request * rreq, int *complete)
 {
@@ -833,10 +801,6 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
                                                   MPIR_Request * rreq, int *complete)
 {
@@ -927,10 +891,6 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_UnpackUEBufComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                              MPIR_Request * rreq, int *complete)
 {
@@ -968,10 +928,6 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_UnpackSRBufComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1010,10 +966,6 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPIR_Request * rre
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                               MPIR_Request * rreq, int *complete)
 {
@@ -1033,10 +985,6 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_ReloadIOV
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                    MPIR_Request * rreq, int *complete)
 {
@@ -1805,10 +1753,6 @@ static int entered_count = 0;
 
 /* Release the current lock on the window and grant the next lock in the
    queue if any */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Release_lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Target_lock_entry_t *target_lock_entry, *target_lock_entry_next;
@@ -1906,10 +1850,6 @@ int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
                                                      MPIR_Request * rreq, int *complete)
 {

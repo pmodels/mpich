@@ -25,10 +25,6 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status) __attribute__ ((weak, a
 #undef MPI_Wait
 #define MPI_Wait PMPI_Wait
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Wait_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -59,10 +55,6 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -119,10 +111,6 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Wait - Waits for an MPI request to complete
 

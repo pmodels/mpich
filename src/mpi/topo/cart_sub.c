@@ -28,10 +28,6 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_sub
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_sub - Partitions a communicator into subgroups which

@@ -28,10 +28,6 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Attr_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Attr_get - Retrieves attribute value by key

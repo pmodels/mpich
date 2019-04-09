@@ -9,10 +9,6 @@
 static int sense;
 static int barrier_init = 0;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_shm_barrier_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t * barrier_region,
                            MPIDU_shm_barrier_t ** barrier, int init_values)
 {
@@ -34,10 +30,6 @@ int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t * barrier_region,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_shm_barrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
 int MPIDU_shm_barrier(MPIDU_shm_barrier_t * barrier, int num_local)
 {

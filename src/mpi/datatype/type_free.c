@@ -25,10 +25,6 @@ int MPI_Type_free(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_Typ
 #undef MPI_Type_free
 #define MPI_Type_free PMPI_Type_free
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_free_impl(MPI_Datatype * datatype)
 {
     MPIR_Datatype *datatype_ptr = NULL;
@@ -41,10 +37,6 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_free - Frees the datatype
 

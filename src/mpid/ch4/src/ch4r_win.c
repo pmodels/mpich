@@ -136,10 +136,6 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
         strncpy(buf, "none", maxlen);
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -256,10 +252,6 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
@@ -350,10 +342,6 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_finalize(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -437,10 +425,6 @@ static int win_finalize(MPIR_Win ** win_ptr)
  * memory, and initializes the shared_table structure that stores each
  * node process's size, disp_unit, and start address for shm RMA operations
  * and query routine.*/
-#undef FUNCNAME
-#define FUNCNAME win_shm_alloc_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option)
 {
@@ -614,10 +598,6 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4_RMA_Init_sync_pvars
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_RMA_Init_sync_pvars(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -651,10 +631,6 @@ int MPIDIG_RMA_Init_sync_pvars(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -674,10 +650,6 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -810,10 +782,6 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -837,10 +805,6 @@ int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
@@ -882,10 +846,6 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -912,10 +872,6 @@ int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
                                    MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
@@ -959,10 +915,6 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -988,10 +940,6 @@ int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_allocate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                             void *baseptr, MPIR_Win ** win_ptr)
 {
@@ -1041,10 +989,6 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

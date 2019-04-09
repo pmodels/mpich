@@ -28,10 +28,6 @@ int MPI_Type_create_struct(int count, const int array_of_blocklengths[],
 #undef MPI_Type_create_struct
 #define MPI_Type_create_struct PMPI_Type_create_struct
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_create_struct_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
@@ -77,10 +73,6 @@ int MPIR_Type_create_struct_impl(int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_struct
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes

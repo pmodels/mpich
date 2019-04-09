@@ -30,10 +30,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 #undef MPI_Testany
 #define MPI_Testany PMPI_Testany
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testany_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
                       int *indx, int *flag, MPI_Status * status)
 {
@@ -81,10 +77,6 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testany
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testany - Tests for completion of any previdously initiated
                   requests

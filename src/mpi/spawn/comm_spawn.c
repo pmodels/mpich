@@ -29,10 +29,6 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 /* Any internal routines can go here.  Make them static if possible */
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_spawn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_spawn - Spawn up to maxprocs instances of a single MPI application
 

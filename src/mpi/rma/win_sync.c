@@ -27,10 +27,6 @@ int MPI_Win_sync(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_sync")));
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_sync
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_sync - Synchronize public and private copies of the given window.
 

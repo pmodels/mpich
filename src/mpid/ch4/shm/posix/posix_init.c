@@ -35,10 +35,6 @@ cvars:
 
 static int choose_posix_eager(void);
 
-#undef FUNCNAME
-#define FUNCNAME choose_posix_eager
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int choose_posix_eager(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -74,10 +70,6 @@ static int choose_posix_eager(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -127,8 +119,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     /* --END ERROR HANDLING-- */
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_finalize_hook)
 int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;

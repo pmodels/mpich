@@ -29,10 +29,6 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_create_errhandler - Create an error handler for use with MPI window
    objects

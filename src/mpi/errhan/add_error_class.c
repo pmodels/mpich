@@ -28,10 +28,6 @@ int MPI_Add_error_class(int *errorclass) __attribute__ ((weak, alias("PMPI_Add_e
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Add_error_class
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Add_error_class - Add an MPI error class to the known classes
 

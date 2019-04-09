@@ -26,10 +26,6 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__ ((weak, alias("PMPI_Co
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 

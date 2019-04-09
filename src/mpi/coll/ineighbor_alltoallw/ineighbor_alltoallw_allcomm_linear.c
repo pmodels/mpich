@@ -13,10 +13,6 @@
  * neighbor.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_allcomm_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                                   const MPI_Aint sdispls[],
                                                   const MPI_Datatype sendtypes[], void *recvbuf,

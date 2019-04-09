@@ -18,10 +18,6 @@ static inline void setupProcessorName( void );
 /*
  * MPID_Get_processor_name()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_processor_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
 {
     int mpi_errno = MPI_SUCCESS;

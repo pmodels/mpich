@@ -74,10 +74,6 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_sched_intra_auto(const void *sendbuf, const int sendcounts[], const int displs[],
                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -98,10 +94,6 @@ int MPIR_Iscatterv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_sched_inter_auto(const void *sendbuf, const int sendcounts[], const int displs[],
                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -122,10 +114,6 @@ int MPIR_Iscatterv_sched_inter_auto(const void *sendbuf, const int sendcounts[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_sched_impl(const void *sendbuf, const int sendcounts[], const int displs[],
                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                               MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -174,10 +162,6 @@ int MPIR_Iscatterv_sched_impl(const void *sendbuf, const int sendcounts[], const
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int displs[],
                          MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -195,10 +179,6 @@ int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int displs[],
                         MPI_Datatype sendtype, void *recvbuf, int recvcount,
                         MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -233,10 +213,6 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
                    MPI_Datatype sendtype, void *recvbuf, int recvcount,
                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -256,10 +232,6 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iscatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iscatterv - Scatters a buffer in parts to all processes in a communicator
                 in a nonblocking way

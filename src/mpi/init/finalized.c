@@ -25,10 +25,6 @@ int MPI_Finalized(int *flag) __attribute__ ((weak, alias("PMPI_Finalized")));
 #define MPI_Finalized PMPI_Finalized
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Finalized
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalized - Indicates whether 'MPI_Finalize' has been called.
 

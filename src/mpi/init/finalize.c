@@ -127,10 +127,6 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 #endif
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalize - Terminates MPI execution environment
 

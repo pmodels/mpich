@@ -29,10 +29,6 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_File_create_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_create_errhandler - Create a file error handler
 

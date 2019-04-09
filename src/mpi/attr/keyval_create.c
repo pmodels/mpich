@@ -29,10 +29,6 @@ int MPI_Keyval_create(MPI_Copy_function * copy_fn, MPI_Delete_function * delete_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Keyval_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Keyval_create - Greates a new attribute key

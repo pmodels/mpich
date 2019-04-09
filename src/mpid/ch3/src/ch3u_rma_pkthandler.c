@@ -178,10 +178,6 @@ void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
 /*                  extended packet functions                  */
 /* =========================================================== */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ExtPktHandler_Accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
                                               int is_derived_dt, void **ext_hdr_ptr,
                                               MPI_Aint * ext_hdr_sz)
@@ -214,10 +210,6 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ExtPktHandler_GetAccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3_ExtPktHandler_GetAccumulate(MPIDI_CH3_Pkt_flags_t flags,
                                                  int is_derived_dt, void **ext_hdr_ptr,
                                                  MPI_Aint * ext_hdr_sz)
@@ -232,10 +224,6 @@ static int MPIDI_CH3_ExtPktHandler_GetAccumulate(MPIDI_CH3_Pkt_flags_t flags,
  * of messages.
  */
 /* ------------------------------------------------------------------------ */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                              intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -395,10 +383,6 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                              intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -596,10 +580,6 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                                     intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -815,10 +795,6 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_GetAccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                                        intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -1109,10 +1085,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_CAS
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                              intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -1221,10 +1193,6 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_CASResp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                  MPIDI_CH3_Pkt_t * pkt, void *data ATTRIBUTE((unused)),
                                  intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1283,10 +1251,6 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_FOP
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                              intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -1470,10 +1434,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_FOPResp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                  MPIDI_CH3_Pkt_t * pkt, void *data,
                                  intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1558,10 +1518,6 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Get_AccumResp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                                        intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -1694,10 +1650,6 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                               intptr_t * buflen, MPIR_Request ** rreqp)
 {
@@ -1749,10 +1701,6 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_GetResp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                  MPIDI_CH3_Pkt_t * pkt, void *data,
                                  intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1834,10 +1782,6 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_LockAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                  void *data ATTRIBUTE((unused)),
                                  intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1883,10 +1827,6 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_LockOpAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                    void *data ATTRIBUTE((unused)),
                                    intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1939,10 +1879,6 @@ int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Ack(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                              void *data ATTRIBUTE((unused)),
                              intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1980,10 +1916,6 @@ int MPIDI_CH3_PktHandler_Ack(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_DecrAtCnt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                    MPIDI_CH3_Pkt_t * pkt, void *data ATTRIBUTE((unused)),
                                    intptr_t * buflen, MPIR_Request ** rreqp)
@@ -2022,10 +1954,6 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Unlock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                 MPIDI_CH3_Pkt_t * pkt, void *data ATTRIBUTE((unused)),
                                 intptr_t * buflen, MPIR_Request ** rreqp)
@@ -2066,10 +1994,6 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Flush
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                void *data ATTRIBUTE((unused)),
                                intptr_t * buflen, MPIR_Request ** rreqp)

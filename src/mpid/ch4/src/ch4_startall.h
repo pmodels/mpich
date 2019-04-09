@@ -13,10 +13,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS;

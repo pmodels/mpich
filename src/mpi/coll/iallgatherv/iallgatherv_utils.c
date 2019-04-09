@@ -12,10 +12,6 @@
 #include "mpiimpl.h"
 #include "iallgatherv.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Iallgatherv_is_displs_ordered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* This function checks whether the displacements are in increasing order and
  * that there is no overlap or gap between the data of successive ranks. Some
  * algorithms can only handle ordered array of data and hence this function for

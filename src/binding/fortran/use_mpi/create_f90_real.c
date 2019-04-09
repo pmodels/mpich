@@ -40,10 +40,6 @@ typedef struct realModel {
     MPI_Datatype dtype;
 } realModel;
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_f90_real
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_f90_real - Return a predefined type that matches
    the specified range

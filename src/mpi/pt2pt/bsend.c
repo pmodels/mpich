@@ -29,10 +29,6 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Bsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Bsend - Basic send with user-provided buffering
 

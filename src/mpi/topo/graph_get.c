@@ -28,10 +28,6 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graph_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Graph_get - Retrieves graph topology information associated with a

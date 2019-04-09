@@ -204,10 +204,6 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 #endif
 
 /* These routine handle any thread initialization that my be required */
-#undef FUNCNAME
-#define FUNCNAME thread_cs_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int thread_cs_init(void)
 {
     int err;
@@ -256,10 +252,6 @@ static int thread_cs_init(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Thread_CS_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Thread_CS_Finalize(void)
 {
     int err;
@@ -344,10 +336,6 @@ MPL_dbg_class MPIR_DBG_ASSERT;
 MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -682,10 +670,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 

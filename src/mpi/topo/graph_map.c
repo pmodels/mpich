@@ -41,10 +41,6 @@ int MPIR_Graph_map(const MPIR_Comm * comm_ptr, int nnodes,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Graph_map_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
                         const int indx[], const int edges[], int *newrank)
 {
@@ -72,10 +68,6 @@ int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graph_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_map - Maps process to graph topology information
 

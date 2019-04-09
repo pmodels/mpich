@@ -92,10 +92,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
    End Algorithm: MPI_Reduce_scatter
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_intra_auto(const void *sendbuf,
                                          void *recvbuf,
                                          int recvcount,
@@ -189,10 +185,6 @@ int MPIR_Reduce_scatter_block_intra_auto(const void *sendbuf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_inter_auto(const void *sendbuf,
                                          void *recvbuf,
                                          int recvcount,
@@ -208,10 +200,6 @@ int MPIR_Reduce_scatter_block_inter_auto(const void *sendbuf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                    int recvcount, MPI_Datatype datatype,
                                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -288,10 +276,6 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                               int recvcount, MPI_Datatype datatype,
                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -311,10 +295,6 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Reduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Reduce_scatter_block - Combines values and scatters the results

@@ -16,10 +16,6 @@
 #define MPIR_LBXOR(a,b) ((a)^(b))
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_BXOR
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_BXOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
@@ -57,10 +53,6 @@ void MPIR_BXOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_BXOR
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_BXOR_check_dtype(MPI_Datatype type)
 {
     switch (type) {

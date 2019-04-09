@@ -19,10 +19,6 @@
 #define MPIR_LLOR(a,b) ((a)||(b))
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_LOR
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_LOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
@@ -83,10 +79,6 @@ void MPIR_LOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_LOR
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_LOR_check_dtype(MPI_Datatype type)
 {
     switch (type) {

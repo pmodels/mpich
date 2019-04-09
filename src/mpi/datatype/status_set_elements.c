@@ -28,10 +28,6 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_set_elements
-#undef FCNAME
-#define FCNAME "MPI_Status_set_elements"
 
 /*@
    MPI_Status_set_elements - Set the number of elements in a status

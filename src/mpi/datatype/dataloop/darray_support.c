@@ -18,10 +18,6 @@ static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs
                             MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Dataloop_convert_darray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Dataloop_convert_darray(int size,
                                  int rank,
                                  int ndims,
@@ -172,10 +168,6 @@ int MPII_Dataloop_convert_darray(int size,
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Type_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
                            int rank, int darg, int order, MPI_Aint orig_extent,
                            MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)

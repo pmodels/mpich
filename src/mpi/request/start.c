@@ -27,10 +27,6 @@ int MPI_Start(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Start")))
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Start - Initiates a communication with a persistent request handle
 

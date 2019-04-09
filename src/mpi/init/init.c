@@ -79,10 +79,6 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 int MPIR_async_thread_initialized = 0;
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Init - Initialize the MPI execution environment
 

@@ -14,10 +14,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_reply_ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -52,10 +48,6 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_handle_unexp_mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;

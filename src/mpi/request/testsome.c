@@ -31,10 +31,6 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Testsome
 #define MPI_Testsome PMPI_Testsome
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testsome_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
 {
@@ -82,10 +78,6 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testsome
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testsome - Tests for some given requests to complete
 

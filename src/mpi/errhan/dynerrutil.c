@@ -96,10 +96,6 @@ static void MPIR_Init_err_dyncodes(void)
     MPIR_Add_finalize(MPIR_Dynerrcodes_finalize, (void *) 0, 9);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Err_set_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*
   MPIR_Err_set_msg - Change the message for an error code or class
 

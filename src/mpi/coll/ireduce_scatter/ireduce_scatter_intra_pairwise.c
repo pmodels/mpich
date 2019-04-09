@@ -13,10 +13,6 @@
  * process sends n/p amount of data to (rank+i) and receives n/p amount of data
  * from (rank-i).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_intra_pairwise
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf,
                                               const int recvcounts[], MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)

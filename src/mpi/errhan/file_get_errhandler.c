@@ -29,10 +29,6 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_File_get_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_get_errhandler - Get the error handler attached to a file
 

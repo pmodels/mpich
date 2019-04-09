@@ -19,10 +19,6 @@
  * group.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank, mpi_errno = MPI_SUCCESS, root;

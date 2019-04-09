@@ -31,10 +31,6 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p);
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out);
 int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_pid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index,
                                                      int *avtid)
 {
@@ -100,10 +96,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     return *index;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_av
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
@@ -175,10 +167,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_pid_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *index,
                                                            int *avtid)
 {
