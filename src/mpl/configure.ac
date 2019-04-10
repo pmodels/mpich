@@ -681,9 +681,9 @@ esac
 # know what's used in MPL
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
-# check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
+# check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS
+    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
 fi
 
 #######################################################################
