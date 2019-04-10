@@ -743,7 +743,7 @@ PAC_ARG_THREAD_PACKAGE
 THREAD_PACKAGE_NAME=THREAD_PACKAGE_INVALID
 threadlib=""
 case $with_thread_package in
-    yes|posix|pthreads|solaris)
+    yes|posix|pthreads|solaris|uti)
         AC_CHECK_HEADERS(pthread.h)
         AC_CHECK_LIB([pthread],[pthread_key_create],[threadlib="-lpthread"])
         THREAD_PACKAGE_NAME=THREAD_PACKAGE_POSIX
