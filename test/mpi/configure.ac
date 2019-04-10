@@ -753,7 +753,9 @@ AC_SUBST(largetest)
 
 # Extended collectives test
 if test "$enable_collalgo_tests" = "yes" ; then
+    AC_MSG_NOTICE([running $srcdir/coll/test_coll_algos.sh])
     source $srcdir/coll/test_coll_algos.sh
+    test $? != 0 &&  AC_MSG_ERROR([$srcdir/coll/test_coll_algos.sh failed.])
 else
     coll_algo_tests=""
 fi
