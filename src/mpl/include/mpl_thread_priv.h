@@ -7,7 +7,7 @@
 #ifndef MPL_THREAD_PRIV_H_INCLUDED
 #define MPL_THREAD_PRIV_H_INCLUDED
 
-#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE && !defined(MPL_TLS_SPECIFIER)
+#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE && !defined(MPL_TLS)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPLI_cleanup_tls(void *a);
@@ -81,7 +81,7 @@ void MPLI_cleanup_tls(void *a);
         MPL_thread_tls_destroy(&(key), err_ptr_);       \
     } while (0)
 
-#else /* MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE || defined(MPL_TLS_SPECIFIER) */
+#else /* MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE || defined(MPL_TLS) */
 
 /* We have proper thread-local storage (TLS) support from the compiler, which
  * should yield the best performance and simplest code, so we'll use that. */
