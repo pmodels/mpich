@@ -217,9 +217,14 @@ int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
         switch (MPIR_CVAR_ALLGATHER_INTER_ALGORITHM) {
             case MPIR_CVAR_ALLGATHER_INTER_ALGORITHM_local_gather_remote_bcast:
                 mpi_errno =
-                    MPIR_Allgather_inter_local_gather_remote_bcast(sendbuf, sendcount, sendtype,
-                                                                   recvbuf, recvcount, recvtype,
-                                                                   comm_ptr, errflag);
+                    MPIR_Allgather_inter_local_gather_remote_bcast(sendbuf,
+                                                                   sendcount,
+                                                                   sendtype,
+                                                                   recvbuf,
+                                                                   recvcount,
+                                                                   recvtype,
+                                                                   comm_ptr,
+                                                                   errflag);
                 break;
             case MPIR_CVAR_ALLGATHER_INTER_ALGORITHM_nb:
                 mpi_errno =
