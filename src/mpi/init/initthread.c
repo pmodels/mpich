@@ -93,7 +93,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 /* Any internal routines can go here.  Make them static if possible */
 
 /* Global variables can be initialized here */
-MPIR_Process_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
+MPIR_Process_t MPIR_Process = { MPIR_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
 
      /* all other fields in MPIR_Process are irrelevant */
 MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
@@ -536,7 +536,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* define MPI as initialized so that we can use MPI functions within
      * MPID_Init if necessary */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
+    MPIR_Int_store(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     /* We can't acquire any critical sections until this point.  Any
      * earlier the basic data structures haven't been initialized */
@@ -663,13 +663,13 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Make fields of MPIR_Process global visible and set mpich_state
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+    MPIR_Int_store(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
     return mpi_errno;
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
+    MPIR_Int_store(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
 
     if (exit_init_cs_on_failure) {
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -741,7 +741,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+            if (MPIR_Int_load(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
                 mpi_errno =
                     MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread",
                                          __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
