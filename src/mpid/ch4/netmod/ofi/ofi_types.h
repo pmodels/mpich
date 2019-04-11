@@ -351,8 +351,8 @@ typedef struct {
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDIU_buf_pool_t *am_buf_pool;
-    OPA_int_t am_inflight_inject_emus;
-    OPA_int_t am_inflight_rma_send_mrs;
+    MPIR_Int_t am_inflight_inject_emus;
+    MPIR_Int_t am_inflight_rma_send_mrs;
 
     /* Completion queue buffering */
     MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];

@@ -338,7 +338,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
         MPIDI_OFI_mr_key_free(mr_key);
     }
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
-    OPA_decr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
+    MPIR_Int_decr(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
 
     MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 

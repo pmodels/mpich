@@ -298,15 +298,15 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_rreq_t *unexp_list;
 #endif
     MPIDIG_req_ext_t *cmpl_list;
-    OPA_int_t exp_seq_no;
-    OPA_int_t nxt_seq_no;
+    MPIR_Int_t exp_seq_no;
+    MPIR_Int_t nxt_seq_no;
     MPIDIU_buf_pool_t *buf_pool;
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    OPA_int_t progress_count;
+    MPIR_Int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
