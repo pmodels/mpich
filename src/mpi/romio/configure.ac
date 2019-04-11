@@ -1372,8 +1372,21 @@ if test -n "$mpi_mpich"; then
       MPIOF_H_INCLUDED=1
    fi
    if test "$FROM_MPICH" = no; then
-      AC_DEFINE(NEEDS_MPI_TEST,1,[Define if mpi_test needed])
-      AC_DEFINE(MPICH,1,[Define if using MPICH])
+      dnl Check if MPI C compiler is MPICH based, e.g. Cray MPI
+      AC_MSG_CHECKING([whether MPI C compiler is MPICH based])
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <mpi.h>
+#ifdef MPICH_NAME
+#error MPICH_NAME is not defined
+#endif
+      ]])], [is_mpich_based=yes], [is_mpich_based=no])
+      AC_MSG_RESULT([$is_mpich_based])
+
+      if test "$is_mpich_based" = no; then
+         AC_DEFINE(NEEDS_MPI_TEST,1,[Define if mpi_test needed])
+         AC_DEFINE(MPICH,1,[Define if using MPICH])
+      fi
+      unset is_mpich_based
    fi
 fi
 
