@@ -227,14 +227,14 @@ MPIDI_CH3I_Progress_state;
 
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
 
-extern OPA_int_t MPIDI_CH3I_progress_completion_count;
+extern MPIR_Int_t MPIDI_CH3I_progress_completion_count;
 
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT do {                                  \
         OPA_write_barrier();                                                            \
-        OPA_incr_int(&MPIDI_CH3I_progress_completion_count);                            \
+        MPIR_Int_incr(&MPIDI_CH3I_progress_completion_count);                            \
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_PROGRESS,VERBOSE,                                            \
                        "just incremented MPIDI_CH3I_progress_completion_count=%d",      \
-                       OPA_load_int(&MPIDI_CH3I_progress_completion_count));            \
+                       MPIR_Int_load(&MPIDI_CH3I_progress_completion_count));            \
     } while(0)
 
 #endif /* MPIDI_CH3_PRE_H_INCLUDED */
