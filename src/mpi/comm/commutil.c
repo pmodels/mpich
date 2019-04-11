@@ -237,6 +237,14 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
         MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMM_MUTEX(comm_p), &thr_err);
         MPIR_Assert(thr_err == 0);
     }
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    /* NOTE: MPIR_THREAD_POBJ_COMM_MUTEX(comm_p) and MPIR_THREAD_VCI_COMM_MUTEX(comm_p)
+     * represent the same object comm_p->mutex. So, initialize it just once. */
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&MPIR_THREAD_VCI_COMM_MUTEX(comm_p), &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
 #endif
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
