@@ -243,6 +243,9 @@ static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
                                                      MPII_Reqalloc_use_lock_t use_lock,
                                                      int pool_idx)
 {
+    MPIR_Assert(pool_idx >= 0);
+    MPIR_Assert(pool_idx < HANDLE_NUM_POOLS);
+
     MPIR_Request *req;
     if (use_lock == LOCK) {
         MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx].lock);
