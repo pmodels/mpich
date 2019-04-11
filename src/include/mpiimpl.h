@@ -163,11 +163,11 @@ typedef struct MPIR_Group MPIR_Group;
 struct MPIR_Topology;
 typedef struct MPIR_Topology MPIR_Topology;
 
-
 /*****************************************************************************/
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
+#include "mpir_int.h"
 #include "mpir_misc.h"
 #include "mpir_dbg.h"
 #include "mpir_objects.h"
