@@ -41,12 +41,13 @@
                          of the process with external rank i.
                          This is of size (*external_size_p)
      intranode_table_p - (*internode_table_p)[i] gives the rank in
-                         *local_ranks_p of rank i in comm or -1 if not
+     (optional)          *local_ranks_p of rank i in comm or -1 if not
                          applicable.  It is of size comm->remote_size.
+                         No return if NULL is specified.
      internode_table_p - (*internode_table_p)[i] gives the rank in
-                         *external_ranks_p of the root of the node
+     (optional)          *external_ranks_p of the root of the node
                          containing rank i in comm.  It is of size
-                         comm->remote_size.
+                         comm->remote_size. No return if NULL is specified.
 */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Find_local_and_external
@@ -180,6 +181,8 @@ int MPIR_Find_local_and_external(MPIR_Comm * comm, int *local_size_p, int *local
      * printf("  nodes[%d] = %d\n", i, nodes[i]);
      */
 
+    MPIR_CHKPMEM_COMMIT();
+
     *local_size_p = local_size;
     *local_rank_p = local_rank;
     *local_ranks_p = MPL_realloc(local_ranks, sizeof(int) * local_size, MPL_MEM_COMM);
@@ -193,10 +196,13 @@ int MPIR_Find_local_and_external(MPIR_Comm * comm, int *local_size_p, int *local
     /* no need to realloc */
     if (intranode_table_p)
         *intranode_table_p = intranode_table;
+    else
+        MPL_free(intranode_table);
+
     if (internode_table_p)
         *internode_table_p = internode_table;
-
-    MPIR_CHKPMEM_COMMIT();
+    else
+        MPL_free(internode_table);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
