@@ -17,6 +17,8 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <unistd.h>
 #endif
 
+#include "mpl_timer_common.h"
+
 int MPL_wtime(MPL_time_t * tval)
 {
     gettimeofday(tval, NULL);
