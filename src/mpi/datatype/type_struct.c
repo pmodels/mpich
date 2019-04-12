@@ -259,7 +259,7 @@ int MPIR_Type_struct(int count,
 
             size += old_dtp->size * blocklength_array[i];
 
-            new_dtp->max_contig_blocks += old_dtp->max_contig_blocks;
+            new_dtp->max_contig_blocks += old_dtp->max_contig_blocks * blocklength_array[i];
         }
 
         /* element size and type */
