@@ -10,6 +10,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME
 
+#include "mpl_timer_common.h"
 static time_t time_epoch;
 
 int MPL_wtime(MPL_time_t * timeval)
