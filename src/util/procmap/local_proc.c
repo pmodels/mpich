@@ -83,20 +83,20 @@ int MPIR_Find_local(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
         }
     }
 
-    /*
-     * printf("------------------------------------------------------------------------\n");
-     * printf("comm = %p\n", comm);
-     * printf("comm->size = %d\n", comm->remote_size);
-     * printf("comm->rank = %d\n", comm->rank);
-     * printf("local_size = %d\n", local_size);
-     * printf("local_rank = %d\n", local_rank);
-     * printf("local_ranks = %p\n", local_ranks);
-     * for (i = 0; i < local_size; ++i)
-     * printf("  local_ranks[%d] = %d\n", i, local_ranks[i]);
-     * printf("intranode_table = %p\n", intranode_table);
-     * for (i = 0; i < comm->remote_size; ++i)
-     * printf("  intranode_table[%d] = %d\n", i, intranode_table[i]);
-     */
+#ifdef ENABLE_DEBUG
+    printf("------------------------------------------------------------------------\n");
+    printf("[%d]comm = %p\n", comm->rank, comm);
+    printf("[%d]comm->size = %d\n", comm->rank, comm->remote_size);
+    printf("[%d]comm->rank = %d\n", comm->rank, comm->rank);
+    printf("[%d]local_size = %d\n", comm->rank, local_size);
+    printf("[%d]local_rank = %d\n", comm->rank, local_rank);
+    printf("[%d]local_ranks = %p\n", comm->rank, local_ranks);
+    for (i = 0; i < local_size; ++i)
+        printf("[%d]  local_ranks[%d] = %d\n", comm->rank, i, local_ranks[i]);
+    printf("[%d]intranode_table = %p\n", comm->rank, intranode_table);
+    for (i = 0; i < comm->remote_size; ++i)
+        printf("[%d]  intranode_table[%d] = %d\n", comm->rank, i, intranode_table[i]);
+#endif
 
     MPIR_CHKPMEM_COMMIT();
 
@@ -201,23 +201,23 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
         internode_table[i] = nodes[node_id];
     }
 
-    /*
-     * printf("------------------------------------------------------------------------\n");
-     * printf("comm = %p\n", comm);
-     * printf("comm->size = %d\n", comm->remote_size);
-     * printf("comm->rank = %d\n", comm->rank);
-     * printf("external_size = %d\n", external_size);
-     * printf("external_rank = %d\n", external_rank);
-     * printf("external_ranks = %p\n", external_ranks);
-     * for (i = 0; i < external_size; ++i)
-     * printf("  external_ranks[%d] = %d\n", i, external_ranks[i]);
-     * printf("internode_table = %p\n", internode_table);
-     * for (i = 0; i < comm->remote_size; ++i)
-     * printf("  internode_table[%d] = %d\n", i, internode_table[i]);
-     * printf("nodes = %p\n", nodes);
-     * for (i = 0; i < (max_node_id + 1); ++i)
-     * printf("  nodes[%d] = %d\n", i, nodes[i]);
-     */
+#ifdef ENABLE_DEBUG
+    printf("------------------------------------------------------------------------\n");
+    printf("[%d]comm = %p\n", comm->rank, comm);
+    printf("[%d]comm->size = %d\n", comm->rank, comm->remote_size);
+    printf("[%d]comm->rank = %d\n", comm->rank, comm->rank);
+    printf("[%d]external_size = %d\n", comm->rank, external_size);
+    printf("[%d]external_rank = %d\n", comm->rank, external_rank);
+    printf("[%d]external_ranks = %p\n", comm->rank, external_ranks);
+    for (i = 0; i < external_size; ++i)
+        printf("[%d]  external_ranks[%d] = %d\n", comm->rank, i, external_ranks[i]);
+    printf("[%d]internode_table = %p\n", comm->rank, internode_table);
+    for (i = 0; i < comm->remote_size; ++i)
+        printf("[%d]  internode_table[%d] = %d\n", comm->rank, i, internode_table[i]);
+    printf("[%d]nodes = %p\n", comm->rank, nodes);
+    for (i = 0; i < (max_node_id + 1); ++i)
+        printf("[%d]  nodes[%d] = %d\n", comm->rank, i, nodes[i]);
+#endif
 
     MPIR_CHKPMEM_COMMIT();
 
