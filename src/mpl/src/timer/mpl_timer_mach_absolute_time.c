@@ -10,6 +10,8 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
 
+#include "mpl_timer_common.h"
+
 static double MPIR_Wtime_mult;
 
 int MPL_wtime_init(void)
