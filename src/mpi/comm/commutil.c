@@ -346,10 +346,25 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
 
-        mpi_errno = MPIR_Find_local_and_external(comm,
-                                                 &num_local, &local_rank, &local_procs,
-                                                 &num_external, &external_rank, &external_procs,
-                                                 &comm->intranode_table, &comm->internode_table);
+        mpi_errno = MPIR_Find_local(comm, &num_local, &local_rank, &local_procs,
+                                    &comm->intranode_table);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno) {
+            if (MPIR_Err_is_fatal(mpi_errno))
+                MPIR_ERR_POP(mpi_errno);
+
+            /* Non-fatal errors simply mean that this communicator will not have
+             * any node awareness.  Node-aware collectives are an optimization. */
+            MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "MPIR_Find_local failed for comm_ptr=%p", comm);
+            MPL_free(comm->intranode_table);
+
+            mpi_errno = MPI_SUCCESS;
+            goto fn_exit;
+        }
+        /* --END ERROR HANDLING-- */
+
+        mpi_errno = MPIR_Find_external(comm, &num_external, &external_rank, &external_procs,
+                                       &comm->internode_table);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno) {
             if (MPIR_Err_is_fatal(mpi_errno))
@@ -358,8 +373,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             /* Non-fatal errors simply mean that this communicator will not have
              * any node awareness.  Node-aware collectives are an optimization. */
             MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
-                          "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
-            MPL_free(comm->intranode_table);
+                          "MPIR_Find_external failed for comm_ptr=%p", comm);
             MPL_free(comm->internode_table);
 
             mpi_errno = MPI_SUCCESS;
