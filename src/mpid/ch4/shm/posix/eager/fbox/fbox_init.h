@@ -22,8 +22,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     int mpi_errno = MPI_SUCCESS;
 
     int i, num_local = 0, local_rank_0 = -1, my_local_rank = -1;
-    int *local_ranks, *local_procs;
-    MPIDI_av_entry_t *av = NULL;
 
     MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
@@ -39,32 +37,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
     MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank = 0;
 
-    MPIR_CHKPMEM_MALLOC(local_procs, int *, size * sizeof(int), mpi_errno,
-                        "local process index array", MPL_MEM_SHM);
-    MPIR_CHKPMEM_MALLOC(local_ranks, int *, size * sizeof(int), mpi_errno,
-                        "mem_region local ranks", MPL_MEM_SHM);
-
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
-    for (i = 0; i < size; i++) {
-        av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
-        if (MPIDI_av_is_local(av)) {
-            if (i == rank) {
-                my_local_rank = num_local;
-            }
 
-            if (local_rank_0 == -1)
-                local_rank_0 = i;
+    mpi_errno = MPIR_Find_local(MPIR_Process.comm_world, &num_local, &my_local_rank,
+                                /* comm_world rank of each local process */
+                                &MPIDI_POSIX_eager_fbox_control_global.local_procs,
+                                /* local rank of each process in comm_world if it is on the same node */
+                                &MPIDI_POSIX_eager_fbox_control_global.local_ranks);
 
-            local_procs[num_local] = i;
-            local_ranks[i] = num_local;
-            num_local++;
-        }
-    }
+    local_rank_0 = MPIDI_POSIX_eager_fbox_control_global.local_procs[0];
     MPIDI_POSIX_eager_fbox_control_global.num_local = num_local;
     MPIDI_POSIX_eager_fbox_control_global.my_local_rank = my_local_rank;
-    MPIDI_POSIX_eager_fbox_control_global.local_ranks = local_ranks;
-    MPIDI_POSIX_eager_fbox_control_global.local_procs = local_procs;
 
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.seg,
                         MPIDU_shm_seg_info_t *,
