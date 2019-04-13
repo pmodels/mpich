@@ -18,13 +18,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 #include "mpitest.h"
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 static int errs = 0;
+struct timespec jitter_delay = { 0, 50000000 }; /* 0.05 seconds */
 
 /* Constants that control the high level test harness behavior. */
 /* MAIN_ITERATIONS is how many NBC ops the test will attempt to issue. */
@@ -33,8 +31,6 @@ static int errs = 0;
 #define WINDOW (20)
 /* we sleep with probability 1/CHANCE_OF_SLEEP */
 #define CHANCE_OF_SLEEP (1000)
-/* JITTER_DELAY is denominated in microseconds (us) */
-#define JITTER_DELAY (50000)    /* 0.05 seconds */
 /* NUM_COMMS is the number of communicators on which ops will be posted */
 #define NUM_COMMS (4)
 
@@ -415,12 +411,6 @@ static void check_after_completion(struct laundry *l)
     MPI_Comm comm = l->comm;
     int *buf = l->buf;
     int *recvbuf = l->recvbuf;
-    int *sendcounts = l->sendcounts;
-    int *recvcounts = l->recvcounts;
-    int *sdispls = l->sdispls;
-    int *rdispls = l->rdispls;
-    int *sendtypes = l->sendtypes;
-    int *recvtypes = l->recvtypes;
     char *buf_alias = (char *) buf;
 
     MPI_Comm_rank(comm, &rank);
@@ -812,7 +802,7 @@ int main(int argc, char **argv)
 
         /* "randomly" and infrequently introduce some jitter into the system */
         if (0 == rand_range(gen_prn(complete_seq + wrank), 0, CHANCE_OF_SLEEP)) {
-            usleep(JITTER_DELAY);       /* take a short nap */
+            nanosleep(&jitter_delay, NULL);     /* take a short nap */
         }
     }
 

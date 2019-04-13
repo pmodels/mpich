@@ -9,19 +9,21 @@
 
 #include <mpi.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <time.h>
 #include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
     MPI_Request barrier;
     int rank, i, done;
+    struct timespec t = { 0, 1000000 };
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Ibarrier(MPI_COMM_WORLD, &barrier);
+
     for (i = 0, done = 0; !done; i++) {
-        usleep(1000);
+        nanosleep(&t, NULL);
         /*printf("[%d] MPI_Test: %d\n",rank,i); */
         MPI_Test(&barrier, &done, MPI_STATUS_IGNORE);
     }

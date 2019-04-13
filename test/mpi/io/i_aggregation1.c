@@ -214,26 +214,6 @@ static void set_hints(MPI_Info * info)
     MPI_Info_set(*info, "cb_buffer_size", "4194304");
 }
 
-/*
-void
-set_hints(MPI_Info *info, char *hints) {
-    char *delimiter = " ";
-    char *hints_cp  = strdup(hints);
-    char *key = strtok(hints_cp, delimiter);
-    char *val;
-    while (key) {
-        val = strtok(NULL, delimiter);
-        if (debug) printf("HINT: %s = %s\n", key, val);
-        if (! val) {
-            Usage(__LINE__);
-        }
-        MPI_Info_set(*info, key, val);
-        key = strtok(NULL, delimiter);
-    }
-    free(hints_cp);
-}
-*/
-
 int main(int argc, char *argv[])
 {
     int nproc = 1, rank = 0;
@@ -252,7 +232,7 @@ int main(int argc, char *argv[])
             fatal_error(mpi_ret, NULL, "MPI_info_create.\n");
     }
 
-    prog = strdup(argv[0]);
+    prog = argv[0];
 
     if (argc > 1) {
         while ((c = getopt(argc, argv, "df:h")) != EOF) {
@@ -261,7 +241,7 @@ int main(int argc, char *argv[])
                     debug = 1;
                     break;
                 case 'f':
-                    target = strdup(optarg);
+                    target = optarg;
                     break;
                 case 'h':
                     set_hints(&info);
@@ -274,7 +254,7 @@ int main(int argc, char *argv[])
             Usage(__LINE__);
         }
     } else {
-        target = "testfile";
+        target = (char *) "testfile";
         set_hints(&info);
     }
 
@@ -284,6 +264,5 @@ int main(int argc, char *argv[])
     MPI_Info_free(&info);
 
     MTest_Finalize(corrupt_blocks);
-    free(prog);
     return MTestReturnValue(corrupt_blocks);
 }

@@ -34,12 +34,11 @@
 #include "mpitest.h"
 
 static char *opt_file = NULL;
-static int rank = -1;
 
-static int parse_args(int argc, char **argv);
+static int parse_args(int rank, int argc, char **argv);
 static void usage(const char *prog);
 
-int test_write(char *file, int nprocs, int rank, MPI_Info info)
+static int test_write(char *file, int nprocs, int rank, MPI_Info info)
 {
     double stime, etime, wtime, w_elapsed, w_slowest, elapsed, slowest;
     MPI_File fh;
@@ -92,17 +91,17 @@ int test_write(char *file, int nprocs, int rank, MPI_Info info)
 int main(int argc, char **argv)
 {
     int nprocs;
+    int rank = -1;
     char file[256];
     MPI_Info info;
     int nr_errors = 0;
-
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* parse the command line arguments */
-    parse_args(argc, argv);
+    parse_args(rank, argc, argv);
 
     sprintf(file, "%s", opt_file);
     MPI_Info_create(&info);
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
     return MTestReturnValue(nr_errors);
 }
 
-static int parse_args(int argc, char **argv)
+static int parse_args(int rank, int argc, char **argv)
 {
     int c;
 
@@ -141,7 +140,7 @@ static int parse_args(int argc, char **argv)
         exit(1);
     }
 
-    opt_file = strdup(argv[optind]);
+    opt_file = argv[optind];
     assert(opt_file);
 
     return (0);
