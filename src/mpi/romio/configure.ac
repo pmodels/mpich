@@ -435,11 +435,7 @@ fi
 
 AC_CHECK_TYPE(long long)
 AC_CHECK_SIZEOF(long long)
-if test -z "$MPI_IMPL" ; then
-	MPI_IMPL=mpich
-	mpi_mpich=1
-fi
-if test $MPI_IMPL = "mpich" ; then
+if test "x$MPI_IMPL" = "xmpich" ; then
 	TEST_CC=mpicc
 	TEST_F77=mpifort
 else
