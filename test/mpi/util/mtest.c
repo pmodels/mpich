@@ -937,7 +937,7 @@ int MTestGetIntercomm(MPI_Comm * comm, int *isLeftGroup, int min_size)
 int MTestTestIntercomm(MPI_Comm comm)
 {
     int local_size, remote_size, rank, **bufs, *bufmem, rbuf[2], j;
-    int errs = 0, wrank, nsize;
+    int errs = 0, nsize;
     char commname[MPI_MAX_OBJECT_NAME + 1];
     MPI_Request *reqs;
 
@@ -1123,11 +1123,10 @@ void MTestPrintErrorMsg(const char msg[], int errcode)
 void MTestPrintfMsg(int level, const char format[], ...)
 {
     va_list list;
-    int n;
 
     if (verbose && level <= verbose) {
         va_start(list, format);
-        n = vprintf(format, list);
+        vprintf(format, list);
         va_end(list);
         fflush(stdout);
     }
@@ -1464,7 +1463,7 @@ int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts
                              MPI_Datatype ** basic_types)
 {
     int i, j, k;
-    char *input_string, *token;
+    char *token;
 
     if (argc < 4) {
         fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
@@ -1476,10 +1475,8 @@ int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts
                 /* allocate arrays */
                 *counts = (int *) malloc(*numtypes * sizeof(int));
                 *basic_types = (MPI_Datatype *) malloc(*numtypes * sizeof(MPI_Datatype));
-            } else if (!strncmp(argv[i], "-types=", strlen("-types="))) {
-                input_string = strdup(argv[i] + strlen("-types="));
-
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+            } else if (!strncmp(argv[i], "-types=", 7)) {
+                for (k = 0, token = strtok(argv[i] + 7, ","); token; token = strtok(NULL, ",")) {
                     j = 0;
                     while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
                            strcmp(token, typelist[j].name)) {
@@ -1493,16 +1490,10 @@ int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts
                         return MTestReturnValue(1);
                     }
                 }
-
-                free(input_string);
-            } else if (!strncmp(argv[i], "-counts=", strlen("-counts="))) {
-                input_string = strdup(argv[i] + strlen("-counts="));
-
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+            } else if (!strncmp(argv[i], "-counts=", 8)) {
+                for (k = 0, token = strtok(argv[i] + 8, ","); token; token = strtok(NULL, ",")) {
                     (*counts)[k++] = atoi(token);
                 }
-
-                free(input_string);
             }
         }
     }
