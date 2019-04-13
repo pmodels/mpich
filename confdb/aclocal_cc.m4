@@ -566,9 +566,13 @@ if test "$enable_strict_done" != "yes" ; then
     c_std=c99
     posix_std=2001
     enable_opt=yes
+    enable_werror=no
     flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
     for flag in ${flags}; do
         case "$flag" in
+             error)
+                enable_werror=yes
+                ;;
 	     stdc89)
 	        c_std=c89
 		;;
@@ -617,6 +621,11 @@ if test "$enable_strict_done" != "yes" ; then
     if test "${add_cflags}" = "yes" ; then
        # common flags
        pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
+
+       # -Werror
+       if test "${enable_werror}" = "yes" ; then
+	  PAC_APPEND_FLAG([-Werror],[pac_cc_strict_flags])
+       fi
 
        # optimization flags
        if test "${enable_opt}" = "yes" ; then
