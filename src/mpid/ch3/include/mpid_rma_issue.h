@@ -244,6 +244,13 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (is_origin_contig) {
         /* origin data is contiguous */
 
+        /* translate extended header to iov */
+        if (ext_hdr_sz > 0) {
+            iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+            iov[iovcnt].MPL_IOV_LEN = ext_hdr_sz;
+            iovcnt++;
+        }
+
         if (is_empty_origin == FALSE) {
             iov[iovcnt].MPL_IOV_BUF =
                 (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);

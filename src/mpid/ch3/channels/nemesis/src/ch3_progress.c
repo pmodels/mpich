@@ -196,8 +196,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
 
-            mpi_errno = MPID_nem_mpich_sendv_header(&iov, &n_iov, sreq->dev.ext_hdr_ptr,
-                                                    sreq->dev.ext_hdr_sz, sreq->ch.vc, &again);
+            mpi_errno = MPID_nem_mpich_sendv_header(&iov, &n_iov, sreq->ch.vc, &again);
             if (mpi_errno) MPIR_ERR_POP (mpi_errno);
             if (!again)
             {

@@ -228,23 +228,8 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
-    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
-    if (sreq->dev.ext_hdr_sz > 0 && gl_data.iov_limit > 2) {
-        REQ_OFI(sreq)->real_hdr =
-            MPL_malloc(sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "iSendContig extended header allocation");
-        REQ_OFI(sreq)->iov[0].iov_base = REQ_OFI(sreq)->real_hdr;
-        REQ_OFI(sreq)->iov[0].iov_len = hdr_sz;
-        REQ_OFI(sreq)->iov[1].iov_base = REQ_OFI(sreq)->real_hdr + sizeof(MPIDI_CH3_Pkt_t);
-        REQ_OFI(sreq)->iov[1].iov_len = sreq->dev.ext_hdr_sz;
-        REQ_OFI(sreq)->iov[2].iov_base = data;
-        REQ_OFI(sreq)->iov[2].iov_len = data_sz;
-        REQ_OFI(sreq)->iov_count = 3;
-        MPIR_Memcpy(REQ_OFI(sreq)->real_hdr, hdr, hdr_sz);
-        MPIR_Memcpy(REQ_OFI(sreq)->real_hdr + sizeof(MPIDI_CH3_Pkt_t),
-                    sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
-    } else if (sreq->dev.ext_hdr_sz == 0 && gl_data.iov_limit > 1) {
+    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
+    if (gl_data.iov_limit > 1) {
         REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "iSendContig header allocation");
@@ -260,10 +245,6 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                              "**nomem", "**nomem %s", "iSendContig pack buffer allocation");
         MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
         buf_offset += sizeof(MPIDI_CH3_Pkt_t);
-        if (sreq->dev.ext_hdr_sz > 0) {
-            MPIR_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
-            buf_offset += sreq->dev.ext_hdr_sz;
-        }
         MPIR_Memcpy(pack_buffer + buf_offset, data, data_sz);
     }
     START_COMM();
