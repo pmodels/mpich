@@ -1534,7 +1534,8 @@ elif test $FROM_MPICH = yes ; then
    DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
    AC_DEFINE(HAVE_MPIX_H, 1, [])
-   AC_DEFINE(HAVE_MPIIO_CONST, const, Set if MPI-IO prototypes use const qualifier)
+   # HAVE_MPIIO_CONST is now determined by whether MPI_VERSION >= 3
+   # AC_DEFINE(HAVE_MPIIO_CONST, const, Set if MPI-IO prototypes use const qualifier)
    AC_DEFINE(HAVE_MPI_TYPE_SIZE_X, 1, [Define if MPI library provides MPI_TYPE_SIZE_X])
    AC_DEFINE(HAVE_MPI_STATUS_SET_ELEMENTS_X, 1, [Define if MPI library provides MPI_STATUS_SET_ELEMENTS_X])
    AC_DEFINE(HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK, 1, [Define if MPI library provides HINDEXED_BLOCK datatype])
@@ -1549,7 +1550,8 @@ if test $WITHIN_KNOWN_MPI_IMPL = no ; then
    PAC_TEST_MPI_GREQUEST
    AC_DEFINE(PRINT_ERR_MSG,1,[Define for printing error messages])
    AC_CHECK_TYPE([MPI_Count],[],[AC_DEFINE_UNQUOTED([MPI_Count],[MPI_Aint],[Define to "MPI_Aint" if MPI does not provide MPI_Count]) ], [[#include <mpi.h>]])
-   PAC_TEST_NEEDS_CONST
+   # HAVE_MPIIO_CONST is now determined by whether MPI_VERSION >= 3
+   # PAC_TEST_NEEDS_CONST
    AC_CHECK_DECLS([MPI_COMBINER_HINDEXED_BLOCK], [], [], [[#include <mpi.h>]])
    AC_CHECK_FUNCS(MPI_Type_size_x MPI_Status_set_elements_x)
 fi
