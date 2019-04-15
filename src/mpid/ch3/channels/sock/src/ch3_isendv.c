@@ -39,17 +39,6 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
-    if (sreq->dev.ext_hdr_sz > 0) {
-        int i;
-        for (i = n_iov - 1; i >= 1; i--) {
-            iov[i + 1].MPL_IOV_BUF = iov[i].MPL_IOV_BUF;
-            iov[i + 1].MPL_IOV_LEN = iov[i].MPL_IOV_LEN;
-        }
-        iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) sreq->dev.ext_hdr_ptr;
-        iov[1].MPL_IOV_LEN = sreq->dev.ext_hdr_sz;
-        n_iov++;
-    }
-
     MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
     MPIR_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
 

@@ -20,28 +20,31 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
                                  void *header, intptr_t hdr_sz )
 {
     int mpi_errno = MPI_SUCCESS;
-    int iov_n;
+    int iov_n, iovcnt = 0;
     MPL_IOV iov[MPL_IOV_LIMIT];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
-    iov[0].MPL_IOV_BUF = header;
-    iov[0].MPL_IOV_LEN = hdr_sz;
-
+    iov[iovcnt].MPL_IOV_BUF = header;
+    iov[iovcnt].MPL_IOV_LEN = hdr_sz;
+    iovcnt++;
     iov_n = MPL_IOV_LIMIT - 1;
 
     if (sreq->dev.ext_hdr_sz > 0) {
         /* When extended packet header exists, here we leave one IOV slot
          * before loading data to IOVs, so that there will be enough
          * IOVs for hdr/ext_hdr/data. */
+        iov[iovcnt].MPL_IOV_BUF = sreq->dev.ext_hdr_ptr;
+        iov[iovcnt].MPL_IOV_LEN = sreq->dev.ext_hdr_sz;
+        iovcnt++;
         iov_n--;
     }
 
-    mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[1], &iov_n);
+    mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[iovcnt], &iov_n);
     if (mpi_errno == MPI_SUCCESS)
     {
-	iov_n += 1;
+	iov_n += iovcnt;  /* add count of hdr/ext_hdr iovs */
 	
 	/* Note this routine is invoked withing a CH3 critical section */
 	/* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
