@@ -220,8 +220,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
         else
         {
             MPID_nem_mpich_send_seg_header(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size,
-                                           &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->dev.ext_hdr_ptr,
-                                           sreq->dev.ext_hdr_sz, sreq->ch.vc, &again);
+                                           &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->ch.vc, &again);
             if (!again)
             {
                 MPIDI_CH3I_shm_active_send = sreq;
