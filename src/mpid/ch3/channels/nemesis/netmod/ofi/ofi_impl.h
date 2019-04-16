@@ -295,7 +295,8 @@ DECLARE_TWO_API_SETS(void, MPID_nem_ofi_anysource_posted, MPIR_Request * rreq);
 
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq);
 int MPID_nem_ofi_send_data(cq_tagged_entry_t * wc, MPIR_Request * sreq);
-int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz);
+int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                               MPL_IOV * hdr_iov, int n_hdr_iov);
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz,
                                  void *data, intptr_t data_sz, MPIR_Request ** sreq_ptr);
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,

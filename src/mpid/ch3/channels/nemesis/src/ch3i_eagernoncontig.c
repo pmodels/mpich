@@ -14,7 +14,8 @@
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as segment_first and segment_size. */
-int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz )
+int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
+                              MPL_IOV *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
@@ -26,6 +27,15 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
+    if (n_hdr_iov > 0) {
+        /* translate segments to iovs and combine with the extended header iov. */
+        mpi_errno = MPIDI_CH3_SendNoncontig_iov(vc, sreq, header, hdr_sz,
+                                                hdr_iov, n_hdr_iov);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
 
     if (!MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) /* MT */
     {
@@ -47,7 +57,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
 
     /* send as many cells of data as you can */
     MPID_nem_mpich_send_seg_header(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size,
-                                   header, hdr_sz, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz, vc, &again);
+                                   header, hdr_sz, vc, &again);
     while(!again && sreq->dev.segment_first < sreq->dev.segment_size)
         MPID_nem_mpich_send_seg(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size, vc, &again);
 

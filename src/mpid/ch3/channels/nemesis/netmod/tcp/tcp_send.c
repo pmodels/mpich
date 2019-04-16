@@ -692,7 +692,8 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     goto fn_exit;
 }
 
-int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz)
+int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz,
+                               MPL_IOV * hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
@@ -714,10 +715,16 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
     iov[iov_n].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     iov_n++;
 
-    if (sreq->dev.ext_hdr_ptr != NULL) {
-        iov[iov_n].MPL_IOV_BUF = sreq->dev.ext_hdr_ptr;
-        iov[iov_n].MPL_IOV_LEN = sreq->dev.ext_hdr_sz;
-        iov_n++;
+    if (n_hdr_iov > 0) {
+        int i;
+        /* merge extended header iovs into iov array.
+         * ensure at least 1 iov is left for data. */
+        MPIR_Assert(MPL_IOV_LIMIT - iov_n - n_hdr_iov > 0);
+        for (i = 0; i < n_hdr_iov; i++) {
+            iov[iov_n].MPL_IOV_BUF = hdr_iov[i].MPL_IOV_BUF;
+            iov[iov_n].MPL_IOV_LEN = hdr_iov[i].MPL_IOV_LEN;
+            iov_n++;
+        }
     }
 
     iov_offset = iov_n;

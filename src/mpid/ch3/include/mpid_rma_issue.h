@@ -233,6 +233,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.ext_hdr_sz = ext_hdr_sz;
         req->dev.ext_hdr_ptr = ext_hdr_ptr;
         req->dev.flattened_type = NULL;
+
+        iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+        iov[iovcnt].MPL_IOV_LEN = ext_hdr_sz;
+        iovcnt++;
     }
 
     if (origin_dtp != NULL) {
@@ -243,14 +247,6 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
     if (is_origin_contig) {
         /* origin data is contiguous */
-
-        /* translate extended header to iov */
-        if (ext_hdr_sz > 0) {
-            iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-            iov[iovcnt].MPL_IOV_LEN = ext_hdr_sz;
-            iovcnt++;
-        }
-
         if (is_empty_origin == FALSE) {
             iov[iovcnt].MPL_IOV_BUF =
                 (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
@@ -277,7 +273,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.OnDataAvail = 0;
 
         MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
+        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN,
+                                         &iov[1], iovcnt - 1);
         MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }

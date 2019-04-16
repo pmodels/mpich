@@ -96,7 +96,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	sreq->dev.segment_size = data_sz;
 	
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-        mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t));
+        mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t),
+                                         NULL, 0);
 	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

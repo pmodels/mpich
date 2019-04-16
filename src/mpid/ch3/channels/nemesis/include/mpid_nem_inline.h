@@ -27,7 +27,7 @@ static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int 
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
 static inline void MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first,
                                                    intptr_t segment_size, void *header, intptr_t header_sz,
-                                                   void *ext_header, intptr_t ext_header_sz, MPIDI_VC_t *vc, int *again);
+                                                   MPIDI_VC_t *vc, int *again);
 static inline void MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
@@ -460,8 +460,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
 */
 static inline void
 MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
-                                void *header, intptr_t header_sz, void *ext_header, intptr_t ext_header_sz,
-                                MPIDI_VC_t *vc, int *again)
+                                void *header, intptr_t header_sz, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG_HEADER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SEND_SEG_HEADER);
@@ -482,7 +481,7 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (ext_header_sz == 0 && sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
+    if (sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
@@ -555,12 +554,6 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
     MPIR_Memcpy((void *)el->pkt.p.payload, header, header_sz);
     
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
-
-    if (ext_header_sz > 0) {
-        /* when extended packet header exists, copy it */
-        MPIR_Memcpy((void *)((char *)(el->pkt.p.payload) + buf_offset), ext_header, ext_header_sz);
-        buf_offset += ext_header_sz;
-    }
 
     /* copy data */
     if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN - buf_offset)

@@ -15,9 +15,14 @@
 
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
-   sreq->dev.segment as well as segment_first and segment_size. */
+   sreq->dev.segment as well as segment_first and segment_size.
+   The optional hdr_iov and n_hdr_iov are used for variable-length extended
+   header, specify NULL and zero if unused. Note that we assume n_hdr_iov is
+   small and does not exceed MPL_IOV_LIMIT - 2 (one for header and one for
+   packed data) at most.  */
 int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
-                                 void *header, intptr_t hdr_sz )
+                                 void *header, intptr_t hdr_sz,
+                                 MPL_IOV *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n, iovcnt = 0;
@@ -31,20 +36,22 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     iovcnt++;
     iov_n = MPL_IOV_LIMIT - 1;
 
-    if (sreq->dev.ext_hdr_sz > 0) {
-        /* When extended packet header exists, here we leave one IOV slot
-         * before loading data to IOVs, so that there will be enough
-         * IOVs for hdr/ext_hdr/data. */
-        iov[iovcnt].MPL_IOV_BUF = sreq->dev.ext_hdr_ptr;
-        iov[iovcnt].MPL_IOV_LEN = sreq->dev.ext_hdr_sz;
-        iovcnt++;
-        iov_n--;
+    /* If extended header iov exists, merge into the iov array. */
+    if (n_hdr_iov > 0) {
+        int i;
+        MPIR_Assert(iov_n - n_hdr_iov > 0); /* secure at least 1 iov for data */
+        for (i = 0; i < n_hdr_iov; i++) {
+             iov[iovcnt].MPL_IOV_BUF = hdr_iov[i].MPL_IOV_BUF;
+             iov[iovcnt].MPL_IOV_LEN = hdr_iov[i].MPL_IOV_LEN;
+             iovcnt++;
+             iov_n--;
+        }
     }
 
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[iovcnt], &iov_n);
     if (mpi_errno == MPI_SUCCESS)
     {
-	iov_n += iovcnt;  /* add count of hdr/ext_hdr iovs */
+	iov_n += iovcnt;  /* add count of hdr iovs */
 	
 	/* Note this routine is invoked withing a CH3 critical section */
 	/* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
@@ -124,7 +131,8 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 	    
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
-                                     sizeof(MPIDI_CH3_Pkt_eager_send_t));
+                                     sizeof(MPIDI_CH3_Pkt_eager_send_t),
+                                     NULL, 0);
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 

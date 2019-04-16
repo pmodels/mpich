@@ -296,9 +296,10 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     goto fn_exit;
 }
 
-int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz)
+int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                               MPL_IOV * hdr_iov, int n_hdr_iov)
 {
-    int c, pgid, mpi_errno = MPI_SUCCESS;
+    int c, i, pgid, mpi_errno = MPI_SUCCESS;
     char *pack_buffer;
     MPI_Aint data_sz;
     uint64_t match_bits;
@@ -314,16 +315,27 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     first = sreq->dev.segment_first;
     last = sreq->dev.segment_size;
     data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
-    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
+    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
+    if (n_hdr_iov > 0) {
+        /* add length of extended header iovs */
+        for (i = 0; i < n_hdr_iov; i++)
+            pkt_len += hdr_iov[i].MPL_IOV_LEN;
+    }
+
     pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**nomem", "**nomem %s", "SendNonContig pack buffer allocation");
     MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
-    if (sreq->dev.ext_hdr_sz > 0) {
-        MPIR_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
-        buf_offset += sreq->dev.ext_hdr_sz;
+
+    if (n_hdr_iov > 0) {
+        /* pack extended header iovs */
+        for (i = 0; i < n_hdr_iov; i++) {
+            MPIR_Memcpy(pack_buffer + buf_offset, hdr_iov[i].MPL_IOV_BUF, hdr_iov[i].MPL_IOV_LEN);
+            buf_offset += hdr_iov[i].MPL_IOV_LEN;
+        }
     }
+
     MPIR_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
