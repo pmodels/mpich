@@ -95,6 +95,19 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         sreq->dev.OnDataAvail = 0;
     }
 
+    /* directly use the iov-based send API if it is provided */
+    if (vc->ch.iSendIov) {
+        MPIR_Assert(n_iov >= 1 && n_iov <= MPL_IOV_LIMIT);
+
+        /* header and remaining iovs */
+        mpi_errno = vc->ch.iSendIov(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, &iov[1], n_iov - 1);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        *sreq_ptr = sreq;
+        goto fn_exit;
+    }
+
     data_sz = 0;
     for (i = 0; i < data_n_iov; ++i)
         data_sz += data_iov[i].MPL_IOV_LEN;
