@@ -44,6 +44,7 @@
 /* iSendContig                                                              */
 /* SendNoncontig                                                            */
 /* iStartContigMsg                                                          */
+/* iSendIov                                                                 */
 /* These routines differ slightly in their behaviors, but can share common  */
 /* code to perform the send.  START_COMM provides that common code, which   */
 /* is based on a tagged rendezvous message.                                 */
@@ -268,6 +269,47 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     START_COMM();
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                          MPL_IOV * iov, int n_iov)
+{
+    int pgid, c, mpi_errno = MPI_SUCCESS;
+    char *pack_buffer = NULL;
+    uint64_t match_bits;
+    MPIR_Request *cts_req;
+    intptr_t buf_offset = 0;
+    size_t pkt_len;
+    int i;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
+
+    MPID_nem_ofi_init_req(sreq);
+
+    /* Compute packed buffer size */
+    MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
+    pkt_len = sizeof(MPIDI_CH3_Pkt_t);
+    for (i = 0; i < n_iov; i++)
+        pkt_len += iov[i].MPL_IOV_LEN;
+
+    pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+                         "**nomem", "**nomem %s", "iSendIov pack buffer allocation");
+
+    /* Copy header and iovs into packed buffer */
+    MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
+    buf_offset += sizeof(MPIDI_CH3_Pkt_t);
+    for (i = 0; i < n_iov; i++) {
+        MPIR_Memcpy(pack_buffer + buf_offset, iov[i].MPL_IOV_BUF, iov[i].MPL_IOV_LEN);
+        buf_offset += iov[i].MPL_IOV_LEN;
+    }
+    START_COMM();
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
