@@ -300,7 +300,8 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz,
                                  void *data, intptr_t data_sz, MPIR_Request ** sreq_ptr);
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
                              intptr_t hdr_sz, void *data, intptr_t data_sz);
-
+int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                          MPL_IOV * iov, int n_iov);
 /* ************************************************************************** */
 /* OFI utility functions : not exposed as a netmod public API                 */
 /* ************************************************************************** */
