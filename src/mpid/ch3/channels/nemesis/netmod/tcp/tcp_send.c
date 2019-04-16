@@ -612,6 +612,109 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
 }
 
 
+int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                          MPL_IOV * iov, int n_iov)
+{
+    int mpi_errno = MPI_SUCCESS, i;
+    intptr_t offset = 0, data_sz = 0;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
+
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iSendIov");
+
+    if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
+            if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
+                MPL_IOV tcp_iov[MPL_IOV_LIMIT];
+                int tcp_iov_n = 1 + n_iov;
+
+                MPIR_Assert(tcp_iov_n >= 0 && tcp_iov_n < MPL_IOV_LIMIT);
+
+                /* Merge header into iov */
+                tcp_iov[0].MPL_IOV_BUF = hdr;
+                tcp_iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+                for (i = 0; i < n_iov; i++) {
+                    tcp_iov[i + 1].MPL_IOV_BUF = iov[i].MPL_IOV_BUF;
+                    tcp_iov[i + 1].MPL_IOV_LEN = iov[i].MPL_IOV_LEN;
+                    data_sz += iov[i].MPL_IOV_LEN;
+                }
+
+                mpi_errno = tcp_large_writev(vc, tcp_iov, tcp_iov_n, &offset);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
+
+                if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz) {
+                    /* sent whole message, complete request */
+                    int complete = 0;
+                    mpi_errno = tcp_complete_sreq(vc, sreq, &complete);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    if (complete) {
+                        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                        goto fn_exit;
+                    } else
+                        goto enqueue_request;   /* not completed: more to send */
+                }
+            }
+        } else {
+            /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
+             * appropriate error code. */
+            mpi_errno = MPID_nem_tcp_connect(vc);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+    }
+
+    if (offset < sizeof(MPIDI_CH3_Pkt_t)) {
+        /* save pending header */
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
+        sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
+        sreq->dev.iov_count = 1;
+
+        /* save whole iov */
+        if (n_iov > 0) {
+            sreq->dev.iov_count += n_iov;
+            for (i = 0; i < n_iov; i++) {
+                sreq->dev.iov[i + 1].MPL_IOV_BUF = iov[i].MPL_IOV_BUF;
+                sreq->dev.iov[i + 1].MPL_IOV_LEN = iov[i].MPL_IOV_LEN;
+            }
+        }
+    } else {
+        /* header has sent out, save any unsent portion of iov */
+        sreq->dev.iov_count = 0;
+        offset -= sizeof(MPIDI_CH3_Pkt_t);
+        for (i = 0; i < n_iov; i++) {
+            if (offset < iov[i].MPL_IOV_LEN) {  /* unsent iov starts */
+                sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF =
+                    (MPL_IOV_BUF_CAST) ((char *) iov[i].MPL_IOV_BUF + offset);
+                sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN = iov[i].MPL_IOV_LEN - offset;
+                offset = 0;
+                sreq->dev.iov_count++;
+            } else
+                offset -= iov[i].MPL_IOV_LEN;   /* sent iov */
+        }
+    }
+
+  enqueue_request:
+    /* enqueue request */
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
+    sreq->ch.vc = vc;
+    sreq->dev.iov_offset = 0;
+
+    mpi_errno = tcp_enqueue_sreq(vc, sreq, false);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;

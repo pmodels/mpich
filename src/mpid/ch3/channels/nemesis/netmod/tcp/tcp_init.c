@@ -523,6 +523,7 @@ int MPID_nem_tcp_vc_init(MPIDI_VC_t * vc)
     vc->sendNoncontig_fn = MPID_nem_tcp_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_tcp_iStartContigMsg;
     vc_ch->iSendContig = MPID_nem_tcp_iSendContig;
+    vc_ch->iSendIov = MPID_nem_tcp_iSendIov;
 #ifdef ENABLE_CHECKPOINTING
     vc_ch->ckpt_pause_send_vc = MPID_nem_tcp_ckpt_pause_send_vc;
     vc_ch->ckpt_continue_vc = MPID_nem_tcp_ckpt_continue_vc;
