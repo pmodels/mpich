@@ -253,7 +253,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
 	sreq->dev.segment_size = data_sz;
 
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-	mpi_errno = vc->sendNoncontig_fn(vc, sreq, rs_pkt, sizeof(*rs_pkt));
+	mpi_errno = vc->sendNoncontig_fn(vc, sreq, rs_pkt, sizeof(*rs_pkt), NULL, 0);
 	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 	MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|senddata");
     }    

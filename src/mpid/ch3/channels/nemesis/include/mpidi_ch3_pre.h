@@ -107,6 +107,11 @@ typedef struct MPIDI_CH3I_VC
        network module should complete the request once the message has been completely sent. */
     int (* iSendContig)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                         void *data, intptr_t data_sz);
+    /* iSendIov -- sends a message consisting of multiple iovs, possibly of 0 n_iov.
+       n_iov should not exceed MPL_IOV_LIMIT - 1. network module should complete the request once the
+       message has been completely sent. */
+    int (* iSendIov)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
+                     MPL_IOV *iov, int n_iov);
 
 #ifdef ENABLE_CHECKPOINTING
     /* ckpt_pause_send -- netmod should stop sending on this vc and queue messages to be sent after ckpt_continue()*/

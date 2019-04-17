@@ -490,6 +490,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         /* local processes use the default method */
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
+        vc_ch->iSendIov     = NULL;
 
 #if MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_SHM_COPY
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_shm_initiate_lmt;
