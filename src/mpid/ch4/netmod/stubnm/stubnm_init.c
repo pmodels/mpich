@@ -14,7 +14,7 @@
 
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
                                MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
-                               int *n_vcis_provided)
+                               int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -29,7 +29,7 @@ int MPIDI_STUBNM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
-MPIDI_vci_resource_t MPIDI_STUBNM_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_STUBNM_vni_get_resource_info(int vni)
 {
     MPIR_Assert(0);
     return 0;

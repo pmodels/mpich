@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Handle_am_recv(void *request, ucs_status
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;

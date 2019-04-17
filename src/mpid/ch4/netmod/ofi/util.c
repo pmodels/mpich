@@ -13,13 +13,13 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
 
-    mpi_errno = MPIDI_OFI_handle_cq_error(vci_idx, ret);
+    mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     return mpi_errno;
