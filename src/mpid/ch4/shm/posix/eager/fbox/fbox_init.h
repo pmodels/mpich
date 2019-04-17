@@ -12,6 +12,24 @@
 #define POSIX_EAGER_FBOX_INIT_H_INCLUDED
 
 #include "fbox_types.h"
+#include "fbox_impl.h"
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE
+      category    : CH4
+      type        : int
+      default     : 3
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The size of the array to store expected receives to speed up fastbox polling.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 #define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver) ((num_local) * (sender) + (receiver))
 
@@ -35,7 +53,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_CHKPMEM_DECL(5);
 
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
-    MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank = 0;
+    MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks =
+        MPL_malloc(sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
+                   MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1, MPL_MEM_SHM);
+    if (NULL == MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    /* -1 means we aren't looking for anything in particular. */
+    for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
+        MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = -1;
+    }
+
+    /* The final entry in the cache array is for tracking the fallback place to start looking for
+     * messages if all other entries in the cache are empty. */
+    MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = 0;
 
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
@@ -130,6 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.local_ranks);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.local_procs);
+    MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
 
     mpi_errno = MPIDU_shm_seg_destroy(&MPIDI_POSIX_eager_fbox_control_global.memory,
                                       MPIDI_POSIX_eager_fbox_control_global.num_local);
