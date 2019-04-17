@@ -9,9 +9,9 @@
 
 #include "shm_impl.h"
 
-int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *n_vsis_provided, int *tag_bits);
 int MPIDI_SHMI_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_SHMI_vci_get_resource_info(int vci);
+MPIDI_vci_resource_t MPIDI_SHMI_vsi_get_resource_info(int vsi);
 
 int MPIDI_SHMI_mpi_comm_create_hook(MPIR_Comm * comm);
 int MPIDI_SHMI_mpi_comm_free_hook(MPIR_Comm * comm);
@@ -59,7 +59,7 @@ int MPIDI_SHMI_mpi_free_mem(void *ptr);
 #ifdef SHM_INLINE
 #define MPIDI_SHM_mpi_init_hook MPIDI_SHMI_mpi_init_hook
 #define MPIDI_SHM_mpi_finalize_hook MPIDI_SHMI_mpi_finalize_hook
-#define MPIDI_SHM_vci_get_resource_info MPIDI_SHMI_vci_get_resource_info
+#define MPIDI_SHM_vsi_get_resource_info MPIDI_SHMI_vsi_get_resource_info
 #define MPIDI_SHM_mpi_comm_create_hook MPIDI_SHMI_mpi_comm_create_hook
 #define MPIDI_SHM_mpi_comm_free_hook MPIDI_SHMI_mpi_comm_free_hook
 #define MPIDI_SHM_mpi_type_commit_hook MPIDI_SHMI_mpi_type_commit_hook

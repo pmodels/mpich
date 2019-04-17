@@ -11,7 +11,7 @@
 #include <shm.h>
 #include "../posix/shm_inline.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vsi, int blocking)
 {
     int ret;
 

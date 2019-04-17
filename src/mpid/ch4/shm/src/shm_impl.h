@@ -19,14 +19,14 @@
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vsi, int blocking)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
 
-    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
+    ret = MPIDI_SHM_src_funcs.progress(vsi, blocking);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
     return ret;
