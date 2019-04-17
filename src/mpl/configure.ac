@@ -15,6 +15,7 @@ AM_INIT_AUTOMAKE([subdir-objects] [-Wall -Werror foreign 1.12.3])
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 AC_USE_SYSTEM_EXTENSIONS
