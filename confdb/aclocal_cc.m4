@@ -1,19 +1,6 @@
 dnl AC_PROG_CC_GNU
 ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
 
-dnl PAC_PROG_CC - reprioritize the C compiler search order
-AC_DEFUN([PAC_PROG_CC],[
-        dnl Many standard autoconf/automake/libtool macros, such as LT_INIT,
-        dnl perform an AC_REQUIRE([AC_PROG_CC]).  If this macro (PAC_PROG_CC)
-        dnl comes after LT_INIT (or similar) then the default compiler search
-        dnl path will be used instead.  This AC_BEFORE macro ensures that a
-        dnl warning will be emitted at autoconf-time (autogen.sh-time) to help
-        dnl developers notice this case.
-        AC_BEFORE([$0],[AC_PROG_CC])
-	PAC_PUSH_FLAG([CFLAGS])
-	AC_PROG_CC([icc pgcc xlc xlC pathcc gcc clang cc])
-	PAC_POP_FLAG([CFLAGS])
-])
 dnl
 dnl/*D
 dnl PAC_C_CHECK_COMPILER_OPTION - Check that a compiler option is accepted

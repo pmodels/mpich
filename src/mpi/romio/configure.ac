@@ -26,7 +26,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 silent
 AM_MAINTAINER_MODE([enable])
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
-PAC_PROG_CC
+AC_PROG_CC
 AM_PROG_CC_C_O
 PAC_CHECK_VISIBILITY
 AC_SUBST(VISIBILITY_CFLAGS)

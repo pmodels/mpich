@@ -617,7 +617,7 @@ export CC
 AC_CONFIG_SUBDIRS([dtpools])
 
 # Running C compiler tests
-PAC_PROG_CC
+AC_PROG_CC
 AM_PROG_CC_C_O
 
 # Note that some versions of autoconf will insist that the compiler 
