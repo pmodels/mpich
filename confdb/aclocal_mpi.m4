@@ -407,7 +407,7 @@ esac
 AC_DEFUN([PAC_MPI_FIND_COMPILERS],[
 # Tell autoconf to determine properties of the compilers (these are the 
 # compilers for MPI programs)
-PAC_PROG_CC
+AC_PROG_CC
 if test "$enable_f77" != no -a "$enable_fortran" != no ; then
     AC_PROG_F77
 fi

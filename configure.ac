@@ -612,7 +612,7 @@ AC_CANONICAL_TARGET
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
-PAC_PROG_CC
+AC_PROG_CC
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP

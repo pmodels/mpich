@@ -56,7 +56,7 @@ export master_top_builddir
 AC_SUBST(master_top_builddir)
 
 dnl Find a C compiler
-PAC_PROG_CC
+AC_PROG_CC
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)
 dnl

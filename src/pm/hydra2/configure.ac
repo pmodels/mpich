@@ -17,7 +17,7 @@ AC_ARG_PROGRAM
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 dnl must also come before AC_USE_SYSTEM_EXTENSIONS
-PAC_PROG_CC
+AC_PROG_CC
 AM_PROG_CC_C_O
 
 # also needed by hwloc in embedded mode, must also come early for expansion
