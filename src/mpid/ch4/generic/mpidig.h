@@ -34,7 +34,7 @@ extern MPIDIG_global_t MPIDIG_global;
 
 int MPIDIG_am_reg_cb(int handler_id,
                      MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
-int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vcis);
+int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self);
 void MPIDIG_finalize(void);
 
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
