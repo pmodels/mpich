@@ -29,7 +29,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
     /* Routines that handle addressing */
     .comm_get_lpid = MPIDI_NM_comm_get_lpid,
     .get_local_upids = MPIDI_OFI_get_local_upids,
-    .get_vci_attr = MPIDI_OFI_get_vci_attr,
+    .vci_get_attr = MPIDI_OFI_vci_get_attr,
     .upids_to_lupids = MPIDI_OFI_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_OFI_create_intercomm_from_lpids,
     .mpi_comm_create_hook = MPIDI_OFI_mpi_comm_create_hook,

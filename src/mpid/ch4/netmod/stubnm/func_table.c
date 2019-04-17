@@ -27,7 +27,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     /* Routines that handle addressing */
     .comm_get_lpid = MPIDI_NM_comm_get_lpid,
     .get_local_upids = MPIDI_STUBNM_get_local_upids,
-    .get_vci_attr = MPIDI_STUBNM_get_vci_attr,
+    .vci_get_attr = MPIDI_STUBNM_vci_get_attr,
     .upids_to_lupids = MPIDI_STUBNM_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_STUBNM_create_intercomm_from_lpids,
     .mpi_comm_create_hook = MPIDI_STUBNM_mpi_comm_create_hook,
