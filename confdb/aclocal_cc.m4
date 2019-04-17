@@ -562,11 +562,15 @@ if test "$enable_strict_done" != "yes" ; then
         -Wstack-usage=262144
     "
 
+    if test -z "$1"; then
+        flags=no
+    else
+        flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
+    fi
     add_cflags=yes
     c_std=c99
     posix_std=2001
     enable_opt=yes
-    flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
     for flag in ${flags}; do
         case "$flag" in
 	     stdc89)
