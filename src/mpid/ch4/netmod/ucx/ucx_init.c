@@ -203,10 +203,10 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
-int MPIDI_UCX_vci_get_attr(int vci)
+MPIDI_vci_resource_t MPIDI_UCX_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
+    return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 
 int MPIDI_UCX_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_remote)
