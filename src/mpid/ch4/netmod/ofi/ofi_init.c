@@ -921,7 +921,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ---------------------------------- */
     /* Initialize Active Message          */
     /* ---------------------------------- */
-    mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
+    mpi_errno = MPIDIG_init(comm_world, comm_self);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_AM) {
