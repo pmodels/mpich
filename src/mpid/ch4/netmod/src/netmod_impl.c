@@ -345,7 +345,7 @@ int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win
 }
 
 int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                           MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
+                           MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
     int ret;
 
@@ -353,7 +353,7 @@ int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_C
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
 
     ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, comm_world, comm_self, spawned,
-                                  n_vcis_provided);
+                                  n_vnis_provided);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
     return ret;
@@ -372,16 +372,16 @@ int MPIDI_NM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VNI);
 
-    ret = MPIDI_NM_func->vci_get_resource_info(vci);
+    ret = MPIDI_NM_func->vni_get_resource_info(vni);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VNI);
     return ret;
 }
 

@@ -15,7 +15,7 @@
 #include "ofi_events.h"
 #include "ofi_am_events.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
@@ -26,14 +26,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
     else if (likely(1)) {
-        ret = fi_cq_read(MPIDI_OFI_global.ctx[vci].cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
+        ret = fi_cq_read(MPIDI_OFI_global.ctx[vni].cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
 
         if (likely(ret > 0))
             mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret);
         else if (ret == -FI_EAGAIN)
             mpi_errno = MPI_SUCCESS;
         else
-            mpi_errno = MPIDI_OFI_handle_cq_error(vci, ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);

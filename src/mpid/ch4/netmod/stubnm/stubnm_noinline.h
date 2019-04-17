@@ -87,9 +87,9 @@ int MPIDI_STUBNM_mpi_win_free_hook(MPIR_Win * win);
 /* stubnm_init.h */
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
                                MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
-                               int *n_vcis_provided);
+                               int *n_vnis_provided);
 int MPIDI_STUBNM_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_STUBNM_vci_get_resource_info(int vci);
+MPIDI_vci_resource_t MPIDI_STUBNM_vni_get_resource_info(int vni);
 void *MPIDI_STUBNM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_STUBNM_mpi_free_mem(void *ptr);
 int MPIDI_STUBNM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids);
@@ -100,7 +100,7 @@ int MPIDI_STUBNM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, 
 #ifdef NETMOD_INLINE
 #define MPIDI_NM_mpi_init_hook MPIDI_STUBNM_mpi_init_hook
 #define MPIDI_NM_mpi_finalize_hook MPIDI_STUBNM_mpi_finalize_hook
-#define MPIDI_NM_vci_get_resource_info MPIDI_STUBNM_vci_get_resource_info
+#define MPIDI_NM_vni_get_resource_info MPIDI_STUBNM_vni_get_resource_info
 #define MPIDI_NM_mpi_alloc_mem MPIDI_STUBNM_mpi_alloc_mem
 #define MPIDI_NM_mpi_free_mem MPIDI_STUBNM_mpi_free_mem
 #define MPIDI_NM_get_local_upids MPIDI_STUBNM_get_local_upids
