@@ -28,7 +28,7 @@ int MPIDI_STUBNM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
-int MPIDI_STUBNM_vci_get_attr(int vci)
+MPIDI_vci_resource_t MPIDI_STUBNM_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0);
     return 0;

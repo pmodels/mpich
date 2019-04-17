@@ -210,10 +210,10 @@ int MPIDI_POSIX_coll_finalize(void)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_vci_get_attr(int vci)
+MPIDI_vci_resource_t MPIDI_POSIX_vci_get_resource_info(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
-    return MPIDI_VCI_TX | MPIDI_VCI_RX;
+    return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 
 void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)

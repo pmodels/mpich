@@ -11,7 +11,7 @@
 
 int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
 int MPIDI_POSIX_mpi_finalize_hook(void);
-int MPIDI_POSIX_vci_get_attr(int vci);
+MPIDI_vci_resource_t MPIDI_POSIX_vci_get_resource_info(int vci);
 
 int MPIDI_POSIX_coll_init(int rank, int size);
 int MPIDI_POSIX_coll_finalize(void);
