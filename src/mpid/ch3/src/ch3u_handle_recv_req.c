@@ -864,7 +864,8 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
 
     /* Because this is in a packet handler, it is already within a critical section */
     /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
-    mpi_errno = vc->sendNoncontig_fn(vc, sreq, get_resp_pkt, sizeof(*get_resp_pkt));
+    mpi_errno = vc->sendNoncontig_fn(vc, sreq, get_resp_pkt, sizeof(*get_resp_pkt),
+                                     NULL, 0);
     /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
@@ -1150,7 +1151,8 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
         sreq->dev.segment_size = get_pkt->count * type_size;
 
         mpi_errno = target_lock_entry->vc->sendNoncontig_fn(target_lock_entry->vc, sreq,
-                                                            iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
+                                                            iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN,
+                                                            NULL, 0);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 

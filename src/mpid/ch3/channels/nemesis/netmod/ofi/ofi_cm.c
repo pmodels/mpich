@@ -443,6 +443,7 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
     vc->sendNoncontig_fn = MPID_nem_ofi_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_ofi_iStartContigMsg;
     vc_ch->iSendContig = MPID_nem_ofi_iSendContig;
+    vc_ch->iSendIov = MPID_nem_ofi_iSendIov;
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
     vc_ofi->is_cmvc = 0;

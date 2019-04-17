@@ -725,9 +725,13 @@ typedef struct MPIDI_VC
     /* noncontiguous send function pointer.  Called to send a
        noncontiguous message.  Caller must initialize
        sreq->dev.segment, _first and _size.  Contiguous messages are
-       called directly from CH3 and cannot be overridden. */
+       called directly from CH3 and cannot be overridden.
+       The optional hdr_iov and n_hdr_iov input parameters are used for
+       variable-length extended header, specify NULL and zero if unused.
+       n_hdr_iov should not exceed MPL_IOV_LIMIT - 2 (one for header and one
+       for packed data).*/
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
-			      void *header, intptr_t hdr_sz );
+			      void *header, intptr_t hdr_sz, MPL_IOV *hdr_iov, int n_hdr_iov);
 
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_ops_t *comm_ops;
@@ -1788,7 +1792,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **, const void *, int,
 int MPIDI_CH3_EagerSyncZero(MPIR_Request **, int, int, MPIR_Comm *, int );
 
 int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
-                                 void *header, intptr_t hdr_sz );
+                                 void *header, intptr_t hdr_sz,
+                                 MPL_IOV *hdr_iov, int n_hdr_iov);
 
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */
