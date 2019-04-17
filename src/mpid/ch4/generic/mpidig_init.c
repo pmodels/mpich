@@ -27,7 +27,7 @@ int MPIDIG_am_reg_cb(int handler_id,
     return mpi_errno;
 }
 
-int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vcis)
+int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT);
