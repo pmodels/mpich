@@ -212,7 +212,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     int avtid;
     int n_vnis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vcis_provided;
+    int n_vsis_provided;
 #endif
 #ifndef USE_PMI2_API
     int max_pmi_name_length;
@@ -433,7 +433,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_vsis_provided, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);

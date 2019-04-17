@@ -9,9 +9,9 @@
 
 #include "shm_impl.h"
 
-int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vsis_provided, int *tag_bits);
 int MPIDI_STUBSHM_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_STUBSHM_vci_get_resource_info(int vci);
+MPIDI_vci_resource_t MPIDI_STUBSHM_vsi_get_resource_info(int vsi);
 
 int MPIDI_STUBSHM_mpi_comm_create_hook(MPIR_Comm * comm);
 int MPIDI_STUBSHM_mpi_comm_free_hook(MPIR_Comm * comm);

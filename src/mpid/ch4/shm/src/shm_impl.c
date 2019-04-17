@@ -13,14 +13,14 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
+int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vsis_provided, int *tag_bits)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
 
-    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, n_vcis_provided, tag_bits);
+    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, n_vsis_provided, tag_bits);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     return ret;
@@ -39,16 +39,16 @@ int MPIDI_SHM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPIDI_vci_resource_t MPIDI_SHM_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_SHM_vsi_get_resource_info(int vsi)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VSI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VSI);
 
-    ret = MPIDI_SHM_src_funcs.vci_get_resource_info(vci);
+    ret = MPIDI_SHM_src_funcs.vsi_get_resource_info(vsi);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VSI);
     return ret;
 }
 
