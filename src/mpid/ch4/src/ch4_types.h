@@ -21,12 +21,6 @@
 
 #define MAX_PROGRESS_HOOKS 4
 
-/* VCI attributes */
-enum {
-    MPIDI_VCI_TX = 0x1,         /* Can send */
-    MPIDI_VCI_RX = 0x2, /* Can receive */
-};
-
 #define MPIDIU_BUF_POOL_NUM (1024)
 #define MPIDIU_BUF_POOL_SZ (256)
 
