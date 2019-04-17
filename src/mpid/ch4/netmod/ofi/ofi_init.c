@@ -1105,7 +1105,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-int MPIDI_OFI_get_vci_attr(int vci)
+int MPIDI_OFI_vci_get_attr(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
