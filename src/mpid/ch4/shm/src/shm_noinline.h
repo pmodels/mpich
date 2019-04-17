@@ -11,7 +11,7 @@
 
 int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
 int MPIDI_SHMI_mpi_finalize_hook(void);
-int MPIDI_SHMI_get_vci_attr(int vci);
+int MPIDI_SHMI_vci_get_attr(int vci);
 
 int MPIDI_SHMI_mpi_comm_create_hook(MPIR_Comm * comm);
 int MPIDI_SHMI_mpi_comm_free_hook(MPIR_Comm * comm);
@@ -60,7 +60,7 @@ int MPIDI_SHMI_progress(int vci, int blocking);
 #ifdef SHM_INLINE
 #define MPIDI_SHM_mpi_init_hook MPIDI_SHMI_mpi_init_hook
 #define MPIDI_SHM_mpi_finalize_hook MPIDI_SHMI_mpi_finalize_hook
-#define MPIDI_SHM_get_vci_attr MPIDI_SHMI_get_vci_attr
+#define MPIDI_SHM_vci_get_attr MPIDI_SHMI_vci_get_attr
 #define MPIDI_SHM_mpi_comm_create_hook MPIDI_SHMI_mpi_comm_create_hook
 #define MPIDI_SHM_mpi_comm_free_hook MPIDI_SHMI_mpi_comm_free_hook
 #define MPIDI_SHM_mpi_type_commit_hook MPIDI_SHMI_mpi_type_commit_hook

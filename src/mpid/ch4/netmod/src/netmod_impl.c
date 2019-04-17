@@ -371,14 +371,14 @@ int MPIDI_NM_mpi_finalize_hook(void)
     return ret;
 }
 
-int MPIDI_NM_get_vci_attr(int vci)
+int MPIDI_NM_vci_get_attr(int vci)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VCI);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VCI);
 
-    ret = MPIDI_NM_func->get_vci_attr(vci);
+    ret = MPIDI_NM_func->vci_get_attr(vci);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
     return ret;

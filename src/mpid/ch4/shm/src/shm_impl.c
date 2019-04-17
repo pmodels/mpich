@@ -36,14 +36,14 @@ int MPIDI_SHM_mpi_finalize_hook(void)
     return ret;
 }
 
-int MPIDI_SHM_get_vci_attr(int vci)
+int MPIDI_SHM_vci_get_attr(int vci)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VCI);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VCI);
 
-    ret = MPIDI_SHM_src_funcs.get_vci_attr(vci);
+    ret = MPIDI_SHM_src_funcs.vci_get_attr(vci);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
     return ret;

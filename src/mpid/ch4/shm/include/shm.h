@@ -20,7 +20,7 @@
  * with the struct of function pointers below. */
 typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vcis_provided, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
-typedef int (*MPIDI_SHM_get_vci_attr_t) (int vci);
+typedef int (*MPIDI_SHM_vci_get_attr_t) (int vci);
 typedef int (*MPIDI_SHM_progress_t) (int vci, int blocking);
 typedef int (*MPIDI_SHM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info,
                                              int root, int timeout, MPIR_Comm * comm,
@@ -421,7 +421,7 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
 typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_hook_t mpi_init;
     MPIDI_SHM_mpi_finalize_hook_t mpi_finalize;
-    MPIDI_SHM_get_vci_attr_t get_vci_attr;
+    MPIDI_SHM_vci_get_attr_t vci_get_attr;
     MPIDI_SHM_progress_t progress;
     MPIDI_SHM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_SHM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -572,7 +572,7 @@ extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 
 int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
 int MPIDI_SHM_mpi_finalize_hook(void);
-int MPIDI_SHM_get_vci_attr(int vci);
+int MPIDI_SHM_vci_get_attr(int vci);
 int MPIDI_SHM_progress(int vci, int blocking);
 int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
