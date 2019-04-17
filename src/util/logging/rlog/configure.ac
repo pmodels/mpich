@@ -57,6 +57,7 @@ AC_SUBST(master_top_builddir)
 
 dnl Find a C compiler
 AC_PROG_CC
+AC_PROG_CC_C99
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)
 dnl
