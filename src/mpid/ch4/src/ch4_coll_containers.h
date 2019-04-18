@@ -6,6 +6,11 @@ extern const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_alpha_c
 extern const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_beta_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_composition_alpha_cnt;
 
+/* Ibcast  CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_intra_composition_beta_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Ibcast_inter_composition_alpha_cnt;
+
 /* Bcast  CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_alpha_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_beta_cnt;
