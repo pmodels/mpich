@@ -8,6 +8,25 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IBCAST_INTRA_COMPOSITION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Select composition (inter_node + intra_node) for Ibcast
+        0  - NM only with MPIR_Sched
+        1  - NM only with Gentran scheduler
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef CH4_COLL_SELECT_H_INCLUDED
 #define CH4_COLL_SELECT_H_INCLUDED
 
@@ -32,6 +51,23 @@ MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag
     }
 
     return &MPIDI_Barrier_intra_composition_beta_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX const
+MPIDI_coll_algo_container_t *MPIDI_Ibcast_select(void *buffer,
+                                                 int count,
+                                                 MPI_Datatype datatype, int root, MPIR_Comm * comm)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) { //Intercomm
+        return &MPIDI_Ibcast_inter_composition_alpha_cnt;
+    }
+
+    /* MPICH algorithms are default now. Use a CVAR to choose gentran algos. Ultimately MPICH algorithms will be
+     * replaced by gentran algos. We will decide what composition (intranode/internode combinations) is the best for various scenarios here */
+    if (MPIR_CVAR_IBCAST_INTRA_COMPOSITION)
+        return &MPIDI_Ibcast_intra_composition_beta_cnt;
+    else
+        return &MPIDI_Ibcast_intra_composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

@@ -15,6 +15,10 @@
 #include "ch4_coll_select.h"
 #include "ch4_coll_params.h"
 #include "ofi_coll_select.h"
+#include "tsp_gentran.h"
+#include "gentran_utils.h"
+#include "ibcast/ibcast_tsp_tree_algos_prototypes.h"
+#include "ibcast/ibcast_tsp_scatterv_allgatherv_algos_prototypes.h"
 
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
                                        const void *ch4_algo_parameters_container_in)
@@ -1211,18 +1215,68 @@ static inline int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s)
 
 static inline int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count, MPI_Datatype datatype,
                                             int root, MPIR_Comm * comm, void *s,
-                                            const void *algo_parameters_container
-                                            ATTRIBUTE((unused)))
+                                            const void *ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
 
-    mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm, *(void *) s);
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Ibcast_select(buffer, count, datatype, root, comm,
+                                ch4_algo_parameters_container_in);
+
+    /* Container validation check and synchronization would come here. Synchronization is required for Triggered ops only */
+    switch (nm_algo_parameters_container_out->id) {
+        case MPIDI_OFI_Ibcast_intra_gentran_tree_id:
+            mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
+                                                         nm_algo_parameters_container_out->params.
+                                                         ofi_ibcast_params.ofi_ibcast_tree_parameters.
+                                                         tree_type,
+                                                         nm_algo_parameters_container_out->params.
+                                                         ofi_ibcast_params.ofi_ibcast_tree_parameters.
+                                                         radix,
+                                                         nm_algo_parameters_container_out->params.
+                                                         ofi_ibcast_params.ofi_ibcast_tree_parameters.
+                                                         block_size, (MPIR_TSP_sched_t *) s);
+            break;
+        case MPIDI_OFI_Ibcast_intra_gentran_scatterv_recexch_allgatherv_id:
+            mpi_errno =
+                MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype,
+                                                                root, comm,
+                                                                nm_algo_parameters_container_out->params.
+                                                                ofi_ibcast_params.ofi_ibcast_scatterv_allgatherv_parameters.
+                                                                scatterv_k,
+                                                                nm_algo_parameters_container_out->params.
+                                                                ofi_ibcast_params.ofi_ibcast_scatterv_allgatherv_parameters.
+                                                                allgatherv_k,
+                                                                (MPIR_TSP_sched_t *) s);
+            break;
+        case MPIDI_OFI_Ibcast_intra_gentran_ring_id:
+            /* Ring algorithm is tree with K =1 */
+            mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
+                                                         nm_algo_parameters_container_out->params.
+                                                         ofi_ibcast_params.ofi_ibcast_tree_parameters.
+                                                         tree_type, 1,
+                                                         nm_algo_parameters_container_out->params.
+                                                         ofi_ibcast_params.ofi_ibcast_tree_parameters.
+                                                         block_size, (MPIR_TSP_sched_t *) s);
+            break;
+        default:
+            mpi_errno =
+                MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm, *(MPIR_Sched_t *) s);
+    }
+
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, int sendcount,

@@ -62,7 +62,8 @@ include $(top_srcdir)/src/mpi/coll/transports/Makefile.mk
 # build collectives algorithms
 include $(top_srcdir)/src/mpi/coll/algorithms/Makefile.mk
 
-AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/ \
+               -I$(top_srcdir)/src/mpi/coll
 
 mpi_core_sources += \
     src/mpi/coll/helper_fns.c     \
