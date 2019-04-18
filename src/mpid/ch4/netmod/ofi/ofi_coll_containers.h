@@ -4,6 +4,17 @@
 /* Barrier OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Barrier_intra_dissemination_cnt;
 
+/* Ibcast OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_gentran_tree_default_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_gentran_ring_default_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Ibcast_intra_gentran_scatterv_recexch_allgatherv_default_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Ibcast_intra_scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_scatter_ring_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_default_cnt;
+
 /* Bcast OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Bcast_intra_binomial_cnt;
 extern const MPIDI_OFI_coll_algo_container_t
