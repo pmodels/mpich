@@ -1891,7 +1891,14 @@ cc_shlib_conf=src/env/cc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
-$cc_shlib_conf
+# We need variables from $cc_shlib_conf to set `WRAPPER_C_DYNAMIC_LOADING_FLAGS`, which 
+#    is used in `src/packaging/pkgconfig/mpich.pc.in`
+# However, libtool's $library_names_spec is more than what's given in $cc_shlib_conf, so
+#    we need protect it. 
+# FIXME: potentially, there are more variable collisions. Need better plan.
+PAC_PUSH_FLAG([library_names_spec])
+. $cc_shlib_conf
+PAC_POP_FLAG([library_names_spec])
 
 # Attempt to construct dynamic loading info, based on the user
 # preference of rpath, runpath or none and on the detected libdir
