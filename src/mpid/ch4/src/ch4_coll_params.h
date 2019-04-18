@@ -267,8 +267,15 @@ typedef union {
     MPIDI_EXSCAN_PARAMS_DECL;
 } MPIDI_coll_params_t;
 
+/* enumerator for different scheduler types */
+typedef enum {
+    MPIR_SCHED_TYPE_GENTRAN = 0,
+    MPIR_SCHED_TYPE_MPICH
+} MPIR_Sched_type_t;
+
 typedef struct MPIDI_coll_algo_container {
     int id;
+    MPIR_Sched_type_t sched_type;
     MPIDI_coll_params_t params;
 } MPIDI_coll_algo_container_t;
 
