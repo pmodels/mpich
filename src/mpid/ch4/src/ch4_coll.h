@@ -1155,11 +1155,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibcast_sched(void *buffer, int count, MPI_Data
                                                int root, MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int ret;
+    const MPIDI_coll_algo_container_t *algo_container = &MPIDI_Ibcast_intra_composition_alpha_cnt;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IBCAST_SCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IBCAST_SCHED);
 
-    ret = MPIDI_NM_mpi_ibcast_sched(buffer, count, datatype, root, comm, s);
+    ret = MPIDI_NM_mpi_ibcast_sched(buffer, count, datatype, root, comm, &s, algo_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IBCAST_SCHED);
     return ret;

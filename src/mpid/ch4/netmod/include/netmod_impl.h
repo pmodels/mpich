@@ -1800,14 +1800,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
                                                        MPI_Datatype datatype, int root,
-                                                       MPIR_Comm * comm, void *s)
+                                                       MPIR_Comm * comm, void *s,
+                                                       const void *algo_parameters_container)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
 
-    ret = MPIDI_NM_native_func->mpi_ibcast_sched(buffer, count, datatype, root, comm, s);
+    ret =
+        MPIDI_NM_native_func->mpi_ibcast_sched(buffer, count, datatype, root, comm, s,
+                                               algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBCAST_SCHED);
     return ret;

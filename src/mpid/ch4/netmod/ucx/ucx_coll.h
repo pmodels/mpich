@@ -829,7 +829,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
                                                        MPI_Datatype datatype, int root,
-                                                       MPIR_Comm * comm, void *s)
+                                                       MPIR_Comm * comm, void *s,
+                                                       const void *algo_parameters_container
+                                                       ATTRIBUTE((unused)))
 {
     int mpi_errno;
 
