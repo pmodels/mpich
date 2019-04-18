@@ -44,6 +44,19 @@ for algo_name in ${algo_names}; do
     done
 done
 
+########## Add tests ibcast collective selection ############
+env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
+env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
+
+coll_algo_tests+="bcasttest 10 ${env}${nl}"
+coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+
+#Force composition with gentran algorithms
+env+="env=MPIR_CVAR_IBCAST_INTRA_COMPOSITION=1 "
+
+coll_algo_tests+="bcasttest 10 ${env}${nl}"
+coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+
 ########## Add tests for reduce algorithms ############
 
 #disable device collectives for reduce to test MPIR algorithms
