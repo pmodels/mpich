@@ -446,7 +446,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         msg.rma_iov_count = 1;
         iov.iov_base = (char *) origin_addr + origin_true_lb;
         iov.iov_len = target_bytes;
-        riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
+        riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_true_lb);
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
