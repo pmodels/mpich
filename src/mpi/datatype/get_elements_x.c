@@ -198,6 +198,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
             case MPI_COMBINER_VECTOR:
             case MPI_COMBINER_HVECTOR_INTEGER:
             case MPI_COMBINER_HVECTOR:
+            case MPI_COMBINER_SUBARRAY:
                 /* count is first in ints array */
                 return MPIR_Type_get_elements(bytes_p, count * (*ints), *types);
                 break;
@@ -246,7 +247,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
                 }
                 return nr_elements;
                 break;
-            case MPI_COMBINER_SUBARRAY:
             case MPI_COMBINER_DARRAY:
             case MPI_COMBINER_F90_REAL:
             case MPI_COMBINER_F90_COMPLEX:
