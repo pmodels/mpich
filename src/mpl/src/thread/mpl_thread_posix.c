@@ -59,33 +59,33 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 #if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI
-        uti_attr_t *uti_attr = NULL;
-        err = uti_attr_init(uti_attr);
+        uti_attr_t uti_attr;
+        err = uti_attr_init(&uti_attr);
         if (err) {
             goto uti_exit;
         }
 
         /* Give a hint that it's beneficial to put the thread
          * on the same NUMA-node as the creator */
-        err = UTI_ATTR_SAME_NUMA_DOMAIN(uti_attr);
+        err = UTI_ATTR_SAME_NUMA_DOMAIN(&uti_attr);
         if (err) {
             goto uti_destroy_and_exit;
         }
 
         /* Give a hint that the thread repeatedly monitors a device
          * using CPU. */
-        err = UTI_ATTR_CPU_INTENSIVE(uti_attr);
+        err = UTI_ATTR_CPU_INTENSIVE(&uti_attr);
         if (err) {
             goto uti_destroy_and_exit;
         }
 
-        err = uti_pthread_create(idp, &attr, MPLI_thread_start, thread_info, uti_attr);
+        err = uti_pthread_create(idp, &attr, MPLI_thread_start, thread_info, &uti_attr);
         if (err) {
             goto uti_destroy_and_exit;
         }
 
       uti_destroy_and_exit:
-        err = uti_attr_destroy(uti_attr);
+        err = uti_attr_destroy(&uti_attr);
         if (err) {
             goto uti_exit;
         }
