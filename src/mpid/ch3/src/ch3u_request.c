@@ -310,6 +310,27 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    /* Too little data would have been received using an IOV.  
 	       We will start receiving data into a SRBuf and unpacking it
 	       later. */
+        intptr_t segment_first, segment_size;
+
+        /* Segment has been changed when trying iov. Thus we need to
+         * reset segment to restart with SRBuf. */
+        segment_first = rreq->dev.segment_first;
+        segment_size = rreq->dev.segment_size;
+        MPIR_Segment_free(rreq->dev.segment_ptr);
+
+        rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count,
+                                                   rreq->dev.datatype);
+        if (rreq->dev.segment_ptr == NULL) {
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"MPIR_Segment_alloc failure");
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                       __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+            rreq->status.MPI_ERROR = mpi_errno;
+            goto fn_exit;
+        }
+
+        rreq->dev.segment_first = segment_first;
+        rreq->dev.segment_size  = segment_size;
+
 	    MPIR_Assert(MPIDI_Request_get_srbuf_flag(rreq) == FALSE);
 	    
 	    MPIDI_CH3U_SRBuf_alloc(rreq, 
