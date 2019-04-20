@@ -10,7 +10,7 @@
 // Not all C++ compilers have iostream instead of iostream.h
 #include <iostream>
 #ifdef HAVE_NAMESPACE_STD
-// Those that do often need the std namespace; otherwise, a bare "cout"
+// Those that do often need the std namespace; otherwise, a bare "cerr"
 // is likely to fail to compile
 using namespace std;
 #endif
@@ -22,60 +22,70 @@ extern "C" {
 #include "dtpools.h"
 }
 #include <stdlib.h>
-
-
 int main(int argc, char *argv[])
 {
     int err, errs = 0;
     int i, j;
-    int count;
+    MPI_Aint count, maxbufsize;
     MPI::Datatype type;
-    MPI::Datatype basic_type;
+    char *basic_type;
     MPI::Intracomm comm;
-    DTP_t mstype, mrtype;
-    char dtypename[MPI_MAX_OBJECT_NAME];
+    DTP_pool_s dtp;
+    DTP_obj_s msobj, mrobj;
     int size1, size2, tnlen;
+    int seed, testsize;
 
     MTest_Init();
 
     comm = MPI::COMM_WORLD;
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
+    seed = MTestArgListGetInt(head, "seed");
+    testsize = MTestArgListGetInt(head, "testsize");
+    count = MTestArgListGetLong(head, "count");
+    maxbufsize = MTestArgListGetLong(head, "maxbufsize");
+    basic_type = MTestArgListGetString(head, "type");
 
-    basic_type = MTestArgListGetDatatype(head, "type");
-    count = MTestArgListGetInt(head, "count");
+
+    err = DTP_pool_create(basic_type, count, seed, &dtp);
+    if (err != DTP_SUCCESS) {
+        cerr << "Error while creating dtp pool (" << basic_type << ",1)\n";
+    }
 
     MTestArgListDestroy(head);
 
-    /* TODO: struct types are currently not supported for C++ */
-
-    err = DTP_pool_create(basic_type, count, &mstype);
-    if (err != DTP_SUCCESS) {
-        basic_type.Get_name(dtypename, tnlen);
-        cout << "Error while creating mstype pool (" << dtypename << ",1)\n";
-    }
-
-    err = DTP_pool_create(basic_type, count, &mrtype);
-    if (err != DTP_SUCCESS) {
-        basic_type.Get_name(dtypename, tnlen);
-        cout << "Error while creating mrtype pool (" << dtypename << ",1)\n";
-    }
-
-    for (i = 0; i < mstype->DTP_num_objs; i++) {
-        err = DTP_obj_create(mstype, i, 0, 1, count);
+    for (i = 0; i < testsize; i++) {
+        err = DTP_obj_create(dtp, &msobj, maxbufsize);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
 
-        for (j = 0; j < mrtype->DTP_num_objs; j++) {
-            err = DTP_obj_create(mrtype, j, 0, 1, count);
-            if (err != DTP_SUCCESS) {
-                errs++;
-                break;
-            }
+        err += DTP_obj_create(dtp, &mrobj, maxbufsize);
+        if (err != DTP_SUCCESS) {
+            errs++;
+            break;
+        }
 
-            type = mstype->DTP_obj_array[i].DTP_obj_type;
+        type = msobj.DTP_datatype;
+
+        // Testing the pack size is tricky, since this is the
+        // size that is stored when packed with type.Pack, and
+        // is not easily defined.  We look for consistency
+        size1 = type.Pack_size(1, comm);
+        size2 = type.Pack_size(2, comm);
+        if (size1 <= 0 || size2 <= 0) {
+            errs++;
+            cerr << "Pack size of datatype " << msobj.DTP_description << " is not positive\n";
+        }
+        if (size1 >= size2) {
+            errs++;
+            cerr << "Pack size of 2 of " << msobj.DTP_description <<
+                " is smaller or the same as the pack size of 1 instance\n";
+        }
+
+        if (mrobj.DTP_datatype != msobj.DTP_datatype) {
+            type = mrobj.DTP_datatype;
 
             // Testing the pack size is tricky, since this is the
             // size that is stored when packed with type.Pack, and
@@ -84,43 +94,19 @@ int main(int argc, char *argv[])
             size2 = type.Pack_size(2, comm);
             if (size1 <= 0 || size2 <= 0) {
                 errs++;
-                type.Get_name(dtypename, tnlen);
-                cout << "Pack size of datatype " << dtypename << " is not positive\n";
+                cerr << "Pack size of datatype " << mrobj.DTP_description << " is not positive\n";
             }
             if (size1 >= size2) {
                 errs++;
-                type.Get_name(dtypename, tnlen);
-                cout << "Pack size of 2 of " << dtypename <<
+                cerr << "Pack size of 2 of " << mrobj.DTP_description <<
                     " is smaller or the same as the pack size of 1 instance\n";
             }
-
-            if (mrtype->DTP_obj_array[j].DTP_obj_type != mstype->DTP_obj_array[i].DTP_obj_type) {
-                type = mrtype->DTP_obj_array[j].DTP_obj_type;
-
-                // Testing the pack size is tricky, since this is the
-                // size that is stored when packed with type.Pack, and
-                // is not easily defined.  We look for consistency
-                size1 = type.Pack_size(1, comm);
-                size2 = type.Pack_size(2, comm);
-                if (size1 <= 0 || size2 <= 0) {
-                    errs++;
-                    type.Get_name(dtypename, tnlen);
-                    cout << "Pack size of datatype " << dtypename << " is not positive\n";
-                }
-                if (size1 >= size2) {
-                    errs++;
-                    type.Get_name(dtypename, tnlen);
-                    cout << "Pack size of 2 of " << dtypename <<
-                        " is smaller or the same as the pack size of 1 instance\n";
-                }
-            }
-            DTP_obj_free(mrtype, j);
         }
-        DTP_obj_free(mstype, i);
+        DTP_obj_free(mrobj);
+        DTP_obj_free(msobj);
     }
 
-    DTP_pool_free(mstype);
-    DTP_pool_free(mrtype);
+    DTP_pool_free(dtp);
 
     MTest_Finalize(errs);
 

@@ -47,53 +47,40 @@ int main(int argc, char *argv[])
     int err, errs = 0;
     int attrval;
     int i, j, key[32], keyval, saveKeyval;
+    int seed, testsize;
     int obj_idx;
-    int count;
+    MPI_Aint count, maxbufsize;
     int tnlen;
     MPI_Datatype type, duptype;
-    DTP_t dtp;
-    char typename[MPI_MAX_OBJECT_NAME];
+    DTP_pool_s dtp;
+    DTP_obj_s obj;
+    char *basic_type;
 
     MTest_Init(&argc, &argv);
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
-
-#ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
-    MPI_Datatype basic_type;
-
+    seed = MTestArgListGetInt(head, "seed");
+    testsize = MTestArgListGetInt(head, "testsize");
+    count = MTestArgListGetLong(head, "count");
+    maxbufsize = MTestArgListGetLong(head, "maxbufsize");
     basic_type = MTestArgListGetString(head, "type");
-    count = MTestArgListGetInt(head, "count");
 
-    err = DTP_pool_create(basic_type, count, &dtp);
+    err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        MPI_Type_get_name(basic_type, typename, &tnlen);
-        fprintf(stdout, "Error while creating pool (%s,%d)\n", typename, count);
-        fflush(stdout);
+        fprintf(stderr, "Error while creating pool (%s,%ld)\n", basic_type, count);
+        fflush(stderr);
     }
-#else
-    basic_types = MTestArgListGetDatatypeList(head, "types");
-    basic_type_counts = MTestArgListGetIntList(head, "counts");
-    basic_type_num = MTestArgListGetInt(head, "numtypes");
-
-    err = DTP_pool_create_struct(basic_type_num, basic_types, basic_type_counts, &dtp);
-    if (err != DTP_SUCCESS) {
-        fprintf(stdout, "Error while creating struct pool\n");
-        fflush(stdout);
-    }
-
-    count = 0;
-#endif
 
     MTestArgListDestroy(head);
 
-    for (obj_idx = 0; obj_idx < dtp->DTP_num_objs; obj_idx++) {
-        err = DTP_obj_create(dtp, obj_idx, 0, 0, 0);
+    for (obj_idx = 0; obj_idx < testsize; obj_idx++) {
+        err = DTP_obj_create(dtp, &obj, maxbufsize);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
 
-        type = dtp->DTP_obj_array[obj_idx].DTP_obj_type;
+        type = obj.DTP_datatype;
         MPI_Type_create_keyval(copy_fn, delete_fn, &keyval, (void *) 0);
         saveKeyval = keyval;    /* in case we need to free explicitly */
         attrval = 1;
@@ -110,29 +97,35 @@ int main(int argc, char *argv[])
 
         if (attrval != 1) {
             errs++;
-            MPI_Type_get_name(type, typename, &tnlen);
-            printf("attrval is %d, should be 1, before dup in type %s\n", attrval, typename);
+            printf("attrval is %d, should be 1, before dup in type %s\n", attrval,
+                   obj.DTP_description);
         }
         MPI_Type_dup(type, &duptype);
         /* Check that the attribute was copied */
         if (attrval != 2) {
             errs++;
-            MPI_Type_get_name(type, typename, &tnlen);
-            printf("Attribute not incremented when type dup'ed (%s)\n", typename);
+            printf("Attribute not incremented when type dup'ed (%s)\n", obj.DTP_description);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
         MPI_Type_free(&duptype);
         if (attrval != 1) {
             errs++;
-            MPI_Type_get_name(type, typename, &tnlen);
-            printf("Attribute not decremented when duptype %s freed\n", typename);
+            printf("Attribute not decremented when duptype %s freed\n", obj.DTP_description);
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
         /* Check that the attribute was freed in the duptype */
 
-        DTP_obj_free(dtp, obj_idx);
-        if (attrval != 0) {
-            errs++;
-            MPI_Type_get_name(type, typename, &tnlen);
-            fprintf(stdout, "Attribute not decremented when type %s freed\n", typename);
+        if (obj.DTP_datatype != dtp.DTP_base_type) {
+            DTP_obj_free(obj);
+            if (attrval != 0) {
+                errs++;
+                fprintf(stderr, "Attribute not decremented when type %s freed\n",
+                        obj.DTP_description);
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
+        } else {
+            MPI_Type_delete_attr(type, saveKeyval);
+            DTP_obj_free(obj);
         }
 
         /* Free those other keyvals */
@@ -142,16 +135,6 @@ int main(int argc, char *argv[])
     }
 
     DTP_pool_free(dtp);
-
-#ifdef USE_DTP_POOL_TYPE__STRUCT
-    /* cleanup array if any */
-    if (basic_types) {
-        free(basic_types);
-    }
-    if (basic_type_counts) {
-        free(basic_type_counts);
-    }
-#endif
 
     MTest_Finalize(errs);
 

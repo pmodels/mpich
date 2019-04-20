@@ -1,0 +1,39 @@
+# (C) 2018 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+# This file is used by autogen.sh to generate multiple binary files for datatype testing.
+# Every line must have the format:
+#
+# <test pathname>:<ssv args>:<ssv counts>:timeLimit=<seconds>:<procs#>:<mintestsize>:<maxtestsize>:<maxbufsize>
+#
+# The autogen.sh script generates a single binary for every line. Each binary will appear in
+# the testlist file multiple times, corresponding to different combinations of basic datatypes
+# (a list of which is defined in basictypelist.txt) and counts.
+#
+# NOTE: the second (ssv args), fourth (timeLimit) and seventh (maxtestsize) fields are optional.
+
+attr/fkeyvaltype::1::1:1024:
+coll/bcast::1 512 262144:timeLimit=420:4:16:1024
+coll/bcast_comm_world_only::1 512 262144:timeLimit=360:10:16:1024
+cxx/attr/fkeyvaltypex::1::1:1024:
+cxx/datatype/packsizex::1::1:1024:
+pt2pt/pingping::1 512 262144::2:8:32
+pt2pt/sendrecv1::1 512 262144::2:32:1024
+pt2pt/sendself::1 512 262144::1:32:1024
+rma/accfence1::1 512 262144::4:16:1024
+rma/accpscw1::1 512 262144::4:16:1024
+rma/epochtest::1 512 262144:timeLimit=300:4:16:1024
+rma/getfence1::1 512 262144::2:16:1024
+rma/getfence1::16000000:timeLimit=1800:2:4:
+rma/lock_contention_dt::1 512 262144:timeLimit=600:4:16:1024
+rma/lock_dt::1 512 262144::2:16:1024
+rma/lock_dt_flush::1 512 262144::2:16:1024
+rma/lock_dt_flushlocal::1 512 262144::2:16:1024
+rma/lockall_dt::1 512 262144::4:16:1024
+rma/lockall_dt_flush::1 512 262144::4:16:1024
+rma/lockall_dt_flushall::1 512 262144::4:16:1024
+rma/lockall_dt_flushlocal::1 512 262144::4:16:1024
+rma/lockall_dt_flushlocalall::1 512 262144::4:16:1024
+rma/putfence1::1 512 262144::2:16:1024
+rma/putfence1::16000000:timeLimit=1800:2:4:
+rma/putpscw1::1 512 262144::4:16:1024
