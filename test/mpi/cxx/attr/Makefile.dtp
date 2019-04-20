@@ -1,3 +1,0 @@
-noinst_PROGRAMS += fkeyvaltypex
-fkeyvaltypex_CPPFLAGS = $(AM_CPPFLAGS)
-fkeyvaltypex_SOURCES = fkeyvaltypex.cxx

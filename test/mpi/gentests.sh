@@ -4,163 +4,154 @@
 #     See COPYRIGHT in top-level directory.
 #
 # Generate datatype testing build instructions for every line in
-# configuration file basictypetest.txt
+# configuration file dtp-test-config.txt
 
 types=""     # basic MPI datatypes for type signature
 counts=""    # counts for type signature
-pathname=""  # source file pathname
-source=""    # base name of source file - extension
-dir=""       # directory in which source is located
+pathname=""  # test file pathname
+testdir=""   # name of test directory
+testname=""  # name of test
+builddir=""  # directory in which executable will be located
 dirs=""      # all directories containing DTPools tests
 args=""      # extra args
 timelimit="" # time limit for testlist.in
 procs=""     # number of processes to use in testlist.in
 srcdir=""    # relative directory in which this script is located
+maxbufsize=""
 other_args=""
 
-# extract src directory from configure
+# help message
+show_help() {
+cat << EOF
+Usage: $0 [options]
+options:
+  --help    show this message and exit
+  --with-dtpools-datatypes=[typelist]
+            comma separated list of MPI Datatypes to use for
+            generating DTPools tests
+  --with-dtpools-maxbufsize=[bytes]
+            max buffer size of DTP objects
+EOF
+}
+
+while [ true ] ; do
+    if test -z "$1" ; then break ; fi
+    case $(echo $1 | cut -d= -f1) in
+        --help)
+            show_help
+            exit 1
+            ;;
+        --with-dtpools-datatypes)
+            types=$(echo $1 | cut -d= -f2)
+            shift
+            ;;
+        --with-dtpools-maxbufsize)
+            maxbufsize=$(echo $1 | cut -d= -f2)
+            shift
+            ;;
+    esac
+done
+
+# get source and build directories
 srcdir=`dirname $0`
+builddir=$PWD
 
-# Read basic MPI datatypes
-while read -r line
-do
-    if [ ! `echo $line | head -c 1` = "#" ] ; then
-        types="$types $line "
-    fi
-done < ${srcdir}/basictypelist.txt
+# reformat type list
+types=$(echo $types | tr "," " ")
 
-while read -r line
-do
+# NOTE: generate seeds for tests starting from '1'
+#       as srand() considers 'seed=0' and 'seed=1'
+#       equivalent: http://sourceware.org/git/?p=glibc.git;a=blob;f=stdlib/random_r.c;h=51a2e8c812aee78783bd6d38c1b6269d41c8e47e;hb=HEAD#l181
+seed=1
+
+while read -r line ; do
     if [ ! `echo $line | head -c 1` = "#" ] ; then
         # the line is not a comment
-        pathname=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\1|'`
-        args=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\2|'`
-        counts=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\3|'`
-        timelimit=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\4|'`
-        procs=`echo $line | sed -E 's|(.+):(.*):(.+):(.*):(.+)|\5|'`
+        pathname=`echo $line | cut -f1 -d':'`
+        args=`echo $line | cut -f2 -d':'`
+        counts=`echo $line | cut -f3 -d':'`
+        timelimit=`echo $line | cut -f4 -d':'`
+        procs=`echo $line | cut -f5 -d':'`
+        mintestsize=`echo $line | cut -f6 -d':'`
+        maxtestsize=`echo $line | cut -f7 -d':'`
         other_args=""
     else
         # the line is a comment
         continue
     fi
 
-    dir=${srcdir}/`dirname $pathname`
-    source=`echo $(basename $pathname)`
+    if [ -z "$pathname" ] ; then
+        echo "No pathname found"
+        exit 1
+    elif [ -z "$counts" ] ; then
+        echo "$pathname has no counts specified"
+        exit 1
+    elif [ -z "$procs" ] ; then
+        echo "$pathname has no proc count specified"
+        exit 1
+    elif [ -z "$mintestsize" ] ; then
+        echo "$pathname has no minimum test size specified"
+        exit 1
+    fi
 
-    # check whether .dtp files already exist in dir ...
-    exists=0
-    for i in $dirs
-    do
-        if [ $i = $dir ] ; then
-            exists=1
+    # set default maxtestsize
+    if [ -z $maxtestsize ] ; then
+        maxtestsize=$mintestsize
+    fi
+
+    # get test directory and name
+    testdir=`dirname $pathname`
+    testname=`basename $pathname`
+
+    # if this is the first test in this directory, create a new
+    # testlist.dtp
+    found=0
+    for dir in $dirs ; do
+        if test "$testdir" = "$dir" ; then
+            found=1
         fi
     done
-
-    # ... if not create them
-    if [ $exists = 0 ] ; then
-        printf "" > ${dir}/testlist.dtp
-        printf "" > ${dir}/testlist.in
-        dirs="$dirs $dir "
+    if test "$found" = "0" ; then
+        dirs="$dirs $testdir"
+        printf "" > ${builddir}/${testdir}/testlist.dtp
     fi
 
     # prepare extra args
-    for arg in $args
-    do
+    for arg in $args ; do
         other_args="$other_args arg=$arg"
     done
 
-    printf "generating tests for: ${source}... "
+    printf "generating tests for: ${testname}... "
 
     sendcounts=$counts
 
-    for type in $types
-    do
-        recvcounts=$sendcounts # reset recv counts to send counts
-
-        for sendcount in $sendcounts
-        do
-            if [ $(basename $dir) = "pt2pt" ] ; then # only send/recv comm can use types from different pools
-                # do combination of different send recv count where recv count >= send count
-                for recvcount in $recvcounts
-                do
-                    echo "${source} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} ${other_args} $timelimit" >> ${dir}/testlist.dtp
-                     # limit the mixed pool case to only one
-                     # TODO: this should be defined in the config file
-                    if [ $recvcount -gt $sendcount ]; then
-                        break
-                    fi
-                done
-                recvcounts=`echo $recvcounts | sed -e "s|$sendcount||"` # update recv counts
+    for type in $types ; do
+        testsize=0
+        count=0
+        for sendcount in $sendcounts ; do
+            # decrease the testsize by the amount the count went up
+            # by, but make sure it doesn't fall below 8
+            if test "$testsize" = "0" ; then
+                testsize=$maxtestsize
+                count=$sendcount
             else
-                echo "${source} $procs arg=-type=${type} arg=-count=${sendcount} ${other_args} $timelimit" >> ${dir}/testlist.dtp
+                testsize=$((testsize * count / sendcount))
+                if [ $testsize -lt $mintestsize ] ; then testsize=$mintestsize; fi
+            fi
+
+            if [ $testdir = "pt2pt" ] ; then # only send/recv comm can use types from different pools
+                # do combination of different send recv count where recv count >= send count
+                # limit the mixed pool case to only one
+                # TODO: this should be defined in the config file
+                for recvcount in $sendcount $((sendcount * 2)) ; do
+                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} arg=-maxbufsize=${maxbufsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                    seed=$((seed + 1))
+                done
+            else
+                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} arg=-maxbufsize=${maxbufsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                seed=$((seed + 1))
             fi
         done
     done
     printf "done\n"
-done < ${srcdir}/basictypetest.txt
-
-while read -r line
-do
-    if [ ! `echo $line | head -c 1` = "#" ] ; then
-        # the line is not a comment
-        pathname=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\1|'`
-        macros=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\2|'`
-        numtypes=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\3|'`
-        types=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\4|'`
-        counts=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\5|'`
-        timelimit=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\6|'`
-        procs=`echo $line | sed -E 's|(.+):(.*):(.+):(.+):(.+):(.*):(.+)|\7|'`
-        other_macros=""
-    else
-        # the line is a comment
-        continue
-    fi
-
-    dir=${srcdir}/`dirname $pathname`
-    source=`echo $(basename $pathname)`
-
-    # NOTE: .dtp and .in files should already exist at this point ...
-    exists=0
-    for i in $dirs
-    do
-        if [ $i = $dir ] ; then
-            exists=1
-        fi
-    done
-
-    # ... if they don't create them
-    if [ $exists = 0 ] ; then
-        printf "" > ${dir}/testlist.dtp
-        printf "" > ${dir}/testlist.in
-        dirs="$dirs $dir "
-    fi
-
-    # prepare extra args
-    for arg in $args
-    do
-        other_args="$other_args arg=$arg"
-    done
-
-    printf "generating tests for: ${source}... "
-    echo "${source} $procs arg=-numtypes=$numtypes arg=-types=$types arg=-counts=$counts ${other_args} $timelimit" >> ${dir}/testlist.dtp
-    printf "done\n"
-done < ${srcdir}/structtypetest.txt
-
-for dir in $dirs
-do
-    printf "generating testlist for: ${dir}... "
-    cat ${dir}/testlist.def >> ${dir}/testlist.in
-    cat ${dir}/testlist.dtp >> ${dir}/testlist.in
-    rm -f ${dir}/testlist.dtp
-    printf "done\n"
-done
-
-printf "generating basictypelist.txt for dtpools... "
-printf "" > ${srcdir}/dtpools/basictypelist.txt
-while read -r line; do
-    if [ ! `echo $line | head -c 1` = "#" ]; then
-        echo "$line," >> ${srcdir}/dtpools/basictypelist.txt
-    fi
-done < ${srcdir}/basictypelist.txt
-echo "MPI_DATATYPE_NULL" >> ${srcdir}/dtpools/basictypelist.txt
-printf "done\n"
+done < ${srcdir}/dtp-test-config.txt

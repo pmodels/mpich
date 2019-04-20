@@ -26,12 +26,8 @@ void MTestError(const char[]);
 typedef void MTestArgList;
 MTestArgList *MTestArgListCreate(int argc, char *argv[]);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
-MPI_Datatype MTestArgListGetDatatype(MTestArgList * head, const char *arg);
-MPI_Datatype *MTestArgListGetDatatypeList(MTestArgList * head, const char *arg);
 int MTestArgListGetInt(MTestArgList * head, const char *arg);
-int *MTestArgListGetIntList(MTestArgList * head, const char *arg);
 long MTestArgListGetLong(MTestArgList * head, const char *arg);
-long *MTestArgListGetLongList(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
 int MTestGetIntracomm(MPI::Intracomm &, int);

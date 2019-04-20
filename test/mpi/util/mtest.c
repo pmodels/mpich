@@ -1388,21 +1388,11 @@ int MTestSpawnPossible(int *can_spawn)
 /* ------------------------------------------------------------------------ */
 /* All dtpools related code */
 
-#include "dtpools.h"
-
-struct _dt_type {
-    const char *name;
-    MPI_Datatype type;
-};
-static struct _dt_type typelist[] = { DTPOOLS_TYPE_LIST };
-
 typedef struct MTestArgListEntry {
     char *arg;
     char *val;
     struct MTestArgListEntry *next;
 } MTestArgListEntry;
-
-static char *progname;
 
 static void MTestArgListInsert(MTestArgListEntry ** head, char *arg, char *val)
 {
@@ -1441,14 +1431,7 @@ static char *MTestArgListSearch(MTestArgListEntry * head, const char *arg)
 
 static void MTestArgListPrintError(const char *arg)
 {
-    fprintf(stdout, "Error: '%s' has not been defined!\n\n", arg);
-    fprintf(stdout, "Usage: %s [options]\n", progname);
-    fprintf(stdout, "options:\n");
-    fprintf(stdout, "  -type=[string]          MPI_Datatype string (e.g., \"MPI_INT\")\n");
-    fprintf(stdout, "  -count=[integer]        number of 'type' in non pt2pt tests\n");
-    fprintf(stdout, "  -sendcnt=[integer]      number of send 'type' in pt2pt tests\n");
-    fprintf(stdout, "  -recvcnt=[integer]      number of recv 'type' in pt2pt tests\n");
-
+    fprintf(stderr, "Error: argument -%s= has not been defined!\n", arg);
     exit(-1);
 }
 
@@ -1463,8 +1446,6 @@ void MTestArgListDestroy(MTestArgList * head)
         free(prev->val);
         free(prev);
     }
-
-    free(progname);
 }
 
 /*
@@ -1493,8 +1474,6 @@ MTestArgList *MTestArgListCreate(int argc, char *argv[])
         free(string);
     }
 
-    progname = strdup(argv[0]);
-
     return head;
 }
 
@@ -1508,55 +1487,9 @@ char *MTestArgListGetString(MTestArgList * head, const char *arg)
     return tmp;
 }
 
-MPI_Datatype MTestArgListGetDatatype(MTestArgList * head, const char *arg)
-{
-    int i = 0;
-    char *tmp = MTestArgListGetString(head, arg);
-    MPI_Datatype type = MPI_DATATYPE_NULL;
-
-    while (strcmp(typelist[i].name, "MPI_DATATYPE_NULL") && strcmp(tmp, typelist[i].name))
-        i++;
-
-    if (strcmp(typelist[i].name, "MPI_DATATYPE_NULL"))
-        type = typelist[i].type;
-
-    return type;
-}
-
-MPI_Datatype *MTestArgListGetDatatypeList(MTestArgList * head, const char *arg)
-{
-    int i, j;
-    char *token;
-    char *tmp = MTestArgListGetString(head, arg);
-    MPI_Datatype *ret = malloc(sizeof(MPI_Datatype) * 64);
-
-    for (i = j = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ",")) {
-        while (strcmp(typelist[i].name, "MPI_DATATYPE_NULL") && strcmp(token, typelist[i].name))
-            i++;
-
-        if (strcmp(typelist[i].name, "MPI_DATATYPE_NULL"))
-            ret[j++] = typelist[i].type;
-    }
-
-    return ret;
-}
-
 int MTestArgListGetInt(MTestArgList * head, const char *arg)
 {
     return atoi(MTestArgListGetString(head, arg));
-}
-
-int *MTestArgListGetIntList(MTestArgList * head, const char *arg)
-{
-    int i;
-    char *token;
-    char *tmp = MTestArgListGetString(head, arg);
-    int *ret = malloc(sizeof(int) * 64);
-
-    for (i = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ","))
-        ret[i++] = atoi(token);
-
-    return ret;
 }
 
 long MTestArgListGetLong(MTestArgList * head, const char *arg)
@@ -1564,15 +1497,12 @@ long MTestArgListGetLong(MTestArgList * head, const char *arg)
     return atol(MTestArgListGetString(head, arg));
 }
 
-long *MTestArgListGetLongList(MTestArgList * head, const char *arg)
+int MTestIsBasicDtype(MPI_Datatype type)
 {
-    int i;
-    char *token;
-    char *tmp = MTestArgListGetString(head, arg);
-    long *ret = malloc(sizeof(long) * 64);
+    int numints, numaddrs, numtypes, combiner;
+    MPI_Type_get_envelope(type, &numints, &numaddrs, &numtypes, &combiner);
 
-    for (i = 0, token = strtok(tmp, ","); token; token = strtok(NULL, ","))
-        ret[i++] = atol(token);
+    int is_basic = (combiner == MPI_COMBINER_NAMED);
 
-    return ret;
+    return is_basic;
 }

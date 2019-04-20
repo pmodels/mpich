@@ -1,3 +1,0 @@
-noinst_PROGRAMS += packsizex
-packsizex_CPPFLAGS = $(AM_CPPFLAGS)
-packsizex_SOURCES = packsizex.cxx

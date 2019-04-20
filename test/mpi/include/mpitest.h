@@ -33,12 +33,8 @@ void MTestGetDbgInfo(int *dbgflag, int *verbose);
 typedef void MTestArgList;
 MTestArgList *MTestArgListCreate(int argc, char *argv[]);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
-MPI_Datatype MTestArgListGetDatatype(MTestArgList * head, const char *arg);
-MPI_Datatype *MTestArgListGetDatatypeList(MTestArgList * head, const char *arg);
 int MTestArgListGetInt(MTestArgList * head, const char *arg);
-int *MTestArgListGetIntList(MTestArgList * head, const char *arg);
 long MTestArgListGetLong(MTestArgList * head, const char *arg);
-long *MTestArgListGetLongList(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
 int MTestGetIntracomm(MPI_Comm *, int);
@@ -59,6 +55,8 @@ int MTestGetWin(MPI_Win *, int);
 const char *MTestGetWinName(void);
 void MTestFreeWin(MPI_Win *);
 #endif
+
+int MTestIsBasicDtype(MPI_Datatype type);
 
 /* These macros permit overrides via:
  *     make CPPFLAGS='-DMTEST_MPI_VERSION=X -DMTEST_MPI_SUBVERSION=Y'
@@ -91,5 +89,21 @@ void MTestFreeWin(MPI_Win *);
 do {                                    \
     memset(addr_, 0, size_);            \
 } while (0)
+
+#define MTEST_CREATE_AND_FREE_DTP_OBJS(dtp_, maxbufsize_, testsize_) ({ \
+    int errs_ = 0;                                                      \
+    do {                                                                \
+        int i_, err_;                                                   \
+        DTP_obj_s obj_;                                                 \
+        for(i_ = 0; i_ < testsize_; i_++) {                             \
+            err_ = DTP_obj_create(dtp_, &obj_, maxbufsize_);            \
+            if (err_ != DTP_SUCCESS) {                                  \
+                errs_++;                                                \
+                break;                                                  \
+            }                                                           \
+            DTP_obj_free(obj_);                                         \
+        }                                                               \
+    } while (0);                                                        \
+    errs_; })
 
 #endif /* MPITEST_H_INCLUDED */
