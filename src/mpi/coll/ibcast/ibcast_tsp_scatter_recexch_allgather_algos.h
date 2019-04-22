@@ -20,8 +20,8 @@
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int count,
                                                           MPI_Datatype datatype, int root,
-                                                          MPIR_Comm * comm,
-                                                          MPIR_TSP_sched_t * sched)
+                                                          MPIR_Comm * comm, int scatter_k,
+                                                          int allgather_k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t extent, type_size;
@@ -36,8 +36,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
     int current_child, next_child, lrank, total_count, recv_id, sink_id;
     int num_children, *child_subtree_size = NULL;
     int recv_size, num_send_dependencies;
-    int scatter_k = MPIR_CVAR_IBCAST_SCATTER_KVAL;
-    int allgather_k = MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL;
     MPIR_CHKLMEM_DECL(3);
 
     /* For correctness, transport based collectives need to get the
@@ -209,7 +207,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
 
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
 int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
-                                                    int root, MPIR_Comm * comm, MPIR_Request ** req)
+                                                    int root, MPIR_Comm * comm, int scatter_k,
+                                                    int allgather_k, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -227,7 +226,7 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
     /* schedule scatter followed by recursive exchange allgather algo */
     mpi_errno =
         MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                              comm, sched);
+                                                              comm, scatter_k, allgather_k, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
