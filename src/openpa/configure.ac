@@ -64,13 +64,6 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 ########################################################################
 
-# check if we're cross compiling
-if test "$build_alias" = "$host_alias" ; then
-  CROSS_COMPILING="no"
-else
-  CROSS_COMPILING="yes"
-fi
-
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
@@ -182,20 +175,6 @@ pac_cv_gnu_attr_format=yes,pac_cv_gnu_attr_format=no)])
         AC_DEFINE(HAVE_GCC_ATTRIBUTE,1,[Define if GNU __attribute__ is supported])
     fi
 fi
-
-dnl Check to make sure that the compiler rejects bogus inline assembly
-dnl statements.  If it does not, then we need to be careful below when
-dnl we're checking which primitives header file to use.
-AC_MSG_CHECKING([if compiler rejects bogus asm statements])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[
-    __asm__ __volatile__ ("ILLEGAL_ASM_STMT");
-  ]])],
-  compiler_rejects_bogus_asm=no
-  AC_MSG_RESULT([no])
-  ,
-  compiler_rejects_bogus_asm=yes
-  AC_MSG_RESULT([yes])
-)
 
 AC_ARG_WITH([atomic-primitives], [AC_HELP_STRING([--with-atomic-primitives],
     [Force OPA to use a specific atomic primitives implementation file (default
@@ -339,25 +318,10 @@ dnl
 dnl If the compiler can't tell that it's getting bad assembly, we have
 dnl no hope of being able to check what asm statements are supported
 dnl without AC_TRY_RUN().
-    if test "$compiler_rejects_bogus_asm" = "yes"  ; then 
-        # if we're cross compiling, don't try the gcc_intel_32_64
-        # test, since it uses fence operations which are not supported
-        # on pre Pentium 4 machines, but it may still compile and link
-        if test "$CROSS_COMPILING" = "no" ; then
-            OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 primitives])
-        fi
-        OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64_p3.h], [GCC_X86_32_64_P3], [gcc x86 primitives for pre-Pentium 4])
-        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ia64.h], [GCC_AND_IA64_ASM], [gcc ia64 primitives])
-        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ppc.h], [GCC_AND_POWERPC_ASM], [gcc PowerPC atomics])
-        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_arm.h], [GCC_AND_ARM_ASM], [gcc ARM atomics])
-        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])
-    fi
-
     OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sync.h], [GCC_INTRINSIC_SYNC], [gcc __sync intrinsics])
     OPA_TRY_PRIMITIVE_HEADER([opa_gcc_atomic.h], [GCC_INTRINSIC_ATOMIC], [gcc __atomic intrinsics])
     OPA_TRY_PRIMITIVE_HEADER([opa_c11.h], [C11_ATOMICS], [C11 atomic intrinsics])
     OPA_TRY_PRIMITIVE_HEADER([opa_nt_intrinsics.h], [NT_INTRINSICS], [Windows NT atomic intrinsics])
-    OPA_TRY_PRIMITIVE_HEADER([opa_sun_atomic_ops.h], [SUN_ATOMIC_OPS], [Sun atomic operations library])
 
     if test "$checked_specified_primitive" = "no" ; then
         AC_MSG_ERROR([did not find specified atomic primitives file "$with_atomic_primitives"], 1)
