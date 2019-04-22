@@ -46,27 +46,27 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     MPI_Type_get_name(targettype, target_name, &len);
 
     MTestPrintfMsg(1,
-                   "Getting count = %ld of origtype %s - count = %ld receive type %s\n",
+                   "Getting count = %ld of origtype %s - count = %ld target type %s\n",
                    origcount, orig_name, targetcount, target_name);
 
-    MPI_Type_get_extent(origtype, &lb, &extent);
+    MPI_Type_get_extent(targettype, &lb, &extent);
     /* This makes sure that disp_unit does not become negative for large counts */
     disp_unit = extent < INT_MAX ? extent : 1;
-    MPI_Win_create(origbuf, origcount * extent + lb, disp_unit, MPI_INFO_NULL, comm, &win);
+    MPI_Win_create(targetbuf, targetcount * extent + lb, disp_unit, MPI_INFO_NULL, comm, &win);
     MPI_Win_fence(0, win);
 
-    if (rank == orig) {
-        /* The orig does not need to do anything besides the
+    if (rank == target) {
+        /* The target does not need to do anything besides the
          * fence */
         MPI_Win_fence(0, win);
-    } else if (rank == target) {
+    } else if (rank == orig) {
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Win_set_errhandler(win, MPI_ERRORS_RETURN);
 
         /* This should have the same effect, in terms of
          * transfering data, as a send/recv pair */
-        err = MPI_Get(targetbuf, targetcount, targettype, orig, 0, origcount, origtype, win);
+        err = MPI_Get(origbuf, origcount, origtype, target, 0, targetcount, targettype, win);
         if (err) {
             errs++;
             if (errs < 10) {
@@ -80,13 +80,13 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
                 MTestPrintError(err);
             }
         }
-        err = DTP_obj_buf_check(target_dtp, j, 0, 1, count);
+        err = DTP_obj_buf_check(orig_dtp, i, 0, 1, count);
         if (err != DTP_SUCCESS) {
             errs++;
             if (errs < 10) {
                 printf
-                    ("Data in target buffer did not match for targetination datatype %s (put with orig datatype %s)\n",
-                     target_name, orig_name);
+                    ("Data in orig buffer did not match for orig datatype %s (get with target datatype %s)\n",
+                     orig_name, target_name);
             }
         }
     } else {
@@ -182,14 +182,14 @@ int main(int argc, char *argv[])
         target = size - 1;
 
         for (i = 0; i < orig_dtp->DTP_num_objs; i++) {
-            err = DTP_obj_create(orig_dtp, i, 0, 1, count);
+            err = DTP_obj_create(orig_dtp, i, 0, 0, 0);
             if (err != DTP_SUCCESS) {
                 errs++;
                 break;
             }
 
             for (j = 0; j < target_dtp->DTP_num_objs; j++) {
-                err = DTP_obj_create(target_dtp, j, 0, 0, 0);
+                err = DTP_obj_create(target_dtp, j, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
                     break;
