@@ -22,8 +22,9 @@
 
 int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int count,
                                                           MPI_Datatype datatype, int root,
-                                                          MPIR_Comm * comm,
+                                                          MPIR_Comm * comm, int scatter_k,
+                                                          int allgather_k,
                                                           MPIR_TSP_sched_t * sched);
 int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
-                                                    int root, MPIR_Comm * comm,
-                                                    MPIR_Request ** req);
+                                                    int root, MPIR_Comm * comm, int scatter_k,
+                                                    int allgather_k, MPIR_Request ** req);

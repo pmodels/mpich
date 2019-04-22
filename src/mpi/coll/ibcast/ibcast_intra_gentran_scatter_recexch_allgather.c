@@ -25,7 +25,10 @@ int MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(void *buffer, int count,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                                    comm_ptr, request);
+                                                                    comm_ptr,
+                                                                    MPIR_CVAR_IBCAST_SCATTER_KVAL,
+                                                                    MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL,
+                                                                    request);
 
     return mpi_errno;
 }
