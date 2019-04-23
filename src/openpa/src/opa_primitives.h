@@ -110,6 +110,8 @@
 #include "primitives/opa_gcc_ia64.h"
 #elif defined(OPA_HAVE_GCC_AND_SICORTEX_ASM)
 #include "primitives/opa_gcc_sicortex.h"
+#elif defined(OPA_HAVE_GCC_INTRINSIC_ATOMIC)
+#include "primitives/opa_gcc_atomic.h"
 #elif defined(OPA_HAVE_GCC_INTRINSIC_SYNC)
 #include "primitives/opa_gcc_sync.h"
 #elif defined(OPA_HAVE_SUN_ATOMIC_OPS)
