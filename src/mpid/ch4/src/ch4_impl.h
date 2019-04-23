@@ -784,21 +784,38 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_create(void **out_map, MPL_memory_class
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_destroy(void *in_map)
 {
     MPIDIU_map_t *map = in_map;
+    MPIDIU_map_entry_t *e, *etmp;
+    HASH_ITER(hh, map->head, e, etmp) {
+        /* Free all remaining entries in the hash */
+        HASH_DELETE(hh, map->head, e);
+        MPL_free(e);
+    }
     HASH_CLEAR(hh, map->head);
     MPL_free(map);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *val,
-                                             MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set_unsafe(void *in_map, uint64_t id, void *val,
+                                                    MPL_memory_class class)
 {
     MPIDIU_map_t *map;
     MPIDIU_map_entry_t *map_entry;
+    /* MPIDIU_MAP_NOT_FOUND may be used as a special value to indicate an error. */
+    MPIR_Assert(val != MPIDIU_MAP_NOT_FOUND);
     map = (MPIDIU_map_t *) in_map;
     map_entry = MPL_malloc(sizeof(MPIDIU_map_entry_t), class);
     MPIR_Assert(map_entry != NULL);
     map_entry->key = id;
     map_entry->value = val;
     HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry, class);
+}
+
+/* Sets a (id -> val) pair into the map, assuming there's no entry with `id`. */
+MPL_STATIC_INLINE_PREFIX void MPIDIU_map_set(void *in_map, uint64_t id, void *val,
+                                             MPL_memory_class class)
+{
+    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_UTIL_MUTEX);
+    MPIDIU_map_set_unsafe(in_map, id, val, class);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_UTIL_MUTEX);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_erase(void *in_map, uint64_t id)
@@ -824,6 +841,29 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_lookup(void *in_map, uint64_t id)
         rc = MPIDIU_MAP_NOT_FOUND;
     else
         rc = map_entry->value;
+    return rc;
+}
+
+/* Updates a value in the map which has `id` as a key.
+   If `id` does not exist in the map, it will be added. Returns the old value. */
+MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_update(void *in_map, uint64_t id, void *new_val,
+                                                 MPL_memory_class class)
+{
+    void *rc;
+    MPIDIU_map_t *map;
+    MPIDIU_map_entry_t *map_entry;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
+    map = (MPIDIU_map_t *) in_map;
+    HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    if (map_entry == NULL) {
+        rc = MPIDIU_MAP_NOT_FOUND;
+        MPIDIU_map_set_unsafe(in_map, id, new_val, class);
+    } else {
+        rc = map_entry->value;
+        map_entry->value = new_val;
+    }
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     return rc;
 }
 

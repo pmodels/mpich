@@ -353,6 +353,11 @@ typedef struct {
     MPIDIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
+    /* Sequence number trackers for active messages */
+    void *am_send_seq_tracker;
+    void *am_recv_seq_tracker;
+    /* Queue (utlist) to store early-arrival active messages */
+    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
 
     /* Completion queue buffering */
     MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];

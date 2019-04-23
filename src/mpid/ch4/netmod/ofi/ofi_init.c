@@ -932,6 +932,10 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                  FI_OPT_ENDPOINT,
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
+        MPIDIU_map_create(&MPIDI_OFI_global.am_recv_seq_tracker, MPL_MEM_BUFFER);
+        MPIDIU_map_create(&MPIDI_OFI_global.am_send_seq_tracker, MPL_MEM_BUFFER);
+        MPIDI_OFI_global.am_unordered_msgs = NULL;
+
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
             MPIDI_OFI_global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
             MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
@@ -1073,6 +1077,13 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
+        while (MPIDI_OFI_global.am_unordered_msgs) {
+            MPIDI_OFI_am_unordered_msg_t *uo_msg = MPIDI_OFI_global.am_unordered_msgs;
+            DL_DELETE(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
+        }
+        MPIDIU_map_destroy(MPIDI_OFI_global.am_send_seq_tracker);
+        MPIDIU_map_destroy(MPIDI_OFI_global.am_recv_seq_tracker);
+
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
             MPL_free(MPIDI_OFI_global.am_bufs[i]);
 
