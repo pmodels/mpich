@@ -99,28 +99,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
     ucp_tag_message_h message_handle;
     /* check for active messages */
     message_handle =
-        ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
+        ucp_tag_probe_nb(MPIDI_UCX_VNI(vni).worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
     while (message_handle) {
         am_buf = MPL_malloc(info.length, MPL_MEM_BUFFER);
-        ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
+        ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_VNI(vni).worker,
                                                                       am_buf,
                                                                       info.length,
                                                                       ucp_dt_make_contig(1),
                                                                       message_handle,
                                                                       &MPIDI_UCX_Handle_am_recv);
         while (!ucp_request_is_completed(ucp_request)) {
-            ucp_worker_progress(MPIDI_UCX_global.worker);
+            ucp_worker_progress(MPIDI_UCX_VNI(vni).worker);
         }
 
         ucp_request_release(ucp_request);
         MPIDI_UCX_am_handler(am_buf, info.length);
         MPL_free(am_buf);
         message_handle =
-            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
+            ucp_tag_probe_nb(MPIDI_UCX_VNI(vni).worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1,
+                             &info);
 
     }
 
-    ucp_worker_progress(MPIDI_UCX_global.worker);
+    ucp_worker_progress(MPIDI_UCX_VNI(vni).worker);
 
   fn_exit:
     return mpi_errno;

@@ -26,19 +26,30 @@
 #define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
 
 typedef struct {
-    int avtid;
-    ucp_context_h context;
-    ucp_worker_h worker;
-    char addrname[UCP_PEER_NAME_MAX];
-    char *pmi_addr_table;
     size_t addrname_len;
     ucp_address_t *if_address;
+    ucp_worker_h worker;
+} MPIDI_UCX_vni_t;
+
+typedef struct {
+    int total_vnis;
+    MPIDI_UCX_vni_t vni[MPIDI_UCX_MAX_WORKERS];
+} MPIDI_UCX_vni_pool_t;
+
+typedef struct {
+    int avtid;
+    ucp_context_h context;
+    char addrname[UCP_PEER_NAME_MAX];
+    char *pmi_addr_table;
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
+    MPIDI_UCX_vni_pool_t vni_pool;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
+#define MPIDI_UCX_VNI_POOL(field) MPIDI_UCX_global.vni_pool.field
+#define MPIDI_UCX_VNI(i) MPIDI_UCX_VNI_POOL(vni)[i]
 
 extern MPIDI_UCX_global_t MPIDI_UCX_global;
 extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;

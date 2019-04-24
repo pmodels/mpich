@@ -12,6 +12,7 @@
 #include <ucp/api/ucp.h>
 
 #define MPIDI_UCX_KVSAPPSTRLEN 4096
+#define MPIDI_UCX_MAX_WORKERS 256       /* TODO: what would be the right number? */
 
 typedef struct {
     void *req;
@@ -62,7 +63,7 @@ typedef struct {
 } MPIDI_UCX_win_t;
 
 typedef struct {
-    ucp_ep_h dest;
+    ucp_ep_h dest[MPIDI_UCX_MAX_WORKERS];
 } MPIDI_UCX_addr_t;
 
 typedef struct {

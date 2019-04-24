@@ -121,14 +121,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_VNI(0).worker,
                                                         (char *) buf + dt_true_lb, data_sz,
                                                         ucp_dt_make_contig(1),
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_VNI(0).worker,
                                                         buf, count,
                                                         dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_VNI(0).worker,
                                                             (char *) buf + dt_true_lb,
                                                             data_sz,
                                                             ucp_dt_make_contig(1),
@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_VNI(0).worker,
                                                             buf, count,
                                                             dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                             MPIDI_UCX_REQ(message).
@@ -264,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {
-        ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(rreq).a.ucp_request);
+        ucp_request_cancel(MPIDI_UCX_VNI(0).worker, MPIDI_UCX_REQ(rreq).a.ucp_request);
     }
 
     return MPI_SUCCESS;

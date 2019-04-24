@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
 
-    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker, ucp_tag, tag_mask, 1, &info);
+    message_h = ucp_tag_probe_nb(MPIDI_UCX_VNI(0).worker, ucp_tag, tag_mask, 1, &info);
 
     if (message_h) {
         *flag = 1;
@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
 
-    message_h = ucp_tag_probe_nb(MPIDI_UCX_global.worker, ucp_tag, tag_mask, 0, &info);
+    message_h = ucp_tag_probe_nb(MPIDI_UCX_VNI(0).worker, ucp_tag, tag_mask, 0, &info);
 
     if (message_h) {
         *flag = 1;

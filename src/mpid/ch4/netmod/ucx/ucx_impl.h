@@ -19,9 +19,9 @@
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
 #define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_UCX_COMM_TO_EP(comm,rank) \
-    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest
-#define MPIDI_UCX_AV_TO_EP(av) MPIDI_UCX_AV((av)).dest
+#define MPIDI_UCX_COMM_TO_EP(comm,rank,vni) \
+    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest[vni]
+#define MPIDI_UCX_AV_TO_EP(av,vni) MPIDI_UCX_AV((av)).dest[vni]
 
 #define MPIDI_UCX_WIN(win) ((win)->dev.netmod.ucx)
 #define MPIDI_UCX_WIN_INFO(win, rank) MPIDI_UCX_WIN(win).info_table[rank]

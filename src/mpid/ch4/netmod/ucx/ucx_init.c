@@ -12,6 +12,28 @@
 #include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : CH4_UCX
+      description : A category for CH4 UCX netmod variables
+
+cvars:
+    - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
+      category    : CH4_UCX
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If set to positive, this CVAR specifies the maximum number of VNIs
+        that UCX netmod exposes.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)
@@ -29,7 +51,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
-    int i;
+    int i, vni;
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
@@ -38,7 +60,8 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
 
-    *n_vnis_provided = 1;
+    *n_vnis_provided = MPIR_CVAR_CH4_UCX_MAX_VNIS;
+    MPIDI_UCX_VNI_POOL(total_vnis) = *n_vnis_provided;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -49,11 +72,14 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = request_init_callback;
     ucp_params.request_cleanup = NULL;
-    ucp_params.estimated_num_eps = size;
+    ucp_params.estimated_num_eps = size * MPIDI_UCX_VNI_POOL(total_vnis);
+    /* multiple threads can access the context from different workers in the same context */
+    ucp_params.mt_workers_shared = 1;
 
     ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
         UCP_PARAM_FIELD_REQUEST_SIZE |
-        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
+        UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT |
+        UCP_PARAM_FIELD_MT_WORKERS_SHARED;
 
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -62,24 +88,27 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
     worker_params.thread_mode = UCS_THREAD_MODE_SERIALIZED;
 
-    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
-                                   &MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucx_status =
-        ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
-                               &MPIDI_UCX_global.addrname_len);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
-
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
+                                       &MPIDI_UCX_VNI(vni).worker);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+        ucx_status =
+            ucp_worker_get_address(MPIDI_UCX_VNI(vni).worker, &MPIDI_UCX_VNI(vni).if_address,
+                                   &MPIDI_UCX_VNI(vni).addrname_len);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+        MPIR_Assert(MPIDI_UCX_VNI(vni).addrname_len <= INT_MAX);
+    }
+    
     mpi_errno =
-        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
-                              (int) MPIDI_UCX_global.addrname_len, FALSE,
+        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_VNI(0).if_address,
+                              (int) MPIDI_UCX_VNI(0).addrname_len, FALSE,
                               MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
                               (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-
+    
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        /* TODO: implement this for multiple VNIs */
         int *node_roots, num_nodes;
 
         MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
@@ -87,18 +116,20 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
             ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
+                ucp_ep_create(MPIDI_UCX_VNI(0 /*may be WRONG*/).worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0 /*may be WRONG*/]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPL_free(node_roots);
     } else {
+        /* Exchange address only for the first VNI here
+         * Use the first VNI to exchange addresses of other VNIs during the commit of COMM_WORLD */
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
             ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                ucp_ep_create(MPIDI_UCX_VNI(0).worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
@@ -112,8 +143,10 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        if (MPIDI_UCX_VNI(vni).worker != NULL)
+            ucp_worker_destroy(MPIDI_UCX_VNI(vni).worker);
+    }
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
@@ -125,20 +158,24 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
-    int i, p = 0, completed;
+    int i, vni, p = 0, completed;
     MPIR_Comm *comm;
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
     comm = MPIR_Process.comm_world;
-    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size, MPL_MEM_OTHER);
+    pending =
+        MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size * MPIDI_UCX_VNI_POOL(total_vnis),
+                   MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
-        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-        MPIDI_UCX_CHK_REQUEST(ucp_request);
-        if (ucp_request != UCS_OK) {
-            pending[p] = ucp_request;
-            p++;
+        for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+            ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[vni]);
+            MPIDI_UCX_CHK_REQUEST(ucp_request);
+            if (ucp_request != UCS_OK) {
+                pending[p] = ucp_request;
+                p++;
+            }
         }
     }
 
@@ -146,7 +183,9 @@ int MPIDI_UCX_mpi_finalize_hook(void)
      * deadlock! */
     completed = p;
     while (completed != 0) {
-        ucp_worker_progress(MPIDI_UCX_global.worker);
+        for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+            ucp_worker_progress(MPIDI_UCX_VNI(vni).worker);
+        }
         completed = p;
         for (i = 0; i < p; i++) {
             if (ucp_request_is_completed(pending[i]) != 0)
@@ -182,8 +221,10 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 #endif
 
 
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    for (vni = 0; vni < MPIDI_UCX_VNI_POOL(total_vnis); vni++) {
+        if (MPIDI_UCX_VNI(vni).worker != NULL)
+            ucp_worker_destroy(MPIDI_UCX_VNI(vni).worker);
+    }
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
