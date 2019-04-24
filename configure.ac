@@ -1173,6 +1173,7 @@ fi
 if test "$izem_atomic" = "yes" ; then
     AC_DEFINE(ENABLE_IZEM_ATOMIC,1,[Define to enable using Izem CPU atomics])
 fi
+AM_CONDITIONAL([ENABLE_IZEM_ATOMIC], [test x$izem_atomic = xyes])
 
 AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
 ZMLIBNAME=${ZMLIBNAME:-"zm"}
