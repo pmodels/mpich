@@ -16,11 +16,16 @@
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
+#define MPIDI_NM_VNI_INVALID -1
+
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
                                     int *n_vnis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef MPIDI_vci_resource_t(*MPIDI_NM_vni_get_resource_info_t) (int vni);
+typedef int (*MPIDI_NM_vni_alloc_t) (MPIDI_vci_resource_t resources,
+                                     MPIDI_vci_property_t properties, int *vni);
+typedef int (*MPIDI_NM_vni_free_t) (int vni);
 typedef int (*MPIDI_NM_progress_t) (int vni, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                             int timeout, MPIR_Comm * comm,
@@ -477,6 +482,8 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
     MPIDI_NM_mpi_finalize_t mpi_finalize;
     MPIDI_NM_vni_get_resource_info_t vni_get_resource_info;
+    MPIDI_NM_vni_alloc_t vni_alloc;
+    MPIDI_NM_vni_free_t vni_free;
     MPIDI_NM_progress_t progress;
     MPIDI_NM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_NM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -660,6 +667,8 @@ int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_C
                            MPIR_Comm * comm_self, int spawned, int *n_vnis_provided);
 int MPIDI_NM_mpi_finalize_hook(void);
 MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni);
+int MPIDI_NM_vni_alloc(MPIDI_vci_resource_t resources, MPIDI_vci_property_t properties, int *vni);
+int MPIDI_NM_vni_free(int vni);
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking) MPL_STATIC_INLINE_SUFFIX;
 int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                               MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
