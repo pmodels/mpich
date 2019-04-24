@@ -11,6 +11,6 @@ noinst_HEADERS += libhydra/topo/hydra_topo.h \
 
 libhydra_la_SOURCES += libhydra/topo/hydra_topo.c
 
-if hydra_have_hwloc
+if HYDRA_HAVE_HWLOC
 include libhydra/topo/hwloc/Makefile.mk
 endif
