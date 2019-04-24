@@ -18,6 +18,14 @@
 #include <assert.h>
 #endif
 
+#ifdef USE_PMIX_API
+#include <pmix.h>
+#elif defined(USE_PMI2_API)
+#include <pmi2.h>
+#else
+#include <pmi.h>
+#endif
+
 #define MPICH_SKIP_MPICXX
 #include "mpiimpl.h"
 
