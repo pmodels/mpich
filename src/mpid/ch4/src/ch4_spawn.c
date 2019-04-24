@@ -9,7 +9,6 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "pmi.h"
 #include "mpidimpl.h"
 
 /*
