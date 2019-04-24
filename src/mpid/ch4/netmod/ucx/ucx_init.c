@@ -135,6 +135,8 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
 
+    MPIDI_UCX_vni_pool_alloc();
+
     MPIDIG_init(comm_world, comm_self);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;

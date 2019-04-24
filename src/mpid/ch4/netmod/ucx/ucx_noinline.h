@@ -9,6 +9,14 @@
 
 #include "ucx_impl.h"
 
+/* ucx_vni.h */
+void MPIDI_UCX_vni_pool_alloc(void);
+int MPIDI_UCX_vni_get_free(void);
+int MPIDI_UCX_vni_alloc(MPIDI_vci_resource_t resources, MPIDI_vci_property_t properties, int *vni);
+int MPIDI_UCX_vni_free(int vni);
+void MPIDI_UCX_vni_arm(MPIDI_UCX_vni_t * vni);
+void MPIDI_UCX_vni_unarm(MPIDI_UCX_vni_t * vni);
+
 /* ucx_comm.h */
 int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm);
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm);

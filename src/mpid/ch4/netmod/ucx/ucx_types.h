@@ -26,12 +26,14 @@
 #define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
 
 typedef struct {
+    int is_free;
     size_t addrname_len;
     ucp_address_t *if_address;
     ucp_worker_h worker;
 } MPIDI_UCX_vni_t;
 
 typedef struct {
+    int next_free_vni;
     int total_vnis;
     MPIDI_UCX_vni_t vni[MPIDI_UCX_MAX_WORKERS];
 } MPIDI_UCX_vni_pool_t;
