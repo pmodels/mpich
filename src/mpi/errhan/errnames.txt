@@ -213,6 +213,9 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **treetype: Invalid tree type used for initializing Tree algorithms
 **treetype %d: Invalid tree type (%d) used for initializing Tree algorithms
 
+**noizem: release_gather based intra-node collectives cannot be used without izem submodule. \
+Reconfigure mpich with --enable-izem=atomic --with-zm-prefix=yes
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
