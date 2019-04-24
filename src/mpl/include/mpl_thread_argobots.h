@@ -29,14 +29,14 @@ typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp);
 
 #define MPL_thread_exit()
-#define MPL_thread_self(id_)
-#define MPL_thread_same(id1_, id2_, same_)
+#define MPL_thread_self(id_) ABT_thread_self_id(id_)
+#define MPL_thread_same(id1_, id2_, same_)  ABT_thread_equal(id1_, id2_, same_)
 
 /* ======================================================================
  *    Scheduling
  * ======================================================================*/
 
-#define MPL_thread_yield MPL_sched_yield
+#define MPL_thread_yield ABT_thread_yield
 
 /* ======================================================================
  *    Mutexes
@@ -69,6 +69,24 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
             MPL_internal_sys_error_printf("ABT_mutex_lock", err__,            \
                                           "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                           \
+    } while (0)
+
+#define MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)      \
+    do {                                                                \
+        int err__;                                                      \
+        *(int*)cs_acq_ptr = 1;                                          \
+        err__ = ABT_mutex_trylock(mutex_ptr_);                          \
+        if (unlikely(err__ != ABT_SUCCESS && err__ != ABT_ERR_MUTEX_LOCKED)) { \
+            *(int*)cs_acq_ptr = 0;                                      \
+            MPL_internal_sys_error_printf("ABT_mutex_trylock", err__,   \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
+        }                                                               \
+        else {                                                          \
+            if (unlikely(err__ != 0))                                   \
+                *(int*)cs_acq_ptr = 0;                                  \
+             err__ = 0;                                                 \
+        }                                                               \
+        *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
 #define MPL_thread_mutex_lock_low(mutex_ptr_, err_ptr_)                       \
@@ -138,10 +156,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         } while (err__ == EINTR);                                               \
         *(int *)(err_ptr_) = err__;                                             \
         if (unlikely(err__))                                                    \
-            MPL_internal_sys_err_printf("ABT_cond_free", err__,                 \
+            MPL_internal_sys_error_printf("ABT_cond_free", err__,                 \
                    "    %s:%d error in cond_wait on cond=%p mutex=%p err__=%d", \
-                   __FILE__, __LINE__, (cond_ptr_),(mutex_ptr_), err__));       \
-        }                                                                       \
+                   __FILE__, __LINE__);       \
         MPL_DBG_MSG_FMT(THREAD,TYPICAL,(MPL_DBG_FDEST,                          \
                                         "Exit cond_wait on cond=%p mutex=%p",   \
                                         (cond_ptr_),(mutex_ptr_)));             \

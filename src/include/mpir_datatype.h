@@ -459,6 +459,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Assert(dtp_ != NULL);                                  \
         MPIR_Datatype_ptr_add_ref(dtp_);                            \
     }                                                               \
     } while (0)

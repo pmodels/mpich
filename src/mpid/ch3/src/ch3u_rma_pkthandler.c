@@ -685,7 +685,8 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         mpi_errno = do_accumulate_op((void *) &accum_pkt->info.data, accum_pkt->count,
                                      accum_pkt->datatype, accum_pkt->addr, accum_pkt->count,
-                                     accum_pkt->datatype, 0, accum_pkt->op);
+                                     accum_pkt->datatype, 0, accum_pkt->op,
+                                     MPIDI_RMA_ACC_SRCBUF_DEFAULT);
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         if (mpi_errno) {
@@ -949,7 +950,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         mpi_errno =
             do_accumulate_op((void *) &get_accum_pkt->info.data, get_accum_pkt->count,
                              get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
-                             get_accum_pkt->datatype, 0, get_accum_pkt->op);
+                             get_accum_pkt->datatype, 0, get_accum_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1380,7 +1381,8 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
         /* Apply the op */
         mpi_errno = do_accumulate_op((void *) &fop_pkt->info.data, 1, fop_pkt->datatype,
-                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op,
+                                     MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1459,7 +1461,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
             MPIR_Datatype_get_extent_macro(fop_pkt->datatype, extent);
 
-            req->dev.user_buf = MPL_malloc(extent, MPL_MEM_BUFFER);
+            req->dev.user_buf = MPL_malloc(extent, MPL_MEM_RMA);
             if (!req->dev.user_buf) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", extent);
             }

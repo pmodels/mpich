@@ -14,6 +14,18 @@
 
 /* The file name is taken as a command-line argument. */
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
 #define BUFSIZE 10000   /* no. of integers */
 #define VERBOSE 0
 int main(int argc, char **argv)
@@ -61,12 +73,14 @@ int main(int argc, char **argv)
 
 /* initialize file to all zeros */
     if (!mynod) {
+        /* ignore error: file may or may not exist */
         MPI_File_delete(filename, MPI_INFO_NULL);
-        MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+        MPI_CHECK(MPI_File_open(MPI_COMM_SELF, filename,
+                                MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
         for (i = 0; i < BUFSIZE; i++)
             writebuf[i] = 0;
-        MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status);
-        MPI_File_close(&fh);
+        MPI_CHECK(MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status));
+        MPI_CHECK(MPI_File_close(&fh));
 #if VERBOSE
         fprintf(stderr, "\ntesting contiguous accesses\n");
 #endif
@@ -78,7 +92,8 @@ int main(int argc, char **argv)
     for (i = 0; i < BUFSIZE; i++)
         readbuf[i] = 20;
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 
 /* set atomicity to true */
     err = MPI_File_set_atomicity(fh, 1);
@@ -95,9 +110,9 @@ int main(int argc, char **argv)
    the data read must be either all old values or all new values; nothing
    in between. */
 
-    if (!mynod)
-        MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status);
-    else {
+    if (!mynod) {
+        MPI_CHECK(MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status));
+    } else {
         err = MPI_File_read(fh, readbuf, BUFSIZE, MPI_INT, &status);
         if (err == MPI_SUCCESS) {
             if (readbuf[0] == 0) {      /* the rest must also be 0 */
@@ -124,7 +139,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -141,12 +156,13 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "ind_wr_buffer_size", "1107");
 
     if (!mynod) {
-        MPI_File_delete(filename, MPI_INFO_NULL);
-        MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+        MPI_CHECK(MPI_File_delete(filename, MPI_INFO_NULL));
+        MPI_CHECK(MPI_File_open(MPI_COMM_SELF, filename,
+                                MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh));
         for (i = 0; i < BUFSIZE; i++)
             writebuf[i] = 0;
-        MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
-        MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status);
+        MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info));
+        MPI_CHECK(MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status));
         MPI_File_close(&fh);
 #if VERBOSE
         fprintf(stderr, "\ntesting noncontiguous accesses\n");
@@ -159,14 +175,14 @@ int main(int argc, char **argv)
     for (i = 0; i < BUFSIZE; i++)
         readbuf[i] = 20;
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
-    MPI_File_set_atomicity(fh, 1);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh));
+    MPI_CHECK(MPI_File_set_atomicity(fh, 1));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info));
     MPI_Barrier(MPI_COMM_WORLD);
 
-    if (!mynod)
-        MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status);
-    else {
+    if (!mynod) {
+        MPI_CHECK(MPI_File_write(fh, writebuf, BUFSIZE, MPI_INT, &status));
+    } else {
         err = MPI_File_read(fh, readbuf, BUFSIZE, MPI_INT, &status);
         if (err == MPI_SUCCESS) {
             if (readbuf[0] == 0) {

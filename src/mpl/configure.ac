@@ -717,14 +717,9 @@ void f1(void *a) { return; }],
         ;;
     abt|argobots)
         with_thread_package=argobots
-        AC_CHECK_HEADERS(abt.h)
-        AC_CHECK_LIB([abt],[abt_key_create],have_abt=yes)
-        if test "$have_abt" = "yes"; then
-           PAC_PREPEND_FLAG([-labt],[LIBS])
-        fi
-        AC_CHECK_FUNCS(ABT_thread_yield)
-        AC_CHECK_FUNC([abt_key_create],[],[AC_MSG_ERROR([unable to find Argobots library])])
-        AC_CHECK_FUNCS(abt_cleanup_push)
+        AC_CHECK_HEADER([abt.h],[],AC_MSG_ERROR([unable to find Argobots header file]))
+        AC_CHECK_LIB([abt],[ABT_key_create],[],AC_MSG_ERROR([unable to find Argobots library]))
+        PAC_PREPEND_FLAG([-labt],[LIBS])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
     no|none)
@@ -740,9 +735,9 @@ esac
 # know what's used in MPL
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
-# check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
+# check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS
+    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
 fi
 
 #######################################################################
@@ -791,9 +786,6 @@ case $with_proc_mutex_package in
     AC_CHECK_FUNC([pthread_mutex_init],[],[AC_MSG_ERROR([unable to find pthreads library])])
     # pthread_mutexattr_setpshared is first released in Issue 5
     AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
-    if test "$ac_cv_func_pthread_mutexattr_setpshared" = "no" ; then
-      AC_DEFINE(HAVE_PTHREAD_MUTEXATTR_SETPSHARED,1, [Define if pthread_mutexattr_setpshared is available.])
-    fi
 
     AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
     PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_POSIX
@@ -833,7 +825,7 @@ if test "${with_thread_package}" = "pthreads" -o "${with_proc_mutex_package}" = 
                  pac_cv_has_pthread_mutex_errorcheck=no)])
 
   if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
-      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NPRRORCHECK,
+      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
                 [Define to an expression that will result in an error checking mutex type.])
   elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
       AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,

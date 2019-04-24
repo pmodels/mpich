@@ -18,6 +18,20 @@
 /* This program will work only if the MPI implementation defines MPI_Aint
    as a 64-bit integer. */
 
+static void handle_error(int errcode, const char *str)
+{
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+#define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
+
+
+
+
 int main(int argc, char **argv)
 {
     MPI_Datatype newtype;
@@ -111,10 +125,11 @@ int main(int argc, char **argv)
         writebuf[i] = mynod * 1024 + i;
 
     /* write the array to the file */
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
-    MPI_File_write_all(fh, writebuf, bufcount, MPI_INT, &status);
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
+    MPI_CHECK(MPI_File_write_all(fh, writebuf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_close(&fh));
 
     free(writebuf);
 
@@ -123,10 +138,11 @@ int main(int argc, char **argv)
     if (!readbuf)
         fprintf(stderr, "Process %d, not enough memory for readbuf\n", mynod);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
-    MPI_File_read_all(fh, readbuf, bufcount, MPI_INT, &status);
-    MPI_File_close(&fh);
+    MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
+                            MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+    MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
+    MPI_CHECK(MPI_File_read_all(fh, readbuf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_close(&fh));
 
     /* check the data read */
     flag = 0;

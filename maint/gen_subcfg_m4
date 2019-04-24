@@ -118,7 +118,7 @@ while (my $dir = pop @dirstack) {
     # the stack to continue the traversal
     opendir DH, $dir
         or die "unable to open dir='$dir', stopped";
-    my @contents = readdir DH;
+    my @contents = sort readdir DH;
     foreach my $f (@contents) {
         # avoid endless recursion
         next if $f eq "." || $f eq "..";

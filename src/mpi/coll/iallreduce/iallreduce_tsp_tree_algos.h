@@ -36,8 +36,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int is_commutative;
     int size;
     int rank;
-    int num_children;
-    int is_tree_leaf;           /* Variables to store location of this rank in the tree */
+    int num_children = 0;
     MPII_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
@@ -86,9 +85,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* identify my locaion in the tree */
-    is_tree_leaf = (num_children == 0) ? 1 : 0;
-
     /* Allocate buffers to receive data from children. Any memory required for execution
      * of the schedule, for example child_buffer, reduce_buffer below, is allocated using
      * MPIR_TSP_sched_malloc function. This function stores the allocated memory address
@@ -96,7 +92,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
      * programmer need not free this memory. This is unlike the MPL_malloc function that
      * will be used for any memory required to generate the schedule and then freed by
      * the programmer once that memory is no longer required */
-    if (!is_tree_leaf) {
+    if (num_children > 0) {
         child_buffer = MPIR_TSP_sched_malloc(sizeof(void *) * num_children, sched);
         child_buffer[0] = MPIR_TSP_sched_malloc(extent * count, sched);
         child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);

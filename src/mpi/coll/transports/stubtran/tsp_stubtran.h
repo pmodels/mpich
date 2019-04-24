@@ -11,6 +11,25 @@
 #ifndef TSP_STUBTRAN_H_INCLUDED
 #define TSP_STUBTRAN_H_INCLUDED
 
+/* Undefine the previous definitions to avoid redefinition warnings */
+#undef MPIR_TSP_TRANSPORT_NAME
+#undef MPIR_TSP_sched_t
+#undef MPIR_TSP_sched_create
+#undef MPIR_TSP_sched_isend
+#undef MPIR_TSP_sched_irecv
+#undef MPIR_TSP_sched_imcast
+#undef MPIR_TSP_sched_issend
+#undef MPIR_TSP_sched_reduce_local
+#undef MPIR_TSP_sched_localcopy
+#undef MPIR_TSP_sched_selective_sink
+#undef MPIR_TSP_sched_sink
+#undef MPIR_TSP_sched_fence
+#undef MPIR_TSP_sched_malloc
+#undef MPIR_TSP_sched_start
+#undef MPIR_TSP_sched_free
+#undef MPIR_TSP_sched_optimize
+#undef MPIR_TSP_sched_reset
+
 #define MPIR_TSP_TRANSPORT_NAME             Stubtran_
 
 /* Stub transport data structures */

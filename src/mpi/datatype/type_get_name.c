@@ -55,10 +55,10 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_FLOAT),
     type_name_entry(MPI_DOUBLE),
     type_name_entry(MPI_LONG_DOUBLE),
-    /* LONG_LONG_INT is allowed as an alias; we don't make it a separate
+    /* LONG_LONG is a synonym of LONG_LONG_INT; we don't make it a separate
      * type */
-/*    type_name_entry(MPI_LONG_LONG_INT), */
-    type_name_entry(MPI_LONG_LONG),
+/*    type_name_entry(MPI_LONG_LONG), */
+    type_name_entry(MPI_LONG_LONG_INT),
     type_name_entry(MPI_UNSIGNED_LONG_LONG),
     type_name_entry(MPI_PACKED),
     type_name_entry(MPI_LB),
@@ -110,7 +110,10 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_UINT32_T),
     type_name_entry(MPI_UINT64_T),
     type_name_entry(MPI_C_BOOL),
-    type_name_entry(MPI_C_FLOAT_COMPLEX),
+    /* C_FLOAT_COMPLEX is a synonym of C_COMPLEX; we don't make it a separate
+     * type */
+/*    type_name_entry(MPI_C_FLOAT_COMPLEX), */
+    type_name_entry(MPI_C_COMPLEX),
     type_name_entry(MPI_C_DOUBLE_COMPLEX),
     type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
 

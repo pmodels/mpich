@@ -80,7 +80,10 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS) {
         handle_error(errcode, "MPI_File_open");
     }
-    MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
     for (i = 0; i < NR_NBOPS; i++) {
         errcode = MPI_File_iwrite_at(fh, nints / NR_NBOPS * i,
                                      buf + (nints / NR_NBOPS * i), nints / NR_NBOPS, MPI_INT,
@@ -103,7 +106,10 @@ int main(int argc, char **argv)
         handle_error(errcode, "MPI_File_open");
     }
 
-    MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
     for (i = 0; i < NR_NBOPS; i++) {
         errcode = MPI_File_iread_at(fh, nints / NR_NBOPS * i,
                                     buf + (nints / NR_NBOPS * i), nints / NR_NBOPS, MPI_INT,

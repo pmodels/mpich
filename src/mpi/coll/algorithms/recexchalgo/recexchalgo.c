@@ -357,5 +357,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     MPIR_CHKLMEM_FREEALL();
     return step2_reverse_rank;
   fn_fail:
+    /* TODO - Replace this with real error handling */
+    MPIR_Assert(MPI_SUCCESS == mpi_errno);
     goto fn_exit;
 }

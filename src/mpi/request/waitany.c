@@ -11,6 +11,25 @@
 #define MPIR_REQUEST_PTR_ARRAY_SIZE 16
 #endif
 
+/* -- Begin Profiling Symbol Block for routine MPI_Waitany */
+#if defined(HAVE_PRAGMA_WEAK)
+#pragma weak MPI_Waitany = PMPI_Waitany
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#pragma _HP_SECONDARY_DEF PMPI_Waitany  MPI_Waitany
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#pragma _CRI duplicate MPI_Waitany as PMPI_Waitany
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status * status)
+    __attribute__ ((weak, alias("PMPI_Waitany")));
+#endif
+/* -- End Profiling Symbol Block */
+
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Waitany
+#define MPI_Waitany PMPI_Waitany
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Waitany
 #undef FCNAME
@@ -89,25 +108,6 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
     goto fn_exit;
 }
 
-/* -- Begin Profiling Symbol Block for routine MPI_Waitany */
-#if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Waitany = PMPI_Waitany
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Waitany  MPI_Waitany
-#elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Waitany as PMPI_Waitany
-#elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status * status)
-    __attribute__ ((weak, alias("PMPI_Waitany")));
-#endif
-/* -- End Profiling Symbol Block */
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Waitany
-#define MPI_Waitany PMPI_Waitany
-
 #endif
 
 #undef FUNCNAME
@@ -152,7 +152,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     int i;
     int active_flag;
     int last_disabled_anysource = -1;
-    int first_nonnull = 0;
+    int first_nonnull = count;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITANY);
@@ -230,7 +230,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                     request_ptrs[i] = NULL;
                 }
             } else {
-                if (!first_nonnull)
+                if (first_nonnull == count)
                     first_nonnull = i;
             }
         } else {

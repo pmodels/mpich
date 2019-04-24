@@ -73,8 +73,8 @@ typedef struct {
 #endif
 } MPIR_Per_thread_t;
 
-#if defined(MPICH_IS_THREADED) && defined(MPL_TLS_SPECIFIER)
-extern MPL_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread;
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
+extern MPL_TLS MPIR_Per_thread_t MPIR_Per_thread;
 #else
 extern MPIR_Per_thread_t MPIR_Per_thread;
 #endif

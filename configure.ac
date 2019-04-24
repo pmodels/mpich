@@ -1468,7 +1468,9 @@ AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-if test "$with_hwloc_prefix" = "embedded" ; then
+if test "$with_hwloc_prefix" = "no" ; then
+   have_hwloc=no
+elif test "$with_hwloc_prefix" = "embedded" ; then
    # Disable visibility when setting up hwloc
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
@@ -5606,13 +5608,6 @@ fi
 LT_OUTPUT
 
 if test "X$enable_shared" = "Xyes" ; then
-    # see Github issue pmodels/mpich#3050 for shared object linking issue with
-    # IBM compiler
-    PAC_C_CHECK_COMPILER_OPTION("-qmkshrobj",found_opt=yes,found_opt=no)
-    if test "$found_opt" = "yes" ; then
-        PAC_APPEND_FLAG([-qmkshrobj],[LDFLAGS])
-    fi
-
     # see ticket #1590 for some more background on these Darwin linking issues
     AS_CASE([$host],
         [*-*-darwin*],

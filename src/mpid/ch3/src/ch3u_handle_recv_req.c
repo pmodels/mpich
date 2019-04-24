@@ -209,7 +209,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
     MPIR_Assert(predef_count == (int) predef_count);
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, (int) predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                                 stream_offset, rreq->dev.op);
+                                 stream_offset, rreq->dev.op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     if (mpi_errno) {
@@ -358,7 +358,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIR_Assert(predef_count == (int) predef_count);
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, (int) predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                                 stream_offset, rreq->dev.op);
+                                 stream_offset, rreq->dev.op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -495,7 +495,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 
     /* Perform accumulate computation */
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, 1, rreq->dev.datatype,
-                                 rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, rreq->dev.op);
+                                 rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, rreq->dev.op,
+                                 MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1307,7 +1308,7 @@ static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
         /* All data fits in packet header */
         mpi_errno = do_accumulate_op((void *) &acc_pkt->info.data, acc_pkt->count,
                                      acc_pkt->datatype, acc_pkt->addr, acc_pkt->count,
-                                     acc_pkt->datatype, 0, acc_pkt->op);
+                                     acc_pkt->datatype, 0, acc_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
     else {
         MPIR_Assert(acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
@@ -1326,7 +1327,7 @@ static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Assert(recv_count == (int) recv_count);
         mpi_errno = do_accumulate_op(target_lock_entry->data, (int) recv_count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
-                                     0, acc_pkt->op);
+                                     0, acc_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
 
     if (win_ptr->shm_allocated == TRUE)
@@ -1425,7 +1426,8 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
         mpi_errno =
             do_accumulate_op((void *) &get_accum_pkt->info.data, get_accum_pkt->count,
                              get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
-                             get_accum_pkt->datatype, 0, get_accum_pkt->op);
+                             get_accum_pkt->datatype, 0, get_accum_pkt->op,
+                             MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1497,7 +1499,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIR_Assert(recv_count == (int) recv_count);
     mpi_errno = do_accumulate_op(target_lock_entry->data, (int) recv_count, get_accum_pkt->datatype,
                                  get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
-                                 0, get_accum_pkt->op);
+                                 0, get_accum_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1640,11 +1642,13 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
     /* Apply the op */
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
         mpi_errno = do_accumulate_op((void *) &fop_pkt->info.data, 1, fop_pkt->datatype,
-                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op,
+                                     MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
     else {
         mpi_errno = do_accumulate_op(target_lock_entry->data, 1, fop_pkt->datatype,
-                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op,
+                                     MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
 
     if (win_ptr->shm_allocated == TRUE)
