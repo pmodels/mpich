@@ -521,4 +521,10 @@ for buf_size in ${buffer_sizes}; do
     done
 done
 
+############## Add tests for multi-leaders based composition for Alltoall ###############
+
+testing_env="MPIR_CVAR_ENABLE_MULTI_LEADS_ALLTOALL=1"
+
+coll_algo_tests+="alltoall1 8 ${env}${nl}"
+
 export coll_algo_tests
