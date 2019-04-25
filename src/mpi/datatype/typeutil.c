@@ -13,10 +13,8 @@
    that is used by ROMIO to test to see if datatypes are contiguous */
 
 /* Preallocated datatype objects */
-MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN] = { {0}
-};
-MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC] = { {0}
-};
+MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
+MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
