@@ -138,6 +138,11 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
+    int vci;
+    MPIDI_vci_type_t vci_type;
+    MPIDI_vci_resource_t vci_resources;
+    MPIDI_vci_property_t vci_properties;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_CREATE_HOOK);
 
@@ -182,6 +187,31 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
             default:
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
+
+        /* Assign a VCI for this communicator and store the mapping.
+         * Current policy: Try allocating an exclusive VCI for this communicator.
+         * If the allocation fails, we assign the shared VCI to this communicator.
+         * TODO: translate hints provided in the info object to the VCI properties
+         * and resources here.
+         */
+        vci_type = MPIDI_VCI_TYPE__EXCLUSIVE;
+        vci_resources = MPIDI_VCI_RESOURCE__GENERIC;
+        vci_properties = MPIDI_VCI_PROPERTY__GENERIC;
+        mpi_errno = MPIDI_vci_alloc(vci_type, vci_resources, vci_properties, &vci);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+        if (vci == MPIDI_VCI_INVALID) {
+            /* Fallback to allocating a shared VCI */
+            mpi_errno =
+                MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                                MPIDI_VCI_PROPERTY__GENERIC, &vci);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+
+        MPIDI_COMM_VCI(comm) = vci;
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
@@ -263,6 +293,11 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
 
+    mpi_errno = MPIDI_vci_free(MPIDI_COMM_VCI(comm));
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+    
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
