@@ -22,7 +22,7 @@
 
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const int *recvcounts, MPI_Datatype datatype,
-                                                 MPI_Op op, int tag, MPIR_Comm * comm, int k,
+                                                 MPI_Op op, MPIR_Comm * comm, int k,
                                                  MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
