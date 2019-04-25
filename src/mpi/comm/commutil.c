@@ -19,10 +19,8 @@
 
 /* Preallocated comm objects */
 /* initialized in initthread.c */
-MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN] = { {0}
-};
-MPIR_Comm MPIR_Comm_direct[MPID_COMM_PREALLOC] = { {0}
-};
+MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
+MPIR_Comm MPIR_Comm_direct[MPID_COMM_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Comm_mem = {
     0,

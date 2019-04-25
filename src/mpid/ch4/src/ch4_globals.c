@@ -23,8 +23,7 @@ MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
-struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC] = { {0}
-};
+struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 
 MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
     0, 0, 0, 0, MPIR_WORKQ_ELEM, sizeof(struct MPIDI_workq_elemt), MPIDI_workq_elemt_direct,

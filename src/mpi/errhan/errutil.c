@@ -144,8 +144,8 @@ static int checkForUserErrcode(int);
 #endif
 
 /* Preallocated errorhandler objects */
-MPIR_Errhandler MPIR_Errhandler_builtin[MPIR_ERRHANDLER_N_BUILTIN] = { {0} };
-MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC] = { {0} };
+MPIR_Errhandler MPIR_Errhandler_builtin[MPIR_ERRHANDLER_N_BUILTIN];
+MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
     sizeof(MPIR_Errhandler),

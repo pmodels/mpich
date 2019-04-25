@@ -298,7 +298,7 @@ typedef struct initcomp_cb
     struct initcomp_cb *next;
 } initcomp_cb_t;
 
-static struct {initcomp_cb_t *top;} initcomp_cb_stack = {0};
+static struct {initcomp_cb_t *top;} initcomp_cb_stack;
 
 #define INITCOMP_S_TOP() GENERIC_S_TOP(initcomp_cb_stack)
 #define INITCOMP_S_PUSH(ep) GENERIC_S_PUSH(&initcomp_cb_stack, ep, next)

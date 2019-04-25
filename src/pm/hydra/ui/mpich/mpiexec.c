@@ -13,7 +13,7 @@
 #include "ui.h"
 #include "uiu.h"
 
-struct HYD_server_info_s HYD_server_info = { {0} };
+struct HYD_server_info_s HYD_server_info;
 
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 struct HYD_ui_info_s HYD_ui_info;
