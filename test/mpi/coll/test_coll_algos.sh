@@ -501,4 +501,24 @@ for buf_size in ${buffer_sizes}; do
     done
 done
 
+########## Add tests for intra-node allreduce algorithms ############
+
+#use release gather based intra-node allreduce
+testing_env="env=MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384"
+kvalues="4 8"
+
+for buf_size in ${buffer_sizes}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+        env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=${kval} "
+
+        coll_algo_tests+="allred 4 ${env}${nl}"
+        coll_algo_tests+="allred2 4 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
