@@ -53,12 +53,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
     if (flags & MPIDI_PROGRESS_NM) {
         mpi_errno = MPIDI_NM_progress(0, 0);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
             MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -66,12 +66,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     if (flags & MPIDI_PROGRESS_SHM) {
         mpi_errno = MPIDI_SHM_progress(0, 0);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
             MPIR_ERR_POP(mpi_errno);
         }
     }
 #endif
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
