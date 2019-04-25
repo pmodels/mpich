@@ -23,8 +23,8 @@ int MPIDI_vci_free(int vci);
  /** Fast-path functions **/
 MPL_STATIC_INLINE_PREFIX int MPIDI_vci_get(MPIR_Comm * comm_ptr, int rank, int tag)
 {
-    /* only root VCI in the pool now */
-    return MPIDI_VCI_ROOT;
+    /* Only single  VCI per comm */
+    return MPIDI_COMM_VCI(comm_ptr);
 }
 
 #endif /* CH4_VCI_H_INCLUDED */

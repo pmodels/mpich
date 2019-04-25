@@ -210,7 +210,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_vnis_provided;
+    int n_vnis_provided, vci;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_vsis_provided;
 #endif
@@ -442,10 +442,40 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_vci_pool_alloc(n_vsis_provided, n_vnis_provided);
+#else
+        mpi_errno = MPIDI_vci_pool_alloc(n_vnis_provided);
+#endif
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
 
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    /* Allocate the root VCI and store in comm_world */
+    mpi_errno =
+        MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                        MPIDI_VCI_PROPERTY__GENERIC, &vci);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    if (MPIDI_VCI(MPIDI_VCI_ROOT).is_free) {
+        mpi_errno = MPI_ERR_OTHER;
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    MPIDI_COMM_VCI(MPIR_Process.comm_world) = vci;
+
+    /* Allocate a shared VCI for comm_self */
+    mpi_errno =
+        MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                        MPIDI_VCI_PROPERTY__GENERIC, &vci);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+    MPIDI_COMM_VCI(MPIR_Process.comm_self) = vci;
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
@@ -525,6 +555,10 @@ int MPID_Finalize(void)
             MPIDIU_avt_release_ref(i);
         }
     }
+
+    mpi_errno = MPIDI_vci_pool_free();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_global.jobid);
