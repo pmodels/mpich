@@ -112,12 +112,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_iprobe_unsafe(source, tag, comm, context_offset, av, flag, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -141,12 +141,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
     MPIDI_workq_vci_progress_unsafe();
     mpi_errno = MPIDI_improbe_unsafe(source, tag, comm, context_offset, av, flag, message, status);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);

@@ -114,9 +114,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         _retry--;                                           \
@@ -139,9 +139,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               __LINE__,                     \
                               __func__,                       \
                               fi_strerror(-_ret));          \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);        \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
