@@ -77,7 +77,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
     int mpi_errno = MPI_SUCCESS;
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

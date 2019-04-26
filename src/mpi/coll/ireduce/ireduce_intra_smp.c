@@ -8,7 +8,7 @@
 
 int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                                 MPIR_Sched_t s)
+                                 MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;

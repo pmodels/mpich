@@ -66,7 +66,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

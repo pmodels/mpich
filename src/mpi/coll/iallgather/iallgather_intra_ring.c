@@ -23,7 +23,7 @@
  */
 int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype
                                      sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -37,9 +37,9 @@ int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Dat
 
     /* First, load the "local" version in the recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
-                                    ((char *) recvbuf + rank * recvcount * recvtype_extent),
-                                    recvcount, recvtype, s);
+        mpi_errno = MPIR_Sched_element_copy(sendbuf, sendcount, sendtype,
+                                            ((char *) recvbuf + rank * recvcount * recvtype_extent),
+                                            recvcount, recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -53,12 +53,13 @@ int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Dat
     j = rank;
     jnext = left;
     for (i = 1; i < comm_size; i++) {
-        mpi_errno = MPIR_Sched_send(((char *) recvbuf + j * recvcount * recvtype_extent),
-                                    recvcount, recvtype, right, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(((char *) recvbuf + j * recvcount * recvtype_extent),
+                                            recvcount, recvtype, right, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         /* concurrent, no barrier here */
-        mpi_errno = MPIR_Sched_recv(((char *) recvbuf + jnext * recvcount * recvtype_extent),
+        mpi_errno =
+            MPIR_Sched_element_recv(((char *) recvbuf + jnext * recvcount * recvtype_extent),
                                     recvcount, recvtype, left, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);

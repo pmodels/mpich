@@ -38,7 +38,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

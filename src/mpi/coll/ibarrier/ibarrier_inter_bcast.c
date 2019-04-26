@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
