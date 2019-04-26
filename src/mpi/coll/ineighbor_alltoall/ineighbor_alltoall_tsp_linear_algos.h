@@ -101,7 +101,7 @@ int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, int sendcoun
         MPIR_ERR_POP(mpi_errno);
 
     /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
+    mpi_errno = MPIR_TSP_queue_sched_enqueue(sched, comm_ptr, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
