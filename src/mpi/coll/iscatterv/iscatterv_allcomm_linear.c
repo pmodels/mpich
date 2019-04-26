@@ -19,7 +19,7 @@
 int MPIR_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                         const int displs[], MPI_Datatype sendtype, void *recvbuf,
                                         int recvcount, MPI_Datatype recvtype, int root,
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -42,15 +42,16 @@ int MPIR_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcount
             if (sendcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (recvbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPIR_Sched_copy(((char *) sendbuf + displs[rank] * extent),
-                                                    sendcounts[rank], sendtype,
-                                                    recvbuf, recvcount, recvtype, s);
+                        mpi_errno =
+                            MPIR_Sched_element_copy(((char *) sendbuf + displs[rank] * extent),
+                                                    sendcounts[rank], sendtype, recvbuf, recvcount,
+                                                    recvtype, s);
                         if (mpi_errno)
                             MPIR_ERR_POP(mpi_errno);
                     }
                 } else {
-                    mpi_errno = MPIR_Sched_send(((char *) sendbuf + displs[i] * extent),
-                                                sendcounts[i], sendtype, i, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_element_send(((char *) sendbuf + displs[i] * extent),
+                                                        sendcounts[i], sendtype, i, comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }
@@ -61,7 +62,7 @@ int MPIR_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcount
     else if (root != MPI_PROC_NULL) {
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
-            mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

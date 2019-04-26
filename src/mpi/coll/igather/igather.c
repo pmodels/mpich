@@ -86,7 +86,7 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 
 int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -104,7 +104,7 @@ int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dataty
 
 int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint local_size, remote_size;
@@ -143,7 +143,7 @@ int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Dataty
 
 int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                            int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                            int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -189,7 +189,7 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
 
 int MPIR_Igather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                       int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -211,7 +211,7 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
@@ -238,10 +238,10 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
         }
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -251,7 +251,7 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

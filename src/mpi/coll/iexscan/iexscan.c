@@ -61,7 +61,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
 int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                  MPIR_Sched_t s)
+                                  MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -79,7 +79,7 @@ int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
 }
 
 int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -102,7 +102,7 @@ int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
 }
 
 int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -121,14 +121,14 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -136,7 +136,7 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

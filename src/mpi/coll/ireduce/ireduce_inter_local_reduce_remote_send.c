@@ -14,7 +14,7 @@
 
 int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void *recvbuf, int count,
                                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                      MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -31,10 +31,10 @@ int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void 
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, 0, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(recvbuf, count, datatype, 0, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_element_barrier(s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -63,15 +63,15 @@ int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void 
             MPIR_Ireduce_sched(sendbuf, tmp_buf, count, datatype, op, 0, comm_ptr->local_comm, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_element_barrier(s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         if (rank == 0) {
-            mpi_errno = MPIR_Sched_send(tmp_buf, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(tmp_buf, count, datatype, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            mpi_errno = MPIR_Sched_barrier(s);
+            mpi_errno = MPIR_Sched_element_barrier(s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

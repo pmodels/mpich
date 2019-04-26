@@ -60,7 +60,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm, &tag);
 
     /* if there is only 1 rank, copy data from sendbuf
      * to recvbuf and exit */

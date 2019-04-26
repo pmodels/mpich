@@ -24,7 +24,7 @@ int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcount
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
-                                        MPIR_Sched_t s)
+                                        MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i;
@@ -53,8 +53,9 @@ int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcount
             if (recvcounts[dst]) {
                 MPIR_Datatype_get_size_macro(recvtypes[dst], type_size);
                 if (type_size) {
-                    mpi_errno = MPIR_Sched_recv((char *) recvbuf + rdispls[dst],
-                                                recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_element_recv((char *) recvbuf + rdispls[dst],
+                                                        recvcounts[dst], recvtypes[dst], dst,
+                                                        comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }
@@ -66,8 +67,9 @@ int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcount
             if (sendcounts[dst]) {
                 MPIR_Datatype_get_size_macro(sendtypes[dst], type_size);
                 if (type_size) {
-                    mpi_errno = MPIR_Sched_send((char *) sendbuf + sdispls[dst],
-                                                sendcounts[dst], sendtypes[dst], dst, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_element_send((char *) sendbuf + sdispls[dst],
+                                                        sendcounts[dst], sendtypes[dst], dst,
+                                                        comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }

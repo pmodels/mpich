@@ -17,7 +17,7 @@ int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                  MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -42,14 +42,14 @@ int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int
 
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + sdispls[k] * sendtype_extent;
-        mpi_errno = MPIR_Sched_send(sb, sendcounts[k], sendtype, dsts[k], comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(sb, sendcounts[k], sendtype, dsts[k], comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
         char *rb = ((char *) recvbuf) + rdispls[l] * recvtype_extent;
-        mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

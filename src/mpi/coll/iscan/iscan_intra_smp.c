@@ -8,7 +8,7 @@
 
 
 int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -63,7 +63,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
+        mpi_errno = MPIR_Sched_element_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -74,14 +74,14 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
      * localfulldata. For example, localfulldata from node 1 contains
      * reduced data of rank 1,2,3. */
     if (roots_comm != NULL && node_comm != NULL) {
-        mpi_errno = MPIR_Sched_recv(localfulldata, count, datatype,
-                                    (node_comm->local_size - 1), node_comm, s);
+        mpi_errno = MPIR_Sched_element_recv(localfulldata, count, datatype,
+                                            (node_comm->local_size - 1), node_comm, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (roots_comm == NULL && node_comm != NULL &&
                node_comm->rank == node_comm->local_size - 1) {
-        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, node_comm, s);
+        mpi_errno = MPIR_Sched_element_send(recvbuf, count, datatype, 0, node_comm, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -106,13 +106,15 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
 
         if (roots_rank != roots_comm->local_size - 1) {
             mpi_errno =
-                MPIR_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm, s);
+                MPIR_Sched_element_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm,
+                                        s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
         if (roots_rank != 0) {
-            mpi_errno = MPIR_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, s);
+            mpi_errno =
+                MPIR_Sched_element_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -137,7 +139,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
         }
 
         /* do reduce on tempbuf and recvbuf, finish scan. */
-        mpi_errno = MPIR_Sched_reduce(tempbuf, recvbuf, count, datatype, op, s);
+        mpi_errno = MPIR_Sched_element_reduce(tempbuf, recvbuf, count, datatype, op, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

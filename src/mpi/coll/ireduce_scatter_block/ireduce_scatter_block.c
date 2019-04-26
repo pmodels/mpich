@@ -88,7 +88,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 
 int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -147,7 +147,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
 
 int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -161,7 +161,7 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
 
 int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                          MPIR_Sched_t s)
+                                          MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -226,7 +226,7 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
 
 int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -248,7 +248,7 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     int is_commutative = MPIR_Op_is_commutative(op);
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
@@ -276,10 +276,10 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                 break;
         }
     }
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -288,7 +288,7 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

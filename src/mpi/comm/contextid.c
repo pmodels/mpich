@@ -304,7 +304,7 @@ struct gcn_state {
     uint64_t tag;
     MPIR_Comm *comm_ptr;
     MPIR_Comm *comm_ptr_inter;
-    MPIR_Sched_t s;
+    MPIR_Sched_element_t s;
     MPIR_Comm *new_comm;
     MPIR_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
@@ -659,13 +659,13 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
     if (st->gcn_cid_kind == MPIR_COMM_KIND__INTERCOMM) {
         if (st->comm_ptr_inter->rank == 0) {
             mpi_errno =
-                MPIR_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
+                MPIR_Sched_element_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0,
+                                        st->comm_ptr_inter, st->s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             mpi_errno =
-                MPIR_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
+                MPIR_Sched_element_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0,
+                                        st->comm_ptr_inter, st->s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(st->s);
@@ -678,10 +678,10 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
         MPIR_SCHED_BARRIER(st->s);
     }
 
-    mpi_errno = MPIR_Sched_cb(&sched_cb_commit_comm, st, st->s);
+    mpi_errno = MPIR_Sched_element_cb(&sched_cb_commit_comm, st, st->s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
+    mpi_errno = MPIR_Sched_element_cb(&MPIR_Sched_element_cb_free_buf, st, st->s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -773,20 +773,20 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
                  *       are not necessarily completed in the same order as they are issued, also on the
                  *       same communicator. To avoid deadlocks, we cannot add the elements to the
                  *       list bevfore the first iallreduce is completed. The "tag" is created for the
-                 *       scheduling - by calling  MPIR_Sched_next_tag(comm_ptr, &tag) - and the same
+                 *       scheduling - by calling  MPIR_Sched_list_get_next_tag(comm_ptr, &tag) - and the same
                  *       for a idup operation on all processes. So we use it here. */
                 /* FIXME I'm not sure if there can be an overflows for this tag */
                 st->tag = (uint64_t) tag + MPIR_Process.attrs.tag_ub;
                 add_gcn_to_list(st);
             }
-            mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, st->s);
+            mpi_errno = MPIR_Sched_element_cb(&sched_cb_gcn_copy_mask, st, st->s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(st->s);
         }
     } else {
         /* Successfully allocated a context id */
-        mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
+        mpi_errno = MPIR_Sched_element_cb(&sched_cb_gcn_bcast, st, st->s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
@@ -857,7 +857,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_allocate_cid, st, st->s);
+    mpi_errno = MPIR_Sched_element_cb(&sched_cb_gcn_allocate_cid, st, st->s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
@@ -870,11 +870,11 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
 /** Allocating a new context ID collectively over the given communicator in a
  * nonblocking way.
  *
- * The nonblocking mechanism is implemented by inserting MPIDU_Sched_entry to
+ * The nonblocking mechanism is implemented by inserting MPIDU_Sched_element_entry to
  * the nonblocking collective progress, which is a part of the progress engine.
  * It uses a two-level linked list 'all_schedules' to manager all nonblocking
- * collective calls: the first level is a linked list of struct MPIDU_Sched;
- * and each struct MPIDU_Sched is an array of struct MPIDU_Sched_entry. The
+ * collective calls: the first level is a linked list of struct MPIDU_Sched_element;
+ * and each struct MPIDU_Sched_element is an array of struct MPIDU_Sched_element_entry. The
  * following four functions are used together to implement the algorithm:
  * sched_cb_gcn_copy_mask, sched_cb_gcn_allocate_cid, sched_cb_gcn_bcast and
  * sched_get_cid_nonblock.
@@ -905,7 +905,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
  */
 static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                                   MPIR_Context_id_t * ctx0, MPIR_Context_id_t * ctx1,
-                                  MPIR_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
+                                  MPIR_Sched_element_t s, MPIR_Comm_kind_t gcn_cid_kind)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
@@ -940,7 +940,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                     MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
         eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
     }
-    mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
+    mpi_errno = MPIR_Sched_element_cb(&sched_cb_gcn_copy_mask, st, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(s);
@@ -959,17 +959,17 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
-    MPIR_Sched_t s;
+    MPIR_Sched_element_t s;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
 
     /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -981,7 +981,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
         MPIR_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -999,7 +999,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
-    MPIR_Sched_t s;
+    MPIR_Sched_element_t s;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
@@ -1012,10 +1012,10 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     }
 
     /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -1029,7 +1029,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
         MPIR_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

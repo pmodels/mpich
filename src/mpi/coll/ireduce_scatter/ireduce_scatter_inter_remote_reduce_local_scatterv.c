@@ -18,7 +18,7 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
                                                                   const int recvcounts[],
                                                                   MPI_Datatype datatype, MPI_Op op,
                                                                   MPIR_Comm * comm_ptr,
-                                                                  MPIR_Sched_t s)
+                                                                  MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size, total_count, i;

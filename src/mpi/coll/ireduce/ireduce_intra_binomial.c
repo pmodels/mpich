@@ -8,7 +8,7 @@
 
 int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, is_commutative;
@@ -60,10 +60,10 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {
         /* could do this up front as an MPIR_Localcopy instead, but we'll defer
          * it to the progress engine */
-        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
+        mpi_errno = MPIR_Sched_element_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_element_barrier(s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -112,32 +112,33 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
             source = (relrank | mask);
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
-                mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, source, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_recv(tmp_buf, count, datatype, source, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPIR_Sched_barrier(s);
+                mpi_errno = MPIR_Sched_element_barrier(s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
 
                 /* The sender is above us, so the received buffer must be
                  * the second argument (in the noncommutative case). */
                 if (is_commutative) {
-                    mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+                    mpi_errno = MPIR_Sched_element_reduce(tmp_buf, recvbuf, count, datatype, op, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 } else {
-                    mpi_errno = MPIR_Sched_reduce(recvbuf, tmp_buf, count, datatype, op, s);
+                    mpi_errno = MPIR_Sched_element_reduce(recvbuf, tmp_buf, count, datatype, op, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
-                    mpi_errno = MPIR_Sched_barrier(s);
+                    mpi_errno = MPIR_Sched_element_barrier(s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     mpi_errno =
-                        MPIR_Sched_copy(tmp_buf, count, datatype, recvbuf, count, datatype, s);
+                        MPIR_Sched_element_copy(tmp_buf, count, datatype, recvbuf, count, datatype,
+                                                s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }
-                mpi_errno = MPIR_Sched_barrier(s);
+                mpi_errno = MPIR_Sched_element_barrier(s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             }
@@ -145,10 +146,10 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
             /* I've received all that I'm going to.  Send my result to
              * my parent */
             source = ((relrank & (~mask)) + lroot) % comm_size;
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, source, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(recvbuf, count, datatype, source, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            mpi_errno = MPIR_Sched_barrier(s);
+            mpi_errno = MPIR_Sched_element_barrier(s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -159,17 +160,17 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
 
     if (!is_commutative && (root != 0)) {
         if (rank == 0) {
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(recvbuf, count, datatype, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            mpi_errno = MPIR_Sched_barrier(s);
+            mpi_errno = MPIR_Sched_element_barrier(s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         } else if (rank == root) {
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, 0, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_recv(recvbuf, count, datatype, 0, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            mpi_errno = MPIR_Sched_barrier(s);
+            mpi_errno = MPIR_Sched_element_barrier(s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

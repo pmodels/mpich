@@ -9,7 +9,7 @@
 
 int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                    MPIR_Sched_t s)
+                                    MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -53,7 +53,8 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
     } else {
         /* only one process on the node. copy sendbuf to recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
-            mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
+            mpi_errno =
+                MPIR_Sched_element_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

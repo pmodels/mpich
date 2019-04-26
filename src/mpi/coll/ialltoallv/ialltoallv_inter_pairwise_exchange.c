@@ -10,7 +10,7 @@ int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                  MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     /* Intercommunicator alltoallv. We use a pairwise exchange algorithm
      * similar to the one used in intracommunicator alltoallv. Since the
@@ -66,13 +66,13 @@ int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int
         if (recvcount * recvtype_size == 0)
             src = MPI_PROC_NULL;
 
-        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_element_barrier(s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

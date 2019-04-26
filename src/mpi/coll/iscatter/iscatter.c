@@ -96,7 +96,7 @@ struct shared_state {
 /* any non-MPI functions go here, especially non-static ones */
 int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -115,7 +115,7 @@ int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datat
 
 int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int local_size, remote_size, sendtype_size, recvtype_size, nbytes;
     int mpi_errno = MPI_SUCCESS;
@@ -153,7 +153,7 @@ int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
 
 int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -203,7 +203,7 @@ int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
 
 int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -225,7 +225,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -254,10 +254,10 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -267,7 +267,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

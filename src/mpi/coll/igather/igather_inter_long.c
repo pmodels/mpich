@@ -15,7 +15,7 @@
  */
 int MPIR_Igather_sched_inter_long(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint remote_size;
@@ -29,13 +29,13 @@ int MPIR_Igather_sched_inter_long(const void *sendbuf, int sendcount, MPI_Dataty
         MPIR_Datatype_get_extent_macro(recvtype, extent);
 
         for (i = 0; i < remote_size; i++) {
-            mpi_errno = MPIR_Sched_recv(((char *) recvbuf + recvcount * i * extent),
-                                        recvcount, recvtype, i, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_recv(((char *) recvbuf + recvcount * i * extent),
+                                                recvcount, recvtype, i, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
     } else {
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

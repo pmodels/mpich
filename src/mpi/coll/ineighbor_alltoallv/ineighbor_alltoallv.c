@@ -79,7 +79,7 @@ int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sen
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
-                                              MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                              MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -101,7 +101,7 @@ int MPIR_Ineighbor_alltoallv_sched_inter_auto(const void *sendbuf, const int sen
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
-                                              MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                              MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -123,7 +123,7 @@ int MPIR_Ineighbor_alltoallv_sched_impl(const void *sendbuf, const int sendcount
                                         const int sdispls[], MPI_Datatype sendtype,
                                         void *recvbuf, const int recvcounts[],
                                         const int rdispls[], MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -169,7 +169,7 @@ int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
                                    const int sdispls[], MPI_Datatype sendtype,
                                    void *recvbuf, const int recvcounts[],
                                    const int rdispls[], MPI_Datatype recvtype,
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,7 +193,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -239,10 +239,10 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
 
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Ineighbor_alltoallv_sched(sendbuf, sendcounts, sdispls, sendtype,
@@ -250,7 +250,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

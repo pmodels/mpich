@@ -66,7 +66,7 @@ static int calc_curr_count(MPIR_Comm * comm, int tag, void *state)
 */
 int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                       int root, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent = 0;
@@ -125,21 +125,23 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
                                       MPL_MEM_BUFFER);
 
             if (recvbuf != MPI_IN_PLACE)
-                mpi_errno = MPIR_Sched_copy(((char *) sendbuf + extent * sendcount * rank),
-                                            sendcount * (comm_size - rank), sendtype,
-                                            tmp_buf, ss->nbytes * (comm_size - rank), MPI_BYTE, s);
+                mpi_errno = MPIR_Sched_element_copy(((char *) sendbuf + extent * sendcount * rank),
+                                                    sendcount * (comm_size - rank), sendtype,
+                                                    tmp_buf, ss->nbytes * (comm_size - rank),
+                                                    MPI_BYTE, s);
             else
                 mpi_errno =
-                    MPIR_Sched_copy(((char *) sendbuf + extent * sendcount * (rank + 1)),
-                                    sendcount * (comm_size - rank - 1), sendtype,
-                                    ((char *) tmp_buf + ss->nbytes),
-                                    ss->nbytes * (comm_size - rank - 1), MPI_BYTE, s);
+                    MPIR_Sched_element_copy(((char *) sendbuf + extent * sendcount * (rank + 1)),
+                                            sendcount * (comm_size - rank - 1), sendtype,
+                                            ((char *) tmp_buf + ss->nbytes),
+                                            ss->nbytes * (comm_size - rank - 1), MPI_BYTE, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno = MPIR_Sched_copy(sendbuf, sendcount * rank, sendtype,
-                                        ((char *) tmp_buf + ss->nbytes * (comm_size - rank)),
-                                        ss->nbytes * rank, MPI_BYTE, s);
+            mpi_errno = MPIR_Sched_element_copy(sendbuf, sendcount * rank, sendtype,
+                                                ((char *) tmp_buf +
+                                                 ss->nbytes * (comm_size - rank)),
+                                                ss->nbytes * rank, MPI_BYTE, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -162,7 +164,7 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
              * they don't have to forward data to anyone. Others
              * receive data into a temporary buffer. */
             if (relative_rank % 2) {
-                mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, src, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_recv(recvbuf, recvcount, recvtype, src, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -171,12 +173,12 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
                 /* the recv size is larger than what may be sent in
                  * some cases. query amount of data actually received */
                 mpi_errno =
-                    MPIR_Sched_recv_status(tmp_buf, tmp_buf_size, MPI_BYTE, src, comm_ptr,
-                                           &ss->status, s);
+                    MPIR_Sched_element_recv_status(tmp_buf, tmp_buf_size, MPI_BYTE, src, comm_ptr,
+                                                   &ss->status, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
-                mpi_errno = MPIR_Sched_cb(&get_count, ss, s);
+                mpi_errno = MPIR_Sched_element_cb(&get_count, ss, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -205,35 +207,38 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
                  * is it always true the (curr_cnt/2==sendcount*mask)? */
                 send_subtree_cnt = curr_cnt - sendcount * mask;
 #endif
-                mpi_errno = MPIR_Sched_cb2(&calc_send_count_root, ss, ((void *) (size_t) mask), s);
+                mpi_errno =
+                    MPIR_Sched_element_cb2(&calc_send_count_root, ss, ((void *) (size_t) mask), s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* mask is also the size of this process's subtree */
                 mpi_errno =
-                    MPIR_Sched_send_defer(((char *) sendbuf + extent * sendcount * mask),
-                                          &ss->send_subtree_count, sendtype, dst, comm_ptr, s);
+                    MPIR_Sched_element_send_defer(((char *) sendbuf + extent * sendcount * mask),
+                                                  &ss->send_subtree_count, sendtype, dst, comm_ptr,
+                                                  s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             } else {
                 /* non-zero root and others */
                 mpi_errno =
-                    MPIR_Sched_cb2(&calc_send_count_non_root, ss, ((void *) (size_t) mask), s);
+                    MPIR_Sched_element_cb2(&calc_send_count_non_root, ss, ((void *) (size_t) mask),
+                                           s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* mask is also the size of this process's subtree */
-                mpi_errno = MPIR_Sched_send_defer(((char *) tmp_buf + ss->nbytes * mask),
-                                                  &ss->send_subtree_count, MPI_BYTE, dst,
-                                                  comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_send_defer(((char *) tmp_buf + ss->nbytes * mask),
+                                                          &ss->send_subtree_count, MPI_BYTE, dst,
+                                                          comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
-            mpi_errno = MPIR_Sched_cb(&calc_curr_count, ss, s);
+            mpi_errno = MPIR_Sched_element_cb(&calc_curr_count, ss, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -243,14 +248,16 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
 
     if ((rank == root) && (root == 0) && (recvbuf != MPI_IN_PLACE)) {
         /* for root=0, put root's data in recvbuf if not MPI_IN_PLACE */
-        mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, s);
+        mpi_errno =
+            MPIR_Sched_element_copy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (!(relative_rank % 2) && (recvbuf != MPI_IN_PLACE)) {
         /* for non-zero root and non-leaf nodes, copy from tmp_buf
          * into recvbuf */
-        mpi_errno = MPIR_Sched_copy(tmp_buf, ss->nbytes, MPI_BYTE, recvbuf, recvcount, recvtype, s);
+        mpi_errno =
+            MPIR_Sched_element_copy(tmp_buf, ss->nbytes, MPI_BYTE, recvbuf, recvcount, recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

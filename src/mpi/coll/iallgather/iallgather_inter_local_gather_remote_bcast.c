@@ -15,7 +15,8 @@
 int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           int recvcount, MPI_Datatype recvtype,
-                                                          MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                          MPIR_Comm * comm_ptr,
+                                                          MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size, root;

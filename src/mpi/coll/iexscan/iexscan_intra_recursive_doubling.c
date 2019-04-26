@@ -51,7 +51,7 @@
 */
 int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -84,8 +84,8 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
     mpi_errno =
-        MPIR_Sched_copy((sendbuf == MPI_IN_PLACE ? (const void *) recvbuf : sendbuf), count,
-                        datatype, partial_scan, count, datatype, s);
+        MPIR_Sched_element_copy((sendbuf == MPI_IN_PLACE ? (const void *) recvbuf : sendbuf), count,
+                                datatype, partial_scan, count, datatype, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -95,17 +95,18 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(partial_scan, count, datatype, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             if (rank > dst) {
-                mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                mpi_errno =
+                    MPIR_Sched_element_reduce(tmp_buf, partial_scan, count, datatype, op, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -119,15 +120,16 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
                 if (rank != 0) {
                     if (flag == 0) {
                         /* simply copy data recd from rank 0 into recvbuf */
-                        mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
-                                                    recvbuf, count, datatype, s);
+                        mpi_errno = MPIR_Sched_element_copy(tmp_buf, count, datatype,
+                                                            recvbuf, count, datatype, s);
                         if (mpi_errno)
                             MPIR_ERR_POP(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
 
                         flag = 1;
                     } else {
-                        mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+                        mpi_errno =
+                            MPIR_Sched_element_reduce(tmp_buf, recvbuf, count, datatype, op, s);
                         if (mpi_errno)
                             MPIR_ERR_POP(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
@@ -135,18 +137,20 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
                 }
             } else {
                 if (is_commutative) {
-                    mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                    mpi_errno =
+                        MPIR_Sched_element_reduce(tmp_buf, partial_scan, count, datatype, op, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 } else {
-                    mpi_errno = MPIR_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
+                    mpi_errno =
+                        MPIR_Sched_element_reduce(partial_scan, tmp_buf, count, datatype, op, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
-                    mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
-                                                partial_scan, count, datatype, s);
+                    mpi_errno = MPIR_Sched_element_copy(tmp_buf, count, datatype,
+                                                        partial_scan, count, datatype, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);

@@ -137,7 +137,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 
 int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, type_size;
@@ -183,7 +183,7 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
 
 int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -195,7 +195,7 @@ int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int cou
 
 
 int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -252,7 +252,7 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
 }
 
 int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -271,7 +271,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -314,10 +314,10 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
         }
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -325,7 +325,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
