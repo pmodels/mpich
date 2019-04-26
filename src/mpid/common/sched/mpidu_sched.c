@@ -142,7 +142,13 @@ struct MPIDU_Sched_list MPIDU_all_schedules = { NULL };
  * progress engine, FALSE otherwise */
 int MPIDU_Sched_list_has_pending_sched(void)
 {
-    return (MPIDU_all_schedules.head != NULL);
+    int ret;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    ret = (MPIDU_all_schedules.head != NULL);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+
+    return ret;
 }
 
 int MPIDU_Sched_list_get_next_tag(MPIR_Comm * comm_ptr, int *tag)
@@ -174,11 +180,13 @@ int MPIDU_Sched_list_get_next_tag(MPIR_Comm * comm_ptr, int *tag)
         end = tag_ub / 2;
     }
     if (start != MPI_UNDEFINED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
         DL_FOREACH(MPIDU_all_schedules.head, elt) {
             if (elt->tag >= start && elt->tag < end) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
             }
         }
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     }
 #endif
 
@@ -494,10 +502,21 @@ int MPIDU_Sched_list_enqueue_sched(MPIR_Sched_element_t * sp, MPIR_Comm * comm, 
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
+    /* The check for head == NULL should happen inside the lock. Consider
+     * we have another thread that is executing the progress hook through the
+     * progress engine. The other thread holds the SCHED_LIST lock and if it
+     * finishes progressing all the schedules, then it would deactivate the
+     * hook before releasing the lock. If the head == NULL check occurs outside
+     * the lock, then the hook will not be rightly activated until the user
+     * issues another non-blocking collective operation, which is incorrect since
+     * the user may not issue another non-blocking collective operation.
+     */
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     if (MPIDU_all_schedules.head == NULL)
         MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
 
     DL_APPEND(MPIDU_all_schedules.head, s);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -1000,13 +1019,13 @@ int MPIDU_Sched_list_progress(int *made_progress)
 {
     int mpi_errno;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
     mpi_errno = MPIDU_Sched_list_progress_scheds(&MPIDU_all_schedules, made_progress);
     if (!mpi_errno && MPIDU_all_schedules.head == NULL)
         MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
     return mpi_errno;
 }
