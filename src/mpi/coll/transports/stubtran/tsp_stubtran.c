@@ -62,8 +62,8 @@ void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched)
     return MPI_SUCCESS;
 }
 
-int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
-                              MPII_Coll_req_t ** request)
+int MPII_Stubutil_queue_sched_enqueue(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
+                                      MPII_Coll_req_t ** request)
 {
     return MPI_SUCCESS;
 }

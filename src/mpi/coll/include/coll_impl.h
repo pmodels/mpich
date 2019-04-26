@@ -16,6 +16,7 @@
 
 #include "stubtran_impl.h"
 #include "gentran_impl.h"
+#include "gentran_utils.h"
 
 #include "../algorithms/stubalgo/stubalgo.h"
 #include "../algorithms/treealgo/treealgo.h"

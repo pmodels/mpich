@@ -124,7 +124,7 @@ int MPII_Coll_finalize(void)
  * block for a recv operation */
 int MPIR_Coll_safe_to_block(void)
 {
-    return MPII_Gentran_scheds_are_pending() == false;
+    return MPII_Genutil_queue_has_pending_scheds() == false;
 }
 
 /* Function to initialze communicators for collectives */

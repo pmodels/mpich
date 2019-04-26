@@ -383,7 +383,7 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
         MPIR_ERR_POP(mpi_errno);
 
     /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
+    mpi_errno = MPIR_TSP_queue_sched_enqueue(sched, comm, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

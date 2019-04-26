@@ -279,7 +279,8 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
     return addr;
 }
 
-int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPIR_Request ** req)
+int MPII_Genutil_queue_sched_enqueue(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
+                                     MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_complete;
@@ -305,9 +306,9 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
 
     /* Enqueue schedule and activate progress hook if not already activated */
     reqp->u.nbc.coll.sched = (void *) sched;
-    if (coll_queue.head == NULL)
-        MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
-    DL_APPEND(coll_queue.head, &(reqp->u.nbc.coll));
+    if (MPII_coll_queue.head == NULL)
+        MPID_Progress_activate_hook(MPII_Genutil_queue_progress_hook_id);
+    DL_APPEND(MPII_coll_queue.head, &(reqp->u.nbc.coll));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
