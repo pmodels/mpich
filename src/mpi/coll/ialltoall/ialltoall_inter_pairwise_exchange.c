@@ -20,7 +20,7 @@
 int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
-                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                 MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int local_size, remote_size, max_size, i;
@@ -54,10 +54,10 @@ int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendco
             sendaddr = (char *) sendbuf + dst * sendcount * sendtype_extent;
         }
 
-        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_element_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

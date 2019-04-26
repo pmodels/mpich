@@ -15,7 +15,7 @@
 int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, const int recvcounts[], const int displs[],
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                       MPIR_Sched_t s)
+                                       MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -39,15 +39,16 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
             if (recvcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (sendbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
-                                                    ((char *) recvbuf + displs[rank] * extent),
-                                                    recvcounts[rank], recvtype, s);
+                        mpi_errno = MPIR_Sched_element_copy(sendbuf, sendcount, sendtype,
+                                                            ((char *) recvbuf +
+                                                             displs[rank] * extent),
+                                                            recvcounts[rank], recvtype, s);
                         if (mpi_errno)
                             MPIR_ERR_POP(mpi_errno);
                     }
                 } else {
-                    mpi_errno = MPIR_Sched_recv(((char *) recvbuf + displs[i] * extent),
-                                                recvcounts[i], recvtype, i, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_element_recv(((char *) recvbuf + displs[i] * extent),
+                                                        recvcounts[i], recvtype, i, comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                 }
@@ -68,9 +69,11 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
                 MPIR_CVAR_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
 
             if (comm_size >= min_procs)
-                mpi_errno = MPIR_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_element_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
             else
-                mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_element_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

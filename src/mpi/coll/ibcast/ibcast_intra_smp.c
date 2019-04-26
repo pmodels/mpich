@@ -27,7 +27,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
 int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
@@ -49,17 +49,17 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
     /* send to intranode-rank 0 on the root's node */
     if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) *//* and is on our node (!-1) */
         if (root == comm_ptr->rank) {
-            mpi_errno = MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+            mpi_errno = MPIR_Sched_element_send(buffer, count, datatype, 0, comm_ptr->node_comm, s);
         } else if (0 == comm_ptr->node_comm->rank) {
             mpi_errno =
-                MPIR_Sched_recv_status(buffer, count, datatype,
-                                       MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
-                                       &ibcast_state->status, s);
+                MPIR_Sched_element_recv_status(buffer, count, datatype,
+                                               MPIR_Get_intranode_rank(comm_ptr, root),
+                                               comm_ptr->node_comm, &ibcast_state->status, s);
         }
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
+        mpi_errno = MPIR_Sched_element_cb(&sched_test_length, ibcast_state, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

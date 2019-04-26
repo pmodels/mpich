@@ -20,7 +20,7 @@
 int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, void *recvbuf,
                                                           int count, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
-                                                          MPIR_Sched_t s)
+                                                          MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
@@ -63,7 +63,7 @@ int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, v
     }
 
     /* don't bcast until the reductions have finished */
-    mpi_errno = MPIR_Sched_barrier(s);
+    mpi_errno = MPIR_Sched_element_barrier(s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

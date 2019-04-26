@@ -8,7 +8,8 @@
 
 int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                      MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_count;
@@ -35,9 +36,9 @@ int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Da
 
     if (sendbuf != MPI_IN_PLACE) {
         /* First, load the "local" version in the recvbuf. */
-        mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
-                                    ((char *) recvbuf + displs[rank] * recvtype_extent),
-                                    recvcounts[rank], recvtype, s);
+        mpi_errno = MPIR_Sched_element_copy(sendbuf, sendcount, sendtype,
+                                            ((char *) recvbuf + displs[rank] * recvtype_extent),
+                                            recvcounts[rank], recvtype, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -78,13 +79,13 @@ int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Da
 
         /* Communicate */
         if (recvnow) {  /* If there's no data to send, just do a recv call */
-            mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_recv(rbuf, recvnow, recvtype, left, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             torecv -= recvnow;
         }
         if (sendnow) {  /* If there's no data to receive, just do a send call */
-            mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(sbuf, sendnow, recvtype, right, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             tosend -= sendnow;

@@ -22,7 +22,7 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
-                                        MPIR_Sched_t s)
+                                        MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;
@@ -69,19 +69,22 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
                     dst = i;
 
                 MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
-                mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
-                                            recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_send(((char *) recvbuf + rdispls[dst]),
+                                                    recvcounts[dst], recvtypes[dst], dst, comm_ptr,
+                                                    s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_element_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE, dst,
+                                            comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
-                mpi_errno = MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            ((char *) recvbuf + rdispls[dst]),
-                                            recvcounts[dst], recvtypes[dst], s);
+                mpi_errno =
+                    MPIR_Sched_element_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
+                                            ((char *) recvbuf + rdispls[dst]), recvcounts[dst],
+                                            recvtypes[dst], s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);

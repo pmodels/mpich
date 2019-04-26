@@ -146,7 +146,7 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
 int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                 MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -191,7 +191,7 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
  * know anything about hierarchy.  It will choose between several
  * different algorithms based on the given parameters. */
 int MPIR_Ibcast_sched_inter_auto(void *buffer, int count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                 MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -201,7 +201,7 @@ int MPIR_Ibcast_sched_inter_auto(void *buffer, int count, MPI_Datatype datatype,
 }
 
 int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int root,
-                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                           MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -255,7 +255,7 @@ int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int r
 }
 
 int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
-                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                      MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -273,7 +273,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+    MPIR_Sched_element_t s = MPIR_SCHED_NULL;
     size_t type_size, nbytes;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -322,10 +322,10 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
 
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_list_get_next_tag(comm_ptr, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
+    mpi_errno = MPIR_Sched_element_create(&s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -333,7 +333,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    mpi_errno = MPIR_Sched_list_enqueue_sched(&s, comm_ptr, tag, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

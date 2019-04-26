@@ -20,7 +20,7 @@
  * scenario. */
 int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                       MPIR_Comm * comm_ptr, MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
@@ -58,17 +58,19 @@ int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_D
                     peer = i;
 
                 /* pack to tmp_buf */
-                mpi_errno = MPIR_Sched_copy(((char *) recvbuf + peer * recvcount * recvtype_extent),
+                mpi_errno =
+                    MPIR_Sched_element_copy(((char *) recvbuf + peer * recvcount * recvtype_extent),
                                             recvcount, recvtype, tmp_buf, nbytes, MPI_BYTE, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* now simultaneously send from tmp_buf and recv to recvbuf */
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, s);
+                mpi_errno = MPIR_Sched_element_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPIR_Sched_recv(((char *) recvbuf + peer * recvcount * recvtype_extent),
+                mpi_errno =
+                    MPIR_Sched_element_recv(((char *) recvbuf + peer * recvcount * recvtype_extent),
                                             recvcount, recvtype, peer, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);

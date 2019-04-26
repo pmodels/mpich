@@ -50,7 +50,7 @@
 int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,
-                                                                 MPIR_Sched_t s)
+                                                                 MPIR_Sched_element_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;
@@ -102,7 +102,8 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
+            mpi_errno =
+                MPIR_Sched_element_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -158,18 +159,19 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
             else
                 incoming_count = 0;
 
-            mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset),
-                                        curr_size, MPI_BYTE, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_element_send(((char *) tmp_buf + send_offset),
+                                                curr_size, MPI_BYTE, dst, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier */
-            mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + recv_offset),
-                                               incoming_count,
-                                               MPI_BYTE, dst, comm_ptr, &ibcast_state->status, s);
+            mpi_errno = MPIR_Sched_element_recv_status(((char *) tmp_buf + recv_offset),
+                                                       incoming_count,
+                                                       MPI_BYTE, dst, comm_ptr,
+                                                       &ibcast_state->status, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
+            mpi_errno = MPIR_Sched_element_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -226,8 +228,8 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
                     /* incoming_count was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
-                    mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
-                                                incoming_count, MPI_BYTE, dst, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_element_send(((char *) tmp_buf + offset),
+                                                        incoming_count, MPI_BYTE, dst, comm_ptr, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
@@ -246,13 +248,14 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
 
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
-                    mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + offset),
-                                                       incoming_count, MPI_BYTE, dst, comm_ptr,
-                                                       &ibcast_state->status, s);
+                    mpi_errno = MPIR_Sched_element_recv_status(((char *) tmp_buf + offset),
+                                                               incoming_count, MPI_BYTE, dst,
+                                                               comm_ptr, &ibcast_state->status, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
-                    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
+                    mpi_errno =
+                        MPIR_Sched_element_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
@@ -268,12 +271,13 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         mask <<= 1;
         i++;
     }
-    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
+    mpi_errno = MPIR_Sched_element_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if (!is_contig) {
         if (rank != root) {
-            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
+            mpi_errno =
+                MPIR_Sched_element_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
