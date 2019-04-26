@@ -567,6 +567,7 @@ typedef enum {
 
  /* VCI */
 typedef struct MPIDI_vci {
+    char padding[64];
     MPID_Thread_mutex_t lock;   /* lock to protect the objects in this VCI */
     int ref_count;              /* number of objects referring to this VCI */
     int is_free;                /* flag to check if this VCI is free or not */
