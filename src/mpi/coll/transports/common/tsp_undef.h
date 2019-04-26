@@ -36,4 +36,4 @@
 #undef MPIR_TSP_sched_isend
 #undef MPIR_TSP_sched_irecv
 #undef MPIR_TSP_sched_imcast
-#undef MPIR_TSP_sched_start
+#undef MPIR_TSP_queue_sched_enqueue

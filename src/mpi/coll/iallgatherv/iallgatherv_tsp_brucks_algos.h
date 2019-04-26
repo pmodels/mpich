@@ -346,7 +346,7 @@ int MPIR_TSP_Iallgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
         MPIR_ERR_POP(mpi_errno);
 
     /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
+    mpi_errno = MPIR_TSP_queue_sched_enqueue(sched, comm_ptr, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

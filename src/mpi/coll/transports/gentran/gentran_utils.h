@@ -16,8 +16,8 @@
 #include "tsp_gentran.h"
 #include "utarray.h"
 
-extern MPII_Coll_queue_t coll_queue;
-extern int MPII_Genutil_progress_hook_id;
+extern MPII_Coll_queue_t MPII_coll_queue;
+extern int MPII_Genutil_queue_progress_hook_id;
 
 /* vertex copy function, required by utarray */
 void MPII_Genutil_vtx_copy(void *_dst, const void *_src);
@@ -39,6 +39,9 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress);
 
 /* Hook to make progress on nonblocking collective operations  */
-int MPII_Genutil_progress_hook(int *);
+int MPII_Genutil_queue_progress_hook(int *);
+
+/* check if there are any pending schedules */
+int MPII_Genutil_queue_has_pending_scheds(void);
 
 #endif /* GENTRAN_UTILS_H_INCLUDED */

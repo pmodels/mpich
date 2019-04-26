@@ -142,7 +142,7 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
         MPIR_ERR_POP(mpi_errno);
 
     /* Start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
+    mpi_errno = MPIR_TSP_queue_sched_enqueue(sched, comm, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

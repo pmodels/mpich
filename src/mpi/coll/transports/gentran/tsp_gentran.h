@@ -28,7 +28,7 @@
 #undef MPIR_TSP_sched_sink
 #undef MPIR_TSP_sched_fence
 #undef MPIR_TSP_sched_malloc
-#undef MPIR_TSP_sched_start
+#undef MPIR_TSP_queue_sched_enqueue
 #undef MPIR_TSP_sched_free
 #undef MPIR_TSP_sched_optimize
 #undef MPIR_TSP_sched_reset
@@ -49,10 +49,10 @@
 #define MPIR_TSP_sched_sink                MPII_Genutil_sched_sink
 #define MPIR_TSP_sched_fence               MPII_Genutil_sched_fence
 #define MPIR_TSP_sched_malloc              MPII_Genutil_sched_malloc
-#define MPIR_TSP_sched_start               MPII_Genutil_sched_start
+#define MPIR_TSP_queue_sched_enqueue               MPII_Genutil_queue_sched_enqueue
 
-extern MPII_Coll_queue_t coll_queue;
-extern int MPII_Genutil_progress_hook_id;
+extern MPII_Coll_queue_t MPII_coll_queue;
+extern int MPII_Genutil_queue_progress_hook_id;
 
 /* Transport function to initialize a new schedule */
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched);
@@ -105,8 +105,8 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
 
 /* Transport function to enqueue and kick start a non-blocking
  * collective */
-int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
-                             MPIR_Request ** request);
+int MPII_Genutil_queue_sched_enqueue(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
+                                     MPIR_Request ** request);
 
 
 /* Transport function to schedule a sink */

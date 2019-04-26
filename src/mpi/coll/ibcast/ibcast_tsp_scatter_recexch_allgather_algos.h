@@ -129,7 +129,7 @@ int MPIR_TSP_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI
         MPIR_ERR_POP(mpi_errno);
 
     /* start and register the schedule */
-    mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
+    mpi_errno = MPIR_TSP_queue_sched_enqueue(sched, comm, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
