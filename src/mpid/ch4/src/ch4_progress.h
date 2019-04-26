@@ -13,52 +13,86 @@
 
 #include "ch4_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_hooks(void)
 {
     int mpi_errno, made_progress, i, active;
+    mpi_errno = MPI_SUCCESS;
+    
+    for (i = 0; i < MPIDI_global.registered_progress_hooks; i++) {
+        progress_func_ptr_t func_ptr = NULL;
+        active = OPA_load_int(&MPIDI_global.progress_hooks[i].active);
+        if (active == TRUE) {
+            func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
+            MPIR_Assert(func_ptr != NULL);
+            mpi_errno = func_ptr(&made_progress);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_vci(int flags, int vci)
+{
+    int mpi_errno;
+    mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+
+    /* Progress the WorkQ associated with this VCI */
+    mpi_errno = MPIDI_workq_vci_progress_unsafe();
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+    if (flags & MPIDI_PROGRESS_NM) {
+        /* Progress the VNI of this VCI */
+        mpi_errno = MPIDI_NM_progress(MPIDI_VCI(vci).vni, 0);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (flags & MPIDI_PROGRESS_SHM) {
+        /* Progress the VSI of this VCI */
+        mpi_errno = MPIDI_SHM_progress(MPIDI_VCI(vci).vsi, 0);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
+#endif
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
+{
+    int mpi_errno;
     mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
 
     if (flags & MPIDI_PROGRESS_HOOKS) {
-        for (i = 0; i < MPIDI_global.registered_progress_hooks; i++) {
-            progress_func_ptr_t func_ptr = NULL;
-            active = OPA_load_int(&MPIDI_global.progress_hooks[i].active);
-            if (active == TRUE) {
-                func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
-                MPIR_Assert(func_ptr != NULL);
-                mpi_errno = func_ptr(&made_progress);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-            }
+        mpi_errno = MPIDI_Progress_test_hooks();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     /* todo: progress unexp_list */
 
-    mpi_errno = MPIDI_workq_vci_progress();
-    if (mpi_errno != MPI_SUCCESS)
+    mpi_errno = MPIDI_Progress_test_vci(flags, MPIDI_VCI_ROOT);
+    if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
-
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
-
-    if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_NM_progress(0, 0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
-            MPIR_ERR_POP(mpi_errno);
-        }
     }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (flags & MPIDI_PROGRESS_SHM) {
-        mpi_errno = MPIDI_SHM_progress(0, 0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
-            MPIR_ERR_POP(mpi_errno);
-        }
-    }
-#endif
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);

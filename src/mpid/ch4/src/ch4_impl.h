@@ -15,6 +15,8 @@
 #include "mpidig.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_vci(int flags, int vci);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_hooks(void);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 /* Collectively allocate shared memory region.
