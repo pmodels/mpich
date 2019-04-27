@@ -5660,6 +5660,11 @@ if test "X$f08_works" = "Xyes"; then
 fi
 
 ########################################################################
+# Some of the settings need to be applied at the end
+if test x"$pac_cc_strict_werror" = xyes ; then
+    PAC_APPEND_FLAG([-Werror],[CFLAGS])
+fi
+########################################################################
 
 if test -z "$pkgconfigdir" ; then
   # The default pkgconfig dir is under the lib dir
