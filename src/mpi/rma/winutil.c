@@ -13,8 +13,7 @@
 #endif
 
 /* Preallocated window objects */
-MPIR_Win MPIR_Win_direct[MPIR_WIN_PREALLOC] = { {0}
-};
+MPIR_Win MPIR_Win_direct[MPIR_WIN_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Win_mem = { 0, 0, 0, 0, MPIR_WIN,
     sizeof(MPIR_Win), MPIR_Win_direct,

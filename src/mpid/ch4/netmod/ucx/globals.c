@@ -11,5 +11,5 @@
 #include "ucx_types.h"
 
 /* *INDENT-OFF* */
-MPIDI_UCX_global_t MPIDI_UCX_global = { {0} };
+MPIDI_UCX_global_t MPIDI_UCX_global;
 /* *INDENT-ON* */

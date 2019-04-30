@@ -57,7 +57,7 @@ static struct lmt_dma_node *outstanding_head = NULL;
 
 /* MT: this stack is not thread-safe */
 static int free_idx; /* is always the index of the next free index */
-static int index_stack[KNEM_STATUS_NR] = {0};
+static int index_stack[KNEM_STATUS_NR];
 
 /* returns an index into knem_status that is available for use */
 static int alloc_status_index(void)
@@ -111,7 +111,7 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPIR_Request *sreq, int send_iov_n,
     int mpi_errno = MPI_SUCCESS;
     int i, err;
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
-    struct knem_cmd_init_send_param sendcmd = {0};
+    struct knem_cmd_init_send_param sendcmd;
 #else
     struct knem_cmd_create_region cr;
 #endif

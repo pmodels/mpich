@@ -42,7 +42,7 @@ struct PMI2U_keyval_pairs {
     char key[MAXKEYLEN];
     char value[MAXVALLEN];
 };
-static struct PMI2U_keyval_pairs PMI2U_keyval_tab[64] = { {{0}, {0}} };
+static struct PMI2U_keyval_pairs PMI2U_keyval_tab[64];
 
 static int PMI2U_keyval_tab_idx = 0;
 

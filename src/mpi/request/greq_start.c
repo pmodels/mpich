@@ -34,7 +34,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
 #define MPIR_GREQ_CLASS_PREALLOC 2
 #endif
 
-MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC] = { {0} };
+MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, MPIR_GREQ_CLASS,
     sizeof(MPIR_Grequest_class),
