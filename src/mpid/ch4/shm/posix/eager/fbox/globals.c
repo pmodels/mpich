@@ -13,7 +13,7 @@
 #include "fbox_types.h"
 
 /* *INDENT-OFF* */
-MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { {0} };
+MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
 /* *INDENT-ON* */
 
 #ifdef MPL_USE_DBG_LOGGING

@@ -41,7 +41,7 @@ struct PMIU_keyval_pairs {
     char key[MAXKEYLEN];
     char value[MAXVALLEN];
 };
-static struct PMIU_keyval_pairs PMIU_keyval_tab[64] = { {{0}, {0}} };
+static struct PMIU_keyval_pairs PMIU_keyval_tab[64];
 
 static int PMIU_keyval_tab_idx = 0;
 

@@ -9,8 +9,7 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
-MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC] = { {0}
-};
+MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Request_mem = {
     0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct,

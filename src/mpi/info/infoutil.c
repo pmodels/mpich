@@ -15,10 +15,8 @@
 #endif
 
 /* Preallocated info objects */
-MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN] = { {0}
-};
-MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC] = { {0}
-};
+MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
+MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, MPIR_INFO,
     sizeof(MPIR_Info), MPIR_Info_direct,

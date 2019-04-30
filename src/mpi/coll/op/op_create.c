@@ -31,8 +31,8 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 #endif
 
 /* Preallocated op objects */
-MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN] = { {0} };
-MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC] = { {0} };
+MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
+MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, MPIR_OP,
     sizeof(MPIR_Op),
