@@ -85,8 +85,8 @@ int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_l
         /* bcast empty hnd as error reporting */
         if (shm_fail_flag)
             serialized_hnd_ptr = &mpl_err_hnd[0];
-        mpi_errno = MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
-                               shm_comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
+                                    shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         if (shm_fail_flag)
@@ -108,8 +108,8 @@ int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_l
         char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
 
         /* get serialized handle from rank 0 and deserialize it */
-        mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
-                               shm_comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0,
+                                    shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* empty handler means root fails */
