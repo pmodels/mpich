@@ -94,6 +94,14 @@ static inline int MPIDI_anysource_matched(MPIR_Request * rreq, int caller, int *
 
     if (MPIDI_NETMOD == caller) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
+        int c;
+        /* MPIDI_SHM_mpi_cancel_recv may complete the request, but we do not
+         * want it to be visible until we copy the request status below.
+         * This is important when an asynchronous progress is on, because
+         * a user thread may immediately see the (incomplete) status.
+         * Bump the request refcount by one to prevent request completion inside
+         * MPIDI_SHM_mpi_cancel_recv. */
+        MPIR_cc_incr(rreq->cc_ptr, &c);
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
 
         /* If the netmod is cancelling the request, then shared memory will
@@ -104,6 +112,8 @@ static inline int MPIDI_anysource_matched(MPIR_Request * rreq, int caller, int *
              * partner request */
             rreq->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
         }
+        /* Now it's safe to complete the request */
+        MPID_Request_complete(rreq);
 #endif
         *continue_matching = 0;
     } else if (MPIDI_SHM == caller) {
