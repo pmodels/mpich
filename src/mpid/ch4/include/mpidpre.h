@@ -430,6 +430,10 @@ typedef unsigned MPIDI_locality_t;
 
 /* ch4 level comm. attributes related to comm. info hints */
 typedef struct MPIDIG_comm_info_args_t {
+    bool mpi_assert_no_any_tag;
+    bool mpi_assert_no_any_source;
+    bool mpi_assert_allow_overtaking;
+    bool mpi_assert_exact_length;
 } MPIDIG_comm_info_args_t;
 
 typedef struct MPIDIG_comm_t {

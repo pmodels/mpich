@@ -201,6 +201,12 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDIG_COMM(comm, unexp_list));
 #endif
 #endif
+    /* Set default values for ch4 comm infokey hints */
+    MPIDIG_COMM(comm, info_args).mpi_assert_no_any_tag = false;
+    MPIDIG_COMM(comm, info_args).mpi_assert_no_any_source = false;
+    MPIDIG_COMM(comm, info_args).mpi_assert_allow_overtaking = false;
+    MPIDIG_COMM(comm, info_args).mpi_assert_exact_length = false;
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATE_HOOK);
     return mpi_errno;

@@ -25,5 +25,6 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut);
 int MPIDI_CH4R_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info);
 int MPIDI_CH4R_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info);
 int MPIDI_CH4R_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p);
+bool MPIDIU_parse_string_to_bool(const char *value, bool * parsed_val);
 
 #endif /* CH4R_COMM_H_INCLUDED */

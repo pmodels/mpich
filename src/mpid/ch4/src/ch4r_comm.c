@@ -243,14 +243,34 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
     return mpi_errno;
 }
 
+bool MPIDIU_parse_string_to_bool(const char *value, bool * parsed_val)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_PARSE_STRING_TO_BOOL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_PARSE_STRING_TO_BOOL);
+
+    if (!strncmp(value, "true", strlen("true")))
+        *parsed_val = true;
+    else if (!strncmp(value, "false", strlen("false")))
+        *parsed_val = false;
+    else
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_INFO, "**infoval");
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_PARSE_STRING_TO_BOOL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_CH4R_mpi_comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_MUTABLE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_MUTABLE);
 
-    mpi_errno = MPIR_Barrier(comm, &errflag);   /* TODO: Is it needed? */
+    /* Body: when adding implementation, mimic comm_set_info_immutable */
 
     if (MPI_SUCCESS != mpi_errno)
         goto fn_fail;
@@ -269,7 +289,39 @@ int MPIDI_CH4R_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_IMMUTABLE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_SET_INFO_IMMUTABLE);
 
-    mpi_errno = MPIR_Barrier(comm, &errflag);   /* TODO: Is it needed? */
+    MPIR_Info *curr_info = NULL;
+    bool assert_val = false;
+    /* Ignores infohints not recognized at this level(ch4r) */
+    LL_FOREACH(info, curr_info) {
+        if (curr_info->key == NULL)
+            continue;
+
+        /* Ignores InfoHints that generate error while reading their values,
+         * e.g., if the provided value is invalid. User can query the actual
+         * value of the hint by calling MPI_Comm_get_info. */
+        if (!strcmp(curr_info->key, "mpi_assert_no_any_tag")) {
+            mpi_errno = MPIDIU_parse_string_to_bool(curr_info->value, &assert_val);
+            if (mpi_errno == MPI_SUCCESS)
+                MPIDIG_COMM(comm, info_args).mpi_assert_no_any_tag = assert_val;
+        } else if (!strcmp(curr_info->key, "mpi_assert_no_any_source")) {
+            mpi_errno = MPIDIU_parse_string_to_bool(curr_info->value, &assert_val);
+            if (mpi_errno == MPI_SUCCESS)
+                MPIDIG_COMM(comm, info_args).mpi_assert_no_any_source = assert_val;
+        } else if (!strcmp(curr_info->key, "mpi_assert_allow_overtaking")) {
+            mpi_errno = MPIDIU_parse_string_to_bool(curr_info->value, &assert_val);
+            if (mpi_errno == MPI_SUCCESS)
+                MPIDIG_COMM(comm, info_args).mpi_assert_allow_overtaking = assert_val;
+        } else if (!strcmp(curr_info->key, "mpi_assert_exact_length")) {
+            mpi_errno = MPIDIU_parse_string_to_bool(curr_info->value, &assert_val);
+            if (mpi_errno == MPI_SUCCESS)
+                MPIDIG_COMM(comm, info_args).mpi_assert_exact_length = assert_val;
+        }
+    }
+
+    /* Some info keys may change the behavior of RMA, so the barrier ensures all
+     * processes have made the info change. */
+    /* TODO: see if such barrier is needed for non-CH4R hooks, e.g., NM and SHM hooks */
+    mpi_errno = MPIR_Barrier(comm, &errflag);
 
     if (MPI_SUCCESS != mpi_errno)
         goto fn_fail;
@@ -284,8 +336,44 @@ int MPIDI_CH4R_mpi_comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
 int MPIDI_CH4R_mpi_comm_get_info(MPIR_Comm * comm, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
+    char hint_val_str[MPI_MAX_INFO_VAL];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_COMM_GET_INFO);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_COMM_GET_INFO);
+
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* Add key values for all the info hints supported at ch4 level */
+    if (MPIDIG_COMM(comm, info_args).mpi_assert_no_any_source)
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "true");
+    else
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "false");
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_assert_no_any_source", hint_val_str);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
+    if (MPIDIG_COMM(comm, info_args).mpi_assert_no_any_tag)
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "true");
+    else
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "false");
+
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_assert_no_any_tag", hint_val_str);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
+    if (MPIDIG_COMM(comm, info_args).mpi_assert_allow_overtaking)
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "true");
+    else
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "false");
+
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_assert_allow_overtaking", hint_val_str);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
+    if (MPIDIG_COMM(comm, info_args).mpi_assert_exact_length)
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "true");
+    else
+        MPL_snprintf(hint_val_str, MPI_MAX_INFO_VAL, "false");
+
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "mpi_assert_exact_length", hint_val_str);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
     if (MPI_SUCCESS != mpi_errno)
         goto fn_fail;
