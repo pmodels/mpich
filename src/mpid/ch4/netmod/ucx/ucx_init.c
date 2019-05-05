@@ -209,6 +209,8 @@ int MPIDI_UCX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
+/* -Wmissing-prototypes, `git grep` not find usage, comment-out for now. */
+/*
 int MPIDI_UCX_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
@@ -224,6 +226,7 @@ int MPIDI_UCX_comm_get_lpid(MPIR_Comm * comm_ptr, int idx, int *lpid_ptr, bool i
     return MPI_SUCCESS;
 
 }
+*/
 
 int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
 {
