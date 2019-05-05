@@ -878,7 +878,6 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
 #ifdef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 #define MPIDI_CH3_VC_GetStateString( _c ) "none"
 #else
-/* FIXME: This duplicates a value in util/sock/ch3usock.h */
 const char *MPIDI_CH3_VC_GetStateString(struct MPIDI_VC *);
 const char *MPIDI_CH3_VC_SockGetStateString(struct MPIDI_VC *);
 #endif

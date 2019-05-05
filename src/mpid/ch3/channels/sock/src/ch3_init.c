@@ -80,14 +80,12 @@ int MPIDI_CH3_VC_Init(MPIDI_VC_t * vc)
     return 0;
 }
 
+#ifdef MPL_USE_DBG_LOGGING
 const char *MPIDI_CH3_VC_GetStateString(struct MPIDI_VC *vc)
 {
-#ifdef MPL_USE_DBG_LOGGING
     return MPIDI_CH3_VC_SockGetStateString(vc);
-#else
-    return "unknown";
-#endif
 }
+#endif
 
 /* Select the routine that uses sockets to connect two communicators
    using a socket */
