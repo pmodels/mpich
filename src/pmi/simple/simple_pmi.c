@@ -724,7 +724,7 @@ int PMI_Spawn_multiple(int count,
 /* FIXME: This mixes init with get maxes */
 static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
 {
-    char buf[PMIU_MAXLINE], cmd[PMIU_MAXLINE], errmsg[PMIU_MAXLINE];
+    char buf[PMIU_MAXLINE], cmd[PMIU_MAXLINE];
     int err, rc;
 
     rc = MPL_snprintf(buf, PMIU_MAXLINE,
@@ -748,8 +748,10 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
     PMIU_parse_keyvals(buf);
     cmd[0] = 0;
     PMIU_getval("cmd", cmd, PMIU_MAXLINE);
+
     if (strncmp(cmd, "response_to_init", PMIU_MAXLINE) != 0) {
-        MPL_snprintf(errmsg, PMIU_MAXLINE,
+        char errmsg[PMIU_MAXLINE * 2 + 100];
+        MPL_snprintf(errmsg, sizeof(errmsg),
                      "got unexpected response to init :%s: (full line = %s)", cmd, buf);
         PMI_Abort(-1, errmsg);
     } else {
@@ -758,7 +760,9 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
         if (strncmp(buf, "0", PMIU_MAXLINE) != 0) {
             PMIU_getval("pmi_version", buf, PMIU_MAXLINE);
             PMIU_getval("pmi_subversion", buf1, PMIU_MAXLINE);
-            MPL_snprintf(errmsg, PMIU_MAXLINE,
+
+            char errmsg[PMIU_MAXLINE * 2 + 100];
+            MPL_snprintf(errmsg, sizeof(errmsg),
                          "pmi_version mismatch; client=%d.%d mgr=%s.%s",
                          PMI_VERSION, PMI_SUBVERSION, buf, buf1);
             PMI_Abort(-1, errmsg);
