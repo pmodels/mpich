@@ -188,15 +188,17 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
                                       (!MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype)),
                                       rreq->dev.ext_hdr_ptr, &stream_offset);
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
     /* accumulate data from tmp_buf into user_buf */
     MPIR_Assert(predef_count == (int) predef_count);
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, (int) predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                                  stream_offset, rreq->dev.op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -309,8 +311,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     /* Copy data from target window to temporary buffer */
 
@@ -326,8 +329,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 
         seg = MPIR_Segment_alloc(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype);
         if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
@@ -341,8 +345,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                                  stream_offset, rreq->dev.op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -448,8 +453,9 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     /* Copy data into a temporary buffer in response request */
     if (is_contig) {
@@ -461,8 +467,9 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 
         seg = MPIR_Segment_alloc(rreq->dev.real_user_buf, 1, rreq->dev.datatype);
         if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
@@ -475,8 +482,9 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
                                  rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, rreq->dev.op,
                                  MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -1174,8 +1182,9 @@ static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
     /* Piggyback candidate should have basic datatype for target datatype. */
     MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(acc_pkt->datatype));
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     if (acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
         /* All data fits in packet header */
@@ -1203,8 +1212,9 @@ static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
                                      0, acc_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -1279,8 +1289,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
 
         /* NOTE: copy 'data + ACC' needs to be atomic */
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+        }
 
         /* Copy data from target window to response packet header */
 
@@ -1288,8 +1299,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
             (void *) &(get_accum_resp_pkt->info.data);
         mpi_errno = immed_copy(src, dest, len);
         if (mpi_errno != MPI_SUCCESS) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
             MPIR_ERR_POP(mpi_errno);
         }
 
@@ -1302,8 +1314,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
                              get_accum_pkt->datatype, 0, get_accum_pkt->op,
                              MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
@@ -1340,8 +1353,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     /* Copy data from target window to temporary buffer */
 
@@ -1358,8 +1372,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
 
         seg = MPIR_Segment_alloc(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype);
         if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
@@ -1374,8 +1389,9 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
                                  get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
                                  0, get_accum_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -1479,8 +1495,9 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     /* Copy data from target window to temporary buffer / response packet header */
 
@@ -1489,8 +1506,9 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         void *src = fop_pkt->addr, *dest = (void *) &fop_resp_pkt->info.data;
         mpi_errno = immed_copy(src, dest, type_size);
         if (mpi_errno != MPI_SUCCESS) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
             MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -1503,8 +1521,9 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
 
         seg = MPIR_Segment_alloc(fop_pkt->addr, 1, fop_pkt->datatype);
         if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
         }
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIR_Segment");
@@ -1524,8 +1543,9 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
                                      MPIDI_RMA_ACC_SRCBUF_DEFAULT);
     }
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -1618,8 +1638,9 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
     MPIR_Datatype_get_size_macro(cas_pkt->datatype, len);
     MPIR_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     MPIR_Memcpy((void *) &cas_resp_pkt->info.data, cas_pkt->addr, len);
 
@@ -1628,8 +1649,9 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
     }
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     /* Send the response packet */
     MPID_THREAD_CS_ENTER(POBJ, target_lock_entry->vc->pobj_mutex);

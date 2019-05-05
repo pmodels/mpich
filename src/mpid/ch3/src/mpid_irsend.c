@@ -56,14 +56,14 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
             goto fn_exit;
         }
 #endif
-    }
-    
-    MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
-    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
-    MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
-    
-    if (rank == MPI_PROC_NULL)
-    {
+        MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
+        MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
+        MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
+    } else {
+        /* sreq creation code is duplicated here, but it is better than add separate branch later. */
+        MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
+        MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
+        MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
 	MPIR_Object_set_ref(sreq, 1);
         MPIR_cc_set(&sreq->cc, 0);
 	goto fn_exit;

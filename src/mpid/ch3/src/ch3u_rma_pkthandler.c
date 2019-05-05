@@ -619,14 +619,16 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype));
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+        }
         mpi_errno = do_accumulate_op((void *) &accum_pkt->info.data, accum_pkt->count,
                                      accum_pkt->datatype, accum_pkt->addr, accum_pkt->count,
                                      accum_pkt->datatype, 0, accum_pkt->op,
                                      MPIDI_RMA_ACC_SRCBUF_DEFAULT);
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
         if (mpi_errno) {
             MPIR_ERR_POP(mpi_errno);
         }
@@ -875,15 +877,17 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
         /* NOTE: 'copy data + ACC' needs to be atomic */
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+        }
 
         /* copy data from target buffer to response packet header */
         src = (void *) (get_accum_pkt->addr), dest = (void *) &(get_accum_resp_pkt->info.data);
         mpi_errno = immed_copy(src, dest, len);
         if (mpi_errno != MPI_SUCCESS) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
             MPIR_ERR_POP(mpi_errno);
         }
 
@@ -893,8 +897,9 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
                              get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
                              get_accum_pkt->datatype, 0, get_accum_pkt->op, MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -1140,8 +1145,9 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     MPIR_Datatype_get_size_macro(cas_pkt->datatype, len);
     MPIR_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+    }
 
     MPIR_Memcpy((void *) &cas_resp_pkt->info.data, cas_pkt->addr, len);
 
@@ -1150,8 +1156,9 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         MPIR_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
     }
 
-    if (win_ptr->shm_allocated == TRUE)
+    if (win_ptr->shm_allocated == TRUE) {
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+    }
 
     /* Send the response packet */
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
@@ -1303,15 +1310,17 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
         /* NOTE: 'copy data + ACC' needs to be atomic */
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+        }
 
         /* copy data to resp pkt header */
         void *src = fop_pkt->addr, *dest = (void *) &fop_resp_pkt->info.data;
         mpi_errno = immed_copy(src, dest, type_size);
         if (mpi_errno != MPI_SUCCESS) {
-            if (win_ptr->shm_allocated == TRUE)
+            if (win_ptr->shm_allocated == TRUE) {
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+            }
             MPIR_ERR_POP(mpi_errno);
         }
 
@@ -1320,8 +1329,9 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                                      fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op,
                                      MPIDI_RMA_ACC_SRCBUF_DEFAULT);
 
-        if (win_ptr->shm_allocated == TRUE)
+        if (win_ptr->shm_allocated == TRUE) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
