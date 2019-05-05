@@ -110,7 +110,7 @@ int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
-#if HAVE_LIBHCOLL
+#ifdef HAVE_LIBHCOLL
     hcoll_type_free_hook(datatype_p);
 #endif
 
@@ -141,7 +141,7 @@ int MPIDI_UCX_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
         datatype_p->dev.netmod.ucx.ucp_datatype = ucp_datatype;
 
     }
-#if HAVE_LIBHCOLL
+#ifdef HAVE_LIBHCOLL
     hcoll_type_commit_hook(datatype_p);
 #endif
 
