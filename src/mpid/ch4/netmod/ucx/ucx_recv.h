@@ -200,7 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
-        if (unlikely((ucs_status_t) ucp_request->req == UCS_ERR_MESSAGE_TRUNCATED)) {
+        if (unlikely((uint64_t) ucp_request->req == (uint64_t) UCS_ERR_MESSAGE_TRUNCATED)) {
             message->status.MPI_ERROR = MPI_ERR_TRUNCATE;
         } else {
             ucp_tag_recv_info_t *info = ucp_request->req;
