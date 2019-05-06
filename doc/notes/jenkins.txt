@@ -1,0 +1,51 @@
+I am starting this notes with my current effort on the warnings tests and custom tests. Feel free to add additional notes -- such as nightly tests, release tests, review tests -- as you see fit.
+
+* warnings tests
+    This is a multi-test triggered by PR comment with phrase ".*test: *mpich/warnings.*".
+    It runs on pmrs-jenkins.cels.anl.gov, centos64 partition.
+    There are 4 "config"s: ch3-tcp ch3-sock ch4-ucx ch4-ofi
+    There are multiple "compiler"s: gcc-4 gcc-8 clang-3 clang-8
+    
+    It runs the 16 cases with configure option: --enable-strict --disable-fortran --disable-romio
+    It checks the output of make to find any warning messages, each warning message is listed as a "failed" testcase in summary.junit.xml
+
+    It currently uses an experimental build process that tries to avoid multiple build of submodules. As such, the Fortran and ROMIO part have not been worked through, therefore the "--disable" options above.
+
+    It is desirable for each new PR to pass this warnings test.
+
+    ** "test: mpich/warnings/icc": same as above, but with `icc` as compiler
+    ** "test: mpich/warnings/more": triggers both tests, effectively running all 5 (or more) compilers
+
+* custom tests
+    This is a multi-test triggered by PR comment with phrase ".*test: *mpich/custom.*"
+    It runs on pmrs-jenkins.cels.anl.gov, centos64 partition.
+    It runs 4 "configs": ch3-tcp ch3-sock ch4-ucx ch4-ofi
+    By default, it configures with default option and runs the default testsuite, ignores the custom xfail script.
+
+    It is possible to only run specified custom tests -- making the test much faster as it only runs a few -- using systax such as:
+        test:mpich/custom
+        testlist: coll/gather_big 8
+        testlist: coll/gather_big 8 env=MPIR_CVAR_GATHER_INTRA_ALGORITHM=nb env=MPIR_CVAR_GATHER_DEVICE_COLLECTIVE=0 env=MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE=0 env=MPIR_CVAR_IGATHER_INTRA_ALGORITHM=gentran_tree env=MPIR_CVAR_IGATHER_TREE_KVAL=8
+
+    Since it is difficult to see the newlines in github comment box, it is recommended to use following syntax:
+        test:mpich/custom
+        testlist: coll/gather_big 8 timeLimit=3600
+        testlist: coll/gather_big 8 timeLimit=3600
+        : env=MPIR_CVAR_GATHER_INTRA_ALGORITHM=nb
+        : env=MPIR_CVAR_GATHER_DEVICE_COLLECTIVE=0
+        : env=MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE=0
+        : env=MPIR_CVAR_IGATHER_INTRA_ALGORITHM=gentran_tree
+        : env=MPIR_CVAR_IGATHER_TREE_KVAL=8
+    , where the beginning ":" is used to merge lines.
+
+    It is also possible to add custom configure options, such as `--enable-g=all` or anything start with "--(enable|disable|with|without)-...". These phrases can be entered anywhere in the comment box.
+
+    It runs the in-tree build scripts (the same build scripts for end users).
+
+* quick tests
+    This is a single test triggered by PR comment with phrase ".*test: *mpich/quick.*"
+    It runs on pmrs-jenkins.cels.anl.gov, centos64 partition.
+    The default only runs ch3-tcp configuration. To run other device, append to comment a phrase such as "--with-device=ch4:ofi"
+    It accepts all the custom phrase as `test:mpich/custom`
+
+    Although the trigger syntax is similar, this runs the experimental build scripts and uses an experimental `runtests.pl` to run testsuite. Compared to custom tests, this one can finish (including the testsuite) before the normal process finishes the configure stage.
