@@ -138,7 +138,7 @@ cvars:
 
 #include "mpiimpl.h"
 #include "release_gather.h"
-#ifdef HAVE_HWLOC
+#ifdef BUILD_TOPOTREES
 #include "topotree.h"
 #include "topotree_util.h"
 #endif
@@ -305,7 +305,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
-#ifdef HAVE_HWLOC
+#ifdef BUILD_TOPOTREES
         /* Create bcast_tree and reduce_tree with root of the tree as 0 */
         if (MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES &&
             getenv("HYDRA_USER_PROVIDED_BINDING")) {
