@@ -132,7 +132,7 @@ typedef enum {
     MPIDI_CH3_PKT_INVALID = -1  /* forces a signed enum to quash warnings */
 } MPIDI_CH3_Pkt_type_t;
 
-/* These flags can be "OR'ed" together */
+/* These pkt_flags can be "OR'ed" together */
 typedef enum {
     MPIDI_CH3_PKT_FLAG_NONE = 0,
     MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED = 1,
@@ -325,7 +325,7 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_FLAGS(pkt_, flags_, err_)                 \
     {                                                                   \
-        /* This macro returns flags in RMA operation packets (PUT, GET, \
+        /* This macro returns pkt_flags in RMA operation packets (PUT, GET, \
            ACC, GACC, FOP, CAS), RMA operation response packets         \
            (GET_RESP, GET_ACCUM_RESP, FOP_RESP, CAS_RESP), RMA control  \
            packets (UNLOCK) and RMA control response packets (LOCK_ACK, \
@@ -334,52 +334,52 @@ MPIDI_CH3_PKT_DEFS
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
         case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
-            flags_ = (pkt_).put.flags;                                  \
+            flags_ = (pkt_).put.pkt_flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
-            flags_ = (pkt_).get.flags;                                  \
+            flags_ = (pkt_).get.pkt_flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
         case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
-            flags_ = (pkt_).accum.flags;                                \
+            flags_ = (pkt_).accum.pkt_flags;                                \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
         case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
-            flags_ = (pkt_).get_accum.flags;                            \
+            flags_ = (pkt_).get_accum.pkt_flags;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
-            flags_ = (pkt_).cas.flags;                                  \
+            flags_ = (pkt_).cas.pkt_flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
         case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
-            flags_ = (pkt_).fop.flags;                                  \
+            flags_ = (pkt_).fop.pkt_flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_RESP):                                  \
         case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
-            flags_ = (pkt_).get_resp.flags;                             \
+            flags_ = (pkt_).get_resp.pkt_flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
-            flags_ = (pkt_).get_accum_resp.flags;                       \
+            flags_ = (pkt_).get_accum_resp.pkt_flags;                       \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP_RESP):                                  \
         case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
-            flags_ = (pkt_).fop_resp.flags;                             \
+            flags_ = (pkt_).fop_resp.pkt_flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
-            flags_ = (pkt_).cas_resp.flags;                             \
+            flags_ = (pkt_).cas_resp.pkt_flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
-            flags_ = (pkt_).lock.flags;                                 \
+            flags_ = (pkt_).lock.pkt_flags;                                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_UNLOCK):                                    \
-            flags_ = (pkt_).unlock.flags;                               \
+            flags_ = (pkt_).unlock.pkt_flags;                               \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
-            flags_ = (pkt_).lock_ack.flags;                             \
+            flags_ = (pkt_).lock_ack.pkt_flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
-            flags_ = (pkt_).lock_op_ack.flags;                          \
+            flags_ = (pkt_).lock_op_ack.pkt_flags;                          \
             break;                                                      \
         default:                                                        \
             MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -411,7 +411,7 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_ERASE_FLAGS(pkt_, err_)                       \
     {                                                                   \
-        /* This macro erases flags in RMA operation packets (PUT, GET,  \
+        /* This macro erases pkt_flags in RMA operation packets (PUT, GET,  \
            ACC, GACC, FOP, CAS), RMA operation response packets         \
            (GET_RESP, GET_ACCUM_RESP, FOP_RESP, CAS_RESP), RMA control  \
            packets (UNLOCK) and RMA control response packets (LOCK_ACK, \
@@ -420,52 +420,52 @@ MPIDI_CH3_PKT_DEFS
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
         case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
-            (pkt_).put.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            (pkt_).put.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
-            (pkt_).get.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            (pkt_).get.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
         case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
-            (pkt_).accum.flags = MPIDI_CH3_PKT_FLAG_NONE;               \
+            (pkt_).accum.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;               \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
         case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
-            (pkt_).get_accum.flags = MPIDI_CH3_PKT_FLAG_NONE;           \
+            (pkt_).get_accum.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;           \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
-            (pkt_).cas.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            (pkt_).cas.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
         case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
-            (pkt_).fop.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            (pkt_).fop.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_RESP):                                  \
         case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
-            (pkt_).get_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            (pkt_).get_resp.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
-            (pkt_).get_accum_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;      \
+            (pkt_).get_accum_resp.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;      \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP_RESP):                                  \
         case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
-            (pkt_).fop_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            (pkt_).fop_resp.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
-            (pkt_).cas_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            (pkt_).cas_resp.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
-            (pkt_).lock.flags = MPIDI_CH3_PKT_FLAG_NONE;                \
+            (pkt_).lock.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;                \
             break;                                                      \
         case (MPIDI_CH3_PKT_UNLOCK):                                    \
-            (pkt_).unlock.flags = MPIDI_CH3_PKT_FLAG_NONE;              \
+            (pkt_).unlock.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;              \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
-            (pkt_).lock_ack.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            (pkt_).lock_ack.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
-            (pkt_).lock_op_ack.flags = MPIDI_CH3_PKT_FLAG_NONE;         \
+            (pkt_).lock_op_ack.pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;         \
             break;                                                      \
         default:                                                        \
             MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -627,7 +627,7 @@ MPIDI_CH3_PKT_DEFS
 
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -641,7 +641,7 @@ typedef struct MPIDI_CH3_Pkt_put {
 
 typedef struct MPIDI_CH3_Pkt_get {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -657,7 +657,7 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     MPI_Request request_handle;
     /* followings are used to decrement ack_counter at origin */
     int target_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     /* Followings are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
@@ -669,7 +669,7 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
 
 typedef struct MPIDI_CH3_Pkt_accum {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -684,7 +684,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     MPI_Request request_handle; /* For get_accumulate response */
     void *addr;
     int count;
@@ -702,7 +702,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPI_Request request_handle;
     /* followings are used to decrement ack_counter at origin */
     int target_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     /* Followings are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
@@ -714,7 +714,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
 
 typedef struct MPIDI_CH3_Pkt_cas {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
@@ -734,12 +734,12 @@ typedef struct MPIDI_CH3_Pkt_cas_resp {
     } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
 } MPIDI_CH3_Pkt_cas_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Op op;
@@ -764,12 +764,12 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
     } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
 } MPIDI_CH3_Pkt_fop_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_lock {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     MPI_Win target_win_handle;
     /* Note that either source_win_handle
      * or request_handle will be used. Here
@@ -785,7 +785,7 @@ typedef struct MPIDI_CH3_Pkt_unlock {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
@@ -796,7 +796,7 @@ typedef struct MPIDI_CH3_Pkt_flush {
 
 typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     /* note that either source_win_handle
      * or request_handle is used. */
     MPI_Win source_win_handle;
@@ -806,7 +806,7 @@ typedef struct MPIDI_CH3_Pkt_lock_ack {
 
 typedef struct MPIDI_CH3_Pkt_lock_op_ack {
     MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     /* note that either source_win_handle
      * or request_handle is used. */
     MPI_Win source_win_handle;
@@ -821,14 +821,14 @@ typedef struct MPIDI_CH3_Pkt_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
     int target_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
 } MPIDI_CH3_Pkt_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
 } MPIDI_CH3_Pkt_decr_at_counter_t;
 
 typedef struct MPIDI_CH3_Pkt_close {
