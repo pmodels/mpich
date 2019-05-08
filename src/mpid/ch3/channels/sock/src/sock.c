@@ -2183,17 +2183,6 @@ int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
     if (pollinfo->type == MPIDI_CH3I_SOCKI_TYPE_COMMUNICATION) {
         if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLIN | POLLOUT)) {
             /* --BEGIN ERROR HANDLING-- */
-            /* comment out unused code. FIXME: understand original intention, then delete. */
-            /*
-            int event_mpi_errno;
-
-            event_mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPIDI_CH3I_SOCK_ERR_SOCK_CLOSED, "**sock|close_cancel",
-                                     "**sock|close_cancel %d %d", pollinfo->sock_set->id,
-                                     pollinfo->sock_id);
-            */
-
             if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLIN)) {
                 MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_READ, pollinfo->read_nb,
                                                pollinfo->user_ptr, MPI_SUCCESS, mpi_errno, fn_exit);
