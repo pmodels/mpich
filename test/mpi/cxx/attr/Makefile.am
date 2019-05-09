@@ -9,7 +9,7 @@ include $(top_srcdir)/Makefile_cxx.mtest
 
 EXTRA_DIST = testlist.in
 
-noinst_PROGRAMS = attrtx attricx baseattrcommx fkeyvalcommx
+noinst_PROGRAMS = attrtx attricx baseattrcommx fkeyvalcommx fkeyvaltypex
 ## the following entries were disabled in the simplemake version:
 ##noinst_PROGRAMS += attrerrx attrerrcommx attrerrtypex attrorderx attrordercommx \
 ##                   attrordertypex attrorderwinx baseattr2x baseattrwinx
@@ -27,5 +27,4 @@ attricx_SOURCES = attricx.cxx
 baseattrcommx_SOURCES = baseattrcommx.cxx
 #baseattrwinx_SOURCES = baseattrwinx.cxx
 fkeyvalcommx_SOURCES = fkeyvalcommx.cxx
-
-include Makefile.dtp
+fkeyvaltypex_SOURCES = fkeyvaltypex.cxx
