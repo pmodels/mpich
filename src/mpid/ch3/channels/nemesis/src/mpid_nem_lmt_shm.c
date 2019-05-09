@@ -473,7 +473,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         last = (data_sz - first <= copy_limit) ? data_sz : first + copy_limit;
 	MPIR_Segment_pack(req->dev.segment_ptr, first, &last, (void *)copy_buf->buf[buf_num]); /* cast away volatile */
         OPA_write_barrier();
-        MPIR_Assign_trunc(copy_buf->len[buf_num].val, (last - first), volatile int);
+        MPIR_Assign_trunc(copy_buf->len[buf_num].val, (last - first), int);
 
         first = last;
         buf_num = (buf_num+1) % NUM_BUFS;
