@@ -19,12 +19,12 @@
 
 typedef struct {
 
-    volatile uint64_t data_ready;
+    volatile uint64_t data_ready;       /*  takes a cache line */
 
     int is_header;
-    size_t payload_sz;
+    unsigned int payload_sz;    /* payload and cell can't be more than 4GB */
 
-    uint8_t payload[MPIDI_POSIX_FBOX_DATA_LEN];
+    uint8_t payload[MPIDI_POSIX_FBOX_DATA_LEN]; /* should be 64-bit aligned */
 
 } MPIDI_POSIX_fastbox_t;
 
