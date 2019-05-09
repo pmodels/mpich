@@ -30,8 +30,10 @@ noinst_PROGRAMS =      \
     keyval_double_free \
     keyval_double_free_comm \
     keyval_double_free_type \
-    keyval_double_free_win
+    keyval_double_free_win  \
+    fkeyvaltype
 
 EXTRA_DIST = testlist.in
 
-include Makefile.dtp
+fkeyvaltype_CPPFLAGS = $(AM_CPPFLAGS)
+fkeyvaltype_SOURCES = fkeyvaltype.c

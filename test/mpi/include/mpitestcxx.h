@@ -23,7 +23,12 @@ void MTestPrintErrorMsg(const char[], int);
 void MTestPrintfMsg(int, const char[], ...);
 void MTestError(const char[]);
 
-int MTestInitBasicSignatureX(int, char **, int *, MPI::Datatype *);
+typedef void MTestArgList;
+MTestArgList *MTestArgListCreate(int argc, char *argv[]);
+char *MTestArgListGetString(MTestArgList * head, const char *arg);
+int MTestArgListGetInt(MTestArgList * head, const char *arg);
+long MTestArgListGetLong(MTestArgList * head, const char *arg);
+void MTestArgListDestroy(MTestArgList * head);
 
 int MTestGetIntracomm(MPI::Intracomm &, int);
 int MTestGetIntracommGeneral(MPI::Intracomm &, int, bool);

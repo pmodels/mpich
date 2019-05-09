@@ -12,7 +12,7 @@
 // Not all C++ compilers have iostream instead of iostream.h
 #include <iostream>
 #ifdef HAVE_NAMESPACE_STD
-// Those that do often need the std namespace; otherwise, a bare "cout"
+// Those that do often need the std namespace; otherwise, a bare "cerr"
 // is likely to fail to compile
 using namespace std;
 #endif
@@ -58,36 +58,39 @@ int main(int argc, char *argv[])
     int attrval;
     int i, j, key[32], keyval, saveKeyval;
     int obj_idx;
-    int count;
+    int seed, testsize;
+    MPI_Aint count, maxbufsize;
     MPI::Datatype type, duptype;
-    MPI::Datatype basic_type;
-    DTP_t dtp;
-    char dtypename[MPI_MAX_OBJECT_NAME];
+    char *basic_type;
+    DTP_pool_s dtp;
+    DTP_obj_s obj;
     int tnlen;
     MPI_Comm comm = MPI_COMM_WORLD;
 
     MTest_Init();
 
-    err = MTestInitBasicSignatureX(argc, argv, &count, &basic_type);
-    if (err)
-        return 1;
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    seed = MTestArgListGetInt(head, "seed");
+    testsize = MTestArgListGetInt(head, "testsize");
+    count = MTestArgListGetLong(head, "count");
+    maxbufsize = MTestArgListGetLong(head, "maxbufsize");
+    basic_type = MTestArgListGetString(head, "type");
 
-    /* TODO: struct types are currently not supported for C++ */
-
-    err = DTP_pool_create(basic_type, count, &dtp);
+    err = DTP_pool_create(basic_type, count, seed, &dtp);
     if (err != DTP_SUCCESS) {
-        basic_type.Get_name(dtypename, tnlen);
-        cout << "Error while creating pool (" << dtypename << "," << count << ")\n";
+        cerr << "Error while creating pool (" << basic_type << "," << count << ")\n";
     }
 
-    for (obj_idx = 0; obj_idx < dtp->DTP_num_objs; obj_idx++) {
-        err = DTP_obj_create(dtp, obj_idx, 0, 0, 0);
+    MTestArgListDestroy(head);
+
+    for (obj_idx = 0; obj_idx < testsize; obj_idx++) {
+        err = DTP_obj_create(dtp, &obj, maxbufsize);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
 
-        type = dtp->DTP_obj_array[obj_idx].DTP_obj_type;
+        type = obj.DTP_datatype;
         keyval = MPI::Datatype::Create_keyval(copy_fn, delete_fn, (void *) 0);
         saveKeyval = keyval;    /* in case we need to free explicitly */
         attrval = 1;
@@ -106,30 +109,31 @@ int main(int argc, char *argv[])
 
         if (attrval != 1) {
             errs++;
-            type.Get_name(dtypename, tnlen);
-            cout << "attrval is " << attrval << ", should be 1, before dup in type " << dtypename <<
-                "\n";
+            cerr << "attrval is " << attrval << ", should be 1, before dup in type " << obj.DTP_description
+                << "\n";
         }
         duptype = type.Dup();
         /* Check that the attribute was copied */
         if (attrval != 2) {
             errs++;
-            type.Get_name(dtypename, tnlen);
-            cout << "Attribute not incremented when type dup'ed (" << dtypename << ")\n";
+            cerr << "Attribute not incremented when type dup'ed (" << obj.DTP_description << ")\n";
         }
         duptype.Free();
         if (attrval != 1) {
             errs++;
-            type.Get_name(dtypename, tnlen);
-            cout << "Attribute not decremented when duptype " << dtypename << " freed\n";
+            cerr << "Attribute not decremented when duptype " << obj.DTP_description << " freed\n";
         }
         /* Check that the attribute was freed in the duptype */
 
-        DTP_obj_free(dtp, obj_idx);
-        if (attrval != 0) {
-            errs++;
-            type.Get_name(dtypename, tnlen);
-            cout << "Attribute not decremented when type " << dtypename << "reed\n";
+        if (obj.DTP_datatype != dtp.DTP_base_type) {
+            DTP_obj_free(obj);
+            if (attrval != 0) {
+                errs++;
+                cerr << "Attribute not decremented when type " << obj.DTP_description << "reed\n";
+            }
+        } else {
+            MPI_Type_delete_attr(type, saveKeyval);
+            DTP_obj_free(obj);
         }
 
         /* Free those other keyvals */

@@ -1388,124 +1388,121 @@ int MTestSpawnPossible(int *can_spawn)
 /* ------------------------------------------------------------------------ */
 /* All dtpools related code */
 
-#include "dtpools.h"
+typedef struct MTestArgListEntry {
+    char *arg;
+    char *val;
+    struct MTestArgListEntry *next;
+} MTestArgListEntry;
 
-struct _dt_type {
-    const char *name;
-    MPI_Datatype type;
-};
-static struct _dt_type typelist[] = { DTPOOLS_TYPE_LIST };
-
-int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+static void MTestArgListInsert(MTestArgListEntry ** head, char *arg, char *val)
 {
-    int i, j;
+    MTestArgListEntry *tmp = *head;
 
-    if (argc < 3) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
-                j = 0;
-                while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                       strcmp(argv[i] + strlen("-type="), typelist[j].name)) {
-                    j++;
-                }
-
-                if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                    *basic_type = typelist[j].type;
-                } else {
-                    fprintf(stdout, "Error: datatype not recognized\n");
-                    return MTestReturnValue(1);
-                }
-            } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
-                *count = atoi(argv[i] + strlen("-count="));
-            }
-        }
+    if (!tmp) {
+        tmp = malloc(sizeof(MTestArgListEntry));
+        tmp->arg = arg;
+        tmp->val = val;
+        tmp->next = NULL;
+        *head = tmp;
+        return;
     }
 
-    return MTestReturnValue(0);
+    while (tmp->next)
+        tmp = tmp->next;
+
+    tmp->next = malloc(sizeof(MTestArgListEntry));
+    tmp->next->arg = arg;
+    tmp->next->val = val;
+    tmp->next->next = NULL;
 }
 
-int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+static char *MTestArgListSearch(MTestArgListEntry * head, const char *arg)
 {
-    int i, j;
+    char *val = NULL;
 
-    if (argc < 4) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
-                j = 0;
-                while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                       strcmp(argv[i] + strlen("-type="), typelist[j].name)) {
-                    j++;
-                }
+    while (head && strcmp(head->arg, arg))
+        head = head->next;
 
-                if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                    *basic_type = typelist[j].type;
-                } else {
-                    fprintf(stdout, "Error: datatype not recognized\n");
-                    return MTestReturnValue(1);
-                }
-            } else if (!strncmp(argv[i], "-sendcnt=", strlen("-sendcnt="))) {
-                count[0] = atoi(argv[i] + strlen("-sendcnt="));
-            } else if (!strncmp(argv[i], "-recvcnt=", strlen("-recvcnt="))) {
-                count[1] = atoi(argv[i] + strlen("-recvcnt="));
-            }
-        }
-    }
+    if (head)
+        val = head->val;
 
-    return MTestReturnValue(0);
+    return val;
 }
 
-int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts,
-                             MPI_Datatype ** basic_types)
+static void MTestArgListPrintError(const char *arg)
 {
-    int i, j, k;
-    char *input_string, *token;
+    fprintf(stderr, "Error: argument -%s= has not been defined!\n", arg);
+    exit(-1);
+}
 
-    if (argc < 4) {
-        fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
-        return MTestReturnValue(1);
-    } else {
-        for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-numtypes=", strlen("-numtypes="))) {
-                *numtypes = atoi(argv[i] + strlen("-numtypes="));
-                /* allocate arrays */
-                *counts = (int *) malloc(*numtypes * sizeof(int));
-                *basic_types = (MPI_Datatype *) malloc(*numtypes * sizeof(MPI_Datatype));
-            } else if (!strncmp(argv[i], "-types=", strlen("-types="))) {
-                input_string = strdup(argv[i] + strlen("-types="));
+void MTestArgListDestroy(MTestArgList * head)
+{
+    MTestArgListEntry *cur = (MTestArgListEntry *) head;
 
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
-                    j = 0;
-                    while (strcmp(typelist[j].name, "MPI_DATATYPE_NULL") &&
-                           strcmp(token, typelist[j].name)) {
-                        j++;
-                    }
+    while (cur) {
+        MTestArgListEntry *prev = cur;
+        cur = cur->next;
+        free(prev->arg);
+        free(prev->val);
+        free(prev);
+    }
+}
 
-                    if (strcmp(typelist[j].name, "MPI_DATATYPE_NULL")) {
-                        (*basic_types)[k++] = typelist[j].type;
-                    } else {
-                        fprintf(stdout, "Error: datatype not recognized\n");
-                        return MTestReturnValue(1);
-                    }
-                }
+/*
+ * following args are expected to be of the form: -arg=val
+ */
+MTestArgList *MTestArgListCreate(int argc, char *argv[])
+{
+    int i;
+    char *string = NULL;
+    char *tmp = NULL;
+    char *arg = NULL;
+    char *val = NULL;
 
-                free(input_string);
-            } else if (!strncmp(argv[i], "-counts=", strlen("-counts="))) {
-                input_string = strdup(argv[i] + strlen("-counts="));
+    MTestArgListEntry *head = NULL;
 
-                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
-                    (*counts)[k++] = atoi(token);
-                }
+    for (i = 1; i < argc; i++) {
+        /* extract arg and val */
+        string = strdup(argv[i]);
+        tmp = strtok(string, "=");
+        arg = strdup(tmp + 1);  /* skip prepending '-' */
+        tmp = strtok(NULL, "=");
+        val = strdup(tmp);
 
-                free(input_string);
-            }
-        }
+        MTestArgListInsert(&head, arg, val);
+
+        free(string);
     }
 
-    return MTestReturnValue(0);
+    return head;
+}
+
+char *MTestArgListGetString(MTestArgList * head, const char *arg)
+{
+    char *tmp;
+
+    if (!(tmp = MTestArgListSearch((MTestArgListEntry *) head, arg)))
+        MTestArgListPrintError(arg);
+
+    return tmp;
+}
+
+int MTestArgListGetInt(MTestArgList * head, const char *arg)
+{
+    return atoi(MTestArgListGetString(head, arg));
+}
+
+long MTestArgListGetLong(MTestArgList * head, const char *arg)
+{
+    return atol(MTestArgListGetString(head, arg));
+}
+
+int MTestIsBasicDtype(MPI_Datatype type)
+{
+    int numints, numaddrs, numtypes, combiner;
+    MPI_Type_get_envelope(type, &numints, &numaddrs, &numtypes, &combiner);
+
+    int is_basic = (combiner == MPI_COMBINER_NAMED);
+
+    return is_basic;
 }
