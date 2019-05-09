@@ -84,7 +84,15 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
             rreq->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
+        /* Note: buf could be NULL.  In one case it is a zero size message such as
+         * the one used in MPI_Barrier.  In another case, the datatype can specify
+         * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
+         */
+        if (nbytes > 0) {
+            char *addr = (char *) buf + dt_true_lb;
+            assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
+            MPIR_Memcpy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
+        }
     }
 
     MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
