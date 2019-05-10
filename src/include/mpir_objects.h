@@ -431,6 +431,7 @@ typedef struct MPIR_Object_alloc_t {
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *);
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t *, void *);
 static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
 
