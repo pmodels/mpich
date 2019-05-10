@@ -81,7 +81,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll);
 int MPID_nem_tcp_sm_init(void);
 int MPID_nem_tcp_sm_finalize(void);
 int MPID_nem_tcp_set_sockopts(int fd);
-MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd);
+int MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd);
 int MPID_nem_tcp_send_finalize(void);
 int MPID_nem_tcp_bind(int sockfd);
 int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc);

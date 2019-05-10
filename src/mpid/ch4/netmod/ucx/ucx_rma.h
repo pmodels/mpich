@@ -41,7 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     uint64_t base;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     base = win_info->addr;
@@ -107,7 +106,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     ucs_status_t status;
     struct MPIR_Segment *segment_ptr;
     char *buffer = NULL;
-    MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     segment_ptr = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
@@ -150,7 +148,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
 
     base = win_info->addr;

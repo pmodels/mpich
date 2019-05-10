@@ -169,7 +169,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         put_pkt->info.flattened_type_size = 0;
         put_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         put_pkt->source_win_handle = win_ptr->handle;
-        put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        put_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(put_pkt->info.data);
             mpi_errno = immed_copy(src, dest, data_sz);
@@ -338,9 +338,9 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         get_pkt->datatype = target_datatype;
         get_pkt->info.flattened_type_size = 0;
         get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
-        get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        get_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_resp_pkt)
-            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
+            get_pkt->pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -541,7 +541,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         accum_pkt->op = op;
         accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         accum_pkt->source_win_handle = win_ptr->handle;
-        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        accum_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(accum_pkt->info.data);
             mpi_errno = immed_copy(src, dest, data_sz);
@@ -789,7 +789,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         get_accum_pkt->info.flattened_type_size = 0;
         get_accum_pkt->op = op;
         get_accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
-        get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        get_accum_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(get_accum_pkt->info.data);
             mpi_errno = immed_copy(src, dest, orig_data_sz);
@@ -1007,7 +1007,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         cas_pkt->datatype = datatype;
         cas_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
-        cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        cas_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         /* REQUIRE: All datatype arguments must be of the same, builtin
          * type and counts must be 1. */
@@ -1154,7 +1154,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         fop_pkt->datatype = datatype;
         fop_pkt->op = op;
         fop_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
-        fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        fop_pkt->pkt_flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(fop_pkt->info.data);
             mpi_errno = immed_copy(src, dest, type_size);

@@ -1106,7 +1106,7 @@ int MPID_nem_tcp_ckpt_cleanup(void)
 static int state_tc_c_cnting_handler(struct pollfd *const plfd, sockconn_t * const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t status;
+    int status;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_STATE_TC_C_CNTING_HANDLER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_STATE_TC_C_CNTING_HANDLER);
@@ -1292,7 +1292,7 @@ static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t * con
 static int state_l_cntd_handler(struct pollfd *const plfd, sockconn_t * const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t status;
+    int status;
     int got_sc_eof = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_STATE_L_CNTD_HANDLER);
 
@@ -1378,7 +1378,7 @@ static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t * cons
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t status;
+    int status;
     sockconn_t *fnd_sc = NULL;
     int snd_nak = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_STATE_L_RANKRCVD_HANDLER);
@@ -1453,7 +1453,7 @@ static int state_l_tmpvcrcvd_handler(struct pollfd *const plfd, sockconn_t * con
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
     int mpi_errno = MPI_SUCCESS;
-    MPID_NEM_TCP_SOCK_STATUS_t status;
+    int status;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_STATE_L_TMPVCRCVD_HANDLER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_STATE_L_TMPVCRCVD_HANDLER);

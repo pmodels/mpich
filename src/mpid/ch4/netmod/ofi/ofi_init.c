@@ -280,8 +280,8 @@ static int init_hints(struct fi_info *hints);
 static struct fi_info *pick_provider(struct fi_info *hints, const char *provname,
                                      struct fi_info *prov_list);
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
-static int conn_manager_init();
-static int conn_manager_destroy();
+static int conn_manager_init(void);
+static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
 
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)

@@ -40,7 +40,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     size_t sendtype_true_extent, recvtype_true_extent;
 
     int delta = 1;
-    int index = 0;
+    int i_recv = 0;
     int *recv_id = NULL;
     void *tmp_recvbuf = NULL;
 
@@ -131,7 +131,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
             }
 
             /* Receive at the exact location. */
-            recv_id[index++] =
+            recv_id[i_recv++] =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
                                      count, recvtype, src, tag, comm, sched, 0, NULL);
 

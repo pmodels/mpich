@@ -32,7 +32,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     
     req->dev.datatype_ptr	   = NULL;
     req->dev.segment_ptr	   = NULL;
-    /* Masks and flags for channel device state in an MPIR_Request */
+    /* Masks and pkt_flags for channel device state in an MPIR_Request */
     req->dev.state		   = 0;
     req->dev.cancel_pending	   = FALSE;
     /* FIXME: RMA ops shouldn't need to be set except when creating a
@@ -42,7 +42,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.target_lock_queue_entry = NULL;
     req->dev.flattened_type = NULL;
     req->dev.iov_offset        = 0;
-    req->dev.flags             = MPIDI_CH3_PKT_FLAG_NONE;
+    req->dev.pkt_flags             = MPIDI_CH3_PKT_FLAG_NONE;
     req->dev.resp_request_handle = MPI_REQUEST_NULL;
     req->dev.user_buf          = NULL;
     req->dev.OnDataAvail       = NULL;

@@ -73,10 +73,10 @@ struct MPIR_Win {
 
     char name[MPI_MAX_OBJECT_NAME];
 
-    MPIR_Win_flavor_t create_flavor;
-    MPIR_Win_model_t model;
-    MPIR_Win_flavor_t copyCreateFlavor;
-    MPIR_Win_model_t copyModel;
+    int create_flavor;
+    int model;
+    int copyCreateFlavor;
+    int copyModel;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_WIN_DECL
