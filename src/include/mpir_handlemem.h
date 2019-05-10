@@ -325,11 +325,16 @@ Input Parameters:
   +*/
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *object)
 {
-    MPIR_Handle_common *obj = (MPIR_Handle_common *) object;
-
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPIR_Handle_obj_free_unsafe(objmem, object);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+}
 
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, void *object)
+{
+    MPIR_Handle_common *obj = (MPIR_Handle_common *) object;
     MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL, (MPL_DBG_FDEST,
                                                "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
                                                (obj),
@@ -372,8 +377,6 @@ static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *obje
 
     obj->next = objmem->avail;
     objmem->avail = obj;
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
 }
 
 /*
