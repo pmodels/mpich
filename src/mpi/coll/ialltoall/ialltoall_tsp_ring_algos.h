@@ -49,12 +49,9 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst, copy_dst;
-    /* for storing task ids, we need only upto two phases back */
-    int vtcs[3], send_id[3], recv_id[3], dtcopy_id[3];
 
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;
-    int nvtcs;
     int tag;
 
     int size = MPIR_Comm_size(comm);
@@ -92,6 +89,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     /* copy my data to buf1 which will be forwarded in phase 0 of the ring.
      * TODO: We could avoid this copy but that would make the implementation more
      * complicated */
+    int dtcopy_id[3];
     dtcopy_id[0] = MPIR_TSP_sched_localcopy((char *) data_buf, size * recvcount, recvtype,
                                             (char *) buf1, size * recvcount, recvtype, sched, 0,
                                             NULL);
@@ -120,6 +118,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 
     sbuf = buf1;
     rbuf = buf2;
+    int send_id[3] = { };       /* warning fix: icc: maybe used before set */
+    int recv_id[3] = { };       /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
@@ -127,6 +127,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
+        int vtcs[3], nvtcs;
         /* schedule send */
         if (i == 0) {
             nvtcs = 1;

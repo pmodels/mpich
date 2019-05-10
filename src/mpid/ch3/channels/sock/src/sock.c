@@ -2183,14 +2183,6 @@ int MPIDI_CH3I_Sock_post_close(struct MPIDI_CH3I_Sock *sock)
     if (pollinfo->type == MPIDI_CH3I_SOCKI_TYPE_COMMUNICATION) {
         if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLIN | POLLOUT)) {
             /* --BEGIN ERROR HANDLING-- */
-            int event_mpi_errno;
-
-            event_mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPIDI_CH3I_SOCK_ERR_SOCK_CLOSED, "**sock|close_cancel",
-                                     "**sock|close_cancel %d %d", pollinfo->sock_set->id,
-                                     pollinfo->sock_id);
-
             if (MPIDI_CH3I_SOCKI_POLLFD_OP_ISSET(pollfd, pollinfo, POLLIN)) {
                 MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_READ, pollinfo->read_nb,
                                                pollinfo->user_ptr, MPI_SUCCESS, mpi_errno, fn_exit);
@@ -2664,7 +2656,6 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
 
 int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_written)
 {
-    struct pollfd *pollfd;
     struct pollinfo *pollinfo;
     ssize_t nb;
     int mpi_errno = MPI_SUCCESS;
@@ -2676,12 +2667,15 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
     MPIDI_CH3I_SOCKI_VERIFY_INIT(mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VALIDATE_SOCK(sock, mpi_errno, fn_exit);
 
-    pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
     pollinfo = MPIDI_CH3I_Socki_sock_get_pollinfo(sock);
 
+#ifdef USE_SOCK_VERIFY  /* necessary for -Wunused-but-set-variable */
+    struct pollfd *pollfd;
+    pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
     MPIDI_CH3I_SOCKI_VERIFY_CONNECTED_WRITABLE(pollinfo, mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VALIDATE_FD(pollinfo, mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VERIFY_NO_POSTED_WRITE(pollfd, pollinfo, mpi_errno, fn_exit);
+#endif
 
     /* FIXME: multiple passes should be made if len > SSIZE_MAX and nb == SSIZE_MAX */
     if (len > SSIZE_MAX) {
@@ -2738,7 +2732,6 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 
 int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
 {
-    struct pollfd *pollfd;
     struct pollinfo *pollinfo;
     ssize_t nb;
     int mpi_errno = MPI_SUCCESS;
@@ -2750,12 +2743,15 @@ int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, siz
     MPIDI_CH3I_SOCKI_VERIFY_INIT(mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VALIDATE_SOCK(sock, mpi_errno, fn_exit);
 
-    pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
     pollinfo = MPIDI_CH3I_Socki_sock_get_pollinfo(sock);
 
+#ifdef USE_SOCK_VERIFY 
+    struct pollfd *pollfd;
+    pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
     MPIDI_CH3I_SOCKI_VALIDATE_FD(pollinfo, mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VERIFY_CONNECTED_WRITABLE(pollinfo, mpi_errno, fn_exit);
     MPIDI_CH3I_SOCKI_VERIFY_NO_POSTED_WRITE(pollfd, pollinfo, mpi_errno, fn_exit);
+#endif
 
     /*
      * FIXME: The IEEE 1003.1 standard says that if the sum of the iov_len
@@ -3276,7 +3272,6 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
 
                     if (n_fds == 0 && millisecond_timeout != 0) {
                         int pollfds_active_elems = sock_set->poll_array_elems;
-                        int err;
 
                         /* The abstraction here is a shared (blocking) resource that
                          * the threads must coordinate.  That means not holding

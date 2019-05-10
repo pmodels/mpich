@@ -84,9 +84,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
                                                        ucp_tag_recv_info_t * info)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-
     return;
 }
 

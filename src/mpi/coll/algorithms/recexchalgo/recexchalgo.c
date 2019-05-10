@@ -138,18 +138,20 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     if (*step1_sendto == -1) {  /* calulate step2_nbrs only for participating ranks */
         int *digit = (int *) MPL_malloc(sizeof(int) * log_p_of_k, MPL_MEM_COLL);
         MPIR_Assert(digit != NULL);
-        int temprank = newrank, index = 0, remainder;
+        int temprank = newrank;
         int mask = 0x1;
         int phase = 0, cbit, cnt, nbr, power;
 
         /* calculate the digits in base k representation of newrank */
         for (i = 0; i < log_p_of_k; i++)
             digit[i] = 0;
+
+        int remainder, i_digit = 0;
         while (temprank != 0) {
             remainder = temprank % k;
             temprank = temprank / k;
-            digit[index] = remainder;
-            index++;
+            digit[i_digit] = remainder;
+            i_digit++;
         }
 
         while (mask < p_of_k) {
@@ -279,7 +281,6 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int i, T, rem, power, step2rank, step2_reverse_rank = 0;
     int pofk = 1, log_pofk = 0;
     int *digit, *digit_reverse;
-    int remainder, index = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(2);
 
@@ -306,11 +307,13 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
                         mpi_errno, "digit_reverse buffer", MPL_MEM_COLL);
     for (i = 0; i < log_pofk; i++)
         digit[i] = 0;
+
+    int remainder, i_digit = 0;
     while (step2rank != 0) {
         remainder = step2rank % k;
         step2rank = step2rank / k;
-        digit[index] = remainder;
-        index++;
+        digit[i_digit] = remainder;
+        i_digit++;
     }
 
     /* reverse the number in base k representation to get the step2_reverse_rank

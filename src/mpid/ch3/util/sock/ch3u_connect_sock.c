@@ -411,7 +411,9 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
     int str_errno = MPL_STR_SUCCESS;
     MPIDI_CH3I_Sock_ifaddr_t ifaddr;
     char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
+#ifdef MPL_USE_DBG_LOGGING
     char *bc_orig = *bc_val_p;
+#endif
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);

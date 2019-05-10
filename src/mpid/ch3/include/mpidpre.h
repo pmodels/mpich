@@ -450,7 +450,7 @@ typedef struct MPIDI_Request {
     MPI_Request request_handle;
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags; /* flags that were included in the original RMA packet header */
+    int pkt_flags; /* pkt_flags that were included in the original RMA packet header */
     struct MPIDI_RMA_Target_lock_entry *target_lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 

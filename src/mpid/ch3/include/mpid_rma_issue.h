@@ -60,7 +60,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 /* =========================================================== */
 
 /* Set extended header for ACC operation and return its real size. */
-static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
+static int init_stream_dtype_ext_pkt(int pkt_flags,
                               MPIR_Datatype* target_dtp, intptr_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz, int *flattened_type_size)
 {
@@ -80,7 +80,7 @@ static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
      *  2. Flattened datatype: if the target is a derived datatype.
      */
 
-    if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM))
+    if ((pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM))
         stream_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_stream_t);
     else
         stream_hdr_sz = 0;
@@ -103,7 +103,7 @@ static int init_stream_dtype_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
         total_hdr = NULL;
     }
 
-    if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM)) {
+    if ((pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM)) {
         ((MPIDI_CH3_Ext_pkt_stream_t *) total_hdr)->stream_offset = stream_offset;
     }
     if (target_dtp != NULL) {
@@ -142,7 +142,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     int iovcnt = 0;
     MPIR_Request *req = NULL;
     MPI_Aint dt_true_lb;
-    MPIDI_CH3_Pkt_flags_t flags;
+    int pkt_flags;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
@@ -184,8 +184,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     iov[iovcnt].MPL_IOV_LEN = sizeof(rma_op->pkt);
     iovcnt++;
 
-    MPIDI_CH3_PKT_RMA_GET_FLAGS(rma_op->pkt, flags, mpi_errno);
-    if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && target_dtp == NULL && is_origin_contig) {
+    MPIDI_CH3_PKT_RMA_GET_FLAGS(rma_op->pkt, pkt_flags, mpi_errno);
+    if (!(pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && target_dtp == NULL && is_origin_contig) {
         /* Fast path --- use iStartMsgv() to issue the data, which does not need a request
          * to be passed in:
          * (1) non-streamed op (do not need to send extended packet header);
@@ -302,7 +302,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
 /* issue_put_op() issues PUT packet header and data. */
 static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
-                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
+                        MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -315,7 +315,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_PUT_OP);
 
-    put_pkt->flags |= flags;
+    put_pkt->pkt_flags |= pkt_flags;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -376,7 +376,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
 /* issue_acc_op() send ACC packet header and data. */
 static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
-                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
+                        MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -400,7 +400,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
         MPIR_Request *curr_req = NULL;
 
-        accum_pkt->flags |= flags;
+        accum_pkt->pkt_flags |= pkt_flags;
 
         /* All origin data is in packet header, issue the header. */
         MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
@@ -445,7 +445,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     /* If there are more than one stream unit, mark the current packet
      * as stream packet */
     if (stream_unit_count > 1)
-        flags |= MPIDI_CH3_PKT_FLAG_RMA_STREAM;
+        pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_STREAM;
 
     /* Get target datatype */
     if (!MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype))
@@ -460,16 +460,16 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         if (j < rma_op->issued_stream_count)
             continue;
 
-        accum_pkt->flags |= flags;
+        accum_pkt->pkt_flags |= pkt_flags;
 
         if (j != 0) {
-            accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
-            accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
+            accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
+            accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
         }
         if (j != stream_unit_count - 1) {
-            accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
-            accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
-            accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
+            accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
+            accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+            accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
         }
 
         stream_offset = j * stream_elem_count * predefined_dtp_size;
@@ -477,7 +477,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */
-        init_stream_dtype_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
+        init_stream_dtype_ext_pkt(pkt_flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
                            &accum_pkt->info.flattened_type_size);
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
@@ -506,8 +506,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         rma_op->issued_stream_count++;
 
-        if (accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
-            accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
+        if (accum_pkt->pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+            accum_pkt->pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
              * only issue the first streaming unit */
             MPIR_Assert(j == 0);
@@ -538,7 +538,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
 /* issue_get_acc_op() send GACC packet header and data. */
 static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
-                            MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
+                            MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -562,7 +562,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_Request *resp_req = NULL;
         MPIR_Request *curr_req = NULL;
 
-        get_accum_pkt->flags |= flags;
+        get_accum_pkt->pkt_flags |= pkt_flags;
 
         rma_op->reqs_size = 1;
 
@@ -626,7 +626,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     /* If there are more than one stream unit, mark the current packet
      * as stream packet */
     if (stream_unit_count > 1)
-        flags |= MPIDI_CH3_PKT_FLAG_RMA_STREAM;
+        pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_STREAM;
 
     rest_len = total_len;
 
@@ -649,16 +649,16 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         if (j < rma_op->issued_stream_count)
             continue;
 
-        get_accum_pkt->flags |= flags;
+        get_accum_pkt->pkt_flags |= pkt_flags;
 
         if (j != 0) {
-            get_accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
-            get_accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
+            get_accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
+            get_accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
         }
         if (j != stream_unit_count - 1) {
-            get_accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
-            get_accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
-            get_accum_pkt->flags &= ~MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
+            get_accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
+            get_accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+            get_accum_pkt->pkt_flags &= ~MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
         }
 
         /* Create a request for the GACC response.  Store the response buf, count, and
@@ -674,7 +674,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         resp_req->dev.datatype = rma_op->result_datatype;
         resp_req->dev.target_win_handle = MPI_WIN_NULL;
         resp_req->dev.source_win_handle = win_ptr->handle;
-        resp_req->dev.flags = flags;
+        resp_req->dev.pkt_flags = pkt_flags;
 
         if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
             MPIR_Datatype*result_dtp = NULL;
@@ -692,7 +692,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */
-        init_stream_dtype_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
+        init_stream_dtype_ext_pkt(pkt_flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz,
                            &get_accum_pkt->info.flattened_type_size);
 
         /* Note: here we need to allocate an extended packet header in response request,
@@ -701,7 +701,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
          * other information. */
         {
             int dummy;
-            init_stream_dtype_ext_pkt(flags, NULL /* target_dtp_ptr */ , stream_offset,
+            init_stream_dtype_ext_pkt(pkt_flags, NULL /* target_dtp_ptr */ , stream_offset,
                                       &(resp_req->dev.ext_hdr_ptr), &(resp_req->dev.ext_hdr_sz),
                                       &dummy);
         }
@@ -722,8 +722,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         rma_op->issued_stream_count++;
 
-        if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
-            get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
+        if (get_accum_pkt->pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+            get_accum_pkt->pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
              * only issue the first streaming unit */
             MPIR_Assert(j == 0);
@@ -770,7 +770,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
 
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
-                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
+                        MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     MPIDI_CH3_Pkt_get_t *get_pkt = &rma_op->pkt.get;
     int mpi_errno = MPI_SUCCESS;
@@ -812,7 +812,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     get_pkt->request_handle = curr_req->handle;
 
-    get_pkt->flags |= flags;
+    get_pkt->pkt_flags |= pkt_flags;
 
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
@@ -889,7 +889,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
-                        MPIDI_CH3_Pkt_flags_t flags)
+                        int pkt_flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -920,7 +920,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     curr_req->dev.source_win_handle = win_ptr->handle;
 
     cas_pkt->request_handle = curr_req->handle;
-    cas_pkt->flags |= flags;
+    cas_pkt->pkt_flags |= pkt_flags;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
@@ -948,7 +948,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
-                        MPIDI_CH3_Pkt_flags_t flags)
+                        int pkt_flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -977,7 +977,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     fop_pkt->request_handle = resp_req->handle;
 
-    fop_pkt->flags |= flags;
+    fop_pkt->pkt_flags |= pkt_flags;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -1018,7 +1018,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 /* issue_rma_op() is called by ch3u_rma_progress.c, it triggers
    proper issuing functions according to packet type. */
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
-                               MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
+                               MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_RMA_OP);
@@ -1028,25 +1028,25 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
     switch (op_ptr->pkt.type) {
     case (MPIDI_CH3_PKT_PUT):
     case (MPIDI_CH3_PKT_PUT_IMMED):
-        mpi_errno = issue_put_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_put_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     case (MPIDI_CH3_PKT_ACCUMULATE):
     case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):
-        mpi_errno = issue_acc_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_acc_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     case (MPIDI_CH3_PKT_GET_ACCUM):
     case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):
-        mpi_errno = issue_get_acc_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_get_acc_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     case (MPIDI_CH3_PKT_GET):
-        mpi_errno = issue_get_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_get_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     case (MPIDI_CH3_PKT_CAS_IMMED):
-        mpi_errno = issue_cas_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_cas_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     case (MPIDI_CH3_PKT_FOP):
     case (MPIDI_CH3_PKT_FOP_IMMED):
-        mpi_errno = issue_fop_op(op_ptr, win_ptr, target_ptr, flags);
+        mpi_errno = issue_fop_op(op_ptr, win_ptr, target_ptr, pkt_flags);
         break;
     default:
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winInvalidOp");

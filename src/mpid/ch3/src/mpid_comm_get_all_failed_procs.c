@@ -14,7 +14,7 @@
 /* Generates a bitarray based on orig_comm where all procs in group are marked with 1 */
 static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bitarray, int *bitarray_size) {
     int mask;
-    int *group_ranks, *comm_ranks, i, index;
+    int *group_ranks, *comm_ranks, i;
 
     /* Calculate the bitarray size in ints and allocate space */
     *bitarray_size = (orig_comm->local_size / (8 * sizeof(int)) + (orig_comm->local_size % (8 * sizeof(int)) ? 1 : 0));
@@ -40,9 +40,9 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
      * add it to the bitarray. */
     for (i = 0; i < group->size ; i++) {
         if (comm_ranks[i] == MPI_UNDEFINED) continue;
-        index = comm_ranks[i] / (sizeof(int) * 8);
+        int idx = comm_ranks[i] / (sizeof(int) * 8);
         mask = 0x1 << comm_ranks[i] % (sizeof(int) * 8);
-        (*bitarray)[index] |= mask;
+        (*bitarray)[idx] |= mask;
     }
 
     MPL_free(group_ranks);

@@ -558,8 +558,14 @@ if test "$enable_strict_done" != "yes" ; then
     c_std=c99
     posix_std=2001
     enable_opt=yes
+    pac_cc_strict_werror=no
     for flag in ${flags}; do
         case "$flag" in
+             error)
+                # note: we can't enable -Werror early as it will break many config tests
+                #       Need apply to CFLAGS at the end of configure.
+                pac_cc_strict_werror=yes
+                ;;
 	     stdc89)
 	        c_std=c89
 		;;

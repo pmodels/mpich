@@ -421,6 +421,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
+    flags = 0;  /* silence gcc-4 -Wmaybe-uninitialized */
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
                               fi_inject_write(MPIDI_OFI_WIN(win).ep,
@@ -604,11 +605,12 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto null_op_exit;
     }
 
+    flags = 0;  /* silence gcc-4 -Wmaybe-uninitialized */
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-        MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
-        if (!sigreq)
-            flags = 0;
+        if (sigreq) {
+            MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+        }
         msg.desc = NULL;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
@@ -1084,13 +1086,17 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                   origin_count, result_count, target_count,
                                   max_size, origin_datatype, result_datatype, target_datatype,
                                   origin_bytes, result_bytes, target_bytes);
-    else
+    else {
+        /* unlikly branch, zero it to prevent gcc-4 about p.result_xxx (-Wmaybe-uninitialized) */
+        memset(&p, 0, sizeof(p));
         MPIDI_OFI_init_seg_state(&p,
                                  result_addr,
                                  MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                                  result_count,
                                  target_count, result_bytes, target_bytes, max_size,
                                  result_datatype, target_datatype);
+    }
+
     msg.desc = NULL;
     msg.addr = MPIDI_OFI_av_to_phys(addr);
     msg.context = NULL;

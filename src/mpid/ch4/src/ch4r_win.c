@@ -281,10 +281,10 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     win->base = NULL;
     win->size = length;
     win->disp_unit = disp_unit;
-    win->create_flavor = (MPIR_Win_flavor_t) create_flavor;
-    win->model = (MPIR_Win_model_t) model;
-    win->copyCreateFlavor = (MPIR_Win_flavor_t) 0;
-    win->copyModel = (MPIR_Win_model_t) 0;
+    win->create_flavor = create_flavor;
+    win->model = model;
+    win->copyCreateFlavor = 0;
+    win->copyModel = 0;
     win->attributes = NULL;
     win->comm_ptr = win_comm_ptr;
     win->copyDispUnit = 0;

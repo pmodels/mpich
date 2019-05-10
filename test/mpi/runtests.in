@@ -626,6 +626,13 @@ sub RunList {
 	}
 	else {
 	    $total_run++;
+            my $save_dir;
+            if ($programname =~/^(\S+)\/(\S+)$/) {
+                $save_dir = `pwd`;
+                chomp $save_dir;
+                $programname = $2;
+                chdir $1 or warn "Can't chdir $1\n";
+            }
 	    if (&BuildMPIProgram( $programname, $xfail ) == 0) {
 		if ($batchRun == 1) {
 		    &AddMPIProgram( $programname, $np, $ResultTest, 
@@ -647,6 +654,9 @@ sub RunList {
 	    if ($batchRun == 0) {
 		&CleanUpAfterRun( $programname );
 	    }
+            if ($save_dir) {
+                chdir $save_dir;
+            }
 	}
     }
     close( $LIST );

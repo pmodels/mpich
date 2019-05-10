@@ -25,8 +25,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     int i, src, dst, copy_dst;
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *rbuf, *sbuf;
-    int vtcs[3], send_id[3], recv_id[3], dtcopy_id[3];
-    int nvtcs;
 
     int size = MPIR_Comm_size(comm);
     int rank = MPIR_Comm_rank(comm);
@@ -61,6 +59,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     buf1 = MPIR_TSP_sched_malloc(recvcount * recvtype_extent, sched);
     buf2 = MPIR_TSP_sched_malloc(recvcount * recvtype_extent, sched);
 
+    int dtcopy_id[3];
     if (is_inplace) {
         /* Copy data to buf1 from sendbuf or recvbuf(in case of inplace) */
         dtcopy_id[0] =
@@ -90,38 +89,43 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     rbuf = buf2;
 
     /* Ranks pass around the data (size - 1) times */
+    int send_id[3];
+    int recv_id[3] = { };       /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* Get new tag for each cycle so that the send-recv pairs are matched correctly */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
+        int vtcs[3], nvtcs;
         if (i == 0) {
             nvtcs = 1;
             vtcs[0] = dtcopy_id[0];
+            send_id[0] = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
+                                              dst, tag, comm, sched, nvtcs, vtcs);
+            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                            (MPL_DBG_FDEST, "posting recv at address=%p, count=%d", rbuf,
+                             size * recvcount));
+            nvtcs = 0;
         } else {
             nvtcs = 2;
             vtcs[0] = recv_id[(i - 1) % 3];
             vtcs[1] = send_id[(i - 1) % 3];
-        }
-
-        send_id[i % 3] = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
-                                              dst, tag, comm, sched, nvtcs, vtcs);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "posting recv at address=%p, count=%d", rbuf,
-                         size * recvcount));
-
-        if (i == 0)
-            nvtcs = 0;
-        else if (i == 1) {
-            nvtcs = 2;
-            vtcs[0] = send_id[(i - 1) % 3];
-            vtcs[1] = recv_id[(i - 1) % 3];
-        } else {
-            nvtcs = 3;
-            vtcs[0] = send_id[(i - 1) % 3];
-            vtcs[1] = dtcopy_id[(i - 2) % 3];
-            vtcs[2] = recv_id[(i - 1) % 3];
+            send_id[i % 3] = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
+                                                  dst, tag, comm, sched, nvtcs, vtcs);
+            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                            (MPL_DBG_FDEST, "posting recv at address=%p, count=%d", rbuf,
+                             size * recvcount));
+            if (i == 1) {
+                nvtcs = 2;
+                vtcs[0] = send_id[0];
+                vtcs[1] = recv_id[0];
+            } else {
+                nvtcs = 3;
+                vtcs[0] = send_id[(i - 1) % 3];
+                vtcs[1] = dtcopy_id[(i - 2) % 3];
+                vtcs[2] = recv_id[(i - 1) % 3];
+            }
         }
 
         recv_id[i % 3] = MPIR_TSP_sched_irecv((char *) rbuf, recvcount, recvtype,

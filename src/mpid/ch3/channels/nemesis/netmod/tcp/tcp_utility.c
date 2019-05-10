@@ -123,7 +123,7 @@ FIXME : Above comments are inconsistent now with the changes. No check for EOF i
 actually done now in this function.
 */
 
-MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
+int MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 {
     int rc = MPID_NEM_TCP_SOCK_NOEVENT;
 
