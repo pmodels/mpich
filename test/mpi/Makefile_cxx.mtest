@@ -12,14 +12,17 @@
 ## see Makefile.mtest for a description why this file exists, but for C++
 
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
-LDADD = $(top_builddir)/cxx/util/mtest.$(OBJEXT)
+LDADD = $(top_builddir)/util/mtest_cxx.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT)
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
 LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
 
-$(top_builddir)/cxx/util/mtest.$(OBJEXT): $(top_srcdir)/cxx/util/mtest.cxx
-	(cd $(top_builddir)/cxx/util && $(MAKE) mtest.$(OBJEXT))
+$(top_builddir)/util/mtest_cxx.$(OBJEXT): $(top_srcdir)/util/mtest_cxx.cxx
+	(cd $(top_builddir)/util && $(MAKE) mtest_cxx.$(OBJEXT))
+
+$(top_builddir)/util/mtest_common.$(OBJEXT): $(top_srcdir)/util/mtest_common.c
+	(cd $(top_builddir)/util && $(MAKE) mtest_common.$(OBJEXT))
 
 $(top_builddir)/dtpools/src/.libs/libdtpools.a: $(top_srcdir)/dtpools/src/*.c
 	(cd $(top_builddir)/dtpools && $(MAKE))

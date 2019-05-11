@@ -7,9 +7,16 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include
 
-mtest.$(OBJEXT): mtest.c
-dtypes.$(OBJEXT): dtypes.c
 all-local: mtest.$(OBJEXT) dtypes.$(OBJEXT)
 
 EXTRA_PROGRAMS = mtestcheck dtypes
-mtestcheck_SOURCES = mtestcheck.c mtest.c
+mtestcheck_SOURCES = mtestcheck.c mtest.c mtest_common.c
+
+#---- CXX ---------------------------------------------------------------------
+all-local: mtest_cxx.$(OBJEXT)
+
+## list a dummy library that we don't actually build in order to cause automake
+## to emit a rule for building mtest_cxx.o from mtest_cxx.cxx
+EXTRA_LIBRARIES = libmtest_dummy.a
+libmtest_dummy_a_SOURCES = mtest_cxx.cxx
+
