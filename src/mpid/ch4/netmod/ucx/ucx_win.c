@@ -290,6 +290,13 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
 
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win)) {
+        int i;
+        for (i = 0; i < win->comm_ptr->local_size; i++) {
+            if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
+                ucp_rkey_destroy(MPIDI_UCX_WIN_INFO(win, i).rkey);
+            }
+        }
+
         if (win->size > 0)
             ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
         MPL_free(MPIDI_UCX_WIN(win).info_table);
