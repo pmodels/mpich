@@ -17,7 +17,6 @@ args=""      # extra args
 timelimit="" # time limit for testlist.in
 procs=""     # number of processes to use in testlist.in
 srcdir=""    # relative directory in which this script is located
-maxbufsize=""
 other_args=""
 
 # help message
@@ -29,8 +28,6 @@ options:
   --with-dtpools-datatypes=[typelist]
             comma separated list of MPI Datatypes to use for
             generating DTPools tests
-  --with-dtpools-maxbufsize=[bytes]
-            max buffer size of DTP objects
 EOF
 }
 
@@ -45,9 +42,9 @@ while [ true ] ; do
             types=$(echo $1 | cut -d= -f2)
             shift
             ;;
-        --with-dtpools-maxbufsize)
-            maxbufsize=$(echo $1 | cut -d= -f2)
-            shift
+        *)
+            echo Unrecognized option [$1]
+            exit 1
             ;;
     esac
 done
@@ -144,11 +141,11 @@ while read -r line ; do
                 # limit the mixed pool case to only one
                 # TODO: this should be defined in the config file
                 for recvcount in $sendcount $((sendcount * 2)) ; do
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} arg=-maxbufsize=${maxbufsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
                 done
             else
-                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} arg=-maxbufsize=${maxbufsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                 seed=$((seed + 1))
             fi
         done
