@@ -90,7 +90,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 				  MPIDI_CH3_Pkt_type_t reqtype, 
 				  const void * buf, MPI_Aint count,
-				  MPI_Datatype datatype, intptr_t data_sz,
+				  MPI_Datatype datatype,
 				  int rank, 
 				  int tag, MPIR_Comm * comm,
 				  int context_offset )
@@ -100,7 +100,12 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     MPIR_Request *sreq = *sreq_p;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
-    
+    MPI_Aint data_sz;
+    MPIR_Datatype *dt_ptr;
+
+    MPIR_Datatype_get_ptr(datatype, dt_ptr);
+    data_sz = count * dt_ptr->size;
+
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                      "sending non-contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
