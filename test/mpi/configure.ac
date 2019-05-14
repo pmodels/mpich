@@ -291,7 +291,7 @@ else
 fi
 
 export dtp_args
-AC_CONFIG_COMMANDS([gentests],[$srcdir/gentests.sh $dtp_args],[dtp_args="$dtp_args"])
+AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
