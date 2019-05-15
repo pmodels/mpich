@@ -216,7 +216,32 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return MPIR_Wait_impl(request_ptr, status);
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    if (request_ptr == NULL)
+        goto fn_exit;
+
+    MPID_Progress_start(&progress_state);
+    while (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Progress_wait_req(request_ptr);
+        if (mpi_errno) {
+            /* --BEGIN ERROR HANDLING-- */
+            MPID_Progress_end(&progress_state);
+            MPIR_ERR_POP(mpi_errno);
+            /* --END ERROR HANDLING-- */
+        }
+
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+            mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
+            goto fn_fail;
+        }
+    }
+    MPID_Progress_end(&progress_state);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_THREAD_USE_MDTA */
