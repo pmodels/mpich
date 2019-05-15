@@ -164,7 +164,54 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
                                           MPI_Status array_of_statuses[], int request_properties)
 {
-    return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    int i;
+
+    if (request_properties & MPIR_REQUESTS_PROPERTY__NO_NULL) {
+        MPID_Progress_start(&progress_state);
+        for (i = 0; i < count; i++) {
+            while (!MPIR_Request_is_complete(request_ptrs[i])) {
+                mpi_errno = MPID_Progress_wait_req(request_ptrs[i]);
+                /* must check and handle the error, can't guard with HAVE_ERROR_CHECKING, but it's
+                 * OK for the error case to be slower */
+                if (unlikely(mpi_errno)) {
+                    /* --BEGIN ERROR HANDLING-- */
+                    MPID_Progress_end(&progress_state);
+                    MPIR_ERR_POP(mpi_errno);
+                    /* --END ERROR HANDLING-- */
+                }
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    } else {
+        MPID_Progress_start(&progress_state);
+        for (i = 0; i < count; i++) {
+            if (request_ptrs[i] == NULL) {
+                continue;
+            }
+            /* wait for ith request to complete */
+            while (!MPIR_Request_is_complete(request_ptrs[i])) {
+                /* generalized requests should already be finished */
+                MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
+
+                mpi_errno = MPID_Progress_wait_req(request_ptrs[i]);
+                if (mpi_errno != MPI_SUCCESS) {
+                    /* --BEGIN ERROR HANDLING-- */
+                    MPID_Progress_end(&progress_state);
+                    MPIR_ERR_POP(mpi_errno);
+                    /* --END ERROR HANDLING-- */
+                }
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
