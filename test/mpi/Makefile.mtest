@@ -22,11 +22,6 @@ LDADD = $(top_builddir)/util/mtest.o
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
 LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
 
-## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
-## prog_DEPENDENCIES variable, but it would be better to figure out the right
-## way to do this
-##DEPADD = @MPILIBLOC@ $(top_builddir)/util/mtest.o
-
 $(top_builddir)/util/mtest.$(OBJEXT): $(top_srcdir)/util/mtest.c
 	(cd $(top_builddir)/util && $(MAKE) mtest.$(OBJEXT))
 
