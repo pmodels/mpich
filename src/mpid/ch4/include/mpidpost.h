@@ -177,12 +177,72 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
                                           MPI_Status array_of_statuses[], int request_properties)
 {
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    int i;
+
+    if (request_properties & MPIR_REQUESTS_PROPERTY__NO_NULL) {
+        MPID_Progress_start(&progress_state);
+        for (i = 0; i < count; i++) {
+            while (!MPIR_Request_is_complete(request_ptrs[i])) {
+                mpi_errno = MPID_Progress_wait_req(request_ptrs[i]);
+                /* must check and handle the error, can't guard with HAVE_ERROR_CHECKING, but it's
+                 * OK for the error case to be slower */
+                if (unlikely(mpi_errno)) {
+                    /* --BEGIN ERROR HANDLING-- */
+                    MPID_Progress_end(&progress_state);
+                    MPIR_ERR_POP(mpi_errno);
+                    /* --END ERROR HANDLING-- */
+                }
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    } else {
+        return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
     return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    if (request_ptr == NULL)
+        goto fn_exit;
+
+    MPID_Progress_start(&progress_state);
+    while (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Progress_wait_req(request_ptr);
+        if (mpi_errno) {
+            /* --BEGIN ERROR HANDLING-- */
+            MPID_Progress_end(&progress_state);
+            MPIR_ERR_POP(mpi_errno);
+            /* --END ERROR HANDLING-- */
+        }
+
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+            mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
+            goto fn_fail;
+        }
+    }
+    MPID_Progress_end(&progress_state);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
     return MPIR_Wait_impl(request_ptr, status);
+#endif
 }
 
 #endif /* MPICH_THREAD_USE_MDTA */
