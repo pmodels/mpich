@@ -21,7 +21,7 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
                                     MPIR_Comm * comm,
                                     int context_offset,
                                     MPIDI_av_entry_t * addr,
-                                    MPI_Status * status, MPIR_Request ** request)
+                                    MPI_Status * status, MPIR_Request ** request, int vci)
 {
     int err = MPI_SUCCESS;
     MPIR_Assert(0);
