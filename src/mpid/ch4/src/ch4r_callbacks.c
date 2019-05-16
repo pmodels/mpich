@@ -86,11 +86,17 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
 
-    /* Check if this message has already been claimed by a probe. */
+    /* Check if this message has already been claimed by mprobe. */
     /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_DQUED) {
+        /* This request has been claimed by mprobe */
         if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_CLAIMED) {
+            /* mrecv has been already called */
             MPIDIG_handle_unexp_mrecv(rreq);
+        } else {
+            /* mrecv has not been called yet -- just take out the busy flag so that
+             * mrecv in future knows this request is ready */
+            MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
         }
         /* MPIDI_CS_EXIT(); */
         goto fn_exit;
