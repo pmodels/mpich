@@ -106,7 +106,7 @@ static inline void backtrace_libc(FILE * output)
         chars += ret;
     }
     fprintf(output, "%s", backtrace_buffer);
-    free(stack_strs);
+    MPL_free(stack_strs);
 }
 #else
 static inline void backtrace_unsupported(FILE * output)
