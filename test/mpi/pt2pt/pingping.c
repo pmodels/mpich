@@ -39,8 +39,9 @@ int main(int argc, char *argv[])
     testsize = MTestArgListGetInt(head, "testsize");
     count[0] = MTestArgListGetLong(head, "sendcnt");
     count[1] = MTestArgListGetLong(head, "recvcnt");
-    maxbufsize = MTestArgListGetLong(head, "maxbufsize");
     basic_type = MTestArgListGetString(head, "type");
+
+    maxbufsize = MTestDefaultMaxBufferSize();
 
     err = DTP_pool_create(basic_type, count[0], seed, &dtp);
     if (err != DTP_SUCCESS) {
