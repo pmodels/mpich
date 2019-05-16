@@ -6,6 +6,38 @@
 */
 
 #include "mpitest.h"
+
+/* ------------------------------------------------------------------------ */
+/* Utilities related to test environment */
+
+/* Some tests would like to test with large buffer, but an arbitary size may fail
+   on machines that does not have sufficient memory or the OS may not support it.
+   This routine provides a portable interface to get that max size.
+   It is taking the simpliest solution here: default to 2GB, unless user set via
+   environment variable -- MPITEST_MAXBUFFER
+*/
+MPI_Aint MTestDefaultMaxBufferSize()
+{
+    MPI_Aint max_size = 2147483648;
+    char *envval = NULL;
+    envval = getenv("MPITEST_MAXBUFFER");
+    if (envval) {
+        max_size = atol(envval);
+        if (max_size < 100000) {
+            fprintf(stderr, "MPITEST_MAXBUFFER (%s) is too small, we need at least 100MB\n",
+                    envval);
+            exit(1);
+        }
+    }
+    return max_size;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Utilities to parse command line options */
+
+/* Parses argument in the form of: -arg1=value1 -arg2=value2 ...
+   Arguments can be supplied in any order, but missing argument will cause error.
+*/
 typedef struct MTestArgListEntry {
     char *arg;
     char *val;

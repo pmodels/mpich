@@ -37,8 +37,9 @@ int main(int argc, char *argv[])
     seed = MTestArgListGetInt(head, "seed");
     testsize = MTestArgListGetInt(head, "testsize");
     count = MTestArgListGetLong(head, "count");
-    maxbufsize = MTestArgListGetLong(head, "maxbufsize");
     basic_type = MTestArgListGetString(head, "type");
+
+    maxbufsize = MTestDefaultMaxBufferSize();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
