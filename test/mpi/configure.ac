@@ -1713,7 +1713,6 @@ AC_OUTPUT(maint/testmerge \
           f08/misc/Makefile \
           f08/profile/Makefile \
      cxx/Makefile \
-          cxx/util/Makefile \
           cxx/attr/Makefile \
           cxx/attr/testlist \
           cxx/pt2pt/Makefile \
