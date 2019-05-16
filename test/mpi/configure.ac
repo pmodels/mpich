@@ -36,8 +36,6 @@ AC_CONFIG_MACRO_DIR([confdb])
 dnl
 echo "RUNNING CONFIGURE FOR MPI TESTS"
 
-AC_CANONICAL_HOST
-
 AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
@@ -264,34 +262,7 @@ AC_ARG_WITH(dtpools-datatypes,
 # parse args for typegen.sh script
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
-AC_ARG_WITH(dtpools-maxbufsize,
-    [AC_HELP_STRING([--with-dtpools-maxbufsize=size_in_bytes],
-        [maximum buffer size needed for the generated datatypes.])],,)
-
-AC_CHECK_SIZEOF(void *)
-if test ! -z "${with_dtpools_maxbufsize}" ; then
-    # if the user specified a size, use it; otherwise try to
-    # autodetect it
-    dtp_args="$dtp_args --with-dtpools-maxbufsize=${with_dtpools_maxbufsize}"
-elif test "$ac_cv_sizeof_void_p" -le "4" ; then
-    # this is somewhat of a hack; the 32-bit FreeBSD system that we
-    # have access to is pretty crappy with just 3GB of memory.  so
-    # reduce the memory size of each DTP object, so we don't run out
-    # of memory
-    if test ! -z "`echo $host_os | grep ^freebsd`" ; then
-       # 32-bit FreeBSD gets 128MB per process
-       dtp_args="$dtp_args --with-dtpools-maxbufsize=134217728"
-    else
-       # remaining 32-bit machines get 512MB per process
-       dtp_args="$dtp_args --with-dtpools-maxbufsize=536870912"
-    fi
-else
-    # all other machines get the default memory per process
-    dtp_args="$dtp_args --with-dtpools-maxbufsize=2147483648"
-fi
-
-export dtp_args
-AC_CONFIG_COMMANDS([gentests],[$srcdir/gentests.sh $dtp_args],[dtp_args="$dtp_args"])
+AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],

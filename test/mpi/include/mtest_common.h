@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+MPI_Aint MTestDefaultMaxBufferSize();
+
 typedef void MTestArgList;
 MTestArgList *MTestArgListCreate(int argc, char *argv[]);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
