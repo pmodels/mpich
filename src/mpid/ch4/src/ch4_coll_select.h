@@ -78,14 +78,27 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
     int nbytes = 0;
     int is_commutative = -1;
 
+    /* is the op commutative? We do SMP optimizations only if it is. */
     is_commutative = MPIR_Op_is_commutative(op);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return &MPIDI_Allreduce_inter_composition_alpha_cnt;
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (comm->node_comm != NULL && MPIR_Comm_size(comm) == MPIR_Comm_size(comm->node_comm)) {
+        /* All the ranks in comm are on the same node */
+        if (!((count * type_size) > MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
+              MPIDI_POSIX_Bcast_algo_choice == MPIDI_POSIX_Bcast_intra_release_gather_id &&
+              MPIDI_POSIX_Reduce_algo_choice == MPIDI_POSIX_Reduce_intra_release_gather_id)) {
+            /* gamma is selected if the msg size is less than threshold or release_gather based
+             * shm_bcast and shm_reduce is not chosen for msg sizes larger than threshold */
+            return &MPIDI_Allreduce_intra_composition_gamma_cnt;
+        }
+    }
+#endif
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
-        /* is the op commutative? We do SMP optimizations only if it is. */
-        MPIR_Datatype_get_size_macro(datatype, type_size);
         nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {

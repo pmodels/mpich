@@ -93,8 +93,8 @@ int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_l
             goto map_fail;
 
         /* ensure all other processes have mapped successfully */
-        mpi_errno = MPIR_Allreduce(&shm_fail_flag, &any_shm_fail_flag, 1, MPI_C_BOOL,
-                                   MPI_LOR, shm_comm_ptr, &errflag);
+        mpi_errno = MPIR_Allreduce_impl(&shm_fail_flag, &any_shm_fail_flag, 1, MPI_C_BOOL,
+                                        MPI_LOR, shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* unlink shared memory region so it gets deleted when all processes exit */
@@ -132,8 +132,8 @@ int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_l
             mapped_flag = true;
 
       result_sync:
-        mpi_errno = MPIR_Allreduce(&shm_fail_flag, &any_shm_fail_flag, 1, MPI_C_BOOL,
-                                   MPI_LOR, shm_comm_ptr, &errflag);
+        mpi_errno = MPIR_Allreduce_impl(&shm_fail_flag, &any_shm_fail_flag, 1, MPI_C_BOOL,
+                                        MPI_LOR, shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         if (any_shm_fail_flag)

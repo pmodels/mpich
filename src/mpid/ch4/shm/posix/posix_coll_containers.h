@@ -22,6 +22,8 @@ extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_release_
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t
     MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_invalid_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_release_gather_cnt;
 
 /* Alltoall POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Alltoall_intra_brucks_cnt;

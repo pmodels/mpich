@@ -65,15 +65,26 @@ extern MPIDI_POSIX_Reduce_id_t MPIDI_POSIX_Reduce_algo_choice;
 
 typedef enum {
     MPIDI_POSIX_Allreduce_intra_recursive_doubling_id,
-    MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id
+    MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id,
+    MPIDI_POSIX_Allreduce_intra_auto_id,
+    MPIDI_POSIX_Allreduce_intra_invalid_id,
+    MPIDI_POSIX_Allreduce_intra_release_gather_id
 } MPIDI_POSIX_Allreduce_id_t;
 
 typedef union {
     /* reserved for parameters related to SHM specific collectives */
+    struct MPIDI_POSIX_Allreduce_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_allreduce_release_gather_parameters;
     struct MPIDI_POSIX_Allreduce_empty_parameters {
         int empty;
     } posix_allreduce_empty_parameters;
 } MPIDI_POSIX_Allreduce_params_t;
+
+extern MPIDI_POSIX_Allreduce_id_t MPIDI_POSIX_Allreduce_algo_choice;
 
 typedef enum {
     MPIDI_POSIX_Alltoall_intra_brucks_id,

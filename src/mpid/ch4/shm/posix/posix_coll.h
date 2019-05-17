@@ -134,6 +134,17 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                 MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
                                                               datatype, op, comm, errflag);
             break;
+        case MPIDI_POSIX_Allreduce_intra_release_gather_id:
+#ifdef ENABLE_IZEM_ATOMIC
+            mpi_errno =
+                MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count,
+                                                         datatype, op, comm, errflag);
+#else
+            /* else block is needed to keep the compiler happy */
+            /* release_gather based algorithms cannot be used without izem submodule */
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
+#endif
+            break;
         default:
             mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
             break;
