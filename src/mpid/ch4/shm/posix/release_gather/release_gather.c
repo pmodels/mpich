@@ -209,7 +209,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         initialize_flags = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
             initialize_bcast_buf = true;
-        } else if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
+        } else if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
+                   operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
+            /* For allreduce, we initialize only reduce buffers and use reduce buffer of rank 0
+             * to broadcast the reduced data in release step */
             initialize_reduce_buf = true;
         }
     } else {
@@ -217,8 +220,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST &&
             COMM_FIELD(comm_ptr, bcast_buf_addr) == NULL) {
             initialize_bcast_buf = true;
-        } else if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE &&
+        } else if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
+                    operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) &&
                    COMM_FIELD(comm_ptr, reduce_buf_addr) == NULL) {
+            /* When op is either reduce or allreduce and reduce buffers are not initialized for each
+             * rank */
             initialize_reduce_buf = true;
         }
     }

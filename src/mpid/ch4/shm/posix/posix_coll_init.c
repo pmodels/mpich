@@ -42,11 +42,39 @@ cvars:
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
+    - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select algorithm for intra-node allreduce
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
+
+    - name        : MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 8192
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum message size for which release, gather primivites based allreduce is used when all
+        the ranks in the communicator are on the same node. This CVAR is used only when
+        MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM is set to "release_gather". Default value of this
+        CVAR is same as cellsize of reduce buffers, because beyond that large messages are getting
+        chuncked and performance can be compromised.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 MPIDI_POSIX_Bcast_id_t MPIDI_POSIX_Bcast_algo_choice = MPIDI_POSIX_Bcast_intra_auto_id;
 MPIDI_POSIX_Reduce_id_t MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_auto_id;
+MPIDI_POSIX_Allreduce_id_t MPIDI_POSIX_Allreduce_algo_choice = MPIDI_POSIX_Allreduce_intra_auto_id;
 
 int collective_cvars_init(void);
 

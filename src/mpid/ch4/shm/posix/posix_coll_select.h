@@ -77,6 +77,30 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    if (MPIDI_POSIX_Allreduce_algo_choice == MPIDI_POSIX_Allreduce_intra_release_gather_id &&
+        (count * type_size) <= MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
+        MPIR_Op_is_commutative(op)) {
+        /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
+         * and MPICH is not multi-threaded. Also when the message size is less than the threshold (for
+         * performance reasons) and op is commutative */
+#ifdef ENABLE_IZEM_ATOMIC
+#ifdef MPICH_IS_THREADED
+        if (!MPIR_ThreadInfo.isThreaded) {
+            /* MPICH configured with threading support but not actually used */
+            return &MPIDI_POSIX_Allreduce_intra_release_gather_cnt;
+        }
+#else
+        /* MPICH not configured with threading support */
+        return &MPIDI_POSIX_Allreduce_intra_release_gather_cnt;
+#endif /* MPICH_IS_THREADED */
+#else
+        /* release_gather algo is chosen through CVAR but izem is not built */
+        return &MPIDI_POSIX_Allreduce_intra_invalid_cnt;
+#endif /* ENABLE_IZEM_ATOMIC */
+    }
+
+    /* Choose from pt2pt based algorithms */
     pof2 = comm->pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {

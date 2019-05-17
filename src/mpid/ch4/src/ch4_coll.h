@@ -115,6 +115,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
                                                        comm, errflag,
                                                        ch4_algo_parameters_container);
             break;
+        case MPIDI_Allreduce_intra_composition_gamma_id:
+            mpi_errno =
+                MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
+                                                        comm, errflag,
+                                                        ch4_algo_parameters_container);
+            break;
         case MPIDI_Allreduce_inter_composition_alpha_id:
             mpi_errno =
                 MPIDI_Allreduce_inter_composition_alpha(sendbuf, recvbuf, count, datatype, op,
