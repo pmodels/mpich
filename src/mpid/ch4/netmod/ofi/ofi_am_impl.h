@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST,
                      "Generated seqno=%d for dest_rank=%d "
-                     "(context_id=0x%08x, src_addr=0x%016lx, dest_addr=0x%016lx)\n",
+                     "(context_id=0x%08x, src_addr=%" PRIu64 ", dest_addr=%" PRIu64 ")\n",
                      old_seq, dest_rank, comm->context_id,
                      MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank),
                      addr));

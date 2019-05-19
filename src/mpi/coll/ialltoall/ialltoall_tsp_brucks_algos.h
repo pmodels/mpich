@@ -56,7 +56,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
                  int phase, int k, int digitval, int comm_size, int *pupsize,
                  MPIR_TSP_sched_t * sched, int ninvtcs, int *invtcs)
 {
-    size_t type_extent, type_lb, type_true_extent;
+    MPI_Aint type_extent, type_lb, type_true_extent;
     int pow_k_phase, offset, nconsecutive_occurrences, delta;
     int *dtcopy_id;
     int counter;
@@ -134,8 +134,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     int nphases = 0, max;
     int p_of_k;                 /* largest power of k that is (strictly) smaller than 'size' */
     int is_inplace;
-    size_t s_extent, s_lb, r_extent, r_lb;
-    size_t s_true_extent, r_true_extent;
+    MPI_Aint s_extent, s_lb, r_extent, r_lb;
+    MPI_Aint s_true_extent, r_true_extent;
     int delta, src, dst;
     void ***tmp_sbuf = NULL, ***tmp_rbuf = NULL;
     int *packids, *sendids = NULL, *recvids = NULL, *unpackids = NULL;

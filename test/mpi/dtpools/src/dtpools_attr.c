@@ -8,6 +8,7 @@
 #include "dtpools_internal.h"
 #include <assert.h>
 #include <limits.h>
+#include <inttypes.h>
 
 #define VALUE_FITS_IN_INT(val) ((val) <= INT_MAX)
 #define VALUE_FITS_IN_AINT(val) ((val) <= (((uint64_t) 1 << (sizeof(MPI_Aint) * 8 - 1)) - 1))
@@ -17,7 +18,7 @@
         MPI_Aint type_extent;                                           \
         MPI_Type_extent(type, &type_extent);                            \
         if (type_extent != extent) {                                    \
-            fprintf(stderr, "expected extent of %llu, but got %zd\n", extent, type_extent); \
+            fprintf(stderr, "expected extent of %" PRIu64 ", but got %zd\n", extent, type_extent); \
             fflush(stderr);                                             \
             assert(0);                                                  \
         }                                                               \

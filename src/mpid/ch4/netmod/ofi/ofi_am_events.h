@@ -21,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t add
     r = MPIDIU_map_lookup(MPIDI_OFI_global.am_recv_seq_tracker, id);
     if (r == MPIDIU_MAP_NOT_FOUND) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "First time adding recv seqno addr=0x%016lx\n", addr));
+                        (MPL_DBG_FDEST, "First time adding recv seqno addr=%" PRIu64 "\n", addr));
         MPIDIU_map_set(MPIDI_OFI_global.am_recv_seq_tracker, id, 0, MPL_MEM_OTHER);
         return 0;
     } else {
@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(fi_addr_t addr, u
     uint64_t id = addr;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "Next recv seqno=%d addr=0x%016lx\n", seqno, addr));
+                    (MPL_DBG_FDEST, "Next recv seqno=%d addr=%" PRIu64 "\n", seqno, addr));
 
     MPIDIU_map_update(MPIDI_OFI_global.am_recv_seq_tracker, id, (void *) (uintptr_t) seqno,
                       MPL_MEM_OTHER);
@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
         if (uo_msg->am_hdr.fi_src_addr == addr && uo_msg->am_hdr.seqno == seqno) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                             (MPL_DBG_FDEST,
-                             "Found unordered message in the queue: addr=0x%016lx, seqno=%d\n",
+                             "Found unordered message in the queue: addr=%" PRIu64 ", seqno=%d\n",
                              addr, seqno));
             DL_DELETE(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
             return uo_msg;
