@@ -29,8 +29,8 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     int size, rank;
     int i, j, is_inplace = false;
     int lrank;
-    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
-    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
+    MPI_Aint sendtype_lb, sendtype_extent, sendtype_true_extent;
+    MPI_Aint recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id[2];
     void *tmp_buf = NULL;
     int recv_id;

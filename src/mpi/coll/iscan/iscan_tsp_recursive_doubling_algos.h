@@ -22,7 +22,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t extent, true_extent;
+    MPI_Aint extent, true_extent;
     MPI_Aint lb;
     int nranks, rank;
     int is_commutative;

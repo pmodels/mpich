@@ -147,7 +147,6 @@ void MPIDI_CH3U_Buffer_copy(
 	for(;;)
 	{
 	    MPI_Aint last;
-	    char * buf_end;
 
 	    if (sdata_sz - sfirst > MPIDI_COPY_BUFFER_SZ)
 	    {
@@ -169,7 +168,6 @@ void MPIDI_CH3U_Buffer_copy(
 	    MPIR_Assert(last > sfirst);
 	    /* --END ERROR HANDLING-- */
 	    
-	    buf_end = buf + last - sfirst;
 	    sfirst = last;
 	    
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
