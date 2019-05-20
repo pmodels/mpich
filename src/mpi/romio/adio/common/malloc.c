@@ -20,10 +20,6 @@
 #include <stdio.h>
 #include "mpipr.h"
 
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-
 /* for the style checker */
 /* style: allow:malloc:1 sig:0 */
 /* style: allow:free:1 sig:0 */

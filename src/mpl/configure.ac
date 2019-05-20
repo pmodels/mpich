@@ -73,7 +73,7 @@ AC_ARG_ENABLE(g,
 	    none|no   - No debugging
 	    log       - Enable debug event logging
 	    mem       - Enable memory tracing
-	    yes|all   - All of the above choices (except "none", obviously)
+	    most|yes|all   - All of the above choices (except "none", obviously)
 	]),,[enable_g=none])
 
 # enable-g
@@ -86,11 +86,11 @@ for option in $enable_g ; do
 	 enable_g_log=yes
 	 ;;
 
-	 mem)
+	 mem|memarena)
 	 enable_g_mem=yes
 	 ;;
 
-	 all|yes)
+	 most|yes|all)
 	 enable_g_log=yes
 	 enable_g_mem=yes
 	 ;;

@@ -54,8 +54,6 @@ typedef struct {
     long num_allocations;       /* The total number of alloations */
 } MPL_memory_allocation_t;
 
-#ifdef MPL_USE_MEMORY_TRACING
-
 /*M
   MPL_malloc - Allocate memory
 
@@ -86,7 +84,6 @@ typedef struct {
   Module:
   Utility
   M*/
-#define MPL_malloc(a,b)    MPL_trmalloc((a),(b),__LINE__,__FILE__)
 
 /*M
   MPL_calloc - Allocate memory that is initialized to zero.
@@ -108,7 +105,6 @@ typedef struct {
   Module:
   Utility
   M*/
-#define MPL_calloc(a,b,c)    MPL_trcalloc((a),(b),(c),__LINE__,__FILE__)
 
 /*M
   MPL_free - Free memory
@@ -137,9 +133,6 @@ typedef struct {
   Module:
   Utility
   M*/
-#define MPL_free(a)      MPL_trfree(a,__LINE__,__FILE__)
-
-#define MPL_realloc(a,b,c)    MPL_trrealloc((a),(b),(c),__LINE__,__FILE__)
 
 /*M
   MPL_mmap - Map memory
@@ -175,7 +168,6 @@ typedef struct {
   Module:
   Utility
   M*/
-#define MPL_mmap(a,b,c,d,e,f,g) MPL_trmmap((a),(b),(c),(d),(e),(f),(g),__LINE__,__FILE__)
 
 /*M
   MPL_munmap - Unmapmemory
@@ -204,9 +196,7 @@ typedef struct {
   Module:
   Utility
   M*/
-#define MPL_munmap(a,b,c) MPL_trmunmap((a),(b),(c),__LINE__,__FILE__)
 
-#ifdef MPL_DEFINE_ALIGNED_ALLOC
 /*M
   MPL_aligned_alloc - Allocate aligned memory
 
@@ -232,6 +222,34 @@ typedef struct {
   Module:
   Utility
   M*/
+
+#ifdef MPL_USE_MEMORY_TRACING
+
+/* Define these as invalid C to catch their use in the code.
+ * The ::: should cause the compiler to choke; the string will give the explanation
+ */
+#define malloc(a)         'Error use MPL_malloc' :::
+#define calloc(a,b)       'Error use MPL_calloc' :::
+#define free(a)           'Error use MPL_free'   :::
+#define realloc(a)        'Error use MPL_realloc' :::
+/* These two functions can't be guarded because we use #include <sys/mman.h>
+ * throughout the code to be able to use other symbols in that header file.
+ * Because we include that header directly, we bypass this guard and cause
+ * compile problems.
+ * #define mmap(a,b,c,d,e,f) 'Error use MPL_mmap'   :::
+ * #define munmap(a,b)       'Error use MPL_munmap' :::
+ */
+#undef strdup   /* in case strdup is a macro */
+#define strdup(a)         'Error use MPL_strdup' :::
+
+#define MPL_malloc(a,b)    MPL_trmalloc((a),(b),__LINE__,__FILE__)
+#define MPL_calloc(a,b,c)    MPL_trcalloc((a),(b),(c),__LINE__,__FILE__)
+#define MPL_free(a)      MPL_trfree(a,__LINE__,__FILE__)
+#define MPL_realloc(a,b,c)    MPL_trrealloc((a),(b),(c),__LINE__,__FILE__)
+#define MPL_mmap(a,b,c,d,e,f,g) MPL_trmmap((a),(b),(c),(d),(e),(f),(g),__LINE__,__FILE__)
+#define MPL_munmap(a,b,c) MPL_trmunmap((a),(b),(c),__LINE__,__FILE__)
+
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
 #define MPL_aligned_alloc(a,b,c) MPL_traligned_alloc((a),(b),(c),__LINE__,__FILE__)
 #endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
 
