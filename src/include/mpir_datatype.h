@@ -138,7 +138,6 @@ struct MPIR_Datatype {
      * and a depth used to verify that we can process it (limited stack depth
      */
     struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
-    MPI_Aint dataloop_size;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL

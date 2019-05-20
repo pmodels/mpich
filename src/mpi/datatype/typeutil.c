@@ -340,7 +340,6 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
 
     new_dtp->size = 0;
     new_dtp->has_sticky_ub = 0;

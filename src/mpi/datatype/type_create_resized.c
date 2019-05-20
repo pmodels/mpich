@@ -62,7 +62,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->contents = 0;
 
     new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
 
     /* if oldtype is a basic, we build a contiguous dataloop of count = 1 */
     if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {

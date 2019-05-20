@@ -27,12 +27,12 @@ struct flatten_hdr {
  */
 int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size)
 {
-    int flattened_dataloop_size;
+    int flattened_loop_size;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Dataloop_flatten_size(datatype_ptr, &flattened_dataloop_size);
+    MPIR_Dataloop_flatten_size(datatype_ptr, &flattened_loop_size);
 
-    *flattened_type_size = flattened_dataloop_size + sizeof(struct flatten_hdr);
+    *flattened_type_size = flattened_loop_size + sizeof(struct flatten_hdr);
 
     return mpi_errno;
 }

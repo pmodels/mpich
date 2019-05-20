@@ -17,11 +17,11 @@ typedef struct MPIR_Dataloop MPIR_Dataloop;
 typedef struct MPIR_Segment MPIR_Segment;
 
 /* Dataloop functions */
-void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPI_Aint old_loop_sz, MPIR_Dataloop ** new_loop_p);
+void MPIR_Dataloop_dup(MPIR_Dataloop * old_loop, MPIR_Dataloop ** new_loop_p);
 
 void MPIR_Dataloop_free(MPIR_Dataloop ** dataloop);
 
-void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p);
 
 void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header);
 int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_dataloop_size);
