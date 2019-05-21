@@ -888,6 +888,9 @@ int MPIDI_PrintConnStr( const char *file, int line,
 			const char *label, const char *str );
 int MPIDI_PrintConnStrToFile( FILE *fd, const char *file, int line, 
 			      const char *label, const char *str );
+
+/* Defined and used in sock channel. */
+const char * MPIDI_Conn_GetStateString(int state);
 #endif
 
 /* These macros simplify and unify the debugging of changes in the
