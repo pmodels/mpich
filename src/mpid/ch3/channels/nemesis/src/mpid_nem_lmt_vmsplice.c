@@ -110,8 +110,8 @@ static int populate_iov_from_req(MPIR_Request *req)
         req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
 
-        req->dev.segment_first = 0;
-        req->dev.segment_size = data_sz;
+        req->dev.msg_offset = 0;
+        req->dev.msgsize = data_sz;
 
         /* FIXME we should write our own function that isn't dependent on
            the in-request iov array.  This will let us use IOVs that are

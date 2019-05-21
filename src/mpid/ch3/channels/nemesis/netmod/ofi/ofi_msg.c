@@ -312,7 +312,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_init_req(sreq);
-    data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
+    data_sz = sreq->dev.msgsize - sreq->dev.msg_offset;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     if (n_hdr_iov > 0) {
         /* add length of extended header iovs */
@@ -336,9 +336,9 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
 
     MPI_Aint actual_pack_bytes;
     MPIR_Pack_impl(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                   sreq->dev.segment_first, pack_buffer + buf_offset,
-                   sreq->dev.segment_size - sreq->dev.segment_first, &actual_pack_bytes);
-    MPIR_Assert(actual_pack_bytes == sreq->dev.segment_size - sreq->dev.segment_first);
+                   sreq->dev.msg_offset, pack_buffer + buf_offset,
+                   sreq->dev.msgsize - sreq->dev.msg_offset, &actual_pack_bytes);
+    MPIR_Assert(actual_pack_bytes == sreq->dev.msgsize - sreq->dev.msg_offset);
 
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);

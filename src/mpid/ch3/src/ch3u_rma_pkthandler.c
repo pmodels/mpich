@@ -511,8 +511,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             req->dev.user_buf = get_pkt->addr;
             req->dev.user_count = get_pkt->count;
             req->dev.datatype = get_pkt->datatype;
-            req->dev.segment_first = 0;
-            req->dev.segment_size = get_pkt->count * type_size;
+            req->dev.msg_offset = 0;
+            req->dev.msgsize = get_pkt->count * type_size;
 
             MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN,
@@ -1627,8 +1627,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         else {
             *buflen = 0;
 
-            req->dev.segment_first = contig_stream_offset;
-            req->dev.segment_size = contig_stream_offset + req->dev.recv_data_sz;
+            req->dev.msg_offset = contig_stream_offset;
+            req->dev.msgsize = contig_stream_offset + req->dev.recv_data_sz;
 
             mpi_errno = MPIDI_CH3U_Request_load_recv_iov(req);
             if (mpi_errno != MPI_SUCCESS) {

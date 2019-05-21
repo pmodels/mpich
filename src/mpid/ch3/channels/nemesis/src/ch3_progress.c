@@ -176,10 +176,10 @@ int MPIDI_CH3I_Shm_send_progress(void)
             do
             {
                 MPID_nem_mpich_send_seg(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                                        &sreq->dev.segment_first, sreq->dev.segment_size,
+                                        &sreq->dev.msg_offset, sreq->dev.msgsize,
                                          sreq->ch.vc, &again);
             }
-            while (!again && sreq->dev.segment_first < sreq->dev.segment_size);
+            while (!again && sreq->dev.msg_offset < sreq->dev.msgsize);
 
             if (again) /* not finished sending */
                 goto fn_exit;
@@ -221,15 +221,15 @@ int MPIDI_CH3I_Shm_send_progress(void)
         else
         {
             MPID_nem_mpich_send_seg_header(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                                           &sreq->dev.segment_first, sreq->dev.segment_size,
+                                           &sreq->dev.msg_offset, sreq->dev.msgsize,
                                            &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->ch.vc, &again);
             if (!again)
             {
                 MPIDI_CH3I_shm_active_send = sreq;
-                while (!again && sreq->dev.segment_first < sreq->dev.segment_size)
+                while (!again && sreq->dev.msg_offset < sreq->dev.msgsize)
                 {
                     MPID_nem_mpich_send_seg(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                                            &sreq->dev.segment_first, sreq->dev.segment_size,
+                                            &sreq->dev.msg_offset, sreq->dev.msgsize,
                                              sreq->ch.vc, &again);
                 }
             }

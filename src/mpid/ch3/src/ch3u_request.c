@@ -20,7 +20,7 @@
 
 /* Max depth of recursive calls of MPID_Request_complete */
 #define REQUEST_CB_DEPTH 2
-#define MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET (-1)
+#define MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET (-1)
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
@@ -31,7 +31,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_INIT);
     
     req->dev.datatype_ptr	   = NULL;
-    req->dev.segment_first         = 0;
+    req->dev.msg_offset         = 0;
     /* Masks and pkt_flags for channel device state in an MPIR_Request */
     req->dev.state		   = 0;
     req->dev.cancel_pending	   = FALSE;
@@ -54,7 +54,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.ext_hdr_sz        = 0;
     req->dev.rma_target_ptr    = NULL;
     req->dev.request_handle    = MPI_REQUEST_NULL;
-    req->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+    req->dev.orig_msg_offset = MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET;
 
     req->dev.request_completed_cb  = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
@@ -88,35 +88,35 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
 
-    last = sreq->dev.segment_size;
+    last = sreq->dev.msgsize;
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
      "pre-pv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
-		      sreq->dev.segment_first, last, *iov_n));
-    MPIR_Assert(sreq->dev.segment_first < last);
+		      sreq->dev.msg_offset, last, *iov_n));
+    MPIR_Assert(sreq->dev.msg_offset < last);
     MPIR_Assert(last > 0);
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
 
     int max_iov_len = *iov_n;
     MPI_Aint actual_iov_bytes;
     MPIR_Type_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                     sreq->dev.segment_first, iov, max_iov_len,
-                     sreq->dev.segment_size - sreq->dev.segment_first, iov_n, &actual_iov_bytes);
-    last = sreq->dev.segment_first + actual_iov_bytes;
+                     sreq->dev.msg_offset, iov, max_iov_len,
+                     sreq->dev.msgsize - sreq->dev.msg_offset, iov_n, &actual_iov_bytes);
+    last = sreq->dev.msg_offset + actual_iov_bytes;
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
     "post-pv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
-		      sreq->dev.segment_first, last, *iov_n));
+		      sreq->dev.msg_offset, last, *iov_n));
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
     
-    if (last == sreq->dev.segment_size)
+    if (last == sreq->dev.msgsize)
     {
 	MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"remaining data loaded into IOV");
 	sreq->dev.OnDataAvail = sreq->dev.OnFinal;
     }
-    else if ((last - sreq->dev.segment_first) / *iov_n >= MPIDI_IOV_DENSITY_MIN)
+    else if ((last - sreq->dev.msg_offset) / *iov_n >= MPIDI_IOV_DENSITY_MIN)
     {
 	MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"more data loaded into IOV");
-	sreq->dev.segment_first = last;
+	sreq->dev.msg_offset = last;
 	sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_SendReloadIOV;
     }
     else
@@ -126,7 +126,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	
 	MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"low density.  using SRBuf.");
 	    
-	data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
+	data_sz = sreq->dev.msgsize - sreq->dev.msg_offset;
 	if (!MPIDI_Request_get_srbuf_flag(sreq))
 	{
 	    MPIDI_CH3U_SRBuf_alloc(sreq, data_sz);
@@ -149,7 +149,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 		   iov[i].MPL_IOV_BUF, iov[i].MPL_IOV_LEN);
 	    iov_data_copied += iov[i].MPL_IOV_LEN;
 	}
-	sreq->dev.segment_first = last;
+	sreq->dev.msg_offset = last;
 
         MPI_Aint max_pack_bytes;
         MPI_Aint actual_pack_bytes;
@@ -157,17 +157,17 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
         if (data_sz > sreq->dev.tmpbuf_sz - iov_data_copied)
             max_pack_bytes = sreq->dev.tmpbuf_sz - iov_data_copied;
         else
-            max_pack_bytes = sreq->dev.segment_size - sreq->dev.segment_first;
+            max_pack_bytes = sreq->dev.msgsize - sreq->dev.msg_offset;
 
         MPIR_Pack_impl(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                       sreq->dev.segment_first, (char*) sreq->dev.tmpbuf + iov_data_copied,
+                       sreq->dev.msg_offset, (char*) sreq->dev.tmpbuf + iov_data_copied,
                        max_pack_bytes, &actual_pack_bytes);
-        last = sreq->dev.segment_first + actual_pack_bytes;
+        last = sreq->dev.msg_offset + actual_pack_bytes;
 
 	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)sreq->dev.tmpbuf;
 	iov[0].MPL_IOV_LEN = actual_pack_bytes + iov_data_copied;
 	*iov_n = 1;
-	if (last == sreq->dev.segment_size)
+	if (last == sreq->dev.msgsize)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"remaining data packed into SRBuf");
 	    sreq->dev.OnDataAvail = sreq->dev.OnFinal;
@@ -175,7 +175,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	else 
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"more data packed into SRBuf");
-	    sreq->dev.segment_first = last;
+	    sreq->dev.msg_offset = last;
 	    sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_SendReloadIOV;
 	}
     }
@@ -205,11 +205,11 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_RECV_IOV);
 
-    if (rreq->dev.orig_segment_first == MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET) {
-        rreq->dev.orig_segment_first = rreq->dev.segment_first;
+    if (rreq->dev.orig_msg_offset == MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET) {
+        rreq->dev.orig_msg_offset = rreq->dev.msg_offset;
     }
 
-    if (rreq->dev.segment_first < rreq->dev.segment_size)
+    if (rreq->dev.msg_offset < rreq->dev.msgsize)
     {
 	/* still reading data that needs to go into the user buffer */
 	
@@ -227,7 +227,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	       could force the use of the SRBuf only 
 	       when (rreq->dev.tmpbuf_off > 0)... */
 	    
-	    data_sz = rreq->dev.segment_size - rreq->dev.segment_first - 
+	    data_sz = rreq->dev.msgsize - rreq->dev.msg_offset - 
 		rreq->dev.tmpbuf_off;
 	    MPIR_Assert(data_sz > 0);
 	    tmpbuf_sz = rreq->dev.tmpbuf_sz - rreq->dev.tmpbuf_off;
@@ -241,15 +241,15 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
             rreq->dev.iov_offset = 0;
 	    rreq->dev.iov_count = 1;
-	    MPIR_Assert(rreq->dev.segment_first - rreq->dev.orig_segment_first + data_sz +
+	    MPIR_Assert(rreq->dev.msg_offset - rreq->dev.orig_msg_offset + data_sz +
 			rreq->dev.tmpbuf_off <= rreq->dev.recv_data_sz);
-	    if (rreq->dev.segment_first - rreq->dev.orig_segment_first + data_sz + rreq->dev.tmpbuf_off ==
+	    if (rreq->dev.msg_offset - rreq->dev.orig_msg_offset + data_sz + rreq->dev.tmpbuf_off ==
 		rreq->dev.recv_data_sz)
 	    {
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 		  "updating rreq to read the remaining data into the SRBuf");
 		rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_UnpackSRBufComplete;
-                rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+                rreq->dev.orig_msg_offset = MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET;
 	    }
 	    else
 	    {
@@ -260,25 +260,25 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    goto fn_exit;
 	}
 	
-	last = rreq->dev.segment_size;
+	last = rreq->dev.msgsize;
 	rreq->dev.iov_count = MPL_IOV_LIMIT;
 	rreq->dev.iov_offset = 0;
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
    "pre-upv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
-			  rreq->dev.segment_first, last, rreq->dev.iov_count));
-	MPIR_Assert(rreq->dev.segment_first < last);
+			  rreq->dev.msg_offset, last, rreq->dev.iov_count));
+	MPIR_Assert(rreq->dev.msg_offset < last);
 	MPIR_Assert(last > 0);
 
         MPI_Aint actual_iov_bytes;
         MPIR_Type_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                         rreq->dev.segment_first, &rreq->dev.iov[0], MPL_IOV_LIMIT,
-                         rreq->dev.segment_size - rreq->dev.segment_first,
+                         rreq->dev.msg_offset, &rreq->dev.iov[0], MPL_IOV_LIMIT,
+                         rreq->dev.msgsize - rreq->dev.msg_offset,
                          &rreq->dev.iov_count, &actual_iov_bytes);
-        last = rreq->dev.segment_first + actual_iov_bytes;
+        last = rreq->dev.msg_offset + actual_iov_bytes;
 
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
    "post-upv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d, iov_offset=%lld",
-			  rreq->dev.segment_first, last, rreq->dev.iov_count, (long long)rreq->dev.iov_offset));
+			  rreq->dev.msg_offset, last, rreq->dev.iov_count, (long long)rreq->dev.iov_offset));
 	MPIR_Assert(rreq->dev.iov_count >= 0 && rreq->dev.iov_count <=
 		    MPL_IOV_LIMIT);
 
@@ -292,8 +292,8 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
 		       MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 		       "**dtypemismatch", 0);
-            MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
-	    rreq->dev.segment_size = rreq->dev.segment_first;
+            MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.msg_offset);
+	    rreq->dev.msgsize = rreq->dev.msg_offset;
 	    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	    goto fn_exit;
 	}
@@ -303,22 +303,22 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
         }
 	/* --END ERROR HANDLING-- */
 
-	if (last == rreq->dev.recv_data_sz + rreq->dev.orig_segment_first)
+	if (last == rreq->dev.recv_data_sz + rreq->dev.orig_msg_offset)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
      "updating rreq to read the remaining data directly into the user buffer");
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
-            rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+            rreq->dev.orig_msg_offset = MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET;
 	}
 	else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV ||
                  MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV ||
-                 (last == rreq->dev.segment_size ||
-                  (last - rreq->dev.segment_first) / rreq->dev.iov_count >= MPIDI_IOV_DENSITY_MIN))
+                 (last == rreq->dev.msgsize ||
+                  (last - rreq->dev.msg_offset) / rreq->dev.iov_count >= MPIDI_IOV_DENSITY_MIN))
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 	     "updating rreq to read more data directly into the user buffer");
-	    rreq->dev.segment_first = last;
+	    rreq->dev.msg_offset = last;
 	    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReloadIOV;
 	}
 	else
@@ -329,7 +329,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    MPIR_Assert(MPIDI_Request_get_srbuf_flag(rreq) == FALSE);
 	    
 	    MPIDI_CH3U_SRBuf_alloc(rreq, 
-			    rreq->dev.segment_size - rreq->dev.segment_first);
+			    rreq->dev.msgsize - rreq->dev.msg_offset);
 	    rreq->dev.tmpbuf_off = 0;
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (rreq->dev.tmpbuf_sz == 0)
@@ -341,7 +341,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
 			      __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 
 			 "**nomem %d", 
-			 rreq->dev.segment_size - rreq->dev.segment_first);
+			 rreq->dev.msgsize - rreq->dev.msg_offset);
 		rreq->status.MPI_ERROR = mpi_errno;
 		goto fn_exit;
 	    }
@@ -357,7 +357,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	   buffer */
 	intptr_t data_sz;
 
-	data_sz = rreq->dev.recv_data_sz - rreq->dev.segment_first;
+	data_sz = rreq->dev.recv_data_sz - rreq->dev.msg_offset;
 	if (!MPIDI_Request_get_srbuf_flag(rreq))
 	{
 	    MPIDI_CH3U_SRBuf_alloc(rreq, data_sz);
@@ -381,14 +381,14 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    MPIR_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
-            rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+            rreq->dev.orig_msg_offset = MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET;
 	}
 	else
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 	  "updating rreq to read overflow data into the SRBuf and reload IOV");
 	    rreq->dev.iov[0].MPL_IOV_LEN = rreq->dev.tmpbuf_sz;
-	    rreq->dev.segment_first += rreq->dev.tmpbuf_sz;
+	    rreq->dev.msg_offset += rreq->dev.tmpbuf_sz;
 	    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReloadIOV;
 	}
 	
@@ -415,45 +415,45 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
     
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_UNPACK_SRBUF);
 
-    tmpbuf_last = (int)(rreq->dev.segment_first + rreq->dev.tmpbuf_sz);
-    if (rreq->dev.segment_size < tmpbuf_last)
+    tmpbuf_last = (int)(rreq->dev.msg_offset + rreq->dev.tmpbuf_sz);
+    if (rreq->dev.msgsize < tmpbuf_last)
     {
-	tmpbuf_last = (int)rreq->dev.segment_size;
+	tmpbuf_last = (int)rreq->dev.msgsize;
     }
 
     MPI_Aint actual_unpack_bytes;
-    MPIR_Unpack_impl(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.segment_first,
+    MPIR_Unpack_impl(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.msg_offset,
                      rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                     rreq->dev.segment_first, &actual_unpack_bytes);
-    last = rreq->dev.segment_first + actual_unpack_bytes;
+                     rreq->dev.msg_offset, &actual_unpack_bytes);
+    last = rreq->dev.msg_offset + actual_unpack_bytes;
 
-    if (last == 0 || last == rreq->dev.segment_first)
+    if (last == 0 || last == rreq->dev.msg_offset)
     {
 	/* --BEGIN ERROR HANDLING-- */
 	/* If no data can be unpacked, then we have a datatype processing 
 	   problem.  Adjust the segment info so that the remaining
 	   data is received and thrown away. */
-	MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
-	rreq->dev.segment_size = rreq->dev.segment_first;
-	rreq->dev.segment_first += tmpbuf_last;
+	MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.msg_offset);
+	rreq->dev.msgsize = rreq->dev.msg_offset;
+	rreq->dev.msg_offset += tmpbuf_last;
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
 		       MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 		       "**dtypemismatch", 0);
 	/* --END ERROR HANDLING-- */
     }
-    else if (tmpbuf_last == rreq->dev.segment_size)
+    else if (tmpbuf_last == rreq->dev.msgsize)
     {
 	/* --BEGIN ERROR HANDLING-- */
 	if (last != tmpbuf_last)
 	{
 	    /* received data was not entirely consumed by unpack() because too
 	       few bytes remained to fill the next basic datatype.
-	       Note: the segment_first field is set to segment_last so that if
+	       Note: the msg_offset field is set to segment_last so that if
 	       this is a truncated message, extra data will be read
 	       off the pipe. */
 	    MPIR_STATUS_SET_COUNT(rreq->status, last);
-	    rreq->dev.segment_size = last;
-	    rreq->dev.segment_first = tmpbuf_last;
+	    rreq->dev.msgsize = last;
+	    rreq->dev.msg_offset = tmpbuf_last;
 	    rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
 		  MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 							  "**dtypemismatch", 0);
@@ -469,9 +469,9 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 	       Note: memmove() is used since the data regions could
                overlap. */
 	    memmove(rreq->dev.tmpbuf, (char *) rreq->dev.tmpbuf + 
-		    (last - rreq->dev.segment_first), rreq->dev.tmpbuf_off);
+		    (last - rreq->dev.msg_offset), rreq->dev.tmpbuf_off);
 	}
-	rreq->dev.segment_first = last;
+	rreq->dev.msg_offset = last;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_REQUEST_UNPACK_SRBUF);
