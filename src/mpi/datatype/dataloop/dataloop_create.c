@@ -26,7 +26,6 @@ create_pairtype - create dataloop for a pairtype
    Arguments:
 +  MPI_Datatype type - the pairtype
 .  MPIR_Dataloop **output_dataloop_ptr
-.  int output_dataloop_size
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
@@ -38,7 +37,7 @@ create_pairtype - create dataloop for a pairtype
    This same function could be used to create dataloops for any type
    that actually consists of two distinct elements.
 @*/
-static int create_pairtype(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+static int create_pairtype(MPI_Datatype type, MPIR_Dataloop ** dlp_p)
 {
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
@@ -61,12 +60,12 @@ static int create_pairtype(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint *
     if (type == MPI_2INT)
         PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
 
-    return MPII_Dataloop_create_struct(2, blocks, disps, types, dlp_p, dlsz_p);
+    return MPII_Dataloop_create_struct(2, blocks, disps, types, dlp_p);
 }
 
-static void create_named(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+static void create_named(MPI_Datatype type, MPIR_Dataloop ** dlp_p);
 
-void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p)
 {
     int i;
     int err ATTRIBUTE((unused));
@@ -89,7 +88,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
     if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
         type == MPI_LONG_INT || type == MPI_SHORT_INT ||
         type == MPI_LONG_DOUBLE_INT || type == MPI_2INT) {
-        create_pairtype(type, dlp_p, dlsz_p);
+        create_pairtype(type, dlp_p);
         return;
     }
 
@@ -97,14 +96,14 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
 
     /* some named types do need dataloops; handle separately. */
     if (combiner == MPI_COMBINER_NAMED) {
-        create_named(type, dlp_p, dlsz_p);
+        create_named(type, dlp_p);
         return;
     } else if (combiner == MPI_COMBINER_F90_REAL ||
                combiner == MPI_COMBINER_F90_COMPLEX || combiner == MPI_COMBINER_F90_INTEGER) {
         MPI_Datatype f90basetype;
         MPIR_Datatype_get_basic_type(type, f90basetype);
         MPII_Dataloop_create_contiguous(1 /* count */ ,
-                                        f90basetype, dlp_p, dlsz_p);
+                                        f90basetype, dlp_p);
         return;
     }
 
@@ -116,7 +115,6 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
     if (old_dlp != NULL) {
         /* dataloop already created; just return it. */
         *dlp_p = old_dlp;
-        MPII_DATALOOP_GET_LOOPSIZE(type, *dlsz_p);
         return;
     }
 
@@ -136,7 +134,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
         case MPI_COMBINER_STRUCT_INTEGER:
         case MPI_COMBINER_STRUCT:
             if (ints[0] == 0) {
-                MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+                MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
                 goto clean_exit;
             }
             break;
@@ -155,30 +153,27 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
         MPII_DATALOOP_GET_LOOPPTR(types[0], old_dlp);
         if (old_dlp == NULL) {
             /* no dataloop already present; create and store one */
-            MPIR_Dataloop_create(types[0], &old_dlp, &old_dlsz);
+            MPIR_Dataloop_create(types[0], &old_dlp);
 
             MPII_DATALOOP_SET_LOOPPTR(types[0], old_dlp);
-            MPII_DATALOOP_SET_LOOPSIZE(types[0], old_dlsz);
         } else {
-            MPII_DATALOOP_GET_LOOPSIZE(types[0], old_dlsz);
+            old_dlsz = MPII_Type_dloop_size(types[0]);
         }
     }
 
     switch (combiner) {
         case MPI_COMBINER_DUP:
             if (type0_combiner != MPI_COMBINER_NAMED) {
-                MPIR_Dataloop_dup(old_dlp, old_dlsz, dlp_p);
-                *dlsz_p = old_dlsz;
+                MPIR_Dataloop_dup(old_dlp, dlp_p);
             } else {
-                MPII_Dataloop_create_contiguous(1, types[0], dlp_p, dlsz_p);
+                MPII_Dataloop_create_contiguous(1, types[0], dlp_p);
             }
             break;
         case MPI_COMBINER_RESIZED:
             if (type0_combiner != MPI_COMBINER_NAMED) {
-                MPIR_Dataloop_dup(old_dlp, old_dlsz, dlp_p);
-                *dlsz_p = old_dlsz;
+                MPIR_Dataloop_dup(old_dlp, dlp_p);
             } else {
-                MPII_Dataloop_create_contiguous(1, types[0], dlp_p, dlsz_p);
+                MPII_Dataloop_create_contiguous(1, types[0], dlp_p);
 
                 (*dlp_p)->el_extent = aints[1]; /* extent */
             }
@@ -186,7 +181,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
         case MPI_COMBINER_CONTIGUOUS:
             MPII_Dataloop_create_contiguous(ints[0] /* count */ ,
                                             types[0] /* oldtype */ ,
-                                            dlp_p, dlsz_p);
+                                            dlp_p);
             break;
         case MPI_COMBINER_VECTOR:
             MPII_Dataloop_create_vector(ints[0] /* count */ ,
@@ -194,7 +189,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                         ints[2] /* stride */ ,
                                         0 /* stride not bytes */ ,
                                         types[0] /* oldtype */ ,
-                                        dlp_p, dlsz_p);
+                                        dlp_p);
             break;
         case MPI_COMBINER_HVECTOR_INTEGER:
         case MPI_COMBINER_HVECTOR:
@@ -209,7 +204,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                         ints[1] /* blklen */ ,
                                         stride, 1 /* stride in bytes */ ,
                                         types[0] /* oldtype */ ,
-                                        dlp_p, dlsz_p);
+                                        dlp_p);
             break;
         case MPI_COMBINER_INDEXED_BLOCK:
             MPII_Dataloop_create_blockindexed(ints[0] /* count */ ,
@@ -217,7 +212,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                               &ints[2] /* disps */ ,
                                               0 /* disp not bytes */ ,
                                               types[0] /* oldtype */ ,
-                                              dlp_p, dlsz_p);
+                                              dlp_p);
             break;
         case MPI_COMBINER_HINDEXED_BLOCK:
             disps = (MPI_Aint *) MPL_malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
@@ -228,7 +223,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                               disps /* disps */ ,
                                               1 /* disp is bytes */ ,
                                               types[0] /* oldtype */ ,
-                                              dlp_p, dlsz_p);
+                                              dlp_p);
             MPL_free(disps);
             break;
         case MPI_COMBINER_INDEXED:
@@ -240,7 +235,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                          &ints[ints[0] + 1] /* disp */ ,
                                          0 /* disp not in bytes */ ,
                                          types[0] /* oldtype */ ,
-                                         dlp_p, dlsz_p);
+                                         dlp_p);
             MPL_free(blklen);
             break;
         case MPI_COMBINER_HINDEXED_INTEGER:
@@ -262,7 +257,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                          blklen /* blklens */ ,
                                          disps, 1 /* disp in bytes */ ,
                                          types[0] /* oldtype */ ,
-                                         dlp_p, dlsz_p);
+                                         dlp_p);
 
             if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
                 MPL_free(disps);
@@ -279,10 +274,9 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                 if (type_combiner != MPI_COMBINER_NAMED) {
                     MPII_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
                     if (old_dlp == NULL) {
-                        MPIR_Dataloop_create(types[i], &old_dlp, &old_dlsz);
+                        MPIR_Dataloop_create(types[i], &old_dlp);
 
                         MPII_DATALOOP_SET_LOOPPTR(types[i], old_dlp);
-                        MPII_DATALOOP_SET_LOOPSIZE(types[i], old_dlsz);
                     }
                 }
             }
@@ -299,7 +293,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
             err = MPII_Dataloop_create_struct(ints[0] /* count */ ,
                                               &ints[1] /* blklens */ ,
                                               disps, types /* oldtype array */ ,
-                                              dlp_p, dlsz_p);
+                                              dlp_p);
             /* TODO if/when this function returns error codes, propagate this failure instead */
             MPIR_Assert(0 == err);
             /* if (err) return err; */
@@ -316,7 +310,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                            ints[1 + 3 * ndims] /* order */ ,
                                            types[0], &tmptype);
 
-            MPIR_Dataloop_create(tmptype, dlp_p, dlsz_p);
+            MPIR_Dataloop_create(tmptype, dlp_p);
 
             MPIR_Type_free_impl(&tmptype);
             break;
@@ -331,7 +325,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
                                          ints[3 + 4 * ndims] /* order */ ,
                                          types[0], &tmptype);
 
-            MPIR_Dataloop_create(tmptype, dlp_p, dlsz_p);
+            MPIR_Dataloop_create(tmptype, dlp_p);
 
             MPIR_Type_free_impl(&tmptype);
             break;
@@ -360,7 +354,7 @@ void MPIR_Dataloop_create(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * 
   such as MPI_SHORT_INT, have multiple elements with potential gaps
   and padding. these types need dataloops for correct processing.
 @*/
-static void create_named(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+static void create_named(MPI_Datatype type, MPIR_Dataloop ** dlp_p)
 {
     MPIR_Dataloop *dlp;
 
@@ -379,16 +373,14 @@ static void create_named(MPI_Datatype type, MPIR_Dataloop ** dlp_p, MPI_Aint * d
         if (dlp != NULL) {
             /* dataloop already created; just return it. */
             *dlp_p = dlp;
-            MPII_DATALOOP_GET_LOOPSIZE(type, *dlsz_p);
         } else {
-            create_pairtype(type, dlp_p, dlsz_p);
+            create_pairtype(type, dlp_p);
         }
         return;
     }
     /* no other combiners need dataloops; exit. */
     else {
         *dlp_p = NULL;
-        *dlsz_p = 0;
         return;
     }
 }

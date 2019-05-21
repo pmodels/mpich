@@ -18,7 +18,6 @@
 .  int strideinbytes
 .  MPI_Datatype oldtype
 .  MPIR_Dataloop **dlp_p
-.  int *dlsz_p
 
    Returns 0 on success, -1 on failure.
 
@@ -26,8 +25,7 @@
 int MPII_Dataloop_create_vector(MPI_Aint icount,
                                 MPI_Aint iblocklength,
                                 MPI_Aint astride,
-                                int strideinbytes,
-                                MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+                                int strideinbytes, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p)
 {
     int err, is_builtin;
     MPI_Aint new_loop_sz;
@@ -45,7 +43,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
      */
     if (count == 0 || blocklength == 0) {
 
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
         return err;
     }
 
@@ -54,7 +52,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
      * if count == 1, store as a contiguous rather than a vector dataloop.
      */
     if (count == 1) {
-        err = MPII_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p);
         return err;
     }
 
@@ -65,7 +63,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
     } else {
         MPI_Aint old_loop_sz = 0;
 
-        MPII_DATALOOP_GET_LOOPSIZE(oldtype, old_loop_sz);
+        old_loop_sz = MPII_Type_dloop_size(oldtype);
 
         /* TODO: ACCOUNT FOR PADDING IN LOOP_SZ HERE */
         new_loop_sz = sizeof(MPIR_Dataloop) + old_loop_sz;
@@ -75,11 +73,12 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
     if (is_builtin) {
         MPI_Aint basic_sz = 0;
 
-        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_VECTOR, count, &new_dlp, &new_loop_sz);
+        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_VECTOR, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         MPIR_Datatype_get_size_macro(oldtype, basic_sz);
         new_dlp->kind = MPII_DATALOOP_KIND_VECTOR | MPII_DATALOOP_FINAL_MASK;
@@ -90,17 +89,15 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
     } else {    /* user-defined base type (oldtype) */
 
         MPIR_Dataloop *old_loop_ptr;
-        MPI_Aint old_loop_sz = 0;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
-        MPII_DATALOOP_GET_LOOPSIZE(oldtype, old_loop_sz);
 
-        MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_VECTOR,
-                                     count, old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);
+        MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_VECTOR, count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         new_dlp->kind = MPII_DATALOOP_KIND_VECTOR;
         MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
@@ -117,7 +114,6 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
     new_dlp->loop_params.v_t.stride = (strideinbytes) ? stride : stride * new_dlp->el_extent;
 
     *dlp_p = new_dlp;
-    *dlsz_p = new_loop_sz;
 
     return 0;
 }

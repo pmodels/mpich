@@ -48,27 +48,6 @@
     }                                             \
 } while (0)
 
-#define MPII_DATALOOP_GET_LOOPSIZE(a,depth_) do {             \
-    void *ptr;                                                      \
-    switch (HANDLE_GET_KIND(a)) {                                   \
-        case HANDLE_KIND_DIRECT:                                    \
-            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC) ; \
-            ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            GET_FIELD(depth_,_size);                  \
-            break;                                                  \
-        case HANDLE_KIND_INDIRECT:                                  \
-            ptr = ((MPIR_Datatype *)                                \
-             MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            GET_FIELD(depth_,_size);                                \
-            break;                                                  \
-        case HANDLE_KIND_INVALID:                                   \
-        case HANDLE_KIND_BUILTIN:                                   \
-        default:                                                    \
-            depth_ = 0;                                             \
-            break;                                                  \
-    }                                                               \
-} while (0)
-
 #define MPII_DATALOOP_SET_LOOPPTR(a,lptr_) do {               \
     void *ptr;                                                      \
     switch (HANDLE_GET_KIND(a)) {                                   \
@@ -86,27 +65,6 @@
         case HANDLE_KIND_BUILTIN:                                   \
         default:                                                    \
             lptr_ = 0;                                              \
-            break;                                                  \
-    }                                                               \
-} while (0)
-
-#define MPII_DATALOOP_SET_LOOPSIZE(a,depth_) do {             \
-    void *ptr;                                                      \
-    switch (HANDLE_GET_KIND(a)) {                                   \
-        case HANDLE_KIND_DIRECT:                                    \
-            MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);  \
-            ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);             \
-            SET_FIELD(depth_,_size);                  \
-            break;                                                  \
-        case HANDLE_KIND_INDIRECT:                                  \
-            ptr = ((MPIR_Datatype *)                                \
-             MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem));   \
-            SET_FIELD(depth_,_size);                  \
-            break;                                                  \
-        case HANDLE_KIND_INVALID:                                   \
-        case HANDLE_KIND_BUILTIN:                                   \
-        default:                                                    \
-            depth_ = 0;                                             \
             break;                                                  \
     }                                                               \
 } while (0)
@@ -225,7 +183,19 @@ struct MPIR_Dataloop {
     MPI_Aint el_size;
     MPI_Aint el_extent;
     MPI_Datatype el_type;
+
+    MPI_Aint dloop_sz;
 };
+
+static int MPII_Type_dloop_size(MPI_Datatype type) ATTRIBUTE((unused));
+static int MPII_Type_dloop_size(MPI_Datatype type)
+{
+    struct MPIR_Dataloop *dloop;
+
+    MPII_DATALOOP_GET_LOOPPTR(type, dloop);
+    return dloop->dloop_sz;
+}
+
 
 /*S
   MPIR_Segment - Description of the Segment datatype
@@ -271,33 +241,27 @@ MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm *elmp);
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
                                  struct MPIR_Dataloop *dlp, int branch_flag);
 
-int MPII_Dataloop_create_contiguous(MPI_Aint count,
-                                    MPI_Datatype oldtype,
-                                    MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+int MPII_Dataloop_create_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p);
 int MPII_Dataloop_create_vector(MPI_Aint count,
                                 MPI_Aint blocklength,
                                 MPI_Aint stride,
-                                int strideinbytes,
-                                MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+                                int strideinbytes, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p);
 int MPII_Dataloop_create_blockindexed(MPI_Aint count,
                                       MPI_Aint blklen,
                                       const void *disp_array,
                                       int dispinbytes,
-                                      MPI_Datatype oldtype,
-                                      MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+                                      MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
  * request of a large blocklength. */
 int MPII_Dataloop_create_indexed(MPI_Aint count,
                                  const MPI_Aint * blocklength_array,
                                  const void *displacement_array,
-                                 int dispinbytes,
-                                 MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+                                 int dispinbytes, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p);
 int MPII_Dataloop_create_struct(MPI_Aint count,
                                 const int *blklen_array,
                                 const MPI_Aint * disp_array,
-                                const MPI_Datatype * oldtype_array,
-                                MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p);
+                                const MPI_Datatype * oldtype_array, MPIR_Dataloop ** dlp_p);
 
 /* Helper functions for dataloop construction */
 int MPII_Dataloop_convert_subarray(int ndims,
@@ -316,13 +280,10 @@ int MPII_Dataloop_convert_darray(int size,
 
 MPI_Aint MPII_Dataloop_stream_size(MPIR_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type));
 
-void MPII_Dataloop_alloc(int kind,
-                         MPI_Aint count, MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p);
+void MPII_Dataloop_alloc(int kind, MPI_Aint count, MPIR_Dataloop ** new_loop_p);
 void MPII_Dataloop_alloc_and_copy(int kind,
                                   MPI_Aint count,
-                                  MPIR_Dataloop * old_loop,
-                                  MPI_Aint old_loop_sz,
-                                  MPIR_Dataloop ** new_loop_p, MPI_Aint * new_loop_sz_p);
+                                  MPIR_Dataloop * old_loop, MPIR_Dataloop ** new_loop_p);
 
 void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
                                    MPI_Aint first,

@@ -75,7 +75,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->contents = NULL;
 
     new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -166,7 +165,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
      * type and then committing it, then the dataloop will be missing.
      */
 
-    MPIR_Dataloop_create(type, &(new_dtp->dataloop), &(new_dtp->dataloop_size));
+    MPIR_Dataloop_create(type, &(new_dtp->dataloop));
 
     int err = MPID_Type_commit_hook(new_dtp);
 
