@@ -177,13 +177,14 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
            iov and let the channel unpack */
         if (data_sz == rreq->dev.recv_data_sz && *buflen >= data_sz)
         {
-            intptr_t last;
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
-            last = data_sz;
-            MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
-				&last, buf);
+
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Unpack_impl(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
+                             rreq->dev.datatype, rreq->dev.segment_first, &actual_unpack_bytes);
+
             /* --BEGIN ERROR HANDLING-- */
-            if (last != data_sz)
+            if (actual_unpack_bytes != data_sz)
             {
                 /* If the data can't be unpacked, the we have a
                    mismatch between the datatype and the amount of

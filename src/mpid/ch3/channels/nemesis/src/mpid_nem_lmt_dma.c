@@ -242,17 +242,8 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPIR_Request *sreq, knem_cookie_t *s_c
             sreq->dev.iov_count = MPL_IOV_LIMIT;
             sreq->dev.iov_offset = 0;
 
-            /* segment_ptr may be non-null when this is a continuation of a
-               many-part message that we couldn't fit in one single flight of
-               iovs. */
-            sreq->dev.segment_ptr = MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count,
-                              sreq->dev.datatype);
-            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno,
-                                 MPI_ERR_OTHER, "**nomem",
-                                 "**nomem %s", "MPIR_Segment_alloc");
             sreq->dev.segment_first = 0;
             sreq->dev.segment_size = data_sz;
-
 
             /* FIXME we should write our own function that isn't dependent on
                the in-request iov array.  This will let us use IOVs that are
