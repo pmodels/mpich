@@ -709,11 +709,6 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_SendNoncontig");
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
-    sreq->dev.segment_ptr =
-        MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPIR_Segment_alloc");
-
     iov_n = 0;
 
     iov[iov_n].MPL_IOV_BUF = header;

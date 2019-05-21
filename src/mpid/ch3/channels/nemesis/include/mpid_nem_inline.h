@@ -25,10 +25,12 @@ static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_f
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
-static inline void MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first,
+static inline void MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                                   intptr_t *segment_first,
                                                    intptr_t segment_size, void *header, intptr_t header_sz,
                                                    MPIDI_VC_t *vc, int *again);
-static inline void MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
+static inline void MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                            intptr_t *segment_first, intptr_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
 
@@ -459,7 +461,8 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
                      i.e.: we will never send only the header
 */
 static inline void
-MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
+MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                intptr_t *segment_first, intptr_t segment_size,
                                 void *header, intptr_t header_sz, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG_HEADER);
@@ -468,7 +471,6 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
     MPID_nem_cell_ptr_t el;
     intptr_t datalen;
     int my_rank;
-    intptr_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPI_Aint buf_offset = 0;
 
@@ -508,13 +510,15 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
             MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, header, header_sz);
             
             /* copy data */
-            last = segment_size;
-            MPIR_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t));
-            MPIR_Assert(last == segment_size);
+            MPI_Aint actual_pack_bytes;
+            MPIR_Pack_impl(buf, count, datatype, *segment_first,
+                           (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t),
+                           segment_size - *segment_first, &actual_pack_bytes);
+            MPIR_Assert(actual_pack_bytes == segment_size - *segment_first);
 
             OPA_store_release_int(&pbox->flag.value, 1);
 
-            *segment_first = last;
+            *segment_first += actual_pack_bytes;;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
 	    MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
@@ -556,15 +560,18 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
     /* copy data */
+    MPI_Aint max_pack_bytes;
     if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN - buf_offset)
-        last = segment_size;
+        max_pack_bytes = segment_size - *segment_first;
     else
-        last = *segment_first + MPID_NEM_MPICH_DATA_LEN - buf_offset;
+        max_pack_bytes = MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
-    MPIR_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload + buf_offset);
-    datalen = buf_offset + last - *segment_first;
-    *segment_first = last;
-    
+    MPI_Aint actual_pack_bytes;
+    MPIR_Pack_impl(buf, count, datatype, *segment_first, (char *)el->pkt.p.payload + buf_offset,
+                   max_pack_bytes, &actual_pack_bytes);
+    datalen = buf_offset + actual_pack_bytes;
+    *segment_first += actual_pack_bytes;
+
     el->pkt.header.source  = my_rank;
     el->pkt.header.dest    = vc->lpid;
     el->pkt.header.datalen = datalen;
@@ -598,7 +605,8 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
 /* similar to MPID_nem_mpich_send_seg_header, except there is no
    header to send.  This need not be the first packet of a message. */
 static inline void
-MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
+                         intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SEND_SEG);
@@ -606,7 +614,6 @@ MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_
     MPID_nem_cell_ptr_t el;
     intptr_t datalen;
     int my_rank;
-    intptr_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
     MPIR_Assert(vc_ch->is_local); /* netmods will have their own implementation */
@@ -639,14 +646,17 @@ MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_
 #endif /*PREFETCH_CELL */
 
     /* copy data */
+    MPI_Aint max_pack_bytes;
     if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN)
-        last = segment_size;
+        max_pack_bytes = segment_size - *segment_first;
     else
-        last = *segment_first + MPID_NEM_MPICH_DATA_LEN;
-    
-    MPIR_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload);
-    datalen = last - *segment_first;
-    *segment_first = last;
+        max_pack_bytes = MPID_NEM_MPICH_DATA_LEN;
+
+    MPI_Aint actual_pack_bytes;
+    MPIR_Pack_impl(buf, count, datatype, *segment_first, (char *)el->pkt.p.payload,
+                   max_pack_bytes, &actual_pack_bytes);
+    datalen = actual_pack_bytes;
+    *segment_first += actual_pack_bytes;
     
     el->pkt.header.source  = my_rank;
     el->pkt.header.dest    = vc->lpid;
