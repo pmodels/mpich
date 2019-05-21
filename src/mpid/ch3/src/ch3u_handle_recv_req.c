@@ -647,21 +647,16 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 
     rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
-    rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf,
-                      (rreq->dev.recv_data_sz / basic_type_size),
-                                               basic_dtp);
-    MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPIR_Segment_alloc");
-
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
-    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadrecviov");
-    }
-    if (!rreq->dev.OnDataAvail)
-        rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
+                     0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
+                     &rreq->dev.iov_count, &actual_iov_bytes);
+    rreq->dev.iov_offset = 0;
+
+    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
 
     *complete = FALSE;
   fn_fail:
@@ -764,21 +759,16 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 
         rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
-        rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf,
-                          (rreq->dev.recv_data_sz / basic_type_size),
-                          basic_dtp);
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIR_Segment_alloc");
-
         rreq->dev.segment_first = 0;
         rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
-        mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadrecviov");
-        }
-        if (!rreq->dev.OnDataAvail)
-            rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
+        MPI_Aint actual_iov_bytes;
+        MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
+                         0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
+                         &rreq->dev.iov_count, &actual_iov_bytes);
+        rreq->dev.iov_offset = 0;
+
+        rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
         *complete = FALSE;
     }
