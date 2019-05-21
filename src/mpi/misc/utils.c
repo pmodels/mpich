@@ -86,7 +86,6 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Segment_free(seg);
     } else {
         char *buf;
-        intptr_t buf_off;
         MPIR_Segment *sseg;
         intptr_t sfirst;
         MPIR_Segment *rseg;
@@ -99,28 +98,28 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
         sfirst = 0;
         rfirst = 0;
-        buf_off = 0;
 
         while (1) {
             MPI_Aint last;
             char *buf_end;
 
-            if (copy_sz - sfirst > COPY_BUFFER_SZ - buf_off) {
-                last = sfirst + (COPY_BUFFER_SZ - buf_off);
+            if (copy_sz - sfirst > COPY_BUFFER_SZ) {
+                last = sfirst + COPY_BUFFER_SZ;
             } else {
                 last = copy_sz;
             }
 
-            MPIR_Segment_pack(sseg, sfirst, &last, buf + buf_off);
+            MPIR_Segment_pack(sseg, sfirst, &last, buf);
             MPIR_Assert(last > sfirst);
 
-            buf_end = buf + buf_off + (last - sfirst);
+            buf_end = buf + last - sfirst;
             sfirst = last;
 
             MPIR_Segment_unpack(rseg, rfirst, &last, buf);
             MPIR_Assert(last > rfirst);
 
             rfirst = last;
+            MPIR_Assert(rfirst == sfirst);
 
             if (rfirst == copy_sz) {
                 /* successful completion */
@@ -129,12 +128,6 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
             /* if the send side finished, but the recv side couldn't unpack it, there's a datatype mismatch */
             MPIR_ERR_CHKANDJUMP(sfirst == copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-
-            /* if not all data was unpacked, copy it to the front of the buffer for next time */
-            buf_off = sfirst - rfirst;
-            if (buf_off > 0) {
-                memmove(buf, buf_end - buf_off, buf_off);
-            }
         }
 
         MPIR_Segment_free(sseg);
