@@ -34,6 +34,12 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     iov[iovcnt].MPL_IOV_BUF = header;
     iov[iovcnt].MPL_IOV_LEN = hdr_sz;
     iovcnt++;
+
+    sreq->dev.segment_ptr = MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count,
+                                               sreq->dev.datatype);
+    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPIR_Segment_alloc");
+
     iov_n = MPL_IOV_LIMIT - 1;
 
     /* If extended header iov exists, merge into the iov array. */
@@ -127,10 +133,10 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 
     MPL_DBG_MSGPKT(vc,tag,eager_pkt->match.parts.context_id,rank,data_sz,
                     "Eager");
-	    
-    sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
+    sreq->dev.user_buf = (void *) buf;
+    sreq->dev.user_count = count;
+    sreq->dev.datatype = datatype;
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
 	    

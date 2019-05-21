@@ -88,10 +88,10 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "sending non-contiguous sync eager message, data_sz=%" PRIdPTR,
 		       data_sz);
-	
-	sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
+	sreq->dev.user_buf = (void *) buf;
+	sreq->dev.user_count = count;
+	sreq->dev.datatype = datatype;
 	sreq->dev.segment_first = 0;
 	sreq->dev.segment_size = data_sz;
 	

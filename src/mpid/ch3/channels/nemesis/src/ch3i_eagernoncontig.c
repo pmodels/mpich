@@ -37,6 +37,10 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
         goto fn_exit;
     }
 
+    sreq->dev.segment_ptr = MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype);
+    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPIR_Segment_alloc");
+
     if (!MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) /* MT */
     {
         /* send queue is not empty, enqueue the request then check to
