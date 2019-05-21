@@ -100,8 +100,14 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_Assert(sreq->dev.segment_first < last);
     MPIR_Assert(last > 0);
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
-    MPIR_Segment_to_iov(sreq->dev.segment_ptr, sreq->dev.segment_first, 
-			     &last, iov, iov_n);
+
+    int max_iov_len = *iov_n;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Type_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                     sreq->dev.segment_first, iov, max_iov_len,
+                     sreq->dev.segment_size - sreq->dev.segment_first, iov_n, &actual_iov_bytes);
+    last = sreq->dev.segment_first + actual_iov_bytes;
+
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
     "post-pv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d",
 		      sreq->dev.segment_first, last, *iov_n));
@@ -270,9 +276,14 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 			  rreq->dev.segment_first, last, rreq->dev.iov_count));
 	MPIR_Assert(rreq->dev.segment_first < last);
 	MPIR_Assert(last > 0);
-	MPIR_Segment_to_iov(rreq->dev.segment_ptr,
-				   rreq->dev.segment_first,
-				   &last, &rreq->dev.iov[0], &rreq->dev.iov_count);
+
+        MPI_Aint actual_iov_bytes;
+        MPIR_Type_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
+                         rreq->dev.segment_first, &rreq->dev.iov[0], MPL_IOV_LIMIT,
+                         rreq->dev.segment_size - rreq->dev.segment_first,
+                         &rreq->dev.iov_count, &actual_iov_bytes);
+        last = rreq->dev.segment_first + actual_iov_bytes;
+
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
    "post-upv: first=%" PRIdPTR ", last=%" PRIdPTR ", iov_n=%d, iov_offset=%lld",
 			  rreq->dev.segment_first, last, rreq->dev.iov_count, (long long)rreq->dev.iov_offset));
