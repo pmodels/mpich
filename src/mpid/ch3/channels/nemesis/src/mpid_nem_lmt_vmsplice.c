@@ -107,8 +107,6 @@ static int populate_iov_from_req(MPIR_Request *req)
     }
     else {
         /* use the segment routines to handle the iovec creation */
-        MPIR_Assert(req->dev.segment_ptr == NULL);
-
         req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
 

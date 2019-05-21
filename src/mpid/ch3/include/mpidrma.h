@@ -885,7 +885,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     }
     else {
         /* derived datatype */
-        MPIR_Segment *segp;
         MPL_IOV *dloop_vec;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
@@ -894,17 +893,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPI_Aint curr_len;
         void *curr_loc;
         int accumulated_count;
-
-        segp = MPIR_Segment_alloc(NULL, target_count, target_dtp);
-        /* --BEGIN ERROR HANDLING-- */
-        if (!segp) {
-            mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPI_ERR_OTHER, "**nomem", 0);
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-            return mpi_errno;
-        }
-        /* --END ERROR HANDLING-- */
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
@@ -972,7 +960,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             accumulated_count += count;
         }
 
-        MPIR_Segment_free(segp);
         MPL_free(dloop_vec);
     }
 
