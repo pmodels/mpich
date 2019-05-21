@@ -524,10 +524,9 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
     {
 	if (dt_contig)
 	{
-	    /* TODO - check that amount of data is consistent with datatype.  
-	       In other words, if we were to use Segment_unpack()
-	       would last = unpack?  If not we should return an error 
-	       (unless configured with --enable-fast) */
+	    /* TODO - check that amount of data is consistent with
+	       datatype.  If not we should return an error (unless
+	       configured with --enable-fast) */
 	    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MEMCPY);
 	    MPIR_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, rreq->dev.tmpbuf,
 		   unpack_sz);
