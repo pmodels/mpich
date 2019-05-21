@@ -67,23 +67,17 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Memcpy(((char *) recvbuf + recvtype_true_lb),
                     ((char *) sendbuf + sendtype_true_lb), copy_sz);
     } else if (sendtype_iscontig) {
-        MPIR_Segment *seg;
-        MPI_Aint last;
-
-        seg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
-        last = copy_sz;
-        MPIR_Segment_unpack(seg, 0, &last, (char *) sendbuf + sendtype_true_lb);
-        MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Unpack_impl((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount, recvtype,
+                         0, &actual_unpack_bytes);
+        MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                            "**dtypemismatch");
     } else if (recvtype_iscontig) {
-        MPIR_Segment *seg;
-        MPI_Aint last;
-
-        seg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
-        last = copy_sz;
-        MPIR_Segment_pack(seg, 0, &last, (char *) recvbuf + recvtype_true_lb);
-        MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
+                       copy_sz, &actual_pack_bytes);
+        MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                            "**dtypemismatch");
     } else {
         char *buf;
         MPIR_Segment *sseg;
