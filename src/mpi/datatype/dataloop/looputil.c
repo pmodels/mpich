@@ -863,22 +863,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 }
 
 
-/* MPIR_Segment_from_iov
-*
-* Q: Should this be any different from pack vector?
-*/
-void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
-                           MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-
-    MPIR_Segment_to_iov(segp, first, lastp, vectorp, lengthp);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-    return;
-}
-
 /*
 * EVERYTHING BELOW HERE IS USED ONLY WITHIN THIS FILE
 */

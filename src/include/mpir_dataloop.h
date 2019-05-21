@@ -43,9 +43,6 @@ void MPIR_Segment_unpack(struct MPIR_Segment *segp,
 void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
                          MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
 
-void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
-                           MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
-
 void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer);
 
