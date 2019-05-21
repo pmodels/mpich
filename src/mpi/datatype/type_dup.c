@@ -91,12 +91,11 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
 
         new_dtp->dataloop = NULL;
-        new_dtp->dataloop_size = old_dtp->dataloop_size;
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
             MPIR_Assert(old_dtp->dataloop != NULL);
-            MPIR_Dataloop_dup(old_dtp->dataloop, old_dtp->dataloop_size, &new_dtp->dataloop);
+            MPIR_Dataloop_dup(old_dtp->dataloop, &new_dtp->dataloop);
             MPID_Type_commit_hook(new_dtp);
         }
     }

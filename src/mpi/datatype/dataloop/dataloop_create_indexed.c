@@ -27,7 +27,6 @@ static void indexed_array_copy(MPI_Aint count,
 .  int dispinbytes
 .  MPI_Datatype oldtype
 .  MPIR_Dataloop **dlp_p
-.  int *dlsz_p
 
 .N Errors
 .N Returns 0 on success, -1 on error.
@@ -36,8 +35,7 @@ static void indexed_array_copy(MPI_Aint count,
 int MPII_Dataloop_create_indexed(MPI_Aint icount,
                                  const MPI_Aint * blocklength_array,
                                  const void *displacement_array,
-                                 int dispinbytes,
-                                 MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+                                 int dispinbytes, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p)
 {
     int err, is_builtin;
     MPI_Aint i;
@@ -53,7 +51,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
 
     /* if count is zero, handle with contig code, call it an int */
     if (count == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
         return err;
     }
 
@@ -81,7 +79,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
 
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
         return err;
     }
 
@@ -93,7 +91,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
          (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0))) {
-        err = MPII_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p);
         return err;
     }
 
@@ -111,7 +109,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPII_Dataloop_create_blockindexed(1,
                                                 old_type_count,
-                                                disp_arr_tmp, dispinbytes, oldtype, dlp_p, dlsz_p);
+                                                disp_arr_tmp, dispinbytes, oldtype, dlp_p);
 
         return err;
     }
@@ -135,8 +133,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
         else
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPII_Dataloop_create_blockindexed(icount - first,
-                                                blksz,
-                                                disp_arr_tmp, dispinbytes, oldtype, dlp_p, dlsz_p);
+                                                blksz, disp_arr_tmp, dispinbytes, oldtype, dlp_p);
 
         return err;
     }
@@ -152,11 +149,12 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
     /* otherwise storing as an indexed dataloop */
 
     if (is_builtin) {
-        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_INDEXED, count, &new_dlp, &new_loop_sz);
+        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_INDEXED, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         new_dlp->kind = MPII_DATALOOP_KIND_INDEXED | MPII_DATALOOP_FINAL_MASK;
 
@@ -165,18 +163,16 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
         new_dlp->el_type = oldtype;
     } else {
         MPIR_Dataloop *old_loop_ptr = NULL;
-        MPI_Aint old_loop_sz = 0;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
-        MPII_DATALOOP_GET_LOOPSIZE(oldtype, old_loop_sz);
 
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_INDEXED,
-                                     contig_count,
-                                     old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);
+                                     contig_count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         new_dlp->kind = MPII_DATALOOP_KIND_INDEXED;
 
@@ -200,7 +196,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
                        new_dlp->loop_params.i_t.offset_array, dispinbytes, old_extent);
 
     *dlp_p = new_dlp;
-    *dlsz_p = new_loop_sz;
+    new_dlp->dloop_sz = new_loop_sz;
 
     return MPI_SUCCESS;
 }

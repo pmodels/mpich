@@ -18,15 +18,13 @@
 
    Output Parameters:
 +  MPIR_Dataloop **dlp_p,
-.  MPI_Aint *dlsz_p,
 -  int *dldepth_p,
 
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_contiguous(MPI_Aint icount,
-                                    MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p)
 {
     MPI_Aint count;
     int is_builtin, apply_contig_coalescing = 0;
@@ -57,11 +55,12 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount,
     if (is_builtin) {
         MPI_Aint basic_sz = 0;
 
-        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_CONTIG, count, &new_dlp, &new_loop_sz);
+        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_CONTIG, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         MPIR_Datatype_get_size_macro(oldtype, basic_sz);
         new_dlp->kind = MPII_DATALOOP_KIND_CONTIG | MPII_DATALOOP_FINAL_MASK;
@@ -74,14 +73,12 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount,
     } else {
         /* user-defined base type (oldtype) */
         MPIR_Dataloop *old_loop_ptr;
-        MPI_Aint old_loop_sz = 0;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
-        MPII_DATALOOP_GET_LOOPSIZE(oldtype, old_loop_sz);
 
         if (apply_contig_coalescing) {
             /* make a copy of the old loop and multiply the count */
-            MPIR_Dataloop_dup(old_loop_ptr, old_loop_sz, &new_dlp);
+            MPIR_Dataloop_dup(old_loop_ptr, &new_dlp);
             /* --BEGIN ERROR HANDLING-- */
             if (!new_dlp)
                 return -1;
@@ -89,15 +86,15 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount,
 
             new_dlp->loop_params.c_t.count *= count;
 
-            new_loop_sz = old_loop_sz;
+            new_loop_sz = old_loop_ptr->dloop_sz;
         } else {
             /* allocate space for new loop including copy of old */
-            MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_CONTIG,
-                                         count, old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);
+            MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_CONTIG, count, old_loop_ptr, &new_dlp);
             /* --BEGIN ERROR HANDLING-- */
             if (!new_dlp)
                 return -1;
             /* --END ERROR HANDLING-- */
+            new_loop_sz = new_dlp->dloop_sz;
 
             new_dlp->kind = MPII_DATALOOP_KIND_CONTIG;
             MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
@@ -109,7 +106,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount,
     }
 
     *dlp_p = new_dlp;
-    *dlsz_p = new_loop_sz;
+    new_dlp->dloop_sz = new_loop_sz;
 
     return 0;
 }
