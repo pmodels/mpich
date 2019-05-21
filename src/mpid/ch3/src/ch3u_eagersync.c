@@ -92,8 +92,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	sreq->dev.user_buf = (void *) buf;
 	sreq->dev.user_count = count;
 	sreq->dev.datatype = datatype;
-	sreq->dev.segment_first = 0;
-	sreq->dev.segment_size = data_sz;
+	sreq->dev.msg_offset = 0;
+	sreq->dev.msgsize = data_sz;
 	
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t),

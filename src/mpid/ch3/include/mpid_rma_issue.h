@@ -264,8 +264,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.user_buf = rma_op->origin_addr;
         req->dev.user_count = rma_op->origin_count;
         req->dev.datatype = rma_op->origin_datatype;
-        req->dev.segment_first = stream_offset;
-        req->dev.segment_size = stream_offset + stream_size;
+        req->dev.msg_offset = stream_offset;
+        req->dev.msgsize = stream_offset + stream_size;
 
         req->dev.OnFinal = 0;
         req->dev.OnDataAvail = 0;

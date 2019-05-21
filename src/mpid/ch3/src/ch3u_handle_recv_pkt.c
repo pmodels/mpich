@@ -164,8 +164,8 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
     else {
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
-        rreq->dev.segment_first = 0;
-	rreq->dev.segment_size  = data_sz;
+        rreq->dev.msg_offset = 0;
+	rreq->dev.msgsize  = data_sz;
 
         /* if all of the data has already been received, and the
            message is not truncated, unpack it now, otherwise build an
@@ -176,7 +176,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
 
             MPI_Aint actual_unpack_bytes;
             MPIR_Unpack_impl(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
-                             rreq->dev.datatype, rreq->dev.segment_first, &actual_unpack_bytes);
+                             rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes);
 
             /* --BEGIN ERROR HANDLING-- */
             if (actual_unpack_bytes != data_sz)
@@ -185,7 +185,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
                    mismatch between the datatype and the amount of
                    data received.  Throw away received data. */
                 MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
-                MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
+                MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.msg_offset);
                 *buflen = data_sz;
                 *complete = TRUE;
 		/* FIXME: Set OnDataAvail to 0?  If not, why not? */
@@ -325,8 +325,8 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
-	rreq->dev.segment_first = 0;
-	rreq->dev.segment_size = data_sz;
+	rreq->dev.msg_offset = 0;
+	rreq->dev.msgsize = data_sz;
 	mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,

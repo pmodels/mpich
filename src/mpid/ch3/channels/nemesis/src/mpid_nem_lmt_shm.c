@@ -428,7 +428,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
 
     data_sz = req->ch.lmt_data_sz;
     buf_num = vc_ch->lmt_buf_num;
-    first = req->dev.segment_first;
+    first = req->dev.msg_offset;
 
     do
     {
@@ -439,7 +439,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             int p = 0;
             
             if (!copy_buf->receiver_present.val || p == LMT_POLLS_BEFORE_GIVING_UP) {
-                req->dev.segment_first = first;
+                req->dev.msg_offset = first;
                 vc_ch->lmt_buf_num = buf_num;
                 *done = FALSE;
                 MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=%" PRIdPTR " data_sz=%" PRIdPTR, first, data_sz));
@@ -524,7 +524,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
     surfeit = vc_ch->lmt_surfeit;
     data_sz = req->ch.lmt_data_sz;
     buf_num = vc_ch->lmt_buf_num;
-    first = req->dev.segment_first;
+    first = req->dev.msg_offset;
 
     do
     {
@@ -535,7 +535,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             int p = 0;
             
             if (!copy_buf->sender_present.val || p == LMT_POLLS_BEFORE_GIVING_UP) {
-                req->dev.segment_first = first;
+                req->dev.msg_offset = first;
                 vc_ch->lmt_buf_num = buf_num;
                 vc_ch->lmt_surfeit = surfeit;
                 *done = FALSE;

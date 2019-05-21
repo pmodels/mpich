@@ -26,11 +26,11 @@ static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
 static inline void MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                   intptr_t *segment_first,
-                                                   intptr_t segment_size, void *header, intptr_t header_sz,
+                                                   intptr_t *msg_offset,
+                                                   intptr_t msgsize, void *header, intptr_t header_sz,
                                                    MPIDI_VC_t *vc, int *again);
 static inline void MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                            intptr_t *segment_first, intptr_t segment_size,
+                                            intptr_t *msg_offset, intptr_t msgsize,
                                                     MPIDI_VC_t *vc, int *again);
 
 
@@ -449,20 +449,20 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
 
 /* send the header and data described by the segment in one cell.  If
    there is no cell available, *again is set to 1.  If all of the data
-   cannot be sent, *segment_first is set to the index of the first
+   cannot be sent, *msg_offset is set to the index of the first
    unsent byte.
    Pre condition:  This must be the first packet of a message (i.e.,
                        *segment first == 0)
                    The destination process is local
    Post conditions:  the header has been sent iff *again == 0
-                     if there is data to send (segment_size > 0) then
+                     if there is data to send (msgsize > 0) then
                          (the header has been sent iff any data has
-                         been sent (i.e., *segment_first > 0) )
+                         been sent (i.e., *msg_offset > 0) )
                      i.e.: we will never send only the header
 */
 static inline void
 MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                intptr_t *segment_first, intptr_t segment_size,
+                                intptr_t *msg_offset, intptr_t msgsize,
                                 void *header, intptr_t header_sz, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG_HEADER);
@@ -483,7 +483,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
+    if (sizeof(MPIDI_CH3_Pkt_t) + msgsize <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
@@ -493,16 +493,16 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 
         /* NOTE: when FASTBOX is being used, streaming optimization is never triggered,
          * because streaming unit size is larger than FASTBOX size. In such case,
-         * first offset (*segment_first) is zero, and last offset (segment_size)
+         * first offset (*msg_offset) is zero, and last offset (msgsize)
          * is the data size */
-        MPIR_Assert(*segment_first == 0);
+        MPIR_Assert(*msg_offset == 0);
 
         if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
             goto usequeue_l;
 
 	{
 	    pbox->cell.pkt.header.source  = MPID_nem_mem_region.local_rank;
-	    pbox->cell.pkt.header.datalen = sizeof(MPIDI_CH3_Pkt_t) + segment_size;
+	    pbox->cell.pkt.header.datalen = sizeof(MPIDI_CH3_Pkt_t) + msgsize;
 	    pbox->cell.pkt.header.seqno   = vc_ch->send_seqno++;
             MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
 
@@ -511,14 +511,14 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
             
             /* copy data */
             MPI_Aint actual_pack_bytes;
-            MPIR_Pack_impl(buf, count, datatype, *segment_first,
+            MPIR_Pack_impl(buf, count, datatype, *msg_offset,
                            (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t),
-                           segment_size - *segment_first, &actual_pack_bytes);
-            MPIR_Assert(actual_pack_bytes == segment_size - *segment_first);
+                           msgsize - *msg_offset, &actual_pack_bytes);
+            MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
 
             OPA_store_release_int(&pbox->flag.value, 1);
 
-            *segment_first += actual_pack_bytes;;
+            *msg_offset += actual_pack_bytes;;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
 	    MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
@@ -561,16 +561,16 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 
     /* copy data */
     MPI_Aint max_pack_bytes;
-    if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN - buf_offset)
-        max_pack_bytes = segment_size - *segment_first;
+    if (msgsize - *msg_offset <= MPID_NEM_MPICH_DATA_LEN - buf_offset)
+        max_pack_bytes = msgsize - *msg_offset;
     else
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Pack_impl(buf, count, datatype, *segment_first, (char *)el->pkt.p.payload + buf_offset,
+    MPIR_Pack_impl(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload + buf_offset,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = buf_offset + actual_pack_bytes;
-    *segment_first += actual_pack_bytes;
+    *msg_offset += actual_pack_bytes;
 
     el->pkt.header.source  = my_rank;
     el->pkt.header.dest    = vc->lpid;
@@ -606,7 +606,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
    header to send.  This need not be the first packet of a message. */
 static inline void
 MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
-                         intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
+                         intptr_t *msg_offset, intptr_t msgsize, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SEND_SEG);
@@ -647,16 +647,16 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     /* copy data */
     MPI_Aint max_pack_bytes;
-    if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN)
-        max_pack_bytes = segment_size - *segment_first;
+    if (msgsize - *msg_offset <= MPID_NEM_MPICH_DATA_LEN)
+        max_pack_bytes = msgsize - *msg_offset;
     else
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Pack_impl(buf, count, datatype, *segment_first, (char *)el->pkt.p.payload,
+    MPIR_Pack_impl(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = actual_pack_bytes;
-    *segment_first += actual_pack_bytes;
+    *msg_offset += actual_pack_bytes;
     
     el->pkt.header.source  = my_rank;
     el->pkt.header.dest    = vc->lpid;

@@ -15,7 +15,7 @@
 
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
-   sreq->dev.segment as well as segment_first and segment_size.
+   sreq->dev.segment as well as msg_offset and msgsize.
    The optional hdr_iov and n_hdr_iov are used for variable-length extended
    header, specify NULL and zero if unused. Note that we assume n_hdr_iov is
    small and does not exceed MPL_IOV_LIMIT - 2 (one for header and one for
@@ -132,8 +132,8 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     sreq->dev.user_buf = (void *) buf;
     sreq->dev.user_count = count;
     sreq->dev.datatype = datatype;
-    sreq->dev.segment_first = 0;
-    sreq->dev.segment_size = data_sz;
+    sreq->dev.msg_offset = 0;
+    sreq->dev.msgsize = data_sz;
 	    
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
@@ -764,8 +764,8 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 	{
 	    /* force read of extra data */
 	    *rreqp = rreq;
-	    rreq->dev.segment_first = 0;
-	    rreq->dev.segment_size = 0;
+	    rreq->dev.msg_offset = 0;
+	    rreq->dev.msgsize = 0;
 	    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,

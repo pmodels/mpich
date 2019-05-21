@@ -547,8 +547,8 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 
     rreq->dev.datatype_ptr = new_dtp;
 
-    rreq->dev.segment_first = 0;
-    rreq->dev.segment_size = rreq->dev.recv_data_sz;
+    rreq->dev.msg_offset = 0;
+    rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
     mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
     if (mpi_errno != MPI_SUCCESS) {
@@ -642,8 +642,8 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 
     rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
-    rreq->dev.segment_first = 0;
-    rreq->dev.segment_size = rreq->dev.recv_data_sz;
+    rreq->dev.msg_offset = 0;
+    rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
     MPI_Aint actual_iov_bytes;
     MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
@@ -754,8 +754,8 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 
         rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
-        rreq->dev.segment_first = 0;
-        rreq->dev.segment_size = rreq->dev.recv_data_sz;
+        rreq->dev.msg_offset = 0;
+        rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
         MPI_Aint actual_iov_bytes;
         MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
@@ -828,8 +828,8 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
         (rreq->dev.pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_resp_pkt->pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
-    sreq->dev.segment_first = 0;
-    sreq->dev.segment_size = new_dtp->size * sreq->dev.user_count;
+    sreq->dev.msg_offset = 0;
+    sreq->dev.msgsize = new_dtp->size * sreq->dev.user_count;
 
     /* Because this is in a packet handler, it is already within a critical section */
     /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
@@ -1114,8 +1114,8 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
         sreq->dev.user_buf = get_pkt->addr;
         sreq->dev.user_count = get_pkt->count;
         sreq->dev.datatype = get_pkt->datatype;
-        sreq->dev.segment_first = 0;
-        sreq->dev.segment_size = get_pkt->count * type_size;
+        sreq->dev.msg_offset = 0;
+        sreq->dev.msgsize = get_pkt->count * type_size;
 
         mpi_errno = target_lock_entry->vc->sendNoncontig_fn(target_lock_entry->vc, sreq,
                                                             iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN,
