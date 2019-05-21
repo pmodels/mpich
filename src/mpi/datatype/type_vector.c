@@ -78,7 +78,7 @@ int MPIR_Type_vector(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
+    new_dtp->typerep = NULL;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 

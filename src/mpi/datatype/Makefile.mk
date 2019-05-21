@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/src/mpi/datatype/dataloop/Makefile.mk
+include $(top_srcdir)/src/mpi/datatype/typerep/Makefile.mk
 
 # for datatype.h, which is included by some other dirs
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/datatype
@@ -67,6 +67,4 @@ mpi_core_sources +=                              \
     src/mpi/datatype/ext32_datatype.c            \
     src/mpi/datatype/type_blockindexed.c         \
     src/mpi/datatype/type_create_pairtype.c      \
-    src/mpi/datatype/type_debug.c                \
-    src/mpi/datatype/type_flatten.c              \
-    src/mpi/datatype/type_iov.c
+    src/mpi/datatype/type_debug.c

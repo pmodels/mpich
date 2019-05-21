@@ -356,8 +356,8 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Contents:");
     contents_printf(type, 0, array_ct);
 
-    MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Dataloop:");
-    MPIR_Dataloop_printf(type, 0, 1);
+    MPL_DBG_OUT(MPIR_DBG_DATATYPE, "# Typerep:");
+    MPIR_Typerep_debug(type);
 }
 
 static char *depth_spacing(int depth)

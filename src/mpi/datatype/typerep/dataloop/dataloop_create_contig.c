@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 /*@
    Dataloop_contiguous - create the dataloop representation for a
@@ -17,20 +17,20 @@
 .  MPI_Datatype oldtype
 
    Output Parameters:
-+  MPIR_Dataloop **dlp_p,
++  MPII_Dataloop **dlp_p,
 -  int *dldepth_p,
 
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p)
+int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     MPI_Aint count;
     int is_builtin, apply_contig_coalescing = 0;
     MPI_Aint new_loop_sz;
 
-    MPIR_Dataloop *new_dlp;
+    MPII_Dataloop *new_dlp;
 
     count = icount;
 
@@ -38,7 +38,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPIR_
 
     if (!is_builtin) {
         MPI_Aint old_size = 0, old_extent = 0;
-        MPIR_Dataloop *old_loop_ptr;
+        MPII_Dataloop *old_loop_ptr;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
         MPIR_Datatype_get_size_macro(oldtype, old_size);
@@ -72,13 +72,13 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPIR_
         new_dlp->loop_params.c_t.count = count;
     } else {
         /* user-defined base type (oldtype) */
-        MPIR_Dataloop *old_loop_ptr;
+        MPII_Dataloop *old_loop_ptr;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
 
         if (apply_contig_coalescing) {
             /* make a copy of the old loop and multiply the count */
-            MPIR_Dataloop_dup(old_loop_ptr, &new_dlp);
+            MPIR_Dataloop_dup(old_loop_ptr, (void **) &new_dlp);
             /* --BEGIN ERROR HANDLING-- */
             if (!new_dlp)
                 return -1;

@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
                                                     MPL_IOV * out_vector,
                                                     MPIDI_OFI_segment_side_t side)
 {
-    MPL_IOV dloop;
+    MPL_IOV typerep_vec;
     MPI_Aint last;
     size_t *cursor;
     int num_contig = 1;
@@ -160,18 +160,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
          * using last byte of datatype.  If pack is complete,
          * num_contig returns as 0. */
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(buf, count, type, *cursor, &dloop, 1, last - *cursor,
-                         &num_contig, &actual_iov_bytes);
+        MPIR_Typerep_to_iov(buf, count, type, *cursor, &typerep_vec, 1, last - *cursor,
+                            &num_contig, &actual_iov_bytes);
         MPIR_Assert(num_contig <= 1);
         last = *cursor + actual_iov_bytes;
     } else {
-        dloop.iov_base = NULL;
-        dloop.iov_len = 0;
+        typerep_vec.iov_base = NULL;
+        typerep_vec.iov_len = 0;
         num_contig = 0;
     }
 
     *cursor = last;
-    *out_vector = dloop;
+    *out_vector = typerep_vec;
     return num_contig == 0 ? 1 : 0;
 }
 

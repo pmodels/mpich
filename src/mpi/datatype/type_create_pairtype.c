@@ -74,7 +74,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
+    new_dtp->typerep = NULL;
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -157,15 +157,15 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->is_contig = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
     new_dtp->max_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
 
-    /* fill in dataloops -- only case where we precreate dataloops
+    /* fill in typereps -- only case where we precreate typereps
      *
      * this is necessary because these types aren't committed by the
-     * user, which is the other place where we create dataloops. so
+     * user, which is the other place where we create typereps. so
      * if the user uses one of these w/out building some more complex
-     * type and then committing it, then the dataloop will be missing.
+     * type and then committing it, then the typerep will be missing.
      */
 
-    MPIR_Dataloop_create(type, &(new_dtp->dataloop));
+    MPIR_Typerep_create(type, &(new_dtp->typerep));
 
     int err = MPID_Type_commit_hook(new_dtp);
 

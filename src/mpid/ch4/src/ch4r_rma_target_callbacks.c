@@ -1297,7 +1297,7 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
         *p_data_sz = data_sz;
         *data = (char *) MPIDIG_REQUEST(areq, req->areq.result_addr) + dt_true_lb;
     } else {
-        MPIR_Type_to_iov_len(MPIDIG_REQUEST(areq, req->areq.result_addr),
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(areq, req->areq.result_addr),
                              MPIDIG_REQUEST(areq, req->areq.result_count),
                              MPIDIG_REQUEST(areq, req->areq.result_datatype), 0, data_sz, &num_iov);
         n_iov = (int) num_iov;
@@ -1308,11 +1308,11 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
 
         int actual_iov_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(MPIDIG_REQUEST(areq, req->areq.result_addr),
-                         MPIDIG_REQUEST(areq, req->areq.result_count),
-                         MPIDIG_REQUEST(areq, req->areq.result_datatype),
-                         0, MPIDIG_REQUEST(areq, req->iov), n_iov, data_sz,
-                         &actual_iov_len, &actual_iov_bytes);
+        MPIR_Typerep_to_iov(MPIDIG_REQUEST(areq, req->areq.result_addr),
+                            MPIDIG_REQUEST(areq, req->areq.result_count),
+                            MPIDIG_REQUEST(areq, req->areq.result_datatype),
+                            0, MPIDIG_REQUEST(areq, req->iov), n_iov, data_sz,
+                            &actual_iov_len, &actual_iov_bytes);
         n_iov = actual_iov_len;
 
         MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
@@ -1486,7 +1486,7 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
         *p_data_sz = data_sz;
         *data = (char *) (offset + base + dt_true_lb);
     } else {
-        MPIR_Type_to_iov_len((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
+        MPIR_Typerep_iov_len((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
                              0, data_sz, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
@@ -1496,9 +1496,9 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 
         int actual_iov_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
-                         0, MPIDIG_REQUEST(rreq, req->iov), n_iov, data_sz,
-                         &actual_iov_len, &actual_iov_bytes);
+        MPIR_Typerep_to_iov((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
+                            0, MPIDIG_REQUEST(rreq, req->iov), n_iov, data_sz,
+                            &actual_iov_len, &actual_iov_bytes);
         n_iov = actual_iov_len;
 
         MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
@@ -2175,7 +2175,7 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
         *p_data_sz = data_sz;
         *data = (char *) (MPIDIG_REQUEST(get_req, req->greq.addr) + dt_true_lb);
     } else {
-        MPIR_Type_to_iov_len((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
+        MPIR_Typerep_iov_len((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
                              MPIDIG_REQUEST(get_req, req->greq.count),
                              MPIDIG_REQUEST(get_req, req->greq.datatype), 0, data_sz, &num_iov);
         n_iov = (int) num_iov;
@@ -2186,11 +2186,11 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
 
         int actual_iov_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
-                         MPIDIG_REQUEST(get_req, req->greq.count),
-                         MPIDIG_REQUEST(get_req, req->greq.datatype),
-                         0, MPIDIG_REQUEST(get_req, req->iov), n_iov, data_sz,
-                         &actual_iov_len, &actual_iov_bytes);
+        MPIR_Typerep_to_iov((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
+                            MPIDIG_REQUEST(get_req, req->greq.count),
+                            MPIDIG_REQUEST(get_req, req->greq.datatype),
+                            0, MPIDIG_REQUEST(get_req, req->iov), n_iov, data_sz,
+                            &actual_iov_len, &actual_iov_bytes);
         n_iov = actual_iov_len;
 
         MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);

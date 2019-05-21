@@ -885,7 +885,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     }
     else {
         /* derived datatype */
-        MPL_IOV *dloop_vec;
+        MPL_IOV *typerep_vec;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -897,10 +897,10 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        dloop_vec = (MPL_IOV *)
+        typerep_vec = (MPL_IOV *)
             MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_DATATYPE);
         /* --BEGIN ERROR HANDLING-- */
-        if (!dloop_vec) {
+        if (!typerep_vec) {
             mpi_errno =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
@@ -911,7 +911,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
         int max_iov_len = vec_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(NULL, target_count, target_dtp, stream_offset, dloop_vec, max_iov_len,
+        MPIR_Typerep_to_iov(NULL, target_count, target_dtp, stream_offset, typerep_vec, max_iov_len,
                          source_count * source_dtp_size, &vec_len, &actual_iov_bytes);
 
         type = dtp->basic_type;
@@ -929,14 +929,14 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             src_type_stride = type_extent;
 
         i = 0;
-        curr_loc = dloop_vec[0].MPL_IOV_BUF;
-        curr_len = dloop_vec[0].MPL_IOV_LEN;
+        curr_loc = typerep_vec[0].MPL_IOV_BUF;
+        curr_len = typerep_vec[0].MPL_IOV_LEN;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += dloop_vec[i].MPL_IOV_LEN;
+                curr_len += typerep_vec[i].MPL_IOV_LEN;
                 continue;
             }
 
@@ -948,8 +948,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = dloop_vec[i].MPL_IOV_BUF;
-                    curr_len = dloop_vec[i].MPL_IOV_LEN;
+                    curr_loc = typerep_vec[i].MPL_IOV_BUF;
+                    curr_len = typerep_vec[i].MPL_IOV_LEN;
                 }
             }
             else {
@@ -960,7 +960,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             accumulated_count += count;
         }
 
-        MPL_free(dloop_vec);
+        MPL_free(typerep_vec);
     }
 
   fn_exit:

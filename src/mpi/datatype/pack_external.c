@@ -62,9 +62,7 @@ int MPI_Pack_external(const char datarep[],
                       MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint first, last;
 
-    MPIR_Segment *segp;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -105,31 +103,13 @@ int MPI_Pack_external(const char datarep[],
         goto fn_exit;
     }
 
-    segp = MPIR_Segment_alloc(inbuf, incount, datatype);
-    /* --BEGIN ERROR HANDLING-- */
-    if (segp == NULL) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE,
-                                         __func__,
-                                         __LINE__,
-                                         MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment");
+    MPI_Aint actual_pack_bytes;
+    mpi_errno =
+        MPIR_Typerep_pack_external(inbuf, incount, datatype, (void *) ((char *) outbuf + *position),
+                                   &actual_pack_bytes);
+    if (mpi_errno)
         goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
-
-    /* NOTE: the use of buffer values and positions in MPI_Pack_external and
-     * in MPIR_Segment_pack_external are quite different.  See code or docs
-     * or something.
-     */
-    first = 0;
-    last = MPIR_SEGMENT_IGNORE_LAST;
-
-    MPIR_Segment_pack_external32(segp, first, &last, (void *) ((char *) outbuf + *position));
-
-    *position += last;
-
-    MPIR_Segment_free(segp);
-
+    *position += actual_pack_bytes;
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -511,7 +511,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
             
             /* copy data */
             MPI_Aint actual_pack_bytes;
-            MPIR_Pack_impl(buf, count, datatype, *msg_offset,
+            MPIR_Typerep_pack(buf, count, datatype, *msg_offset,
                            (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t),
                            msgsize - *msg_offset, &actual_pack_bytes);
             MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
@@ -567,7 +567,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Pack_impl(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload + buf_offset,
+    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload + buf_offset,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = buf_offset + actual_pack_bytes;
     *msg_offset += actual_pack_bytes;
@@ -653,7 +653,7 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Pack_impl(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload,
+    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = actual_pack_bytes;
     *msg_offset += actual_pack_bytes;

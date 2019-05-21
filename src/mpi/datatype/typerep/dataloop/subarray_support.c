@@ -8,7 +8,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 int MPII_Dataloop_convert_subarray(int ndims,
                                    int *array_of_sizes,

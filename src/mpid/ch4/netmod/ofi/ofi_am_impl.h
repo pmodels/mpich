@@ -446,7 +446,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     if (!dt_contig) {
         send_buf = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
 
-        mpi_errno = MPIR_Pack_impl(buf, count, datatype, 0, send_buf, data_sz, &last);
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

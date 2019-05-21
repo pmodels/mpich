@@ -118,8 +118,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
         MPI_Aint actual_pack_bytes;
         mpi_errno =
-            MPIR_Pack_impl(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                           data_sz, &actual_pack_bytes);
+            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
+                              data_sz, &actual_pack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
@@ -201,8 +201,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     } else {
         MPI_Aint actual_pack_bytes;
         mpi_errno =
-            MPIR_Pack_impl(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
-                           data_sz, &actual_pack_bytes);
+            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
+                              data_sz, &actual_pack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
@@ -278,8 +278,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     } else {
         MPI_Aint actual_pack_bytes;
         mpi_errno =
-            MPIR_Pack_impl(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                           data_sz, &actual_pack_bytes);
+            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
+                              data_sz, &actual_pack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);

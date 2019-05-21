@@ -6,7 +6,7 @@
 #ifndef TYPESIZE_SUPPORT_H_INCLUDED
 #define TYPESIZE_SUPPORT_H_INCLUDED
 
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 #define MPII_Dataloop_type_footprint MPIDU_Type_footprint
 

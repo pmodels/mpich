@@ -324,7 +324,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     }
     else {
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
+        MPIR_Typerep_pack(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                        stream_offset, resp_req->dev.user_buf, stream_data_len, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == stream_data_len);
     }
@@ -453,7 +453,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     }
     else {
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, resp_req->dev.user_buf,
+        MPIR_Typerep_pack(rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, resp_req->dev.user_buf,
                        type_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size);
     }
@@ -538,7 +538,7 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
     }
     /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    MPIR_Type_unflatten(new_dtp, rreq->dev.flattened_type);
+    MPIR_Typerep_unflatten(new_dtp, rreq->dev.flattened_type);
 
     /* update request to get the data */
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_PUT_RECV);
@@ -595,7 +595,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
         }
         /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
         MPIR_Object_set_ref(new_dtp, 1);
-        MPIR_Type_unflatten(new_dtp, rreq->dev.flattened_type);
+        MPIR_Typerep_unflatten(new_dtp, rreq->dev.flattened_type);
 
         /* update new request to get the data */
         MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
@@ -646,7 +646,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
     MPI_Aint actual_iov_bytes;
-    MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
+    MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                      0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
                      &rreq->dev.iov_count, &actual_iov_bytes);
     rreq->dev.iov_offset = 0;
@@ -698,7 +698,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         }
         /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
         MPIR_Object_set_ref(new_dtp, 1);
-        MPIR_Type_unflatten(new_dtp, rreq->dev.flattened_type);
+        MPIR_Typerep_unflatten(new_dtp, rreq->dev.flattened_type);
 
         /* update new request to get the data */
         MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
@@ -758,7 +758,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
+        MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                          0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
                          &rreq->dev.iov_count, &actual_iov_bytes);
         rreq->dev.iov_offset = 0;
@@ -800,7 +800,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     }
     /* Note: handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    MPIR_Type_unflatten(new_dtp, rreq->dev.flattened_type);
+    MPIR_Typerep_unflatten(new_dtp, rreq->dev.flattened_type);
 
     /* create request for sending data */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
@@ -1326,7 +1326,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     }
     else {
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
+        MPIR_Typerep_pack(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
                        0, sreq->dev.user_buf, type_size * recv_count, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size * recv_count);
     }
@@ -1466,7 +1466,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
     }
     else {
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(fop_pkt->addr, 1, fop_pkt->datatype, 0, resp_req->dev.user_buf,
+        MPIR_Typerep_pack(fop_pkt->addr, 1, fop_pkt->datatype, 0, resp_req->dev.user_buf,
                        type_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size);
     }
