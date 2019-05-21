@@ -1627,8 +1627,6 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         else {
             *buflen = 0;
 
-            req->dev.segment_ptr = MPIR_Segment_alloc(req->dev.user_buf, req->dev.user_count,
-                                                      req->dev.datatype);
             req->dev.segment_first = contig_stream_offset;
             req->dev.segment_size = contig_stream_offset + req->dev.recv_data_sz;
 

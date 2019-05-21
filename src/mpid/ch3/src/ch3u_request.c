@@ -31,7 +31,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_INIT);
     
     req->dev.datatype_ptr	   = NULL;
-    req->dev.segment_ptr	   = NULL;
+    req->dev.segment_first         = 0;
     /* Masks and pkt_flags for channel device state in an MPIR_Request */
     req->dev.state		   = 0;
     req->dev.cancel_pending	   = FALSE;
@@ -87,11 +87,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
-
-    sreq->dev.segment_ptr = MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count,
-                                               sreq->dev.datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPIR_Segment_alloc");
 
     last = sreq->dev.segment_size;
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
@@ -185,9 +180,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	}
     }
 
-    MPIR_Segment_free(sreq->dev.segment_ptr);
-    sreq->dev.segment_ptr = NULL;
-    
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
     return mpi_errno;
@@ -334,27 +326,6 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    /* Too little data would have been received using an IOV.  
 	       We will start receiving data into a SRBuf and unpacking it
 	       later. */
-        intptr_t segment_first, segment_size;
-
-        /* Segment has been changed when trying iov. Thus we need to
-         * reset segment to restart with SRBuf. */
-        segment_first = rreq->dev.segment_first;
-        segment_size = rreq->dev.segment_size;
-        MPIR_Segment_free(rreq->dev.segment_ptr);
-
-        rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count,
-                                                   rreq->dev.datatype);
-        if (rreq->dev.segment_ptr == NULL) {
-            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"MPIR_Segment_alloc failure");
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                       __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-            rreq->status.MPI_ERROR = mpi_errno;
-            goto fn_exit;
-        }
-
-        rreq->dev.segment_first = segment_first;
-        rreq->dev.segment_size  = segment_size;
-
 	    MPIR_Assert(MPIDI_Request_get_srbuf_flag(rreq) == FALSE);
 	    
 	    MPIDI_CH3U_SRBuf_alloc(rreq, 
@@ -629,10 +600,6 @@ void MPID_Request_destroy_hook(MPIR_Request *req)
 {
     if (req->dev.datatype_ptr != NULL) {
         MPIR_Datatype_ptr_release(req->dev.datatype_ptr);
-    }
-
-    if (req->dev.segment_ptr != NULL) {
-        MPIR_Segment_free(req->dev.segment_ptr);
     }
 
     if (MPIDI_Request_get_srbuf_flag(req)) {

@@ -395,10 +395,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 		intptr_t recv_data_sz;
 		/* user buffer is not contiguous.  Unpack it, handling
 		   various errors and exceptional cases */
-		rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
-				  rreq->dev.datatype);
-                MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
 		recv_data_sz = rreq->dev.recv_data_sz;
 
 		MPI_Aint actual_unpack_bytes;
