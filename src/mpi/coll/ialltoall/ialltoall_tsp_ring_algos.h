@@ -58,9 +58,9 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     int rank = MPIR_Comm_rank(comm);
     int is_inplace = (sendbuf == MPI_IN_PLACE);
 
-    size_t recvtype_lb, recvtype_extent;
-    size_t sendtype_lb, sendtype_extent;
-    size_t sendtype_true_extent, recvtype_true_extent;
+    MPI_Aint recvtype_lb, recvtype_extent;
+    MPI_Aint sendtype_lb, sendtype_extent;
+    MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
