@@ -74,12 +74,10 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     size_t nbytes;
-    MPI_Aint last;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
-    MPIR_Segment *segment_ptr;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIR_Request *anysource_partner = NULL;
@@ -202,16 +200,15 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer),
-                                         MPIDIG_REQUEST(match_req, count),
-                                         MPIDIG_REQUEST(match_req, datatype));
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Unpack_impl(MPIDIG_REQUEST(rreq, buffer), nbytes,
+                                     MPIDIG_REQUEST(match_req, buffer),
+                                     MPIDIG_REQUEST(match_req, count),
+                                     MPIDIG_REQUEST(match_req, datatype), 0, &actual_unpack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-        last = nbytes;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
-        MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) nbytes) {
+        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
