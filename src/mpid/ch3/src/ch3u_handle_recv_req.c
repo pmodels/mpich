@@ -323,20 +323,10 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
                               stream_offset), stream_data_len);
     }
     else {
-        MPIR_Segment *seg;
-        MPI_Aint first = stream_offset;
-        MPI_Aint last = first + stream_data_len;
-
-        seg = MPIR_Segment_alloc(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype);
-        if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            }
-        }
-        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Segment");
-        MPIR_Segment_pack(seg, first, &last, resp_req->dev.user_buf);
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
+                       stream_offset, resp_req->dev.user_buf, stream_data_len, &actual_pack_bytes);
+        MPIR_Assert(actual_pack_bytes == stream_data_len);
     }
 
     /* accumulate data from tmp_buf into user_buf */
@@ -462,19 +452,10 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
         MPIR_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, type_size);
     }
     else {
-        MPIR_Segment *seg;
-        MPI_Aint last = type_size;
-
-        seg = MPIR_Segment_alloc(rreq->dev.real_user_buf, 1, rreq->dev.datatype);
-        if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            }
-        }
-        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Segment");
-        MPIR_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, resp_req->dev.user_buf,
+                       type_size, &actual_pack_bytes);
+        MPIR_Assert(actual_pack_bytes == type_size);
     }
 
     /* Perform accumulate computation */
@@ -1359,20 +1340,10 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, recv_count * type_size);
     }
     else {
-        MPIR_Segment *seg;
-        MPI_Aint first = 0;
-        MPI_Aint last = first + type_size * recv_count;
-
-        seg = MPIR_Segment_alloc(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype);
-        if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            }
-        }
-        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Segment");
-        MPIR_Segment_pack(seg, first, &last, sreq->dev.user_buf);
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
+                       0, sreq->dev.user_buf, type_size * recv_count, &actual_pack_bytes);
+        MPIR_Assert(actual_pack_bytes == type_size * recv_count);
     }
 
     /* Perform ACCUMULATE OP */
@@ -1509,19 +1480,10 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Memcpy(resp_req->dev.user_buf, fop_pkt->addr, type_size);
     }
     else {
-        MPIR_Segment *seg;
-        MPI_Aint last = type_size;
-
-        seg = MPIR_Segment_alloc(fop_pkt->addr, 1, fop_pkt->datatype);
-        if (seg == NULL) {
-            if (win_ptr->shm_allocated == TRUE) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            }
-        }
-        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Segment");
-        MPIR_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(fop_pkt->addr, 1, fop_pkt->datatype, 0, resp_req->dev.user_buf,
+                       type_size, &actual_pack_bytes);
+        MPIR_Assert(actual_pack_bytes == type_size);
     }
 
     /* Apply the op */
