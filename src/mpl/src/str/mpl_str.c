@@ -407,14 +407,13 @@ void MPL_create_pathname(char *dest_filename, const char *dirname,
                          const char *prefix, const int is_dir)
 {
     /* Generate a random number which doesn't interfere with user application */
-    const unsigned int random = xorshift_rand();
+    const unsigned int rdm = xorshift_rand();
     const unsigned int pid = (unsigned int) getpid();
 
     if (dirname) {
         MPL_snprintf(dest_filename, PATH_MAX, "%s/%s.%u.%u%c", dirname, prefix,
-                     random, pid, is_dir ? '/' : '\0');
+                     rdm, pid, is_dir ? '/' : '\0');
     } else {
-        MPL_snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix,
-                     random, pid, is_dir ? '/' : '\0');
+        MPL_snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix, rdm, pid, is_dir ? '/' : '\0');
     }
 }
