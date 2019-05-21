@@ -415,23 +415,29 @@ typedef struct MPIDI_OFI_seg_state {
                                  * This value remains constant once seg_state is initialized. */
     MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
 
-    MPIR_Segment *origin_seg;   /* Segment structure */
     size_t origin_cursor;       /* First byte to pack */
     size_t origin_end;          /* Last byte to pack */
+    const void *origin_buf;
+    size_t origin_count;
+    MPI_Datatype origin_type;
     MPI_Aint origin_iov_len;    /* Length of data actually packed */
     MPL_IOV origin_iov;         /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
-    MPIR_Segment *target_seg;
     size_t target_cursor;
     size_t target_end;
+    MPI_Aint target_buf;
+    size_t target_count;
+    MPI_Datatype target_type;
     MPI_Aint target_iov_len;
     MPL_IOV target_iov;
     uintptr_t target_addr;
 
-    MPIR_Segment *result_seg;
     size_t result_cursor;
     size_t result_end;
+    const void *result_buf;
+    size_t result_count;
+    MPI_Datatype result_type;
     MPI_Aint result_iov_len;
     MPL_IOV result_iov;
     uintptr_t result_addr;
