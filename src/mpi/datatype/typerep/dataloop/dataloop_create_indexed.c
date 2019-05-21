@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 #include <stdlib.h>
 
@@ -26,7 +26,7 @@ static void indexed_array_copy(MPI_Aint count,
 .  void *displacement_array (either ints or MPI_Aints)
 .  int dispinbytes
 .  MPI_Datatype oldtype
-.  MPIR_Dataloop **dlp_p
+.  MPII_Dataloop **dlp_p
 
 .N Errors
 .N Returns 0 on success, -1 on error.
@@ -35,7 +35,7 @@ static void indexed_array_copy(MPI_Aint count,
 int MPII_Dataloop_create_indexed(MPI_Aint icount,
                                  const MPI_Aint * blocklength_array,
                                  const void *displacement_array,
-                                 int dispinbytes, MPI_Datatype oldtype, MPIR_Dataloop ** dlp_p)
+                                 int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     int err, is_builtin;
     MPI_Aint i;
@@ -44,7 +44,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
 
     MPI_Aint old_type_count = 0, contig_count, count;
     MPI_Aint old_extent;
-    struct MPIR_Dataloop *new_dlp;
+    MPII_Dataloop *new_dlp;
 
     count = (MPI_Aint) icount;  /* avoid subsequent casting */
 
@@ -162,7 +162,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
         new_dlp->el_extent = old_extent;
         new_dlp->el_type = oldtype;
     } else {
-        MPIR_Dataloop *old_loop_ptr = NULL;
+        MPII_Dataloop *old_loop_ptr = NULL;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
 

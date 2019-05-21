@@ -25,67 +25,6 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Pack
 #define MPI_Pack PMPI_Pack
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Pack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
-                   MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                   MPI_Aint * actual_pack_bytes)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Segment *segp;
-    int contig;
-    MPI_Aint dt_true_lb;
-    MPI_Aint data_sz;
-    MPI_Aint last;
-
-    if (incount == 0) {
-        *actual_pack_bytes = 0;
-        goto fn_exit;
-    }
-
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-        contig = TRUE;
-        dt_true_lb = 0;
-        data_sz = incount * MPIR_Datatype_get_basic_size(datatype);
-    } else {
-        MPIR_Datatype *dt_ptr;
-        MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        MPIR_Datatype_is_contig(datatype, &contig);
-        dt_true_lb = dt_ptr->true_lb;
-        data_sz = incount * dt_ptr->size;
-    }
-
-    /* make sure we don't pack more than the max bytes */
-    /* FIXME: we need to make sure to pack each basic datatype
-     * atomically, even if the max_pack_bytes allows us to split it */
-    if (data_sz > max_pack_bytes)
-        data_sz = max_pack_bytes;
-
-    /* Handle contig case quickly */
-    if (contig) {
-        MPIR_Memcpy(outbuf, (char *) inbuf + dt_true_lb + inoffset, data_sz);
-        *actual_pack_bytes = data_sz;
-    } else {
-        segp = MPIR_Segment_alloc(inbuf, incount, datatype);
-        MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Segment");
-
-        last = inoffset + max_pack_bytes;
-        MPIR_Segment_pack(segp, inoffset, &last, outbuf);
-        MPIR_Segment_free(segp);
-
-        *actual_pack_bytes = last - inoffset;
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@
@@ -218,7 +157,7 @@ int MPI_Pack(const void *inbuf,
 
     MPI_Aint actual_pack_bytes;
     void *buf = (void *) ((char *) outbuf + position_x);
-    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
+    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
     if (mpi_errno)
         goto fn_fail;
     position_x += actual_pack_bytes;

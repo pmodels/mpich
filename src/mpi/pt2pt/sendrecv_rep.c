@@ -147,7 +147,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                                        "temporary send buffer", MPL_MEM_BUFFER);
 
             mpi_errno =
-                MPIR_Pack_impl(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
+                MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
         }

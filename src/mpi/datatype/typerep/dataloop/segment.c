@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -361,7 +361,7 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                 {
                     MPI_Aint blocksize;
                     MPI_Aint num_blocks;
-                    MPIR_Dataloop *dloop;
+                    MPII_Dataloop *dloop;
 
                     for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
                         blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
@@ -832,7 +832,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
             /* reload the next stackelm if necessary */
             next_elmp = &(segp->stackelm[cur_sp + 1]);
             if (cur_elmp->may_require_reloading) {
-                MPIR_Dataloop *load_dlp = NULL;
+                MPII_Dataloop *load_dlp = NULL;
                 switch (cur_elmp->loop_p->kind & MPII_DATALOOP_KIND_MASK) {
                     case MPII_DATALOOP_KIND_CONTIG:
                     case MPII_DATALOOP_KIND_VECTOR:
@@ -971,7 +971,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
  */
 MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
 {
-    struct MPIR_Dataloop *dlp = elmp->loop_p;
+    MPII_Dataloop *dlp = elmp->loop_p;
 
     switch (dlp->kind & MPII_DATALOOP_KIND_MASK) {
         case MPII_DATALOOP_KIND_CONTIG:
@@ -1014,7 +1014,7 @@ MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
  */
 MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
 {
-    struct MPIR_Dataloop *dlp = elmp->loop_p;
+    MPII_Dataloop *dlp = elmp->loop_p;
 
     switch (dlp->kind & MPII_DATALOOP_KIND_MASK) {
         case MPII_DATALOOP_KIND_VECTOR:
@@ -1044,7 +1044,7 @@ MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
  * the rest are filled in at processing time.
  */
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
-                                 struct MPIR_Dataloop *dlp, int branch_flag)
+                                 MPII_Dataloop *dlp, int branch_flag)
 {
     elmp->loop_p = dlp;
 

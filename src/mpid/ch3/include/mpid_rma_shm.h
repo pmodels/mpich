@@ -365,7 +365,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(origin_addr, origin_count, origin_datatype,
+        MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype,
                        stream_offset, packed_buf, stream_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == stream_size);
 
@@ -490,7 +490,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(origin_addr, origin_count, origin_datatype,
+        MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype,
                        stream_offset, packed_buf, stream_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == stream_size);
 

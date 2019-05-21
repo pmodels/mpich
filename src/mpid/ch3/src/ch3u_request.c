@@ -98,7 +98,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 
     int max_iov_len = *iov_n;
     MPI_Aint actual_iov_bytes;
-    MPIR_Type_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+    MPIR_Typerep_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
                      sreq->dev.msg_offset, iov, max_iov_len,
                      sreq->dev.msgsize - sreq->dev.msg_offset, iov_n, &actual_iov_bytes);
     last = sreq->dev.msg_offset + actual_iov_bytes;
@@ -159,7 +159,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
         else
             max_pack_bytes = sreq->dev.msgsize - sreq->dev.msg_offset;
 
-        MPIR_Pack_impl(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+        MPIR_Typerep_pack(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
                        sreq->dev.msg_offset, (char*) sreq->dev.tmpbuf + iov_data_copied,
                        max_pack_bytes, &actual_pack_bytes);
         last = sreq->dev.msg_offset + actual_pack_bytes;
@@ -270,7 +270,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	MPIR_Assert(last > 0);
 
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
+        MPIR_Typerep_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                          rreq->dev.msg_offset, &rreq->dev.iov[0], MPL_IOV_LIMIT,
                          rreq->dev.msgsize - rreq->dev.msg_offset,
                          &rreq->dev.iov_count, &actual_iov_bytes);
@@ -422,7 +422,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
     }
 
     MPI_Aint actual_unpack_bytes;
-    MPIR_Unpack_impl(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.msg_offset,
+    MPIR_Typerep_unpack(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.msg_offset,
                      rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                      rreq->dev.msg_offset, &actual_unpack_bytes);
     last = rreq->dev.msg_offset + actual_unpack_bytes;
@@ -534,7 +534,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	else
 	{
 	    MPI_Aint actual_unpack_bytes;
-	    MPIR_Unpack_impl(rreq->dev.tmpbuf, unpack_sz,
+	    MPIR_Typerep_unpack(rreq->dev.tmpbuf, unpack_sz,
 			     rreq->dev.user_buf, rreq->dev.user_count,
 			     rreq->dev.datatype, 0, &actual_unpack_bytes);
 

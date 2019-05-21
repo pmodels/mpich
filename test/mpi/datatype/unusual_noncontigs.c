@@ -563,7 +563,7 @@ static int pack_and_check_expected(MPI_Datatype type, const char *name,
 }
 
 /* regression for tt#1030, checks for bad offset math in the
- * blockindexed and indexed dataloop flattening code */
+ * blockindexed and indexed typerep flattening code */
 int flatten_test(void)
 {
     int err, errs = 0;

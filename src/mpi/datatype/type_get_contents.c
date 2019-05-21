@@ -7,7 +7,7 @@
 
 #include "mpiimpl.h"
 #include "mpir_datatype.h"
-#include "mpir_dataloop.h"
+#include "mpir_typerep.h"
 #include "datatype.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_get_contents */

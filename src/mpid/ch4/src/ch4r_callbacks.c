@@ -201,10 +201,11 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
         MPI_Aint actual_unpack_bytes;
-        mpi_errno = MPIR_Unpack_impl(MPIDIG_REQUEST(rreq, buffer), nbytes,
-                                     MPIDIG_REQUEST(match_req, buffer),
-                                     MPIDIG_REQUEST(match_req, count),
-                                     MPIDIG_REQUEST(match_req, datatype), 0, &actual_unpack_bytes);
+        mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes,
+                                        MPIDIG_REQUEST(match_req, buffer),
+                                        MPIDIG_REQUEST(match_req, count),
+                                        MPIDIG_REQUEST(match_req, datatype), 0,
+                                        &actual_unpack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -277,7 +278,7 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
             *p_data_sz = data_sz;
         }
 
-        MPIR_Type_to_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                              MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
 
         MPIR_Assert(num_iov > 0);
@@ -287,9 +288,9 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
 
         int actual_iov_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                         MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
-                         (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
+        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
+                            (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
 
         if (actual_iov_bytes != (MPI_Aint) * p_data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;

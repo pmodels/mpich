@@ -175,7 +175,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
 
             MPI_Aint actual_unpack_bytes;
-            MPIR_Unpack_impl(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
+            MPIR_Typerep_unpack(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
                              rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes);
 
             /* --BEGIN ERROR HANDLING-- */

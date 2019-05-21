@@ -8,7 +8,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims,
                            int nprocs, int rank, int darg, int order, MPI_Aint orig_extent,

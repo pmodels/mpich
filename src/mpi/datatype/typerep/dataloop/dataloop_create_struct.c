@@ -6,22 +6,22 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 static int create_struct_memory_error(void);
 static int create_unique_type_struct(MPI_Aint count,
                                      const int *blklens,
                                      const MPI_Aint * disps,
                                      const MPI_Datatype * oldtypes,
-                                     int type_pos, MPIR_Dataloop ** dlp_p);
+                                     int type_pos, MPII_Dataloop ** dlp_p);
 static int create_basic_all_bytes_struct(MPI_Aint count,
                                          const int *blklens,
                                          const MPI_Aint * disps,
-                                         const MPI_Datatype * oldtypes, MPIR_Dataloop ** dlp_p);
+                                         const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
 static int create_flattened_struct(MPI_Aint count,
                                    const int *blklens,
                                    const MPI_Aint * disps,
-                                   const MPI_Datatype * oldtypes, MPIR_Dataloop ** dlp_p);
+                                   const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
 
 /*@
   Dataloop_create_struct - create the dataloop representation for a
@@ -50,7 +50,7 @@ Output Parameters:
 int MPII_Dataloop_create_struct(MPI_Aint count,
                                 const int *blklens,
                                 const MPI_Aint * disps,
-                                const MPI_Datatype * oldtypes, MPIR_Dataloop ** dlp_p)
+                                const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     int err, i, nr_basics = 0, nr_derived = 0, type_pos = 0;
 
@@ -174,7 +174,7 @@ static int create_unique_type_struct(MPI_Aint count,
                                      const int *blklens,
                                      const MPI_Aint * disps,
                                      const MPI_Datatype * oldtypes,
-                                     int type_pos, MPIR_Dataloop ** dlp_p)
+                                     int type_pos, MPII_Dataloop ** dlp_p)
 {
     /* the same type used more than once in the array; type_pos
      * indexes to the first of these.
@@ -223,7 +223,7 @@ static int create_unique_type_struct(MPI_Aint count,
 static int create_basic_all_bytes_struct(MPI_Aint count,
                                          const int *blklens,
                                          const MPI_Aint * disps,
-                                         const MPI_Datatype * oldtypes, MPIR_Dataloop ** dlp_p)
+                                         const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     int i, err, cur_pos = 0;
     MPI_Aint *tmp_blklens;
@@ -269,7 +269,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
 static int create_flattened_struct(MPI_Aint count,
                                    const int *blklens,
                                    const MPI_Aint * disps,
-                                   const MPI_Datatype * oldtypes, MPIR_Dataloop ** dlp_p)
+                                   const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     /* arbitrary types, convert to bytes and use indexed */
     int i, err, nr_blks = 0;

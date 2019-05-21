@@ -70,8 +70,8 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
 
     if (!dt_contig) {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Unpack_impl(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
-                         &actual_unpack_bytes);
+        MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
+                            &actual_unpack_bytes);
         if (actual_unpack_bytes != (MPI_Aint) (nbytes)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,

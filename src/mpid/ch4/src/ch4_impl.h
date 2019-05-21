@@ -930,7 +930,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         (*uop) (source_buf, target_buf, &source_count, &source_dtp);
     } else {
         /* derived datatype */
-        MPL_IOV *dloop_vec;
+        MPL_IOV *typerep_vec;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -943,10 +943,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPIR_Assert(dtp != NULL);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        dloop_vec = (MPL_IOV *)
+        typerep_vec = (MPL_IOV *)
             MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_RMA);
         /* --BEGIN ERROR HANDLING-- */
-        if (!dloop_vec) {
+        if (!typerep_vec) {
             mpi_errno =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
@@ -956,8 +956,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 
         int actual_iov_len;
         MPI_Aint actual_iov_bytes;
-        MPIR_Type_to_iov(NULL, target_count, target_dtp, 0, dloop_vec, vec_len,
-                         source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
+        MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
+                            source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
         vec_len = actual_iov_len;
 
         type = dtp->basic_type;
@@ -975,14 +975,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             src_type_stride = source_dtp_extent;
 
         i = 0;
-        curr_loc = dloop_vec[0].MPL_IOV_BUF;
-        curr_len = dloop_vec[0].MPL_IOV_LEN;
+        curr_loc = typerep_vec[0].MPL_IOV_BUF;
+        curr_len = typerep_vec[0].MPL_IOV_LEN;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += dloop_vec[i].MPL_IOV_LEN;
+                curr_len += typerep_vec[i].MPL_IOV_LEN;
                 continue;
             }
 
@@ -994,8 +994,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = dloop_vec[i].MPL_IOV_BUF;
-                    curr_len = dloop_vec[i].MPL_IOV_LEN;
+                    curr_loc = typerep_vec[i].MPL_IOV_BUF;
+                    curr_len = typerep_vec[i].MPL_IOV_LEN;
                 }
             } else {
                 curr_loc = (void *) ((char *) curr_loc + type_extent * count);
@@ -1005,7 +1005,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             accumulated_count += count;
         }
 
-        MPL_free(dloop_vec);
+        MPL_free(typerep_vec);
     }
 
   fn_exit:

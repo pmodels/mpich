@@ -69,8 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPIR_ERR_CHKANDJUMP(packed_buf == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
 
     MPI_Aint actual_pack_bytes;
-    mpi_errno = MPIR_Pack_impl(origin_addr, origin_count, origin_datatype, 0,
-                               packed_buf, total_len, &actual_pack_bytes);
+    mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0,
+                                  packed_buf, total_len, &actual_pack_bytes);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_Assert(actual_pack_bytes == total_len);

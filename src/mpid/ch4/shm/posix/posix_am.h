@@ -142,9 +142,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
         MPI_Aint actual_pack_bytes;
-        mpi_errno = MPIR_Pack_impl(data, count, datatype, 0,
-                                   MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer),
-                                   data_sz, &actual_pack_bytes);
+        mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0,
+                                      MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer),
+                                      data_sz, &actual_pack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);

@@ -70,9 +70,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     int actual_iov_len;
     MPI_Aint actual_iov_bytes;
-    MPIR_Type_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
-                     MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
-                     &actual_iov_len, &actual_iov_bytes);
+    MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
+                        MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
+                        &actual_iov_len, &actual_iov_bytes);
     num_contig = actual_iov_len;
 
     originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));

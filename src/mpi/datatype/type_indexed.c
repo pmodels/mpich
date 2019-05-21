@@ -91,13 +91,13 @@ int MPIR_Type_indexed(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
+    new_dtp->typerep = NULL;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin) {
         /* builtins are handled differently than user-defined types because
-         * they have no associated dataloop or datatype structure.
+         * they have no associated typerep or datatype structure.
          */
         el_sz = MPIR_Datatype_get_basic_size(oldtype);
         old_sz = el_sz;

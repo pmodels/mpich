@@ -86,8 +86,8 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 
     if (!dt_contig) {
         MPI_Aint actual_unpack_bytes;
-        mpi_errno = MPIR_Unpack_impl(MPIDIG_REQUEST(rreq, buffer), nbytes, buf,
-                                     count, datatype, 0, &actual_unpack_bytes);
+        mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf,
+                                        count, datatype, 0, &actual_unpack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

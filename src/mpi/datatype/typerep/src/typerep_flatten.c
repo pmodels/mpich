@@ -6,7 +6,7 @@
  */
 
 #include <mpiimpl.h>
-#include <mpir_dataloop.h>
+#include <dataloop.h>
 #include <stdlib.h>
 
 struct flatten_hdr {
@@ -19,13 +19,13 @@ struct flatten_hdr {
 };
 
 /*
- * MPIR_Type_flatten_size
+ * MPIR_Typerep_flatten_size
  *
  * Parameters:
  * datatype_ptr        - (IN)  datatype to flatten
  * flattened_type_size - (OUT) buffer size needed for the flattened representation
  */
-int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size)
+int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size)
 {
     int flattened_loop_size;
     int mpi_errno = MPI_SUCCESS;
@@ -38,13 +38,13 @@ int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_siz
 }
 
 /*
- * MPIR_Type_flatten
+ * MPIR_Typerep_flatten
  *
  * Parameters:
  * datatype_ptr   - (IN)  datatype to flatten
  * flattened_type - (OUT) buffer that will contain the flattened representation
  */
-int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
+int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
     void *flattened_dataloop = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
@@ -74,17 +74,16 @@ int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 }
 
 /*
- * MPIR_Type_unflatten
+ * MPIR_Typerep_unflatten
  *
  * Parameters:
  * datatype_ptr   - (OUT) datatype into which the buffer will be unflattened
  * flattened_type - (IN)  buffer that contains the flattened representation
  */
-int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
+int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
-    void *flattened_dataloop =
-        (MPIR_Dataloop *) ((char *) flattened_type + sizeof(struct flatten_hdr));
+    void *flattened_dataloop = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
     int mpi_errno = MPI_SUCCESS;
 
     datatype_ptr->is_committed = 1;

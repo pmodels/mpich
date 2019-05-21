@@ -68,14 +68,14 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
                     ((char *) sendbuf + sendtype_true_lb), copy_sz);
     } else if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Unpack_impl((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount, recvtype,
-                         0, &actual_unpack_bytes);
+        MPIR_Typerep_unpack((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount,
+                            recvtype, 0, &actual_unpack_bytes);
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else if (recvtype_iscontig) {
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
-                       copy_sz, &actual_pack_bytes);
+        MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
+                          copy_sz, &actual_pack_bytes);
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else {
@@ -97,15 +97,15 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
             }
 
             MPI_Aint actual_pack_bytes;
-            MPIR_Pack_impl(sendbuf, sendcount, sendtype, sfirst, buf,
-                           max_pack_bytes, &actual_pack_bytes);
+            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, sfirst, buf,
+                              max_pack_bytes, &actual_pack_bytes);
             MPIR_Assert(actual_pack_bytes > 0);
 
             sfirst += actual_pack_bytes;
 
             MPI_Aint actual_unpack_bytes;
-            MPIR_Unpack_impl(buf, actual_pack_bytes, recvbuf, recvcount, recvtype,
-                             rfirst, &actual_unpack_bytes);
+            MPIR_Typerep_unpack(buf, actual_pack_bytes, recvbuf, recvcount, recvtype,
+                                rfirst, &actual_unpack_bytes);
             MPIR_Assert(actual_unpack_bytes > 0);
 
             rfirst += actual_unpack_bytes;

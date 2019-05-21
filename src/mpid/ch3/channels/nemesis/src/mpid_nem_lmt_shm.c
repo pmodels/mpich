@@ -463,7 +463,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         max_pack_bytes = (data_sz - first <= copy_limit) ? data_sz - first : copy_limit;
 
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(req->dev.user_buf, req->dev.user_count, req->dev.datatype, first,
+        MPIR_Typerep_pack(req->dev.user_buf, req->dev.user_count, req->dev.datatype, first,
                        (void *)copy_buf->buf[buf_num], max_pack_bytes, &actual_pack_bytes);
 
         OPA_write_barrier();
@@ -554,7 +554,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         last = expected_last = (data_sz - first <= surfeit + len) ? data_sz : first + surfeit + len;
 
         MPI_Aint actual_unpack_bytes;
-        MPIR_Unpack_impl(src_buf, last - first,
+        MPIR_Typerep_unpack(src_buf, last - first,
                          req->dev.user_buf, req->dev.user_count, req->dev.datatype,
                          first, &actual_unpack_bytes);
         last = first + actual_unpack_bytes;

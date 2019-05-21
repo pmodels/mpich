@@ -125,9 +125,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     int actual_iov_len;
     MPI_Aint actual_iov_bytes;
-    MPIR_Type_to_iov(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
-                     MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig, dt_ptr->size * count,
-                     &actual_iov_len, &actual_iov_bytes);
+    MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
+                        MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig, dt_ptr->size * count,
+                        &actual_iov_len, &actual_iov_bytes);
     num_contig = actual_iov_len;
 
     originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
@@ -293,9 +293,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
         MPI_Aint actual_pack_bytes;
-        MPIR_Pack_impl(buf, count, datatype, 0,
-                       MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer), data_sz,
-                       &actual_pack_bytes);
+        MPIR_Typerep_pack(buf, count, datatype, 0,
+                          MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer), data_sz,
+                          &actual_pack_bytes);
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);
     } else {
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) = NULL;
