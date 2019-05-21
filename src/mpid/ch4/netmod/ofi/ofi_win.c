@@ -344,14 +344,14 @@ static int win_init_sep(MPIR_Win * win)
     /* Set per window transmit attributes. */
     set_rma_fi_info(win, finfo);
     /* Get available transmit context index. */
-    int *index = (int *) utarray_back(MPIDI_OFI_global.rma_sep_idx_array);
-    if (index == NULL) {
+    int *idx = (int *) utarray_back(MPIDI_OFI_global.rma_sep_idx_array);
+    if (idx == NULL) {
         mpi_errno = MPIDI_OFI_ENAVAIL;
         goto fn_fail;
     }
     /* Retrieve transmit context on scalable EP. */
     MPIDI_OFI_CALL_RETURN(fi_tx_context
-                          (MPIDI_OFI_global.rma_sep, *index, finfo->tx_attr,
+                          (MPIDI_OFI_global.rma_sep, *idx, finfo->tx_attr,
                            &(MPIDI_OFI_WIN(win).ep), NULL), ret);
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -360,7 +360,7 @@ static int win_init_sep(MPIR_Win * win)
         goto fn_fail;
     }
 
-    MPIDI_OFI_WIN(win).sep_tx_idx = *index;
+    MPIDI_OFI_WIN(win).sep_tx_idx = *idx;
     /* Pop this index out of reserving array. */
     utarray_pop_back(MPIDI_OFI_global.rma_sep_idx_array);
 

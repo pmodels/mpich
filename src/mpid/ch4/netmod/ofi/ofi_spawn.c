@@ -36,15 +36,15 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state);
 
 static void free_port_name_tag(int tag)
 {
-    int index, rem_tag;
+    int idx, rem_tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FREE_PORT_NAME_TAG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FREE_PORT_NAME_TAG);
 
-    index = tag / (sizeof(int) * 8);
-    rem_tag = tag - (index * sizeof(int) * 8);
+    idx = tag / (sizeof(int) * 8);
+    rem_tag = tag - (idx * sizeof(int) * 8);
 
-    MPIDI_OFI_global.port_name_tag_mask[index] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+    MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FREE_PORT_NAME_TAG);
 }
