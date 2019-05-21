@@ -230,7 +230,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
-    MPI_Aint last;
     char *send_buf;
     uint64_t match_bits;
 
@@ -288,16 +287,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment *), MPL_MEM_BUFFER);
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIDI_OFI_pack_t), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
-        size_t segment_first;
-        segment_first = 0;
-        last = data_sz;
 
-        MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment) = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_Segment_pack(MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
-                          MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer));
+        MPI_Aint actual_pack_bytes;
+        MPIR_Pack_impl(buf, count, datatype, 0,
+                       MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer), data_sz,
+                       &actual_pack_bytes);
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);
     } else {
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) = NULL;
