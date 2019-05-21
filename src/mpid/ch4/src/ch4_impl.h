@@ -930,9 +930,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         (*uop) (source_buf, target_buf, &source_count, &source_dtp);
     } else {
         /* derived datatype */
-        MPIR_Segment *segp;
         MPL_IOV *dloop_vec;
-        MPI_Aint first, last;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -940,18 +938,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPI_Aint curr_len;
         void *curr_loc;
         int accumulated_count;
-
-        segp = MPIR_Segment_alloc(NULL, target_count, target_dtp);
-        /* --BEGIN ERROR HANDLING-- */
-        if (!segp) {
-            mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPI_ERR_OTHER, "**nomem", 0);
-            goto fn_exit;
-        }
-        /* --END ERROR HANDLING-- */
-        first = 0;
-        last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         MPIR_Assert(dtp != NULL);
@@ -968,7 +954,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         }
         /* --END ERROR HANDLING-- */
 
-        MPIR_Segment_to_iov(segp, first, &last, dloop_vec, &vec_len);
+        int actual_iov_len;
+        MPI_Aint actual_iov_bytes;
+        MPIR_Type_to_iov(NULL, target_count, target_dtp, 0, dloop_vec, vec_len,
+                         source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
+        vec_len = actual_iov_len;
 
         type = dtp->basic_type;
         MPIR_Assert(type != MPI_DATATYPE_NULL);
@@ -1015,7 +1005,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             accumulated_count += count;
         }
 
-        MPIR_Segment_free(segp);
         MPL_free(dloop_vec);
     }
 

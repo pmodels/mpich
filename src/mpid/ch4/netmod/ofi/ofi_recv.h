@@ -45,7 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     size_t countp_huge = 0;
     size_t oout = 0;
     size_t cur_o = 0;
-    MPIR_Segment *seg;
     struct fi_msg_tagged msg;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -63,16 +62,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     map_size = dt_ptr->max_contig_blocks * count + 1;
     num_contig = map_size;      /* map_size is the maximum number of iovecs that can be generated */
-    MPI_Aint last = dt_ptr->size * count;
 
     size = o_size * num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
 
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
-    seg = MPIR_Segment_alloc(buf, count, MPIDI_OFI_REQUEST(rreq, datatype));
-    MPIR_Segment_to_iov(seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack), &num_contig);
-    MPIR_Segment_free(seg);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Type_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
+                     MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
+                     &actual_iov_len, &actual_iov_bytes);
+    num_contig = actual_iov_len;
 
     originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
     oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
