@@ -343,6 +343,13 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     }
 
     MPIR_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
+
+    MPIR_Segment_free(sreq->dev.segment_ptr);
+
+    /* set the segment_ptr to NULL, so we don't try to free it again
+     * when the request completes */
+    sreq->dev.segment_ptr = NULL;
+
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
   fn_exit:
