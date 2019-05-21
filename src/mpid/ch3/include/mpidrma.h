@@ -887,7 +887,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* derived datatype */
         MPIR_Segment *segp;
         MPL_IOV *dloop_vec;
-        MPI_Aint first, last;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -906,8 +905,6 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             return mpi_errno;
         }
         /* --END ERROR HANDLING-- */
-        first = stream_offset;
-        last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
@@ -924,7 +921,10 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         }
         /* --END ERROR HANDLING-- */
 
-        MPIR_Segment_to_iov(segp, first, &last, dloop_vec, &vec_len);
+        int max_iov_len = vec_len;
+        MPI_Aint actual_iov_bytes;
+        MPIR_Type_to_iov(NULL, target_count, target_dtp, stream_offset, dloop_vec, max_iov_len,
+                         source_count * source_dtp_size, &vec_len, &actual_iov_bytes);
 
         type = dtp->basic_type;
         MPIR_Assert(type != MPI_DATATYPE_NULL);
