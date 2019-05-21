@@ -68,4 +68,5 @@ mpi_core_sources +=                              \
     src/mpi/datatype/type_blockindexed.c         \
     src/mpi/datatype/type_create_pairtype.c      \
     src/mpi/datatype/type_debug.c                \
-    src/mpi/datatype/type_flatten.c
+    src/mpi/datatype/type_flatten.c              \
+    src/mpi/datatype/type_iov.c
