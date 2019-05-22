@@ -894,7 +894,8 @@ if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "y
    AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
 fi
 
-AC_CHECK_FUNCS(backtrace_symbols)
+# Check for execinfo backtrace support
+AX_EXECINFO
 
 # Check for libbacktrace support
 PAC_PUSH_FLAG([LIBS])
