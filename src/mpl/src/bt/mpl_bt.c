@@ -5,7 +5,7 @@
  */
 
 #include "mpl.h"
-#ifdef MPL_HAVE_EXECINFO_H
+#ifdef MPL_HAVE_BACKTRACE
 #include <execinfo.h>
 #endif
 
@@ -79,7 +79,7 @@ static inline void backtrace_libunwind(FILE * output)
     fprintf(output, "%s", backtrace_buffer);
 }
 
-#elif defined MPL_HAVE_BACKTRACE_SYMBOLS
+#elif defined MPL_HAVE_BACKTRACE
 static inline void backtrace_libc(FILE * output)
 {
 #ifndef MPL_MAX_TRACE_DEPTH
@@ -124,7 +124,7 @@ void MPL_backtrace_show(FILE * output)
     /* libunwind is not able to get line numbers without forking off to
      * addr2line (?)*/
     backtrace_libunwind(output);
-#elif defined MPL_HAVE_BACKTRACE_SYMBOLS
+#elif defined MPL_HAVE_BACKTRACE
     backtrace_libc(output);
 #else
     backtrace_unsupported(output);
