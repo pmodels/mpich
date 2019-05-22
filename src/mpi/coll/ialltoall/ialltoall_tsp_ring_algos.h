@@ -118,8 +118,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 
     sbuf = buf1;
     rbuf = buf2;
-    int send_id[3] = { };       /* warning fix: icc: maybe used before set */
-    int recv_id[3] = { };       /* warning fix: icc: maybe used before set */
+    int send_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
+    int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
