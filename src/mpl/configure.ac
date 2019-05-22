@@ -897,46 +897,6 @@ fi
 # Check for execinfo backtrace support
 AX_EXECINFO
 
-# Check for libbacktrace support
-PAC_PUSH_FLAG([LIBS])
-PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
-AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([
-#include <backtrace.h>
-],[
-backtrace_create_state(0, 0, 0, 0);
-backtrace_print(0, 0, 0);
-])],
-    [ac_cv_lib_backtrace=yes],
-    [ac_cv_lib_backtrace=no]
-)
-PAC_POP_FLAG([LIBS])
-
-if test "$ac_cv_lib_backtrace" = "yes" ; then
-    AC_DEFINE([HAVE_LIBBACKTRACE],[1],[Define to 1 if you have the backtrace header (backtrace.h) and library (-lbacktrace)])
-    PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
-fi
-AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
-
-# Check for libunwind support
-PAC_PUSH_FLAG([LIBS])
-PAC_PREPEND_FLAG([-lunwind],[LIBS])
-AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([
-#include<libunwind.h>
-],[
-unw_backtrace(0, 0);
-])],
-    [ac_cv_lib_libunwind=yes],
-    [ac_cv_lib_libunwind=no]
-)
-PAC_POP_FLAG([LIBS])
-
-if test "$ac_cv_lib_libunwind" = "yes" ; then
-    AC_DEFINE([HAVE_LIBUNWIND],[1],[Define to 1 if you have the libunwind header (libunwind.h) and library (-lunwind)])
-    PAC_PREPEND_FLAG([-lunwind],[LIBS])
-fi
-
 AX_LIB_SOCKET_NSL
 AC_CHECK_HEADERS(ifaddrs.h arpa/inet.h)
 AC_CHECK_FUNCS(inet_ntop getifaddrs)
