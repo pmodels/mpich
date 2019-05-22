@@ -13,8 +13,6 @@
 extern "C" {
 #endif
 
-#define MPL_BACKTRACE_BUFFER_LEN 1024
-#define MPL_MAX_TRACE_DEPTH 32
     void MPL_backtrace_show(FILE * output);
 
 #if defined(__cplusplus)

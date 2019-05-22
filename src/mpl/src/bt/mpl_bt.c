@@ -8,33 +8,19 @@
 #ifdef MPL_HAVE_BACKTRACE
 #include <execinfo.h>
 
+#define MAX_TRACE_DEPTH 32
+
 void MPL_backtrace_show(FILE * output)
 {
-#ifndef MPL_MAX_TRACE_DEPTH
-#define MPL_MAX_TRACE_DEPTH 32
-#endif
-    void *trace[MPL_MAX_TRACE_DEPTH];
-    char **stack_strs;
-    char backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN];
-    int frames, i, ret, chars = 0;
+    void *trace[MAX_TRACE_DEPTH];
+    _mpl_backtrace_size_t frames;
 
-    frames = backtrace(trace, MPL_MAX_TRACE_DEPTH);
-    stack_strs = backtrace_symbols(trace, frames);
+    frames = backtrace(trace, MAX_TRACE_DEPTH);
+    char **strs = backtrace_symbols(trace, frames);
+    for (_mpl_backtrace_size_t i = 0; i < frames; i++)
+        fprintf(output, "%s\n", strs[i]);
 
-    for (i = 0; i < frames; i++) {
-        ret = MPL_snprintf(backtrace_buffer + chars,
-                           MPL_BACKTRACE_BUFFER_LEN - chars, "%s\n", stack_strs[i]);
-        if (ret + chars >= MPL_BACKTRACE_BUFFER_LEN) {
-            /* the extra new line will be more readable than a merely
-             * truncated string */
-            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 2] = '\n';
-            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 1] = '\0';
-            break;
-        }
-        chars += ret;
-    }
-    fprintf(output, "%s", backtrace_buffer);
-    MPL_free(stack_strs);
+    MPL_free(strs);
 }
 #else
 void MPL_backtrace_show(FILE * output)
