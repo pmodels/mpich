@@ -90,7 +90,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
 
     /* Ranks pass around the data (size - 1) times */
     int send_id[3];
-    int recv_id[3] = { };       /* warning fix: icc: maybe used before set */
+    int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* Get new tag for each cycle so that the send-recv pairs are matched correctly */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
