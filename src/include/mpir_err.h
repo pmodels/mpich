@@ -810,28 +810,38 @@ cvars:
 #define MPIR_ERR_SETANDSTMT(err_,class_,stmt_,msg_)                     \
     do {                                                                \
         err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
-                                    __LINE__, class_, msg_, 0); stmt_ ; \
+                                    __LINE__, class_, msg_, 0);         \
+        assert(err_);                                                   \
+        stmt_ ;                                                         \
     } while (0)
 #define MPIR_ERR_SETANDSTMT1(err_,class_,stmt_,gmsg_,smsg_,arg1_)       \
     do {                                                                \
         err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
-                                    __LINE__, class_, gmsg_, smsg_, arg1_); stmt_ ; \
+                                    __LINE__, class_, gmsg_, smsg_, arg1_); \
+        assert(err_);                                                   \
+        stmt_ ;                                                         \
     } while (0)
 #define MPIR_ERR_SETANDSTMT2(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_) \
     do {                                                                \
         err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
-                                    __LINE__, class_, gmsg_, smsg_, arg1_, arg2_); stmt_ ; \
+                                    __LINE__, class_, gmsg_, smsg_, arg1_, arg2_); \
+        assert(err_);                                                   \
+        stmt_ ;                                                         \
     } while (0)
 #define MPIR_ERR_SETANDSTMT3(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_) \
     do {                                                                \
         err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
-                                    __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_); stmt_ ; \
+                                    __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_); \
+        assert(err_);                                                   \
+        stmt_ ;                                                         \
     } while (0)
 #define MPIR_ERR_SETANDSTMT4(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_, arg4_) \
     do {                                                                \
         err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, \
-                                    arg2_, arg3_, arg4_); stmt_ ;       \
+                                    arg2_, arg3_, arg4_); \
+        assert(err_);                                                   \
+        stmt_ ;                                                         \
     } while (0)
 
 #define MPIR_ERR_SETFATALSIMPLE(err_,class_,msg_)                       \
