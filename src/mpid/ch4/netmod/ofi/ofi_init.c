@@ -475,7 +475,7 @@ static int dynproc_send_disconnect(int conn_id)
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
                             MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
 {
-    int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
+    int mpi_errno = MPI_SUCCESS, pmi_errno, i, ofi_version;
     int thr_err = 0;
     void *table = NULL;
     const char *provname = NULL;
@@ -536,9 +536,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* layouts that are compatible with this version.                           */
     /* ------------------------------------------------------------------------ */
     if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
-        fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+        ofi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
     else
-        fi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+        ofi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
 
     /* ------------------------------------------------------------------------ */
     /* fi_getinfo:  returns information about fabric  services for reaching a   */
@@ -554,7 +554,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
          * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
         MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
 
-        MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
+        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
 
         /* We'll try to pick the best provider three times.
          * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
@@ -605,7 +605,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
-    MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
+    MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
     MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
     /* When a specific provider is specified at configure time,
      * make sure it is the one selected by fi_getinfo */
@@ -1254,7 +1254,7 @@ int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
 
 static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
                            struct fid_cq *p2p_cq, struct fid_cntr *rma_ctr, struct fid_av *av,
-                           struct fid_ep **ep, int index)
+                           struct fid_ep **ep, int idx)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_tx_attr tx_attr;
@@ -1275,7 +1275,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         memset(&cq_attr, 0, sizeof(cq_attr));
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
         MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_global.domain,
-                                  &cq_attr, &MPIDI_OFI_global.ctx[index].cq, NULL), opencq);
+                                  &cq_attr, &MPIDI_OFI_global.ctx[idx].cq, NULL), opencq);
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.op_flags = FI_COMPLETION;
@@ -1294,13 +1294,12 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         /* MSG */
         tx_attr.caps |= FI_MSG;
 
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_OFI_global.ctx[index].tx, NULL),
-                       ep);
+        MPIDI_OFI_CALL(fi_tx_context(*ep, idx, &tx_attr, &MPIDI_OFI_global.ctx[idx].tx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_global.ctx[index].tx, &MPIDI_OFI_global.ctx[index].cq->fid,
+                       (MPIDI_OFI_global.ctx[idx].tx, &MPIDI_OFI_global.ctx[idx].cq->fid,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_global.ctx[index].tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
+                       (MPIDI_OFI_global.ctx[idx].tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
@@ -1317,16 +1316,15 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
 
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_global.ctx[index].rx, NULL),
-                       ep);
+        MPIDI_OFI_CALL(fi_rx_context(*ep, idx, &rx_attr, &MPIDI_OFI_global.ctx[idx].rx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_global.ctx[index].rx, &MPIDI_OFI_global.ctx[index].cq->fid,
+                       (MPIDI_OFI_global.ctx[idx].rx, &MPIDI_OFI_global.ctx[idx].cq->fid,
                         FI_RECV), bind);
 
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[index].tx), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[index].rx), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[idx].tx), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_global.ctx[idx].rx), ep_enable);
     } else {
         /* ---------------------------------------------------------- */
         /* Bind the CQs, counters,  and AV to the endpoint object     */
@@ -1541,7 +1539,7 @@ static int init_global_settings(const char *prov_name)
 
 static int init_hints(struct fi_info *hints)
 {
-    int fi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+    int ofi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
     MPIR_Assert(hints != NULL);
 
     /* ------------------------------------------------------------------------ */
@@ -1572,9 +1570,9 @@ static int init_hints(struct fi_info *hints)
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
 
     if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
-        fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+        ofi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
 
-    if (fi_version >= FI_VERSION(1, 5)) {
+    if (ofi_version >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
         hints->mode |= FI_CONTEXT2;
 #endif

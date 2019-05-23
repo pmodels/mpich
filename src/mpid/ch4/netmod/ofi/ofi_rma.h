@@ -421,7 +421,6 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
-    flags = 0;  /* silence gcc-4 -Wmaybe-uninitialized */
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
                               fi_inject_write(MPIDI_OFI_WIN(win).ep,
@@ -605,11 +604,12 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto null_op_exit;
     }
 
-    flags = 0;  /* silence gcc-4 -Wmaybe-uninitialized */
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         if (sigreq) {
             MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+        } else {
+            flags = 0;
         }
         msg.desc = NULL;
         msg.msg_iov = &iov;
