@@ -86,7 +86,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     rbuf = buf2;
 
     int send_id[3];
-    int recv_id[3] = { };       /* warning fix: icc: maybe used before set */
+    int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < nranks - 1; i++) {
         recv_rank = (rank - i - 1 + nranks) % nranks;   /* Rank whose data you're receiving */
         send_rank = (rank - i + nranks) % nranks;       /* Rank whose data you're sending */
