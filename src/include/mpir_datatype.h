@@ -76,7 +76,7 @@ typedef struct MPIR_Datatype_contents {
   invalidate the dup'ed datatype.
 
   Originally we attempted to keep contents/envelope data in a non-optimized
-  dataloop.  The subarray and darray types were particularly problematic,
+  typerep.  The subarray and darray types were particularly problematic,
   and eventually we decided it would be simpler to just keep contents/
   envelope data in arrays separately.
 
@@ -134,11 +134,8 @@ struct MPIR_Datatype {
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
 
-    /* dataloop members, including a pointer to the loop, the size in bytes,
-     * and a depth used to verify that we can process it (limited stack depth
-     */
-    struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
-    MPI_Aint dataloop_size;
+    /* internal type representation */
+    void *typerep;              /* might be optimized for homogenous */
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
@@ -511,11 +508,7 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
                           MPI_Datatype * newtype_p);
 int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
                           const MPI_Datatype old_types[], MPI_Datatype * newtype);
-int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf,
-                   MPI_Aint outcount, MPI_Aint * position);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
-int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
-                     void *outbuf, int outcount, MPI_Datatype datatype);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
@@ -541,10 +534,6 @@ int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addr
                            MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
-int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size);
-int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
-int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
-
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
 char *MPIR_Datatype_combiner_to_string(int combiner);
@@ -563,6 +552,5 @@ MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
                                                  MPI_Aint blklen,
                                                  const void *disp_array,
                                                  int dispinbytes, MPI_Aint old_extent);
-
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */

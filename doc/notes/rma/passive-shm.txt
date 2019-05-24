@@ -56,7 +56,7 @@ MPID_Accumulate
 NOTE: When the lock is shared, we can achieve more parallelism by
 dividing the local window into regions.  Each region would have a
 separate mutex to guarantee that all data elements with that region
-were processed atomically.  Ideally, dataloops would be optimized such
+were processed atomically.  Ideally, typereps would be optimized such
 that a region mutex would never be acquired more than once per
 accumulate operation.
 
@@ -69,4 +69,4 @@ extra logic will be required to hold multiple mutexes when a type
 crosses a region boundary.
 
 NOTE: When the lock is exclusive, slicing up the local window and
-optimizing the dataloops to increase region locality is unnecessary.
+optimizing the typereps to increase region locality is unnecessary.

@@ -26,8 +26,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
     size_t data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     size_t am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -104,21 +103,20 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -188,8 +186,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
     size_t data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -269,21 +266,20 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
         goto fn_exit;
     }
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDIG_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
@@ -326,8 +322,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -416,21 +411,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -509,8 +503,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -609,21 +602,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);

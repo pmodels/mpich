@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 
 #include <stdio.h>
 
@@ -24,8 +24,7 @@ static void blockindexed_array_copy(MPI_Aint count,
 .  void *displacement_array (array of either MPI_Aints or ints)
 .  int displacement_in_bytes (boolean)
 .  MPI_Datatype old_type
-.  MPIR_Dataloop **output_dataloop_ptr
-.  int output_dataloop_size
+.  MPII_Dataloop **output_dataloop_ptr
 
 .N Errors
 .N Returns 0 on success, -1 on failure.
@@ -33,9 +32,7 @@ static void blockindexed_array_copy(MPI_Aint count,
 int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
                                       MPI_Aint iblklen,
                                       const void *disp_array,
-                                      int dispinbytes,
-                                      MPI_Datatype oldtype,
-                                      MPIR_Dataloop ** dlp_p, MPI_Aint * dlsz_p)
+                                      int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     int err, is_builtin, is_vectorizable = 1;
     int i;
@@ -43,14 +40,14 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
 
     MPI_Aint contig_count, count, blklen;
     MPI_Aint old_extent, eff_disp0, eff_disp1, last_stride;
-    MPIR_Dataloop *new_dlp;
+    MPII_Dataloop *new_dlp;
 
     count = (MPI_Aint) icount;  /* avoid subsequent casting */
     blklen = (MPI_Aint) iblklen;
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
         return err;
     }
 
@@ -74,7 +71,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) disp_array)[0] == 0) ||
          (dispinbytes && ((MPI_Aint *) disp_array)[0] == 0))) {
-        err = MPII_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p, dlsz_p);
+        err = MPII_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p);
         return err;
     }
 
@@ -117,7 +114,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
         }
         if (is_vectorizable) {
             err = MPII_Dataloop_create_vector(count, blklen, last_stride, 1,    /* strideinbytes */
-                                              oldtype, dlp_p, dlsz_p);
+                                              oldtype, dlp_p);
             return err;
         }
     }
@@ -141,11 +138,12 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
      */
 
     if (is_builtin) {
-        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_BLOCKINDEXED, count, &new_dlp, &new_loop_sz);
+        MPII_Dataloop_alloc(MPII_DATALOOP_KIND_BLOCKINDEXED, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         new_dlp->kind = MPII_DATALOOP_KIND_BLOCKINDEXED | MPII_DATALOOP_FINAL_MASK;
 
@@ -153,18 +151,17 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
         new_dlp->el_extent = old_extent;
         new_dlp->el_type = oldtype;
     } else {
-        MPIR_Dataloop *old_loop_ptr = NULL;
-        MPI_Aint old_loop_sz = 0;
+        MPII_Dataloop *old_loop_ptr = NULL;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
-        MPII_DATALOOP_GET_LOOPSIZE(oldtype, old_loop_sz);
 
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_BLOCKINDEXED,
-                                     count, old_loop_ptr, old_loop_sz, &new_dlp, &new_loop_sz);
+                                     count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
         if (!new_dlp)
             return -1;
         /* --END ERROR HANDLING-- */
+        new_loop_sz = new_dlp->dloop_sz;
 
         new_dlp->kind = MPII_DATALOOP_KIND_BLOCKINDEXED;
 
@@ -185,7 +182,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
                             new_dlp->loop_params.bi_t.offset_array, dispinbytes, old_extent);
 
     *dlp_p = new_dlp;
-    *dlsz_p = new_loop_sz;
+    new_dlp->dloop_sz = new_loop_sz;
 
     return 0;
 }

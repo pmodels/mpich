@@ -74,12 +74,10 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     size_t nbytes;
-    MPI_Aint last;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
-    MPIR_Segment *segment_ptr;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIR_Request *anysource_partner = NULL;
@@ -202,16 +200,16 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(match_req, buffer),
-                                         MPIDIG_REQUEST(match_req, count),
-                                         MPIDIG_REQUEST(match_req, datatype));
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes,
+                                        MPIDIG_REQUEST(match_req, buffer),
+                                        MPIDIG_REQUEST(match_req, count),
+                                        MPIDIG_REQUEST(match_req, datatype), 0,
+                                        &actual_unpack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-        last = nbytes;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
-        MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) nbytes) {
+        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
@@ -253,10 +251,9 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
 {
-    int dt_contig, n_iov;
-    MPI_Aint dt_true_lb, last, num_iov;
+    int dt_contig;
+    MPI_Aint dt_true_lb, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPIR_Segment *segment_ptr;
     size_t data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
@@ -276,31 +273,31 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
         *p_data_sz = data_sz;
         *data = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
     } else {
-        segment_ptr = MPIR_Segment_alloc(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                         MPIDIG_REQUEST(rreq, datatype));
-        MPIR_Assert(segment_ptr);
-
         if (*p_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
             *p_data_sz = data_sz;
         }
-        last = data_sz;
-        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
-        n_iov = (int) num_iov;
-        MPIR_Assert(n_iov > 0);
+
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
+
+        MPIR_Assert(num_iov > 0);
         MPIDIG_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
+            (struct iovec *) MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
         MPIR_Assert(MPIDIG_REQUEST(rreq, req->iov));
 
-        last = *p_data_sz;
-        MPIR_Segment_to_iov(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, req->iov), &n_iov);
-        if (last != (MPI_Aint) * p_data_sz) {
+        int actual_iov_len;
+        MPI_Aint actual_iov_bytes;
+        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
+                            (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
+
+        if (actual_iov_bytes != (MPI_Aint) * p_data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
         *data = MPIDIG_REQUEST(rreq, req->iov);
-        *p_data_sz = n_iov;
+        *p_data_sz = actual_iov_len;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
-        MPL_free(segment_ptr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);

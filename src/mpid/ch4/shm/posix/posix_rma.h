@@ -27,9 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPI_Aint total_len = 0;
     MPI_Aint origin_dtp_size = 0;
     MPIR_Datatype *origin_dtp_ptr = NULL;
-    MPIR_Segment *seg = NULL;
     void *packed_buf = NULL;
-    MPI_Aint first = 0, last = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COMPUTE_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COMPUTE_ACCUMULATE);
 
@@ -67,15 +65,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
 #endif
 
     /* Pack origin data into a contig buffer */
-    last = total_len;
     packed_buf = MPL_malloc(total_len, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP(packed_buf == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
 
-    seg = MPIR_Segment_alloc(origin_addr, origin_count, origin_datatype);
-    MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "MPIR_Segment");
-    MPIR_Segment_pack(seg, first, &last, packed_buf);
-    MPIR_Segment_free(seg);
+    MPI_Aint actual_pack_bytes;
+    mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0,
+                                  packed_buf, total_len, &actual_pack_bytes);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == total_len);
 
     mpi_errno = MPIDIG_compute_acc_op((void *) packed_buf, (int) predefined_dtp_count, basic_type,
                                       target_addr, target_count, target_datatype, op,

@@ -304,17 +304,15 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPI_Aint data_sz;
     uint64_t match_bits;
     MPIR_Request *cts_req;
-    intptr_t first, last;
     intptr_t buf_offset = 0;
     void *data = NULL;
     size_t pkt_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
+
     MPID_nem_ofi_init_req(sreq);
-    first = sreq->dev.segment_first;
-    last = sreq->dev.segment_size;
-    data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
+    data_sz = sreq->dev.msgsize - sreq->dev.msg_offset;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     if (n_hdr_iov > 0) {
         /* add length of extended header iovs */
@@ -336,7 +334,12 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
         }
     }
 
-    MPIR_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
+    MPI_Aint actual_pack_bytes;
+    MPIR_Typerep_pack(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                   sreq->dev.msg_offset, pack_buffer + buf_offset,
+                   sreq->dev.msgsize - sreq->dev.msg_offset, &actual_pack_bytes);
+    MPIR_Assert(actual_pack_bytes == sreq->dev.msgsize - sreq->dev.msg_offset);
+
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
   fn_exit:

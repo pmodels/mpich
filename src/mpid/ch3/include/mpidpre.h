@@ -383,13 +383,11 @@ typedef struct MPIDI_Request {
     MPI_Datatype datatype;
     int drop_data;
 
-    /* segment, segment_first, and segment_size are used when processing 
+    /* msg_offset, and msgsize are used when processing
        non-contiguous datatypes */
-    /*    MPIR_Segment   segment; */
-    struct MPIR_Segment *segment_ptr;
-    intptr_t segment_first;
-    intptr_t segment_size;
-    intptr_t orig_segment_first;
+    intptr_t msg_offset;
+    intptr_t msgsize;
+    intptr_t orig_msg_offset;
 
     /* Pointer to datatype for reference counting purposes */
     struct MPIR_Datatype* datatype_ptr;

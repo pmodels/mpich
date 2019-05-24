@@ -41,10 +41,9 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
-    MPI_Aint dt_true_lb, last;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t in_data_sz, dt_sz, nbytes;
-    MPIR_Segment *segment_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
@@ -70,14 +69,10 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     /* Copy the data from the message. */
 
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
-
-        last = nbytes;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
-        MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) (nbytes)) {
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
+                            &actual_unpack_bytes);
+        if (actual_unpack_bytes != (MPI_Aint) (nbytes)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);

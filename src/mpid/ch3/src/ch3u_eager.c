@@ -15,7 +15,7 @@
 
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
-   sreq->dev.segment as well as segment_first and segment_size.
+   sreq->dev.segment as well as msg_offset and msgsize.
    The optional hdr_iov and n_hdr_iov are used for variable-length extended
    header, specify NULL and zero if unused. Note that we assume n_hdr_iov is
    small and does not exceed MPL_IOV_LIMIT - 2 (one for header and one for
@@ -34,6 +34,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     iov[iovcnt].MPL_IOV_BUF = header;
     iov[iovcnt].MPL_IOV_LEN = hdr_sz;
     iovcnt++;
+
     iov_n = MPL_IOV_LIMIT - 1;
 
     /* If extended header iov exists, merge into the iov array. */
@@ -127,12 +128,12 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 
     MPL_DBG_MSGPKT(vc,tag,eager_pkt->match.parts.context_id,rank,data_sz,
                     "Eager");
-	    
-    sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
-    sreq->dev.segment_first = 0;
-    sreq->dev.segment_size = data_sz;
+    sreq->dev.user_buf = (void *) buf;
+    sreq->dev.user_count = count;
+    sreq->dev.datatype = datatype;
+    sreq->dev.msg_offset = 0;
+    sreq->dev.msgsize = data_sz;
 	    
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
@@ -392,26 +393,20 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 	    }
 	    else {
 		intptr_t recv_data_sz;
-		MPI_Aint last;
-		/* user buffer is not contiguous.  Use the segment
-		   code to unpack it, handling various errors and 
-		   exceptional cases */
-		/* FIXME: The MPICH tests do not exercise this branch */
-		/* printf( "Surprise!\n" ); fflush(stdout);*/
-		rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
-				  rreq->dev.datatype);
-                MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
+		/* user buffer is not contiguous.  Unpack it, handling
+		   various errors and exceptional cases */
 		recv_data_sz = rreq->dev.recv_data_sz;
-		last    = recv_data_sz;
-		MPIR_Segment_unpack( rreq->dev.segment_ptr, 0, 
-				     &last, eagershort_pkt->data );
-		if (last != recv_data_sz) {
+
+		MPI_Aint actual_unpack_bytes;
+		MPIR_Typerep_unpack(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
+				 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes);
+
+		if (actual_unpack_bytes != recv_data_sz) {
 		    /* --BEGIN ERROR HANDLING-- */
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
 		       need to distinguish between these two types. */
-		    MPIR_STATUS_SET_COUNT(rreq->status, last);
+		    MPIR_STATUS_SET_COUNT(rreq->status, actual_unpack_bytes);
 		    if (rreq->dev.recv_data_sz <= userbuf_sz) {
 			MPIR_ERR_SETSIMPLE(rreq->status.MPI_ERROR,MPI_ERR_TYPE,
 					   "**dtypemismatch");
@@ -769,8 +764,8 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 	{
 	    /* force read of extra data */
 	    *rreqp = rreq;
-	    rreq->dev.segment_first = 0;
-	    rreq->dev.segment_size = 0;
+	    rreq->dev.msg_offset = 0;
+	    rreq->dev.msgsize = 0;
 	    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,

@@ -238,21 +238,11 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPIR_Request *sreq, knem_cookie_t *s_c
     }
     else {
         /* use the segment routines to handle the iovec creation */
-        if (sreq->dev.segment_ptr == NULL) {
+        if (sreq->dev.msg_offset == 0) {
             sreq->dev.iov_count = MPL_IOV_LIMIT;
             sreq->dev.iov_offset = 0;
 
-            /* segment_ptr may be non-null when this is a continuation of a
-               many-part message that we couldn't fit in one single flight of
-               iovs. */
-            sreq->dev.segment_ptr = MPIR_Segment_alloc(sreq->dev.user_buf, sreq->dev.user_count,
-                              sreq->dev.datatype);
-            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno,
-                                 MPI_ERR_OTHER, "**nomem",
-                                 "**nomem %s", "MPIR_Segment_alloc");
-            sreq->dev.segment_first = 0;
-            sreq->dev.segment_size = data_sz;
-
+            sreq->dev.msgsize = data_sz;
 
             /* FIXME we should write our own function that isn't dependent on
                the in-request iov array.  This will let us use IOVs that are
@@ -356,18 +346,8 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
         rreq->dev.iov_count = 1;
     }
     else {
-        if (rreq->dev.segment_ptr == NULL) {
-            /* segment_ptr may be non-null when this is a continuation of a
-               many-part message that we couldn't fit in one single flight of
-               iovs. */
-            MPIR_Assert(rreq->dev.segment_ptr == NULL);
-            rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count,
-                              rreq->dev.datatype);
-            MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno,
-                                 MPI_ERR_OTHER, "**nomem",
-                                 "**nomem %s", "MPIR_Segment_alloc");
-            rreq->dev.segment_first = 0;
-            rreq->dev.segment_size = data_sz;
+        if (rreq->dev.msg_offset == 0) {
+            rreq->dev.msgsize = data_sz;
 
             /* see load_send_iov FIXME above */
             mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);

@@ -64,8 +64,7 @@ int MPIR_Type_blockindexed(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 

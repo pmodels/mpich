@@ -33,7 +33,6 @@ typedef enum {
 } MPIDI_POSIX_EAGER_recv_posted_hook_state_t;
 
 struct MPIR_Request;
-struct MPIR_Segment;
 
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
@@ -98,7 +97,6 @@ typedef struct MPIDI_POSIX_am_request_header {
     struct MPIDI_POSIX_am_request_header *prev, *next;
 } MPIDI_POSIX_am_request_header_t;
 
-struct MPIR_Segment;
 typedef struct MPIDI_POSIX_am_request {
     int dest;
     int rank;
@@ -109,7 +107,6 @@ typedef struct MPIDI_POSIX_am_request {
     int type;
     int user_count;
     MPI_Datatype datatype;
-    struct MPIR_Segment *segment_ptr;
     size_t segment_first;
     size_t segment_size;
 

@@ -6,9 +6,9 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 #include "datatype.h"
-#include "mpir_dataloop.h"
+#include "mpir_typerep.h"
 #include "looputil.h"
 #include "veccpy.h"
 
@@ -219,7 +219,7 @@ static inline void segment_init(const void *buf,
     int branch_detected = 0;
 
     struct MPII_Dataloop_stackelm *elmp;
-    struct MPIR_Dataloop *dlp = 0, *sblp = &segp->builtin_loop;
+    MPII_Dataloop *dlp = 0, *sblp = &segp->builtin_loop;
 
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
@@ -257,7 +257,7 @@ static inline void segment_init(const void *buf,
         /* default: need to use builtin to handle contig; must check
          * loop depth first
          */
-        MPIR_Dataloop *oldloop; /* loop from original type, before new count */
+        MPII_Dataloop *oldloop; /* loop from original type, before new count */
         MPI_Aint type_size, type_extent;
         MPI_Datatype el_type;
 
@@ -862,22 +862,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
     return;
 }
 
-
-/* MPIR_Segment_from_iov
-*
-* Q: Should this be any different from pack vector?
-*/
-void MPIR_Segment_from_iov(struct MPIR_Segment *segp,
-                           MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-
-    MPIR_Segment_to_iov(segp, first, lastp, vectorp, lengthp);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_FROM_IOV);
-    return;
-}
 
 /*
 * EVERYTHING BELOW HERE IS USED ONLY WITHIN THIS FILE
