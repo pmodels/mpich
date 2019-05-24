@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);
         int r = rreq->status.MPI_SOURCE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, NULL, 0, NULL,
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, NULL, 0, NULL,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
@@ -385,7 +385,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
         remote_key = recv->remote_info.rma_key;
 
         MPIDI_OFI_cntr_incr();
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[0].tx,        /* endpoint     */
+        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_CTX(0).tx,       /* endpoint     */
                                      (void *) ((uintptr_t) recv->wc.buf + recv->cur_offset),    /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
@@ -809,7 +809,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 
     switch (ret) {
         case -FI_EAVAIL:
-            fi_cq_readerr(MPIDI_OFI_global.ctx[vni_idx].cq, &e, 0);
+            fi_cq_readerr(MPIDI_OFI_CTX(vni_idx).cq, &e, 0);
 
             switch (e.err) {
                 case FI_ETRUNC:

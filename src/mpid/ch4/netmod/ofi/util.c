@@ -430,7 +430,7 @@ static MPI_Op mpi_ops[] = {
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
 #define CHECK_ATOMIC(fcn,field1,field2)            \
   atomic_count = 0;                                \
-  ret = fcn(MPIDI_OFI_global.ctx[0].tx,                \
+  ret = fcn(MPIDI_OFI_CTX(0).tx,                \
     fi_dt,                                 \
     fi_op,                                 \
             &atomic_count);                        \

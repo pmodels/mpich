@@ -365,7 +365,7 @@ static int win_init_sep(MPIR_Win * win)
     utarray_pop_back(MPIDI_OFI_global.rma_sep_idx_array);
 
     MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                     &MPIDI_OFI_global.ctx[0].cq->fid,
+                                     &MPIDI_OFI_CTX(0).cq->fid,
                                      FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -460,7 +460,7 @@ static int win_init_stx(MPIR_Win * win)
         }
 
         MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                         &MPIDI_OFI_global.ctx[0].cq->fid,
+                                         &MPIDI_OFI_CTX(0).cq->fid,
                                          FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -511,7 +511,7 @@ static int win_init_global(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
-    MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[0].tx;
+    MPIDI_OFI_WIN(win).ep = MPIDI_OFI_CTX(0).tx;
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.rma_issued_cntr;
 
@@ -819,7 +819,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
             utarray_push_back(MPIDI_OFI_global.rma_sep_idx_array, &(MPIDI_OFI_WIN(win).sep_tx_idx),
                               MPL_MEM_RMA);
         }
-        if (MPIDI_OFI_WIN(win).ep != MPIDI_OFI_global.ctx[0].tx)
+        if (MPIDI_OFI_WIN(win).ep != MPIDI_OFI_CTX(0).tx)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
         if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_OFI_global.rma_cmpl_cntr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);

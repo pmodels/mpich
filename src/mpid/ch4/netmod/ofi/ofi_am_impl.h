@@ -140,7 +140,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
-    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
+    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_CTX(0).rx,
                                        &MPIDI_OFI_global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), FALSE /* lock */ , repost);
   fn_exit:
@@ -160,7 +160,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
-    ret = fi_cq_read(MPIDI_OFI_global.ctx[vni_idx].cq, &cq_entry, 1);
+    ret = fi_cq_read(MPIDI_OFI_CTX(vni_idx).cq, &cq_entry, 1);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
@@ -241,7 +241,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 2,
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_CTX(0).tx, iov, NULL, 2,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
@@ -332,7 +332,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 3,
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_CTX(0).tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
@@ -385,7 +385,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 3,
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_CTX(0).tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
@@ -504,7 +504,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
     OPA_incr_int(&MPIDI_OFI_global.am_inflight_inject_emus);
 
-    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[0].tx, ibuf, len,
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_CTX(0).tx, ibuf, len,
                                     NULL /* desc */ , addr, &(MPIDI_OFI_REQUEST(sreq, context))),
                             need_lock, send);
   fn_exit:
@@ -555,7 +555,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
     memcpy(buff, &msg_hdr, sizeof(msg_hdr));
     memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
 
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, buff, buff_len, addr),
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_CTX(0).tx, buff, buff_len, addr),
                             need_lock, inject);
 
   fn_exit:

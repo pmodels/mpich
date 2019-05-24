@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, comm->rank,
+        MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain);
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, comm->rank,
+        MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain);
@@ -205,7 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.data = comm->rank;
     msg.addr = MPIDI_OFI_av_to_phys(addr);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv,
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_CTX(0).tx, &msg, flags), tsendv,
                          MPIDI_OFI_CALL_LOCK, FALSE);
 
   fn_exit:
@@ -257,7 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ssend_match =
             MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, rank, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,       /* endpoint    */
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_CTX(0).rx,      /* endpoint    */
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
@@ -306,7 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
         mpi_errno =
-            MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
+            MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
                                    match_bits, NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                    FALSE);
@@ -315,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
         mpi_errno =
-            MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
+            MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
                                    match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                    MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
@@ -362,7 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
          * MPIDI_OFI_global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
         MPIDI_OFI_REQUEST(sreq, util_id) = rank;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf,
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, send_buf,
                                            MPIDI_OFI_global.max_msg_size,
                                            NULL,
                                            comm->rank,

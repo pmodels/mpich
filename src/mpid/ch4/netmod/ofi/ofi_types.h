@@ -95,6 +95,10 @@
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
+#define MPIDI_OFI_VNI_POOL(field) MPIDI_OFI_global.vni_pool.field
+#define MPIDI_OFI_VNI(i) MPIDI_OFI_VNI_POOL(vni)[i]
+#define MPIDI_OFI_CTX(i) MPIDI_OFI_VNI(i).ctx
+
 /* Convert the address vector entry to an endpoint index.
  * This conversion depends on the data structure which could change based on
  * whether we're using scalable endpoints or not. */
@@ -237,6 +241,21 @@ typedef struct {
     struct fid_cq *cq;
 } MPIDI_OFI_context_t;
 
+typedef struct {
+    int is_free;
+    MPIDI_OFI_context_t ctx;
+} MPIDI_OFI_vni_t;
+
+typedef struct {
+    int next_free_vni;
+    int max_vnis;
+#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+    MPIDI_OFI_vni_t vni[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+#else
+    MPIDI_OFI_vni_t vni[MPIDI_OFI_MAX_ENDPOINTS];
+#endif
+} MPIDI_OFI_vni_pool_t;
+
 typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPIDI_OFI_CACHELINE_SIZE];
@@ -323,19 +342,14 @@ typedef struct {
     size_t tx_iov_limit;
     size_t rx_iov_limit;
     size_t rma_iov_limit;
-    int max_vnis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
     size_t max_order_waw;
 
-    /* Mutexes and endpoints */
+    /* Mutexes and VNI pool */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
-#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
-#else
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS];
-#endif
+    MPIDI_OFI_vni_pool_t vni_pool;
 
     /* Window/RMA Globals */
     void *win_map;
