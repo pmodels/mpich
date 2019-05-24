@@ -27,7 +27,7 @@ mpi_core_sources   += src/mpid/ch4/shm/src/func_table.c \
                       src/mpid/ch4/shm/src/shm_rma.c \
                       src/mpid/ch4/shm/src/shm_impl.c
 
-if HAVE_HWLOC
+if BUILD_TOPOTREES
 noinst_HEADERS += src/mpid/ch4/shm/src/topotree_util.h \
                   src/mpid/ch4/shm/src/topotree_types.h\
                   src/mpid/ch4/shm/src/topotree.h
