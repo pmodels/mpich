@@ -39,9 +39,9 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 
 int MPIDIG_RMA_Init_targetcb_pvars(void);
-int MPIDIG_put_ack_taget_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                                int is_local, int *is_contig,
-                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
+int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+                                 int is_local, int *is_contig,
+                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
                                  size_t * p_data_sz, int is_local, int *is_contig,
                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
