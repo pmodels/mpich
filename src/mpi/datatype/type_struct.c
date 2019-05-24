@@ -194,8 +194,7 @@ int MPIR_Type_struct(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)

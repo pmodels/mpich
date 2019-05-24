@@ -86,7 +86,7 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
         stream_hdr_sz = 0;
 
     if (target_dtp != NULL)
-        MPIR_Type_flatten_size(target_dtp, flattened_type_size);
+        MPIR_Typerep_flatten_size(target_dtp, flattened_type_size);
     else
         *flattened_type_size = 0;
 
@@ -108,7 +108,7 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
     }
     if (target_dtp != NULL) {
         flattened_type = (void *) ((char *) total_hdr + stream_hdr_sz);
-        MPIR_Type_flatten(target_dtp, flattened_type);
+        MPIR_Typerep_flatten(target_dtp, flattened_type);
     }
 
     (*ext_hdr_ptr) = total_hdr;
@@ -261,13 +261,11 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     }
     else {
         /* origin data is non-contiguous */
-        req->dev.segment_ptr = MPIR_Segment_alloc(rma_op->origin_addr, rma_op->origin_count,
-                          rma_op->origin_datatype);
-        MPIR_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
-        req->dev.segment_first = stream_offset;
-        req->dev.segment_size = stream_offset + stream_size;
+        req->dev.user_buf = rma_op->origin_addr;
+        req->dev.user_count = rma_op->origin_count;
+        req->dev.datatype = rma_op->origin_datatype;
+        req->dev.msg_offset = stream_offset;
+        req->dev.msgsize = stream_offset + stream_size;
 
         req->dev.OnFinal = 0;
         req->dev.OnDataAvail = 0;
@@ -336,7 +334,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPIR_Datatype_get_ptr(target_datatype, target_dtp_ptr);
-            MPIR_Type_flatten_size(target_dtp_ptr, &put_pkt->info.flattened_type_size);
+            MPIR_Typerep_flatten_size(target_dtp_ptr, &put_pkt->info.flattened_type_size);
 
             ext_hdr_ptr = MPL_malloc(put_pkt->info.flattened_type_size, MPL_MEM_RMA);
             if (ext_hdr_ptr == NULL) {
@@ -345,7 +343,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
             }
             MPL_VG_MEM_INIT(ext_hdr_ptr, put_pkt->info.flattened_type_size);
 
-            MPIR_Type_flatten(target_dtp_ptr, ext_hdr_ptr);
+            MPIR_Typerep_flatten(target_dtp_ptr, ext_hdr_ptr);
             ext_hdr_sz = put_pkt->info.flattened_type_size;
         }
 
@@ -830,7 +828,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPI_Aint ext_hdr_sz = 0;
 
         MPIR_Datatype_get_ptr(target_datatype, dtp);
-        MPIR_Type_flatten_size(dtp, &get_pkt->info.flattened_type_size);
+        MPIR_Typerep_flatten_size(dtp, &get_pkt->info.flattened_type_size);
 
         ext_hdr_ptr = MPL_malloc(get_pkt->info.flattened_type_size, MPL_MEM_RMA);
         if (ext_hdr_ptr == NULL) {
@@ -839,7 +837,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         }
         MPL_VG_MEM_INIT(ext_hdr_ptr, get_pkt->info.flattened_type_size);
 
-        MPIR_Type_flatten(dtp, ext_hdr_ptr);
+        MPIR_Typerep_flatten(dtp, ext_hdr_ptr);
         ext_hdr_sz = get_pkt->info.flattened_type_size;
 
         iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_pkt;

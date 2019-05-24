@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "dataloop.h"
+#include "dataloop_internal.h"
 #include <stdlib.h>
 #include <limits.h>
 #include "datatype.h"
@@ -19,8 +19,8 @@
  */
 
 /* --BEGIN ERROR HANDLING-- */
-static void dot_printf(MPIR_Dataloop * loop_p, int depth, int header);
-static void dot_printf(MPIR_Dataloop * loop_p, int depth, int header)
+static void dot_printf(MPII_Dataloop * loop_p, int depth, int header);
+static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
 {
     int i;
 
@@ -206,10 +206,10 @@ void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header)
         return;
     } else {
         MPIR_Datatype *dt_p;
-        MPIR_Dataloop *loop_p;
+        MPII_Dataloop *loop_p;
 
         MPIR_Datatype_get_ptr(type, dt_p);
-        loop_p = dt_p->dataloop;
+        loop_p = (MPII_Dataloop *) dt_p->typerep;
 
         dot_printf(loop_p, depth, header);
         return;

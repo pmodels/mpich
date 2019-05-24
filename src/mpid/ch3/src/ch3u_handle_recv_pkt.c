@@ -164,32 +164,28 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
     else {
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
-        
-	rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
-			  rreq->dev.datatype);
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
-	rreq->dev.segment_first = 0;
-	rreq->dev.segment_size  = data_sz;
+        rreq->dev.msg_offset = 0;
+	rreq->dev.msgsize  = data_sz;
 
         /* if all of the data has already been received, and the
            message is not truncated, unpack it now, otherwise build an
            iov and let the channel unpack */
         if (data_sz == rreq->dev.recv_data_sz && *buflen >= data_sz)
         {
-            intptr_t last;
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
-            last = data_sz;
-            MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
-				&last, buf);
+
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
+                             rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes);
+
             /* --BEGIN ERROR HANDLING-- */
-            if (last != data_sz)
+            if (actual_unpack_bytes != data_sz)
             {
                 /* If the data can't be unpacked, the we have a
                    mismatch between the datatype and the amount of
                    data received.  Throw away received data. */
                 MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
-                MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
+                MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.msg_offset);
                 *buflen = data_sz;
                 *complete = TRUE;
 		/* FIXME: Set OnDataAvail to 0?  If not, why not? */
@@ -329,11 +325,8 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
-	rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
-			  rreq->dev.datatype);
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-	rreq->dev.segment_first = 0;
-	rreq->dev.segment_size = data_sz;
+	rreq->dev.msg_offset = 0;
+	rreq->dev.msgsize = data_sz;
 	mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,

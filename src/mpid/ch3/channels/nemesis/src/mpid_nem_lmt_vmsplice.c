@@ -107,20 +107,11 @@ static int populate_iov_from_req(MPIR_Request *req)
     }
     else {
         /* use the segment routines to handle the iovec creation */
-        MPIR_Assert(req->dev.segment_ptr == NULL);
-
         req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
 
-        /* XXX DJG FIXME where is this segment freed? */
-        req->dev.segment_ptr = MPIR_Segment_alloc(req->dev.user_buf, req->dev.user_count,
-                          req->dev.datatype);
-        MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno,
-                             MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIR_Segment_alloc");
-        req->dev.segment_first = 0;
-        req->dev.segment_size = data_sz;
-
+        req->dev.msg_offset = 0;
+        req->dev.msgsize = data_sz;
 
         /* FIXME we should write our own function that isn't dependent on
            the in-request iov array.  This will let us use IOVs that are

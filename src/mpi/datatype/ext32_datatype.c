@@ -6,7 +6,7 @@
  */
 
 #include <mpiimpl.h>
-#include <mpir_dataloop.h>
+#include <mpir_typerep.h>
 
 #include <stdio.h>
 #include <stdlib.h>

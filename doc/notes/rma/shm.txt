@@ -140,14 +140,14 @@ MPID_shm_Accumulate
 * Perform requested accumulation
 
   We need an algorithm for performing accumulations when the
-  datatype are non-contiguous.  Ideally, the two dataloops and the
+  datatype are non-contiguous.  Ideally, the two typereps and the
   accumulation operations could be processed without requiring any
   extra copying, packing, or temporary buffers.
 
   NOTE: While it may be possible to write a function to perform the
   requested operations, it is likely that such functionality will need
   to be inlined so that appropriate locking of local window regions
-  occurs as data is being processed.  Also, the dataloops will need to
+  occurs as data is being processed.  Also, the typereps will need to
   be optimized so that it is not necessary to acquire a region's mutex
   more than once per request.
 

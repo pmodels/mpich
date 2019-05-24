@@ -464,9 +464,8 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
                                                     MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
                                                     size_t max_pipe)
 {
-    MPIR_Segment *dt_seg;
     ssize_t rem_size = total_bytes;
-    size_t num_iov, total_iov = 0;
+    MPI_Aint num_iov, total_iov = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
@@ -474,17 +473,14 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     if (dt_datatype == MPI_DATATYPE_NULL)
         goto fn_exit;
 
-    dt_seg = MPIR_Segment_alloc(NULL, dt_count, dt_datatype);
-
     do {
         size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
 
-        MPIR_Segment_count_contig_blocks(dt_seg, 0, &tmp_size, &num_iov);
+        MPIR_Typerep_iov_len(NULL, dt_count, dt_datatype, 0, tmp_size, &num_iov);
         total_iov += num_iov;
 
         rem_size -= tmp_size;
     } while (rem_size);
-    MPIR_Segment_free(dt_seg);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);

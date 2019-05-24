@@ -13,13 +13,13 @@
 
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
-   as well as segment_first and segment_size. */
+   as well as msg_offset and msgsize. */
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
                               MPL_IOV *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    intptr_t orig_segment_first = sreq->dev.segment_first;
+    intptr_t orig_msg_offset = sreq->dev.msg_offset;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
@@ -56,17 +56,19 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
     }
 
     /* send as many cells of data as you can */
-    MPID_nem_mpich_send_seg_header(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size,
+    MPID_nem_mpich_send_seg_header(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                                   &sreq->dev.msg_offset, sreq->dev.msgsize,
                                    header, hdr_sz, vc, &again);
-    while(!again && sreq->dev.segment_first < sreq->dev.segment_size)
-        MPID_nem_mpich_send_seg(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size, vc, &again);
+    while(!again && sreq->dev.msg_offset < sreq->dev.msgsize)
+        MPID_nem_mpich_send_seg(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
+                                &sreq->dev.msg_offset, sreq->dev.msgsize, vc, &again);
 
     if (again)
     {
         /* we didn't finish sending everything */
         sreq->ch.noncontig = TRUE;
         sreq->ch.vc = vc;
-        if (sreq->dev.segment_first == orig_segment_first) /* nothing was sent, save header */
+        if (sreq->dev.msg_offset == orig_msg_offset) /* nothing was sent, save header */
         {
             sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
             sreq->ch.header_sz    = hdr_sz;
@@ -89,7 +91,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.msgsize));
     }
     else
     {
@@ -98,7 +100,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(complete); /* all data has been sent, we should always complete */
 
-        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.msgsize));
     }
 
  fn_exit:

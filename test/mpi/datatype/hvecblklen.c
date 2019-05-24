@@ -10,7 +10,7 @@
 #include "mpitest.h"
 
 /* Inspired by the Intel MPI_Type_hvector_blklen test.
-   Added to include a test of a dataloop optimization that failed.
+   Added to include a test of a typerep optimization that failed.
 */
 int main(int argc, char *argv[])
 {
