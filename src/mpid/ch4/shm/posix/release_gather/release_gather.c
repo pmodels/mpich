@@ -138,7 +138,7 @@ cvars:
 
 #include "mpiimpl.h"
 #include "release_gather.h"
-#ifdef HAVE_HWLOC
+#ifdef BUILD_TOPOTREES
 #include "topotree.h"
 #include "topotree_util.h"
 #endif
@@ -196,7 +196,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     const long pg_sz = sysconf(_SC_PAGESIZE);
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     bool mapfail_flag = false;
-    int topotree_fail[2] = { 0, 0 };
+    int topotree_fail[2] = { -1, -1 };  /* -1 means topo trees not created due to reasons like not
+                                         * specifying binding, no hwloc etc. 0 means topo trees were
+                                         * created successfully. 1 means topo trees were created
+                                         * but there was a failure, so the tree needs to be freed
+                                         * before creating the non-topo tree */
 
     rank = MPIR_Comm_rank(comm_ptr);
     num_ranks = MPIR_Comm_size(comm_ptr);
@@ -305,10 +309,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
-#ifdef HAVE_HWLOC
+#ifdef BUILD_TOPOTREES
         /* Create bcast_tree and reduce_tree with root of the tree as 0 */
         if (MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES &&
             getenv("HYDRA_USER_PROVIDED_BINDING")) {
+            /* Topology aware trees are created only when the user has specified process binding */
             if (hwloc_topology_load(MPIR_Process.hwloc_topology) == 0) {
                 mpi_errno =
                     MPIDI_SHM_topology_tree_init(comm_ptr, 0, MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
