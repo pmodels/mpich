@@ -246,35 +246,11 @@ if test "$pac_cv_have_struct_ifreq" = "yes" ; then
     AC_DEFINE(HAVE_STRUCT_IFREQ,1,[Define if struct ifreq can be used])
 fi
 
-# Check for knem options
-AC_ARG_WITH(knem, [--with-knem=path - specify path where knem include directory can be found],
-if test "${with_knem}" != "yes" -a "${with_knem}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_knem}/include"
-fi,)
-AC_ARG_WITH(knem-include, [--with-knem-include=path - specify path to knem include directory],
-if test "${with_knem_include}" != "yes" -a "${with_knem_include}" != "no" ; then
-    CPPFLAGS="$CPPFLAGS -I${with_knem_include}"
-fi,)
-
-AC_CHECK_HEADERS([knem_io.h], pac_cv_have_knem_io_h=yes,pac_cv_have_knem_io_h=no,)
-if test "${pac_cv_have_knem_io_h}" = yes ; then
-    AC_DEFINE(HAVE_KNEM_IO_H,1,[Define if you have the <knem_io.h> header file.])
-fi
-
 # allow the user to select different local LMT implementations
-AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', 'knem', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
+AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
 case "$with_nemesis_local_lmt" in
     shm_copy|default)
     local_lmt_impl=MPID_NEM_LOCAL_LMT_SHM_COPY
-    ;;
-    dma|shm_dma|knem)
-    if test "${pac_cv_have_knem_io_h}" != yes ; then
-        AC_MSG_ERROR([Failed to find knem_io.h for nemesis-local-lmt=knem])
-    fi
-    local_lmt_impl=MPID_NEM_LOCAL_LMT_DMA
-    ;;
-    vmsplice)
-    local_lmt_impl=MPID_NEM_LOCAL_LMT_VMSPLICE
     ;;
     none)
     local_lmt_impl=MPID_NEM_LOCAL_LMT_NONE
