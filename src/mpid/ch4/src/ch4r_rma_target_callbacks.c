@@ -1202,9 +1202,9 @@ static int cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-int MPIDIG_put_ack_taget_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                                int is_local, int *is_contig,
-                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+                                 int is_local, int *is_contig,
+                                 MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_put_ack_msg_t *msg_hdr = (MPIDIG_put_ack_msg_t *) am_hdr;
