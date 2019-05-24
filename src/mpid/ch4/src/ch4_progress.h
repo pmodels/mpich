@@ -13,7 +13,7 @@
 
 #include "ch4_impl.h"
 
-#define MPIDI_MAX_VCI_PROGRESS_ATTEMPTS 100
+#define MPIDI_MAX_VCI_PROGRESS_ATTEMPTS 1000000
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test_hooks(void)
 {
