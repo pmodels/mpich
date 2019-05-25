@@ -57,7 +57,7 @@
 Input/output Parameters:
 . dataloop - pointer to dataloop structure
 @*/
-void MPIR_Dataloop_free(void** dataloop_)
+void MPIR_Dataloop_free(void **dataloop_)
 {
     MPII_Dataloop **dataloop = (MPII_Dataloop **) dataloop_;
 
@@ -496,7 +496,7 @@ void MPII_Dataloop_alloc_and_copy(int kind,
 
   Returns 0 on success, -1 on failure.
 @*/
-void MPIR_Dataloop_dup(void* old_loop_, void** new_loop_p_)
+void MPIR_Dataloop_dup(void *old_loop_, void **new_loop_p_)
 {
     MPII_Dataloop *new_loop;
     MPII_Dataloop **new_loop_p = (MPII_Dataloop **) new_loop_p_;
@@ -541,8 +541,7 @@ Input Parameters:
            (passing NULL will instead result in el_size values being used)
 
 @*/
-MPI_Aint
-MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type))
+MPI_Aint MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type))
 {
     MPI_Aint tmp_sz, tmp_ct = 1;
 
