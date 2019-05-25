@@ -13,9 +13,9 @@
 
 struct MPIR_Datatype;
 
-void MPIR_Dataloop_create(MPI_Datatype type, void ** dlp_p);
-void MPIR_Dataloop_free(void ** dataloop);
-void MPIR_Dataloop_dup(void * old_loop, void ** new_loop_p);
+void MPIR_Dataloop_create(MPI_Datatype type, void **dlp_p);
+void MPIR_Dataloop_free(void **dataloop);
+void MPIR_Dataloop_dup(void *old_loop, void **new_loop_p);
 int MPIR_Dataloop_flatten_size(struct MPIR_Datatype *dtp, int *flattened_dataloop_size);
 int MPIR_Dataloop_flatten(struct MPIR_Datatype *dtp, void *flattened_dataloop);
 int MPIR_Dataloop_unflatten(struct MPIR_Datatype *dtp, void *flattened_dataloop);

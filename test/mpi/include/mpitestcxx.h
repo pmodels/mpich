@@ -11,9 +11,11 @@
 #include "mpi.h"
 #include "mpitestconf.h"
 
+/* *INDENT-OFF* */
 extern "C" {
 #include "mtest_common.h"
 }
+/* *INDENT-ON* */
 
 #ifdef HAVE_IOSTREAM
 #include <iostream>
@@ -23,11 +25,9 @@ using namespace std;
 #else
 #include <iostream.h>
 #endif
-
 #include <string.h>
-/*
- * Init and finalize test
- */
+
+/* Init and finalize test */
 void MTest_Init(void);
 void MTest_Finalize(int);
 void MTestPrintError(int);
