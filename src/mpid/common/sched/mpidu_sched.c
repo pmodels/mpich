@@ -54,7 +54,7 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
         case MPIDU_SCHED_ENTRY_SEND:
             {
                 struct MPIDU_Sched_send *s = &(e->u.send);
-                fprintf(fh, "\t\tSend: " MPI_AINT_FMT_DEC_SPEC " of type %x from %d\n", s->count,
+                fprintf(fh, "\t\tSend: " MPIR_FMT_AINT_d " of type %x from %d\n", s->count,
                         s->datatype, s->dest);
                 fprintf(fh, "\t\t from buff: %p\n", s->buf);
             }
@@ -62,7 +62,7 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
         case MPIDU_SCHED_ENTRY_RECV:
             {
                 struct MPIDU_Sched_recv *r = &(e->u.recv);
-                fprintf(fh, "\t\tRecv: " MPI_AINT_FMT_DEC_SPEC " of type %x from %d\n", r->count,
+                fprintf(fh, "\t\tRecv: " MPIR_FMT_AINT_d " of type %x from %d\n", r->count,
                         r->datatype, r->src);
                 fprintf(fh, "\t\t Into buff: %p\n", r->buf);
             }
@@ -71,7 +71,7 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
             {
                 struct MPIDU_Sched_reduce *rd = &(e->u.reduce);
                 fprintf(fh, "\t\tReduce: %p -> %p\n", rd->inbuf, rd->inoutbuf);
-                fprintf(fh, "\t\t  " MPI_AINT_FMT_DEC_SPEC " elements of type %x\n", rd->count,
+                fprintf(fh, "\t\t  " MPIR_FMT_AINT_d " elements of type %x\n", rd->count,
                         rd->datatype);
                 fprintf(fh, "\t\t Op: %x\n", rd->op);
             }
@@ -79,9 +79,9 @@ static void entry_dump(FILE * fh, struct MPIDU_Sched_entry *e)
         case MPIDU_SCHED_ENTRY_COPY:
             {
                 struct MPIDU_Sched_copy *cp = &(e->u.copy);
-                fprintf(fh, "\t\tFrom: %p " MPI_AINT_FMT_DEC_SPEC " of type %x\n", cp->inbuf,
+                fprintf(fh, "\t\tFrom: %p " MPIR_FMT_AINT_d " of type %x\n", cp->inbuf,
                         cp->incount, cp->intype);
-                fprintf(fh, "\t\tTo:   %p " MPI_AINT_FMT_DEC_SPEC " of type %x\n", cp->outbuf,
+                fprintf(fh, "\t\tTo:   %p " MPIR_FMT_AINT_d " of type %x\n", cp->outbuf,
                         cp->outcount, cp->outtype);
             }
             break;
@@ -789,9 +789,9 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
         MPIR_Datatype_get_size_macro(intype, intype_size);
         MPIR_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
-            MPL_error_printf("truncation: intype=%#x, intype_size=" MPI_AINT_FMT_DEC_SPEC
-                             ", incount=" MPI_AINT_FMT_DEC_SPEC ", outtype=%#x, outtype_size="
-                             MPI_AINT_FMT_DEC_SPEC " outcount=" MPI_AINT_FMT_DEC_SPEC "\n", intype,
+            MPL_error_printf("truncation: intype=%#x, intype_size=" MPIR_FMT_AINT_d
+                             ", incount=" MPIR_FMT_AINT_d ", outtype=%#x, outtype_size="
+                             MPIR_FMT_AINT_d " outcount=" MPIR_FMT_AINT_d "\n", intype,
                              intype_size, incount, outtype, outtype_size, outcount);
         }
     }

@@ -497,7 +497,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
         MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                         (MPL_DBG_FDEST,
                          "dloop_segment_manipulate: warning: first == last ("
-                         MPI_AINT_FMT_DEC_SPEC ")\n", first));
+                         MPIR_FMT_AINT_d ")\n", first));
         return;
     }
 
@@ -506,8 +506,8 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
         MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "first=" MPI_AINT_FMT_DEC_SPEC "; stream_off="
-                         MPI_AINT_FMT_DEC_SPEC "; resetting.\n", first, stream_off));
+                         "first=" MPIR_FMT_AINT_d "; stream_off="
+                         MPIR_FMT_AINT_d "; resetting.\n", first, stream_off));
 #endif
 
         if (first < stream_off) {
@@ -524,9 +524,9 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
         MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "done repositioning stream_off; first=" MPI_AINT_FMT_DEC_SPEC
-                         ", stream_off=" MPI_AINT_FMT_DEC_SPEC ", last="
-                         MPI_AINT_FMT_DEC_SPEC "\n", first, stream_off, last));
+                         "done repositioning stream_off; first=" MPIR_FMT_AINT_d
+                         ", stream_off=" MPIR_FMT_AINT_d ", last="
+                         MPIR_FMT_AINT_d "\n", first, stream_off, last));
 #endif
     }
 
@@ -611,7 +611,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "\thit leaf; cur_sp=%d, elmp=%x, piece_sz=" MPI_AINT_FMT_DEC_SPEC
+                             "\thit leaf; cur_sp=%d, elmp=%x, piece_sz=" MPIR_FMT_AINT_d
                              "\n", cur_sp, (unsigned) cur_elmp, myblocks * local_el_size));
 #endif
 
@@ -622,9 +622,8 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
-                                 "\tpartial block count=" MPI_AINT_FMT_DEC_SPEC " ("
-                                 MPI_AINT_FMT_DEC_SPEC " bytes)\n", myblocks,
-                                 myblocks * stream_el_size));
+                                 "\tpartial block count=" MPIR_FMT_AINT_d " ("
+                                 MPIR_FMT_AINT_d " bytes)\n", myblocks, myblocks * stream_el_size));
 #endif
                 if (myblocks == 0) {
                     SEGMENT_SAVE_LOCAL_VALUES;
@@ -904,8 +903,8 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "\tstep 1: next orig_offset = " MPI_AINT_FMT_DEC_SPEC " (0x"
-                             MPI_AINT_FMT_HEX_SPEC ")\n", next_elmp->orig_offset,
+                             "\tstep 1: next orig_offset = " MPIR_FMT_AINT_d " (0x"
+                             MPIR_FMT_AINT_x ")\n", next_elmp->orig_offset,
                              next_elmp->orig_offset));
 #endif
 
@@ -944,9 +943,8 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 #ifdef MPII_DATALOOP_DEBUG_MANIPULATE
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "\tstep 2: next curoffset = " MPI_AINT_FMT_DEC_SPEC " (0x"
-                             MPI_AINT_FMT_HEX_SPEC ")\n", next_elmp->curoffset,
-                             next_elmp->curoffset));
+                             "\tstep 2: next curoffset = " MPIR_FMT_AINT_d " (0x"
+                             MPIR_FMT_AINT_x ")\n", next_elmp->curoffset, next_elmp->curoffset));
 #endif
 
             cur_elmp->curblock--;
@@ -1044,7 +1042,7 @@ MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
  * the rest are filled in at processing time.
  */
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
-                                 MPII_Dataloop *dlp, int branch_flag)
+                                 MPII_Dataloop * dlp, int branch_flag)
 {
     elmp->loop_p = dlp;
 

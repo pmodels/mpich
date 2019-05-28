@@ -435,8 +435,8 @@ static int contig_m2m(MPI_Aint * blocks_p,
     DBG_SEGMENT(printf("element type = %lx\n", (long) el_type));
     DBG_SEGMENT(printf("contig m2m: elsize = %d, size = %d\n", (int) el_size, (int) size));
 #ifdef MPID_SU_VERBOSE
-    dbg_printf("\t[contig unpack: do=" MPI_AINT_FMT_DEC_SPEC ", dp=%x, bp=%x, sz="
-               MPI_AINT_FMT_DEC_SPEC ", blksz=" MPI_AINT_FMT_DEC_SPEC "]\n", rel_off,
+    dbg_printf("\t[contig unpack: do=" MPIR_FMT_AINT_d ", dp=%x, bp=%x, sz="
+               MPIR_FMT_AINT_d ", blksz=" MPIR_FMT_AINT_d "]\n", rel_off,
                (unsigned) bufp, (unsigned) paramp->u.unpack.unpack_buffer, el_size, *blocks_p);
 #endif
 
@@ -884,9 +884,9 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
     size = *blocks_p * (MPI_Aint) el_size;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
-                                                 "    contig to vec: do=" MPI_AINT_FMT_DEC_SPEC
+                                                 "    contig to vec: do=" MPIR_FMT_AINT_d
                                                  ", dp=%p, ind=%d, sz=%d, blksz="
-                                                 MPI_AINT_FMT_DEC_SPEC, (MPI_Aint) rel_off, bufp,
+                                                 MPIR_FMT_AINT_d, (MPI_Aint) rel_off, bufp,
                                                  paramp->u.pack_vector.index, el_size,
                                                  (MPI_Aint) * blocks_p));
 
@@ -944,14 +944,14 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
     blocks_left = *blocks_p;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
-                                                 "    vector to vec: do=" MPI_AINT_FMT_DEC_SPEC
+                                                 "    vector to vec: do=" MPIR_FMT_AINT_d
                                                  ", dp=%p"
-                                                 ", len=" MPI_AINT_FMT_DEC_SPEC
-                                                 ", ind=" MPI_AINT_FMT_DEC_SPEC
-                                                 ", ct=" MPI_AINT_FMT_DEC_SPEC
-                                                 ", blksz=" MPI_AINT_FMT_DEC_SPEC
-                                                 ", str=" MPI_AINT_FMT_DEC_SPEC
-                                                 ", blks=" MPI_AINT_FMT_DEC_SPEC,
+                                                 ", len=" MPIR_FMT_AINT_d
+                                                 ", ind=" MPIR_FMT_AINT_d
+                                                 ", ct=" MPIR_FMT_AINT_d
+                                                 ", blksz=" MPIR_FMT_AINT_d
+                                                 ", str=" MPIR_FMT_AINT_d
+                                                 ", blks=" MPIR_FMT_AINT_d,
                                                  (MPI_Aint) rel_off,
                                                  bufp,
                                                  (MPI_Aint) paramp->u.pack_vector.length,
@@ -987,7 +987,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 #ifdef MPID_SP_VERBOSE
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC
+                             "\t[vector to vec exiting (1): next ind = %d, " MPIR_FMT_AINT_d
                              " blocks processed.\n", paramp->u.pack_vector.index,
                              (MPI_Aint) * blocks_p));
 #endif
@@ -1009,7 +1009,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 #ifdef MPID_SP_VERBOSE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC
+                     "\t[vector to vec exiting (2): next ind = %d, " MPIR_FMT_AINT_d
                      " blocks processed.\n", paramp->u.pack_vector.index, (MPI_Aint) * blocks_p));
 #endif
 

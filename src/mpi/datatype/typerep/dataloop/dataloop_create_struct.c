@@ -383,7 +383,7 @@ static int create_flattened_struct(MPI_Aint count,
         MPL_DBG_OUT(MPIR_DBG_DATATYPE, "--- start of flattened type ---");
         for (i = 0; i < nr_blks; i++) {
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "a[%d] = (%d, " MPI_AINT_FMT_DEC_SPEC ")", i,
+                                                "a[%d] = (%d, " MPIR_FMT_AINT_d ")", i,
                                                 tmp_blklens[i], tmp_disps[i]));
         }
         MPL_DBG_OUT(MPIR_DBG_DATATYPE, "--- end of flattened type ---");

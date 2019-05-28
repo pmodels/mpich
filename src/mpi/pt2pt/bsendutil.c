@@ -235,8 +235,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     else
         packsize = count;
 
-    MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "looking for buffer of size " MPI_AINT_FMT_DEC_SPEC,
-                  packsize);
+    MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "looking for buffer of size " MPIR_FMT_AINT_d, packsize);
     /*
      * Use two passes.  Each pass is the same; between the two passes,
      * attempt to complete any active requests, and start any pending
@@ -248,7 +247,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
         p = MPIR_Bsend_find_buffer(packsize);
         if (p) {
             MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL, (MPL_DBG_FDEST,
-                                                      "found buffer of size " MPI_AINT_FMT_DEC_SPEC
+                                                      "found buffer of size " MPIR_FMT_AINT_d
                                                       " with address %p", packsize, p));
             /* Found a segment */
 

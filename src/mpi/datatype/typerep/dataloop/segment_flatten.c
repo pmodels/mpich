@@ -189,7 +189,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
             MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                             (MPL_DBG_FDEST,
                              "\t[vector to vec exiting (1): next ind = %d, "
-                             MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
+                             MPIR_FMT_AINT_d " blocks processed.\n",
                              paramp->u.pack_vector.index, *blocks_p));
 #endif
             return 1;
@@ -208,7 +208,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
 #ifdef MPID_SP_VERBOSE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC
+                     "\t[vector to vec exiting (2): next ind = %d, " MPIR_FMT_AINT_d
                      " blocks processed.\n", paramp->u.pack_vector.index, *blocks_p));
 #endif
 

@@ -79,10 +79,10 @@ void MPII_Datatype_printf(MPI_Datatype type,
     }
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
                     (MPL_DBG_FDEST,
-                     "%5d  %21s  %11d  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  "
-                     MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC
-                     ")  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  "
-                     MPI_AINT_FMT_DEC_SPEC "  %11d", depth, string, (int) size, (MPI_Aint) extent,
+                     "%5d  %21s  %11d  " MPIR_FMT_AINT_d "  " MPIR_FMT_AINT_d "  "
+                     MPIR_FMT_AINT_d "  " MPIR_FMT_AINT_d "(" MPIR_FMT_AINT_d
+                     ")  " MPIR_FMT_AINT_d "(" MPIR_FMT_AINT_d ")  "
+                     MPIR_FMT_AINT_d "  %11d", depth, string, (int) size, (MPI_Aint) extent,
                      (MPI_Aint) true_lb, (MPI_Aint) true_ub, (MPI_Aint) lb, (MPI_Aint) sticky_lb,
                      (MPI_Aint) ub, (MPI_Aint) sticky_ub, (MPI_Aint) displacement,
                      (int) blocklength));
@@ -337,11 +337,11 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPIR_Assert(string != NULL);
 
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                        "# Size = " MPI_AINT_FMT_DEC_SPEC ", Extent = "
-                                        MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC
-                                        "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = "
-                                        MPI_AINT_FMT_DEC_SPEC ", Element Size = "
-                                        MPI_AINT_FMT_DEC_SPEC " (%s), %s", (MPI_Aint) dtp->size,
+                                        "# Size = " MPIR_FMT_AINT_d ", Extent = "
+                                        MPIR_FMT_AINT_d ", LB = " MPIR_FMT_AINT_d
+                                        "%s, UB = " MPIR_FMT_AINT_d "%s, Extent = "
+                                        MPIR_FMT_AINT_d ", Element Size = "
+                                        MPIR_FMT_AINT_d " (%s), %s", (MPI_Aint) dtp->size,
                                         (MPI_Aint) dtp->extent, (MPI_Aint) dtp->lb,
                                         (dtp->has_sticky_lb) ? "(sticky)" : "", (MPI_Aint) dtp->ub,
                                         (dtp->has_sticky_ub) ? "(sticky)" : "",
@@ -468,7 +468,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
             MPIR_Assert((ints != NULL) && (aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "# %shvector ct = %d, blk = %d, str = "
-                                                MPI_AINT_FMT_DEC_SPEC "\n",
+                                                MPIR_FMT_AINT_d "\n",
                                                 depth_spacing(depth), ints[0],
                                                 ints[1], (MPI_Aint) aints[0]));
             contents_printf(*types, depth + 1, acount);
@@ -493,7 +493,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  hindexed [%d]: blk = %d, disp = "
-                                                    MPI_AINT_FMT_DEC_SPEC "\n",
+                                                    MPIR_FMT_AINT_d "\n",
                                                     depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
                 contents_printf(*types, depth + 1, acount);
@@ -506,7 +506,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
             for (i = 0; i < acount && i < ints[0]; i++) {
                 MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                     "# %s  struct[%d]: blk = %d, disp = "
-                                                    MPI_AINT_FMT_DEC_SPEC "\n",
+                                                    MPIR_FMT_AINT_d "\n",
                                                     depth_spacing(depth), i,
                                                     (int) ints[i + 1], (MPI_Aint) aints[i]));
                 contents_printf(types[i], depth + 1, acount);
@@ -531,8 +531,8 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
             MPIR_Assert((aints != NULL) && (types != NULL));
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
                             (MPL_DBG_FDEST,
-                             "# %sresized lb = " MPI_AINT_FMT_DEC_SPEC " extent = "
-                             MPI_AINT_FMT_DEC_SPEC "\n", depth_spacing(depth), aints[0], aints[1]));
+                             "# %sresized lb = " MPIR_FMT_AINT_d " extent = "
+                             MPIR_FMT_AINT_d "\n", depth_spacing(depth), aints[0], aints[1]));
             contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         default:

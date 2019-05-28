@@ -88,7 +88,7 @@ static int leaf_contig_count_block(MPI_Aint * blocks_p,
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST,
                      "contig count block: count = %d, buf+off = %d, lastloc = "
-                     MPI_AINT_FMT_DEC_SPEC "\n", (int) paramp->count,
+                     MPIR_FMT_AINT_d "\n", (int) paramp->count,
                      (int) ((char *) bufp + rel_off), paramp->last_loc));
 #endif
 

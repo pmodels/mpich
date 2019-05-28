@@ -177,7 +177,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	MPIR_Datatype_is_contig((datatype_), (&dt_contig_out_));	\
 	(data_sz_out_) = (intptr_t) (count_) * (dt_ptr_)->size;	\
         (dt_true_lb_)    = (dt_ptr_)->true_lb;                          \
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=%" PRIdPTR, \
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPIR_FMT_AINT_d ", data_sz=%" PRIdPTR, \
 			  (dt_contig_out_), (dt_ptr_)->size, (data_sz_out_)));\
     }									\
 }

@@ -200,7 +200,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"received rndv CTS pkt");
     
     MPIR_Request_get_ptr(cts_pkt->sender_req_id, sreq);
-    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"received cts, count=" MPI_AINT_FMT_DEC_SPEC "\n", sreq->dev.user_count));
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"received cts, count=" MPIR_FMT_AINT_d "\n", sreq->dev.user_count));
 
     sreq->dev.OnDataAvail = 0;
     sreq->dev.OnFinal = 0;

@@ -565,7 +565,7 @@ MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype 
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: contig: ct = %d; new tot_ct = "
-                                 MPI_AINT_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.c_t.count,
+                                 MPIR_FMT_AINT_d "\n", (int) dl_p->loop_params.c_t.count,
                                  (MPI_Aint) tmp_ct));
 #endif
                 break;
@@ -576,7 +576,7 @@ MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype 
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: vector: ct = %d; blk = %d; new tot_ct = "
-                                 MPI_AINT_FMT_DEC_SPEC "\n", (int) dl_p->loop_params.v_t.count,
+                                 MPIR_FMT_AINT_d "\n", (int) dl_p->loop_params.v_t.count,
                                  (int) dl_p->loop_params.v_t.blocksize, (MPI_Aint) tmp_ct));
 #endif
                 break;
@@ -587,7 +587,7 @@ MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype 
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: blkindexed: blks = %d; new tot_ct = "
-                                 MPI_AINT_FMT_DEC_SPEC "\n",
+                                 MPIR_FMT_AINT_d "\n",
                                  (int) dl_p->loop_params.bi_t.count *
                                  (int) dl_p->loop_params.bi_t.blocksize, (MPI_Aint) tmp_ct));
 #endif
@@ -598,7 +598,7 @@ MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype 
                 MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                                 (MPL_DBG_FDEST,
                                  "stream_size: contig: blks = %d; new tot_ct = "
-                                 MPI_AINT_FMT_DEC_SPEC "\n",
+                                 MPIR_FMT_AINT_d "\n",
                                  (int) dl_p->loop_params.i_t.total_blocks, (MPI_Aint) tmp_ct));
 #endif
                 break;

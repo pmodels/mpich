@@ -39,8 +39,8 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
         case MPII_DATALOOP_KIND_CONTIG:
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "      dl%d [shape = record, label = \"contig |{ ct = %d; el_sz = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];", depth,
+                                                MPIR_FMT_AINT_d "; el_ext = "
+                                                MPIR_FMT_AINT_d " }\"];", depth,
                                                 (int) loop_p->loop_params.c_t.count,
                                                 (MPI_Aint) loop_p->el_size,
                                                 (MPI_Aint) loop_p->el_extent));
@@ -48,9 +48,9 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
         case MPII_DATALOOP_KIND_VECTOR:
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                                 "      dl%d [shape = record, label = \"vector |{ ct = %d; blk = %d; str = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_sz = "
-                                                MPI_AINT_FMT_DEC_SPEC "; el_ext =  "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];", depth,
+                                                MPIR_FMT_AINT_d "; el_sz = "
+                                                MPIR_FMT_AINT_d "; el_ext =  "
+                                                MPIR_FMT_AINT_d " }\"];", depth,
                                                 (int) loop_p->loop_params.v_t.count,
                                                 (int) loop_p->loop_params.v_t.blocksize,
                                                 (MPI_Aint) loop_p->loop_params.v_t.stride,
@@ -68,14 +68,14 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
                 if (i + 1 < loop_p->loop_params.i_t.count) {
                     /* more regions after this one */
                     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d), ",
+                                                        "\\n(" MPIR_FMT_AINT_d ", %d), ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         i_t.offset_array[i],
                                                         (int) loop_p->loop_params.
                                                         i_t.blocksize_array[i]));
                 } else {
                     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d); ",
+                                                        "\\n(" MPIR_FMT_AINT_d ", %d); ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         i_t.offset_array[i],
                                                         (int) loop_p->loop_params.
@@ -87,8 +87,8 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
             }
 
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];\n",
+                                                "\\nel_sz = " MPIR_FMT_AINT_d "; el_ext = "
+                                                MPIR_FMT_AINT_d " }\"];\n",
                                                 (MPI_Aint) loop_p->el_size,
                                                 (MPI_Aint) loop_p->el_extent));
             break;
@@ -103,12 +103,12 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
                 if (i + 1 < loop_p->loop_params.bi_t.count) {
                     /* more regions after this one */
                     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        MPI_AINT_FMT_DEC_SPEC ",\\n ",
+                                                        MPIR_FMT_AINT_d ",\\n ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         bi_t.offset_array[i]));
                 } else {
                     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                        MPI_AINT_FMT_DEC_SPEC "; ",
+                                                        MPIR_FMT_AINT_d "; ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         bi_t.offset_array[i]));
                 }
@@ -118,8 +118,8 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
             }
 
             MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
-                                                "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = "
-                                                MPI_AINT_FMT_DEC_SPEC " }\"];",
+                                                "\\nel_sz = " MPIR_FMT_AINT_d "; el_ext = "
+                                                MPIR_FMT_AINT_d " }\"];",
                                                 (MPI_Aint) loop_p->el_size,
                                                 (MPI_Aint) loop_p->el_extent));
             break;
@@ -146,11 +146,11 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
 
             for (i = 0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
                 if (i + 1 < loop_p->loop_params.s_t.count) {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPI_AINT_FMT_DEC_SPEC ", ",
+                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPIR_FMT_AINT_d ", ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         s_t.offset_array[i]));
                 } else {
-                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPI_AINT_FMT_DEC_SPEC "; ",
+                    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, MPIR_FMT_AINT_d "; ",
                                                         (MPI_Aint) loop_p->loop_params.
                                                         s_t.offset_array[i]));
                 }
