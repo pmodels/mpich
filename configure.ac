@@ -5079,14 +5079,6 @@ AS_CASE([$MPI_OFFSET],
         [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
 AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
 
-# FIXME: we need an explanation of why we need both MPI_OFFSET and
-# MPI_OFFSET_TYPEDEF.   Why is MPI_OFFSET_TYPEDEF necessary?
-# This appears to be used by the Windows "winconfigure.wsf" which is used
-# to create a multiline definition using an #ifdef check on USE_GCC
-# We may wish to use a different approach
-MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
-AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
 # Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
 # The value for this comes from ROMIO, and is needed in mpif.h.in
 # First, we check that this works with both Fortran compilers (if
