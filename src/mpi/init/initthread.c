@@ -346,7 +346,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Info *info_ptr;
 #if defined(MPICH_IS_THREADED)
     bool cs_initialized = false;
-#endif
 
     /* The threading library must be initialized at the very beginning because
      * it manages all synchronization objects (e.g., mutexes) that will be
@@ -357,6 +356,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         if (thread_err)
             goto fn_fail;
     }
+#endif
 
 #ifdef HAVE_HWLOC
     MPIR_Process.bindset = hwloc_bitmap_alloc();
