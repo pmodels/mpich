@@ -94,7 +94,7 @@ int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
                 break;
             case MPI_SEEK_CUR:
                 /* get current location of shared file pointer */
-                ADIO_Get_shared_fp(adio_fh, 0, &curr_offset, &error_code);
+                ADIO_Get_shared_fp(adio_fh, 0, (ADIO_Offset *)&curr_offset, &error_code);
                 /* --BEGIN ERROR HANDLING-- */
                 if (error_code != MPI_SUCCESS) {
                     error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -119,7 +119,7 @@ int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
                 break;
             case MPI_SEEK_END:
                 /* find offset corr. to end of file */
-                ADIOI_Get_eof_offset(adio_fh, &eof_offset);
+                ADIOI_Get_eof_offset(adio_fh, (ADIO_Offset *)&eof_offset);
                 offset += eof_offset;
                 /* --BEGIN ERROR HANDLING-- */
                 if (offset < 0) {

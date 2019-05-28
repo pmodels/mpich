@@ -74,7 +74,7 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
     /* flatten and add to datatype */
     flat = flatlist_node_new(datatype, flat_count);
     if (is_contig) {
-        MPI_Type_size_x(datatype, &(flat->blocklens[0]));
+        MPI_Type_size_x(datatype, (MPI_Count *)&(flat->blocklens[0]));
         flat->indices[0] = 0;
     } else {
 

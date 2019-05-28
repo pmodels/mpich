@@ -53,7 +53,7 @@ int MPI_File_get_position(MPI_File fh, MPI_Offset * offset)
     MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    ADIOI_Get_position(adio_fh, offset);
+    ADIOI_Get_position(adio_fh, (ADIO_Offset *)offset);
 
   fn_exit:
     return MPI_SUCCESS;

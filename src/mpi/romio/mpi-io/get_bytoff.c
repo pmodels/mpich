@@ -62,7 +62,7 @@ int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
     MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    ADIOI_Get_byte_offset(adio_fh, offset, disp);
+    ADIOI_Get_byte_offset(adio_fh, offset, (ADIO_Offset *)disp);
 
   fn_exit:
 

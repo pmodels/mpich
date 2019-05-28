@@ -108,7 +108,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size_x(fd->filetype, &filetype_sz);
+    MPI_Type_size_x(fd->filetype, (MPI_Count *)&filetype_sz);
     flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     if (filetype_extent == filetype_sz) {
         flat_file_p->blocklens[0] = memtype_sz * count;

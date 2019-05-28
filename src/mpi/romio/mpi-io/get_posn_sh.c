@@ -54,7 +54,7 @@ int MPI_File_get_position_shared(MPI_File fh, MPI_Offset * offset)
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
-    ADIO_Get_shared_fp(adio_fh, 0, offset, &error_code);
+    ADIO_Get_shared_fp(adio_fh, 0, (ADIO_Offset *)offset, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
         error_code = MPIO_Err_return_file(adio_fh, error_code);

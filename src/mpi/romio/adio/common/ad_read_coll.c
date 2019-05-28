@@ -843,7 +843,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                 others_req[i].lens[k] = partial_send[i];
             }
             ADIOI_Type_create_hindexed_x(count[i],
-                                         &(others_req[i].lens[start_pos[i]]),
+                                         (MPI_Count *)&(others_req[i].lens[start_pos[i]]),
                                          &(others_req[i].mem_ptrs[start_pos[i]]),
                                          MPI_BYTE, &send_type);
             /* absolute displacement; use MPI_BOTTOM in send */

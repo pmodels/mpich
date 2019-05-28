@@ -574,7 +574,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                 others_req[i].lens[k] = partial_recv[i];
             }
             ADIOI_Type_create_hindexed_x(count[i],
-                                         &(others_req[i].lens[start_pos[i]]),
+                                         (MPI_Count *)&(others_req[i].lens[start_pos[i]]),
                                          &(others_req[i].mem_ptrs[start_pos[i]]),
                                          MPI_BYTE, recv_types + j);
             /* absolute displacements; use MPI_BOTTOM in recv */
