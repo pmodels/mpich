@@ -15,6 +15,18 @@
 #include "adio.h"
 #include "mpio.h"
 
+#if SIZEOF_MPI_OFFSET == 4
+#define MPIR_FMT_OFFSET_d PRId32
+#define MPIR_FMT_OFFSET_x PRIx32
+#define MPIR_OFFSET_MAX 2147483647
+#elif SIZEOF_MPI_OFFSET == 8
+#define MPIR_FMT_OFFSET_d PRId64
+#define MPIR_FMT_OFFSET_x PRIx64
+#define MPIR_OFFSET_MAX 9223372036854775807
+#else
+#error "Size of MPI_Offset is neither 4 or 8 bytes."
+#endif
+
 #ifdef ROMIO_INSIDE_MPICH
 #include "mpir_ext.h"
 

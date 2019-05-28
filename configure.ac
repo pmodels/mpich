@@ -4243,9 +4243,8 @@ dnl     len_doublecplx=$hexlen
     # not yet support it.
     PAC_F77_LOGICALS_IN_C([$MPI_FINT])
 
-    # Get the INTEGER_KIND, ADDRESS_KIND and OFFSET_KIND if possible
+    # Get the INTEGER_KIND if possible
     #
-    # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
     # Since our compiler might BE a Fortran 90 compiler, try and determine the
     # values.
     if test "$FC" = "no" ; then
@@ -4257,48 +4256,12 @@ dnl     len_doublecplx=$hexlen
         ])
     fi
     if test "$FC" != "no" ; then
-        # Offset kind should be for 8 bytes if possible (Romio prefers that)
-        # address should be sizeof void * (unless --with-aint-size has
-        # been set)
-        # FIXME in the current configure implementation OFFSET_KIND and
-        # MPI_Offset won't always agree, but generally will.  The MPI Standard
-        # implies that these types must have identical size, so this is a bug
-        # waiting to happen.
-	if test "$with_aint_size" -gt 0 -a \
-	        "$with_aint_size" -gt "$ac_cv_sizeof_void_p" ; then
-	    testsize=$with_aint_size
-        else
-            testsize=$ac_cv_sizeof_void_p
-        fi
-        if test "$testsize" = 0 ; then
-            # Set a default
-            testsize=4
-        fi
-        dnl Using the {} around testsize helps the comments work correctly
-        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
-        if test "$testsize" = 8 ; then
-            OFFSET_KIND=$ADDRESS_KIND
-        else
-            PAC_PROG_FC_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
-        fi
-        #
         PAC_PROG_FC_INT_KIND(INTEGER_KIND,$pac_cv_f77_sizeof_integer,$CROSS_F90_INTEGER_KIND)
         if test "$INTEGER_KIND" = "-1" ; then
 	    # In our experience, this usually means that there is some
 	    # problem building and/or running the f90 program.  Fail
 	    # in this case rather than attempt to continue
 	    AC_MSG_ERROR([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.])
-        fi
-	#
-        # Some compilers won't allow a -1 kind (e.g., absoft).  In this case,
-        # use a fallback (sizeof(int) kind)
-        if test "$ADDRESS_KIND" = "-1" -o "$OFFSET_KIND" = "-1" ; then
-            if test "$ADDRESS_KIND" = "-1" ; then
-	        ADDRESS_KIND=$INTEGER_KIND
-            fi
-            if test "$OFFSET_KIND" = "-1" ; then
-	        OFFSET_KIND=$INTEGER_KIND
-            fi
         fi
 	AC_LANG_PUSH([Fortran])
         AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
@@ -4320,26 +4283,6 @@ dnl     len_doublecplx=$hexlen
 	# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
 	AC_SUBST(WTIME_DOUBLE_TYPE)
     fi
-    # Make sure that address kind and offset kind have values.
-    if test -z "$ADDRESS_KIND" ; then
-        ADDRESS_KIND=0
-    fi
-    if test -z "$OFFSET_KIND" ; then
-        OFFSET_KIND=0
-    fi
-    # Note, however, that zero value are (in all practical case) invalid
-    # for Fortran 90, and indicate a failure.  Test and fail if Fortran 90
-    # enabled.
-    if test "$enable_fc" = "yes" ; then
-        if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
-	    AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
-	    # If the above is converted to a warning, you need to change
-	    # enable_fc and remote f90 from the bindings
-	    enable_fc=no
-        fi
-    fi
-    AC_SUBST(ADDRESS_KIND)
-    AC_SUBST(OFFSET_KIND)
     AC_SUBST(INTEGER_KIND)
 
     # Some compilers may require special directives to handle the common
@@ -4803,6 +4746,12 @@ if test "$NEEDSPLIB" = "yes" ; then
 fi
 AC_SUBST(LPMPILIBNAME)
 
+#----------------------------------------------------------------- 
+#   **** MPI_Aint, MPI_Offset, MPI_Count ****
+#----------------------------------------------------------------- 
+#---------------------------------------- 
+# **** SIZES: export MPI_SIZEOF_xxx and define SIZEOF_MPI_xxx 
+# ---- MPI_Aint ----
 # Note that aint_size must be used instead of void_p where the desired check
 # is on the size of MPI_Aint
 aint_size=$ac_cv_sizeof_void_p
@@ -4814,7 +4763,6 @@ if test "$with_aint_size" -gt 0 ; then
 fi
 
 MPI_SIZEOF_AINT=$aint_size
-# export for subconfigure (e.g. test/mpi/configure)
 export MPI_SIZEOF_AINT
 
 MPI_AINT=int
@@ -4828,19 +4776,50 @@ done
 AC_SUBST(MPI_AINT)
 AC_DEFINE_UNQUOTED([SIZEOF_MPI_AINT],[$aint_size], [Define size of MPI_Aint in bytes])
 
-# ----------------------------------------------------------------------------
-# MPI_AINT datatype
-# ----------------------------------------------------------------------------
-# Must be done after MPI_Aint type determination but before subconfigures.
+# ---- MPI_Offset ----
+# Use 8-byte integer for MPI_Offset. We could use a config option
+# --with-offset_size=#, similar to --with-aint-size.
+MPI_SIZEOF_OFFSET=8
+export MPI_SIZEOF_OFFSET
 
-# convert to 2-char hex size
+MPI_OFFSET=int
+for type in int long long_long short ; do
+    eval len=\$ac_cv_sizeof_$type
+    if test "$len" = "$MPI_SIZEOF_OFFSET" ; then
+        MPI_OFFSET=`echo $type | sed -e 's/_/ /'`
+        break
+    fi
+done
+AC_SUBST(MPI_OFFSET)
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_OFFSET],[$MPI_SIZEOF_OFFSET], [Define size of MPI_Offset in bytes])
+
+# ---- MPI_Count ----
+# quick sanity checking to avoid a bad test immediately below
+AS_IF([test -z "$MPI_SIZEOF_AINT"],
+      [AC_MSG_ERROR([size of MPI_Aint is unknown at this stage])])
+AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
+      [AC_MSG_ERROR([size of MPI_Offset is unknown at this stage])])
+
+AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
+      [# an unlikely case, but I suppose it's theoretically possible
+       MPI_COUNT="$MPI_AINT"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
+      [# don't bother checking whether Aint or Offset are larger than int, they
+       # surely will be
+       MPI_COUNT="$MPI_OFFSET"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
+AC_SUBST([MPI_COUNT])
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_COUNT],[$MPI_SIZEOF_COUNT], [Define size of MPI_Count in bytes])
+
+#---------------------------------------- 
+# **** MPI datatype: AC_SUBST(MPI_xxx_DATATYPE)
+# ---- MPI_AINT ----
 case "$MPI_SIZEOF_AINT" in
     4)    len_mpi_aint=04 ;;
     8)    len_mpi_aint=08 ;;
     16)   len_mpi_aint=10 ;;
     *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_AINT to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
 esac
-# MPI_AINT and MPI_OFFSET are already taken, appending a _DATATYPE suffix
 MPI_AINT_DATATYPE=0x4c00${len_mpi_aint}43
 AC_SUBST(MPI_AINT_DATATYPE)
 export MPI_AINT_DATATYPE
@@ -4850,8 +4829,85 @@ export MPI_AINT_DATATYPE
 MPI_F77_AINT=`expr 1275068483 '+' '(' 256 '*' $MPI_SIZEOF_AINT ')'`
 AC_SUBST(MPI_F77_AINT)
 export MPI_F77_AINT
-# ----------------------------------------------------------------------------
 
+# ---- MPI_OFFSET ----
+case "$MPI_SIZEOF_OFFSET" in
+    4)    len_mpi_offset=04 ;;
+    8)    len_mpi_offset=08 ;;
+    16)   len_mpi_offset=10 ;;
+    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_OFFSET to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
+esac
+MPI_OFFSET_DATATYPE=0x4c00${len_mpi_offset}44
+AC_SUBST(MPI_OFFSET_DATATYPE)
+export MPI_OFFSET_DATATYPE
+
+# 0x4c000044 is 1275068484 in decimal, add ($MPI_SIZEOF_OFFSET * 256) and you get
+# the decimal equivalent of the hex number
+MPI_F77_OFFSET=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+AC_SUBST(MPI_F77_OFFSET)
+export MPI_F77_OFFSET
+
+# ---- MPI_COUNT ----
+AS_CASE([$MPI_SIZEOF_COUNT],
+        [4], [len_mpi_count=04],
+        [8], [len_mpi_count=08],
+        [16],[len_mpi_count=10],
+        [AC_MSG_ERROR([Unable to convert MPI_SIZEOF_COUNT to a hex string!])])
+MPI_COUNT_DATATYPE=0x4c00${len_mpi_count}45
+AC_SUBST([MPI_COUNT_DATATYPE])
+
+# 0x4c000045 is 1275068485 in decimal, add ($MPI_SIZEOF_COUNT * 256) and you get
+# the decimal equivalent of the hex number
+MPI_F77_COUNT=`expr 1275068485 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+AC_SUBST([MPI_F77_COUNT])
+
+#---------------------------------------- 
+# **** Fortran F90 KIND:
+if test "$enable_f77" = yes ; then
+    if test "$FC" != "no" ; then
+        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,$MPI_SIZEOF_AINT,$CROSS_F90_ADDRESS_KIND)
+        PAC_PROG_FC_INT_KIND(OFFSET_KIND,$MPI_SIZEOF_OFFSET,$CROSS_F90_OFFSET_KIND)
+        if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
+            AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
+            # If the above is converted to a warning, you need to change
+            # enable_fc and remote f90 from the bindings
+            enable_fc=no
+        fi
+    fi
+    # Make sure that address kind and offset kind have values.
+    if test -z "$ADDRESS_KIND" ; then
+        ADDRESS_KIND=0
+    fi
+    if test -z "$OFFSET_KIND" ; then
+        OFFSET_KIND=0
+    fi
+
+    AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
+      [COUNT_KIND="$ADDRESS_KIND"],
+      [COUNT_KIND="$OFFSET_KIND"])
+
+    AC_SUBST(ADDRESS_KIND)
+    AC_SUBST(OFFSET_KIND)
+    AC_SUBST(COUNT_KIND)
+fi
+
+#---------------------------------------- 
+# **** Fortran F77 type:
+if test "$enable_f77" = yes ; then
+    if test $MPI_SIZEOF_OFFSET = $pac_cv_f77_sizeof_integer ; then
+        FORTRAN_MPI_OFFSET="integer"
+    elif test $MPI_SIZEOF_OFFSET = 4 -a $pac_cv_fort_integer4 = yes ; then
+        FORTRAN_MPI_OFFSET="integer*8"
+    elif test $MPI_SIZEOF_OFFSET = 8 -a $pac_cv_fort_integer8 = yes ; then
+        FORTRAN_MPI_OFFSET="integer*8"
+    else
+        AC_MSG_ERROR([Can't find F77 integer type for MPI_Offset.])
+    fi
+    export FORTRAN_MPI_OFFSET
+    AC_SUBST(FORTRAN_MPI_OFFSET)
+fi
+
+#---------------------------------------- 
 if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
     AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
 fi
@@ -4880,6 +4936,9 @@ BSEND_OVERHEAD=$ac_cv_sizeof_MPII_Bsend_data_t
 export BSEND_OVERHEAD
 AC_SUBST(BSEND_OVERHEAD)
 
+AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
+
+# ----------------------------------------------------------------------------
 dnl Configure any subdirectories.  Note that config.status will *not*
 dnl reexecute these!
 dnl
@@ -5029,23 +5088,7 @@ dnl AC_SUBST(MPI_2COMPLEX)
 dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
-#---- MPI_Offset ---- 
-# Use 8-byte integer for MPI_Offset. We could use a config option
-# --with-offset_size=#, similar to --with-aint-size.
-MPI_SIZEOF_OFFSET=8
-export MPI_SIZEOF_OFFSET
-
-MPI_OFFSET=int
-for type in int long long_long short ; do
-    eval len=\$ac_cv_sizeof_$type
-    if test "$len" = "$MPI_SIZEOF_OFFSET" ; then
-        MPI_OFFSET=`echo $type | sed -e 's/_/ /'`
-        break
-    fi
-done
-AC_SUBST(MPI_OFFSET)
-AC_DEFINE_UNQUOTED([SIZEOF_MPI_OFFSET],[$MPI_SIZEOF_OFFSET], [Define size of MPI_Offset in bytes])
-
+#---- FORTRAN_MPI_OFFSET ---- 
 # Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
 # The value for this comes from ROMIO, and is needed in mpif.h.in
 # First, we check that this works with both Fortran compilers (if
@@ -5081,64 +5124,6 @@ AC_SUBST(FORTRAN_MPI_OFFSET)
 #
 
 # ----------------------------------------------------------------------------
-# MPI_OFFSET datatype
-# ----------------------------------------------------------------------------
-# must be done after ROMIO configure step
-case "$MPI_SIZEOF_OFFSET" in
-    4)    len_mpi_offset=04 ;;
-    8)    len_mpi_offset=08 ;;
-    16)   len_mpi_offset=10 ;;
-    *)    AC_MSG_ERROR([Unable to convert MPI_SIZEOF_OFFSET to a hex string.  This is either because we are building on a very strange platform or there is a bug somewhere in configure.]) ;;
-esac
-MPI_OFFSET_DATATYPE=0x4c00${len_mpi_offset}44
-AC_SUBST(MPI_OFFSET_DATATYPE)
-export MPI_OFFSET_DATATYPE
-
-# 0x4c000044 is 1275068484 in decimal, add ($MPI_SIZEOF_OFFSET * 256) and you get
-# the decimal equivalent of the hex number
-MPI_F77_OFFSET=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
-AC_SUBST(MPI_F77_OFFSET)
-export MPI_F77_OFFSET
-
-# ----------------------------------------------------------------------------
-# MPI_COUNT datatype
-# ----------------------------------------------------------------------------
-# quick sanity checking to avoid a bad test immediately below
-AS_IF([test -z "$MPI_SIZEOF_AINT"],
-      [AC_MSG_ERROR([size of MPI_Aint is unknown at this stage])])
-AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
-      [AC_MSG_ERROR([size of MPI_Offset is unknown at this stage])])
-
-AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
-      [# an unlikely case, but I suppose it's theoretically possible
-       MPI_COUNT="$MPI_AINT"
-       COUNT_KIND="$ADDRESS_KIND"
-       MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
-      [# don't bother checking whether Aint or Offset are larger than int, they
-       # surely will be
-       MPI_COUNT="$MPI_OFFSET"
-       COUNT_KIND="$OFFSET_KIND"
-       MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
-AC_SUBST([MPI_COUNT])
-AC_SUBST([COUNT_KIND])
-AC_DEFINE_UNQUOTED([SIZEOF_MPI_COUNT],[$MPI_SIZEOF_COUNT], [Define size of MPI_Count in bytes])
-AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
-
-AS_CASE([$MPI_SIZEOF_COUNT],
-        [4], [len_mpi_count=04],
-        [8], [len_mpi_count=08],
-        [16],[len_mpi_count=10],
-        [AC_MSG_ERROR([Unable to convert MPI_SIZEOF_COUNT to a hex string!])])
-MPI_COUNT_DATATYPE=0x4c00${len_mpi_count}45
-AC_SUBST([MPI_COUNT_DATATYPE])
-
-# 0x4c000045 is 1275068485 in decimal, add ($MPI_SIZEOF_COUNT * 256) and you get
-# the decimal equivalent of the hex number
-MPI_F77_COUNT=`expr 1275068485 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
-AC_SUBST([MPI_F77_COUNT])
-
-# ----------------------------------------------------------------------------
-
 #
 # Set size of MPI_Status.  Must come after MPI_Count determination.
 #

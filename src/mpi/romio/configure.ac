@@ -175,10 +175,7 @@ F77GETARG="call getarg(i,str)"
 F77IARGC="iargc()"
 F77MPIOINC=""
 FTESTDEFINE=""
-FORTRAN_MPI_OFFSET=""
 MPIOF_H_INCLUDED=0
-MPI_OFFSET_KIND1="!"
-MPI_OFFSET_KIND2="!"
 TEST_CC=""
 TEST_F77=""
 #
@@ -525,43 +522,49 @@ if test "$pac_cv_int_hold_pointer" != yes ; then
     AC_DEFINE(HAVE_INT_LT_POINTER,1,[Define if int smaller than pointer])
 fi
 
+AC_ARG_VAR(MPI_SIZEOF_OFFSET, [Size of MPI_Offset in bytes.])
+AC_ARG_VAR(MPI_OFFSET, [C type for MPI_Offset.])
+AC_ARG_VAR(FORTRAN_MPI_OFFSET, [Fortran type for MPI_Offset.])
+
+if test -z $MPI_SIZEOF_OFFSET ; then
+    MPI_SIZEOF_OFFSET=8
+fi
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_OFFSET],[$MPI_SIZEOF_OFFSET],[Define size of MPI_Offset in bytes.])
+
+if test -z $MPI_OFFSET ; then
+    MPI_OFFSET=int
+    AC_CHECK_SIZEOF([long])
+    AC_CHECK_SIZEOF([long long])
+    for type in int long long_long ; do
+        eval len=\$ac_cv_sizeof_$type
+        if test "$len" = "$MPI_SIZEOF_OFFSET" ; then
+            MPI_OFFSET=`echo $type | sed -e 's/_/ /'`
+            break
+        fi
+    done
+fi
+
+if test -z $FORTRAN_MPI_OFFSET ; then
+    # When not build from MPICH, use a simplistic default.
+    FORTRAN_MPI_OFFSET="integer*8"
+fi
+
+MPI_OFFSET_KIND1="!"
+MPI_OFFSET_KIND2="!"
+
+# FIXME: Use preprocessor to get correct format, xref: mpiimpl.h
 # LL is the printf-style format name for output of a MPI_Offset.
 # We have to match this to the type that we use for MPI_Offset.
 AC_CHECK_SIZEOF(long long)
 if test "$ac_cv_sizeof_long_long" != 0 ; then
     if test "$ac_cv_sizeof_long_long" = "8" ; then
-       AC_DEFINE(HAVE_LONG_LONG_64,1,[Define if long long is 64 bits])
-       MPI_OFFSET_TYPE="long long"
-       DEFINE_MPI_OFFSET="typedef long long MPI_Offset;"
-       FORTRAN_MPI_OFFSET="integer*8"
        LL="lld"
-    elif test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_int" ; then
-       MPI_OFFSET_TYPE="int"
-       DEFINE_MPI_OFFSET="typedef int MPI_Offset;"
-       FORTRAN_MPI_OFFSET="integer"
-       AC_DEFINE(MPI_OFFSET_IS_INT,1,[Define if MPI_Offset is int])
-       LL="d"
-       MPI_OFFSET_KIND1="!"
-       MPI_OFFSET_KIND2="!"
     else
-       echo "defining MPI_Offset as long in C and integer in Fortran" 
-       MPI_OFFSET_TYPE="long"
-       DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-       FORTRAN_MPI_OFFSET="integer"
        LL="ld"
-       MPI_OFFSET_KIND1="!"
-       MPI_OFFSET_KIND2="!"
     fi
 else
-    echo "defining MPI_Offset as long in C and integer in Fortran" 
-    MPI_OFFSET_TYPE="long"
-    DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
-    FORTRAN_MPI_OFFSET="integer"
     LL="ld"
-    MPI_OFFSET_KIND1="!"
-    MPI_OFFSET_KIND2="!"
 fi
-
 
 #
 if test -n "$ac_cv_sizeof_long_long"; then
@@ -718,7 +721,7 @@ AM_CONDITIONAL([BUILD_F77_TESTS],[test "x$NOF77" != "x1"])
 AC_MSG_CHECKING([whether struct flock compatible with MPI_Offset])
 AC_TRY_COMPILE([#include <fcntl.h>],
 [struct flock l;
- $MPI_OFFSET_TYPE a=1;
+ $MPI_OFFSET a=1;
  l.l_start = a; 
  l.l_len   = a;
 ],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
@@ -1701,9 +1704,7 @@ AC_SUBST(HAVE_MPI_INFO)
 AC_SUBST(BUILD_MPI_INFO)
 AC_SUBST(HAVE_MPI_DARRAY_SUBARRAY)
 AC_SUBST(BUILD_MPI_ARRAY)
-AC_SUBST(DEFINE_MPI_OFFSET)
 AC_SUBST(DEFINE_HAVE_MPI_GREQUEST)
-AC_SUBST(MPI_OFFSET_TYPE)
 AC_SUBST(MPI_FINFO1)
 AC_SUBST(MPI_FINFO2)
 AC_SUBST(MPI_FINFO3)
