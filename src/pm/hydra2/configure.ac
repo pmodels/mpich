@@ -360,8 +360,8 @@ if test "$have_hwloc" = "yes" ; then
 fi
 
 HWLOC_DO_AM_CONDITIONALS
-AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
-AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${hydra_use_embedded_hwloc}" = "yes"])
+AM_CONDITIONAL([HYDRA_HAVE_HWLOC], [test "${have_hwloc}" = "yes"])
+AM_CONDITIONAL([HYDRA_USE_EMBEDDED_HWLOC], [test "${hydra_use_embedded_hwloc}" = "yes"])
 
 
 
