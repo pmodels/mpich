@@ -1044,7 +1044,7 @@ MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
  * the rest are filled in at processing time.
  */
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
-                                 MPII_Dataloop *dlp, int branch_flag)
+                                 MPII_Dataloop * dlp, int branch_flag)
 {
     elmp->loop_p = dlp;
 

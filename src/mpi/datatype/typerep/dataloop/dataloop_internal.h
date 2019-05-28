@@ -217,12 +217,12 @@ struct MPIR_Segment {
                                  * maintain information on the stack after it has
                                  * been placed there by following the datatype field
                                  * for any type except struct */
-    MPII_Dataloop builtin_loop;  /* used for both predefined types
-                                  * (which won't have a loop already)
-                                  * and for situations where a count
-                                  * is passed in and we need to create
-                                  * a contig loop to handle it
-                                  */
+    MPII_Dataloop builtin_loop; /* used for both predefined types
+                                 * (which won't have a loop already)
+                                 * and for situations where a count
+                                 * is passed in and we need to create
+                                 * a contig loop to handle it
+                                 */
 };
 
 struct MPII_Dataloop_m2m_params {
@@ -234,7 +234,7 @@ struct MPII_Dataloop_m2m_params {
 MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm *elmp);
 MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm *elmp);
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
-                                 MPII_Dataloop *dlp, int branch_flag);
+                                 MPII_Dataloop * dlp, int branch_flag);
 
 int MPII_Dataloop_create_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
 int MPII_Dataloop_create_vector(MPI_Aint count,

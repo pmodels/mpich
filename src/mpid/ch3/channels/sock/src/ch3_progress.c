@@ -890,9 +890,9 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 mpi_errno =
-                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
-                                         "**ch3|sock|postread", "ch3|sock|postread %p %p %p", rreq,
-                                         conn, conn->vc);
+                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__,
+                                         MPI_ERR_OTHER, "**ch3|sock|postread",
+                                         "ch3|sock|postread %p %p %p", rreq, conn, conn->vc);
                 goto fn_fail;
             }
             /* --END ERROR HANDLING-- */

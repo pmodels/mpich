@@ -1000,8 +1000,9 @@ static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo, MPIDI_CH3I_
         eventq_table = MPL_malloc(sizeof(struct MPIDI_CH3I_Socki_eventq_table), MPL_MEM_OTHER);
         /* --BEGIN ERROR HANDLING-- */
         if (eventq_table == NULL) {
-            mpi_errno = MPIR_Err_create_code(errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
-                                             "**sock|poll|eqmalloc", 0);
+            mpi_errno =
+                MPIR_Err_create_code(errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
+                                     "**sock|poll|eqmalloc", 0);
             goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
@@ -2745,7 +2746,7 @@ int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, siz
 
     pollinfo = MPIDI_CH3I_Socki_sock_get_pollinfo(sock);
 
-#ifdef USE_SOCK_VERIFY 
+#ifdef USE_SOCK_VERIFY
     struct pollfd *pollfd;
     pollfd = MPIDI_CH3I_Socki_sock_get_pollfd(sock);
     MPIDI_CH3I_SOCKI_VALIDATE_FD(pollinfo, mpi_errno, fn_exit);
