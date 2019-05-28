@@ -58,7 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     int my_vni, dest_vni;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
+    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request, vci);
     my_vni = MPIDI_VCI(vci).vni;
     /* For now, VNI i communicates with only VNI i of every other process */
     dest_vni = my_vni;

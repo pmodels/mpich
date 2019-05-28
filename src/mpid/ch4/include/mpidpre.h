@@ -238,6 +238,7 @@ typedef struct {
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_complete(int kind, int vci);
 
 typedef struct MPIDIG_win_shared_info {
     uint32_t disp_unit;
@@ -569,6 +570,7 @@ typedef enum {
 typedef struct MPIDI_vci {
     char padding[64];
     MPID_Thread_mutex_t lock;   /* lock to protect the objects in this VCI */
+    struct MPIR_Request *lw_req;       /* pre-allocated completed request for this VCI */
     int ref_count;              /* number of objects referring to this VCI */
     int is_free;                /* flag to check if this VCI is free or not */
     int vni;                    /* index to the VNI in the netmod's pool */

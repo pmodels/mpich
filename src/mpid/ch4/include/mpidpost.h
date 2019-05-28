@@ -51,6 +51,19 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
     return;
 }
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete(int kind, int vci)
+{
+    MPIR_Request *req;
+#ifdef HAVE_DEBUGGER_SUPPORT
+    req = MPIR_Request_create(kind);
+    MPIR_cc_set(&req->cc, 0);
+#else
+    req = MPIDI_VCI(vci).lw_req;
+    MPIR_Request_add_ref(req);
+#endif
+    return req;
+}
+
 /*
   Device override hooks for asynchronous progress threads
 */

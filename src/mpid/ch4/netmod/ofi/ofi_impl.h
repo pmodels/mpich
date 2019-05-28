@@ -246,10 +246,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           MPIR_Request_add_ref((req));                                  \
       } while (0)
 
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
+#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req, vci)          \
     do {                                                                \
         if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
-            (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
+            (req) = MPID_Request_create_complete(MPIR_REQUEST_KIND__SEND, vci); \
         } else {                                                        \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
