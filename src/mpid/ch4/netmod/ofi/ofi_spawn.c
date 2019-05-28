@@ -324,7 +324,8 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                            *conn,
                                            match_bits,
                                            (void *) &req.context,
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
+                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE,
+                                           MPIDI_VCI_ROOT);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -477,7 +478,8 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                            *conn,
                                            match_bits,
                                            (void *) &req[0].context,
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
+                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE,
+                                           MPIDI_VCI_ROOT);
         if (mpi_errno) {
             MPL_free(local_upid_size);
             MPL_free(local_upids);
@@ -493,10 +495,10 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                *conn,
                                match_bits,
                                (void *) &req[1].context, MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK,
-                               FALSE);
+                               FALSE, MPIDI_VCI_ROOT);
         MPIDI_OFI_send_handler(MPIDI_OFI_CTX(0).tx, local_node_ids, local_size * sizeof(int),
                                NULL, comm_ptr->rank, *conn, match_bits, (void *) &req[2].context,
-                               MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
+                               MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
 
         MPIDI_OFI_PROGRESS_WHILE(!req[0].done || !req[1].done || !req[2].done);
 

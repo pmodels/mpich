@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
-                                           MPIDI_OFI_CALL_NO_LOCK, FALSE);
+                                           MPIDI_OFI_CALL_NO_LOCK, FALSE, MPIDI_VCI_ROOT);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
