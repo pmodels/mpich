@@ -5029,55 +5029,22 @@ dnl AC_SUBST(MPI_2COMPLEX)
 dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
-# If ROMIO was successfully configured, then ROMIO will have exported the
-# definition of MPI_OFFSET_TYPE through its localdefs file (created by the
-# ROMIO configure in src/mpi/romio/localdefs).  If MPI_OFFSET_TYPE was not
-# defined, this code attempts to find a good choice for MPI_OFFSET_TYPE
-# (As the offset type is used for File operations, the specific type
-# really doesn't matter if ROMIO doesn't provide it).
-if test -n "$MPI_OFFSET_TYPE" ; then
-    # We got the value from the ROMIO configure
-    MPI_OFFSET="$MPI_OFFSET_TYPE"
-    # Get and export the size of this type if possible
-    if test -z "$MPI_SIZEOF_OFFSET" ; then
-        # set a default
-        AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-            ac_cv_sizeof_MPI_Offset=unknown
-            AC_COMPUTE_INT([ac_cv_sizeof_MPI_Offset],[sizeof($MPI_OFFSET)],[],[
-                AC_MSG_WARN([Unable to determine the size of MPI_Offset])
-            ])
-	])
-	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then
-  	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
-        fi
-    fi
-    export MPI_SIZEOF_OFFSET
-else
-    # Make a guess at the appropriate definition for offset.  Try to
-    # find a 64bit type.
-    if test "$ac_cv_sizeof_long" = 8 ; then
-        MPI_OFFSET="long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
-    elif test "$ac_cv_sizeof_long_long" = 8 ; then
-        MPI_OFFSET="long long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
-    else
-        MPI_OFFSET=long
-        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
-    fi
-    export MPI_SIZEOF_OFFSET
-fi
-AC_SUBST(MPI_OFFSET)
+#---- MPI_Offset ---- 
+# Use 8-byte integer for MPI_Offset. We could use a config option
+# --with-offset_size=#, similar to --with-aint-size.
+MPI_SIZEOF_OFFSET=8
+export MPI_SIZEOF_OFFSET
 
-AS_CASE([$MPI_OFFSET],
-        [int],         [MPIR_OFFSET_MAX="INT_MAX"],
-        [long],        [MPIR_OFFSET_MAX="LONG_MAX"],
-        ['long long'], [MPIR_OFFSET_MAX="LLONG_MAX"],
-        [short],       [MPIR_OFFSET_MAX="SHRT_MAX"],
-        [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
-AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
+MPI_OFFSET=int
+for type in int long long_long short ; do
+    eval len=\$ac_cv_sizeof_$type
+    if test "$len" = "$MPI_SIZEOF_OFFSET" ; then
+        MPI_OFFSET=`echo $type | sed -e 's/_/ /'`
+        break
+    fi
+done
+AC_SUBST(MPI_OFFSET)
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_OFFSET],[$MPI_SIZEOF_OFFSET], [Define size of MPI_Offset in bytes])
 
 # Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
 # The value for this comes from ROMIO, and is needed in mpif.h.in
@@ -5146,17 +5113,15 @@ AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
       [# an unlikely case, but I suppose it's theoretically possible
        MPI_COUNT="$MPI_AINT"
        COUNT_KIND="$ADDRESS_KIND"
-       MPIR_COUNT_MAX="$MPIR_AINT_MAX"
        MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
       [# don't bother checking whether Aint or Offset are larger than int, they
        # surely will be
        MPI_COUNT="$MPI_OFFSET"
        COUNT_KIND="$OFFSET_KIND"
-       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"
        MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
 AC_SUBST([MPI_COUNT])
 AC_SUBST([COUNT_KIND])
-AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_COUNT],[$MPI_SIZEOF_COUNT], [Define size of MPI_Count in bytes])
 AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
 
 AS_CASE([$MPI_SIZEOF_COUNT],
