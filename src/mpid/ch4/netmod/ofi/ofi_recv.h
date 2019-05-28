@@ -211,6 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     *request = rreq;
+    MPIDI_REQUEST(*request, vci) = vci;
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
 

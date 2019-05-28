@@ -249,6 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
+    MPIDI_REQUEST(*request, vci) = vci;
     my_vni = MPIDI_VCI(vci).vni;
     /* For now, VNI i communicates with only VNI i of every other process */
     dest_vni = my_vni;
