@@ -565,12 +565,6 @@ typedef @MPI_COUNT@ MPI_Count;
 static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI_AINT;
 #endif
 
-/* FIXME: The following two definition are not defined by MPI and must not be
-   included in the mpi.h file, as the MPI namespace is reserved to the MPI 
-   standard */
-#define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
-#define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
-
 /* Let ROMIO know that MPI_Offset is already defined */
 #define HAVE_MPI_OFFSET
 /* MPI_OFFSET_TYPEDEF is set in configure and is 

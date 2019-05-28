@@ -4812,52 +4812,21 @@ if test "$with_aint_size" -gt 0 ; then
         AC_MSG_RESULT([Overriding MPI_Aint to be $aint_size bytes])
    fi
 fi
+
+MPI_SIZEOF_AINT=$aint_size
+# export for subconfigure (e.g. test/mpi/configure)
+export MPI_SIZEOF_AINT
+
 MPI_AINT=int
 for type in int long long_long short ; do
     eval len=\$ac_cv_sizeof_$type
     if test "$len" = "$aint_size" ; then
         MPI_AINT=`echo $type | sed -e 's/_/ /'`
-        # Make the sizeof AINT available to other configures
-        MPI_SIZEOF_AINT=$len
-        export MPI_SIZEOF_AINT
-        case $type in
-            int)
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-                ;;
-            long)
-                MPI_AINT_FMT_DEC_SPEC="%ld"
-                MPI_AINT_FMT_HEX_SPEC="%lx"
-                MPIR_AINT_MAX="LONG_MAX"
-                ;;
-            long_long)
-                MPI_AINT_FMT_DEC_SPEC="%lld"
-                MPI_AINT_FMT_HEX_SPEC="%llx"
-                # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
-                # easier there.  See mpiiimpl.h.
-                MPIR_AINT_MAX="LLONG_MAX"
-                ;;
-            short)
-                MPI_AINT_FMT_DEC_SPEC="%hd"
-                MPI_AINT_FMT_HEX_SPEC="%hx"
-                MPIR_AINT_MAX="SHRT_MAX"
-                ;;
-            *)
-                AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-            ;;
-        esac
-        export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
         break
     fi
 done
 AC_SUBST(MPI_AINT)
-AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
-AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
-AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
+AC_DEFINE_UNQUOTED([SIZEOF_MPI_AINT],[$aint_size], [Define size of MPI_Aint in bytes])
 
 # ----------------------------------------------------------------------------
 # MPI_AINT datatype

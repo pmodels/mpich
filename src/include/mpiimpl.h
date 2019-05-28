@@ -102,6 +102,18 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #define __func__ "__func__"
 #endif
 
+#if SIZEOF_MPI_AINT == 4
+#define MPI_AINT_FMT_DEC_SPEC PRId32
+#define MPI_AINT_FMT_HEX_SPEC PRIx32
+#define MPIR_AINT_MAX 2147483647
+#elif SIZEOF_MPI_AINT == 8
+#define MPI_AINT_FMT_DEC_SPEC PRId64
+#define MPI_AINT_FMT_HEX_SPEC PRIx64
+#define MPIR_AINT_MAX 9223372036854775807
+#else
+#error "Size of MPI_Aint is neither 4 or 8 bytes."
+#endif
+
 /*****************************************************************************
  * We use the following ordering of information in this file:
  *
