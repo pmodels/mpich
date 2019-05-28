@@ -155,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_CTX(0).rx, &msg, flags), trecv,
-                         MPIDI_OFI_CALL_LOCK, FALSE);
+                         MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -261,7 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                        rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv,
-                             MPIDI_OFI_CALL_LOCK, FALSE);
+                             MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
     else {
         MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
         MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
@@ -277,7 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.addr = FI_ADDR_UNSPEC;
 
         MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_CTX(0).rx, &msg, flags), trecv,
-                             MPIDI_OFI_CALL_LOCK, FALSE);
+                             MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
     }
 
   fn_exit:

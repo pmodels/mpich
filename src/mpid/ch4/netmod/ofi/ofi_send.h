@@ -206,7 +206,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.addr = MPIDI_OFI_av_to_phys(addr);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_CTX(0).tx, &msg, flags), tsendv,
-                         MPIDI_OFI_CALL_LOCK, FALSE);
+                         MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -265,7 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
                                       (void *) &(ackreq->context)), trecvsync, MPIDI_OFI_CALL_LOCK,
-                             FALSE);
+                             FALSE, MPIDI_VCI_ROOT);
     }
 
     send_buf = (char *) buf + dt_true_lb;

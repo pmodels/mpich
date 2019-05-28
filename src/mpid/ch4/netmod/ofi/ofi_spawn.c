@@ -285,7 +285,8 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                       NULL,
                                       *conn,
                                       match_bits,
-                                      mask_bits, &req.context), trecv, MPIDI_OFI_CALL_LOCK, FALSE);
+                                      mask_bits, &req.context), trecv, MPIDI_OFI_CALL_LOCK, FALSE,
+                             MPIDI_VCI_ROOT);
         time_gap = 0.0;
         MPID_Wtime(&time_sta);
         do {
@@ -406,7 +407,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                       FI_ADDR_UNSPEC,
                                       match_bits,
                                       mask_bits, &req[0].context), trecv, MPIDI_OFI_CALL_LOCK,
-                             FALSE);
+                             FALSE, MPIDI_VCI_ROOT);
         MPIDI_OFI_PROGRESS_WHILE(!req[0].done);
 
         for (i = 0; i < (*remote_size); i++)
@@ -421,7 +422,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                       FI_ADDR_UNSPEC,
                                       match_bits,
                                       mask_bits, &req[1].context), trecv, MPIDI_OFI_CALL_LOCK,
-                             FALSE);
+                             FALSE, MPIDI_VCI_ROOT);
 
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_CTX(0).rx,
                                       *remote_node_ids,
@@ -430,7 +431,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                       FI_ADDR_UNSPEC,
                                       match_bits,
                                       mask_bits, &req[2].context), trecv, MPIDI_OFI_CALL_LOCK,
-                             FALSE);
+                             FALSE, MPIDI_VCI_ROOT);
 
         MPIDI_OFI_PROGRESS_WHILE(!req[1].done || !req[2].done);
         size_t disp = 0;

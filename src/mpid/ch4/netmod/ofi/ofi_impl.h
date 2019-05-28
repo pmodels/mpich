@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 
 #define MPIDI_OFI_CALL_LOCK 1
 #define MPIDI_OFI_CALL_NO_LOCK 0
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN)          \
+#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN,VCI_IDX)          \
     do {                                                    \
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
@@ -114,9 +114,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(VCI_IDX).lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(VCI_IDX).lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         _retry--;                                           \
@@ -440,10 +440,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
 
     if (is_inject) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                             do_lock, do_eagain);
+                             do_lock, do_eagain, MPIDI_VCI_ROOT);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                             tsenddata, do_lock, do_eagain);
+                             tsenddata, do_lock, do_eagain, MPIDI_VCI_ROOT);
     }
 
   fn_exit:
