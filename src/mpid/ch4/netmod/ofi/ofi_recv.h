@@ -32,6 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                                                 MPIDI_av_entry_t * addr, MPIR_Request * rreq,
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
 {
+    printf("OFI_recv_iov: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t max_pipe = INT64_MAX;
@@ -270,6 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       mask_bits, (void *) &(MPIDI_OFI_REQUEST(rreq, context))),
                              trecv, MPIDI_OFI_CALL_LOCK, FALSE, vci);
     else {
+        printf("Not VCI aware!\n");
         MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
         MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
 
@@ -333,6 +335,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int context_offset, MPIDI_av_entry_t * addr,
                                                     MPIR_Request ** request)
 {
+    printf("NM_mpi_recv_init: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
@@ -348,6 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
 {
+    printf("NM_mpi_imrecv: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIDI_av_entry_t *av;
@@ -403,6 +407,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
 
+    printf("NM_mpi_cancel_recv: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     ssize_t ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);

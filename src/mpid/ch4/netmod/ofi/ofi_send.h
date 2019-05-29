@@ -96,6 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * sreq,
                                                 MPIR_Datatype * dt_ptr)
 {
+    printf("OFI_send_iov: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t countp =
@@ -259,6 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
+        printf("OFI_send_normal: Sync send not implemented for multiple VCIs!\n");
         int c = 1;
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
@@ -465,6 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
+    printf("NM_mpi_ssend: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND);
@@ -515,6 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
                                                  MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
+    printf("NM_mpi_issend: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISSEND);
@@ -541,6 +545,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count,
                                                     MPIDI_av_entry_t * addr,
                                                     MPIR_Request ** request)
 {
+    printf("NM_mpi_send_init: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
@@ -558,6 +563,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count,
                                                      MPIDI_av_entry_t * addr,
                                                      MPIR_Request ** request)
 {
+    printf("NM_mpi_ssend_init: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
@@ -575,6 +581,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count,
                                                      MPIDI_av_entry_t * addr,
                                                      MPIR_Request ** request)
 {
+    printf("NM_mpi_bsend_init: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
@@ -592,6 +599,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
                                                      MPIDI_av_entry_t * addr,
                                                      MPIR_Request ** request)
 {
+    printf("NM_mpi_rsend_init: Not implemented for multiple VCIs!\n");
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
@@ -604,6 +612,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
+    printf("NM_mpi_cancel_send: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_SEND);
