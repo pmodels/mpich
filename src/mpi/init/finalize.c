@@ -331,6 +331,7 @@ int MPI_Finalize(void)
     }
 #endif
 
+#if defined(MPICH_IS_THREADED)
     /* Finalize the threading library after releasing all synchronization
      * objects (e.g., mutexes) */
     {
@@ -338,6 +339,7 @@ int MPI_Finalize(void)
         MPL_thread_finalize(&thread_err);
         MPIR_Assert(thread_err == 0);
     }
+#endif
 
     /* ... end of body of routine ... */
   fn_exit:
