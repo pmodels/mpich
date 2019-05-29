@@ -1311,6 +1311,7 @@ elif test "$with_hwloc_prefix" = "embedded" ; then
       hwlocsrcdir="src/hwloc"
       hwloclib="$HWLOC_EMBEDDED_LDADD"
       PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
+      PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
       # if possible, do not expose hwloc symbols in libmpi.so
       PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
    fi
