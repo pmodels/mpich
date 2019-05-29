@@ -242,6 +242,7 @@ typedef struct {
 } MPIDI_OFI_context_t;
 
 typedef struct {
+    char padding[64];
     int is_free;
     MPIDI_OFI_context_t ctx;
 } MPIDI_OFI_vni_t;
