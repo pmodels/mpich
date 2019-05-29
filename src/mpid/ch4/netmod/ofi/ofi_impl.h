@@ -505,7 +505,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 
 MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
 {
-#if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
+#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
     return &MPIDI_OFI_REQUEST(req, util.iov);
 #else
     return (struct iovec *) MPIDI_OFI_aligned_next_iov(&MPIDI_OFI_REQUEST(req, util.iov_store));
