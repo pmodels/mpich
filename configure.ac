@@ -2852,42 +2852,106 @@ if test "$pac_cv_cc_has___func__" != "yes" ; then
 pac_cv_cc_has___FUNCTION__=no)])
 fi
 
-# ----------------------------------------------------------------------------
-# Check on support for long double and long long types.  Do this before the
-# structure alignment test because it will test for including those
-# types as well.  In addition, allow the device to suppress support for these
-# optional C types by setting MPID_NO_LONG_DOUBLE and/or MPID_NO_LONG_LONG
-# to yes.
-if test "$MPID_NO_LONG_DOUBLE" != "yes" && test "X$enable_long_double" != "Xno" ; then
-    AC_CACHE_CHECK([whether long double is supported],
-    pac_cv_have_long_double,[
-    AC_TRY_COMPILE(,[long double a;],
-    pac_cv_have_long_double=yes,pac_cv_have_long_double=no)])
-    if test "$pac_cv_have_long_double" = "yes" ; then
-        AC_DEFINE(HAVE_LONG_DOUBLE,1,[Define if long double is supported])
-    fi
+#------------------------------------------------------- 
+# C types
+
+# AC_CHECK_SIZEOF etc. Sets $ac_cv_sizeof_type. Defines SIZEOF_TYPE.
+# Unsigned types are assumed to have the same size as signed types.
+
+# Device layer may overide the sizes, 0 mean unavailable.
+# In addition, --with-cross=crossfile can be used to preset/override them.
+if test x$MPID_NO_LONG_LONG = xyes ; then
+    ac_cv_sizeof_long_long=0
 fi
-if test "$MPID_NO_LONG_LONG" != "yes" ; then
-    AC_CACHE_CHECK([whether long long is supported],
-    pac_cv_have_long_long,[
-    AC_TRY_COMPILE(,[long long a;],
-    pac_cv_have_long_long=yes,pac_cv_have_long_long=no)])
-    if test "$pac_cv_have_long_long" = "yes" ; then
-        AC_DEFINE(HAVE_LONG_LONG_INT,1,[Define if long long is supported])
-    fi
+if test x$MPID_NO_LONG_DOUBLE = xyes ; then
+    ac_cv_sizeof_long_double=0
 fi
-# Add HAVE_FLOAT16 detection
-if test "$MPID_NO_FLOAT16" != "yes" ; then
-    AC_CACHE_CHECK([whether _Float16 is supported],
-    pac_cv_have_float16,[
-    AC_TRY_COMPILE(,[_Float16 a;],
-    pac_cv_have_float16=yes,pac_cv_have_float16=no)])
-    if test "$pac_cv_have_float16" = "yes" ; then
-        AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
-    fi
+
+AC_CHECK_SIZEOF(char)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
+AC_CHECK_SIZEOF(long double)
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(int8_t)
+AC_CHECK_SIZEOF(int16_t)
+AC_CHECK_SIZEOF(int32_t)
+AC_CHECK_SIZEOF(int64_t)
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS([stddef.h])
+AC_CHECK_SIZEOF(wchar_t, 0, [
+#ifdef HAVE_STDDEF_H
+#include <stddef.h>
+#endif
+])
+
+# Other C99 types.
+AC_CHECK_HEADERS([stdbool.h complex.h])
+AC_CHECK_SIZEOF([_Bool],0,[
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+])
+AC_CHECK_SIZEOF([float _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
+AC_CHECK_SIZEOF([double _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
+AC_CHECK_SIZEOF([long double _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
+AC_CHECK_SIZEOF([_Float16])
+
+# sanity check
+if test $ac_cv_sizeof_short -eq 0 -o \
+        $ac_cv_sizeof_int -eq 0 -o \
+        $ac_cv_sizeof_long -eq 0 ; then
+        # FIXME: CROSS_SIZEOF_typename mechanism is gone.
+	AC_MSG_ERROR([Configure was unable to determine the size of types ; if cross compiling,
+use the --with-cross=file configure option to specify a file containing
+autoconf cache value, e.g. ac_cv_sizeof_int=4. The perl script
+maint/gen_cross.pl can be used to run on the target system to generate
+a sample crossfile. Pass this cross file to configure using the
+--with-cross=path/to/crossfile option])
 fi
+
+# MPI_FINT, MPI_AINT, MPI_OFFSET, MPI_COUNT
+MPI_SIZEOF_FINT=$ac_cv_sizeof_int
+MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
+MPI_SIZEOF_OFFSET=8
+if test $MPI_SIZEOF_AINT -gt $MPI_SIZEOF_OFFSET ; then
+    MPI_SIZEOF_COUNT=$MPI_SIZEOF_AINT
+else
+    MPI_SIZEOF_COUNT=$MPI_SIZEOF_OFFSET
+fi
+
+AC_MSG_CHECKING([size of MPI_Fint])
+AC_MSG_RESULT([$MPI_SIZEOF_FINT])
+AC_MSG_CHECKING([size of MPI_Aint])
+AC_MSG_RESULT([$MPI_SIZEOF_AINT])
+AC_MSG_CHECKING([size of MPI_Offset])
+AC_MSG_RESULT([$MPI_SIZEOF_OFFSET])
+AC_MSG_CHECKING([size of MPI_Count])
+AC_MSG_RESULT([$MPI_SIZEOF_COUNT])
+AC_DEFINE_UNQUOTED([SIZEOF_FINT],[$MPI_SIZEOF_FINT],[The size of MPI_Fint.])
+AC_DEFINE_UNQUOTED([SIZEOF_AINT],[$MPI_SIZEOF_AINT],[The size of MPI_Aint.])
+AC_DEFINE_UNQUOTED([SIZEOF_OFFSET],[$MPI_SIZEOF_OFFSET],[The size of MPI_Offset.])
+AC_DEFINE_UNQUOTED([SIZEOF_COUNT],[$MPI_SIZEOF_COUNT],[The size of MPI_Count.])
+
 # ----------------------------------------------------------------------------
 # Get default structure alignment for integers
+# ----------------------------------------------------------------------------
 dnl PAC_C_MAX_INTEGER_ALIGN places the default alignment into
 dnl pac_cv_c_max_integer_align, with possible values including
 dnl packed (byte), largest, two, four, eight (or other failure message).
@@ -2987,151 +3051,6 @@ if test "$host_cpu" = "sparc" ; then
     AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
 fi
 
-# There are further alignment checks after we test for int64_t etc. below.
-
-# Get the size of the C types for encoding in the basic datatypes and for
-# the specific-sized integers
-AC_CHECK_SIZEOF(char)
-AC_CHECK_SIZEOF(unsigned char)
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(unsigned short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(unsigned int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(unsigned long)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(unsigned long long)
-AC_CHECK_SIZEOF(float)
-AC_CHECK_SIZEOF(double)
-AC_CHECK_SIZEOF(long double)
-AC_CHECK_SIZEOF(void *)
-
-AC_HEADER_STDC
-AC_CHECK_HEADERS([stddef.h])
-AC_CHECK_SIZEOF(wchar_t, 0, [
-#ifdef HAVE_STDDEF_H
-#include <stddef.h>
-#endif
-])
-
-AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
-AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
-AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
-AC_CHECK_SIZEOF(short_int, 0, [typedef struct { short a; int b; } short_int; ])
-AC_CHECK_SIZEOF(two_int, 0, [typedef struct { int a; int b; } two_int; ])
-AC_CHECK_SIZEOF(long_double_int, 0, [typedef struct { long double a; int b;} long_double_int; ])
-
-# sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
-# Include it when testing for these types
-AC_CHECK_HEADER(sys/bitypes.h,[use_bitypes="#include <sys/bitypes.h>"
-AC_DEFINE(HAVE_SYS_BITYPES_H,1,[Define if sys/bitypes.h exists])])
-# A C99 compliant compiler should have inttypes.h for fixed-size int types
-AC_CHECK_HEADERS(inttypes.h stdint.h)
-
-# Check for types
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_int8_t" != no ; then
-    AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_int16_t" != no ; then
-    AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_int32_t" != no ; then
-    AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_int64_t" != no ; then
-    AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
-fi
-
-# The following make these definitions:
-#   define _UINT<n>_T 1
-# if uint<n>_t is available.  E.g., define _UINT8_T as 1 if uint8_t is available
-# if not available, define uint<n>_t as the related C type, e.g.,
-#   define uint8_t unsigned char
-#
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Temporary issue in autoconf integer type checking (remove when
-# autoconf fixes this or provides a workaround for it)
-if test "$ac_cv_c_uint8_t" != no ; then
-    AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_uint16_t" != no ; then
-    AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_uint32_t" != no ; then
-    AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
-fi
-if test "$ac_cv_c_uint64_t" != no ; then
-    AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
-fi
-
-# Other C99 types.
-AC_CHECK_HEADERS([stdbool.h complex.h])
-AC_CHECK_SIZEOF([_Bool],0,[
-#ifdef HAVE_STDBOOL_H
-#include <stdbool.h>
-#endif
-])
-AC_CHECK_SIZEOF([float _Complex],0,[
-#ifdef HAVE_COMPLEX_H
-#include <complex.h>
-#endif
-])
-AC_CHECK_SIZEOF([double _Complex],0,[
-#ifdef HAVE_COMPLEX_H
-#include <complex.h>
-#endif
-])
-AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
-  AC_CHECK_SIZEOF([long double _Complex],0,[
-#ifdef HAVE_COMPLEX_H
-#include <complex.h>
-#endif
-  ])
-])
-AC_CHECK_SIZEOF([_Float16])
-
-# we need really could just use the result of AC_CHECK_SIZEOF, but having a
-# HAVE_typename macro is useful for consistency
-AC_CHECK_TYPES([_Bool, float _Complex, double _Complex])
-
-AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
-  AC_CHECK_TYPES([long double _Complex])
-])
-
-# MPI_FINT, MPI_AINT, MPI_OFFSET, MPI_COUNT
-MPI_SIZEOF_FINT=$ac_cv_sizeof_int
-MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
-MPI_SIZEOF_OFFSET=8
-if test $MPI_SIZEOF_AINT -gt $MPI_SIZEOF_OFFSET ; then
-    MPI_SIZEOF_COUNT=$MPI_SIZEOF_AINT
-else
-    MPI_SIZEOF_COUNT=$MPI_SIZEOF_OFFSET
-fi
-
-AC_MSG_CHECKING([size of MPI_Fint])
-AC_MSG_RESULT([$MPI_SIZEOF_FINT])
-AC_MSG_CHECKING([size of MPI_Aint])
-AC_MSG_RESULT([$MPI_SIZEOF_AINT])
-AC_MSG_CHECKING([size of MPI_Offset])
-AC_MSG_RESULT([$MPI_SIZEOF_OFFSET])
-AC_MSG_CHECKING([size of MPI_Count])
-AC_MSG_RESULT([$MPI_SIZEOF_COUNT])
-AC_DEFINE_UNQUOTED([SIZEOF_FINT],[$MPI_SIZEOF_FINT],[The size of MPI_Fint.])
-AC_DEFINE_UNQUOTED([SIZEOF_AINT],[$MPI_SIZEOF_AINT],[The size of MPI_Aint.])
-AC_DEFINE_UNQUOTED([SIZEOF_OFFSET],[$MPI_SIZEOF_OFFSET],[The size of MPI_Offset.])
-AC_DEFINE_UNQUOTED([SIZEOF_COUNT],[$MPI_SIZEOF_COUNT],[The size of MPI_Count.])
-
 # ----------------------------------------------------------------------------
 # We can now create the Fortran versions of the datatype values, along with
 # some of the other datatype-dependent sizes
@@ -3150,12 +3069,9 @@ AC_DEFINE_UNQUOTED([SIZEOF_COUNT],[$MPI_SIZEOF_COUNT],[The size of MPI_Count.])
 #
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
-    # Up to size checking code in master configure.ac (where it tries to
-    # find the matching C sizes) as part of defining mpi_integer8 etc.
+    # Up to size checking code for F77 data types.
     # The results are available in pac_cv_sizeof_f77_<type>
     # Size is 0 if unknown or unavailable (or cross-compiling)
-    # Due to limitations in autoconf, we cannot put these into a loop.
-    # We also check integer to find the type of MPI_Fint
     #
     # Cross-compilation results can be included with the --with-cross=file
     # option.
@@ -3165,44 +3081,6 @@ if test "$enable_f77" = yes ; then
     PAC_PROG_F77_CHECK_SIZEOF_EXT(integer,$CROSS_F77_SIZEOF_INTEGER)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(real,$CROSS_F77_SIZEOF_REAL)
     PAC_PROG_F77_CHECK_SIZEOF_EXT(double precision,$CROSS_F77_SIZEOF_DOUBLE_PRECISION)
-    AC_LANG_FORTRAN77
-    # If we have sizes for real and double, we do not need to call
-    # mpir_get_fsize at run time.
-    # For the size-defined types (e.g., integer*2), we assume that if the
-    # compiler allows it, it has the stated size.
-    AC_CACHE_CHECK([whether integer*1 is supported],pac_cv_fort_integer1,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*1 i])],
-         pac_cv_fort_integer1=yes,
-         pac_cv_fort_integer1=no)])
-    AC_CACHE_CHECK([whether integer*2 is supported],pac_cv_fort_integer2,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*2 i])],
-        pac_cv_fort_integer2=yes,
-        pac_cv_fort_integer2=no)])
-    AC_CACHE_CHECK([whether integer*4 is supported],pac_cv_fort_integer4,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*4 i])],
-        pac_cv_fort_integer4=yes,
-        pac_cv_fort_integer4=no)])
-    AC_CACHE_CHECK([whether integer*8 is supported],pac_cv_fort_integer8,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*8 i])],
-        pac_cv_fort_integer8=yes,
-        pac_cv_fort_integer8=no)])
-    AC_CACHE_CHECK([whether integer*16 is supported],pac_cv_fort_integer16,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*16 i])],
-        pac_cv_fort_integer16=yes,
-        pac_cv_fort_integer16=no)])
-    AC_CACHE_CHECK([whether real*4 is supported],pac_cv_fort_real4,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*4 a])],
-        pac_cv_fort_real4=yes,
-        pac_cv_fort_real4=no)])
-    AC_CACHE_CHECK([whether real*8 is supported],pac_cv_fort_real8,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*8 a])],
-        pac_cv_fort_real8=yes,
-        pac_cv_fort_real8=no)])
-    AC_CACHE_CHECK([whether real*16 is supported],pac_cv_fort_real16,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*16 a])],
-        pac_cv_fort_real16=yes,
-        pac_cv_fort_real16=no)])
-
     if test $pac_cv_f77_sizeof_integer -eq 0 -o \
             $pac_cv_f77_sizeof_real -eq 0 ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not
@@ -3212,6 +3090,7 @@ shell assignments to CROSS_F77_SIZEOF_typename, e.g., CROSS_F77_SIZEOF_INTEGER.
 The program maint/getcross.pl can be run on the target system to generate this file.
 ])
     fi
+
     if test $MPI_SIZEOF_AINT -gt $pac_cv_f77_sizeof_integer ; then
         AC_DEFINE(HAVE_AINT_LARGER_THAN_FINT,1,[Define if addresses are larger than Fortran integers])
     fi
@@ -3224,6 +3103,19 @@ The program maint/getcross.pl can be run on the target system to generate this f
         AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
     fi
 
+    PAC_F77_CHECK_TYPE([integer*1])
+    PAC_F77_CHECK_TYPE([integer*2])
+    PAC_F77_CHECK_TYPE([integer*4])
+    PAC_F77_CHECK_TYPE([integer*8])
+    PAC_F77_CHECK_TYPE([integer*16])
+    PAC_F77_CHECK_TYPE([real*2])
+    PAC_F77_CHECK_TYPE([real*4])
+    PAC_F77_CHECK_TYPE([real*8])
+    PAC_F77_CHECK_TYPE([real*16])
+
+    AC_LANG_C
+
+    # FIXME: do we need it or not?
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
     # not yet support it.
@@ -3243,7 +3135,6 @@ The program maint/getcross.pl can be run on the target system to generate this f
         ])
     fi
     if test "$FC" != "no" ; then
-        if test "$testsize" = 8 ; then
         PAC_PROG_FC_INT_KIND(ADDRESS_KIND,$MPI_SIZEOF_AINT,$CROSS_F90_ADDRESS_KIND)
         if test "$MPI_SIZEOF_AINT" = 8 ; then
             OFFSET_KIND=$ADDRESS_KIND
@@ -3312,11 +3203,10 @@ The program maint/getcross.pl can be run on the target system to generate this f
       [ COUNT_KIND="$ADDRESS_KIND"],
       [ COUNT_KIND="$OFFSET_KIND" ])
 
-
     AC_SUBST(ADDRESS_KIND)
     AC_SUBST(OFFSET_KIND)
     AC_SUBST(INTEGER_KIND)
-    AC_SUBST(COUNT_KIND)
+    AC_SUBST([COUNT_KIND])
 
     # Some compilers may require special directives to handle the common
     # block in a library.  In particular, directives are needed for Microsoft
@@ -3400,43 +3290,43 @@ The program maint/getcross.pl can be run on the target system to generate this f
 
     AC_LANG_C
 fi
+
 # ----------------------------------------------------------------------------
-# C++ types
+# CXX types
 
 if test "$enable_cxx" = "yes" ; then
     AC_LANG_CPLUSPLUS
+    AC_CHECK_HEADER(complex)
+    if test "$ac_cv_header_complex" != "yes" ; then
+        ac_cv_sizeof_Complex=0
+        ac_cv_sizeof_DoubleComplex=0
+        ac_cv_sizeof_LongDoubleComplex=0
+    fi
+    if test "$ac_cv_sizeof_long_double" = 0 ; then
+        ac_cv_sizeof_LongDoubleComplex=0
+    fi
+
+    # bool, Complex, DoubleComplex, LongDoubleComplex
     AC_CHECK_SIZEOF(bool)
 
-    AC_CHECK_HEADER(complex)
-    if test "$ac_cv_header_complex" = "yes" ; then
-        # The C++ complex types are all templated.  We finagle this by
-        # defining a standin name
-        AC_CHECK_SIZEOF(Complex,0,[#include <stdio.h>
+    AC_CHECK_SIZEOF(FloatComplex,0,[#include <stdio.h>
 #include <complex>
 using namespace std;
-#define Complex complex<float>
+#define FloatComplex complex<float>
 ])
-        AC_CHECK_SIZEOF(DoubleComplex,0,[#include <stdio.h>
+    AC_CHECK_SIZEOF(DoubleComplex,0,[#include <stdio.h>
 #include <complex>
 using namespace std;
 #define DoubleComplex complex<double>
 ])
-        if test "$MPID_NO_LONG_DOUBLE" != yes ; then
-             AC_CHECK_SIZEOF(LongDoubleComplex,0,[#include <stdio.h>
+    AC_CHECK_SIZEOF(LongDoubleComplex,0,[#include <stdio.h>
 #include <complex>
 using namespace std;
 #define LongDoubleComplex complex<long double>
 ])
-        fi
-
-        # If either complex or double complex have length 0, then mark
-        # c++ complex as unavailable
-        if test "$ac_cv_sizeof_Complex" != 0 -a \
-                "$ac_cv_sizeof_DoubleComplex" != 0 ; then
-            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
-        fi
 
     AC_LANG_C
+fi
 
 # ------------------------------------------------------------------------
 # Test if  type_tag_for_datatype is agnostic to modifiers such as const, volatile, and restrict
@@ -3692,14 +3582,14 @@ elif test $MPI_SIZEOF_AINT = 8 ; then
     MPI_AINT=int64_t
 fi
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
-#define MPI_Datatype int
-typedef $MPI_AINT MPI_Aint;
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+#define MPI_Datatype int
+typedef $MPI_AINT MPI_Aint;
 #include "${master_top_srcdir}/src/include/mpii_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
@@ -3846,8 +3736,9 @@ if test $enable_f77 = yes ; then
     elif test $MPI_SIZEOF_OFFSET = 8 ; then
         FORTRAN_MPI_OFFSET=INTEGER*8
     else
-   	AC_MSG_ERROR([Failed to find a FORTRAN integer type for MPI_Offset])
+        AC_MSG_ERROR([Failed to find a FORTRAN integer type for MPI_Offset])
     fi
+fi
 
 if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
     AC_LANG_PUSH([Fortran 77])
