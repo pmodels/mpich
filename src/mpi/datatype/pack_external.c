@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Pack_external as PMPI_Pack_external
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Pack_external(const char datarep[], const void *inbuf, int incount,
-                      MPI_Datatype datatype, void *outbuf, size_t outsize, size_t * position)
+                      MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
     __attribute__ ((weak, alias("PMPI_Pack_external")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -59,7 +59,7 @@ Input/Output Parameters:
 int MPI_Pack_external(const char datarep[],
                       const void *inbuf,
                       int incount,
-                      MPI_Datatype datatype, void *outbuf, size_t outsize, size_t * position)
+                      MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Pack_external_size as PMPI_Pack_external_size
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datatype,
-                           size_t * size)
+                           MPI_Aint * size)
     __attribute__ ((weak, alias("PMPI_Pack_external_size")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -52,7 +52,7 @@ Output Parameters:
 .N MPI_ERR_ARG
 @*/
 int MPI_Pack_external_size(const char datarep[],
-                           int incount, MPI_Datatype datatype, size_t * size)
+                           int incount, MPI_Datatype datatype, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);

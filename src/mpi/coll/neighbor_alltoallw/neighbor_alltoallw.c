@@ -61,7 +61,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                           const size_t rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
+                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
     __attribute__ ((weak, alias("PMPI_Neighbor_alltoallw")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -217,7 +217,7 @@ Output Parameters:
 @*/
 int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                           const size_t rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
+                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

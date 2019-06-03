@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Type_hindexed as PMPI_Type_hindexed
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_hindexed(int count, int *array_of_blocklengths,
-                      size_t * array_of_displacements, MPI_Datatype oldtype,
+                      MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                       MPI_Datatype * newtype) __attribute__ ((weak, alias("PMPI_Type_hindexed")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -35,7 +35,7 @@ int MPI_Type_hindexed(int count, int *array_of_blocklengths,
 Input Parameters:
 + count - number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths
 . array_of_blocklengths - number of elements in each block (array of nonnegative integers)
-. array_of_displacements - byte displacement of each block (array of size_t)
+. array_of_displacements - byte displacement of each block (array of MPI_Aint)
 - oldtype - old datatype (handle)
 
 Output Parameters:
@@ -79,7 +79,7 @@ consider declaring the Fortran array with a zero origin
 @*/
 int MPI_Type_hindexed(int count,
                       int *array_of_blocklengths,
-                      size_t * array_of_displacements,
+                      MPI_Aint * array_of_displacements,
                       MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;

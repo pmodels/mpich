@@ -62,8 +62,8 @@ cvars:
 #pragma _CRI duplicate MPI_Ineighbor_alltoallw as PMPI_Ineighbor_alltoallw
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                            const size_t sdispls[], const MPI_Datatype sendtypes[],
-                            void *recvbuf, const int recvcounts[], const size_t rdispls[],
+                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                            void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[],
                             const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_Ineighbor_alltoallw")));
 #endif
@@ -315,7 +315,7 @@ Output Parameters:
 @*/
 int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
                             const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                            const size_t rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
+                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
                             MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;

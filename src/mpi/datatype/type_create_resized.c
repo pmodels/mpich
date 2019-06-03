@@ -135,7 +135,7 @@ Output Parameters:
 .N MPI_ERR_TYPE
 @*/
 int MPI_Type_create_resized(MPI_Datatype oldtype,
-                            size_t lb, size_t extent, MPI_Datatype * newtype)
+                            MPI_Aint lb, MPI_Aint extent, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle = MPI_DATATYPE_NULL;

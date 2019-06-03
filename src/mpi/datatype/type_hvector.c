@@ -81,7 +81,7 @@ Output Parameters:
 .N MPI_SUCCESS
 @*/
 int MPI_Type_hvector(int count,
-                     int blocklength, size_t stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+                     int blocklength, MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_HVECTOR);

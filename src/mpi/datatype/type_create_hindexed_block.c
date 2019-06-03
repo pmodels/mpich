@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Type_create_hindexed_block as PMPI_Type_create_hindexed_block
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_hindexed_block(int count, int blocklength,
-                                   const size_t array_of_displacements[],
+                                   const MPI_Aint array_of_displacements[],
                                    MPI_Datatype oldtype, MPI_Datatype * newtype)
     __attribute__ ((weak, alias("PMPI_Type_create_hindexed_block")));
 #endif
@@ -88,7 +88,7 @@ Output Parameters:
 @*/
 int MPI_Type_create_hindexed_block(int count,
                                    int blocklength,
-                                   const size_t array_of_displacements[],
+                                   const MPI_Aint array_of_displacements[],
                                    MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;

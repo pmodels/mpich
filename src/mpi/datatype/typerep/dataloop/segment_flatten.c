@@ -147,7 +147,7 @@ static int leaf_contig_mpi_flatten(size_t * blocks_p,
  * TODO: MAKE THIS CODE SMARTER, USING THE SAME GENERAL APPROACH AS IN THE
  *       COUNT BLOCK CODE ABOVE.
  */
-static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,        /* offset into buffer */
+static int leaf_vector_mpi_flatten(size_t * blocks_p, size_t count, size_t blksz, size_t stride, MPI_Datatype el_type, size_t rel_off,        /* offset into buffer */
                                    void *bufp,  /* start of buffer */
                                    void *v_paramp)
 {
@@ -261,7 +261,7 @@ static int leaf_blkidx_mpi_flatten(size_t * blocks_p,
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
-            *blocks_p -= ((MPI_Aint) blocks_left + (((MPI_Aint) size) / el_size));
+            *blocks_p -= ((size_t) blocks_left + (((size_t) size) / el_size));
             return 1;
         } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i]))) {
             /* add this size to the last vector rather than using up new one */

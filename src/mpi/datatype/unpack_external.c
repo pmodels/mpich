@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Unpack_external as PMPI_Unpack_external
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize,
-                        size_t * position, void *outbuf, int outcount, MPI_Datatype datatype)
+                        MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
     __attribute__ ((weak, alias("PMPI_Unpack_external")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -57,8 +57,8 @@ Output Parameters:
 @*/
 int MPI_Unpack_external(const char datarep[],
                         const void *inbuf,
-                        size_t insize,
-                        size_t * position, void *outbuf, int outcount, MPI_Datatype datatype)
+                        MPI_Aint insize,
+                        MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK_EXTERNAL);

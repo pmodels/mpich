@@ -33,7 +33,7 @@ struct piece_params {
         } pack_vector;
         struct {
             int64_t *offp;
-            MPI_Aint *sizep;    /* see notes in Segment_flatten header */
+            size_t *sizep;    /* see notes in Segment_flatten header */
             int index;
             int length;
         } flatten;
@@ -425,7 +425,7 @@ static int contig_m2m(size_t * blocks_p,
                       MPI_Datatype el_type,
                       size_t rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
-    MPI_Aint el_size;           /* MPI_Aint? */
+    size_t el_size;
     size_t size;
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
@@ -456,7 +456,7 @@ static int contig_m2m(size_t * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
+static int vector_m2m(size_t * blocks_p, size_t count ATTRIBUTE((unused)), size_t blksz, size_t stride, MPI_Datatype el_type, size_t rel_off, /* offset into buffer */
                       void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     size_t i;
@@ -811,7 +811,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
     }
     *types_p = (MPI_Datatype *) (((char *) cp) + struct_sz);
     *ints_p = (int *) (((char *) (*types_p)) + types_sz);
-    *aints_p = (MPI_Aint *) (((char *) (*ints_p)) + ints_sz);
+    *aints_p = (size_t *) (((char *) (*ints_p)) + ints_sz);
     /* end of hardcoded handling of MPICH contents format */
 
     return;
@@ -929,7 +929,7 @@ static int contig_pack_to_iov(size_t * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,     /* offset into buffer */
+static int vector_pack_to_iov(size_t * blocks_p, size_t count, size_t blksz, size_t stride, MPI_Datatype el_type, size_t rel_off,     /* offset into buffer */
                               void *bufp,       /* start of buffer */
                               void *v_paramp)
 {

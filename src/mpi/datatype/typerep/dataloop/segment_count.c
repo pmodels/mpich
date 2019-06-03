@@ -116,7 +116,7 @@ static int leaf_contig_count_block(size_t * blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int leaf_vector_count_block(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off,        /* offset into buffer */
+static int leaf_vector_count_block(size_t * blocks_p, size_t count, size_t blksz, size_t stride, MPI_Datatype el_type, size_t rel_off,        /* offset into buffer */
                                    void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     size_t new_blk_count;
@@ -213,7 +213,7 @@ static int leaf_index_count_block(size_t * blocks_p,
      *       so we're not going to go through and check every piece
      *       separately here. if someone else were building indexed
      *       dataloops by hand, then the loop here might be necessary.
-     *       MPI_Aint i and MPI_Aint size would need to be
+     *       size_t i and size_t size would need to be
      *       declared above.
      */
 #if 0

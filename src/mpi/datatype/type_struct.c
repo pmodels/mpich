@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Type_struct as PMPI_Type_struct
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_struct(int count, int *array_of_blocklengths,
-                    size_t * array_of_displacements,
+                    MPI_Aint * array_of_displacements,
                     MPI_Datatype * array_of_types, MPI_Datatype * newtype)
     __attribute__ ((weak, alias("PMPI_Type_struct")));
 #endif
@@ -495,7 +495,7 @@ for the structure foo
 @*/
 int MPI_Type_struct(int count,
                     int *array_of_blocklengths,
-                    size_t * array_of_displacements,
+                    MPI_Aint * array_of_displacements,
                     MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
