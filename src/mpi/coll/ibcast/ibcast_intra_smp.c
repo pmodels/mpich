@@ -10,7 +10,7 @@
 static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint recv_size;
+    size_t recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
     MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
     if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
@@ -30,7 +30,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
+    size_t type_size;
     struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

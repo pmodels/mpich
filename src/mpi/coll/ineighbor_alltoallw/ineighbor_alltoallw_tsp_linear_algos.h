@@ -19,10 +19,10 @@
 
 /* Routine to schedule linear algorithm for neighbor_alltoallw */
 int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                      const MPI_Aint sdispls[],
+                                                      const size_t sdispls[],
                                                       const MPI_Datatype sendtypes[], void *recvbuf,
                                                       const int recvcounts[],
-                                                      const MPI_Aint rdispls[],
+                                                      const size_t rdispls[],
                                                       const MPI_Datatype recvtypes[],
                                                       MPIR_Comm * comm_ptr,
                                                       MPIR_TSP_sched_t * sched)
@@ -82,9 +82,9 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const
 
 /* Non-blocking linear algo based neighbor_alltoallw */
 int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                const MPI_Aint sdispls[],
+                                                const size_t sdispls[],
                                                 const MPI_Datatype sendtypes[], void *recvbuf,
-                                                const int recvcounts[], const MPI_Aint rdispls[],
+                                                const int recvcounts[], const size_t rdispls[],
                                                 const MPI_Datatype recvtypes[],
                                                 MPIR_Comm * comm_ptr, MPIR_Request ** req)
 {

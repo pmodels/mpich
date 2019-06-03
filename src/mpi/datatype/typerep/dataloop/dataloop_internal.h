@@ -96,13 +96,13 @@ typedef struct MPII_Dataloop_stackelm {
                                  * need reloading (e.g. this is a struct)
                                  */
 
-    MPI_Aint curcount;
-    MPI_Aint curoffset;
-    MPI_Aint curblock;
+    size_t curcount;
+    size_t curoffset;
+    size_t curblock;
 
-    MPI_Aint orig_count;
-    MPI_Aint orig_offset;
-    MPI_Aint orig_block;
+    size_t orig_count;
+    size_t orig_offset;
+    size_t orig_block;
 
     struct MPII_Dataloop *loop_p;
 } MPII_Dataloop_stackelm;
@@ -139,47 +139,47 @@ typedef struct MPII_Dataloop {
                                  * or struct) and a bit that indicates
                                  * whether the dataloop is a leaf type. */
     union {
-        MPI_Aint count;
+        size_t count;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop *dataloop;
         } c_t;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop *dataloop;
-            MPI_Aint blocksize;
-            MPI_Aint stride;
+            size_t blocksize;
+            size_t stride;
         } v_t;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop *dataloop;
-            MPI_Aint blocksize;
-            MPI_Aint *offset_array;
+            size_t blocksize;
+            size_t *offset_array;
         } bi_t;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop *dataloop;
-            MPI_Aint *blocksize_array;
-            MPI_Aint *offset_array;
-            MPI_Aint total_blocks;
+            size_t *blocksize_array;
+            size_t *offset_array;
+            size_t total_blocks;
         } i_t;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop **dataloop_array;
-            MPI_Aint *blocksize_array;
-            MPI_Aint *offset_array;
+            size_t *blocksize_array;
+            size_t *offset_array;
             MPI_Aint *el_extent_array;  /* need more than one */
         } s_t;
         struct {
-            MPI_Aint count;
+            size_t count;
             struct MPII_Dataloop *dataloop;
         } cm_t;
     } loop_params;
-    MPI_Aint el_size;
-    MPI_Aint el_extent;
+    size_t el_size;
+    size_t el_extent;
     MPI_Datatype el_type;
 
-    MPI_Aint dloop_sz;
+    size_t dloop_sz;
 } MPII_Dataloop;
 
 static int MPII_Type_dloop_size(MPI_Datatype type) ATTRIBUTE((unused));
@@ -207,7 +207,7 @@ static int MPII_Type_dloop_size(MPI_Datatype type)
 struct MPIR_Segment {
     void *ptr;                  /* pointer to datatype buffer */
     MPI_Datatype handle;
-    MPI_Aint stream_off;        /* next offset into data stream resulting from datatype
+    size_t stream_off;        /* next offset into data stream resulting from datatype
                                  * processing.  in other words, how many bytes have
                                  * we created/used by parsing so far?  that amount + 1.
                                  */
@@ -231,31 +231,31 @@ struct MPII_Dataloop_m2m_params {
     char *userbuf;
 };
 
-MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm *elmp);
-MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm *elmp);
+size_t MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm *elmp);
+size_t MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm *elmp);
 void MPII_Dataloop_stackelm_load(struct MPII_Dataloop_stackelm *elmp,
                                  MPII_Dataloop * dlp, int branch_flag);
 
-int MPII_Dataloop_create_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
-int MPII_Dataloop_create_vector(MPI_Aint count,
-                                MPI_Aint blocklength,
-                                MPI_Aint stride,
+int MPII_Dataloop_create_contiguous(size_t count, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
+int MPII_Dataloop_create_vector(size_t count,
+                                size_t blocklength,
+                                size_t stride,
                                 int strideinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
-int MPII_Dataloop_create_blockindexed(MPI_Aint count,
-                                      MPI_Aint blklen,
+int MPII_Dataloop_create_blockindexed(size_t count,
+                                      size_t blklen,
                                       const void *disp_array,
                                       int dispinbytes,
                                       MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
 /* we bump up the size of the blocklength array because create_struct might use
  * create_indexed in an optimization, and in course of doing so, generate a
  * request of a large blocklength. */
-int MPII_Dataloop_create_indexed(MPI_Aint count,
-                                 const MPI_Aint * blocklength_array,
+int MPII_Dataloop_create_indexed(size_t count,
+                                 const size_t * blocklength_array,
                                  const void *displacement_array,
                                  int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p);
-int MPII_Dataloop_create_struct(MPI_Aint count,
+int MPII_Dataloop_create_struct(size_t count,
                                 const int *blklen_array,
-                                const MPI_Aint * disp_array,
+                                const size_t * disp_array,
                                 const MPI_Datatype * oldtype_array, MPII_Dataloop ** dlp_p);
 
 /* Helper functions for dataloop construction */
@@ -273,52 +273,52 @@ int MPII_Dataloop_convert_darray(int size,
                                  int *array_of_psizes,
                                  int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
-MPI_Aint MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_Datatype el_type));
+size_t MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, size_t(*sizefn) (MPI_Datatype el_type));
 
-void MPII_Dataloop_alloc(int kind, MPI_Aint count, MPII_Dataloop ** new_loop_p);
+void MPII_Dataloop_alloc(int kind, size_t count, MPII_Dataloop ** new_loop_p);
 void MPII_Dataloop_alloc_and_copy(int kind,
-                                  MPI_Aint count,
+                                  size_t count,
                                   MPII_Dataloop * old_loop, MPII_Dataloop ** new_loop_p);
 
 void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
-                                   MPI_Aint first,
-                                   MPI_Aint * lastp,
-                                   MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp);
+                                   size_t first,
+                                   size_t * lastp,
+                                   size_t * blklens, size_t * disps, size_t * lengthp);
 
-void MPII_Dataloop_update(MPII_Dataloop * dataloop, MPI_Aint ptrdiff);
+void MPII_Dataloop_update(MPII_Dataloop * dataloop, size_t ptrdiff);
 
 void MPII_Segment_manipulate(MPIR_Segment * segp,
-                             MPI_Aint first,
-                             MPI_Aint * lastp,
-                             int (*piecefn) (MPI_Aint * blocks_p,
+                             size_t first,
+                             size_t * lastp,
+                             int (*piecefn) (size_t * blocks_p,
                                              MPI_Datatype el_type,
-                                             MPI_Aint rel_off,
+                                             size_t rel_off,
                                              void *bufp,
                                              void *v_paramp),
-                             int (*vectorfn) (MPI_Aint * blocks_p,
-                                              MPI_Aint count,
-                                              MPI_Aint blklen,
-                                              MPI_Aint stride,
+                             int (*vectorfn) (size_t * blocks_p,
+                                              size_t count,
+                                              size_t blklen,
+                                              size_t stride,
                                               MPI_Datatype el_type,
-                                              MPI_Aint rel_off,
+                                              size_t rel_off,
                                               void *bufp,
                                               void *v_paramp),
-                             int (*blkidxfn) (MPI_Aint * blocks_p,
-                                              MPI_Aint count,
-                                              MPI_Aint blklen,
-                                              MPI_Aint * offsetarray,
+                             int (*blkidxfn) (size_t * blocks_p,
+                                              size_t count,
+                                              size_t blklen,
+                                              size_t * offsetarray,
                                               MPI_Datatype el_type,
-                                              MPI_Aint rel_off,
+                                              size_t rel_off,
                                               void *bufp,
                                               void *v_paramp),
-                             int (*indexfn) (MPI_Aint * blocks_p,
-                                             MPI_Aint count,
-                                             MPI_Aint * blockarray,
-                                             MPI_Aint * offsetarray,
+                             int (*indexfn) (size_t * blocks_p,
+                                             size_t count,
+                                             size_t * blockarray,
+                                             size_t * offsetarray,
                                              MPI_Datatype el_type,
-                                             MPI_Aint rel_off,
+                                             size_t rel_off,
                                              void *bufp,
                                              void *v_paramp),
-                             MPI_Aint(*sizefn) (MPI_Datatype el_type), void *pieceparams);
+                             size_t(*sizefn) (MPI_Datatype el_type), void *pieceparams);
 
 #endif /* DATALOOP_INTERNAL_H_INCLUDED */

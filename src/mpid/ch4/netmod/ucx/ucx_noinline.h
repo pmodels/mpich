@@ -47,20 +47,20 @@ int MPIDI_UCX_mpi_op_commit_hook(MPIR_Op * op_p);
 int MPIDI_UCX_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info);
 int MPIDI_UCX_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p);
 int MPIDI_UCX_mpi_win_free(MPIR_Win ** win_ptr);
-int MPIDI_UCX_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_UCX_mpi_win_create(void *base, size_t length, int disp_unit, MPIR_Info * info,
                              MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
-int MPIDI_UCX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size);
-int MPIDI_UCX_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDI_UCX_mpi_win_attach(MPIR_Win * win, void *base, size_t size);
+int MPIDI_UCX_mpi_win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info_ptr,
                                       MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr);
 int MPIDI_UCX_mpi_win_detach(MPIR_Win * win, const void *base);
-int MPIDI_UCX_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPIDI_UCX_mpi_win_allocate(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                                void *baseptr, MPIR_Win ** win_ptr);
 int MPIDI_UCX_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win);
 int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win);
 int MPIDI_UCX_mpi_win_allocate_shared_hook(MPIR_Win * win);
 int MPIDI_UCX_mpi_win_create_dynamic_hook(MPIR_Win * win);
-int MPIDI_UCX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size);
+int MPIDI_UCX_mpi_win_attach_hook(MPIR_Win * win, void *base, size_t size);
 int MPIDI_UCX_mpi_win_detach_hook(MPIR_Win * win, const void *base);
 int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win);
 

@@ -63,21 +63,21 @@ int MPIR_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 int MPIR_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req);
 
 /* send and recv take a comm ptr to enable hierarchical collectives */
-int MPIR_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIR_Sched_send(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                     MPIR_Comm * comm, MPIR_Sched_t s);
-int MPIR_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
+int MPIR_Sched_recv(void *buf, size_t count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
                     MPIR_Sched_t s);
 
 /* just like MPI_Issend, can't complete until the matching recv is posted */
-int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIR_Sched_ssend(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                      MPIR_Comm * comm, MPIR_Sched_t s);
 
-int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, size_t count, MPI_Datatype datatype,
                       MPI_Op op, MPIR_Sched_t s);
 /* packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype */
-int MPIR_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
-                    void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
+int MPIR_Sched_copy(const void *inbuf, size_t incount, MPI_Datatype intype,
+                    void *outbuf, size_t outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
 int MPIR_Sched_barrier(MPIR_Sched_t s);
@@ -98,12 +98,12 @@ int MPIR_Sched_barrier(MPIR_Sched_t s);
  * A corresponding _recv_defer function is not currently provided because there
  * is no known use case.  The recv count is just an upper bound, not an exact
  * amount to be received, so an oversized recv is used instead of deferral. */
-int MPIR_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
+int MPIR_Sched_send_defer(const void *buf, const size_t * count, MPI_Datatype datatype, int dest,
                           MPIR_Comm * comm, MPIR_Sched_t s);
 /* Just like MPIR_Sched_recv except it populates the given status object with
  * the received count and error information, much like a normal recv.  Often
  * useful in conjunction with MPIR_Sched_send_defer. */
-int MPIR_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+int MPIR_Sched_recv_status(void *buf, size_t count, MPI_Datatype datatype, int src,
                            MPIR_Comm * comm, MPI_Status * status, MPIR_Sched_t s);
 
 /* buffer management, fancy reductions, etc */

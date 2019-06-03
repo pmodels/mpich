@@ -23,7 +23,7 @@ int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    MPI_Aint sendtype_extent, recvtype_extent;
+    size_t sendtype_extent, recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);

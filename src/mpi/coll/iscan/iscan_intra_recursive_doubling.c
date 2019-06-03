@@ -11,7 +11,7 @@ int MPIR_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     int is_commutative;
     int mask, dst, rank, comm_size;
     void *partial_scan = NULL;

@@ -27,18 +27,18 @@ int MPIDI_STUBNM_mpi_win_free(MPIR_Win ** win_ptr)
     return MPIDIG_mpi_win_free(win_ptr);
 }
 
-int MPIDI_STUBNM_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_STUBNM_mpi_win_create(void *base, size_t length, int disp_unit, MPIR_Info * info,
                                 MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
 }
 
-int MPIDI_STUBNM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+int MPIDI_STUBNM_mpi_win_attach(MPIR_Win * win, void *base, size_t size)
 {
     return MPIDIG_mpi_win_attach(win, base, size);
 }
 
-int MPIDI_STUBNM_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDI_STUBNM_mpi_win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info_ptr,
                                          MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     return MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
@@ -49,7 +49,7 @@ int MPIDI_STUBNM_mpi_win_detach(MPIR_Win * win, const void *base)
     return MPIDIG_mpi_win_detach(win, base);
 }
 
-int MPIDI_STUBNM_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPIDI_STUBNM_mpi_win_allocate(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                                   void *baseptr, MPIR_Win ** win)
 {
     return MPIDIG_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
@@ -80,7 +80,7 @@ int MPIDI_STUBNM_mpi_win_create_dynamic_hook(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-int MPIDI_STUBNM_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
+int MPIDI_STUBNM_mpi_win_attach_hook(MPIR_Win * win, void *base, size_t size)
 {
     return MPI_SUCCESS;
 }

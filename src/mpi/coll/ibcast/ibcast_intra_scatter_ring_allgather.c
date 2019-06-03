@@ -33,7 +33,7 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
     int is_contig, type_size, nbytes;
     int scatter_size, curr_size;
     int i, j, jnext, left, right;
-    MPI_Aint true_extent, true_lb;
+    size_t true_extent, true_lb;
     void *tmp_buf = NULL;
 
     struct MPII_Ibcast_state *ibcast_state;

@@ -212,7 +212,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     int mpi_errno = MPI_SUCCESS;
     MPII_Bsend_data_t *p;
     MPII_Bsend_msg_t *msg;
-    MPI_Aint packsize;
+    size_t packsize;
     int pass;
 
     /* Find a free segment and copy the data into it.  If we could
@@ -260,7 +260,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
              * use MPIR_Memcpy and the provided datatype */
             msg->count = 0;
             if (dtype != MPI_PACKED) {
-                MPI_Aint actual_pack_bytes;
+                size_t actual_pack_bytes;
                 void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
                     MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes);

@@ -11,16 +11,16 @@
 #include <stdio.h>
 
 
-static void blockindexed_array_copy(MPI_Aint count,
+static void blockindexed_array_copy(size_t count,
                                     const void *disp_array,
-                                    MPI_Aint * out_disp_array,
-                                    int dispinbytes, MPI_Aint old_extent);
+                                    size_t * out_disp_array,
+                                    int dispinbytes, size_t old_extent);
 
 /*@
    Dataloop_create_blockindexed - create blockindexed dataloop
 
    Arguments:
-+  MPI_Aint count
++  size_t count
 .  void *displacement_array (array of either MPI_Aints or ints)
 .  int displacement_in_bytes (boolean)
 .  MPI_Datatype old_type
@@ -29,21 +29,21 @@ static void blockindexed_array_copy(MPI_Aint count,
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
-                                      MPI_Aint iblklen,
+int MPII_Dataloop_create_blockindexed(size_t icount,
+                                      size_t iblklen,
                                       const void *disp_array,
                                       int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     int err, is_builtin, is_vectorizable = 1;
     int i;
-    MPI_Aint new_loop_sz;
+    size_t new_loop_sz;
 
-    MPI_Aint contig_count, count, blklen;
-    MPI_Aint old_extent, eff_disp0, eff_disp1, last_stride;
+    size_t contig_count, count, blklen;
+    size_t old_extent, eff_disp0, eff_disp1, last_stride;
     MPII_Dataloop *new_dlp;
 
     count = (MPI_Aint) icount;  /* avoid subsequent casting */
-    blklen = (MPI_Aint) iblklen;
+    blklen = (size_t) iblklen;
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
@@ -70,7 +70,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
      */
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) disp_array)[0] == 0) ||
-         (dispinbytes && ((MPI_Aint *) disp_array)[0] == 0))) {
+         (dispinbytes && ((size_t *) disp_array)[0] == 0))) {
         err = MPII_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p);
         return err;
     }
@@ -93,20 +93,20 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
      * if displacements start at zero and result in a fixed stride,
      * store it as a vector rather than a blockindexed dataloop.
      */
-    eff_disp0 = (dispinbytes) ? ((MPI_Aint) ((MPI_Aint *) disp_array)[0]) :
-        (((MPI_Aint) ((int *) disp_array)[0]) * old_extent);
+    eff_disp0 = (dispinbytes) ? ((size_t) ((size_t *) disp_array)[0]) :
+        (((size_t) ((int *) disp_array)[0]) * old_extent);
 
-    if (count > 1 && eff_disp0 == (MPI_Aint) 0) {
+    if (count > 1 && eff_disp0 == (size_t) 0) {
         eff_disp1 = (dispinbytes) ?
-            ((MPI_Aint) ((MPI_Aint *) disp_array)[1]) :
-            (((MPI_Aint) ((int *) disp_array)[1]) * old_extent);
+            ((size_t) ((size_t *) disp_array)[1]) :
+            (((size_t) ((int *) disp_array)[1]) * old_extent);
         last_stride = eff_disp1 - eff_disp0;
 
         for (i = 2; i < count; i++) {
             eff_disp0 = eff_disp1;
             eff_disp1 = (dispinbytes) ?
-                ((MPI_Aint) ((MPI_Aint *) disp_array)[i]) :
-                (((MPI_Aint) ((int *) disp_array)[i]) * old_extent);
+                ((size_t) ((size_t *) disp_array)[i]) :
+                (((size_t) ((int *) disp_array)[i]) * old_extent);
             if (eff_disp1 - eff_disp0 != last_stride) {
                 is_vectorizable = 0;
                 break;
@@ -192,18 +192,18 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
  * Unlike the indexed version, this one does not compact adjacent
  * blocks, because that would really mess up the blockindexed type!
  */
-static void blockindexed_array_copy(MPI_Aint count,
+static void blockindexed_array_copy(size_t count,
                                     const void *in_disp_array,
-                                    MPI_Aint * out_disp_array, int dispinbytes, MPI_Aint old_extent)
+                                    size_t * out_disp_array, int dispinbytes, size_t old_extent)
 {
     int i;
     if (!dispinbytes) {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((MPI_Aint) ((int *) in_disp_array)[i]) * old_extent;
+            out_disp_array[i] = ((size_t) ((int *) in_disp_array)[i]) * old_extent;
         }
     } else {
         for (i = 0; i < count; i++) {
-            out_disp_array[i] = ((MPI_Aint) ((MPI_Aint *) in_disp_array)[i]);
+            out_disp_array[i] = ((size_t) ((size_t *) in_disp_array)[i]);
         }
     }
     return;

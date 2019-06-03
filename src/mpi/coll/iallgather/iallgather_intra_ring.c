@@ -28,7 +28,7 @@ int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
     int i, j, jnext, left, right;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;

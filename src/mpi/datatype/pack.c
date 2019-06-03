@@ -65,7 +65,7 @@ int MPI_Pack(const void *inbuf,
              MPI_Datatype datatype, void *outbuf, int outsize, int *position, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint position_x;
+    size_t position_x;
     MPIR_Comm *comm_ptr = NULL;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK);
@@ -155,7 +155,7 @@ int MPI_Pack(const void *inbuf,
 
     position_x = *position;
 
-    MPI_Aint actual_pack_bytes;
+    size_t actual_pack_bytes;
     void *buf = (void *) ((char *) outbuf + position_x);
     mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
     if (mpi_errno)

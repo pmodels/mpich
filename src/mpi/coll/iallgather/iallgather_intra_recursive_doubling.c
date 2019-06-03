@@ -9,14 +9,14 @@
 /* helper callbacks and associated state structures */
 struct shared_state {
     int recvtype;
-    MPI_Aint curr_count;
-    MPI_Aint last_recv_count;
+    size_t curr_count;
+    size_t last_recv_count;
     MPI_Status status;
 };
 static int get_count(MPIR_Comm * comm, int tag, void *state)
 {
     struct shared_state *ss = state;
-    MPI_Aint recv_count;
+    size_t recv_count;
     MPIR_Get_count_impl(&ss->status, ss->recvtype, &recv_count);
     ss->last_recv_count = recv_count;
     ss->curr_count += ss->last_recv_count;
@@ -54,7 +54,7 @@ int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int send
     int mask, tmp_mask, dst;
     int dst_tree_root, my_tree_root, tree_root;
     int offset, send_offset, recv_offset;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     MPIR_Datatype *recv_dtp;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

@@ -58,8 +58,8 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
-int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
+int MPIR_Localcopy(const void *sendbuf, size_t sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, size_t recvcount, MPI_Datatype recvtype);
 
 /*@ MPIR_Add_finalize - Add a routine to be called when MPI_Finalize is invoked
 

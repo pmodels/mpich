@@ -9,18 +9,18 @@
 #include "dataloop_internal.h"
 
 static int create_struct_memory_error(void);
-static int create_unique_type_struct(MPI_Aint count,
+static int create_unique_type_struct(size_t count,
                                      const int *blklens,
-                                     const MPI_Aint * disps,
+                                     const size_t * disps,
                                      const MPI_Datatype * oldtypes,
                                      int type_pos, MPII_Dataloop ** dlp_p);
-static int create_basic_all_bytes_struct(MPI_Aint count,
+static int create_basic_all_bytes_struct(size_t count,
                                          const int *blklens,
-                                         const MPI_Aint * disps,
+                                         const size_t * disps,
                                          const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
-static int create_flattened_struct(MPI_Aint count,
+static int create_flattened_struct(size_t count,
                                    const int *blklens,
-                                   const MPI_Aint * disps,
+                                   const size_t * disps,
                                    const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p);
 
 /*@
@@ -42,14 +42,14 @@ Output Parameters:
   Notes:
   This function relies on others, like Dataloop_create_indexed, to create
   types in some cases. This call (like all the rest) takes int blklens
-  and MPI_Aint displacements, so it's possible to overflow when working
+  and size_t displacements, so it's possible to overflow when working
   with a particularly large struct type in some cases. This isn't detected
   or corrected in this code at this time.
 
 @*/
-int MPII_Dataloop_create_struct(MPI_Aint count,
+int MPII_Dataloop_create_struct(size_t count,
                                 const int *blklens,
-                                const MPI_Aint * disps,
+                                const size_t * disps,
                                 const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     int err, i, nr_basics = 0, nr_derived = 0, type_pos = 0;
@@ -170,9 +170,9 @@ static int create_struct_memory_error(void)
 
 /* --END ERROR HANDLING-- */
 
-static int create_unique_type_struct(MPI_Aint count,
+static int create_unique_type_struct(size_t count,
                                      const int *blklens,
-                                     const MPI_Aint * disps,
+                                     const size_t * disps,
                                      const MPI_Datatype * oldtypes,
                                      int type_pos, MPII_Dataloop ** dlp_p)
 {
@@ -180,11 +180,11 @@ static int create_unique_type_struct(MPI_Aint count,
      * indexes to the first of these.
      */
     int i, err, cur_pos = 0;
-    MPI_Aint *tmp_blklens;
-    MPI_Aint *tmp_disps;
+    size_t *tmp_blklens;
+    size_t *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_blklens = (size_t *) MPL_malloc(count * sizeof(size_t), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
         /* TODO: ??? */
@@ -192,8 +192,8 @@ static int create_unique_type_struct(MPI_Aint count,
     }
     /* --END ERROR HANDLING-- */
 
-    tmp_disps = (MPI_Aint *)
-        MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_disps = (size_t *)
+        MPL_malloc(count * sizeof(size_t), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
@@ -220,17 +220,17 @@ static int create_unique_type_struct(MPI_Aint count,
 
 }
 
-static int create_basic_all_bytes_struct(MPI_Aint count,
+static int create_basic_all_bytes_struct(size_t count,
                                          const int *blklens,
-                                         const MPI_Aint * disps,
+                                         const size_t * disps,
                                          const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     int i, err, cur_pos = 0;
-    MPI_Aint *tmp_blklens;
-    MPI_Aint *tmp_disps;
+    size_t *tmp_blklens;
+    size_t *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_blklens = (size_t *) MPL_malloc(count * sizeof(size_t), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
@@ -238,7 +238,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
     }
     /* --END ERROR HANDLING-- */
 
-    tmp_disps = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_disps = (size_t *) MPL_malloc(count * sizeof(size_t), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
@@ -249,7 +249,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
 
     for (i = 0; i < count; i++) {
         if (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB && blklens[i] != 0) {
-            MPI_Aint sz;
+            size_t sz;
 
             MPIR_Datatype_get_size_macro(oldtypes[i], sz);
             tmp_blklens[cur_pos] = (int) sz *blklens[i];
@@ -266,21 +266,21 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
     return err;
 }
 
-static int create_flattened_struct(MPI_Aint count,
+static int create_flattened_struct(size_t count,
                                    const int *blklens,
-                                   const MPI_Aint * disps,
+                                   const size_t * disps,
                                    const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
 {
     /* arbitrary types, convert to bytes and use indexed */
     int i, err, nr_blks = 0;
-    MPI_Aint *tmp_blklens;
-    MPI_Aint *tmp_disps;        /* since we're calling another fn that takes
+    size_t *tmp_blklens;
+    size_t *tmp_disps;        /* since we're calling another fn that takes
                                  * this type as an input parameter */
-    MPI_Aint bytes;
+    size_t bytes;
     MPIR_Segment *segp;
 
     int first_ind;
-    MPI_Aint last_ind;
+    size_t last_ind;
 
     /* use segment code once to count contiguous regions */
     for (i = 0; i < count; i++) {
@@ -296,14 +296,14 @@ static int create_flattened_struct(MPI_Aint count,
             nr_blks++;
         } else {        /* derived type; get a count of contig blocks */
 
-            MPI_Aint tmp_nr_blks, sz;
+            size_t tmp_nr_blks, sz;
 
             MPIR_Datatype_get_size_macro(oldtypes[i], sz);
 
             /* if the derived type has some data to contribute,
              * add to flattened representation */
             if (sz > 0) {
-                segp = MPIR_Segment_alloc(NULL, (MPI_Aint) blklens[i], oldtypes[i]);
+                segp = MPIR_Segment_alloc(NULL, (size_t) blklens[i], oldtypes[i]);
 
                 bytes = MPIR_SEGMENT_IGNORE_LAST;
 
@@ -327,7 +327,7 @@ static int create_flattened_struct(MPI_Aint count,
 
     nr_blks += 2;       /* safety measure */
 
-    tmp_blklens = (MPI_Aint *) MPL_malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_blklens = (size_t *) MPL_malloc(nr_blks * sizeof(size_t), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
         return create_struct_memory_error();
@@ -335,7 +335,7 @@ static int create_flattened_struct(MPI_Aint count,
     /* --END ERROR HANDLING-- */
 
 
-    tmp_disps = (MPI_Aint *) MPL_malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    tmp_disps = (size_t *) MPL_malloc(nr_blks * sizeof(size_t), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
         MPL_free(tmp_blklens);
@@ -347,7 +347,7 @@ static int create_flattened_struct(MPI_Aint count,
     first_ind = 0;
     for (i = 0; i < count; i++) {
         int is_basic;
-        MPI_Aint sz = -1;
+        size_t sz = -1;
 
         is_basic = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
         if (!is_basic)
@@ -363,7 +363,7 @@ static int create_flattened_struct(MPI_Aint count,
          */
         if (oldtypes[i] != MPI_UB &&
             oldtypes[i] != MPI_LB && blklens[i] != 0 && (is_basic || sz > 0)) {
-            segp = MPIR_Segment_alloc((char *) disps[i], (MPI_Aint) blklens[i], oldtypes[i]);
+            segp = MPIR_Segment_alloc((char *) disps[i], (size_t) blklens[i], oldtypes[i]);
 
             last_ind = nr_blks - first_ind;
             bytes = MPIR_SEGMENT_IGNORE_LAST;

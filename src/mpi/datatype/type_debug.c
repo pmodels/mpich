@@ -33,12 +33,12 @@ static char *depth_spacing(int depth) ATTRIBUTE((unused));
 /* --BEGIN ERROR HANDLING-- */
 
 void MPII_Datatype_printf(MPI_Datatype type,
-                          int depth, MPI_Aint displacement, int blocklength, int header)
+                          int depth, size_t displacement, int blocklength, int header)
 {
 #ifdef MPL_USE_DBG_LOGGING
     char *string;
-    MPI_Aint size;
-    MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
+    size_t size;
+    size_t extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
         string = MPIR_Datatype_builtin_to_string(type);
@@ -82,9 +82,9 @@ void MPII_Datatype_printf(MPI_Datatype type,
                      "%5d  %21s  %11d  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  "
                      MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC
                      ")  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  "
-                     MPI_AINT_FMT_DEC_SPEC "  %11d", depth, string, (int) size, (MPI_Aint) extent,
-                     (MPI_Aint) true_lb, (MPI_Aint) true_ub, (MPI_Aint) lb, (MPI_Aint) sticky_lb,
-                     (MPI_Aint) ub, (MPI_Aint) sticky_ub, (MPI_Aint) displacement,
+                     MPI_AINT_FMT_DEC_SPEC "  %11d", depth, string, (int) size, (size_t) extent,
+                     (size_t) true_lb, (size_t) true_ub, (size_t) lb, (size_t) sticky_lb,
+                     (size_t) ub, (size_t) sticky_ub, (size_t) displacement,
                      (int) blocklength));
 #endif
     return;
@@ -341,12 +341,12 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC
                                         "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = "
                                         MPI_AINT_FMT_DEC_SPEC ", Element Size = "
-                                        MPI_AINT_FMT_DEC_SPEC " (%s), %s", (MPI_Aint) dtp->size,
-                                        (MPI_Aint) dtp->extent, (MPI_Aint) dtp->lb,
-                                        (dtp->has_sticky_lb) ? "(sticky)" : "", (MPI_Aint) dtp->ub,
+                                        MPI_AINT_FMT_DEC_SPEC " (%s), %s", (size_t) dtp->size,
+                                        (size_t) dtp->extent, (size_t) dtp->lb,
+                                        (dtp->has_sticky_lb) ? "(sticky)" : "", (size_t) dtp->ub,
                                         (dtp->has_sticky_ub) ? "(sticky)" : "",
-                                        (MPI_Aint) dtp->extent,
-                                        (MPI_Aint) dtp->builtin_element_size,
+                                        (size_t) dtp->extent,
+                                        (size_t) dtp->builtin_element_size,
                                         dtp->builtin_element_size ==
                                         -1 ? "multiple types" :
                                         string,
@@ -397,7 +397,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
     MPIR_Datatype *dtp;
     MPIR_Datatype_contents *cp;
 
-    MPI_Aint *aints = NULL;
+    size_t *aints = NULL;
     MPI_Datatype *types = NULL;
     int *ints = NULL;
 
@@ -426,7 +426,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
     }
 
     if (cp->nr_aints > 0) {
-        aints = (MPI_Aint *) MPL_malloc(cp->nr_aints * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+        aints = (size_t *) MPL_malloc(cp->nr_aints * sizeof(size_t), MPL_MEM_DATATYPE);
         MPIR_Assert(aints != NULL);
         MPII_Datatype_get_contents_aints(cp, aints);
     }
@@ -470,7 +470,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                                                 "# %shvector ct = %d, blk = %d, str = "
                                                 MPI_AINT_FMT_DEC_SPEC "\n",
                                                 depth_spacing(depth), ints[0],
-                                                ints[1], (MPI_Aint) aints[0]));
+                                                ints[1], (size_t) aints[0]));
             contents_printf(*types, depth + 1, acount);
             MPII_DATATYPE_FREE_AND_RETURN;
         case MPI_COMBINER_INDEXED:
@@ -495,7 +495,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                                                     "# %s  hindexed [%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
                                                     depth_spacing(depth), i,
-                                                    (int) ints[i + 1], (MPI_Aint) aints[i]));
+                                                    (int) ints[i + 1], (size_t) aints[i]));
                 contents_printf(*types, depth + 1, acount);
             }
             MPII_DATATYPE_FREE_AND_RETURN;
@@ -508,7 +508,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
                                                     "# %s  struct[%d]: blk = %d, disp = "
                                                     MPI_AINT_FMT_DEC_SPEC "\n",
                                                     depth_spacing(depth), i,
-                                                    (int) ints[i + 1], (MPI_Aint) aints[i]));
+                                                    (int) ints[i + 1], (size_t) aints[i]));
                 contents_printf(types[i], depth + 1, acount);
             }
             MPII_DATATYPE_FREE_AND_RETURN;

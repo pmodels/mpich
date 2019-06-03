@@ -37,7 +37,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     int total_count;
 
     comm_size = comm_ptr->local_size;

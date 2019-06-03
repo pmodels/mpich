@@ -15,7 +15,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    size_t extent, true_extent, true_lb;
     int *disps;
     void *tmp_recvbuf, *tmp_results;
     int type_size ATTRIBUTE((unused)), total_count, dst;

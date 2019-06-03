@@ -17,7 +17,7 @@
 #include "ch4r_recv.h"
 
 static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
-                                          void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                          void *buf, size_t count, MPI_Datatype datatype,
                                           MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -35,13 +35,13 @@ static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t c
     return mpi_errno;
 }
 
-static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
+static inline int MPIDIG_handle_unexpected(void *buf, size_t count, MPI_Datatype datatype,
                                            MPIR_Comm * comm, int context_offset,
                                            MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t in_data_sz, dt_sz, nbytes;
 
@@ -69,10 +69,10 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     /* Copy the data from the message. */
 
     if (!dt_contig) {
-        MPI_Aint actual_unpack_bytes;
+        size_t actual_unpack_bytes;
         MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
                             &actual_unpack_bytes);
-        if (actual_unpack_bytes != (MPI_Aint) (nbytes)) {
+        if (actual_unpack_bytes != (size_t) (nbytes)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
@@ -114,7 +114,7 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
+static inline int MPIDIG_do_irecv(void *buf, size_t count, MPI_Datatype datatype, int rank,
                                   int tag, MPIR_Comm * comm, int context_offset,
                                   MPIR_Request ** request, int alloc_req, uint64_t flags)
 {
@@ -213,7 +213,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
-                                             MPI_Aint count,
+                                             size_t count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -277,7 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
-                                               MPI_Aint count,
+                                               size_t count,
                                                MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -320,7 +320,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
-                                              MPI_Aint count,
+                                              size_t count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,

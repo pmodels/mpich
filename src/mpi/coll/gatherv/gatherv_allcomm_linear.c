@@ -49,7 +49,7 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint extent;
+    size_t extent;
     int i, reqs;
     int min_procs;
     MPIR_Request **reqarray;

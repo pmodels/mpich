@@ -94,14 +94,14 @@ struct MPIR_Datatype {
 
     /* user-visible parameters */
     MPI_Aint size;              /* MPI_Count could be 128 bits, so use MPI_Aint */
-    MPI_Aint extent, ub, lb, true_ub, true_lb;
+    size_t extent, ub, lb, true_ub, true_lb;
     struct MPIR_Attribute *attributes;
     char name[MPI_MAX_OBJECT_NAME];
 
 
     /* private fields */
     /* chars affecting subsequent datatype processing and creation */
-    MPI_Aint alignsize;
+    size_t alignsize;
     int has_sticky_ub, has_sticky_lb;
     int is_committed;
 
@@ -116,8 +116,8 @@ struct MPIR_Datatype {
      *                       is set to -1.
      */
     int basic_type;
-    MPI_Aint n_builtin_elements;
-    MPI_Aint builtin_element_size;
+    size_t n_builtin_elements;
+    size_t builtin_element_size;
 
     /* information on contiguity of type, for processing shortcuts.
      *
@@ -129,7 +129,7 @@ struct MPIR_Datatype {
      * It is not trivial to calculate the *real* number of contig
      * blocks in the case where old datatype is non-contiguous
      */
-    MPI_Aint max_contig_blocks;
+    size_t max_contig_blocks;
 
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
@@ -371,7 +371,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              int nr_aints,
                                              int nr_types,
                                              int array_of_ints[],
-                                             const MPI_Aint array_of_aints[],
+                                             const size_t array_of_aints[],
                                              const MPI_Datatype array_of_types[])
 {
     int i, contents_size, align_sz, epsilon, mpi_errno;
@@ -389,7 +389,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = nr_types * sizeof(MPI_Datatype);
     ints_sz = nr_ints * sizeof(int);
-    aints_sz = nr_aints * sizeof(MPI_Aint);
+    aints_sz = nr_aints * sizeof(size_t);
 
     /* pad the struct, types, and ints before we allocate.
      *
@@ -440,7 +440,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
 
     ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
     if (nr_aints > 0) {
-        MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
+        MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(size_t));
     }
     new_dtp->contents = cp;
 
@@ -456,9 +456,9 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
 }
 
 /* contents accessor functions */
-void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
+void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, size_t ** aints_p,
                                MPI_Datatype ** types_p);
-void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
+void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, size_t ** aints_p,
                                 MPI_Datatype ** types_p);
 
 /* This routine is used to install an attribute free routine for datatypes
@@ -479,45 +479,45 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
                                       MPI_Count * true_extent);
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size);
 
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count);
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, size_t * count);
 int MPIR_Type_commit_impl(MPI_Datatype * datatype);
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
+                                 const size_t array_of_displacements[],
                                  const MPI_Datatype array_of_types[], MPI_Datatype * newtype);
 int MPIR_Type_create_indexed_block_impl(int count,
                                         int blocklength,
                                         const int array_of_displacements[],
                                         MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
-                                         const MPI_Aint array_of_displacements[],
+                                         const size_t array_of_displacements[],
                                          MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
-void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent);
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
-                                    MPI_Aint * true_extent);
+void MPIR_Type_get_extent_impl(MPI_Datatype datatype, size_t * lb, size_t * extent);
+void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, size_t * true_lb,
+                                    size_t * true_extent);
 void MPIR_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_addresses,
                             int *num_datatypes, int *combiner);
-int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type,
+int MPIR_Type_hvector_impl(int count, int blocklen, size_t stride, MPI_Datatype old_type,
                            MPI_Datatype * newtype_p);
 int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[],
                            MPI_Datatype old_type, MPI_Datatype * newtype);
 void MPIR_Type_free_impl(MPI_Datatype * datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type,
                           MPI_Datatype * newtype_p);
-int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
+int MPIR_Type_struct_impl(int count, const int blocklens[], const size_t indices[],
                           const MPI_Datatype old_types[], MPI_Datatype * newtype);
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
-void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
+void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, size_t * size);
+void MPIR_Type_lb_impl(MPI_Datatype datatype, size_t * displacement);
 
 /* Datatype functions */
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
+int MPIR_Type_struct(int count, const int *blocklength_array, const size_t * displacement_array,
                      const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
 int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array,
                       int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
-int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride, int strideinbytes,
+int MPIR_Type_vector(int count, int blocklength, size_t stride, int strideinbytes,
                      MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_blockindexed(int count,
@@ -527,11 +527,11 @@ int MPIR_Type_blockindexed(int count,
 
 int MPIR_Type_commit(MPI_Datatype * type);
 int MPII_Type_zerolen(MPI_Datatype * newtype);
-int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+int MPIR_Type_create_resized(MPI_Datatype oldtype, size_t lb, size_t extent,
                              MPI_Datatype * newtype);
 int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addresses,
                            int max_datatypes, int array_of_integers[],
-                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
+                           size_t array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
 /* debugging helper functions */
@@ -539,18 +539,18 @@ char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
 char *MPIR_Datatype_combiner_to_string(int combiner);
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct);
 
-MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type);
+size_t MPIR_Datatype_size_external32(MPI_Datatype type);
 
-MPI_Aint MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type);
+size_t MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type);
 
-MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
-                                            const MPI_Aint * blocklength_array,
+size_t MPII_Datatype_indexed_count_contig(size_t count,
+                                            const size_t * blocklength_array,
                                             const void *displacement_array,
-                                            int dispinbytes, MPI_Aint old_extent);
+                                            int dispinbytes, size_t old_extent);
 
-MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
-                                                 MPI_Aint blklen,
+size_t MPII_Datatype_blockindexed_count_contig(size_t count,
+                                                 size_t blklen,
                                                  const void *disp_array,
-                                                 int dispinbytes, MPI_Aint old_extent);
+                                                 int dispinbytes, size_t old_extent);
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */

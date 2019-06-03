@@ -163,8 +163,8 @@ int MPIR_Bcast_intra_auto(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size;
-    MPI_Aint nbytes = 0;
-    MPI_Aint type_size;
+    size_t nbytes = 0;
+    size_t type_size;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST);

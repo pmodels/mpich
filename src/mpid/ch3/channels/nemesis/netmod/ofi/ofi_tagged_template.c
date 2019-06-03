@@ -110,7 +110,7 @@ static inline int ADD_SUFFIX(send_normal) (struct MPIDI_VC * vc,
                                            int dt_contig,
                                            intptr_t data_sz,
                                            MPIR_Datatype * dt_ptr,
-                                           MPI_Aint dt_true_lb, uint64_t send_type) {
+                                           size_t dt_true_lb, uint64_t send_type) {
     int err0, err1, mpi_errno = MPI_SUCCESS;
     char *send_buffer;
     uint64_t match_bits, ssend_match, ssend_mask;
@@ -246,7 +246,7 @@ ADD_SUFFIX(send_lightweight) (struct MPIDI_VC * vc,
 static inline int
 ADD_SUFFIX(do_isend) (struct MPIDI_VC * vc,
                       const void *buf,
-                      MPI_Aint count,
+                      size_t count,
                       MPI_Datatype datatype,
                       int dest,
                       int tag,
@@ -254,7 +254,7 @@ ADD_SUFFIX(do_isend) (struct MPIDI_VC * vc,
                       int context_offset,
                       struct MPIR_Request ** request, int should_create_req, uint64_t send_type) {
     int dt_contig, mpi_errno = MPI_SUCCESS;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     intptr_t data_sz;
     MPIR_Datatype *dt_ptr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_ISEND);
@@ -286,7 +286,7 @@ ADD_SUFFIX(do_isend) (struct MPIDI_VC * vc,
 
 int ADD_SUFFIX(MPID_nem_ofi_send) (struct MPIDI_VC * vc,
                                    const void *buf,
-                                   MPI_Aint count,
+                                   size_t count,
                                    MPI_Datatype datatype,
                                    int dest,
                                    int tag, MPIR_Comm * comm, int context_offset,
@@ -304,7 +304,7 @@ int ADD_SUFFIX(MPID_nem_ofi_send) (struct MPIDI_VC * vc,
 
 int ADD_SUFFIX(MPID_nem_ofi_isend) (struct MPIDI_VC * vc,
                                     const void *buf,
-                                    MPI_Aint count,
+                                    size_t count,
                                     MPI_Datatype datatype,
                                     int dest,
                                     int tag, MPIR_Comm * comm, int context_offset,
@@ -321,7 +321,7 @@ int ADD_SUFFIX(MPID_nem_ofi_isend) (struct MPIDI_VC * vc,
 
 int ADD_SUFFIX(MPID_nem_ofi_ssend) (struct MPIDI_VC * vc,
                                     const void *buf,
-                                    MPI_Aint count,
+                                    size_t count,
                                     MPI_Datatype datatype,
                                     int dest,
                                     int tag, MPIR_Comm * comm, int context_offset,
@@ -338,7 +338,7 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend) (struct MPIDI_VC * vc,
 
 int ADD_SUFFIX(MPID_nem_ofi_issend) (struct MPIDI_VC * vc,
                                      const void *buf,
-                                     MPI_Aint count,
+                                     size_t count,
                                      MPI_Datatype datatype,
                                      int dest,
                                      int tag,
@@ -360,7 +360,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted) (struct MPIDI_VC * vc, struct MPIR_Requ
     uint64_t match_bits = 0, mask_bits = 0;
     fi_addr_t remote_proc = 0;
     intptr_t data_sz;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     MPIR_Context_id_t context_id;
     char *recv_buffer;

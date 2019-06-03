@@ -31,9 +31,9 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint recvtype_extent, recvtype_sz;
+    size_t recvtype_extent, recvtype_sz;
     int pof2, src, rem, send_cnt;
-    MPI_Aint curr_cnt, recv_cnt;
+    size_t curr_cnt, recv_cnt;
     int dst, total_count;
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(1);

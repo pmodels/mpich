@@ -79,10 +79,10 @@ typedef struct MPII_Genutil_vtx_t {
         } reduce_local;
         struct {
             const void *sendbuf;
-            MPI_Aint sendcount;
+            size_t sendcount;
             MPI_Datatype sendtype;
             void *recvbuf;
-            MPI_Aint recvcount;
+            size_t recvcount;
             MPI_Datatype recvtype;
         } localcopy;
     } u;

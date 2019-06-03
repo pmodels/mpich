@@ -14,9 +14,9 @@
  */
 
 int MPIR_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
-                                                  const MPI_Aint sdispls[],
+                                                  const size_t sdispls[],
                                                   const MPI_Datatype sendtypes[], void *recvbuf,
-                                                  const int recvcounts[], const MPI_Aint rdispls[],
+                                                  const int recvcounts[], const size_t rdispls[],
                                                   const MPI_Datatype recvtypes[],
                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

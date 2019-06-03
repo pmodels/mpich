@@ -25,7 +25,7 @@ enum {
 #ifdef USE_SYM_HEAP
 static inline int check_maprange_ok(void *start, size_t size);
 static void *generate_random_addr(size_t size);
-static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
+static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, size_t shm_segment_len,
                                    MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                    int *map_result_ptr);
 static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype);
@@ -148,7 +148,7 @@ static void *generate_random_addr(size_t size)
  * If it is MPIDIU_SYMSHM_MAP_FAIL, the caller can try it again with a different
  * start address; if it is MPIDIU_SYMSHM_OTHER_FAIL, it usually means no more shm
  * segment can be allocated, thus the caller should stop retrying. */
-static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
+static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, size_t shm_segment_len,
                                    MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                    int *map_result_ptr)
 {
@@ -302,7 +302,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
 {
     int mpi_errno = MPI_SUCCESS;
     int blocks[2] = { 1, 1 };
-    MPI_Aint disps[2];
+    size_t disps[2];
     MPI_Datatype types[2], maxloc_type = MPI_DATATYPE_NULL;
     MPI_Op maxloc_op = MPI_OP_NULL;
     ull_maxloc_t maxloc, maxloc_result;
@@ -314,7 +314,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     types[0] = MPI_UNSIGNED_LONG_LONG;
     types[1] = MPI_INT;
     disps[0] = 0;
-    disps[1] = (MPI_Aint) ((uintptr_t) & maxloc.loc - (uintptr_t) & maxloc.sz);
+    disps[1] = (size_t) ((uintptr_t) & maxloc.loc - (uintptr_t) & maxloc.sz);
 
     mpi_errno = MPIR_Type_create_struct_impl(2, blocks, disps, types, &maxloc_type);
     if (mpi_errno)
@@ -359,7 +359,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
  * Input shm_size is the total mapping size of shared memory on local node, and
  * shm_offsets presents the expected offset of local process's start address in
  * the mapped shared memory. */
-int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm * comm,
+int MPIDIU_get_shm_symheap(size_t shm_size, size_t * shm_offsets, MPIR_Comm * comm,
                            MPIR_Win * win, bool * fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;

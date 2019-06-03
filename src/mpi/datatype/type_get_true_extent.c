@@ -26,8 +26,8 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint * true_lb, MPI_Aint
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
 
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
-                                    MPI_Aint * true_extent)
+void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, size_t * true_lb,
+                                    size_t * true_extent)
 {
     MPI_Count true_lb_x, true_extent_x;
 

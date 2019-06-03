@@ -29,7 +29,7 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int s
     int k, l;
     int *srcs, *dsts;
     int tag;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHER_SCHED_INTRA_LINEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHER_SCHED_INTRA_LINEAR);

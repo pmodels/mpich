@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Rget as PMPI_Rget
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Rget(void *origin_addr, int origin_count,
-             MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+             MPI_Datatype origin_datatype, int target_rank, size_t target_disp,
              int target_count, MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
     __attribute__ ((weak, alias("PMPI_Rget")));
 #endif
@@ -70,7 +70,7 @@ Output Parameters:
 .seealso: MPI_Get
 @*/
 int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
-             origin_datatype, int target_rank, MPI_Aint target_disp,
+             origin_datatype, int target_rank, size_t target_disp,
              int target_count, MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;

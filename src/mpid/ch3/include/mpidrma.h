@@ -325,8 +325,8 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
         goto issue_ack;
     }
     else {
-        MPI_Aint type_size = 0;
-        MPI_Aint type_extent;
+        size_t type_size = 0;
+        size_t type_extent;
         intptr_t recv_data_sz = 0;
         intptr_t buf_size = 0;
         MPIR_Request *req = NULL;
@@ -350,8 +350,8 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
             buf_size = type_extent * target_count;
         }
         else {
-            MPI_Aint stream_elem_count;
-            MPI_Aint total_len;
+            size_t stream_elem_count;
+            size_t total_len;
             MPI_Op op;
 
             MPIDI_CH3_PKT_RMA_GET_OP((*pkt), op, mpi_errno);
@@ -832,12 +832,12 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
                                    void *target_buf, int target_count, MPI_Datatype target_dtp,
-                                   MPI_Aint stream_offset, MPI_Op acc_op,
+                                   size_t stream_offset, MPI_Op acc_op,
                                    MPIDI_RMA_Acc_srcbuf_kind_t srckind)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
-    MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
+    size_t source_dtp_size = 0, source_dtp_extent = 0;
     int is_empty_source = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
 
@@ -869,7 +869,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
     if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
-        MPI_Aint real_stream_offset;
+        size_t real_stream_offset;
         void *curr_target_buf;
 
         if (is_empty_source == FALSE) {
@@ -887,10 +887,10 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* derived datatype */
         MPL_IOV *typerep_vec;
         int vec_len, i, count;
-        MPI_Aint type_extent, type_size, src_type_stride;
+        size_t type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype*dtp;
-        MPI_Aint curr_len;
+        size_t curr_len;
         void *curr_loc;
         int accumulated_count;
 
@@ -910,7 +910,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* --END ERROR HANDLING-- */
 
         int max_iov_len = vec_len;
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(NULL, target_count, target_dtp, stream_offset, typerep_vec, max_iov_len,
                          source_count * source_dtp_size, &vec_len, &actual_iov_bytes);
 
@@ -1168,7 +1168,7 @@ static inline int poke_progress_engine(void)
 
 static inline void MPIDI_CH3_ExtPkt_Accum_get_stream(int pkt_flags,
                                                      int is_derived_dt, void *ext_hdr_ptr,
-                                                     MPI_Aint * stream_offset)
+                                                     size_t * stream_offset)
 {
     if (pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIR_Assert(ext_hdr_ptr != NULL);
@@ -1178,7 +1178,7 @@ static inline void MPIDI_CH3_ExtPkt_Accum_get_stream(int pkt_flags,
 
 static inline void MPIDI_CH3_ExtPkt_Gaccum_get_stream(int pkt_flags,
                                                       int is_derived_dt, void *ext_hdr_ptr,
-                                                      MPI_Aint * stream_offset)
+                                                      size_t * stream_offset)
 {
     /* We do not check packet match here, because error must have already been
      * reported at header init time (on origin) and at packet receive time (on target).  */

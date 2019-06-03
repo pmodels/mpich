@@ -60,7 +60,7 @@ Output Parameters:
 Notes:
 
 Users are cautioned that displacement arithmetic can overflow in variables of
-type 'MPI_Aint' and result in unexpected values on some platforms. This issue may
+type 'size_t' and result in unexpected values on some platforms. This issue may
 be addressed in a future version of MPI.
 
 Memory in this window may not be used as the target of one-sided accesses in

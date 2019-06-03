@@ -26,7 +26,7 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const int *sendcounts, con
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint extent;
+    size_t extent;
     int i, reqs;
     MPIR_Request **reqarray;
     MPI_Status *starray;

@@ -95,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     int dt_contig;
     size_t data_sz;
     MPIR_Datatype *dt_ptr;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIDI_POSIX_am_header_t msg_hdr;
     uint8_t *send_buf = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr_p = &msg_hdr;
@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         MPIR_ERR_CHKANDJUMP1(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0,
                                       MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer),
                                       data_sz, &actual_pack_bytes);

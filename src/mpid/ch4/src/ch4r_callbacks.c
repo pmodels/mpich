@@ -75,7 +75,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_Request *match_req = NULL;
     size_t nbytes;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
 
@@ -200,7 +200,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
     /* Perform the data copy (using the datatype engine if necessary for non-contig transfers) */
     if (!dt_contig) {
-        MPI_Aint actual_unpack_bytes;
+        size_t actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes,
                                         MPIDIG_REQUEST(match_req, buffer),
                                         MPIDIG_REQUEST(match_req, count),
@@ -209,7 +209,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
+        if (actual_unpack_bytes != (size_t) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
@@ -252,7 +252,7 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
 {
     int dt_contig;
-    MPI_Aint dt_true_lb, num_iov;
+    size_t dt_true_lb, num_iov;
     MPIR_Datatype *dt_ptr;
     size_t data_sz;
 
@@ -287,12 +287,12 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
         MPIR_Assert(MPIDIG_REQUEST(rreq, req->iov));
 
         int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
                             (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
 
-        if (actual_iov_bytes != (MPI_Aint) * p_data_sz) {
+        if (actual_iov_bytes != (size_t) * p_data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
         *data = MPIDIG_REQUEST(rreq, req->iov);

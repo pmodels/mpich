@@ -14,7 +14,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
     int rank = comm_ptr->rank;
     MPIR_Comm *node_comm;
     MPIR_Comm *roots_comm;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *tempbuf = NULL;
     void *prefulldata = NULL;
     void *localfulldata = NULL;

@@ -52,7 +52,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, pof2, newrank, rem, newdst, i,
         send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *tmp_buf;
 
     comm_size = comm_ptr->local_size;

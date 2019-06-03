@@ -10,19 +10,19 @@
 
 #include <stdlib.h>
 
-static void indexed_array_copy(MPI_Aint count,
-                               MPI_Aint contig_count,
-                               const MPI_Aint * input_blocklength_array,
+static void indexed_array_copy(size_t count,
+                               size_t contig_count,
+                               const size_t * input_blocklength_array,
                                const void *input_displacement_array,
-                               MPI_Aint * output_blocklength_array,
-                               MPI_Aint * out_disp_array, int dispinbytes, MPI_Aint old_extent);
+                               size_t * output_blocklength_array,
+                               size_t * out_disp_array, int dispinbytes, size_t old_extent);
 
 /*@
    MPII_Dataloop_create_indexed
 
    Arguments:
 +  int icount
-.  MPI_Aint *iblocklength_array
+.  size_t *iblocklength_array
 .  void *displacement_array (either ints or MPI_Aints)
 .  int dispinbytes
 .  MPI_Datatype oldtype
@@ -32,18 +32,18 @@ static void indexed_array_copy(MPI_Aint count,
 .N Returns 0 on success, -1 on error.
 @*/
 
-int MPII_Dataloop_create_indexed(MPI_Aint icount,
-                                 const MPI_Aint * blocklength_array,
+int MPII_Dataloop_create_indexed(size_t icount,
+                                 const size_t * blocklength_array,
                                  const void *displacement_array,
                                  int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     int err, is_builtin;
-    MPI_Aint i;
-    MPI_Aint new_loop_sz, blksz;
-    MPI_Aint first;
+    size_t i;
+    size_t new_loop_sz, blksz;
+    size_t first;
 
-    MPI_Aint old_type_count = 0, contig_count, count;
-    MPI_Aint old_extent;
+    size_t old_type_count = 0, contig_count, count;
+    size_t old_extent;
     MPII_Dataloop *new_dlp;
 
     count = (MPI_Aint) icount;  /* avoid subsequent casting */
@@ -57,7 +57,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
 
     /* Skip any initial zero-length blocks */
     for (first = 0; first < count; first++)
-        if ((MPI_Aint) blocklength_array[first])
+        if ((size_t) blocklength_array[first])
             break;
 
 
@@ -70,7 +70,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
     }
 
     for (i = first; i < count; i++) {
-        old_type_count += (MPI_Aint) blocklength_array[i];
+        old_type_count += (size_t) blocklength_array[i];
     }
 
     contig_count = MPII_Datatype_indexed_count_contig(count,
@@ -90,7 +90,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
      */
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
-         (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0))) {
+         (dispinbytes && ((size_t *) displacement_array)[first] == 0))) {
         err = MPII_Dataloop_create_contiguous(old_type_count, oldtype, dlp_p);
         return err;
     }
@@ -104,7 +104,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
     if (contig_count == 1) {
         const void *disp_arr_tmp;       /* no ternary assignment to avoid clang warnings */
         if (dispinbytes)
-            disp_arr_tmp = &(((const MPI_Aint *) displacement_array)[first]);
+            disp_arr_tmp = &(((const size_t *) displacement_array)[first]);
         else
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPII_Dataloop_create_blockindexed(1,
@@ -129,7 +129,7 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
     if (blksz == blocklength_array[first]) {
         const void *disp_arr_tmp;       /* no ternary assignment to avoid clang warnings */
         if (dispinbytes)
-            disp_arr_tmp = &(((const MPI_Aint *) displacement_array)[first]);
+            disp_arr_tmp = &(((const size_t *) displacement_array)[first]);
         else
             disp_arr_tmp = &(((const int *) displacement_array)[first]);
         err = MPII_Dataloop_create_blockindexed(icount - first,
@@ -211,58 +211,58 @@ int MPII_Dataloop_create_indexed(MPI_Aint icount,
  * Output displacements are always output in bytes, while block
  * lengths are always output in terms of the base type.
  */
-static void indexed_array_copy(MPI_Aint count,
-                               MPI_Aint contig_count,
-                               const MPI_Aint * in_blklen_array,
+static void indexed_array_copy(size_t count,
+                               size_t contig_count,
+                               const size_t * in_blklen_array,
                                const void *in_disp_array,
-                               MPI_Aint * out_blklen_array,
-                               MPI_Aint * out_disp_array, int dispinbytes, MPI_Aint old_extent)
+                               size_t * out_blklen_array,
+                               size_t * out_disp_array, int dispinbytes, size_t old_extent)
 {
-    MPI_Aint i, first, cur_idx = 0;
+    size_t i, first, cur_idx = 0;
 
     /* Skip any initial zero-length blocks */
     for (first = 0; first < count; ++first)
-        if ((MPI_Aint) in_blklen_array[first])
+        if ((size_t) in_blklen_array[first])
             break;
 
-    out_blklen_array[0] = (MPI_Aint) in_blklen_array[first];
+    out_blklen_array[0] = (size_t) in_blklen_array[first];
 
     if (!dispinbytes) {
-        out_disp_array[0] = (MPI_Aint)
+        out_disp_array[0] = (size_t)
             ((int *) in_disp_array)[first] * old_extent;
 
         for (i = first + 1; i < count; ++i) {
             if (in_blklen_array[i] == 0) {
                 continue;
             } else if (out_disp_array[cur_idx] +
-                       ((MPI_Aint) out_blklen_array[cur_idx]) * old_extent ==
-                       ((MPI_Aint) ((int *) in_disp_array)[i]) * old_extent) {
+                       ((size_t) out_blklen_array[cur_idx]) * old_extent ==
+                       ((size_t) ((int *) in_disp_array)[i]) * old_extent) {
                 /* adjacent to current block; add to block */
-                out_blklen_array[cur_idx] += (MPI_Aint) in_blklen_array[i];
+                out_blklen_array[cur_idx] += (size_t) in_blklen_array[i];
             } else {
                 cur_idx++;
                 MPIR_Assert(cur_idx < contig_count);
-                out_disp_array[cur_idx] = ((MPI_Aint) ((int *) in_disp_array)[i]) * old_extent;
+                out_disp_array[cur_idx] = ((size_t) ((int *) in_disp_array)[i]) * old_extent;
                 out_blklen_array[cur_idx] = in_blklen_array[i];
             }
         }
     } else {    /* input displacements already in bytes */
 
-        out_disp_array[0] = (MPI_Aint) ((MPI_Aint *) in_disp_array)[first];
+        out_disp_array[0] = (size_t) ((size_t *) in_disp_array)[first];
 
         for (i = first + 1; i < count; ++i) {
             if (in_blklen_array[i] == 0) {
                 continue;
             } else if (out_disp_array[cur_idx] +
-                       ((MPI_Aint) out_blklen_array[cur_idx]) * old_extent ==
-                       ((MPI_Aint) ((MPI_Aint *) in_disp_array)[i])) {
+                       ((size_t) out_blklen_array[cur_idx]) * old_extent ==
+                       ((size_t) ((size_t *) in_disp_array)[i])) {
                 /* adjacent to current block; add to block */
                 out_blklen_array[cur_idx] += in_blklen_array[i];
             } else {
                 cur_idx++;
                 MPIR_Assert(cur_idx < contig_count);
-                out_disp_array[cur_idx] = (MPI_Aint) ((MPI_Aint *) in_disp_array)[i];
-                out_blklen_array[cur_idx] = (MPI_Aint) in_blklen_array[i];
+                out_disp_array[cur_idx] = (size_t) ((size_t *) in_disp_array)[i];
+                out_blklen_array[cur_idx] = (size_t) in_blklen_array[i];
             }
         }
     }

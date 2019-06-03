@@ -82,7 +82,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
 int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 				     MPL_IOV * const iov, int * const iov_n)
 {
-    MPI_Aint last;
+    size_t last;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
 
@@ -97,7 +97,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
 
     int max_iov_len = *iov_n;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
                      sreq->dev.msg_offset, iov, max_iov_len,
                      sreq->dev.msgsize - sreq->dev.msg_offset, iov_n, &actual_iov_bytes);
@@ -151,8 +151,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	}
 	sreq->dev.msg_offset = last;
 
-        MPI_Aint max_pack_bytes;
-        MPI_Aint actual_pack_bytes;
+        size_t max_pack_bytes;
+        size_t actual_pack_bytes;
 
         if (data_sz > sreq->dev.tmpbuf_sz - iov_data_copied)
             max_pack_bytes = sreq->dev.tmpbuf_sz - iov_data_copied;
@@ -199,7 +199,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
  */
 int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
-    MPI_Aint last;
+    size_t last;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_RECV_IOV);
 
@@ -269,7 +269,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	MPIR_Assert(rreq->dev.msg_offset < last);
 	MPIR_Assert(last > 0);
 
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                          rreq->dev.msg_offset, &rreq->dev.iov[0], MPL_IOV_LIMIT,
                          rreq->dev.msgsize - rreq->dev.msg_offset,
@@ -408,7 +408,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
  */
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 {
-    MPI_Aint last;
+    size_t last;
     int tmpbuf_last;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_UNPACK_SRBUF);
@@ -421,7 +421,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 	tmpbuf_last = (int)rreq->dev.msgsize;
     }
 
-    MPI_Aint actual_unpack_bytes;
+    size_t actual_unpack_bytes;
     MPIR_Typerep_unpack(rreq->dev.tmpbuf, tmpbuf_last - rreq->dev.msg_offset,
                      rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                      rreq->dev.msg_offset, &actual_unpack_bytes);
@@ -486,7 +486,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 {
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     intptr_t userbuf_sz;
     MPIR_Datatype * dt_ptr;
     intptr_t unpack_sz;
@@ -533,7 +533,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	}
 	else
 	{
-	    MPI_Aint actual_unpack_bytes;
+	    size_t actual_unpack_bytes;
 	    MPIR_Typerep_unpack(rreq->dev.tmpbuf, unpack_sz,
 			     rreq->dev.user_buf, rreq->dev.user_count,
 			     rreq->dev.datatype, 0, &actual_unpack_bytes);

@@ -13,7 +13,7 @@ int MPIR_Iallreduce_sched_intra_recursive_doubling(const void *sendbuf, void *re
     int mpi_errno = MPI_SUCCESS;
     int pof2, rem, comm_size, is_commutative, rank;
     int newrank, mask, newdst, dst;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

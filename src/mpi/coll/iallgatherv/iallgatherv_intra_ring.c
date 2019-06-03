@@ -12,7 +12,7 @@ int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Da
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_count;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     int rank, comm_size;
     int left, right;
     char *sbuf = NULL;

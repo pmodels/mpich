@@ -29,8 +29,8 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param);
 int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param);
 
 /* rendezvous hooks */
-int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
-                          intptr_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPIR_Comm * comm, int context_offset);
+int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, size_t count, MPI_Datatype datatype, int dt_contig,
+                          intptr_t data_sz, size_t dt_true_lb, int rank, int tag, MPIR_Comm * comm, int context_offset);
 int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPIR_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                               \
@@ -203,7 +203,7 @@ typedef union MPIDI_CH3_nem_pkt
     } while (0)
         
 static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPIR_Request *req,
-                                           void *cookie_buf, MPI_Aint cookie_len)
+                                           void *cookie_buf, size_t cookie_len)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cookie_t, cookie_pkt);

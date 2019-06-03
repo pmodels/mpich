@@ -23,7 +23,7 @@ int MPIR_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendcount
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
-    MPI_Aint extent;
+    size_t extent;
     int i;
 
     rank = comm_ptr->rank;

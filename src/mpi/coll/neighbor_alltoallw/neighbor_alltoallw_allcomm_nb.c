@@ -7,9 +7,9 @@
 #include "mpiimpl.h"
 
 int MPIR_Neighbor_alltoallw_allcomm_nb(const void *sendbuf, const int sendcounts[],
-                                       const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                       const size_t sdispls[], const MPI_Datatype sendtypes[],
                                        void *recvbuf, const int recvcounts[],
-                                       const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                       const size_t rdispls[], const MPI_Datatype recvtypes[],
                                        MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

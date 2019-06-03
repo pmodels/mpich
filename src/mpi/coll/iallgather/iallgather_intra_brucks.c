@@ -22,7 +22,7 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
     int mpi_errno = MPI_SUCCESS;
     int pof2, curr_cnt, rem, src, dst;
     int rank, comm_size;
-    MPI_Aint recvtype_extent, recvtype_sz;
+    size_t recvtype_extent, recvtype_sz;
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

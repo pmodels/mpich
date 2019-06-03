@@ -18,9 +18,9 @@ int MPIR_Igather_sched_inter_long(const void *sendbuf, int sendcount, MPI_Dataty
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint remote_size;
+    size_t remote_size;
     int i;
-    MPI_Aint extent;
+    size_t extent;
 
     remote_size = comm_ptr->remote_size;
 

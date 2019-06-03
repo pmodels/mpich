@@ -25,9 +25,9 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 #undef MPI_Get_count
 #define MPI_Get_count PMPI_Get_count
 
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, size_t * count)
 {
-    MPI_Aint size;
+    size_t size;
 
     MPIR_Datatype_get_size_macro(datatype, size);
     MPIR_Assert(size >= 0 && MPIR_STATUS_GET_COUNT(*status) >= 0);
@@ -36,7 +36,7 @@ void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_A
         if ((MPIR_STATUS_GET_COUNT(*status) % size) != 0)
             (*count) = MPI_UNDEFINED;
         else
-            (*count) = (MPI_Aint) (MPIR_STATUS_GET_COUNT(*status) / size);
+            (*count) = (size_t) (MPIR_STATUS_GET_COUNT(*status) / size);
     } else {
         if (MPIR_STATUS_GET_COUNT(*status) > 0) {
             /* --BEGIN ERROR HANDLING-- */
@@ -84,7 +84,7 @@ size of 'datatype' (so that 'count' would not be integral), a 'count' of
 int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint count_x;
+    size_t count_x;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_COUNT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

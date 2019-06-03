@@ -180,7 +180,7 @@ void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
 
 static int MPIDI_CH3_ExtPktHandler_Accumulate(int pkt_flags,
                                               int is_derived_dt, void **ext_hdr_ptr,
-                                              MPI_Aint * ext_hdr_sz)
+                                              size_t * ext_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -212,7 +212,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(int pkt_flags,
 
 static int MPIDI_CH3_ExtPktHandler_GetAccumulate(int pkt_flags,
                                                  int is_derived_dt, void **ext_hdr_ptr,
-                                                 MPI_Aint * ext_hdr_sz)
+                                                 size_t * ext_hdr_sz)
 {
     return MPIDI_CH3_ExtPktHandler_Accumulate(pkt_flags, is_derived_dt, ext_hdr_ptr, ext_hdr_sz);
 }
@@ -256,7 +256,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     }
 
     if (pkt->type == MPIDI_CH3_PKT_PUT_IMMED) {
-        MPI_Aint type_size;
+        size_t type_size;
 
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype));
@@ -293,7 +293,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype)) {
-            MPI_Aint type_size;
+            size_t type_size;
 
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RECV);
             req->dev.datatype = put_pkt->datatype;
@@ -394,7 +394,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     intptr_t data_len;
     MPIR_Win *win_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
+    size_t type_size;
     int acquire_lock_fail = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
 
@@ -584,15 +584,15 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
 {
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &pkt->accum;
     MPIR_Request *req = NULL;
-    MPI_Aint extent;
+    size_t extent;
     int complete = 0;
     char *data_buf = NULL;
     intptr_t data_len;
     MPIR_Win *win_ptr;
     int acquire_lock_fail = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
-    MPI_Aint stream_elem_count, total_len;
+    size_t type_size;
+    size_t stream_elem_count, total_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
@@ -801,14 +801,14 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 {
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &pkt->get_accum;
     MPIR_Request *req = NULL;
-    MPI_Aint extent;
+    size_t extent;
     int complete = 0;
     char *data_buf = NULL;
     intptr_t data_len;
     MPIR_Win *win_ptr;
     int acquire_lock_fail = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint stream_elem_count, total_len;
+    size_t stream_elem_count, total_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
@@ -837,7 +837,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
         MPL_IOV iov[MPL_IOV_LIMIT];
         int iovcnt;
-        MPI_Aint type_size;
+        size_t type_size;
 
         *buflen = 0;
         *rreqp = NULL;
@@ -947,7 +947,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
             MPIR_ERR_POP(mpi_errno);
 
         if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
-            MPI_Aint type_size;
+            size_t type_size;
 
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
             req->dev.datatype = get_accum_pkt->datatype;
@@ -1099,7 +1099,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     MPIR_Win *win_ptr;
     MPIR_Request *req;
     MPIR_Request *rreq = NULL;
-    MPI_Aint len;
+    size_t len;
     int acquire_lock_fail = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
 
@@ -1206,7 +1206,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &pkt->cas_resp;
     MPIR_Request *req;
-    MPI_Aint len;
+    size_t len;
     MPIR_Win *win_ptr;
     int target_rank = cas_resp_pkt->target_rank;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
@@ -1268,7 +1268,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     MPIR_Request *rreq = NULL;
     int acquire_lock_fail = 0;
     MPIR_Win *win_ptr = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
@@ -1370,7 +1370,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
         MPIR_Request *req = NULL;
         intptr_t data_len;
-        MPI_Aint extent;
+        size_t extent;
         int complete = 0;
         int is_empty_origin = FALSE;
 
@@ -1451,7 +1451,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &pkt->fop_resp;
     MPIR_Request *req = NULL;
     MPIR_Win *win_ptr = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     intptr_t data_len;
     int complete = 0;
     int target_rank = fop_resp_pkt->target_rank;
@@ -1535,7 +1535,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     int complete = 0;
     intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
+    size_t type_size;
     MPIR_Win *win_ptr;
     int target_rank = get_accum_resp_pkt->target_rank;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
@@ -1583,11 +1583,11 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         MPIR_Assert(pkt->type == MPIDI_CH3_PKT_GET_ACCUM_RESP);
 
         MPI_Datatype basic_type;
-        MPI_Aint basic_type_extent, basic_type_size;
-        MPI_Aint stream_elem_count;
-        MPI_Aint total_len, rest_len;
-        MPI_Aint real_stream_offset;
-        MPI_Aint contig_stream_offset = 0;
+        size_t basic_type_extent, basic_type_size;
+        size_t stream_elem_count;
+        size_t total_len, rest_len;
+        size_t real_stream_offset;
+        size_t contig_stream_offset = 0;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype)) {
             basic_type = req->dev.datatype;
@@ -1717,7 +1717,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     int complete = 0;
     intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
+    size_t type_size;
     MPIR_Win *win_ptr;
     int target_rank = get_resp_pkt->target_rank;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);

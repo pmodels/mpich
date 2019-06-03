@@ -7,7 +7,7 @@ extern int hcoll_enable;
 
 static dte_data_representation_t mpi_predefined_derived_2_hcoll(MPI_Datatype datatype)
 {
-    MPI_Aint size;
+    size_t size;
 
     switch (datatype) {
         case MPI_FLOAT_INT:

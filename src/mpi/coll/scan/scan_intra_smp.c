@@ -18,7 +18,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
     int rank = comm_ptr->rank;
     MPI_Status status;
     void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     int noneed = 1;             /* noneed=1 means no need to bcast tempbuf and
                                  * reduce tempbuf & recvbuf */
 

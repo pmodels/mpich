@@ -124,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
                         MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig, dt_ptr->size * count,
                         &actual_iov_len, &actual_iov_bytes);
@@ -221,12 +221,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, size_t count,
                                                    MPI_Datatype datatype, int rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
                                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                    int dt_contig, size_t data_sz,
-                                                   MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
+                                                   MPIR_Datatype * dt_ptr, size_t dt_true_lb,
                                                    uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -292,7 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(buf, count, datatype, 0,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer), data_sz,
                           &actual_pack_bytes);
@@ -386,14 +386,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, size_t count, MPI_Datatype datatype,
                                             int rank, int tag, MPIR_Comm * comm, int context_offset,
                                             MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                             int noreq, uint64_t syncflag)
 {
     int dt_contig, mpi_errno;
     size_t data_sz;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND);
@@ -418,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, size_t count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
@@ -442,7 +442,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, size_t count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
@@ -467,7 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, size_t count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
@@ -491,7 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, size_t count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)

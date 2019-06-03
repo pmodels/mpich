@@ -26,9 +26,9 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
 #undef MPI_Pack_size
 #define MPI_Pack_size PMPI_Pack_size
 
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size)
+void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, size_t * size)
 {
-    MPI_Aint typesize;
+    size_t typesize;
     MPIR_Datatype_get_size_macro(datatype, typesize);
     *size = incount * typesize;
 }
@@ -70,7 +70,7 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
     MPIR_Comm *comm_ptr = NULL;
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint size_x = MPI_UNDEFINED;
+    size_t size_x = MPI_UNDEFINED;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

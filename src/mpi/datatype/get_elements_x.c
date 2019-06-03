@@ -180,7 +180,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
          */
         int i, j, *ints;
         MPI_Count typecount = 0, nr_elements = 0, last_nr_elements;
-        MPI_Aint *aints;
+        size_t *aints;
         MPI_Datatype *types;
 
         /* Establish locations of arrays */

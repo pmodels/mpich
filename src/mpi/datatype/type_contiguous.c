@@ -44,7 +44,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 {
     int mpi_errno = MPI_SUCCESS;
     int is_builtin;
-    MPI_Aint el_sz;
+    size_t el_sz;
     MPI_Datatype el_type;
     MPIR_Datatype *new_dtp;
 
@@ -105,7 +105,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
         new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
         new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
 
-        MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
+        MPII_DATATYPE_CONTIG_LB_UB((size_t) count,
                                    old_dtp->lb,
                                    old_dtp->ub, old_dtp->extent, new_dtp->lb, new_dtp->ub);
 
@@ -170,7 +170,7 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
      * one 2147483647-byte chunk followed immediately by a 1852516353-byte
      * chunk */
     MPI_Datatype chunks, remainder;
-    MPI_Aint lb, extent, disps[2];
+    size_t lb, extent, disps[2];
     int blocklens[2];
     MPI_Datatype types[2];
     int mpi_errno;

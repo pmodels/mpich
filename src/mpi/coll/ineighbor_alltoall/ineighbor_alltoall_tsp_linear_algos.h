@@ -27,7 +27,7 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int se
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    MPI_Aint sendtype_extent, recvtype_extent;
+    size_t sendtype_extent, recvtype_extent;
     int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_SCHED_ALLCOMM_LINEAR);

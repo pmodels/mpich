@@ -12,18 +12,18 @@
 - disp - displacement (integer)
 
   Return value:
-  A new MPI_Aint value that is equivalent to the sum of the base and disp
+  A new size_t value that is equivalent to the sum of the base and disp
   arguments, where base represents a base address returned by a call
   to MPI_GET_ADDRESS and disp represents a signed integer displacement.
 */
-MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
+size_t MPID_Aint_add(size_t base, size_t disp)
 {
-    MPI_Aint result;
+    size_t result;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_ADD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_ADD);
 
-    result = (MPI_Aint) ((char *) base + disp);
+    result = (size_t) ((char *) base + disp);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_ADD);
     return result;
@@ -35,18 +35,18 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 - addr2 - subtrahend address (integer)
 
   Return value:
-  A new MPI_Aint value that is equivalent to the difference between addr1 and
+  A new size_t value that is equivalent to the difference between addr1 and
   addr2 arguments, where addr1 and addr2 represent addresses returned by calls
   to MPI_GET_ADDRESS.
 */
-MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+size_t MPID_Aint_diff(size_t addr1, size_t addr2)
 {
-    MPI_Aint result;
+    size_t result;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_DIFF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_DIFF);
 
-    result = (MPI_Aint) ((char *) addr1 - (char *) addr2);
+    result = (size_t) ((char *) addr1 - (char *) addr2);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_DIFF);
     return result;

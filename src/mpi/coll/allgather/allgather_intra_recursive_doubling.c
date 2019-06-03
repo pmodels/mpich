@@ -30,9 +30,9 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     int j, i;
-    MPI_Aint curr_cnt, last_recv_cnt = 0;
+    size_t curr_cnt, last_recv_cnt = 0;
     int dst;
     MPI_Status status;
     int mask, dst_tree_root, my_tree_root,

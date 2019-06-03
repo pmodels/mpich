@@ -24,25 +24,25 @@ extern MPIR_Object_alloc_t MPIDI_workq_elemt_mem;
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *, int, MPI_Datatype, int, int,
                                                MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *, size_t, MPI_Datatype, int, int,
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *, size_t, MPI_Datatype, int, int,
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *, size_t, MPI_Datatype, int, int,
                                                  MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                  MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *, size_t, MPI_Datatype, int, int,
                                                MPIR_Comm *, int, MPIDI_av_entry_t *, MPI_Status *,
                                                MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, size_t, MPI_Datatype, int, int,
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *);
-MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *, int, MPI_Datatype, int, MPI_Aint, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, size_t, MPI_Datatype, MPIR_Request *);
+MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *, int, MPI_Datatype, int, size_t, int,
                                               MPI_Datatype, MPIR_Win *);
-MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *, int, MPI_Datatype, int, MPI_Aint, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *, int, MPI_Datatype, int, size_t, int,
                                               MPI_Datatype, MPIR_Win *);
 MPL_STATIC_INLINE_PREFIX struct MPIDI_workq_elemt *MPIDI_workq_elemt_create(void)
 {
@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *e
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                                         const void *send_buf,
                                                         void *recv_buf,
-                                                        MPI_Aint count,
+                                                        size_t count,
                                                         MPI_Datatype datatype,
                                                         int rank,
                                                         int tag,
@@ -184,7 +184,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
                                                       int target_rank,
-                                                      MPI_Aint target_disp,
+                                                      size_t target_disp,
                                                       int target_count,
                                                       MPI_Datatype target_datatype,
                                                       MPI_Op acc_op,

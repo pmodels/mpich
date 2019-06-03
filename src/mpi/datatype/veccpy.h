@@ -11,27 +11,27 @@
 #ifdef HAVE_ANY_INT64_T_ALIGNEMENT
 #define MPIR_ALIGN8_TEST(p1,p2)
 #else
-#define MPIR_ALIGN8_TEST(p1,p2) && ((((MPI_Aint) p1 | (MPI_Aint) p2) & 0x7) == 0)
+#define MPIR_ALIGN8_TEST(p1,p2) && ((((size_t) p1 | (size_t) p2) & 0x7) == 0)
 #endif
 
 #ifdef HAVE_ANY_INT32_T_ALIGNEMENT
 #define MPIR_ALIGN4_TEST(p1,p2)
 #else
-#define MPIR_ALIGN4_TEST(p1,p2) && ((((MPI_Aint) p1 | (MPI_Aint) p2) & 0x3) == 0)
+#define MPIR_ALIGN4_TEST(p1,p2) && ((((size_t) p1 | (size_t) p2) & 0x3) == 0)
 #endif
 
 #define MPII_COPY_FROM_VEC(src,dest,stride,type,nelms,count)            \
     {                                                                   \
         if (!nelms) {                                                   \
             src = (char*)                                               \
-                (((MPI_Aint) (src)) +                                   \
-                 ((MPI_Aint) count * (MPI_Aint) stride));               \
+                (((size_t) (src)) +                                   \
+                 ((size_t) count * (size_t) stride));               \
         }                                                               \
         else if (stride % sizeof(type)) {                               \
             MPII_COPY_FROM_VEC_UNALIGNED(src,dest,stride,type,nelms,count); \
         }                                                               \
         else {                                                          \
-            MPII_COPY_FROM_VEC_ALIGNED(src,dest,stride/(MPI_Aint)sizeof(type),type,nelms,count); \
+            MPII_COPY_FROM_VEC_ALIGNED(src,dest,stride/(size_t)sizeof(type),type,nelms,count); \
         }                                                               \
     }
 
@@ -39,14 +39,14 @@
     {                                                                   \
         if (!nelms) {                                                   \
             dest = (char*)                                              \
-                (((MPI_Aint) (dest)) +                                  \
-                 ((MPI_Aint) count * (MPI_Aint) stride));               \
+                (((size_t) (dest)) +                                  \
+                 ((size_t) count * (size_t) stride));               \
         }                                                               \
-        else if (stride % (MPI_Aint) sizeof(type)) {                    \
+        else if (stride % (size_t) sizeof(type)) {                    \
             MPII_COPY_TO_VEC_UNALIGNED(src,dest,stride,type,nelms,count); \
         }                                                               \
         else {                                                          \
-            MPII_COPY_TO_VEC_ALIGNED(src,dest,stride/(MPI_Aint)sizeof(type),type,nelms,count); \
+            MPII_COPY_TO_VEC_ALIGNED(src,dest,stride/(size_t)sizeof(type),type,nelms,count); \
         }                                                               \
     }
 
@@ -57,7 +57,7 @@
         register int k;                                                 \
         register unsigned long _i, j;                                   \
         unsigned long total_count = count * nelms;                      \
-        const MPI_Aint l_stride = stride;                           \
+        const size_t l_stride = stride;                           \
                                                                         \
         MPIR_Assert(stride <= INT_MAX);                                \
         MPIR_Assert(total_count <= INT_MAX);                           \
@@ -172,7 +172,7 @@
         type * tmp_src = l_src;                                         \
         register int k;                                                 \
         register unsigned long _i, j, total_count = count * nelms;      \
-        const MPI_Aint l_stride = stride;                           \
+        const size_t l_stride = stride;                           \
                                                                         \
         MPIR_Assert(stride <= INT_MAX);                                \
         MPIR_Assert(total_count <= INT_MAX);                           \
@@ -288,7 +288,7 @@
         register int k;                                                 \
         register unsigned long _i, j;                                   \
         unsigned long total_count = count * nelms;                      \
-        const MPI_Aint l_stride = stride;                           \
+        const size_t l_stride = stride;                           \
                                                                         \
         MPIR_Assert(stride <= INT_MAX);                                \
         MPIR_Assert(total_count <= INT_MAX);                           \
@@ -404,7 +404,7 @@
         register int k;                                                 \
         register unsigned long _i, j;                                   \
         unsigned long total_count = count * nelms;                      \
-        const MPI_Aint l_stride = stride;                           \
+        const size_t l_stride = stride;                           \
                                                                         \
         MPIR_Assert(stride <= INT_MAX);                                \
         MPIR_Assert(total_count <= INT_MAX);                           \

@@ -735,10 +735,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallv(const void *sendbuf, const 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Neighbor_alltoallw(const void *sendbuf, const int *sendcounts,
-                                                     const MPI_Aint * sdispls,
+                                                     const size_t * sdispls,
                                                      const MPI_Datatype * sendtypes, void *recvbuf,
                                                      const int *recvcounts,
-                                                     const MPI_Aint * rdispls,
+                                                     const size_t * rdispls,
                                                      const MPI_Datatype * recvtypes,
                                                      MPIR_Comm * comm)
 {
@@ -843,10 +843,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv(const void *sendbuf, const
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf, const int *sendcounts,
-                                                      const MPI_Aint * sdispls,
+                                                      const size_t * sdispls,
                                                       const MPI_Datatype * sendtypes,
                                                       void *recvbuf, const int *recvcounts,
-                                                      const MPI_Aint * rdispls,
+                                                      const size_t * rdispls,
                                                       const MPI_Datatype * recvtypes,
                                                       MPIR_Comm * comm, MPIR_Request ** req)
 {
@@ -1494,10 +1494,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallv_sched(const void *sendbuf,
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw_sched(const void *sendbuf,
                                                             const int sendcounts[],
-                                                            const MPI_Aint sdispls[],
+                                                            const size_t sdispls[],
                                                             const MPI_Datatype sendtypes[],
                                                             void *recvbuf, const int recvcounts[],
-                                                            const MPI_Aint rdispls[],
+                                                            const size_t rdispls[],
                                                             const MPI_Datatype recvtypes[],
                                                             MPIR_Comm * comm, MPIR_Sched_t s)
 {

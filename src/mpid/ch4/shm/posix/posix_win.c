@@ -54,7 +54,7 @@ int MPIDI_POSIX_mpi_win_free(MPIR_Win ** win_ptr)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDI_POSIX_mpi_win_create(void *base, size_t length, int disp_unit, MPIR_Info * info,
                                MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
@@ -69,7 +69,7 @@ int MPIDI_POSIX_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_
     return mpi_errno;
 }
 
-int MPIDI_POSIX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+int MPIDI_POSIX_mpi_win_attach(MPIR_Win * win, void *base, size_t size)
 {
     int mpi_errno;
 
@@ -83,7 +83,7 @@ int MPIDI_POSIX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDI_POSIX_mpi_win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info_ptr,
                                         MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
@@ -113,7 +113,7 @@ int MPIDI_POSIX_mpi_win_detach(MPIR_Win * win, const void *base)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPIDI_POSIX_mpi_win_allocate(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                                  void *baseptr, MPIR_Win ** win)
 {
     int mpi_errno;
@@ -253,7 +253,7 @@ int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 
 int MPIDI_POSIX_mpi_win_attach_hook(MPIR_Win * win ATTRIBUTE((unused)),
                                     void *base ATTRIBUTE((unused)),
-                                    MPI_Aint size ATTRIBUTE((unused)))
+                                    size_t size ATTRIBUTE((unused)))
 {
     /* No optimization */
     return MPI_SUCCESS;

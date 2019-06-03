@@ -10,12 +10,12 @@
 #include <stdlib.h>
 
 struct flatten_hdr {
-    MPI_Aint size;
-    MPI_Aint extent, ub, lb, true_ub, true_lb;
+    size_t size;
+    size_t extent, ub, lb, true_ub, true_lb;
     int has_sticky_ub, has_sticky_lb;
     int is_contig;
     int basic_type;
-    MPI_Aint max_contig_blocks;
+    size_t max_contig_blocks;
 };
 
 /*

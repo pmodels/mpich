@@ -15,7 +15,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(const void *sendbu
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    size_t extent, true_extent, true_lb;
     int *disps;
     void *tmp_recvbuf, *tmp_results;
     int type_size ATTRIBUTE((unused)), dis[2], blklens[2], total_count, dst;

@@ -97,7 +97,7 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *buflen, int *complete)
 {
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     intptr_t userbuf_sz;
     MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;
@@ -174,7 +174,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
         {
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
 
-            MPI_Aint actual_unpack_bytes;
+            size_t actual_unpack_bytes;
             MPIR_Typerep_unpack(buf, data_sz, rreq->dev.user_buf, rreq->dev.user_count,
                              rreq->dev.datatype, rreq->dev.msg_offset, &actual_unpack_bytes);
 
@@ -276,7 +276,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;	
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     intptr_t userbuf_sz;
     MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;

@@ -16,7 +16,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     MPIDI_CH3_Pkt_ready_send_t * const ready_pkt = &upkt.ready_send;
     intptr_t data_sz;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype* dt_ptr;
     MPIR_Request * sreq;
     MPIDI_VC_t * vc;

@@ -764,23 +764,23 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const in
     goto fn_exit;
 }
 
-MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
+size_t MPID_Aint_add(size_t base, size_t disp)
 {
-    MPI_Aint result;
+    size_t result;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_ADD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_ADD);
-    result = (MPI_Aint) ((char *) base + disp);
+    result = (size_t) ((char *) base + disp);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_ADD);
     return result;
 }
 
-MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+size_t MPID_Aint_diff(size_t addr1, size_t addr2)
 {
-    MPI_Aint result;
+    size_t result;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_DIFF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_DIFF);
 
-    result = (MPI_Aint) ((char *) addr1 - (char *) addr2);
+    result = (size_t) ((char *) addr1 - (char *) addr2);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_DIFF);
     return result;
 }

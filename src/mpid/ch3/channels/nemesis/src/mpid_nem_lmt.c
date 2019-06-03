@@ -74,9 +74,9 @@ int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int array
 }
 
 /* MPID_nem_lmt_RndvSend - Send a request to perform a rendezvous send */
-int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
+int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, size_t count,
                           MPI_Datatype datatype, int dt_contig ATTRIBUTE((unused)),
-                          intptr_t data_sz, MPI_Aint dt_true_lb ATTRIBUTE((unused)),
+                          intptr_t data_sz, size_t dt_true_lb ATTRIBUTE((unused)),
                           int rank, int tag, MPIR_Comm * comm, int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -500,7 +500,7 @@ static int do_cts(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     MPIR_Datatype* dt_ptr;
     MPL_IOV s_cookie;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_CTS);

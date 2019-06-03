@@ -896,7 +896,7 @@ typedef union MPIDI_CH3_Pkt {
 /* Extended header packet types */
 
 typedef struct MPIDI_CH3_Ext_pkt_stream {
-    MPI_Aint stream_offset;
+    size_t stream_offset;
 } MPIDI_CH3_Ext_pkt_stream_t;
 
 #if defined(MPID_USE_SEQUENCE_NUMBERS)

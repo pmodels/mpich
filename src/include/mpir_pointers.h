@@ -71,6 +71,6 @@
  * \param[in]  aint  Variable of type MPI_Aint
  */
 #define MPIR_Ensure_Aint_fits_in_int(aint) \
-  MPIR_Assert((aint) == (MPI_Aint)(int)(aint));
+  MPIR_Assert((aint) == (size_t)(int)(aint));
 
 #endif /* MPIR_POINTERS_H_INCLUDED */

@@ -139,7 +139,7 @@ int MPIDI_SHMI_mpi_win_create_dynamic_hook(MPIR_Win * win)
     return ret;
 }
 
-int MPIDI_SHMI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
+int MPIDI_SHMI_mpi_win_attach_hook(MPIR_Win * win, void *base, size_t size)
 {
     int ret;
 

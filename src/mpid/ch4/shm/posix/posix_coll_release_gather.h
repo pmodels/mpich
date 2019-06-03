@@ -30,8 +30,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     int i, my_rank, num_chunks, chunk_count_floor, chunk_count_ceil;
     int offset = 0, is_contig, ori_count = count;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint position;
-    MPI_Aint lb, true_extent, extent, type_size;
+    size_t position;
+    size_t lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
     MPI_Datatype ori_datatype = datatype;
 
@@ -169,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     int i, num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0, is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint lb, true_extent, extent, type_size;
+    size_t lb, true_extent, extent, type_size;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     int i, num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0, is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint lb, true_extent, extent, type_size;
+    size_t lb, true_extent, extent, type_size;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);

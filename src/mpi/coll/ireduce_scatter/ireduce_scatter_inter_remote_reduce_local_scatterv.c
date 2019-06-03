@@ -22,7 +22,7 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size, total_count, i;
-    MPI_Aint true_extent, true_lb = 0, extent;
+    size_t true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
     int *disps = NULL;
     MPIR_Comm *newcomm_ptr = NULL;

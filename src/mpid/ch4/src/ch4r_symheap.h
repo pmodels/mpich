@@ -43,7 +43,7 @@ cvars:
 */
 
 size_t MPIDIU_get_mapsize(size_t size, size_t * psz);
-int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm * comm,
+int MPIDIU_get_shm_symheap(size_t shm_size, size_t * shm_offsets, MPIR_Comm * comm,
                            MPIR_Win * win, bool * fail_flag);
 
 #endif /* CH4R_SYMHEAP_H_INCLUDED */

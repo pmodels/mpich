@@ -28,7 +28,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     size_t extent, type_size;
-    MPI_Aint type_lb, true_extent;
+    size_t type_lb, true_extent;
     int is_commutative;
     int size;
     int rank;

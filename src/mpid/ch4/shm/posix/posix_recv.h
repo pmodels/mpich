@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_recv_posted_hook(MPIR_Request * reques
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
-                                                  MPI_Aint count,
+                                                  size_t count,
                                                   MPI_Datatype datatype,
                                                   int rank,
                                                   int tag,
@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv_init(void *buf,
-                                                       MPI_Aint count,
+                                                       size_t count,
                                                        MPI_Datatype datatype,
                                                        int rank,
                                                        int tag,
@@ -52,14 +52,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv_init(void *buf,
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, size_t count,
                                                     MPI_Datatype datatype, MPIR_Request * message)
 {
     return MPIDIG_mpi_imrecv(buf, count, datatype, message);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
-                                                   MPI_Aint count,
+                                                   size_t count,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag,

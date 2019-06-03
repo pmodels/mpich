@@ -45,7 +45,7 @@ struct MPIR_Win {
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
     void *base;
-    MPI_Aint size;
+    size_t size;
     int disp_unit;              /* Displacement unit of *local* window */
     MPIR_Attribute *attributes;
     MPIR_Comm *comm_ptr;        /* Pointer to comm of window (dup) */
@@ -69,7 +69,7 @@ struct MPIR_Win {
      * this is thread-safe.
      */
     int copyDispUnit;
-    MPI_Aint copySize;
+    size_t copySize;
 
     char name[MPI_MAX_OBJECT_NAME];
 

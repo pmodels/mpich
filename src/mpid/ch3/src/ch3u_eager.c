@@ -90,7 +90,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 /* MPIDI_CH3_EagerNoncontigSend - Eagerly send noncontiguous data */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 				  MPIDI_CH3_Pkt_type_t reqtype, 
-				  const void * buf, MPI_Aint count,
+				  const void * buf, size_t count,
 				  MPI_Datatype datatype,
 				  int rank, 
 				  int tag, MPIR_Comm * comm,
@@ -101,7 +101,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     MPIR_Request *sreq = *sreq_p;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
-    MPI_Aint data_sz;
+    size_t data_sz;
     MPIR_Datatype *dt_ptr;
 
     MPIR_Datatype_get_ptr(datatype, dt_ptr);
@@ -335,7 +335,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
     if (rreq->dev.recv_data_sz > 0) {
 	if (found) {
 	    int            dt_contig;
-	    MPI_Aint       dt_true_lb;
+	    size_t       dt_true_lb;
 	    intptr_t userbuf_sz;
 	    MPIR_Datatype *dt_ptr;
 	    intptr_t data_sz;
@@ -397,7 +397,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 		   various errors and exceptional cases */
 		recv_data_sz = rreq->dev.recv_data_sz;
 
-		MPI_Aint actual_unpack_bytes;
+		size_t actual_unpack_bytes;
 		MPIR_Typerep_unpack(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
 				 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes);
 

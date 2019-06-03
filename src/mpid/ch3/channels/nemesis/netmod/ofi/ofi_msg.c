@@ -301,7 +301,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
 {
     int c, i, pgid, mpi_errno = MPI_SUCCESS;
     char *pack_buffer;
-    MPI_Aint data_sz;
+    size_t data_sz;
     uint64_t match_bits;
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
@@ -334,7 +334,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
         }
     }
 
-    MPI_Aint actual_pack_bytes;
+    size_t actual_pack_bytes;
     MPIR_Typerep_pack(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
                       sreq->dev.msg_offset, pack_buffer + buf_offset,
                       sreq->dev.msgsize - sreq->dev.msg_offset, &actual_pack_bytes);

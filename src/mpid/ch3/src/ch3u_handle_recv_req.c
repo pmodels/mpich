@@ -144,8 +144,8 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq,
     MPI_Win source_win_handle = rreq->dev.source_win_handle;
     int pkt_flags = rreq->dev.pkt_flags;
     MPI_Datatype basic_type;
-    MPI_Aint predef_count, predef_dtp_size;
-    MPI_Aint stream_offset;
+    size_t predef_count, predef_dtp_size;
+    size_t stream_offset;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
@@ -245,12 +245,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     int iovcnt;
     int is_contig;
     MPI_Datatype basic_type;
-    MPI_Aint predef_count, predef_dtp_size;
-    MPI_Aint dt_true_lb;
-    MPI_Aint stream_offset;
+    size_t predef_count, predef_dtp_size;
+    size_t dt_true_lb;
+    size_t stream_offset;
     int is_empty_origin = FALSE;
-    MPI_Aint extent, type_size;
-    MPI_Aint stream_data_len, total_len;
+    size_t extent, type_size;
+    size_t stream_data_len, total_len;
     MPIR_CHKPMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -323,7 +323,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
                               stream_offset), stream_data_len);
     }
     else {
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                        stream_offset, resp_req->dev.user_buf, stream_data_len, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == stream_data_len);
@@ -399,7 +399,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     MPIR_Request *resp_req = NULL;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
@@ -452,7 +452,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
         MPIR_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, type_size);
     }
     else {
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, resp_req->dev.user_buf,
                        type_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size);
@@ -568,10 +568,10 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPI_Aint basic_type_extent, basic_type_size;
-    MPI_Aint total_len, rest_len, stream_elem_count;
-    MPI_Aint stream_offset;
-    MPI_Aint type_size;
+    size_t basic_type_extent, basic_type_size;
+    size_t total_len, rest_len, stream_elem_count;
+    size_t stream_offset;
+    size_t type_size;
     MPI_Datatype basic_dtp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
 
@@ -645,7 +645,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rreq->dev.msg_offset = 0;
     rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                      0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
                      &rreq->dev.iov_count, &actual_iov_bytes);
@@ -665,10 +665,10 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype*new_dtp = NULL;
-    MPI_Aint basic_type_extent, basic_type_size;
-    MPI_Aint total_len, rest_len, stream_elem_count;
-    MPI_Aint stream_offset;
-    MPI_Aint type_size;
+    size_t basic_type_extent, basic_type_size;
+    size_t total_len, rest_len, stream_elem_count;
+    size_t stream_offset;
+    size_t type_size;
     MPI_Datatype basic_dtp;
     int is_empty_origin = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
@@ -757,7 +757,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         rreq->dev.msg_offset = 0;
         rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                          0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
                          &rreq->dev.iov_count, &actual_iov_bytes);
@@ -1024,7 +1024,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPIDI_CH3_Pkt_get_t *get_pkt = &((target_lock_entry->pkt).get);
     MPIR_Request *sreq = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     size_t len;
     int iovcnt;
     MPL_IOV iov[MPL_IOV_LIMIT];
@@ -1153,8 +1153,8 @@ static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
     }
     else {
         MPIR_Assert(acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
-        MPI_Aint type_size, type_extent;
-        MPI_Aint total_len, recv_count;
+        size_t type_size, type_extent;
+        size_t total_len, recv_count;
 
         MPIR_Datatype_get_size_macro(acc_pkt->datatype, type_size);
         MPIR_Datatype_get_extent_macro(acc_pkt->datatype, type_extent);
@@ -1198,14 +1198,14 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &((target_lock_entry->pkt).get_accum);
     MPIR_Request *sreq = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     size_t len;
     int iovcnt;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_extent;
-    MPI_Aint total_len, recv_count;
+    size_t type_extent;
+    size_t total_len, recv_count;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
     MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
@@ -1325,7 +1325,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, recv_count * type_size);
     }
     else {
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
                        0, sreq->dev.user_buf, type_size * recv_count, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size * recv_count);
@@ -1386,7 +1386,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &((target_lock_entry->pkt).fop);
     MPIR_Request *resp_req = NULL;
-    MPI_Aint type_size;
+    size_t type_size;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     int is_contig;
@@ -1465,7 +1465,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_Memcpy(resp_req->dev.user_buf, fop_pkt->addr, type_size);
     }
     else {
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(fop_pkt->addr, 1, fop_pkt->datatype, 0, resp_req->dev.user_buf,
                        type_size, &actual_pack_bytes);
         MPIR_Assert(actual_pack_bytes == type_size);
@@ -1554,7 +1554,7 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &upkt.cas_resp;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &((target_lock_entry->pkt).cas);
     MPIR_Request *send_req = NULL;
-    MPI_Aint len;
+    size_t len;
     int mpi_errno = MPI_SUCCESS;
 
     /* Piggyback candidate should have basic datatype for target datatype. */

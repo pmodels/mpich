@@ -14,7 +14,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 {
     intptr_t data_sz;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype* dt_ptr;
     MPIR_Request * sreq;
     MPIDI_VC_t * vc=0;

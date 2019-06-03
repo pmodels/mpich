@@ -20,7 +20,7 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
     int mpi_errno = MPI_SUCCESS;
     int i;
     int comm_size, rank;
-    MPI_Aint extent;
+    size_t extent;
     int min_procs;
 
     rank = comm_ptr->rank;

@@ -23,7 +23,7 @@ int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int
      */
     int mpi_errno = MPI_SUCCESS;
     int local_size, remote_size, max_size, i;
-    MPI_Aint send_extent, recv_extent, sendtype_size, recvtype_size;
+    size_t send_extent, recv_extent, sendtype_size, recvtype_size;
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
 

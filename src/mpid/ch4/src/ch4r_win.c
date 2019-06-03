@@ -21,10 +21,10 @@ enum {
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr);
 static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen);
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init);
-static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
+static int win_init(size_t length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model);
 static int win_finalize(MPIR_Win ** win_ptr);
-static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
+static int win_shm_alloc_impl(size_t size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option);
 
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
@@ -252,7 +252,7 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
     goto fn_exit;
 }
 
-static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
+static int win_init(size_t length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -425,7 +425,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
  * memory, and initializes the shared_table structure that stores each
  * node process's size, disp_unit, and start address for shm RMA operations
  * and query routine.*/
-static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
+static int win_shm_alloc_impl(size_t size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -433,7 +433,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     MPIR_Win *win = NULL;
     size_t total_shm_size = 0LL;
     MPIDIG_win_shared_info_t *shared_table = NULL;
-    MPI_Aint *shm_offsets = NULL;
+    size_t *shm_offsets = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
     size_t page_sz = 0, mapsize;
     bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
@@ -472,7 +472,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
-        MPIR_CHKLMEM_MALLOC(shm_offsets, MPI_Aint *, shm_comm_ptr->local_size * sizeof(MPI_Aint),
+        MPIR_CHKLMEM_MALLOC(shm_offsets, size_t *, shm_comm_ptr->local_size * sizeof(size_t),
                             mpi_errno, "shm offset", MPL_MEM_RMA);
 
         /* No allreduce here because this is a shared memory domain
@@ -480,7 +480,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
          * and a non performance sensitive API.
          */
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
-            shm_offsets[i] = (MPI_Aint) total_shm_size;
+            shm_offsets[i] = (size_t) total_shm_size;
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
                 total_shm_size += MPIDIU_get_mapsize(shared_table[i].size, &page_sz);
             else
@@ -805,7 +805,7 @@ int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPIDIG_mpi_win_create(void *base, size_t length, int disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -846,7 +846,7 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, size_t size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_ATTACH);
@@ -872,7 +872,7 @@ int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPIDIG_mpi_win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info_ptr,
                                    MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -940,7 +940,7 @@ int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPIDIG_mpi_win_allocate(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                             void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

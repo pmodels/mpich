@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
-                                            MPI_Aint count,
+                                            size_t count,
                                             MPI_Datatype datatype,
                                             int rank,
                                             int tag,
@@ -41,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 {
     int dt_contig;
     size_t data_sz;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req = *request;
@@ -107,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
-                                               MPI_Aint count,
+                                               size_t count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -183,7 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -195,7 +195,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
-                                                 MPI_Aint count,
+                                                 size_t count,
                                                  MPI_Datatype datatype,
                                                  int rank,
                                                  int tag,

@@ -166,8 +166,8 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
 }
 
 
-int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+int MPII_Genutil_sched_localcopy(const void *sendbuf, size_t sendcount, MPI_Datatype sendtype,
+                                 void *recvbuf, size_t recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
 {
     vtx_t *vtxp;

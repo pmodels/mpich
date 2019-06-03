@@ -26,7 +26,7 @@ int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
 #undef MPI_Type_get_extent
 #define MPI_Type_get_extent PMPI_Type_get_extent
 
-void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent)
+void MPIR_Type_get_extent_impl(MPI_Datatype datatype, size_t * lb, size_t * extent)
 {
     MPI_Count lb_x, extent_x;
 

@@ -28,7 +28,7 @@ int MPIR_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     int nbytes, recvtype_sz, newtype_size;
     int rank, comm_size;
     void *tmp_buf = NULL;
-    MPI_Aint sendtype_extent, recvtype_extent;
+    size_t sendtype_extent, recvtype_extent;
     int pof2, dst, src;
     int count, block;
     MPI_Datatype newtype;

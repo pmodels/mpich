@@ -472,7 +472,7 @@ lock_exit:
  */
 MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                                            int context_id, MPIR_Comm *comm, void *user_buf,
-                                           MPI_Aint user_count, MPI_Datatype datatype, int * foundp)
+                                           size_t user_count, MPI_Datatype datatype, int * foundp)
 {
     int mpi_errno = MPI_SUCCESS;
     int found = FALSE;

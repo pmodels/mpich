@@ -61,7 +61,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
                void *outbuf, int outcount, MPI_Datatype datatype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint position_x;
+    size_t position_x;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK);
 
@@ -121,7 +121,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 
     position_x = *position;
 
-    MPI_Aint actual_unpack_bytes;
+    size_t actual_unpack_bytes;
     void *buf = (void *) ((char *) inbuf + position_x);
     mpi_errno =
         MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);

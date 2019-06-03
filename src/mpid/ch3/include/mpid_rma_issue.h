@@ -62,9 +62,9 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 /* Set extended header for ACC operation and return its real size. */
 static int init_stream_dtype_ext_pkt(int pkt_flags,
                               MPIR_Datatype* target_dtp, intptr_t stream_offset,
-                              void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz, int *flattened_type_size)
+                              void **ext_hdr_ptr, size_t * ext_hdr_sz, int *flattened_type_size)
 {
-    MPI_Aint _total_sz = 0, stream_hdr_sz = 0;
+    size_t _total_sz = 0, stream_hdr_sz = 0;
     void *flattened_type, *total_hdr;
     int mpi_errno = MPI_SUCCESS;
 
@@ -131,7 +131,7 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
 /* issue_from_origin_buffer() issues data from origin
    buffer (i.e. non-IMMED operation). */
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
-                                    void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
+                                    void *ext_hdr_ptr, size_t ext_hdr_sz,
                                     intptr_t stream_offset, intptr_t stream_size,
                                     MPIR_Request ** req_ptr)
 {
@@ -141,7 +141,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt = 0;
     MPIR_Request *req = NULL;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     int pkt_flags;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
@@ -325,9 +325,9 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
-        MPI_Aint origin_type_size;
+        size_t origin_type_size;
         void *ext_hdr_ptr = NULL;
-        MPI_Aint ext_hdr_sz = 0;
+        size_t ext_hdr_sz = 0;
         MPIR_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
 
         /* If derived datatype on target, add extended packet header. */
@@ -380,14 +380,14 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &rma_op->pkt.accum;
     int i, j;
-    MPI_Aint stream_elem_count, stream_unit_count;
-    MPI_Aint predefined_dtp_size, predefined_dtp_extent, predefined_dtp_count;
-    MPI_Aint total_len, rest_len;
-    MPI_Aint origin_dtp_size;
+    size_t stream_elem_count, stream_unit_count;
+    size_t predefined_dtp_size, predefined_dtp_extent, predefined_dtp_count;
+    size_t total_len, rest_len;
+    size_t origin_dtp_size;
     MPIR_Datatype*origin_dtp_ptr = NULL;
     MPIR_Datatype*target_dtp_ptr = NULL;
     void *ext_hdr_ptr = NULL;
-    MPI_Aint ext_hdr_sz = 0;
+    size_t ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_ACC_OP);
 
@@ -542,13 +542,13 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &rma_op->pkt.get_accum;
     int i, j;
-    MPI_Aint stream_elem_count, stream_unit_count;
-    MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
-    MPI_Aint total_len, rest_len;
-    MPI_Aint target_dtp_size;
+    size_t stream_elem_count, stream_unit_count;
+    size_t predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
+    size_t total_len, rest_len;
+    size_t target_dtp_size;
     MPIR_Datatype*target_dtp_ptr = NULL;
     void *ext_hdr_ptr = NULL;
-    MPI_Aint ext_hdr_sz = 0;
+    size_t ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_ACC_OP);
 
@@ -825,7 +825,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     else {
         /* derived datatype on target. */
         void *ext_hdr_ptr = NULL;
-        MPI_Aint ext_hdr_sz = 0;
+        size_t ext_hdr_sz = 0;
 
         MPIR_Datatype_get_ptr(target_datatype, dtp);
         MPIR_Typerep_flatten_size(dtp, &get_pkt->info.flattened_type_size);
@@ -987,7 +987,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
-        MPI_Aint origin_dtp_size;
+        size_t origin_dtp_size;
         MPIR_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
         mpi_errno = issue_from_origin_buffer(rma_op, vc, NULL, 0,       /*ext_hdr_ptr, ext_hdr_sz */
                                              0, 1 * origin_dtp_size, &curr_req);

@@ -53,7 +53,7 @@ Output Parameters:
 @*/
 int MPI_Type_create_hvector(int count,
                             int blocklength,
-                            MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+                            size_t stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;

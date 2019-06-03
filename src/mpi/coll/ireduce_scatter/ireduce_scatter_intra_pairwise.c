@@ -19,7 +19,7 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    size_t extent, true_extent, true_lb;
     int *disps;
     void *tmp_recvbuf;
     int src, dst;

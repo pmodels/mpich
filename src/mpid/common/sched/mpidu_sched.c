@@ -549,7 +549,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 }
 
 /* do these ops need an entry handle returned? */
-int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIDU_Sched_send(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                      MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -585,7 +585,7 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
 }
 
 
-int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIDU_Sched_ssend(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                       MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -621,7 +621,7 @@ int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, in
 }
 
 
-int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
+int MPIDU_Sched_send_defer(const void *buf, const size_t * count, MPI_Datatype datatype, int dest,
                            MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -656,7 +656,7 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
     goto fn_exit;
 }
 
-int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+int MPIDU_Sched_recv_status(void *buf, size_t count, MPI_Datatype datatype, int src,
                             MPIR_Comm * comm, MPI_Status * status, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -687,7 +687,7 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
     goto fn_exit;
 }
 
-int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
+int MPIDU_Sched_recv(void *buf, size_t count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -718,7 +718,7 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
     goto fn_exit;
 }
 
-int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, size_t count, MPI_Datatype datatype,
                        MPI_Op op, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -756,8 +756,8 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
  *
  * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype. */
-int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
-                     void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s)
+int MPIDU_Sched_copy(const void *inbuf, size_t incount, MPI_Datatype intype,
+                     void *outbuf, size_t outcount, MPI_Datatype outtype, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -785,7 +785,7 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
     /* some sanity checking up front */
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
     {
-        MPI_Aint intype_size, outtype_size;
+        size_t intype_size, outtype_size;
         MPIR_Datatype_get_size_macro(intype, intype_size);
         MPIR_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
@@ -913,7 +913,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                                          (int) i, e->u.recv.rreq));
                         MPIR_Process_status(&e->u.recv.rreq->status, &s->req->u.nbc.errflag);
                         if (e->u.recv.status != MPI_STATUS_IGNORE) {
-                            MPI_Aint recvd;
+                            size_t recvd;
                             e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
                             MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
                             MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);

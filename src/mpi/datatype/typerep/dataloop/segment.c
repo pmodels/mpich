@@ -133,8 +133,8 @@ cvars:
 #define STACKELM_STRUCT_DATALOOP(elmp_, curcount_)                \
     (elmp_)->loop_p->loop_params.s_t.dataloop_array[(curcount_)]
 
-static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
-                         MPI_Aint(*sizefn) (MPI_Datatype el_type))
+static void segment_seek(struct MPIR_Segment *segp, size_t position,
+                         size_t(*sizefn) (MPI_Datatype el_type))
 {
     struct MPII_Dataloop_stackelm *cur_elmp;
     struct MPII_Dataloop_stackelm *next_elmp;
@@ -164,9 +164,9 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
             case MPII_DATALOOP_KIND_CONTIG:
                 {
-                    MPI_Aint blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+                    size_t blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
 
-                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    size_t num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
                     if (num_elems > blocksize)
                         num_elems = blocksize;
                     segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
@@ -209,15 +209,15 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
             case MPII_DATALOOP_KIND_VECTOR:
                 {
-                    MPI_Aint blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+                    size_t blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
 
-                    MPI_Aint num_blocks =
+                    size_t num_blocks =
                         (position - segp->stream_off) / (cur_elmp->loop_p->el_size * blocksize);
                     if (num_blocks > cur_elmp->orig_count)
                         num_blocks = cur_elmp->orig_count;
                     segp->stream_off += num_blocks * cur_elmp->loop_p->el_size * blocksize;
 
-                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    size_t num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
                     MPIR_Assert(num_elems < blocksize);
                     segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
 
@@ -257,15 +257,15 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
             case MPII_DATALOOP_KIND_BLOCKINDEXED:
                 {
-                    MPI_Aint blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
+                    size_t blocksize = MPII_Dataloop_stackelm_blocksize(cur_elmp);
 
-                    MPI_Aint num_blocks =
+                    size_t num_blocks =
                         (position - segp->stream_off) / (cur_elmp->loop_p->el_size * blocksize);
                     if (num_blocks > cur_elmp->orig_count)
                         num_blocks = cur_elmp->orig_count;
                     segp->stream_off += num_blocks * cur_elmp->loop_p->el_size * blocksize;
 
-                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    size_t num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
                     MPIR_Assert(num_elems < blocksize);
                     segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
 
@@ -305,8 +305,8 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
             case MPII_DATALOOP_KIND_INDEXED:
                 {
-                    MPI_Aint blocksize;
-                    MPI_Aint num_blocks;
+                    size_t blocksize;
+                    size_t num_blocks;
 
                     for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
                         blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
@@ -319,7 +319,7 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
                     blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
 
-                    MPI_Aint num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
+                    size_t num_elems = (position - segp->stream_off) / cur_elmp->loop_p->el_size;
                     MPIR_Assert(num_elems < blocksize);
                     segp->stream_off += num_elems * cur_elmp->loop_p->el_size;
 
@@ -359,8 +359,8 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
             case MPII_DATALOOP_KIND_STRUCT:
                 {
-                    MPI_Aint blocksize;
-                    MPI_Aint num_blocks;
+                    size_t blocksize;
+                    size_t num_blocks;
                     MPII_Dataloop *dloop;
 
                     for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
@@ -376,7 +376,7 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                     blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
                     dloop = STACKELM_STRUCT_DATALOOP(cur_elmp, num_blocks);
 
-                    MPI_Aint num_elems = (position - segp->stream_off) / dloop->el_size;
+                    size_t num_elems = (position - segp->stream_off) / dloop->el_size;
                     MPIR_Assert(num_elems < blocksize);
                     segp->stream_off += num_elems * dloop->el_size;
 
@@ -429,7 +429,7 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 
   fallback_path:
     {
-        MPI_Aint tmp_last = position;
+        size_t tmp_last = position;
 
         /* use manipulate function with a NULL piecefn to advance
          * stream offset */
@@ -450,42 +450,42 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
 }
 
 void MPII_Segment_manipulate(struct MPIR_Segment *segp,
-                             MPI_Aint first,
-                             MPI_Aint * lastp,
-                             int (*contigfn) (MPI_Aint * blocks_p,
+                             size_t first,
+                             size_t * lastp,
+                             int (*contigfn) (size_t * blocks_p,
                                               MPI_Datatype el_type,
-                                              MPI_Aint rel_off,
+                                              size_t rel_off,
                                               void *bufp,
                                               void *v_paramp),
-                             int (*vectorfn) (MPI_Aint * blocks_p,
-                                              MPI_Aint count,
-                                              MPI_Aint blklen,
-                                              MPI_Aint stride,
+                             int (*vectorfn) (size_t * blocks_p,
+                                              size_t count,
+                                              size_t blklen,
+                                              size_t stride,
                                               MPI_Datatype el_type,
-                                              MPI_Aint rel_off,
+                                              size_t rel_off,
                                               void *bufp,
                                               void *v_paramp),
-                             int (*blkidxfn) (MPI_Aint * blocks_p,
-                                              MPI_Aint count,
-                                              MPI_Aint blklen,
-                                              MPI_Aint * offsetarray,
+                             int (*blkidxfn) (size_t * blocks_p,
+                                              size_t count,
+                                              size_t blklen,
+                                              size_t * offsetarray,
                                               MPI_Datatype el_type,
-                                              MPI_Aint rel_off,
+                                              size_t rel_off,
                                               void *bufp,
                                               void *v_paramp),
-                             int (*indexfn) (MPI_Aint * blocks_p,
-                                             MPI_Aint count,
-                                             MPI_Aint * blockarray,
-                                             MPI_Aint * offsetarray,
+                             int (*indexfn) (size_t * blocks_p,
+                                             size_t count,
+                                             size_t * blockarray,
+                                             size_t * offsetarray,
                                              MPI_Datatype el_type,
-                                             MPI_Aint rel_off,
+                                             size_t rel_off,
                                              void *bufp,
                                              void *v_paramp),
-                             MPI_Aint(*sizefn) (MPI_Datatype el_type), void *pieceparams)
+                             size_t(*sizefn) (MPI_Datatype el_type), void *pieceparams)
 {
     /* these four are the "local values": cur_sp, valid_sp, last, stream_off */
     int cur_sp, valid_sp;
-    MPI_Aint last, stream_off;
+    size_t last, stream_off;
 
     struct MPII_Dataloop_stackelm *cur_elmp;
     enum { PF_NULL, PF_CONTIG, PF_VECTOR, PF_BLOCKINDEXED, PF_INDEXED } piecefn_type = PF_NULL;
@@ -541,7 +541,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 
         if (cur_elmp->loop_p->kind & MPII_DATALOOP_FINAL_MASK) {
             int piecefn_indicated_exit = -1;
-            MPI_Aint myblocks, local_el_size, stream_el_size;
+            size_t myblocks, local_el_size, stream_el_size;
             MPI_Datatype el_type;
 
             /* structs are never finals (leaves) */
@@ -677,7 +677,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
             if (myblocks == 0) {
                 SEGMENT_SAVE_LOCAL_VALUES;
                 return;
-            } else if (myblocks < (MPI_Aint) (cur_elmp->curblock)) {
+            } else if (myblocks < (size_t) (cur_elmp->curblock)) {
                 cur_elmp->curoffset += myblocks * local_el_size;
                 cur_elmp->curblock -= myblocks;
 
@@ -685,7 +685,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                 return;
             } else {    /* myblocks >= cur_elmp->curblock */
 
-                MPI_Aint count_index = 0;
+                size_t count_index = 0;
 
                 /* this assumes we're either *just* processing the last parts
                  * of the current block, or we're processing as many blocks as
@@ -694,8 +694,8 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
 
                 switch (cur_elmp->loop_p->kind & MPII_DATALOOP_KIND_MASK) {
                     case MPII_DATALOOP_KIND_INDEXED:
-                        while (myblocks > 0 && myblocks >= (MPI_Aint) (cur_elmp->curblock)) {
-                            myblocks -= (MPI_Aint) (cur_elmp->curblock);
+                        while (myblocks > 0 && myblocks >= (size_t) (cur_elmp->curblock)) {
+                            myblocks -= (size_t) (cur_elmp->curblock);
                             cur_elmp->curcount--;
                             MPIR_Assert(cur_elmp->curcount >= 0);
 
@@ -718,24 +718,24 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                         break;
                     case MPII_DATALOOP_KIND_VECTOR:
                         /* this math relies on assertions at top of code block */
-                        cur_elmp->curcount -= myblocks / (MPI_Aint) (cur_elmp->curblock);
+                        cur_elmp->curcount -= myblocks / (size_t) (cur_elmp->curblock);
                         if (cur_elmp->curcount == 0) {
-                            MPIR_Assert(myblocks % ((MPI_Aint) (cur_elmp->curblock)) == 0);
+                            MPIR_Assert(myblocks % ((size_t) (cur_elmp->curblock)) == 0);
                             SEGMENT_POP_AND_MAYBE_EXIT;
                         } else {
                             /* this math relies on assertions at top of code
                              * block
                              */
                             cur_elmp->curblock = cur_elmp->orig_block -
-                                (myblocks % (MPI_Aint) (cur_elmp->curblock));
+                                (myblocks % (size_t) (cur_elmp->curblock));
                             /* new offset = original offset +
                              *              stride * whole blocks +
                              *              leftover bytes
                              */
                             cur_elmp->curoffset = cur_elmp->orig_offset +
-                                (((MPI_Aint) (cur_elmp->orig_count - cur_elmp->curcount)) *
+                                (((size_t) (cur_elmp->orig_count - cur_elmp->curcount)) *
                                  cur_elmp->loop_p->loop_params.v_t.stride) +
-                                (((MPI_Aint) (cur_elmp->orig_block - cur_elmp->curblock)) *
+                                (((size_t) (cur_elmp->orig_block - cur_elmp->curblock)) *
                                  local_el_size);
                         }
                         break;
@@ -743,13 +743,13 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                         /* contigs that reach this point have always been
                          * completely processed
                          */
-                        MPIR_Assert(myblocks == (MPI_Aint) (cur_elmp->curblock) &&
+                        MPIR_Assert(myblocks == (size_t) (cur_elmp->curblock) &&
                                     cur_elmp->curcount == 1);
                         SEGMENT_POP_AND_MAYBE_EXIT;
                         break;
                     case MPII_DATALOOP_KIND_BLOCKINDEXED:
-                        while (myblocks > 0 && myblocks >= (MPI_Aint) (cur_elmp->curblock)) {
-                            myblocks -= (MPI_Aint) (cur_elmp->curblock);
+                        while (myblocks > 0 && myblocks >= (size_t) (cur_elmp->curblock)) {
+                            myblocks -= (size_t) (cur_elmp->curblock);
                             cur_elmp->curcount--;
                             MPIR_Assert(cur_elmp->curcount >= 0);
 
@@ -824,7 +824,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
         } else {        /* push the stackelm */
 
             MPII_Dataloop_stackelm *next_elmp;
-            MPI_Aint count_index, block_index;
+            size_t count_index, block_index;
 
             count_index = cur_elmp->orig_count - cur_elmp->curcount;
             block_index = cur_elmp->orig_block - cur_elmp->curblock;
@@ -870,27 +870,27 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
             switch (cur_elmp->loop_p->kind & MPII_DATALOOP_KIND_MASK) {
                 case MPII_DATALOOP_KIND_CONTIG:
                     next_elmp->orig_offset = cur_elmp->curoffset +
-                        (MPI_Aint) block_index *cur_elmp->loop_p->el_extent;
+                        (size_t) block_index *cur_elmp->loop_p->el_extent;
                     break;
                 case MPII_DATALOOP_KIND_VECTOR:
                     /* note: stride is in bytes */
                     next_elmp->orig_offset = cur_elmp->orig_offset +
-                        (MPI_Aint) count_index *cur_elmp->loop_p->loop_params.v_t.stride +
-                        (MPI_Aint) block_index *cur_elmp->loop_p->el_extent;
+                        (size_t) count_index *cur_elmp->loop_p->loop_params.v_t.stride +
+                        (size_t) block_index *cur_elmp->loop_p->el_extent;
                     break;
                 case MPII_DATALOOP_KIND_BLOCKINDEXED:
                     next_elmp->orig_offset = cur_elmp->orig_offset +
-                        (MPI_Aint) block_index *cur_elmp->loop_p->el_extent +
+                        (size_t) block_index *cur_elmp->loop_p->el_extent +
                         STACKELM_BLOCKINDEXED_OFFSET(cur_elmp, count_index);
                     break;
                 case MPII_DATALOOP_KIND_INDEXED:
                     next_elmp->orig_offset = cur_elmp->orig_offset +
-                        (MPI_Aint) block_index *cur_elmp->loop_p->el_extent +
+                        (size_t) block_index *cur_elmp->loop_p->el_extent +
                         STACKELM_INDEXED_OFFSET(cur_elmp, count_index);
                     break;
                 case MPII_DATALOOP_KIND_STRUCT:
                     next_elmp->orig_offset = cur_elmp->orig_offset +
-                        (MPI_Aint) block_index *STACKELM_STRUCT_EL_EXTENT(cur_elmp,
+                        (size_t) block_index *STACKELM_STRUCT_EL_EXTENT(cur_elmp,
                                                                           count_index) +
                         STACKELM_STRUCT_OFFSET(cur_elmp, count_index);
                     break;
@@ -969,7 +969,7 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
  * before this is called!
  *
  */
-MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
+size_t MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
 {
     MPII_Dataloop *dlp = elmp->loop_p;
 
@@ -1012,7 +1012,7 @@ MPI_Aint MPII_Dataloop_stackelm_blocksize(struct MPII_Dataloop_stackelm * elmp)
  * (all the time for indexed) at the moment.
  *
  */
-MPI_Aint MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
+size_t MPII_Dataloop_stackelm_offset(struct MPII_Dataloop_stackelm * elmp)
 {
     MPII_Dataloop *dlp = elmp->loop_p;
 

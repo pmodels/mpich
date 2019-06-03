@@ -29,8 +29,8 @@ enum MPIDU_Sched_entry_type {
 
 struct MPIDU_Sched_send {
     const void *buf;
-    MPI_Aint count;
-    const MPI_Aint *count_p;
+    size_t count;
+    const size_t *count_p;
     MPI_Datatype datatype;
     int dest;
     struct MPIR_Comm *comm;
@@ -40,7 +40,7 @@ struct MPIDU_Sched_send {
 
 struct MPIDU_Sched_recv {
     void *buf;
-    MPI_Aint count;
+    size_t count;
     MPI_Datatype datatype;
     int src;
     struct MPIR_Comm *comm;
@@ -51,17 +51,17 @@ struct MPIDU_Sched_recv {
 struct MPIDU_Sched_reduce {
     const void *inbuf;
     void *inoutbuf;
-    MPI_Aint count;
+    size_t count;
     MPI_Datatype datatype;
     MPI_Op op;
 };
 
 struct MPIDU_Sched_copy {
     const void *inbuf;
-    MPI_Aint incount;
+    size_t incount;
     MPI_Datatype intype;
     void *outbuf;
-    MPI_Aint outcount;
+    size_t outcount;
     MPI_Datatype outtype;
 };
 
@@ -126,16 +126,16 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp);
 int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 int MPIDU_Sched_start(MPIR_Sched_t * sp, struct MPIR_Comm *comm, int tag,
                       struct MPIR_Request **req);
-int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIDU_Sched_send(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
-int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+int MPIDU_Sched_recv(void *buf, size_t count, MPI_Datatype datatype, int src,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
-int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+int MPIR_Sched_ssend(const void *buf, size_t count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPIR_Sched_t s);
-int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, size_t count, MPI_Datatype datatype,
                       MPI_Op op, MPIR_Sched_t s);
-int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,
-                     MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
+int MPIDU_Sched_copy(const void *inbuf, size_t incount, MPI_Datatype intype, void *outbuf,
+                     size_t outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 int MPIDU_Sched_barrier(MPIR_Sched_t s);
 
 #endif /* MPIDU_SCHED_H_INCLUDED */

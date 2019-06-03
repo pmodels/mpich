@@ -20,7 +20,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPI_Aint local_size, remote_size;
+    size_t local_size, remote_size;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
@@ -36,7 +36,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator gather, and then sends the data
          * to root. */
-        MPI_Aint sendtype_sz;
+        size_t sendtype_sz;
         void *tmp_buf = NULL;
 
         rank = comm_ptr->rank;

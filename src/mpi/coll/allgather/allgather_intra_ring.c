@@ -32,7 +32,7 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     int j, i;
     int left, right, jnext;
 

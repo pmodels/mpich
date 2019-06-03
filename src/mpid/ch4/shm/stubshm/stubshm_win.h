@@ -108,7 +108,7 @@ static inline int MPIDI_STUBSHM_mpi_win_fence(int assert, MPIR_Win * win)
 
 static inline int MPIDI_STUBSHM_mpi_win_shared_query(MPIR_Win * win,
                                                      int rank,
-                                                     MPI_Aint * size, int *disp_unit, void *baseptr)
+                                                     size_t * size, int *disp_unit, void *baseptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SHARED_QUERY);

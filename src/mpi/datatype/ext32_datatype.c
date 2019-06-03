@@ -14,7 +14,7 @@
 
 typedef struct external32_basic_size {
     MPI_Datatype el_type;
-    MPI_Aint el_size;
+    size_t el_size;
 } external32_basic_size_t;
 
 static external32_basic_size_t external32_basic_size_array[] = {
@@ -82,9 +82,9 @@ static external32_basic_size_t external32_basic_size_array[] = {
     {MPI_CXX_LONG_DOUBLE_COMPLEX, 2 * 16}
 };
 
-MPI_Aint MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type)
+size_t MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type)
 {
-    MPI_Aint ret = (MPI_Aint) 0;
+    size_t ret = (size_t) 0;
     unsigned int i = 0;
     for (i = 0; i < (sizeof(external32_basic_size_array) / sizeof(external32_basic_size_t)); i++) {
         if (external32_basic_size_array[i].el_type == el_type) {

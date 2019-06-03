@@ -331,7 +331,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     /* catch common aliasing cases */
                     if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcount == recvcount &&
                         sendcount != 0) {
-                        MPI_Aint recvtype_size;
+                        size_t recvtype_size;
                         MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
                         MPIR_ERRTEST_ALIAS_COLL(sendbuf,
                                                 ((char *) recvbuf) +

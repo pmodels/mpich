@@ -9,13 +9,13 @@
 /*
  * MPID_Send()
  */
-int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
+int MPID_Send(const void * buf, size_t count, MPI_Datatype datatype, int rank,
 	      int tag, MPIR_Comm * comm, int context_offset,
 	      MPIR_Request ** request)
 {
     intptr_t data_sz;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype* dt_ptr;
     MPIR_Request * sreq = NULL;
     MPIDI_VC_t * vc;

@@ -20,7 +20,7 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addresses,
                           int max_datatypes, int array_of_integers[],
-                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+                          size_t array_of_addresses[], MPI_Datatype array_of_datatypes[])
     __attribute__ ((weak, alias("PMPI_Type_get_contents")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -51,7 +51,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
                            int max_addresses,
                            int max_datatypes,
                            int array_of_integers[],
-                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+                           size_t array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     int i, mpi_errno;
     MPIR_Datatype *dtp;
@@ -131,7 +131,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
                           int max_addresses,
                           int max_datatypes,
                           int array_of_integers[],
-                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+                          size_t array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_CONTENTS);

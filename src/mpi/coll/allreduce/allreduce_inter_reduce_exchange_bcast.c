@@ -20,7 +20,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
 {
     int mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);

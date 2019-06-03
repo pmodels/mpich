@@ -12,9 +12,9 @@
  */
 
 /* MPIDI_CH3_RndvSend - Send a request to perform a rendezvous send */
-int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
+int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, size_t count,
 			MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
-			MPI_Aint dt_true_lb,
+			size_t dt_true_lb,
 			int rank, 
 			int tag, MPIR_Comm * comm, int context_offset )
 {
@@ -192,7 +192,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_rndv_send_t * rs_pkt = &upkt.rndv_send;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     intptr_t data_sz;
     MPIR_Datatype* dt_ptr;
     int mpi_errno = MPI_SUCCESS;

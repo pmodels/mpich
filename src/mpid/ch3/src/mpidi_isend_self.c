@@ -12,7 +12,7 @@
    particularly contiguous ones?  See also the FIXME about buffering
    short messages */
 
-int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
+int MPIDI_Isend_self(const void * buf, size_t count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		     int type, MPIR_Request ** request)
 {
     MPIDI_Message_match match;
@@ -103,7 +103,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     {
 	if (type != MPIDI_REQUEST_TYPE_RSEND)
 	{
-	    MPI_Aint dt_sz;
+	    size_t dt_sz;
 	
 	    /* FIXME: Insert code here to buffer small sends in a temporary buffer? */
 

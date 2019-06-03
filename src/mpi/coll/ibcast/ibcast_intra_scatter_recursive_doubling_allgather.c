@@ -59,7 +59,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     int type_size, j, k, i, tmp_mask, is_contig;
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
-    MPI_Aint true_extent, true_lb;
+    size_t true_extent, true_lb;
     void *tmp_buf;
     struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(2);

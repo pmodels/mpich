@@ -107,8 +107,8 @@ int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Dataty
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint local_size, remote_size;
-    MPI_Aint recvtype_size, sendtype_size, nbytes;
+    size_t local_size, remote_size;
+    size_t recvtype_size, sendtype_size, nbytes;
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -378,7 +378,7 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     /* catch common aliasing cases */
                     if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcount == recvcount &&
                         sendcount != 0) {
-                        MPI_Aint recvtype_size;
+                        size_t recvtype_size;
                         MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
                         MPIR_ERRTEST_ALIAS_COLL(sendbuf,
                                                 (char *) recvbuf +

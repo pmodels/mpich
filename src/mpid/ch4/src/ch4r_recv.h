@@ -53,11 +53,11 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     size_t message_sz;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t data_sz ATTRIBUTE((unused)), dt_sz, nbytes;
     void *buf;
-    MPI_Aint count;
+    size_t count;
     MPI_Datatype datatype;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_MRECV);
@@ -85,13 +85,13 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (!dt_contig) {
-        MPI_Aint actual_unpack_bytes;
+        size_t actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf,
                                         count, datatype, 0, &actual_unpack_bytes);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
+        if (actual_unpack_bytes != (size_t) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);

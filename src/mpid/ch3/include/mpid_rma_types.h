@@ -51,7 +51,7 @@ typedef struct MPIDI_RMA_Op {
 
     struct MPIR_Request *single_req;    /* used for unstreamed RMA ops */
     struct MPIR_Request **multi_reqs;   /* used for streamed RMA ops */
-    MPI_Aint reqs_size;         /* when reqs_size == 0, neither single_req nor multi_reqs is used;
+    size_t reqs_size;         /* when reqs_size == 0, neither single_req nor multi_reqs is used;
                                  * when reqs_size == 1, single_req is used;
                                  * when reqs_size > 1, multi_reqs is used. */
 

@@ -19,7 +19,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size, root;
-    MPI_Aint sendtype_sz;
+    size_t sendtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);

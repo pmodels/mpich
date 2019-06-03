@@ -38,9 +38,9 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     int batch_size = MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE;
     int bblock = MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS;
 
-    MPI_Aint recvtype_lb, recvtype_extent;
-    MPI_Aint sendtype_lb, sendtype_extent;
-    MPI_Aint sendtype_true_extent, recvtype_true_extent;
+    size_t recvtype_lb, recvtype_extent;
+    size_t sendtype_lb, sendtype_extent;
+    size_t sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);

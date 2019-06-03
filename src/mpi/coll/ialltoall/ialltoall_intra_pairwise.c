@@ -31,7 +31,7 @@ int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_
     int i;
     int src, dst, is_pof2;
     int rank, comm_size;
-    MPI_Aint sendtype_extent, recvtype_extent;
+    size_t sendtype_extent, recvtype_extent;
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* we do not handle in-place */

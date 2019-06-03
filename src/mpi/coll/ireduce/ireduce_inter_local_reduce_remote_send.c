@@ -18,7 +18,7 @@ int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void 
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

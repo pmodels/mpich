@@ -21,7 +21,7 @@ int MPIR_Iscatter_sched_inter_linear(const void *sendbuf, int sendcount, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
     int remote_size;
     int i;
-    MPI_Aint extent;
+    size_t extent;
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */

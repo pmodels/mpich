@@ -43,7 +43,7 @@ int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *re
     int send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root;
     void *tmp_buf = NULL;
     int *cnts, *disps;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     MPIR_SCHED_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(2);
 

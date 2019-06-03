@@ -20,7 +20,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
                                        MPIR_Errflag_t * errflag)
 {
     int rank, comm_size, i;
-    MPI_Aint extent, true_extent, true_lb;
+    size_t extent, true_extent, true_lb;
     int *disps;
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;

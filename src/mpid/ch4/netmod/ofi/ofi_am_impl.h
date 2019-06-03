@@ -406,7 +406,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
     size_t data_sz;
-    MPI_Aint dt_true_lb, last;
+    size_t dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
     int need_lock = !is_reply;
 

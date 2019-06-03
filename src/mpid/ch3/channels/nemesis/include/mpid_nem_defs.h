@@ -30,7 +30,7 @@ extern char MPID_nem_hostname[MAX_HOSTNAME_LEN];
 #define MPID_NEM_POLL_OUT     1
 
 #define MPID_NEM_ASYMM_NULL_VAL    64
-typedef MPI_Aint MPID_nem_addr_t;
+typedef size_t MPID_nem_addr_t;
 extern  char *MPID_nem_asymm_base_addr;
 
 #define MPID_NEM_REL_NULL (0x0)

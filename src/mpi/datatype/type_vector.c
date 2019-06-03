@@ -47,14 +47,14 @@ Output Parameters:
 @*/
 int MPIR_Type_vector(int count,
                      int blocklength,
-                     MPI_Aint stride,
+                     size_t stride,
                      int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_builtin, old_is_contig;
-    MPI_Aint el_sz, old_sz;
+    size_t el_sz, old_sz;
     MPI_Datatype el_type;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
+    size_t old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
 
     MPIR_Datatype *new_dtp;
 
@@ -83,7 +83,7 @@ int MPIR_Type_vector(int count,
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin) {
-        el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        el_sz = (size_t) MPIR_Datatype_get_basic_size(oldtype);
         el_type = oldtype;
 
         old_lb = 0;
@@ -94,7 +94,7 @@ int MPIR_Type_vector(int count,
         old_extent = el_sz;
         old_is_contig = 1;
 
-        new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
+        new_dtp->size = (size_t) count *(size_t) blocklength *el_sz;
         new_dtp->has_sticky_lb = 0;
         new_dtp->has_sticky_ub = 0;
 
@@ -136,9 +136,9 @@ int MPIR_Type_vector(int count,
         eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
 
-    MPII_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
+    MPII_DATATYPE_VECTOR_LB_UB((size_t) count,
                                eff_stride,
-                               (MPI_Aint) blocklength,
+                               (size_t) blocklength,
                                old_lb, old_ub, old_extent, new_dtp->lb, new_dtp->ub);
     new_dtp->true_lb = new_dtp->lb + (old_true_lb - old_lb);
     new_dtp->true_ub = new_dtp->ub + (old_true_ub - old_ub);
@@ -148,8 +148,8 @@ int MPIR_Type_vector(int count,
      * size and extent of new type are equivalent, and stride is
      * equal to blocklength * size of old type.
      */
-    if ((MPI_Aint) (new_dtp->size) == new_dtp->extent &&
-        eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
+    if ((size_t) (new_dtp->size) == new_dtp->extent &&
+        eff_stride == (size_t) blocklength * old_sz && old_is_contig) {
         new_dtp->is_contig = 1;
         new_dtp->max_contig_blocks = 1;
     } else {

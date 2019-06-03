@@ -10,21 +10,21 @@
 #include "mpidrma.h"
 
 /* FIXME: get this from OS */
-#define MPIDI_CH3_PAGESIZE ((MPI_Aint)4096)
+#define MPIDI_CH3_PAGESIZE ((size_t)4096)
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
-static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int MPIDI_CH3I_Win_init(size_t size, int disp_unit, int create_flavor, int model,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_allocate_shm(size_t size, int disp_unit, MPIR_Info * info,
                                        MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr);
 
-static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_gather_info(void *base, size_t size, int disp_unit, MPIR_Info * info,
                                       MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
@@ -95,7 +95,7 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
     goto fn_exit;
 }
 
-static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int MPIDI_CH3I_Win_init(size_t size, int disp_unit, int create_flavor, int model,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -123,7 +123,7 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
 
 
 static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_win,
-                                     MPI_Aint ** base_shm_offs_ptr)
+                                     size_t ** base_shm_offs_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size;
@@ -135,7 +135,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
     int *node_ranks = NULL, *node_ranks_in_shm_node = NULL;
     MPIR_Group *node_group_ptr = NULL, *shm_node_group_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPI_Aint *base_shm_offs;
+    size_t *base_shm_offs;
 
     MPIDI_SHM_Win_t *elem = shm_wins_list;
 
@@ -213,8 +213,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
          * Note that this collective call must be called after checking the
          * group match in order to guarantee all the local processes can perform
          * this call. */
-        base_shm_offs[node_rank] = (MPI_Aint) ((*win_ptr)->base)
-            - (MPI_Aint) (shm_win->shm_base_addr);
+        base_shm_offs[node_rank] = (size_t) ((*win_ptr)->base)
+            - (size_t) (shm_win->shm_base_addr);
         mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                         base_shm_offs, 1, MPI_AINT, node_comm_ptr, &errflag);
         if (mpi_errno)
@@ -265,7 +265,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *shm_win_ptr = NULL;
     int i, node_size;
-    MPI_Aint *base_shm_offs;
+    size_t *base_shm_offs;
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
@@ -278,7 +278,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
 
     node_size = (*win_ptr)->comm_ptr->node_comm->local_size;
 
-    MPIR_CHKLMEM_MALLOC(base_shm_offs, MPI_Aint *, node_size * sizeof(MPI_Aint),
+    MPIR_CHKLMEM_MALLOC(base_shm_offs, size_t *, node_size * sizeof(size_t),
                         mpi_errno, "base_shm_offs", MPL_MEM_RMA);
 
     /* Return the first matched shared window.
@@ -299,7 +299,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
      * shm_base_addrs[i] = my_shm_base_addr + off[i] */
     for (i = 0; i < node_size; i++) {
         (*win_ptr)->shm_base_addrs[i] =
-            (void *) ((MPI_Aint) shm_win_ptr->shm_base_addr + base_shm_offs[i]);
+            (void *) ((size_t) shm_win_ptr->shm_base_addr + base_shm_offs[i]);
     }
 
     /* TODO: should we use the same mutex or create a new one ?
@@ -317,13 +317,13 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
-static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_gather_info(void *base, size_t size, int disp_unit, MPIR_Info * info,
                                       MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     MPIR_Comm *node_comm_ptr = NULL;
     int node_rank;
     int comm_rank, comm_size;
-    MPI_Aint *tmp_buf = NULL;
+    size_t *tmp_buf = NULL;
     int i, k;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
@@ -417,13 +417,13 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
     (*win_ptr)->basic_info_table = (MPIDI_Win_basic_info_t *) ((*win_ptr)->info_shm_base_addr);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
+    MPIR_CHKLMEM_MALLOC(tmp_buf, size_t *, 4 * comm_size * sizeof(size_t),
                         mpi_errno, "tmp_buf", MPL_MEM_RMA);
 
     tmp_buf[4 * comm_rank] = MPIR_Ptr_to_aint(base);
     tmp_buf[4 * comm_rank + 1] = size;
-    tmp_buf[4 * comm_rank + 2] = (MPI_Aint) disp_unit;
-    tmp_buf[4 * comm_rank + 3] = (MPI_Aint) (*win_ptr)->handle;
+    tmp_buf[4 * comm_rank + 2] = (size_t) disp_unit;
+    tmp_buf[4 * comm_rank + 3] = (size_t) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPI_AINT,
                                     (*win_ptr)->comm_ptr, &errflag);
@@ -456,14 +456,14 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     /* --END ERROR HANDLING-- */
 }
 
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
+static int MPIDI_CH3I_Win_allocate_shm(size_t size, int disp_unit, MPIR_Info * info,
                                        MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     void **base_pp = (void **) base_ptr;
     int i, node_size, node_rank;
     MPIR_Comm *node_comm_ptr;
-    MPI_Aint *node_sizes;
+    size_t *node_sizes;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int noncontig = FALSE;
     MPIR_CHKPMEM_DECL(1);
@@ -500,13 +500,13 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
     /* get the sizes of the windows and window objectsof
      * all processes.  allocate temp. buffer for communication */
-    MPIR_CHKLMEM_MALLOC(node_sizes, MPI_Aint *, node_size * sizeof(MPI_Aint), mpi_errno,
+    MPIR_CHKLMEM_MALLOC(node_sizes, size_t *, node_size * sizeof(size_t), mpi_errno,
                         "node_sizes", MPL_MEM_RMA);
 
-    node_sizes[node_rank] = (MPI_Aint) size;
+    node_sizes[node_rank] = (size_t) size;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               node_sizes, sizeof(MPI_Aint), MPI_BYTE,
+                               node_sizes, sizeof(size_t), MPI_BYTE,
                                node_comm_ptr, &errflag);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     if (mpi_errno)

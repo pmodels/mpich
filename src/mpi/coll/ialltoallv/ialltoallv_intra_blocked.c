@@ -15,7 +15,7 @@ int MPIR_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcount
     int comm_size;
     int i;
     int ii, ss, bblock;
-    MPI_Aint send_extent, recv_extent, sendtype_size, recvtype_size;
+    size_t send_extent, recv_extent, sendtype_size, recvtype_size;
     int dst, rank;
 
 #ifdef HAVE_ERROR_CHECKING

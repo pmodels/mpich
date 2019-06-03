@@ -26,7 +26,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);

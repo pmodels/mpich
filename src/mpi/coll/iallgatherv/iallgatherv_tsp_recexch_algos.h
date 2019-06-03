@@ -230,7 +230,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, int sendcount,
     int is_inplace, i;
     int nranks, rank;
     size_t recv_extent;
-    MPI_Aint recv_lb, true_extent;
+    size_t recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
     int is_instep2, log_pofk;

@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
                         MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
                         &actual_iov_len, &actual_iov_bytes);
@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     size_t data_sz;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    size_t dt_true_lb;
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
@@ -292,7 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               MPI_Aint count,
+                                               size_t count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -340,7 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
-                                                 MPI_Aint count,
+                                                 size_t count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -368,7 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,

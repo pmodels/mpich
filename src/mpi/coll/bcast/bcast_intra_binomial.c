@@ -21,11 +21,11 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint nbytes = 0;
-    MPI_Aint recvd_size;
+    size_t nbytes = 0;
+    size_t recvd_size;
     MPI_Status status;
     int is_contig;
-    MPI_Aint type_size;
+    size_t type_size;
     void *tmp_buf = NULL;
     MPIR_CHKLMEM_DECL(1);
 

@@ -83,7 +83,7 @@ typedef struct MPIDI_workq_elemt {
         union {
             struct MPIDI_workq_send {
                 const void *send_buf;
-                MPI_Aint count;
+                size_t count;
                 MPI_Datatype datatype;
                 int rank;
                 int tag;
@@ -94,7 +94,7 @@ typedef struct MPIDI_workq_elemt {
             } send;             /* also for ISEND SSEND ISSEND RSEND IRSEND */
             struct MPIDI_workq_recv {
                 void *recv_buf;
-                MPI_Aint count;
+                size_t count;
                 MPI_Datatype datatype;
                 int rank;
                 int tag;
@@ -106,7 +106,7 @@ typedef struct MPIDI_workq_elemt {
             } recv;
             struct MPIDI_workq_irecv {
                 void *recv_buf;
-                MPI_Aint count;
+                size_t count;
                 MPI_Datatype datatype;
                 int rank;
                 int tag;
@@ -138,7 +138,7 @@ typedef struct MPIDI_workq_elemt {
             } improbe;
             struct MPIDI_workq_imrecv {
                 void *buf;
-                MPI_Aint count;
+                size_t count;
                 MPI_Datatype datatype;
                 MPIR_Request **message;
                 MPIR_Request *request;
@@ -150,7 +150,7 @@ typedef struct MPIDI_workq_elemt {
                 int origin_count;
                 MPI_Datatype origin_datatype;
                 int target_rank;
-                MPI_Aint target_disp;
+                size_t target_disp;
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
@@ -160,7 +160,7 @@ typedef struct MPIDI_workq_elemt {
                 int origin_count;
                 MPI_Datatype origin_datatype;
                 int target_rank;
-                MPI_Aint target_disp;
+                size_t target_disp;
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;

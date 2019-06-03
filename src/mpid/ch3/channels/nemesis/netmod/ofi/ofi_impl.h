@@ -267,16 +267,16 @@ static inline int MPID_nem_ofi_create_req_lw(MPIR_Request ** request, int refcnt
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_recv_posted, struct MPIDI_VC * vc,
                      struct MPIR_Request * req);
 
-DECLARE_TWO_API_SETS(int, MPID_nem_ofi_send, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,
+DECLARE_TWO_API_SETS(int, MPID_nem_ofi_send, struct MPIDI_VC *vc, const void *buf, size_t count,
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,
                      int context_offset, struct MPIR_Request **request);
-DECLARE_TWO_API_SETS(int, MPID_nem_ofi_isend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,
+DECLARE_TWO_API_SETS(int, MPID_nem_ofi_isend, struct MPIDI_VC *vc, const void *buf, size_t count,
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,
                      int context_offset, struct MPIR_Request **request);
-DECLARE_TWO_API_SETS(int, MPID_nem_ofi_ssend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,
+DECLARE_TWO_API_SETS(int, MPID_nem_ofi_ssend, struct MPIDI_VC *vc, const void *buf, size_t count,
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,
                      int context_offset, struct MPIR_Request **request);
-DECLARE_TWO_API_SETS(int, MPID_nem_ofi_issend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,
+DECLARE_TWO_API_SETS(int, MPID_nem_ofi_issend, struct MPIDI_VC *vc, const void *buf, size_t count,
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,
                      int context_offset, struct MPIR_Request **request);
 int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc, struct MPIR_Request *sreq);

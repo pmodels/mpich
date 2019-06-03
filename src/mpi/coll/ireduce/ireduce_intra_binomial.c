@@ -13,7 +13,7 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, is_commutative;
     int mask, relrank, source, lroot;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf;
     MPIR_SCHED_CHKPMEM_DECL(2);
 

@@ -23,7 +23,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
                                                         ATTRIBUTE((unused)))
 {
     int nbytes = 0;
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -52,7 +52,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
                                                             *ch4_algo_parameters_container_in
                                                             ATTRIBUTE((unused)))
 {
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -78,7 +78,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
                                                          *ch4_algo_parameters_container_in
                                                          ATTRIBUTE((unused)))
 {
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -171,7 +171,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoall_select(const void *sendbuf,
                                                            *ch4_algo_parameters_container_in
                                                            ATTRIBUTE((unused)))
 {
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
     int nbytes = 0;
 
     MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -247,12 +247,12 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgather_select(const void *sendbuf,
                                                             ATTRIBUTE((unused)))
 {
     int comm_size = 0;
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
     int nbytes = 0;
 
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(recvtype, type_size);
-    nbytes = (MPI_Aint) recvcount *comm_size * type_size;
+    nbytes = (size_t) recvcount *comm_size * type_size;
 
     if ((nbytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
         return &MPIDI_OFI_Allgather_intra_recursive_doubling_cnt;
@@ -279,7 +279,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgatherv_select(const void *sendbuf
                                                              ATTRIBUTE((unused)))
 {
     int comm_size = 0;
-    MPI_Aint type_size = 0;
+    size_t type_size = 0;
     int nbytes = 0;
     int i = 0;
     int total_count = 0;

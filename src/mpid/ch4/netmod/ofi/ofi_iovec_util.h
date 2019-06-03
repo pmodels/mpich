@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
                                                     MPIDI_OFI_segment_side_t side)
 {
     MPL_IOV typerep_vec;
-    MPI_Aint last;
+    size_t last;
     size_t *cursor;
     int num_contig = 1;
     const void *buf;
@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
          * vector is processed, and we try to pack as much as possible
          * using last byte of datatype.  If pack is complete,
          * num_contig returns as 0. */
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(buf, count, type, *cursor, &typerep_vec, 1, last - *cursor,
                             &num_contig, &actual_iov_bytes);
         MPIR_Assert(num_contig <= 1);
@@ -181,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
  * Note: _bytes is calculated based on _count & _type and passed in here for reusing. */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                        const void *origin,
-                                                       const MPI_Aint target,
+                                                       const size_t target,
                                                        size_t origin_count,
                                                        size_t target_count,
                                                        size_t origin_bytes,
@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
-    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(size_t));
     if (likely(buf_limit > MPIR_AINT_MAX))
         buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;
@@ -227,7 +227,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state(MPIDI_OFI_seg_state_t
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * seg_state,
                                                         const void *origin,
                                                         const void *result,
-                                                        const MPI_Aint target,
+                                                        const size_t target,
                                                         size_t origin_count,
                                                         size_t result_count,
                                                         size_t target_count,
@@ -242,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
      * So round down to the maximum of MPI_Aint if necessary.
      * For instance, as of libfabric 1.6.2, sockets provider has (SIZE_MAX-4K) as buf_limit. */
-    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(MPI_Aint));
+    MPL_COMPILE_TIME_ASSERT(sizeof(seg_state->buf_limit) == sizeof(size_t));
     if (likely(buf_limit > MPIR_AINT_MAX))
         buf_limit = MPIR_AINT_MAX;
     seg_state->buf_limit = buf_limit;

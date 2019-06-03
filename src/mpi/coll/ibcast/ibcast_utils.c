@@ -10,7 +10,7 @@
 int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint recv_size;
+    size_t recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
     MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
@@ -46,7 +46,7 @@ int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint recv_size;
+    size_t recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
     MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);

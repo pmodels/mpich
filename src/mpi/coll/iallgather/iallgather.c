@@ -156,7 +156,7 @@ int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dat
     comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
-    tot_bytes = (MPI_Aint) recvcount *comm_size * recvtype_size;
+    tot_bytes = (size_t) recvcount *comm_size * recvtype_size;
 
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
         mpi_errno =

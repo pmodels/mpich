@@ -30,7 +30,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, pof2, newrank, rem, newdst;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *tmp_buf;
 
     comm_size = comm_ptr->local_size;

@@ -17,7 +17,7 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
 static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
                                 MPI_Datatype origin_datatype, int target_rank,
-                                MPI_Aint target_disp, int target_count,
+                                size_t target_disp, int target_count,
                                 MPI_Datatype target_datatype, MPIR_Win * win,
                                 MPIR_Request ** sreq_ptr)
 {
@@ -26,7 +26,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
     size_t data_sz;
-    MPI_Aint num_iov;
+    size_t num_iov;
     struct iovec *dt_iov, am_iov[2];
     size_t am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -111,12 +111,12 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_Assert(dt_iov);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
                         &actual_iov_len, &actual_iov_bytes);
     n_iov = actual_iov_len;
 
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    MPIR_Assert(actual_iov_bytes == (size_t) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -177,7 +177,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 }
 
 static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-                                int target_rank, MPI_Aint target_disp, int target_count,
+                                int target_rank, size_t target_disp, int target_count,
                                 MPI_Datatype target_datatype, MPIR_Win * win,
                                 MPIR_Request ** sreq_ptr)
 {
@@ -186,7 +186,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
     size_t data_sz;
-    MPI_Aint num_iov;
+    size_t num_iov;
     struct iovec *dt_iov;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -274,12 +274,12 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_Assert(dt_iov);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
                         &actual_iov_len, &actual_iov_bytes);
     n_iov = actual_iov_len;
 
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    MPIR_Assert(actual_iov_bytes == (size_t) data_sz);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDIG_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
@@ -312,7 +312,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
                                                   MPI_Datatype origin_datatype, int target_rank,
-                                                  MPI_Aint target_disp, int target_count,
+                                                  size_t target_disp, int target_count,
                                                   MPI_Datatype target_datatype,
                                                   MPI_Op op, MPIR_Win * win,
                                                   MPIR_Request ** sreq_ptr)
@@ -322,7 +322,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
-    MPI_Aint num_iov;
+    size_t num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -419,12 +419,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIR_Assert(dt_iov);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
                         &actual_iov_len, &actual_iov_bytes);
     n_iov = actual_iov_len;
 
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    MPIR_Assert(actual_iov_bytes == (size_t) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -492,7 +492,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
                                                       int target_rank,
-                                                      MPI_Aint target_disp,
+                                                      size_t target_disp,
                                                       int target_count,
                                                       MPI_Datatype target_datatype,
                                                       MPI_Op op, MPIR_Win * win,
@@ -503,7 +503,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
-    MPI_Aint num_iov;
+    size_t num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -610,12 +610,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    size_t actual_iov_bytes;
     MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
                         &actual_iov_len, &actual_iov_bytes);
     n_iov = actual_iov_len;
 
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    MPIR_Assert(actual_iov_bytes == (size_t) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -678,7 +678,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_put(const void *origin_addr, int origin_count,
                                             MPI_Datatype origin_datatype, int target_rank,
-                                            MPI_Aint target_disp, int target_count,
+                                            size_t target_disp, int target_count,
                                             MPI_Datatype target_datatype, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -704,7 +704,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_put(const void *origin_addr, int origin_
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin_count,
                                              MPI_Datatype origin_datatype, int target_rank,
-                                             MPI_Aint target_disp, int target_count,
+                                             size_t target_disp, int target_count,
                                              MPI_Datatype target_datatype, MPIR_Win * win,
                                              MPIR_Request ** request)
 {
@@ -733,7 +733,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
                                             MPI_Datatype origin_datatype, int target_rank,
-                                            MPI_Aint target_disp, int target_count,
+                                            size_t target_disp, int target_count,
                                             MPI_Datatype target_datatype, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -759,7 +759,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count,
                                              MPI_Datatype origin_datatype, int target_rank,
-                                             MPI_Aint target_disp, int target_count,
+                                             size_t target_disp, int target_count,
                                              MPI_Datatype target_datatype, MPIR_Win * win,
                                              MPIR_Request ** request)
 {
@@ -788,7 +788,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int origin_count,
                                                     MPI_Datatype origin_datatype, int target_rank,
-                                                    MPI_Aint target_disp, int target_count,
+                                                    size_t target_disp, int target_count,
                                                     MPI_Datatype target_datatype, MPI_Op op,
                                                     MPIR_Win * win, MPIR_Request ** request)
 {
@@ -816,7 +816,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_accumulate(const void *origin_addr, int origin_count,
                                                    MPI_Datatype origin_datatype, int target_rank,
-                                                   MPI_Aint target_disp, int target_count,
+                                                   size_t target_disp, int target_count,
                                                    MPI_Datatype target_datatype, MPI_Op op,
                                                    MPIR_Win * win)
 {
@@ -847,7 +847,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget_accumulate(const void *origin_addr,
                                                         MPI_Datatype origin_datatype,
                                                         void *result_addr, int result_count,
                                                         MPI_Datatype result_datatype,
-                                                        int target_rank, MPI_Aint target_disp,
+                                                        int target_rank, size_t target_disp,
                                                         int target_count,
                                                         MPI_Datatype target_datatype, MPI_Op op,
                                                         MPIR_Win * win, MPIR_Request ** request)
@@ -880,7 +880,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
                                                        MPI_Datatype origin_datatype,
                                                        void *result_addr, int result_count,
                                                        MPI_Datatype result_datatype,
-                                                       int target_rank, MPI_Aint target_disp,
+                                                       int target_rank, size_t target_disp,
                                                        int target_count,
                                                        MPI_Datatype target_datatype,
                                                        MPI_Op op, MPIR_Win * win)
@@ -910,7 +910,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr,
                                                          const void *compare_addr,
                                                          void *result_addr, MPI_Datatype datatype,
-                                                         int target_rank, MPI_Aint target_disp,
+                                                         int target_rank, size_t target_disp,
                                                          MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -979,7 +979,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_fetch_and_op(const void *origin_addr, void *result_addr,
                                                      MPI_Datatype datatype, int target_rank,
-                                                     MPI_Aint target_disp, MPI_Op op,
+                                                     size_t target_disp, MPI_Op op,
                                                      MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;

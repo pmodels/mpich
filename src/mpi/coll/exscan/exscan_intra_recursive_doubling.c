@@ -57,7 +57,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, flag;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 

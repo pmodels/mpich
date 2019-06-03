@@ -27,7 +27,7 @@ int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_D
     int i, j;
     int rank, comm_size;
     int nbytes, recvtype_size;
-    MPI_Aint recvtype_extent;
+    size_t recvtype_extent;
     int peer;
     MPIR_SCHED_CHKPMEM_DECL(1);
 

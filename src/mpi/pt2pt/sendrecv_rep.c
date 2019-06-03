@@ -137,8 +137,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         MPIR_Request *sreq = NULL;
         MPIR_Request *rreq = NULL;
         void *tmpbuf = NULL;
-        MPI_Aint tmpbuf_size = 0;
-        MPI_Aint actual_pack_bytes = 0;
+        size_t tmpbuf_size = 0;
+        size_t actual_pack_bytes = 0;
 
         if (count > 0 && dest != MPI_PROC_NULL) {
             MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);

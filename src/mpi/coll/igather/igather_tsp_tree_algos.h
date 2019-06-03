@@ -26,8 +26,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
-    MPI_Aint sendtype_lb, sendtype_extent, sendtype_true_extent;
-    MPI_Aint recvtype_lb, recvtype_extent, recvtype_true_extent;
+    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
+    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id, *recv_id = NULL;
     void *tmp_buf = NULL;
     const void *data_buf = NULL;

@@ -8,16 +8,16 @@
 #include "mpiimpl.h"
 #include <dataloop.h>
 
-int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
-                      MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                      MPI_Aint * actual_pack_bytes)
+int MPIR_Typerep_pack(const void *inbuf, size_t incount, MPI_Datatype datatype,
+                      size_t inoffset, void *outbuf, size_t max_pack_bytes,
+                      size_t * actual_pack_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
     int contig;
-    MPI_Aint dt_true_lb;
-    MPI_Aint data_sz;
-    MPI_Aint last;
+    size_t dt_true_lb;
+    size_t data_sz;
+    size_t last;
 
     if (incount == 0) {
         *actual_pack_bytes = 0;
@@ -64,16 +64,16 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
     goto fn_exit;
 }
 
-int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
-                        void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
-                        MPI_Aint * actual_unpack_bytes)
+int MPIR_Typerep_unpack(const void *inbuf, size_t insize,
+                        void *outbuf, size_t outcount, MPI_Datatype datatype, size_t outoffset,
+                        size_t * actual_unpack_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
     int contig;
-    MPI_Aint last;
-    MPI_Aint data_sz;
-    MPI_Aint dt_true_lb;
+    size_t last;
+    size_t data_sz;
+    size_t dt_true_lb;
 
     if (insize == 0) {
         *actual_unpack_bytes = 0;

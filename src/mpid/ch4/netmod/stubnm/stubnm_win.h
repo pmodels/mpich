@@ -56,7 +56,7 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 
 static inline int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
                                                 int rank,
-                                                MPI_Aint * size, int *disp_unit, void *baseptr)
+                                                size_t * size, int *disp_unit, void *baseptr)
 {
     return MPIDIG_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
 }

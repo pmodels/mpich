@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Fetch_and_op as PMPI_Fetch_and_op
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Datatype datatype, int target_rank, size_t target_disp,
                      MPI_Op op, MPI_Win win)
     __attribute__ ((weak, alias("PMPI_Fetch_and_op")));
 #endif
@@ -75,7 +75,7 @@ datatype argument must be a predefined datatype.
 .seealso: MPI_Get_accumulate
 @*/
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Datatype datatype, int target_rank, size_t target_disp,
                      MPI_Op op, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;

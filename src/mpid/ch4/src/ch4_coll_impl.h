@@ -441,9 +441,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint true_lb = 0;
-    MPI_Aint true_extent = 0;
-    MPI_Aint extent = 0;
+    size_t true_lb = 0;
+    size_t true_extent = 0;
+    size_t extent = 0;
     const void *reduce_roots_container =
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
     const void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
@@ -535,9 +535,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint true_lb = 0;
-    MPI_Aint true_extent = 0;
-    MPI_Aint extent = 0;
+    size_t true_lb = 0;
+    size_t true_extent = 0;
+    size_t extent = 0;
     const void *reduce_roots_container =
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
     const void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
@@ -1371,9 +1371,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     void *tempbuf = NULL;
     void *localfulldata = NULL;
     void *prefulldata = NULL;
-    MPI_Aint true_lb = 0;
-    MPI_Aint true_extent = 0;
-    MPI_Aint extent = 0;
+    size_t true_lb = 0;
+    size_t true_extent = 0;
+    size_t extent = 0;
     int noneed = 1;             /* noneed=1 means no need to bcast tempbuf and
                                  * reduce tempbuf & recvbuf */
     MPIR_CHKLMEM_DECL(3);

@@ -8,7 +8,7 @@
 #include "mpidrma.h"
 
 
-int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
+int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, size_t * size,
                                    int *disp_unit, void *baseptr)
 {
     int comm_size;

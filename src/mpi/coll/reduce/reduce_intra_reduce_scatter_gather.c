@@ -48,7 +48,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     int mask, *cnts, *disps, i, j, send_idx = 0;
     int recv_idx, last_idx = 0, newdst;
     int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf;
 
     MPIR_CHKLMEM_DECL(4);

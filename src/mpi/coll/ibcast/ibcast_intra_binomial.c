@@ -20,7 +20,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
     int mask;
     int comm_size, rank;
     int is_contig;
-    MPI_Aint nbytes, type_size;
+    size_t nbytes, type_size;
     int relative_rank;
     int src, dst;
     struct MPII_Ibcast_state *ibcast_state;

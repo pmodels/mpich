@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
-                                                 MPI_Aint count,
+                                                 size_t count,
                                                  MPI_Datatype datatype,
                                                  int rank,
                                                  int tag,
@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
-                                       MPI_Aint count,
+                                       size_t count,
                                        MPI_Datatype datatype,
                                        int rank,
                                        int tag,
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
-                                        MPI_Aint count,
+                                        size_t count,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,
@@ -384,7 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
 
 
 MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
-                                        MPI_Aint count,
+                                        size_t count,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,
@@ -423,7 +423,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
-                                         MPI_Aint count,
+                                         size_t count,
                                          MPI_Datatype datatype,
                                          int rank,
                                          int tag,
@@ -463,7 +463,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
-                                        MPI_Aint count,
+                                        size_t count,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,
@@ -497,7 +497,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
-                                         MPI_Aint count,
+                                         size_t count,
                                          MPI_Datatype datatype,
                                          int rank,
                                          int tag,

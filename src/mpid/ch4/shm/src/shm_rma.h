@@ -12,7 +12,7 @@
 #include "../posix/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int rank,
-                                                            MPI_Aint * size, int *disp_unit,
+                                                            size_t * size, int *disp_unit,
                                                             void *baseptr)
 {
     int ret;
@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
-                                               MPI_Aint target_disp, int target_count,
+                                               size_t target_disp, int target_count,
                                                MPI_Datatype target_datatype, MPIR_Win * win)
 {
     int ret;
@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock(int rank, MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
-                                               MPI_Aint target_disp, int target_count,
+                                               size_t target_disp, int target_count,
                                                MPI_Datatype target_datatype, MPIR_Win * win)
 {
     int ret;
@@ -167,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert, MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, int origin_count,
                                                       MPI_Datatype origin_datatype, int target_rank,
-                                                      MPI_Aint target_disp, int target_count,
+                                                      size_t target_disp, int target_count,
                                                       MPI_Datatype target_datatype, MPI_Op op,
                                                       MPIR_Win * win)
 {
@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, i
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rput(const void *origin_addr, int origin_count,
                                                 MPI_Datatype origin_datatype, int target_rank,
-                                                MPI_Aint target_disp, int target_count,
+                                                size_t target_disp, int target_count,
                                                 MPI_Datatype target_datatype, MPIR_Win * win,
                                                 MPIR_Request ** request)
 {
@@ -219,7 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_a
                                                             const void *compare_addr,
                                                             void *result_addr,
                                                             MPI_Datatype datatype,
-                                                            int target_rank, MPI_Aint target_disp,
+                                                            int target_rank, size_t target_disp,
                                                             MPIR_Win * win)
 {
     int ret;
@@ -236,7 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_a
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_raccumulate(const void *origin_addr, int origin_count,
                                                        MPI_Datatype origin_datatype,
-                                                       int target_rank, MPI_Aint target_disp,
+                                                       int target_rank, size_t target_disp,
                                                        int target_count,
                                                        MPI_Datatype target_datatype, MPI_Op op,
                                                        MPIR_Win * win, MPIR_Request ** request)
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget_accumulate(const void *origin_ad
                                                            MPI_Datatype origin_datatype,
                                                            void *result_addr, int result_count,
                                                            MPI_Datatype result_datatype,
-                                                           int target_rank, MPI_Aint target_disp,
+                                                           int target_rank, size_t target_disp,
                                                            int target_count,
                                                            MPI_Datatype target_datatype, MPI_Op op,
                                                            MPIR_Win * win, MPIR_Request ** request)
@@ -280,7 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget_accumulate(const void *origin_ad
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_fetch_and_op(const void *origin_addr,
                                                         void *result_addr, MPI_Datatype datatype,
-                                                        int target_rank, MPI_Aint target_disp,
+                                                        int target_rank, size_t target_disp,
                                                         MPI_Op op, MPIR_Win * win)
 {
     int ret;
@@ -336,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock_all(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_count,
                                                 MPI_Datatype origin_datatype, int target_rank,
-                                                MPI_Aint target_disp, int target_count,
+                                                size_t target_disp, int target_count,
                                                 MPI_Datatype target_datatype, MPIR_Win * win,
                                                 MPIR_Request ** request)
 {
@@ -383,7 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
                                                           MPI_Datatype origin_datatype,
                                                           void *result_addr, int result_count,
                                                           MPI_Datatype result_datatype,
-                                                          int target_rank, MPI_Aint target_disp,
+                                                          int target_rank, size_t target_disp,
                                                           int target_count,
                                                           MPI_Datatype target_datatype, MPI_Op op,
                                                           MPIR_Win * win)

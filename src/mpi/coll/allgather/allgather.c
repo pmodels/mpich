@@ -109,7 +109,7 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint tot_bytes;
+    size_t tot_bytes;
     int type_size;
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
@@ -119,7 +119,7 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
 
     MPIR_Datatype_get_size_macro(recvtype, type_size);
 
-    tot_bytes = (MPI_Aint) recvcount *comm_size * type_size;
+    tot_bytes = (size_t) recvcount *comm_size * type_size;
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
         mpi_errno =
             MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,

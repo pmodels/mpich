@@ -57,17 +57,17 @@
 
 /* PtrToAint converts a pointer to an MPI_Aint type, truncating bits if necessary */
 #ifdef HAVE_PTRTOAINT
-#define MPIR_Ptr_to_aint(a) ((MPI_Aint)(INT_PTR) (a))
+#define MPIR_Ptr_to_aint(a) ((size_t)(INT_PTR) (a))
 #else
 /* An MPI_Aint may be *larger* than a pointer.  By using 2 casts, we can
    keep some compilers from complaining about converting a pointer to an
    integer of a different size */
-#define MPIR_Ptr_to_aint(a) ((MPI_Aint)(uintptr_t)(a))
+#define MPIR_Ptr_to_aint(a) ((size_t)(uintptr_t)(a))
 #endif
 
 /* AintToPtr converts an MPI_Aint to a pointer type, extending bits if necessary */
 #ifdef HAVE_AINTTOPTR
-#define MPIR_Aint_to_ptr(a) ((VOID *)(INT_PTR)((MPI_Aint)a))
+#define MPIR_Aint_to_ptr(a) ((VOID *)(INT_PTR)((size_t)a))
 #else
 #define MPIR_Aint_to_ptr(a) (void*)(a)
 #endif

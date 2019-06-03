@@ -29,13 +29,13 @@ Used indirectly by mpid_irecv, mpid_recv (through MPIDI_CH3_RecvFromSelf) and
  into a single file, and make MPIDI_CH3U_Buffer_copy static to this file. */
 
 void MPIDI_CH3U_Buffer_copy(
-    const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt, int * smpi_errno,
-    void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, intptr_t * rsz,
+    const void * const sbuf, size_t scount, MPI_Datatype sdt, int * smpi_errno,
+    void * const rbuf, size_t rcount, MPI_Datatype rdt, intptr_t * rsz,
     int * rmpi_errno)
 {
     int sdt_contig;
     int rdt_contig;
-    MPI_Aint sdt_true_lb, rdt_true_lb;
+    size_t sdt_true_lb, rdt_true_lb;
     intptr_t sdata_sz;
     intptr_t rdata_sz;
     MPIR_Datatype* sdt_ptr;
@@ -76,7 +76,7 @@ void MPIDI_CH3U_Buffer_copy(
     }
     else if (sdt_contig)
     {
-        MPI_Aint actual_unpack_bytes;
+        size_t actual_unpack_bytes;
         MPIR_Typerep_unpack((char*) sbuf + sdt_true_lb, sdata_sz, rbuf, rcount, rdt, 0, &actual_unpack_bytes);
         /* --BEGIN ERROR HANDLING-- */
         if (actual_unpack_bytes != sdata_sz)
@@ -88,7 +88,7 @@ void MPIDI_CH3U_Buffer_copy(
     }
     else if (rdt_contig)
     {
-	MPI_Aint actual_pack_bytes;
+	size_t actual_pack_bytes;
 	MPIR_Typerep_pack(sbuf, scount, sdt, 0, (char*)rbuf + rdt_true_lb, sdata_sz, &actual_pack_bytes);
 	/* --BEGIN ERROR HANDLING-- */
 	if (actual_pack_bytes != sdata_sz)
@@ -121,9 +121,9 @@ void MPIDI_CH3U_Buffer_copy(
 	
 	for(;;)
 	{
-	    MPI_Aint max_pack_bytes;
-	    MPI_Aint actual_pack_bytes;
-	    MPI_Aint actual_unpack_bytes;
+	    size_t max_pack_bytes;
+	    size_t actual_pack_bytes;
+	    size_t actual_unpack_bytes;
 
 	    /* rdata_sz is allowed to be larger than sdata_sz, so if
 	     * we copied everything from the source buffer to the
@@ -168,7 +168,7 @@ void MPIDI_CH3U_Buffer_copy(
  * This routine is called by mpid_recv and mpid_irecv when a request
  * matches a send-to-self message 
  */
-int MPIDI_CH3_RecvFromSelf( MPIR_Request *rreq, void *buf, MPI_Aint count,
+int MPIDI_CH3_RecvFromSelf( MPIR_Request *rreq, void *buf, size_t count,
 			    MPI_Datatype datatype )
 {
     MPIR_Request * const sreq = rreq->dev.partner_request;

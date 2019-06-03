@@ -35,14 +35,14 @@ cvars:
 */
 
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
-                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   origin_datatype, int target_rank, size_t target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPIR_Datatype*dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
@@ -208,14 +208,14 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 }
 
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
-                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   origin_datatype, int target_rank, size_t target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t orig_data_sz, target_data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
@@ -273,7 +273,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
-        MPI_Aint target_type_size;
+        size_t target_type_size;
         int use_immed_resp_pkt = FALSE;
         int is_origin_contig, is_target_contig;
 
@@ -374,14 +374,14 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
 
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                          origin_datatype, int target_rank, MPI_Aint target_disp,
+                          origin_datatype, int target_rank, size_t target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
                           MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
@@ -441,8 +441,8 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
-        MPI_Aint stream_elem_count, stream_unit_count;
-        MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
+        size_t stream_elem_count, stream_unit_count;
+        size_t predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
         MPIR_Datatype*origin_dtp = NULL, *target_dtp = NULL;
         int i;
 
@@ -582,7 +582,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
 int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                              MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                              MPI_Datatype result_datatype, int target_rank, size_t target_disp,
                               int target_count, MPI_Datatype target_datatype, MPI_Op op,
                               MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
@@ -590,7 +590,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     intptr_t orig_data_sz, target_data_sz;
     int rank;
     int dt_contig ATTRIBUTE((unused));
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
@@ -650,12 +650,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt;
-        MPI_Aint origin_type_size;
-        MPI_Aint target_type_size;
+        size_t origin_type_size;
+        size_t target_type_size;
         int use_immed_pkt = FALSE, i;
         int is_origin_contig, is_target_contig, is_result_contig;
-        MPI_Aint stream_elem_count, stream_unit_count;
-        MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
+        size_t stream_elem_count, stream_unit_count;
+        size_t predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
         MPIR_Datatype*origin_dtp = NULL, *target_dtp = NULL, *result_dtp = NULL;
         int is_empty_origin = FALSE;
 
@@ -829,7 +829,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
 
 int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
-             origin_datatype, int target_rank, MPI_Aint target_disp,
+             origin_datatype, int target_rank, size_t target_disp,
              int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -852,7 +852,7 @@ int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
 }
 
 int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
-             origin_datatype, int target_rank, MPI_Aint target_disp,
+             origin_datatype, int target_rank, size_t target_disp,
              int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -875,7 +875,7 @@ int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
 }
 
 int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                    origin_datatype, int target_rank, MPI_Aint target_disp,
+                    origin_datatype, int target_rank, size_t target_disp,
                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -899,7 +899,7 @@ int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
 int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                        MPI_Datatype result_datatype, int target_rank, size_t target_disp,
                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
                         MPIR_Win * win_ptr)
 {
@@ -926,7 +926,7 @@ int MPID_Get_accumulate(const void *origin_addr, int origin_count,
 
 int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPIR_Win * win_ptr)
+                          size_t target_disp, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -977,7 +977,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
-        MPI_Aint type_size;
+        size_t type_size;
         void *src = NULL, *dest = NULL;
 
         /* Append this operation to the RMA ops queue */
@@ -1056,7 +1056,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
 int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank,
-                      MPI_Aint target_disp, MPI_Op op, MPIR_Win * win_ptr)
+                      size_t target_disp, MPI_Op op, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -1106,7 +1106,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_fop_t *fop_pkt;
-        MPI_Aint type_size;
+        size_t type_size;
         int use_immed_pkt = FALSE;
         int is_contig;
 

@@ -61,7 +61,7 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
+                           const size_t rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
     __attribute__ ((weak, alias("PMPI_Neighbor_alltoallw")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -75,9 +75,9 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 /* any non-MPI functions go here, especially non-static ones */
 
 int MPIR_Neighbor_alltoallw_intra_auto(const void *sendbuf, const int sendcounts[],
-                                       const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                       const size_t sdispls[], const MPI_Datatype sendtypes[],
                                        void *recvbuf, const int recvcounts[],
-                                       const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                       const size_t rdispls[], const MPI_Datatype recvtypes[],
                                        MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -96,9 +96,9 @@ int MPIR_Neighbor_alltoallw_intra_auto(const void *sendbuf, const int sendcounts
 }
 
 int MPIR_Neighbor_alltoallw_inter_auto(const void *sendbuf, const int sendcounts[],
-                                       const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                       const size_t sdispls[], const MPI_Datatype sendtypes[],
                                        void *recvbuf, const int recvcounts[],
-                                       const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                       const size_t rdispls[], const MPI_Datatype recvtypes[],
                                        MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -117,10 +117,10 @@ int MPIR_Neighbor_alltoallw_inter_auto(const void *sendbuf, const int sendcounts
 }
 
 int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
-                                 const MPI_Aint sdispls[],
+                                 const size_t sdispls[],
                                  const MPI_Datatype sendtypes[], void *recvbuf,
                                  const int recvcounts[],
-                                 const MPI_Aint rdispls[],
+                                 const size_t rdispls[],
                                  const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -170,9 +170,9 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
 }
 
 int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                            const MPI_Aint sdispls[],
+                            const size_t sdispls[],
                             const MPI_Datatype sendtypes[], void *recvbuf,
-                            const int recvcounts[], const MPI_Aint rdispls[],
+                            const int recvcounts[], const size_t rdispls[],
                             const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -217,7 +217,7 @@ Output Parameters:
 @*/
 int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
+                           const size_t rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -23,7 +23,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_noncommutative(const void *sendbuf, v
     int i, k;
     int recv_offset, send_offset;
     int block_size, total_count, size;
-    MPI_Aint true_extent, true_lb;
+    size_t true_extent, true_lb;
     int buf0_was_inout;
     void *tmp_buf0;
     void *tmp_buf1;

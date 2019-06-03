@@ -454,9 +454,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
 
 struct MPIDI_OFI_contig_blocks_params {
     size_t max_pipe;
-    MPI_Aint count;
-    MPI_Aint last_loc;
-    MPI_Aint start_loc;
+    size_t count;
+    size_t last_loc;
+    size_t start_loc;
     size_t last_chunk;
 };
 
@@ -465,7 +465,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
                                                     size_t max_pipe)
 {
     ssize_t rem_size = total_bytes;
-    MPI_Aint num_iov, total_iov = 0;
+    size_t num_iov, total_iov = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);

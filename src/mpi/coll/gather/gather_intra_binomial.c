@@ -48,16 +48,16 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     int mpi_errno_ret = MPI_SUCCESS;
     int relative_rank;
     int mask, src, dst, relative_src;
-    MPI_Aint curr_cnt = 0, nbytes, sendtype_size, recvtype_size;
+    size_t curr_cnt = 0, nbytes, sendtype_size, recvtype_size;
     int recvblks;
     int missing;
-    MPI_Aint tmp_buf_size;
+    size_t tmp_buf_size;
     void *tmp_buf = NULL;
     MPI_Status status;
     MPI_Aint extent = 0;        /* Datatype extent */
     int blocks[2];
     int displs[2];
-    MPI_Aint struct_displs[2];
+    size_t struct_displs[2];
     MPI_Datatype types[2], tmp_type;
     int copy_offset = 0, copy_blks = 0;
     MPIR_CHKLMEM_DECL(1);
@@ -149,8 +149,8 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                          * rank 0. */
                         mpi_errno = MPIC_Recv(((char *) recvbuf +
                                                (((rank +
-                                                  mask) % comm_size) * (MPI_Aint) recvcount *
-                                                extent)), (MPI_Aint) recvblks * recvcount,
+                                                  mask) % comm_size) * (size_t) recvcount *
+                                                extent)), (size_t) recvblks * recvcount,
                                               recvtype, src, MPIR_GATHER_TAG, comm_ptr, &status,
                                               errflag);
                         if (mpi_errno) {
@@ -209,7 +209,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                     }
                 } else {        /* Intermediate nodes store in temporary buffer */
 
-                    MPI_Aint offset;
+                    size_t offset;
 
                     /* Estimate the amount of data that is going to come in */
                     recvblks = mask;
@@ -264,7 +264,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                 }
             } else {
                 blocks[0] = sendcount;
-                struct_displs[0] = (MPI_Aint) sendbuf;
+                struct_displs[0] = (size_t) sendbuf;
                 types[0] = sendtype;
                 /* check for overflow.  work around int limits if needed */
                 if (curr_cnt - nbytes != (int) (curr_cnt - nbytes)) {
@@ -274,7 +274,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                     MPIR_Assign_trunc(blocks[1], curr_cnt - nbytes, int);
                     types[1] = MPI_BYTE;
                 }
-                struct_displs[1] = (MPI_Aint) tmp_buf;
+                struct_displs[1] = (size_t) tmp_buf;
                 mpi_errno =
                     MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
                 if (mpi_errno)

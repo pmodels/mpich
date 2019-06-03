@@ -44,7 +44,7 @@ static int MPII_Type_create_resized_memory_error(void)
 /* --END ERROR HANDLING-- */
 
 int MPIR_Type_create_resized(MPI_Datatype oldtype,
-                             MPI_Aint lb, MPI_Aint extent, MPI_Datatype * newtype_p)
+                             size_t lb, size_t extent, MPI_Datatype * newtype_p)
 {
     MPIR_Datatype *new_dtp;
 
@@ -135,12 +135,12 @@ Output Parameters:
 .N MPI_ERR_TYPE
 @*/
 int MPI_Type_create_resized(MPI_Datatype oldtype,
-                            MPI_Aint lb, MPI_Aint extent, MPI_Datatype * newtype)
+                            size_t lb, size_t extent, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle = MPI_DATATYPE_NULL;
     MPIR_Datatype *new_dtp;
-    MPI_Aint aints[2];
+    size_t aints[2];
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -15,7 +15,7 @@ int MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(const void *sendbuf, vo
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, newrank, pof2, rem;
     int i, send_idx, recv_idx, last_idx, mask, newdst, dst, send_cnt, recv_cnt;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf = NULL;
     int *cnts, *disps;
     MPIR_SCHED_CHKPMEM_DECL(1);

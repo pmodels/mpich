@@ -281,7 +281,7 @@ typedef struct MPIDIG_win_info_args_t {
                                          * any_op and none are two special values.
                                          * any_op by default. */
     bool accumulate_noncontig_dtype;    /* true by default. */
-    MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
+    size_t accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
 

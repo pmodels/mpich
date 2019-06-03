@@ -24,11 +24,11 @@
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
+int MPII_Dataloop_create_contiguous(size_t icount, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
-    MPI_Aint count;
+    size_t count;
     int is_builtin, apply_contig_coalescing = 0;
-    MPI_Aint new_loop_sz;
+    size_t new_loop_sz;
 
     MPII_Dataloop *new_dlp;
 
@@ -37,7 +37,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
     is_builtin = (MPII_DATALOOP_HANDLE_HASLOOP(oldtype)) ? 0 : 1;
 
     if (!is_builtin) {
-        MPI_Aint old_size = 0, old_extent = 0;
+        size_t old_size = 0, old_extent = 0;
         MPII_Dataloop *old_loop_ptr;
 
         MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
@@ -53,7 +53,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
     }
 
     if (is_builtin) {
-        MPI_Aint basic_sz = 0;
+        size_t basic_sz = 0;
 
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_CONTIG, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */

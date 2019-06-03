@@ -53,7 +53,7 @@ struct MPIR_Comm;
    request is not currently available */
 typedef struct MPII_Bsend_msg {
     void *msgbuf;
-    MPI_Aint count;
+    size_t count;
     MPI_Datatype dtype;
     int tag;
     struct MPIR_Comm *comm_ptr;

@@ -23,7 +23,7 @@ int MPIR_Gather_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype se
     int mpi_errno_ret = MPI_SUCCESS;
     int i;
     MPI_Status status;
-    MPI_Aint extent;
+    size_t extent;
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */

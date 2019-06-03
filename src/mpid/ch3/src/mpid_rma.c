@@ -50,11 +50,11 @@ int MPIDI_CH3I_RMA_Active_req_cnt = 0;
 /* This variable stores the index of RMA progress hook in progress hook array */
 int MPIDI_CH3I_RMA_Progress_hook_id = 0;
 
-static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPIR_Info * info,
+static int win_init(size_t size, int disp_unit, int create_flavor, int model, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 
-int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPID_Win_create(void *base, size_t size, int disp_unit, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
 }
 
 
-int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPID_Win_allocate(size_t size, int disp_unit, MPIR_Info * info,
                       MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -169,7 +169,7 @@ int MPID_Free_mem(void *ptr)
 }
 
 
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm_ptr,
+int MPID_Win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm_ptr,
                              void *base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -193,7 +193,7 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info, MPI
     return mpi_errno;
 }
 
-int MPID_Win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
+int MPID_Win_shared_query(MPIR_Win * win, int rank, size_t * size, int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -213,7 +213,7 @@ int MPID_Win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size, int *disp_u
     goto fn_exit;
 }
 
-static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPIR_Info * info,
+static int win_init(size_t size, int disp_unit, int create_flavor, int model, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

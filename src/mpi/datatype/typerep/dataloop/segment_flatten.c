@@ -17,33 +17,33 @@
 
 struct flatten_params {
     int index;
-    MPI_Aint length;
-    MPI_Aint last_end;
-    MPI_Aint *blklens;
-    MPI_Aint *disps;
+    size_t length;
+    size_t last_end;
+    size_t *blklens;
+    size_t *disps;
 };
 
-static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
+static int leaf_contig_mpi_flatten(size_t * blocks_p,
                                    MPI_Datatype el_type,
-                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p,
-                                   MPI_Aint count,
-                                   MPI_Aint blksz,
-                                   MPI_Aint stride,
+                                   size_t rel_off, void *bufp, void *v_paramp);
+static int leaf_vector_mpi_flatten(size_t * blocks_p,
+                                   size_t count,
+                                   size_t blksz,
+                                   size_t stride,
                                    MPI_Datatype el_type,
-                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
-                                   MPI_Aint count,
-                                   MPI_Aint blksz,
-                                   MPI_Aint * offsetarray,
+                                   size_t rel_off, void *bufp, void *v_paramp);
+static int leaf_blkidx_mpi_flatten(size_t * blocks_p,
+                                   size_t count,
+                                   size_t blksz,
+                                   size_t * offsetarray,
                                    MPI_Datatype el_type,
-                                   MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
-                                  MPI_Aint count,
-                                  MPI_Aint * blockarray,
-                                  MPI_Aint * offsetarray,
+                                   size_t rel_off, void *bufp, void *v_paramp);
+static int leaf_index_mpi_flatten(size_t * blocks_p,
+                                  size_t count,
+                                  size_t * blockarray,
+                                  size_t * offsetarray,
                                   MPI_Datatype el_type,
-                                  MPI_Aint rel_off, void *bufp, void *v_paramp);
+                                  size_t rel_off, void *bufp, void *v_paramp);
 
 /* MPII_Dataloop_segment_flatten - flatten a type into a representation
  *                            appropriate for passing to hindexed create.
@@ -64,9 +64,9 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
  *           the amount of the array that has actual data)
  */
 void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
-                                   MPI_Aint first,
-                                   MPI_Aint * lastp,
-                                   MPI_Aint * blklens, MPI_Aint * disps, MPI_Aint * lengthp)
+                                   size_t first,
+                                   size_t * lastp,
+                                   size_t * blklens, size_t * disps, size_t * lengthp)
 {
     struct flatten_params params;
 
@@ -94,13 +94,13 @@ void MPII_Dataloop_segment_flatten(MPIR_Segment * segp,
 /* leaf_contig_mpi_flatten
  *
  */
-static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
+static int leaf_contig_mpi_flatten(size_t * blocks_p,
                                    MPI_Datatype el_type,
-                                   MPI_Aint rel_off, void *bufp, void *v_paramp)
+                                   size_t rel_off, void *bufp, void *v_paramp)
 {
     int last_idx;
-    MPI_Aint size;
-    MPI_Aint el_size;
+    size_t size;
+    size_t el_size;
     char *last_end = NULL;
     struct flatten_params *paramp = v_paramp;
 
@@ -110,7 +110,7 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
     last_idx = paramp->index - 1;
     if (last_idx >= 0) {
         last_end = (char *)
-            (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
+            (paramp->disps[last_idx] + ((size_t) paramp->blklens[last_idx]));
     }
 
     if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
@@ -124,7 +124,7 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
         /* add this size to the last vector rather than using up another one */
         paramp->blklens[last_idx] += size;
     } else {
-        paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off;
+        paramp->disps[last_idx + 1] = (size_t) bufp + rel_off;
         paramp->blklens[last_idx + 1] = size;
         paramp->index++;
     }
@@ -152,8 +152,8 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
                                    void *v_paramp)
 {
     int i;
-    MPI_Aint size, blocks_left;
-    MPI_Aint el_size;
+    size_t size, blocks_left;
+    size_t el_size;
     struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
@@ -177,7 +177,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
             last_end = (char *)
-                (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
+                (paramp->disps[last_idx] + (size_t) (paramp->blklens[last_idx]));
         }
 
         if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
@@ -197,7 +197,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off;
+            paramp->disps[last_idx + 1] = (size_t) bufp + rel_off;
             paramp->blklens[last_idx + 1] = size;
             paramp->index++;
         }
@@ -220,16 +220,16 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
     return 0;
 }
 
-static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
-                                   MPI_Aint count,
-                                   MPI_Aint blksz,
-                                   MPI_Aint * offsetarray,
+static int leaf_blkidx_mpi_flatten(size_t * blocks_p,
+                                   size_t count,
+                                   size_t blksz,
+                                   size_t * offsetarray,
                                    MPI_Datatype el_type,
-                                   MPI_Aint rel_off, void *bufp, void *v_paramp)
+                                   size_t rel_off, void *bufp, void *v_paramp)
 {
     int i;
-    MPI_Aint blocks_left, size;
-    MPI_Aint el_size;
+    size_t blocks_left, size;
+    size_t el_size;
     struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
@@ -253,7 +253,7 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
             last_end = (char *)
-                (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
+                (paramp->disps[last_idx] + ((size_t) paramp->blklens[last_idx]));
         }
 
         if ((last_idx == paramp->length - 1) &&
@@ -267,7 +267,7 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off + offsetarray[i];
+            paramp->disps[last_idx + 1] = (size_t) bufp + rel_off + offsetarray[i];
             paramp->blklens[last_idx + 1] = size;
             paramp->index++;
         }
@@ -280,16 +280,16 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
     return 0;
 }
 
-static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
-                                  MPI_Aint count,
-                                  MPI_Aint * blockarray,
-                                  MPI_Aint * offsetarray,
+static int leaf_index_mpi_flatten(size_t * blocks_p,
+                                  size_t count,
+                                  size_t * blockarray,
+                                  size_t * offsetarray,
                                   MPI_Datatype el_type,
-                                  MPI_Aint rel_off, void *bufp, void *v_paramp)
+                                  size_t rel_off, void *bufp, void *v_paramp)
 {
     int i;
-    MPI_Aint size, blocks_left;
-    MPI_Aint el_size;
+    size_t size, blocks_left;
+    size_t el_size;
     struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
@@ -313,7 +313,7 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
             last_end = (char *)
-                (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
+                (paramp->disps[last_idx] + (size_t) (paramp->blklens[last_idx]));
         }
 
         if ((last_idx == paramp->length - 1) &&
@@ -327,7 +327,7 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
-            paramp->disps[last_idx + 1] = (MPI_Aint) bufp + rel_off + offsetarray[i];
+            paramp->disps[last_idx + 1] = (size_t) bufp + rel_off + offsetarray[i];
             paramp->blklens[last_idx + 1] = size;       /* these blocks are in bytes */
             paramp->index++;
         }

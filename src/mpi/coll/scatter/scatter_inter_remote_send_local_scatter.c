@@ -51,7 +51,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
     } else {
         /* remote group. rank 0 receives data from root. need to
          * allocate temporary buffer to store this data. */
-        MPI_Aint recvtype_sz;
+        size_t recvtype_sz;
         void *tmp_buf = NULL;
 
         rank = comm_ptr->rank;

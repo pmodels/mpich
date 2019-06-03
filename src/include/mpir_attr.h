@@ -42,8 +42,8 @@ typedef struct copy_function {
     int (*C_CopyFunction) (int, int, void *, void *, void *, int *);
     void (*F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
                               MPI_Fint *, MPI_Fint *, MPI_Fint *);
-    void (*F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
-                              MPI_Aint *, MPI_Fint *, MPI_Fint *);
+    void (*F90_CopyFunction) (MPI_Fint *, MPI_Fint *, size_t *, size_t *,
+                              size_t *, MPI_Fint *, MPI_Fint *);
     /* The generic lang-independent user_function and proxy will
      * replace the lang dependent copy funcs above
      * Currently the lang-indpendent funcs are used only for keyvals
@@ -80,7 +80,7 @@ MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
 typedef struct delete_function {
     int (*C_DeleteFunction) (int, int, void *, void *);
     void (*F77_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *);
-    void (*F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
+    void (*F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, size_t *, size_t *, MPI_Fint *);
     /* The generic lang-independent user_function and proxy will
      * replace the lang dependent copy funcs above
      * Currently the lang-indpendent funcs are used only for keyvals
@@ -126,7 +126,7 @@ typedef struct MPII_Keyval {
    to work with the datatype code used in the I/O library.  While this
    is really a limitation in the current Datatype implementation. */
 #ifdef USE_AINT_FOR_ATTRVAL
-typedef MPI_Aint MPII_Attr_val_t;
+typedef size_t MPII_Attr_val_t;
 #else
 typedef void *MPII_Attr_val_t;
 #endif

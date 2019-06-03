@@ -373,7 +373,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
-                                   MPI_Aint target_disp,
+                                   size_t target_disp,
                                    int target_count,
                                    MPI_Datatype target_datatype,
                                    MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
@@ -390,7 +390,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     MPIDI_OFI_seg_state_t p;
     int target_contig, origin_contig;
     size_t target_bytes, origin_bytes;
-    MPI_Aint origin_true_lb, target_true_lb;
+    size_t origin_true_lb, target_true_lb;
     struct iovec iov;
     struct fi_rma_iov riov;
 
@@ -528,7 +528,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
-                                   MPI_Aint target_disp,
+                                   size_t target_disp,
                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win,
                                    MPIDI_av_entry_t * av)
 {
@@ -557,7 +557,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
-                                   MPI_Aint target_disp,
+                                   size_t target_disp,
                                    int target_count,
                                    MPI_Datatype target_datatype,
                                    MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
@@ -573,7 +573,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     unsigned i;
     MPIDI_OFI_seg_state_t p;
     int origin_contig, target_contig;
-    MPI_Aint origin_true_lb, target_true_lb;
+    size_t origin_true_lb, target_true_lb;
     size_t origin_bytes, target_bytes;
     struct fi_rma_iov riov;
     struct iovec iov;
@@ -700,7 +700,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    int origin_count,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
-                                   MPI_Aint target_disp,
+                                   size_t target_disp,
                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win,
                                    MPIDI_av_entry_t * av)
 {
@@ -730,7 +730,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     int origin_count,
                                     MPI_Datatype origin_datatype,
                                     int target_rank,
-                                    MPI_Aint target_disp,
+                                    size_t target_disp,
                                     int target_count,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win, MPIDI_av_entry_t * av, MPIR_Request ** request)
@@ -761,14 +761,14 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                 const void *compare_addr,
                                                 void *result_addr,
                                                 MPI_Datatype datatype,
-                                                int target_rank, MPI_Aint target_disp,
+                                                int target_rank, size_t target_disp,
                                                 MPIR_Win * win, MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
     size_t offset, max_count, max_size, dt_size, bytes;
-    MPI_Aint true_lb;
+    size_t true_lb;
     void *buffer, *tbuffer, *rbuffer;
     struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
     struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
@@ -869,7 +869,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                           int origin_count,
                                           MPI_Datatype origin_datatype,
                                           int target_rank,
-                                          MPI_Aint target_disp,
+                                          size_t target_disp,
                                           int target_count,
                                           MPI_Datatype target_datatype,
                                           MPI_Op op, MPIR_Win * win,
@@ -1009,7 +1009,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                               int result_count,
                                               MPI_Datatype result_datatype,
                                               int target_rank,
-                                              MPI_Aint target_disp,
+                                              size_t target_disp,
                                               int target_count,
                                               MPI_Datatype target_datatype,
                                               MPI_Op op, MPIR_Win * win,
@@ -1200,7 +1200,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                            int origin_count,
                                            MPI_Datatype origin_datatype,
                                            int target_rank,
-                                           MPI_Aint target_disp,
+                                           size_t target_disp,
                                            int target_count,
                                            MPI_Datatype target_datatype,
                                            MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t * av,
@@ -1245,7 +1245,7 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                int result_count,
                                                MPI_Datatype result_datatype,
                                                int target_rank,
-                                               MPI_Aint target_disp,
+                                               size_t target_disp,
                                                int target_count,
                                                MPI_Datatype target_datatype,
                                                MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t * av,
@@ -1286,14 +1286,14 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             void *result_addr,
                                             MPI_Datatype datatype,
                                             int target_rank,
-                                            MPI_Aint target_disp, MPI_Op op, MPIR_Win * win,
+                                            size_t target_disp, MPI_Op op, MPIR_Win * win,
                                             MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
     size_t offset, max_count, max_size, dt_size, bytes;
-    MPI_Aint true_lb ATTRIBUTE((unused));
+    size_t true_lb ATTRIBUTE((unused));
     void *buffer, *tbuffer, *rbuffer;
     struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
     struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
@@ -1400,7 +1400,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     int origin_count,
                                     MPI_Datatype origin_datatype,
                                     int target_rank,
-                                    MPI_Aint target_disp,
+                                    size_t target_disp,
                                     int target_count,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win, MPIDI_av_entry_t * av, MPIR_Request ** request)
@@ -1434,7 +1434,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               int result_count,
                                               MPI_Datatype result_datatype,
                                               int target_rank,
-                                              MPI_Aint target_disp,
+                                              size_t target_disp,
                                               int target_count,
                                               MPI_Datatype target_datatype, MPI_Op op,
                                               MPIR_Win * win, MPIDI_av_entry_t * av)
@@ -1474,7 +1474,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                           int origin_count,
                                           MPI_Datatype origin_datatype,
                                           int target_rank,
-                                          MPI_Aint target_disp,
+                                          size_t target_disp,
                                           int target_count,
                                           MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win,
                                           MPIDI_av_entry_t * av)

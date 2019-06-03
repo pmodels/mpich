@@ -120,7 +120,7 @@ int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Req
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     MPIR_Datatype* dt_ptr;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_INITIATE_LMT);
@@ -459,10 +459,10 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         else
             copy_limit = MPID_NEM_COPY_BUF_LEN;
 
-        MPI_Aint max_pack_bytes;
+        size_t max_pack_bytes;
         max_pack_bytes = (data_sz - first <= copy_limit) ? data_sz - first : copy_limit;
 
-        MPI_Aint actual_pack_bytes;
+        size_t actual_pack_bytes;
         MPIR_Typerep_pack(req->dev.user_buf, req->dev.user_count, req->dev.datatype, first,
                        (void *)copy_buf->buf[buf_num], max_pack_bytes, &actual_pack_bytes);
 
@@ -553,7 +553,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         src_buf = ((char *)copy_buf->buf[buf_num]) - surfeit; /* cast away volatile */
         last = expected_last = (data_sz - first <= surfeit + len) ? data_sz : first + surfeit + len;
 
-        MPI_Aint actual_unpack_bytes;
+        size_t actual_unpack_bytes;
         MPIR_Typerep_unpack(src_buf, last - first,
                          req->dev.user_buf, req->dev.user_count, req->dev.datatype,
                          first, &actual_unpack_bytes);

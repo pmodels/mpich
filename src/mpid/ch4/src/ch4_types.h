@@ -162,7 +162,7 @@ typedef struct MPIDIG_put_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t preq_ptr;
-    MPI_Aint target_disp;
+    size_t target_disp;
     uint64_t count;
     MPI_Datatype datatype;
     int n_iov;
@@ -190,7 +190,7 @@ typedef struct MPIDIG_get_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t greq_ptr;
-    MPI_Aint target_disp;
+    size_t target_disp;
     uint64_t count;
     MPI_Datatype datatype;
     int n_iov;
@@ -204,7 +204,7 @@ typedef struct MPIDIG_cswap_req_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t req_ptr;
-    MPI_Aint target_disp;
+    size_t target_disp;
     MPI_Datatype datatype;
 } MPIDIG_cswap_req_msg_t;
 
@@ -221,7 +221,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     int target_count;
     MPI_Datatype target_datatype;
     MPI_Op op;
-    MPI_Aint target_disp;
+    size_t target_disp;
     uint64_t result_data_sz;
     int n_iov;
 } MPIDIG_acc_req_msg_t;

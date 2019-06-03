@@ -12,7 +12,7 @@ int MPIR_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, j, i;
-    MPI_Aint recvtype_extent, recvtype_sz;
+    size_t recvtype_extent, recvtype_sz;
     int send_cnt, dst, total_count, pof2, src, rem;
     int incoming_count, curr_count;
     void *tmp_buf;

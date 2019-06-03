@@ -11,11 +11,11 @@
 #include "dataloop_internal.h"
 
 static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims,
-                           int nprocs, int rank, int darg, int order, MPI_Aint orig_extent,
-                           MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
+                           int nprocs, int rank, int darg, int order, size_t orig_extent,
+                           MPI_Datatype type_old, MPI_Datatype * type_new, size_t * st_offset);
 static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                            int rank, int darg, int order, MPI_Aint orig_extent,
-                            MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
+                            int rank, int darg, int order, size_t orig_extent,
+                            MPI_Datatype type_old, MPI_Datatype * type_new, size_t * st_offset);
 
 
 int MPII_Dataloop_convert_darray(int size,
@@ -30,7 +30,7 @@ int MPII_Dataloop_convert_darray(int size,
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype type_old, type_new = MPI_DATATYPE_NULL, types[3];
     int procs, tmp_rank, i, tmp_size, blklens[3], *coords;
-    MPI_Aint *st_offsets, orig_extent, disps[3];
+    size_t *st_offsets, orig_extent, disps[3];
 
     MPIR_Datatype_get_extent_macro(oldtype, orig_extent);
 
@@ -45,7 +45,7 @@ int MPII_Dataloop_convert_darray(int size,
         tmp_rank = tmp_rank % procs;
     }
 
-    st_offsets = (MPI_Aint *) MPL_malloc(ndims * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    st_offsets = (size_t *) MPL_malloc(ndims * sizeof(size_t), MPL_MEM_DATATYPE);
     type_old = oldtype;
 
     if (order == MPI_ORDER_FORTRAN) {
@@ -88,7 +88,7 @@ int MPII_Dataloop_convert_darray(int size,
         tmp_size = 1;
         for (i = 1; i < ndims; i++) {
             tmp_size *= array_of_gsizes[i - 1];
-            disps[1] += ((MPI_Aint) tmp_size) * st_offsets[i];
+            disps[1] += ((size_t) tmp_size) * st_offsets[i];
         }
         /* rest done below for both Fortran and C order */
     }
@@ -132,7 +132,7 @@ int MPII_Dataloop_convert_darray(int size,
         tmp_size = 1;
         for (i = ndims - 2; i >= 0; i--) {
             tmp_size *= array_of_gsizes[i + 1];
-            disps[1] += ((MPI_Aint) tmp_size) * st_offsets[i];
+            disps[1] += ((size_t) tmp_size) * st_offsets[i];
         }
     }
 
@@ -140,7 +140,7 @@ int MPII_Dataloop_convert_darray(int size,
 
     disps[2] = orig_extent;
     for (i = 0; i < ndims; i++)
-        disps[2] *= (MPI_Aint) (array_of_gsizes[i]);
+        disps[2] *= (size_t) (array_of_gsizes[i]);
 
     disps[0] = 0;
     blklens[0] = blklens[1] = blklens[2] = 1;
@@ -169,14 +169,14 @@ int MPII_Dataloop_convert_darray(int size,
  * needs to call MPIO_Err_return_xxx.
  */
 static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                           int rank, int darg, int order, MPI_Aint orig_extent,
-                           MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
+                           int rank, int darg, int order, size_t orig_extent,
+                           MPI_Datatype type_old, MPI_Datatype * type_new, size_t * st_offset)
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
     int mpi_errno = MPI_SUCCESS;
     int blksize, global_size, mysize, i, j;
-    MPI_Aint stride;
+    size_t stride;
 
     global_size = array_of_gsizes[dim];
 
@@ -203,7 +203,7 @@ static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
                 MPIR_ERR_POP(mpi_errno);
         } else {
             for (i = 0; i < dim; i++)
-                stride *= (MPI_Aint) (array_of_gsizes[i]);
+                stride *= (size_t) (array_of_gsizes[i]);
             mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -215,7 +215,7 @@ static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
                 MPIR_ERR_POP(mpi_errno);
         } else {
             for (i = ndims - 1; i > dim; i--)
-                stride *= (MPI_Aint) (array_of_gsizes[i]);
+                stride *= (size_t) (array_of_gsizes[i]);
             mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -238,14 +238,14 @@ static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
  * needs to call MPIO_Err_return_xxx.
  */
 static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                            int rank, int darg, int order, MPI_Aint orig_extent,
-                            MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
+                            int rank, int darg, int order, size_t orig_extent,
+                            MPI_Datatype type_old, MPI_Datatype * type_new, size_t * st_offset)
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
     int mpi_errno = MPI_SUCCESS;
     int blksize, i, blklens[3], st_index, end_index, local_size, rem, count;
-    MPI_Aint stride, disps[3];
+    size_t stride, disps[3];
     MPI_Datatype type_tmp, types[3];
 
     if (darg == MPI_DISTRIBUTE_DFLT_DARG)
@@ -269,13 +269,13 @@ static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs
     count = local_size / blksize;
     rem = local_size % blksize;
 
-    stride = ((MPI_Aint) nprocs) * ((MPI_Aint) blksize) * orig_extent;
+    stride = ((size_t) nprocs) * ((size_t) blksize) * orig_extent;
     if (order == MPI_ORDER_FORTRAN)
         for (i = 0; i < dim; i++)
-            stride *= (MPI_Aint) (array_of_gsizes[i]);
+            stride *= (size_t) (array_of_gsizes[i]);
     else
         for (i = ndims - 1; i > dim; i--)
-            stride *= (MPI_Aint) (array_of_gsizes[i]);
+            stride *= (size_t) (array_of_gsizes[i]);
 
     mpi_errno = MPIR_Type_hvector_impl(count, blksize, stride, type_old, type_new);
     if (mpi_errno)
@@ -288,7 +288,7 @@ static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs
         types[0] = *type_new;
         types[1] = type_old;
         disps[0] = 0;
-        disps[1] = ((MPI_Aint) count) * stride;
+        disps[1] = ((size_t) count) * stride;
         blklens[0] = 1;
         blklens[1] = rem;
 
@@ -307,9 +307,9 @@ static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs
         types[0] = MPI_LB;
         disps[0] = 0;
         types[1] = *type_new;
-        disps[1] = ((MPI_Aint) rank) * ((MPI_Aint) blksize) * orig_extent;
+        disps[1] = ((size_t) rank) * ((size_t) blksize) * orig_extent;
         types[2] = MPI_UB;
-        disps[2] = orig_extent * ((MPI_Aint) (array_of_gsizes[dim]));
+        disps[2] = orig_extent * ((size_t) (array_of_gsizes[dim]));
         blklens[0] = blklens[1] = blklens[2] = 1;
 
         mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, &type_tmp);

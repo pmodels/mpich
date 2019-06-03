@@ -33,7 +33,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int comm_size, i, pof2;
-    MPI_Aint sendtype_extent, recvtype_extent;
+    size_t sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;

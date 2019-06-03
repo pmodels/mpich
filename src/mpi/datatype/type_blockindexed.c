@@ -36,11 +36,11 @@ int MPIR_Type_blockindexed(int count,
 {
     int mpi_errno = MPI_SUCCESS, i;
     int is_builtin, old_is_contig;
-    MPI_Aint contig_count;
-    MPI_Aint el_sz;
+    size_t contig_count;
+    size_t el_sz;
     MPI_Datatype el_type;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
-    MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
+    size_t old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
+    size_t min_lb = 0, max_ub = 0, eff_disp;
 
     MPIR_Datatype *new_dtp;
 
@@ -69,7 +69,7 @@ int MPIR_Type_blockindexed(int count,
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin) {
-        el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        el_sz = (size_t) MPIR_Datatype_get_basic_size(oldtype);
         el_type = oldtype;
 
         old_lb = 0;
@@ -79,7 +79,7 @@ int MPIR_Type_blockindexed(int count,
         old_extent = el_sz;
         old_is_contig = 1;
 
-        new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
+        new_dtp->size = (size_t) count *(size_t) blocklength *el_sz;
         new_dtp->has_sticky_lb = 0;
         new_dtp->has_sticky_ub = 0;
 
@@ -104,7 +104,7 @@ int MPIR_Type_blockindexed(int count,
         old_extent = old_dtp->extent;
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
-        new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *(MPI_Aint) old_dtp->size;
+        new_dtp->size = (size_t) count *(size_t) blocklength *(size_t) old_dtp->size;
         new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
         new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
@@ -117,18 +117,18 @@ int MPIR_Type_blockindexed(int count,
     }
 
     /* priming for loop */
-    eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[0] :
-        (((MPI_Aint) ((int *) displacement_array)[0]) * old_extent);
-    MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength,
+    eff_disp = (dispinbytes) ? ((size_t *) displacement_array)[0] :
+        (((size_t) ((int *) displacement_array)[0]) * old_extent);
+    MPII_DATATYPE_BLOCK_LB_UB((size_t) blocklength,
                               eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
 
     /* determine new min lb and max ub */
     for (i = 1; i < count; i++) {
-        MPI_Aint tmp_lb, tmp_ub;
+        size_t tmp_lb, tmp_ub;
 
-        eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-            (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
-        MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength,
+        eff_disp = (dispinbytes) ? ((size_t *) displacement_array)[i] :
+            (((size_t) ((int *) displacement_array)[i]) * old_extent);
+        MPII_DATATYPE_BLOCK_LB_UB((size_t) blocklength,
                                   eff_disp, old_lb, old_ub, old_extent, tmp_lb, tmp_ub);
 
         if (tmp_lb < min_lb)
@@ -154,7 +154,7 @@ int MPIR_Type_blockindexed(int count,
                                                                displacement_array,
                                                                dispinbytes, old_extent);
         new_dtp->max_contig_blocks = contig_count;
-        if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
+        if ((contig_count == 1) && ((size_t) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;
         }
     }

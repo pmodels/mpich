@@ -14,7 +14,7 @@
 #include "ucx_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               MPI_Aint count,
+                                               size_t count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
-                                                 MPI_Aint count, MPI_Datatype datatype,
+                                                 size_t count, MPI_Datatype datatype,
                                                  MPIR_Request * message)
 {
     int ret;
@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,

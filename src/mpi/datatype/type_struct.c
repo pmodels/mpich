@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_Type_struct as PMPI_Type_struct
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_struct(int count, int *array_of_blocklengths,
-                    MPI_Aint * array_of_displacements,
+                    size_t * array_of_displacements,
                     MPI_Datatype * array_of_types, MPI_Datatype * newtype)
     __attribute__ ((weak, alias("PMPI_Type_struct")));
 #endif
@@ -29,9 +29,9 @@ int MPI_Type_struct(int count, int *array_of_blocklengths,
 #undef MPI_Type_struct
 #define MPI_Type_struct PMPI_Type_struct
 
-static MPI_Aint MPII_Type_struct_alignsize(int count,
+static size_t MPII_Type_struct_alignsize(int count,
                                            const MPI_Datatype * oldtype_array,
-                                           const MPI_Aint * displacement_array);
+                                           const size_t * displacement_array);
 
 /* MPII_Type_struct_alignsize
  *
@@ -55,12 +55,12 @@ static MPI_Aint MPII_Type_struct_alignsize(int count,
  * have different natural alignments).  Linux on X86, however, does not have
  * different rules for this case.
  */
-static MPI_Aint MPII_Type_struct_alignsize(int count,
+static size_t MPII_Type_struct_alignsize(int count,
                                            const MPI_Datatype * oldtype_array,
-                                           const MPI_Aint * displacement_array)
+                                           const size_t * displacement_array)
 {
     int i;
-    MPI_Aint max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
+    size_t max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
 
     for (i = 0; i < count; i++) {
         /* shouldn't be called with an LB or UB, but we'll handle it nicely */
@@ -100,7 +100,7 @@ static MPI_Aint MPII_Type_struct_alignsize(int count,
 #endif
 #ifdef HAVE_DOUBLE_POS_ALIGNMENT
                     /* sort of a hack, but so is this rule */
-                    if (oldtype_array[i] == MPI_DOUBLE && displacement_array[i] != (MPI_Aint) 0) {
+                    if (oldtype_array[i] == MPI_DOUBLE && displacement_array[i] != (size_t) 0) {
                         tmp_alignsize = 4;
                     }
 #endif
@@ -113,7 +113,7 @@ static MPI_Aint MPII_Type_struct_alignsize(int count,
                     break;
 #ifdef HAVE_LLINT_POS_ALIGNMENT
                     if (oldtype_array[i] == MPI_LONG_LONG_INT &&
-                        displacement_array[i] != (MPI_Aint) 0) {
+                        displacement_array[i] != (size_t) 0) {
                         tmp_alignsize = 4;
                     }
 #endif
@@ -152,17 +152,17 @@ Output Parameters:
 @*/
 int MPIR_Type_struct(int count,
                      const int *blocklength_array,
-                     const MPI_Aint * displacement_array,
+                     const size_t * displacement_array,
                      const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, old_are_contig = 1, definitely_not_contig = 0;
     int found_sticky_lb = 0, found_sticky_ub = 0, found_true_lb = 0,
         found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
-    MPI_Aint el_sz = 0;
-    MPI_Aint size = 0;
+    size_t el_sz = 0;
+    size_t size = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
-    MPI_Aint true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
+    size_t true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
         sticky_ub_disp = 0, lb_disp = 0, ub_disp = 0;
 
     MPIR_Datatype *new_dtp;
@@ -209,8 +209,8 @@ int MPIR_Type_struct(int count,
     new_dtp->max_contig_blocks = 0;
     for (i = 0; i < count; i++) {
         int is_builtin = (HANDLE_GET_KIND(oldtype_array[i]) == HANDLE_KIND_BUILTIN);
-        MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
-        MPI_Aint tmp_el_sz;
+        size_t tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
+        size_t tmp_el_sz;
         MPI_Datatype tmp_el_type;
         MPIR_Datatype *old_dtp = NULL;
         int old_is_contig;
@@ -225,7 +225,7 @@ int MPIR_Type_struct(int count,
             tmp_el_sz = MPIR_Datatype_get_basic_size(oldtype_array[i]);
             tmp_el_type = oldtype_array[i];
 
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (blocklength_array[i]),
+            MPII_DATATYPE_BLOCK_LB_UB((size_t) (blocklength_array[i]),
                                       displacement_array[i],
                                       0, tmp_el_sz, tmp_el_sz, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb;
@@ -243,7 +243,7 @@ int MPIR_Type_struct(int count,
             tmp_el_sz = old_dtp->builtin_element_size;
             tmp_el_type = old_dtp->basic_type;
 
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+            MPII_DATATYPE_BLOCK_LB_UB((size_t) blocklength_array[i],
                                       displacement_array[i],
                                       old_dtp->lb, old_dtp->ub, old_dtp->extent, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb + (old_dtp->true_lb - old_dtp->lb);
@@ -356,11 +356,11 @@ int MPIR_Type_struct(int count,
     new_dtp->extent = new_dtp->ub - new_dtp->lb;
     if ((!found_sticky_lb) && (!found_sticky_ub)) {
         /* account for padding */
-        MPI_Aint epsilon = (new_dtp->alignsize > 0) ?
-            new_dtp->extent % ((MPI_Aint) (new_dtp->alignsize)) : 0;
+        size_t epsilon = (new_dtp->alignsize > 0) ?
+            new_dtp->extent % ((size_t) (new_dtp->alignsize)) : 0;
 
         if (epsilon) {
-            new_dtp->ub += ((MPI_Aint) (new_dtp->alignsize) - epsilon);
+            new_dtp->ub += ((size_t) (new_dtp->alignsize) - epsilon);
             new_dtp->extent = new_dtp->ub - new_dtp->lb;
         }
     }
@@ -371,7 +371,7 @@ int MPIR_Type_struct(int count,
      * same, and the old type was also contiguous, and we didn't see
      * something noncontiguous based on true ub/ub.
      */
-    if (((MPI_Aint) (new_dtp->size) == new_dtp->extent) &&
+    if (((size_t) (new_dtp->size) == new_dtp->extent) &&
         old_are_contig && (!definitely_not_contig)) {
         new_dtp->is_contig = 1;
     } else {
@@ -383,7 +383,7 @@ int MPIR_Type_struct(int count,
 }
 
 int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
-                          const MPI_Aint * array_of_displacements,
+                          const size_t * array_of_displacements,
                           const MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -495,7 +495,7 @@ for the structure foo
 @*/
 int MPI_Type_struct(int count,
                     int *array_of_blocklengths,
-                    MPI_Aint * array_of_displacements,
+                    size_t * array_of_displacements,
                     MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;

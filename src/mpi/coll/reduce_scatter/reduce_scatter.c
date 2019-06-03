@@ -104,7 +104,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
                                    MPIR_Errflag_t * errflag)
 {
     int comm_size, i;
-    MPI_Aint true_extent, true_lb;
+    size_t true_extent, true_lb;
     int *disps;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;

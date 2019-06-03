@@ -609,35 +609,35 @@ typedef struct MPIDI_Comm_ops
     /* Overriding calls in case of matching-capable interfaces */
     int (*recv_posted)(struct MPIDI_VC *vc, struct MPIR_Request *req);
     
-    int (*send)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*send)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
 		struct MPIR_Request **request);
-    int (*rsend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*rsend)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,
 		 struct MPIR_Request **request);
-    int (*ssend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*ssend)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,
 		 struct MPIR_Request **request );
-    int (*isend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*isend)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,
 		 struct MPIR_Request **request );
-    int (*irsend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*irsend)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		  int dest, int tag, MPIR_Comm *comm, int context_offset,
 		  struct MPIR_Request **request );
-    int (*issend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*issend)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		  int dest, int tag, MPIR_Comm *comm, int context_offset,
 		  struct MPIR_Request **request );
     
-    int (*send_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*send_init)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		     int dest, int tag, MPIR_Comm *comm, int context_offset,
 		     struct MPIR_Request **request );
     int (*bsend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
 		      int dest, int tag, MPIR_Comm *comm, int context_offset,
 		      struct MPIR_Request **request);
-    int (*rsend_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*rsend_init)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		      int dest, int tag, MPIR_Comm *comm, int context_offset,
 		      struct MPIR_Request **request );
-    int (*ssend_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+    int (*ssend_init)(struct MPIDI_VC *vc, const void *buf, size_t count, MPI_Datatype datatype,
 		      int dest, int tag, MPIR_Comm *comm, int context_offset,
 		      struct MPIR_Request **request );
     int (*startall)(struct MPIDI_VC *vc, int count,  struct MPIR_Request *requests[]);
@@ -711,9 +711,9 @@ typedef struct MPIDI_VC
 
     /* rendezvous function pointers.  Called to send a rendevous
        message or when one is matched */
-    int (* rndvSend_fn)( struct MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
+    int (* rndvSend_fn)( struct MPIR_Request **sreq_p, const void * buf, size_t count,
                          MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
-                         MPI_Aint dt_true_lb, int rank, int tag,
+                         size_t dt_true_lb, int rank, int tag,
                          struct MPIR_Comm * comm, int context_offset );
     int (* rndvRecv_fn)( struct MPIDI_VC * vc, struct MPIR_Request *rreq );
 
@@ -799,7 +799,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
   BEGIN SEND/RECEIVE BUFFER SECTION
   ---------------------------------*/
 #if !defined(MPIDI_CH3U_Offsetof)
-#    define MPIDI_CH3U_Offsetof(struct_, field_) ((MPI_Aint) &((struct_*)0)->field_)
+#    define MPIDI_CH3U_Offsetof(struct_, field_) ((size_t) &((struct_*)0)->field_)
 #endif
 
 #if !defined(MPIDI_CH3U_SRBuf_size)
@@ -836,8 +836,8 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
         MPIDI_CH3U_SRBuf_element_t * tmp;                               \
         MPIR_Assert(MPIDI_Request_get_srbuf_flag(req_));                \
         MPIDI_Request_set_srbuf_flag((req_), FALSE);                    \
-        tmp = (MPIDI_CH3U_SRBuf_element_t *) (((MPI_Aint) ((req_)->dev.tmpbuf)) - \
-               ((MPI_Aint) MPIDI_CH3U_Offsetof(MPIDI_CH3U_SRBuf_element_t, buf))); \
+        tmp = (MPIDI_CH3U_SRBuf_element_t *) (((size_t) ((req_)->dev.tmpbuf)) - \
+               ((size_t) MPIDI_CH3U_Offsetof(MPIDI_CH3U_SRBuf_element_t, buf))); \
         tmp->next = MPIDI_CH3U_SRBuf_pool;                              \
         MPIDI_CH3U_SRBuf_pool = tmp;                                    \
     }
@@ -987,7 +987,7 @@ const char * MPIDI_VC_GetStateString(int);
 
 
 /* Prototypes for internal device routines */
-int MPIDI_Isend_self(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
+int MPIDI_Isend_self(const void *, size_t, MPI_Datatype, int, int, MPIR_Comm *,
 		     int, int, MPIR_Request **);
 
 /*--------------------------
@@ -1050,20 +1050,20 @@ void MPIDI_RMA_finalize(void);
  */
 
 typedef struct {
-    int (*create)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
-    int (*allocate)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shared)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shm)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*create)(void *, size_t, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*allocate)(size_t, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shared)(size_t, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shm)(size_t, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
     int (*create_dynamic)(MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*detect_shm)(MPIR_Win **);
-    int (*gather_info)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
-    int (*shared_query)(MPIR_Win *, int, MPI_Aint *, int *, void *);
+    int (*gather_info)(void *, size_t, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*shared_query)(MPIR_Win *, int, size_t *, int *, void *);
 } MPIDI_CH3U_Win_fns_t;
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
 typedef struct {
-    int (*win_init)(MPI_Aint, int, int, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*win_init)(size_t, int, int, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*win_free)(MPIR_Win **);
 } MPIDI_CH3U_Win_hooks_t;
 
@@ -1091,19 +1091,19 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks);
 int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings);
 
 /* Default window creation functions provided by CH3 */
-int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_create(void *, size_t, int, MPIR_Info *, MPIR_Comm *,
                          MPIR_Win **);
-int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
+int MPIDI_CH3U_Win_allocate(size_t size, int disp_unit, MPIR_Info *info,
                            MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
-int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info *info,
+int MPIDI_CH3U_Win_allocate_no_shm(size_t size, int disp_unit, MPIR_Info *info,
                                    MPIR_Comm *comm_ptr, void *baseptr, MPIR_Win **win_ptr);
 int MPIDI_CH3U_Win_create_dynamic(MPIR_Info *info, MPIR_Comm *comm, MPIR_Win **win);
-int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
+int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, size_t * size,
                                 int *disp_unit, void *baseptr);
 
 /* MPI RMA Utility functions */
 
-int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_gather_info(void *, size_t, int, MPIR_Info *, MPIR_Comm *,
                                  MPIR_Win **);
 
 
@@ -1134,20 +1134,20 @@ int MPIDI_CH3I_Progress_finalize(void);
 /* Internal RMA operation routines.
  * Called by normal RMA operations and request-based RMA operations . */
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
-                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   origin_datatype, int target_rank, size_t target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq);
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
-                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   origin_datatype, int target_rank, size_t target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq);
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                          origin_datatype, int target_rank, MPI_Aint target_disp,
+                          origin_datatype, int target_rank, size_t target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
                           MPIR_Win * win_ptr, MPIR_Request * ureq);
 int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                              MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                              MPI_Datatype result_datatype, int target_rank, size_t target_disp,
                               int target_count, MPI_Datatype target_datatype, MPI_Op op,
                               MPIR_Win * win_ptr, MPIR_Request * ureq);
 
@@ -1413,7 +1413,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                                    int *foundp);
 MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                                           int context_id, MPIR_Comm *comm, void *user_buf,
-                                           MPI_Aint user_count, MPI_Datatype datatype, int * foundp);
+                                           size_t user_count, MPI_Datatype datatype, int * foundp);
 int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq);
 MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 					   int * found);
@@ -1428,9 +1428,9 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq);
 int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq);
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq);
 
-void MPIDI_CH3U_Buffer_copy(const void * const sbuf, MPI_Aint scount,
+void MPIDI_CH3U_Buffer_copy(const void * const sbuf, size_t scount,
 			    MPI_Datatype sdt, int * smpi_errno,
-			    void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt,
+			    void * const rbuf, size_t rcount, MPI_Datatype rdt,
 			    intptr_t * rdata_sz, int * rmpi_errno);
 int MPIDI_CH3U_Post_data_receive(int found, MPIR_Request ** rreqp);
 int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreqp);
@@ -1771,7 +1771,7 @@ int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt );
 
 /* Routines to create packets (used in implementing MPI communications */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
-				  const void *, MPI_Aint,
+				  const void *, size_t,
 				  MPI_Datatype, int, int, MPIR_Comm *,
 				  int );
 int MPIDI_CH3_EagerContigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
@@ -1785,11 +1785,11 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
 				int, MPIR_Comm *, int );
 
 
-int MPIDI_CH3_RndvSend( MPIR_Request **, const void *, MPI_Aint, MPI_Datatype,
-			int, intptr_t, MPI_Aint, int, int, MPIR_Comm *, int );
+int MPIDI_CH3_RndvSend( MPIR_Request **, const void *, size_t, MPI_Datatype,
+			int, intptr_t, size_t, int, int, MPIR_Comm *, int );
 
 int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **, const void *, int,
-				      MPI_Datatype, intptr_t, int, MPI_Aint,
+				      MPI_Datatype, intptr_t, int, size_t,
 				      int, int, MPIR_Comm *, int );
 int MPIDI_CH3_EagerSyncZero(MPIR_Request **, int, int, MPIR_Comm *, int );
 
@@ -1800,7 +1800,7 @@ int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */
 int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *, MPIR_Request * );
-int MPIDI_CH3_RecvFromSelf( MPIR_Request *, void *, MPI_Aint, MPI_Datatype );
+int MPIDI_CH3_RecvFromSelf( MPIR_Request *, void *, size_t, MPI_Datatype );
 int MPIDI_CH3_RecvRndv( MPIDI_VC_t *, MPIR_Request * );
 
 /* Handler routines to continuing after an IOV is processed (assigned to the

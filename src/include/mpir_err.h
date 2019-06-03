@@ -460,7 +460,7 @@ cvars:
         int ferr = 0;                                                   \
         if (HANDLE_GET_KIND(dtype) == HANDLE_KIND_BUILTIN) { ferr=1; }  \
         else {                                                          \
-            MPI_Aint errsize;                                           \
+            size_t errsize;                                           \
             MPIR_Datatype *errdtypeptr;                                 \
             MPIR_Datatype_get_ptr(dtype,errdtypeptr);                   \
             MPIR_Datatype_get_size_macro(dtype,errsize);                \

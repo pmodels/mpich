@@ -75,33 +75,33 @@ static void setPrint(void)
 
 /* NOTE: bufp values are unused, ripe for removal */
 
-static int contig_m2m(MPI_Aint * blocks_p,
-                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int vector_m2m(MPI_Aint * blocks_p,
-                      MPI_Aint count,
-                      MPI_Aint blksz,
-                      MPI_Aint stride,
-                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int blkidx_m2m(MPI_Aint * blocks_p,
-                      MPI_Aint count,
-                      MPI_Aint blocklen,
-                      MPI_Aint * offsetarray,
-                      MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
-static int index_m2m(MPI_Aint * blocks_p,
-                     MPI_Aint count,
-                     MPI_Aint * blockarray,
-                     MPI_Aint * offsetarray,
-                     MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int contig_m2m(size_t * blocks_p,
+                      MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
+static int vector_m2m(size_t * blocks_p,
+                      size_t count,
+                      size_t blksz,
+                      size_t stride,
+                      MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
+static int blkidx_m2m(size_t * blocks_p,
+                      size_t count,
+                      size_t blocklen,
+                      size_t * offsetarray,
+                      MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
+static int index_m2m(size_t * blocks_p,
+                     size_t count,
+                     size_t * blockarray,
+                     size_t * offsetarray,
+                     MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
 
 /* prototypes of internal functions */
-static int vector_pack_to_iov(MPI_Aint * blocks_p,
-                              MPI_Aint count,
-                              MPI_Aint blksz,
-                              MPI_Aint stride,
-                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int vector_pack_to_iov(size_t * blocks_p,
+                              size_t count,
+                              size_t blksz,
+                              size_t stride,
+                              MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
 
-static int contig_pack_to_iov(MPI_Aint * blocks_p,
-                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp);
+static int contig_pack_to_iov(size_t * blocks_p,
+                              MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp);
 
 static inline int is_float_type(MPI_Datatype el_type)
 {
@@ -115,7 +115,7 @@ static inline int is_float_type(MPI_Datatype el_type)
 
 static int external32_basic_convert(char *dest_buf,
                                     const char *src_buf,
-                                    int dest_el_size, int src_el_size, MPI_Aint count)
+                                    int dest_el_size, int src_el_size, size_t count)
 {
     const char *src_ptr = src_buf;
     char *dest_ptr = dest_buf;
@@ -212,9 +212,9 @@ static int external32_float_convert(char *dest_buf,
  *
  */
 static inline void segment_init(const void *buf,
-                                MPI_Aint count, MPI_Datatype handle, struct MPIR_Segment *segp)
+                                size_t count, MPI_Datatype handle, struct MPIR_Segment *segp)
 {
-    MPI_Aint elmsize = 0;
+    size_t elmsize = 0;
     int i, depth = 0;
     int branch_detected = 0;
 
@@ -258,7 +258,7 @@ static inline void segment_init(const void *buf,
          * loop depth first
          */
         MPII_Dataloop *oldloop; /* loop from original type, before new count */
-        MPI_Aint type_size, type_extent;
+        size_t type_size, type_extent;
         MPI_Datatype el_type;
 
         MPII_DATALOOP_GET_LOOPPTR(handle, oldloop);
@@ -360,7 +360,7 @@ static inline void segment_init(const void *buf,
     segp->valid_sp = depth - 1;
 }
 
-struct MPIR_Segment *MPIR_Segment_alloc(const void *buf, MPI_Aint count, MPI_Datatype handle)
+struct MPIR_Segment *MPIR_Segment_alloc(const void *buf, size_t count, MPI_Datatype handle)
 {
     struct MPIR_Segment *segp;
 
@@ -382,7 +382,7 @@ void MPIR_Segment_free(struct MPIR_Segment *segp)
     return;
 }
 
-void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, void *streambuf)
+void MPIR_Segment_pack(MPIR_Segment * segp, size_t first, size_t * lastp, void *streambuf)
 {
     struct MPII_Dataloop_m2m_params params;     /* defined in dataloop_parts.h */
 
@@ -400,7 +400,7 @@ void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, vo
     return;
 }
 
-void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp,
+void MPIR_Segment_unpack(MPIR_Segment * segp, size_t first, size_t * lastp,
                          const void *streambuf)
 {
     struct MPII_Dataloop_m2m_params params;
@@ -421,12 +421,12 @@ void MPIR_Segment_unpack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp,
 
 /* PIECE FUNCTIONS BELOW */
 
-static int contig_m2m(MPI_Aint * blocks_p,
+static int contig_m2m(size_t * blocks_p,
                       MPI_Datatype el_type,
-                      MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+                      size_t rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     MPI_Aint el_size;           /* MPI_Aint? */
-    MPI_Aint size;
+    size_t size;
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
@@ -459,8 +459,8 @@ static int contig_m2m(MPI_Aint * blocks_p,
 static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), MPI_Aint blksz, MPI_Aint stride, MPI_Datatype el_type, MPI_Aint rel_off, /* offset into buffer */
                       void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
-    MPI_Aint i;
-    MPI_Aint el_size, whole_count, blocks_left;
+    size_t i;
+    size_t el_size, whole_count, blocks_left;
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
     char *cbufp;
 
@@ -470,8 +470,8 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
                 ("vector m2m: elsize = %d, count = %d, stride = %d, blocksize = %d\n",
                  (int) el_size, (int) count, (int) stride, (int) blksz));
 
-    whole_count = (MPI_Aint) ((blksz > 0) ? (*blocks_p / (MPI_Aint) blksz) : 0);
-    blocks_left = (MPI_Aint) ((blksz > 0) ? (*blocks_p % (MPI_Aint) blksz) : 0);
+    whole_count = (size_t) ((blksz > 0) ? (*blocks_p / (size_t) blksz) : 0);
+    blocks_left = (size_t) ((blksz > 0) ? (*blocks_p % (size_t) blksz) : 0);
 
     if (paramp->direction == M2M_TO_USERBUF) {
         if (el_size == 8 MPIR_ALIGN8_TEST(paramp->streambuf, cbufp)) {
@@ -485,18 +485,18 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
             MPII_COPY_TO_VEC(paramp->streambuf, cbufp, 0, int16_t, blocks_left, 1);
         } else {
             for (i = 0; i < whole_count; i++) {
-                MPIR_Memcpy(cbufp, paramp->streambuf, ((MPI_Aint) blksz) * el_size);
+                MPIR_Memcpy(cbufp, paramp->streambuf, ((size_t) blksz) * el_size);
                 DBG_SEGMENT(printf("vec: memcpy %p %p %d\n", cbufp,
                                    paramp->streambuf, (int) (blksz * el_size)));
-                paramp->streambuf += ((MPI_Aint) blksz) * el_size;
+                paramp->streambuf += ((size_t) blksz) * el_size;
 
                 cbufp += stride;
             }
             if (blocks_left) {
-                MPIR_Memcpy(cbufp, paramp->streambuf, ((MPI_Aint) blocks_left) * el_size);
+                MPIR_Memcpy(cbufp, paramp->streambuf, ((size_t) blocks_left) * el_size);
                 DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n", cbufp,
                                    paramp->streambuf, (int) (blocks_left * el_size)));
-                paramp->streambuf += ((MPI_Aint) blocks_left) * el_size;
+                paramp->streambuf += ((size_t) blocks_left) * el_size;
             }
         }
     } else {    /* M2M_FROM_USERBUF */
@@ -512,17 +512,17 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, 0, int16_t, blocks_left, 1);
         } else {
             for (i = 0; i < whole_count; i++) {
-                MPIR_Memcpy(paramp->streambuf, cbufp, (MPI_Aint) blksz * el_size);
+                MPIR_Memcpy(paramp->streambuf, cbufp, (size_t) blksz * el_size);
                 DBG_SEGMENT(printf("vec: memcpy %p %p %d\n",
                                    paramp->streambuf, cbufp, (int) (blksz * el_size)));
-                paramp->streambuf += (MPI_Aint) blksz *el_size;
+                paramp->streambuf += (size_t) blksz *el_size;
                 cbufp += stride;
             }
             if (blocks_left) {
-                MPIR_Memcpy(paramp->streambuf, cbufp, (MPI_Aint) blocks_left * el_size);
+                MPIR_Memcpy(paramp->streambuf, cbufp, (size_t) blocks_left * el_size);
                 DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n",
                                    paramp->streambuf, cbufp, (int) (blocks_left * el_size)));
-                paramp->streambuf += (MPI_Aint) blocks_left *el_size;
+                paramp->streambuf += (size_t) blocks_left *el_size;
             }
         }
     }
@@ -530,16 +530,16 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
     return 0;
 }
 
-static int blkidx_m2m(MPI_Aint * blocks_p,
-                      MPI_Aint count,
-                      MPI_Aint blocklen,
-                      MPI_Aint * offsetarray,
+static int blkidx_m2m(size_t * blocks_p,
+                      size_t count,
+                      size_t blocklen,
+                      size_t * offsetarray,
                       MPI_Datatype el_type,
-                      MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+                      size_t rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
-    MPI_Aint curblock = 0;
-    MPI_Aint el_size;
-    MPI_Aint blocks_left = *blocks_p;
+    size_t curblock = 0;
+    size_t el_size;
+    size_t blocks_left = *blocks_p;
     char *cbufp;
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
@@ -575,12 +575,12 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
         } else if (el_size == 2) {
             MPII_COPY_FROM_VEC(src, dest, 0, int16_t, blocklen, 1);
         } else {
-            MPIR_Memcpy(dest, src, (MPI_Aint) blocklen * el_size);
+            MPIR_Memcpy(dest, src, (size_t) blocklen * el_size);
             DBG_SEGMENT(printf
                         ("blkidx m3m:memcpy(%p,%p,%d)\n", dest, src, (int) (blocklen * el_size)));
         }
 
-        paramp->streambuf += (MPI_Aint) blocklen *el_size;
+        paramp->streambuf += (size_t) blocklen *el_size;
         blocks_left -= blocklen;
         curblock++;
     }
@@ -588,16 +588,16 @@ static int blkidx_m2m(MPI_Aint * blocks_p,
     return 0;
 }
 
-static int index_m2m(MPI_Aint * blocks_p,
-                     MPI_Aint count,
-                     MPI_Aint * blockarray,
-                     MPI_Aint * offsetarray,
+static int index_m2m(size_t * blocks_p,
+                     size_t count,
+                     size_t * blockarray,
+                     size_t * offsetarray,
                      MPI_Datatype el_type,
-                     MPI_Aint rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
+                     size_t rel_off, void *bufp ATTRIBUTE((unused)), void *v_paramp)
 {
     int curblock = 0;
-    MPI_Aint el_size;
-    MPI_Aint cur_block_sz, blocks_left = *blocks_p;
+    size_t el_size;
+    size_t cur_block_sz, blocks_left = *blocks_p;
     char *cbufp;
     struct MPII_Dataloop_m2m_params *paramp = v_paramp;
 
@@ -642,9 +642,9 @@ static int index_m2m(MPI_Aint * blocks_p,
     return 0;
 }
 
-static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
+static int contig_pack_external32_to_buf(size_t * blocks_p,
                                          MPI_Datatype el_type,
-                                         MPI_Aint rel_off, void *bufp, void *v_paramp)
+                                         size_t rel_off, void *bufp, void *v_paramp)
 {
     int src_el_size, dest_el_size;
     struct piece_params *paramp = v_paramp;
@@ -688,9 +688,9 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     return 0;
 }
 
-static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
+static int contig_unpack_external32_to_buf(size_t * blocks_p,
                                            MPI_Datatype el_type,
-                                           MPI_Aint rel_off, void *bufp, void *v_paramp)
+                                           size_t rel_off, void *bufp, void *v_paramp)
 {
     int src_el_size, dest_el_size;
     struct piece_params *paramp = v_paramp;
@@ -738,7 +738,7 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 }
 
 void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
-                                  MPI_Aint first, MPI_Aint * lastp, void *pack_buffer)
+                                  size_t first, size_t * lastp, void *pack_buffer)
 {
     struct piece_params pack_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_PACK_EXTERNAL);
@@ -756,7 +756,7 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
 }
 
 void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
-                                    MPI_Aint first, MPI_Aint * lastp, const void *unpack_buffer)
+                                    size_t first, size_t * lastp, const void *unpack_buffer)
 {
     struct piece_params pack_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIR_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
@@ -774,7 +774,7 @@ void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
 }
 
 void MPIR_Type_access_contents(MPI_Datatype type,
-                               int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
+                               int **ints_p, size_t ** aints_p, MPI_Datatype ** types_p)
 {
     int nr_ints, nr_aints, nr_types, combiner;
     int types_sz, struct_sz, ints_sz, epsilon, align_sz;
@@ -821,7 +821,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
    must have a comment that describes why it is needed and the arguments
    must have ATTRIBUTE((unused)) */
 void MPIR_Type_release_contents(MPI_Datatype type,
-                                int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
+                                int **ints_p, size_t ** aints_p, MPI_Datatype ** types_p)
 {
     return;
 }
@@ -839,7 +839,7 @@ void MPIR_Type_release_contents(MPI_Datatype type,
 *           the amount of the array that has actual data)
 */
 void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
-                         MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
+                         size_t first, size_t * lastp, MPL_IOV * vectorp, int *lengthp)
 {
     struct piece_params packvec_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_TO_IOV);
@@ -869,11 +869,11 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 
 /********** FUNCTIONS FOR CREATING AN IOV DESCRIBING BUFFER **********/
 
-static int contig_pack_to_iov(MPI_Aint * blocks_p,
-                              MPI_Datatype el_type, MPI_Aint rel_off, void *bufp, void *v_paramp)
+static int contig_pack_to_iov(size_t * blocks_p,
+                              MPI_Datatype el_type, size_t rel_off, void *bufp, void *v_paramp)
 {
     int el_size, last_idx;
-    MPI_Aint size;
+    size_t size;
     char *last_end = NULL;
     struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_CONTIG_PACK_TO_IOV);
@@ -881,14 +881,14 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_CONTIG_PACK_TO_IOV);
 
     el_size = MPIR_Datatype_get_basic_size(el_type);
-    size = *blocks_p * (MPI_Aint) el_size;
+    size = *blocks_p * (size_t) el_size;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
                                                  "    contig to vec: do=" MPI_AINT_FMT_DEC_SPEC
                                                  ", dp=%p, ind=%d, sz=%d, blksz="
-                                                 MPI_AINT_FMT_DEC_SPEC, (MPI_Aint) rel_off, bufp,
+                                                 MPI_AINT_FMT_DEC_SPEC, (size_t) rel_off, bufp,
                                                  paramp->u.pack_vector.index, el_size,
-                                                 (MPI_Aint) * blocks_p));
+                                                 (size_t) * blocks_p));
 
     last_idx = paramp->u.pack_vector.index - 1;
     if (last_idx >= 0) {
@@ -934,13 +934,13 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
                               void *v_paramp)
 {
     int i;
-    MPI_Aint size, blocks_left, basic_size;
+    size_t size, blocks_left, basic_size;
     struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
 
-    basic_size = (MPI_Aint) MPIR_Datatype_get_basic_size(el_type);
+    basic_size = (size_t) MPIR_Datatype_get_basic_size(el_type);
     blocks_left = *blocks_p;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
@@ -952,20 +952,20 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
                                                  ", blksz=" MPI_AINT_FMT_DEC_SPEC
                                                  ", str=" MPI_AINT_FMT_DEC_SPEC
                                                  ", blks=" MPI_AINT_FMT_DEC_SPEC,
-                                                 (MPI_Aint) rel_off,
+                                                 (size_t) rel_off,
                                                  bufp,
-                                                 (MPI_Aint) paramp->u.pack_vector.length,
-                                                 (MPI_Aint) paramp->u.pack_vector.index,
+                                                 (size_t) paramp->u.pack_vector.length,
+                                                 (size_t) paramp->u.pack_vector.index,
                                                  count,
-                                                 blksz, (MPI_Aint) stride, (MPI_Aint) * blocks_p));
+                                                 blksz, (size_t) stride, (size_t) * blocks_p));
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
         char *last_end = NULL;
 
-        if (blocks_left > (MPI_Aint) blksz) {
-            size = ((MPI_Aint) blksz) * basic_size;
-            blocks_left -= (MPI_Aint) blksz;
+        if (blocks_left > (size_t) blksz) {
+            size = ((size_t) blksz) * basic_size;
+            blocks_left -= (size_t) blksz;
         } else {
             /* last pass */
             size = blocks_left * basic_size;
@@ -989,7 +989,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
                             (MPL_DBG_FDEST,
                              "\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC
                              " blocks processed.\n", paramp->u.pack_vector.index,
-                             (MPI_Aint) * blocks_p));
+                             (size_t) * blocks_p));
 #endif
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_VECTOR_PACK_TO_IOV);
             return 1;
@@ -1010,7 +1010,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST,
                      "\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC
-                     " blocks processed.\n", paramp->u.pack_vector.index, (MPI_Aint) * blocks_p));
+                     " blocks processed.\n", paramp->u.pack_vector.index, (size_t) * blocks_p));
 #endif
 
     /* if we get here then we processed ALL the blocks; don't need to update

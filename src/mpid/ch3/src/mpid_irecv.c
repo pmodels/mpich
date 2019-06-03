@@ -6,7 +6,7 @@
 
 #include "mpidimpl.h"
 
-int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
+int MPID_Irecv(void * buf, size_t count, MPI_Datatype datatype, int rank, int tag,
 	       MPIR_Comm * comm, int context_offset,
                MPIR_Request ** request)
 {

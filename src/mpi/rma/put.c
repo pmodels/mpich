@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Put as PMPI_Put
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count,
+            int target_rank, size_t target_disp, int target_count,
             MPI_Datatype target_datatype, MPI_Win win) __attribute__ ((weak, alias("PMPI_Put")));
 #endif
 /* -- End Profiling Symbol Block */
@@ -58,7 +58,7 @@ Input Parameters:
 .seealso: MPI_Rput
 @*/
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
+            origin_datatype, int target_rank, size_t target_disp,
             int target_count, MPI_Datatype target_datatype, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;

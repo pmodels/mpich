@@ -56,7 +56,7 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
     int mask, dst, is_commutative, flag;
-    MPI_Aint true_extent, true_lb, extent;
+    size_t true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPIR_SCHED_CHKPMEM_DECL(2);
 

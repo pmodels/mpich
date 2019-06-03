@@ -14,7 +14,7 @@
    Arguments:
 +  int icount
 .  int iblocklength
-.  MPI_Aint astride
+.  size_t astride
 .  int strideinbytes
 .  MPI_Datatype oldtype
 .  MPII_Dataloop **dlp_p
@@ -22,20 +22,20 @@
    Returns 0 on success, -1 on failure.
 
 @*/
-int MPII_Dataloop_create_vector(MPI_Aint icount,
-                                MPI_Aint iblocklength,
-                                MPI_Aint astride,
+int MPII_Dataloop_create_vector(size_t icount,
+                                size_t iblocklength,
+                                size_t astride,
                                 int strideinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
 {
     int err, is_builtin;
 
-    MPI_Aint count, blocklength;
-    MPI_Aint stride;
+    size_t count, blocklength;
+    size_t stride;
     MPII_Dataloop *new_dlp;
 
     count = (MPI_Aint) icount;  /* avoid subsequent casting */
-    blocklength = (MPI_Aint) iblocklength;
-    stride = (MPI_Aint) astride;
+    blocklength = (size_t) iblocklength;
+    stride = (size_t) astride;
 
     /* if count or blocklength are zero, handle with contig code,
      * call it a int
@@ -58,7 +58,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
     is_builtin = (MPII_DATALOOP_HANDLE_HASLOOP(oldtype)) ? 0 : 1;
 
     if (is_builtin) {
-        MPI_Aint basic_sz = 0;
+        size_t basic_sz = 0;
 
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_VECTOR, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */

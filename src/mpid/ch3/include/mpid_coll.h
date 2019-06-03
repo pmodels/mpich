@@ -291,9 +291,9 @@ static inline int MPID_Neighbor_alltoallv(const void *sendbuf, const int sendcou
 }
 
 static inline int MPID_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                                          const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                          const size_t sdispls[], const MPI_Datatype sendtypes[],
                                           void *recvbuf, const int recvcounts[],
-                                          const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                          const size_t rdispls[], const MPI_Datatype recvtypes[],
                                           MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -377,9 +377,9 @@ static inline int MPID_Ineighbor_alltoallv(const void *sendbuf, const int sendco
 }
 
 static inline int MPID_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                                           const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                           const size_t sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const int recvcounts[],
-                                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                           const size_t rdispls[], const MPI_Datatype recvtypes[],
                                            MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -875,9 +875,9 @@ static inline int MPID_Ineighbor_alltoallv_sched(const void *sendbuf, const int 
 
 
 static inline int MPID_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
-                                           const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                           const size_t sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const int recvcounts[],
-                                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                           const size_t rdispls[], const MPI_Datatype recvtypes[],
                                            MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

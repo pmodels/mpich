@@ -22,7 +22,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     MPI_Status status;
     int comm_size, rank, is_commutative, type_size ATTRIBUTE((unused));
     int mask, relrank, source, lroot;
-    MPI_Aint true_lb, true_extent, extent;
+    size_t true_lb, true_extent, extent;
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 

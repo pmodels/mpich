@@ -149,7 +149,7 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
     int pof2;
     int is_commutative;
     int nbytes = 0;
-    MPI_Aint type_size;
+    size_t type_size;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;

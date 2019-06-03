@@ -9,14 +9,14 @@
 #include "mpidrma.h"
 
 int MPID_Rput(const void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              MPI_Datatype origin_datatype, int target_rank, size_t target_disp,
               int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
               MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RPUT);
@@ -67,14 +67,14 @@ int MPID_Rput(const void *origin_addr, int origin_count,
 
 
 int MPID_Rget(void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              MPI_Datatype origin_datatype, int target_rank, size_t target_disp,
               int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
               MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET);
@@ -125,14 +125,14 @@ int MPID_Rget(void *origin_addr, int origin_count,
 
 
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
-                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Datatype origin_datatype, int target_rank, size_t target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr,
                      MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
@@ -184,14 +184,14 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
 
 int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         MPI_Datatype result_datatype, int target_rank, size_t target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
                          MPIR_Win * win_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
     MPIR_Datatype*dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    size_t dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz, trg_data_sz;
     MPIR_Request *ureq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);

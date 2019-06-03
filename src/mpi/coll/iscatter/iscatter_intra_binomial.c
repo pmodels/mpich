@@ -9,8 +9,8 @@
 /* helper callbacks and associated state structures */
 struct shared_state {
     int sendcount;
-    MPI_Aint curr_count;
-    MPI_Aint send_subtree_count;
+    size_t curr_count;
+    size_t send_subtree_count;
     int nbytes;
     MPI_Status status;
 };
@@ -69,7 +69,7 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
                                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint extent = 0;
+    size_t extent = 0;
     int rank, comm_size, sendtype_size;
     int relative_rank;
     int mask, recvtype_size = 0, src, dst;

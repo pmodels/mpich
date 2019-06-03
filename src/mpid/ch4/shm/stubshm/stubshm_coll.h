@@ -342,10 +342,10 @@ static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallv(const void *sendbuf, cons
 }
 
 static inline int MPIDI_STUBSHM_mpi_neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                                                       const MPI_Aint sdispls[],
+                                                       const size_t sdispls[],
                                                        const MPI_Datatype sendtypes[],
                                                        void *recvbuf, const int recvcounts[],
-                                                       const MPI_Aint rdispls[],
+                                                       const size_t rdispls[],
                                                        const MPI_Datatype recvtypes[],
                                                        MPIR_Comm * comm_ptr,
                                                        MPIR_Errflag_t * errflag)
@@ -418,10 +418,10 @@ static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallv(const void *sendbuf, con
 }
 
 static inline int MPIDI_STUBSHM_mpi_ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
-                                                        const MPI_Aint sdispls[],
+                                                        const size_t sdispls[],
                                                         const MPI_Datatype sendtypes[],
                                                         void *recvbuf, const int recvcounts[],
-                                                        const MPI_Aint rdispls[],
+                                                        const size_t rdispls[],
                                                         const MPI_Datatype recvtypes[],
                                                         MPIR_Comm * comm_ptr, MPI_Request * req)
 {

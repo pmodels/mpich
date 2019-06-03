@@ -268,7 +268,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
-                                                   int rank, MPI_Aint * size, int *disp_unit,
+                                                   int rank, size_t * size, int *disp_unit,
                                                    void *baseptr)
 {
     int mpi_errno;

@@ -30,11 +30,11 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 }
 
 
-int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
+int MPIDI_CH3U_Win_gather_info(void *base, size_t size, int disp_unit,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
-    MPI_Aint *tmp_buf;
+    size_t *tmp_buf;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
@@ -55,15 +55,15 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 
     /* get the addresses of the windows, window objects, and completion
      * counters of all processes.  allocate temp. buffer for communication */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
+    MPIR_CHKLMEM_MALLOC(tmp_buf, size_t *, 4 * comm_size * sizeof(size_t),
                         mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* FIXME: If we wanted to validate the transfer as within range at the
      * origin, we'd also need the window size. */
     tmp_buf[4 * rank] = MPIR_Ptr_to_aint(base);
     tmp_buf[4 * rank + 1] = size;
-    tmp_buf[4 * rank + 2] = (MPI_Aint) disp_unit;
-    tmp_buf[4 * rank + 3] = (MPI_Aint) (*win_ptr)->handle;
+    tmp_buf[4 * rank + 2] = (size_t) disp_unit;
+    tmp_buf[4 * rank + 3] = (size_t) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                tmp_buf, 4, MPI_AINT, (*win_ptr)->comm_ptr, &errflag);
@@ -93,7 +93,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 }
 
 
-int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPIDI_CH3U_Win_create(void *base, size_t size, int disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -144,7 +144,7 @@ int MPIDI_CH3U_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_W
     /* --END ERROR HANDLING-- */
 }
 
-int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+int MPID_Win_attach(MPIR_Win * win, void *base, size_t size)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -182,7 +182,7 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
 }
 
 
-int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPIDI_CH3U_Win_allocate(size_t size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -212,7 +212,7 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
 }
 
 
-int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
+int MPIDI_CH3U_Win_allocate_no_shm(size_t size, int disp_unit, MPIR_Info * info,
                                    MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     void **base_pp = (void **) baseptr;
@@ -251,7 +251,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * inf
 }
 
 
-int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
+int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, size_t * size,
                                 int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;

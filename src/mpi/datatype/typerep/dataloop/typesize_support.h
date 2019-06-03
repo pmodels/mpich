@@ -11,13 +11,13 @@
 #define MPII_Dataloop_type_footprint MPIDU_Type_footprint
 
 typedef struct MPIDU_Type_footprint_s {
-    MPI_Aint size, extent;
+    size_t size, extent;
 
     /* these are only needed for calculating footprint of types
      * built using this type. no reason to expose these.
      */
-    MPI_Aint lb, ub, alignsz;
-    MPI_Aint true_lb, true_ub;
+    size_t lb, ub, alignsz;
+    size_t true_lb, true_ub;
     int has_sticky_lb;
     int has_sticky_ub;
 } MPII_Dataloop_type_footprint;

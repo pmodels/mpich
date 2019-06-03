@@ -25,11 +25,11 @@ static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_f
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
-static inline void MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
+static inline void MPID_nem_mpich_send_seg_header (void *buf, size_t count, MPI_Datatype datatype,
                                                    intptr_t *msg_offset,
                                                    intptr_t msgsize, void *header, intptr_t header_sz,
                                                    MPIDI_VC_t *vc, int *again);
-static inline void MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
+static inline void MPID_nem_mpich_send_seg (void *buf, size_t count, MPI_Datatype datatype,
                                             intptr_t *msg_offset, intptr_t msgsize,
                                                     MPIDI_VC_t *vc, int *again);
 
@@ -324,7 +324,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     intptr_t payload_len;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPI_Aint buf_offset = 0;
+    size_t buf_offset = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
     
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
@@ -461,7 +461,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
                      i.e.: we will never send only the header
 */
 static inline void
-MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype,
+MPID_nem_mpich_send_seg_header (void *buf, size_t count, MPI_Datatype datatype,
                                 intptr_t *msg_offset, intptr_t msgsize,
                                 void *header, intptr_t header_sz, MPIDI_VC_t *vc, int *again)
 {
@@ -472,7 +472,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
     intptr_t datalen;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPI_Aint buf_offset = 0;
+    size_t buf_offset = 0;
 
     MPIR_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     MPIR_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
@@ -510,7 +510,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
             MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, header, header_sz);
             
             /* copy data */
-            MPI_Aint actual_pack_bytes;
+            size_t actual_pack_bytes;
             MPIR_Typerep_pack(buf, count, datatype, *msg_offset,
                            (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t),
                            msgsize - *msg_offset, &actual_pack_bytes);
@@ -560,13 +560,13 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
     /* copy data */
-    MPI_Aint max_pack_bytes;
+    size_t max_pack_bytes;
     if (msgsize - *msg_offset <= MPID_NEM_MPICH_DATA_LEN - buf_offset)
         max_pack_bytes = msgsize - *msg_offset;
     else
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
-    MPI_Aint actual_pack_bytes;
+    size_t actual_pack_bytes;
     MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload + buf_offset,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = buf_offset + actual_pack_bytes;
@@ -605,7 +605,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 /* similar to MPID_nem_mpich_send_seg_header, except there is no
    header to send.  This need not be the first packet of a message. */
 static inline void
-MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
+MPID_nem_mpich_send_seg (void *buf, size_t count, MPI_Datatype datatype,
                          intptr_t *msg_offset, intptr_t msgsize, MPIDI_VC_t *vc, int *again)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SEND_SEG);
@@ -646,13 +646,13 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
 #endif /*PREFETCH_CELL */
 
     /* copy data */
-    MPI_Aint max_pack_bytes;
+    size_t max_pack_bytes;
     if (msgsize - *msg_offset <= MPID_NEM_MPICH_DATA_LEN)
         max_pack_bytes = msgsize - *msg_offset;
     else
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN;
 
-    MPI_Aint actual_pack_bytes;
+    size_t actual_pack_bytes;
     MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = actual_pack_bytes;

@@ -86,7 +86,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-int MPID_Win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPID_Win_create(void *base, size_t length, int disp_unit, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
@@ -110,7 +110,7 @@ int MPID_Win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info
     goto fn_exit;
 }
 
-int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+int MPID_Win_attach(MPIR_Win * win, void *base, size_t size)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ATTACH);
@@ -134,7 +134,7 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPID_Win_allocate_shared(size_t size, int disp_unit, MPIR_Info * info_ptr,
                              MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
@@ -182,7 +182,7 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPID_Win_allocate(size_t size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                       void *baseptr, MPIR_Win ** win)
 {
     int mpi_errno;

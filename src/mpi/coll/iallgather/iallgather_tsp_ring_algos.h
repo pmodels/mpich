@@ -31,9 +31,9 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int tag;
 
-    MPI_Aint recvtype_lb, recvtype_extent;
-    MPI_Aint sendtype_lb, sendtype_extent;
-    MPI_Aint sendtype_true_extent, recvtype_true_extent;
+    size_t recvtype_lb, recvtype_extent;
+    size_t sendtype_lb, sendtype_extent;
+    size_t sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RING);

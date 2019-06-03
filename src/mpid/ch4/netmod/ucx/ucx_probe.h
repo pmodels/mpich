@@ -21,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t ucp_tag, tag_mask;
-    MPI_Aint count;
+    size_t count;
     ucp_tag_recv_info_t info;
     ucp_tag_message_h message_h;
     MPIR_Request *req = NULL;
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t ucp_tag, tag_mask;
-    MPI_Aint count;
+    size_t count;
     ucp_tag_recv_info_t info;
     ucp_tag_message_h message_h;
 

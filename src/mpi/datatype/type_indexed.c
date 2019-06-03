@@ -56,10 +56,10 @@ int MPIR_Type_indexed(int count,
     int mpi_errno = MPI_SUCCESS;
     int is_builtin, old_is_contig;
     int i;
-    MPI_Aint contig_count;
-    MPI_Aint el_sz, el_ct, old_ct, old_sz;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
-    MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
+    size_t contig_count;
+    size_t el_sz, el_ct, old_ct, old_sz;
+    size_t old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
+    size_t min_lb = 0, max_ub = 0, eff_disp;
     MPI_Datatype el_type;
 
     MPIR_Datatype *new_dtp;
@@ -106,15 +106,15 @@ int MPIR_Type_indexed(int count,
 
         old_lb = 0;
         old_true_lb = 0;
-        old_ub = (MPI_Aint) el_sz;
-        old_true_ub = (MPI_Aint) el_sz;
-        old_extent = (MPI_Aint) el_sz;
+        old_ub = (size_t) el_sz;
+        old_true_ub = (size_t) el_sz;
+        old_extent = (size_t) el_sz;
         old_is_contig = 1;
 
         new_dtp->has_sticky_ub = 0;
         new_dtp->has_sticky_lb = 0;
 
-        MPIR_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
+        MPIR_Assign_trunc(new_dtp->alignsize, el_sz, size_t);
         new_dtp->builtin_element_size = el_sz;
         new_dtp->basic_type = el_type;
 
@@ -144,13 +144,13 @@ int MPIR_Type_indexed(int count,
         new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
         new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->builtin_element_size = (MPI_Aint) el_sz;
+        new_dtp->builtin_element_size = (size_t) el_sz;
         new_dtp->basic_type = el_type;
 
         new_dtp->max_contig_blocks = 0;
         for (i = 0; i < count; i++)
             new_dtp->max_contig_blocks
-                += old_dtp->max_contig_blocks * ((MPI_Aint) blocklength_array[i]);
+                += old_dtp->max_contig_blocks * ((size_t) blocklength_array[i]);
     }
 
     /* find the first nonzero blocklength element */
@@ -165,26 +165,26 @@ int MPIR_Type_indexed(int count,
 
     /* priming for loop */
     old_ct = blocklength_array[i];
-    eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-        (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
+    eff_disp = (dispinbytes) ? ((size_t *) displacement_array)[i] :
+        (((size_t) ((int *) displacement_array)[i]) * old_extent);
 
-    MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+    MPII_DATATYPE_BLOCK_LB_UB((size_t) blocklength_array[i],
                               eff_disp, old_lb, old_ub, old_extent, min_lb, max_ub);
 
     /* determine min lb, max ub, and count of old types in remaining
      * nonzero size blocks
      */
     for (i++; i < count; i++) {
-        MPI_Aint tmp_lb, tmp_ub;
+        size_t tmp_lb, tmp_ub;
 
         if (blocklength_array[i] > 0) {
             old_ct += blocklength_array[i];     /* add more oldtypes */
 
-            eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
-                (((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
+            eff_disp = (dispinbytes) ? ((size_t *) displacement_array)[i] :
+                (((size_t) ((int *) displacement_array)[i]) * old_extent);
 
             /* calculate ub and lb for this block */
-            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (blocklength_array[i]),
+            MPII_DATATYPE_BLOCK_LB_UB((size_t) (blocklength_array[i]),
                                       eff_disp, old_lb, old_ub, old_extent, tmp_lb, tmp_ub);
 
             if (tmp_lb < min_lb)
@@ -210,7 +210,7 @@ int MPIR_Type_indexed(int count,
      */
     new_dtp->is_contig = 0;
     if (old_is_contig) {
-        MPI_Aint *blklens = MPL_malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+        size_t *blklens = MPL_malloc(count * sizeof(size_t), MPL_MEM_DATATYPE);
         MPIR_Assert(blklens != NULL);
         for (i = 0; i < count; i++)
             blklens[i] = blocklength_array[i];
@@ -219,7 +219,7 @@ int MPIR_Type_indexed(int count,
                                                           displacement_array, dispinbytes,
                                                           old_extent);
         new_dtp->max_contig_blocks = contig_count;
-        if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
+        if ((contig_count == 1) && ((size_t) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;
         }
         MPL_free(blklens);

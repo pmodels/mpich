@@ -13,8 +13,8 @@
  * satisfying the MPI-level pack/unpack_external functions.  MPICH
  * internals do not need them. */
 
-int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
-                               void *outbuf, MPI_Aint * actual_pack_bytes)
+int MPIR_Typerep_pack_external(const void *inbuf, size_t incount, MPI_Datatype datatype,
+                               void *outbuf, size_t * actual_pack_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -45,8 +45,8 @@ int MPIR_Typerep_pack_external(const void *inbuf, MPI_Aint incount, MPI_Datatype
     goto fn_exit;
 }
 
-int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outcount,
-                                 MPI_Datatype datatype, MPI_Aint * actual_unpack_bytes)
+int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, size_t outcount,
+                                 MPI_Datatype datatype, size_t * actual_unpack_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;

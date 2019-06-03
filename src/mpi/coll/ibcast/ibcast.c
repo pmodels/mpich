@@ -150,7 +150,7 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
-    MPI_Aint type_size, nbytes;
+    size_t type_size, nbytes;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 

@@ -86,7 +86,7 @@ int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen);
 
 /* Nemesis-provided RMA implementation */
-int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);
+int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win *win_ptr, int target_rank, size_t *size, int *disp_unit, void *baseptr);
 int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 
 /* Shared memory window atomic/accumulate mutex implementation */

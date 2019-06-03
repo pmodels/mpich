@@ -14,7 +14,7 @@
 #include "ch4_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
-                                               MPI_Aint count,
+                                               size_t count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
-                                                MPI_Aint count,
+                                                size_t count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
@@ -167,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
-                                                 MPI_Aint count, MPI_Datatype datatype,
+                                                 size_t count, MPI_Datatype datatype,
                                                  MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -291,7 +291,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
-                                               MPI_Aint count, MPI_Datatype datatype,
+                                               size_t count, MPI_Datatype datatype,
                                                MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
 
 
 MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
-                                       MPI_Aint count,
+                                       size_t count,
                                        MPI_Datatype datatype,
                                        int rank,
                                        int tag,
@@ -454,7 +454,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
 
 
 MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
-                                        MPI_Aint count,
+                                        size_t count,
                                         MPI_Datatype datatype, MPIR_Request * message,
                                         MPI_Status * status, MPIR_Request ** rreq)
 {
@@ -487,7 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, size_t count, MPI_Datatype datatype,
                                          MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -516,7 +516,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
-                                        MPI_Aint count,
+                                        size_t count,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,

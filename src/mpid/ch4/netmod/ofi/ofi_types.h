@@ -411,7 +411,7 @@ typedef struct {
 } MPIDI_OFI_offset_checker_t;
 
 typedef struct MPIDI_OFI_seg_state {
-    MPI_Aint buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
+    size_t buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
                                  * This value remains constant once seg_state is initialized. */
     MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
 
@@ -426,10 +426,10 @@ typedef struct MPIDI_OFI_seg_state {
 
     size_t target_cursor;
     size_t target_end;
-    MPI_Aint target_buf;
+    size_t target_buf;
     size_t target_count;
     MPI_Datatype target_type;
-    MPI_Aint target_iov_len;
+    size_t target_iov_len;
     MPL_IOV target_iov;
     uintptr_t target_addr;
 
@@ -438,7 +438,7 @@ typedef struct MPIDI_OFI_seg_state {
     const void *result_buf;
     size_t result_count;
     MPI_Datatype result_type;
-    MPI_Aint result_iov_len;
+    size_t result_iov_len;
     MPL_IOV result_iov;
     uintptr_t result_addr;
 } MPIDI_OFI_seg_state_t;

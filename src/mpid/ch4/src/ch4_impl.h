@@ -19,12 +19,12 @@ int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 /* Collectively allocate shared memory region.
  * MPL_shm routines and MPI collectives are internally used. */
-int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
+int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, size_t shm_segment_len,
                                 MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                 bool * mapfail_flag_ptr);
 /* Destroy shared memory region on the local process.
  * MPL_shm routines are internally used. */
-int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_segment_hdl_ptr,
+int MPIDIU_destroy_shm_segment(size_t shm_segment_len, MPL_shm_hnd_t * shm_segment_hdl_ptr,
                                void **base_ptr);
 
 
@@ -896,7 +896,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
-    MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
+    size_t source_dtp_size = 0, source_dtp_extent = 0;
     int is_empty_source = FALSE;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
 
@@ -932,10 +932,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* derived datatype */
         MPL_IOV *typerep_vec;
         int vec_len, i, count;
-        MPI_Aint type_extent, type_size, src_type_stride;
+        size_t type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype *dtp;
-        MPI_Aint curr_len;
+        size_t curr_len;
         void *curr_loc;
         int accumulated_count;
 
@@ -955,7 +955,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --END ERROR HANDLING-- */
 
         int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
+        size_t actual_iov_bytes;
         MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
                             source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
         vec_len = actual_iov_len;

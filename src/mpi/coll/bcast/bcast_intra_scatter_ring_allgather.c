@@ -34,12 +34,12 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size;
     int j, i, is_contig;
-    MPI_Aint nbytes, type_size;
+    size_t nbytes, type_size;
     int left, right, jnext;
     void *tmp_buf;
-    MPI_Aint recvd_size, curr_size = 0;
+    size_t recvd_size, curr_size = 0;
     MPI_Status status;
-    MPI_Aint true_extent, true_lb;
+    size_t true_extent, true_lb;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;

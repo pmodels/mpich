@@ -17,10 +17,10 @@
     {                                                                   \
         struct { ut1_ a; ut2_ b; } foo;                                 \
         type_size_   = sizeof(foo.a) + sizeof(foo.b);                   \
-        type_extent_ = (MPI_Aint) sizeof(foo);                          \
+        type_extent_ = (size_t) sizeof(foo);                          \
         el_size_ = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
-        true_ub_ = ((MPI_Aint) ((char *) &foo.b - (char *) &foo.a)) +   \
-            (MPI_Aint) sizeof(foo.b);                                   \
+        true_ub_ = ((size_t) ((char *) &foo.b - (char *) &foo.a)) +   \
+            (size_t) sizeof(foo.b);                                   \
         alignsize_ = MPL_MAX(MPIR_Datatype_get_basic_size(mt1_),        \
                              MPIR_Datatype_get_basic_size(mt2_));       \
     }
@@ -65,7 +65,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 {
     int mpi_errno = MPI_SUCCESS;
     int type_size, alignsize;
-    MPI_Aint type_extent, true_ub, el_size;
+    size_t type_extent, true_ub, el_size;
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
@@ -154,8 +154,8 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
             break;
     }
 
-    new_dtp->is_contig = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
-    new_dtp->max_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
+    new_dtp->is_contig = (((size_t) type_size) == type_extent) ? 1 : 0;
+    new_dtp->max_contig_blocks = (((size_t) type_size) == type_extent) ? 1 : 2;
 
     /* fill in typereps -- only case where we precreate typereps
      *

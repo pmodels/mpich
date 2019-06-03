@@ -34,14 +34,14 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
     int comm_size, rank;
     int relative_rank;
     int mask, src, dst, relative_src;
-    MPI_Aint recvtype_size, sendtype_size, curr_cnt = 0, nbytes;
+    size_t recvtype_size, sendtype_size, curr_cnt = 0, nbytes;
     int recvblks;
     int tmp_buf_size, missing;
     void *tmp_buf = NULL;
     int blocks[2];
     int displs[2];
-    MPI_Aint struct_displs[2];
-    MPI_Aint extent = 0;
+    size_t struct_displs[2];
+    size_t extent = 0;
     int copy_offset = 0, copy_blks = 0;
     MPI_Datatype types[2], tmp_type;
     MPIR_SCHED_CHKPMEM_DECL(1);
@@ -175,7 +175,7 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                         MPIR_Type_free_impl(&tmp_type);
                     }
                 } else {        /* Intermediate nodes store in temporary buffer */
-                    MPI_Aint offset;
+                    size_t offset;
 
                     /* Estimate the amount of data that is going to come in */
                     recvblks = mask;
@@ -219,7 +219,7 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                     MPIR_ERR_POP(mpi_errno);
             } else {
                 blocks[0] = sendcount;
-                struct_displs[0] = (MPI_Aint) sendbuf;
+                struct_displs[0] = (size_t) sendbuf;
                 types[0] = sendtype;
                 /* check for overflow.  work around int limits if needed */
                 if (curr_cnt - nbytes != (int) (curr_cnt - nbytes)) {
@@ -229,7 +229,7 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                     MPIR_Assign_trunc(blocks[1], curr_cnt - nbytes, int);
                     types[1] = MPI_BYTE;
                 }
-                struct_displs[1] = (MPI_Aint) tmp_buf;
+                struct_displs[1] = (size_t) tmp_buf;
 
                 mpi_errno =
                     MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
