@@ -1,0 +1,29 @@
+## Configure MPI basic datatypes
+
+There are currently 0x46 basic MPI datatypes listed in the standard, plus 1 extra type (MPIX_C_FLOAT16). The existing configure (at the time of github PR#3819) is very messy in configuring these datatypes. This note documents the new approach.
+
+* In configure.ac we only run tests to check the sizes of various types, using `AC_CHECK_SIZEOF` and `PAC_PROG_F77_CHECK_SIZEOF_EXT`. 
+    ** `AC_CHECK_SIZEOF` will use and define cache value `pac_cv_sizeof_xxx` and define in `mpichconf.h` macro `SIZEOF_XXX`. 
+    ** `PAC_PROG_F77_CHECK_SIZEOF_EXT` will use and define cache_value `CROSS_F77_SIZEOF_XXX` and define in `mpichconf.h` macro `SIZEOF_F77_XXX`.
+    ** User can bypass and customize these results by presetting the cache value in environment or supply them in a cross file with config option `--with-cross=path/to/crossfile`. The cross file is simply a set of `varname=value` that sets the cache values for the types.
+    ** When the datatype is not availiable or compiler errors out for whatever reason, both the cache value and defined macros will be set to 0 (not empty). Therefore, there is no need to run separate tests for `HAVE_XXXTYPE` macros.
+
+* In `mpi.h.in`, we hard code the builtin MPI DATATYTPE's handle value with masking bits (0x4c for builtin-datatype and 0x8c for direct pair type) and sequence bits (last two bits 00-47) in place, but the size bits (2-3) are set to 00 as they need to be determined by configure.
+    **  Instead of doing bit manipulation and arithmetics in autoconf shell script, it is more effective to do it in a scripting langauge such as Perl. We use a perl script -- `maint/config_filter.pl` to do all the datatype postprocessing and then overwrite `mpi.h`, `mpif.h`, and `mpir_ext.h`.
+    ** There are convienient macros such as `HAVE_xxx` (eg. `HAVE_LONG_LONG`, for every MPI basic datatype), and equivalent MPIR_xxx_CTYPE macros for datatypes from FORTRAN and CXX bindings (e.g. MPIR_COMPLEX_CTYPE). They are defined in mpir_ext.h and are used inside mpich and romio. It may be desirable to have these macros in `mpi.h` so the user code can easily detect the availability of basic datatypes. It will be really useful for, e.g. teststuite.
+    ** MPI_FINT, MPI_AINT, MPI_OFFSET, and MPI_COUNT are special as the standard expose them not only as MPI datatype, but also as C typedefs. These typedefs are also filled by `config_filter.pl`. In addition, it adds macros in `mpir_ext.h` for their fmt and max macros, e.g. MPIR_AINT_FMT_d, MPIR_AINT_FMT_x and MPIR_AINT_MAX.
+    
+
+## Cross file
+
+Generally, it is a straight forward process to check sizeof data types by compile and running test programs. This will fail in cross-compiling. AC_CHECK_SIZEOF has work-arounds. The FORTRAN case does not. The solution is to ask user supply a cross-file.
+
+The cross-file mechanism is not well explained, probably due to the cumbersome nature. Seems the previous solution is to ask user to run a configure in `maint/fcrosscompile` inside the target host system to generate a cross file.
+
+There are also sample cross-files in the current repository: src/cross/powerpc64-bgq-linux, src/mpid/ch4/cross/{icc,gcc}-linux-x86-8. By all means, these should be consolidated.
+
+The new solution is to ask the user to run a single script -- `perl maint/gen_cross.pl` on the target host system, which will produce `cross_values.txt`. The messages in that program should point user to pass it to the mpich configure using `--with-cross=path/to/cross-values.txt`.
+
+Currently `gen_cross.pl` uses the same mechanism as in configure to check for type sizes. For C, use `sizeof`; for fortran, use a hybrid method by defining types in FORTRAN and checking its size in C. There are other methods possible, for example, directly parsing compiler's assembly output.
+
+The cross file mechanism, while it is a solution for cross compiling, can also be used as a way to customize the datatypes. For example, setting `ac_cv_sizeof_long_long=0` can be used to disable `long long` types. The device layer may also control the availability of `long long` and `long double`. 
