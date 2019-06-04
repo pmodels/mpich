@@ -656,7 +656,7 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
     goto fn_exit;
 }
 
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);

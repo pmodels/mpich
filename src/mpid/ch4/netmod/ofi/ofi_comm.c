@@ -36,7 +36,7 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         void *table;
         fi_addr_t *mapped_table;
-        size_t rem_bcs, num_nodes = MPIDI_global.max_node_id + 1;
+        MPI_Aint rem_bcs, num_nodes = MPIDI_global.max_node_id + 1;
         int i, curr, node;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));

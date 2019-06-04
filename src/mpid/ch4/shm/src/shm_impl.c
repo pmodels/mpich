@@ -358,7 +358,7 @@ int MPIDI_SHM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Wi
     return ret;
 }
 
-int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids)
 {
     int ret;
 
@@ -371,7 +371,7 @@ int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     return ret;
 }
 
-int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_SHM_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                               int **remote_lupids)
 {
     int ret;
@@ -398,7 +398,7 @@ int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
     return ret;
 }
 
-void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_SHM_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     void *ret;
 

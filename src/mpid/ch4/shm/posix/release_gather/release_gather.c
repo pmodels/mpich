@@ -192,7 +192,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     int rank, num_ranks;
     bool initialize_flags = false, initialize_bcast_buf = false, initialize_reduce_buf = false;
     int flags_num_pages, fallback = 0;
-    size_t flags_shm_size = 0;
+    MPI_Aint flags_shm_size = 0;
     const long pg_sz = sysconf(_SC_PAGESIZE);
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     bool mapfail_flag = false;
@@ -235,8 +235,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
     if (initialize_flags || initialize_bcast_buf || initialize_reduce_buf) {
         /* Calculate the amount of shm to be created */
-        size_t tmp_shm_counter;
-        size_t memory_to_be_allocated = 0;
+        MPI_Aint tmp_shm_counter;
+        MPI_Aint memory_to_be_allocated = 0;
         if (initialize_flags) {
             /* Calculate the amount of memory that would be allocated for flags */
             flags_shm_size = MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK * num_ranks;

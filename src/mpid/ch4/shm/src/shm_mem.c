@@ -9,7 +9,7 @@
 #include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
 
-void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_SHMI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     void *ret;
 

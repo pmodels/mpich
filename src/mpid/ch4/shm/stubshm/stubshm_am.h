@@ -16,7 +16,7 @@ static inline int MPIDI_STUBSHM_am_isend(int rank,
                                          MPIR_Comm * comm,
                                          int handler_id,
                                          const void *am_hdr,
-                                         size_t am_hdr_sz,
+                                         MPI_Aint am_hdr_sz,
                                          const void *data,
                                          MPI_Count count,
                                          MPI_Datatype datatype, MPIR_Request * sreq)
@@ -34,7 +34,7 @@ static inline int MPIDI_STUBSHM_am_isendv(int rank,
                                           MPIR_Comm * comm,
                                           int handler_id,
                                           struct iovec *am_hdr,
-                                          size_t iov_len,
+                                          MPI_Aint iov_len,
                                           const void *data,
                                           MPI_Count count,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
@@ -51,7 +51,7 @@ static inline int MPIDI_STUBSHM_am_isendv(int rank,
 static inline int MPIDI_STUBSHM_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
                                                int handler_id,
                                                const void *am_hdr,
-                                               size_t am_hdr_sz,
+                                               MPI_Aint am_hdr_sz,
                                                const void *data,
                                                MPI_Count count,
                                                MPI_Datatype datatype, MPIR_Request * sreq)
@@ -65,7 +65,7 @@ static inline int MPIDI_STUBSHM_am_isend_reply(MPIR_Context_id_t context_id, int
     return MPI_SUCCESS;
 }
 
-static inline size_t MPIDI_STUBSHM_am_hdr_max_sz(void)
+static inline MPI_Aint MPIDI_STUBSHM_am_hdr_max_sz(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_HDR_MAX_SZ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_HDR_MAX_SZ);
@@ -78,7 +78,7 @@ static inline size_t MPIDI_STUBSHM_am_hdr_max_sz(void)
 
 static inline int MPIDI_STUBSHM_am_send_hdr(int rank,
                                             MPIR_Comm * comm,
-                                            int handler_id, const void *am_hdr, size_t am_hdr_sz)
+                                            int handler_id, const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_SEND_HDR);
@@ -91,7 +91,7 @@ static inline int MPIDI_STUBSHM_am_send_hdr(int rank,
 
 static inline int MPIDI_STUBSHM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                                   int handler_id, const void *am_hdr,
-                                                  size_t am_hdr_sz)
+                                                  MPI_Aint am_hdr_sz)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_SEND_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_SEND_HDR_REPLY);

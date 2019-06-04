@@ -123,7 +123,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
-                        (size_t) len != gl_data.bound_addrlen,
+                        (MPI_Aint) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
 
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &direct_addr, 0ULL, NULL), avmap);
@@ -205,7 +205,7 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Re
 static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int c, mpi_errno = MPI_SUCCESS;
-    size_t pkt_len;
+    MPI_Aint pkt_len;
     char *pack_buffer = NULL;
     MPIDI_VC_t *vc;
     MPIR_Request *new_rreq, *sreq;
@@ -418,7 +418,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     MPIDI_CH3I_NM_OFI_RC(vc->pg->getConnInfo(vc->pg_rank, bc, MPIDI_OFI_KVSAPPSTRLEN, vc->pg));
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
-                        (size_t) len != gl_data.bound_addrlen,
+                        (MPI_Aint) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(vc)->direct_addr), 0ULL, NULL), avmap);
     VC_OFI(vc)->ready = 1;
@@ -544,7 +544,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag));
     ret = MPL_str_get_binary_arg(business_card, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
-                        (size_t) len != gl_data.bound_addrlen,
+                        (MPI_Aint) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(new_vc)->direct_addr), 0ULL, NULL), avmap);
 

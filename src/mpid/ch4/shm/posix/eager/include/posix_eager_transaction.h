@@ -19,7 +19,7 @@ typedef struct MPIDI_POSIX_eager_recv_transaction {
     void *msg_hdr;
 
     void *payload;
-    size_t payload_sz;          /* 2GB limit */
+    MPI_Aint payload_sz;        /* 2GB limit */
 
     int src_grank;
 

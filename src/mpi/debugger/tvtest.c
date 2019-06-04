@@ -311,7 +311,7 @@ static int dbgrI_find_function(mqs_image * image, char *name, mqs_lang_code lang
 /* Simulate requesting the debugger to fetch data from within this process */
 static int dbgrI_fetch_data(mqs_process * proc, mqs_taddr_t addr, int asize, void *data)
 {
-    MPIR_Memcpy(data, (void *) addr, (size_t) asize);
+    MPIR_Memcpy(data, (void *) addr, (MPI_Aint) asize);
     return mqs_ok;
 }
 

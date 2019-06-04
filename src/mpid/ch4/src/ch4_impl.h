@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
             (dt_ptr_)        = NULL;                            \
             (dt_contig_out_) = TRUE;                            \
             (dt_true_lb_)    = 0;                               \
-            (data_sz_out_)   = (size_t)(count_) *               \
+            (data_sz_out_)   = (MPI_Aint)(count_) *               \
                 MPIR_Datatype_get_basic_size(datatype_);        \
         } else {                                                \
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
             {                                                   \
                 (dt_contig_out_) = (dt_ptr_)->is_contig;        \
                 (dt_true_lb_)    = (dt_ptr_)->true_lb;          \
-                (data_sz_out_)   = (size_t)(count_) *           \
+                (data_sz_out_)   = (MPI_Aint)(count_) *           \
                     (dt_ptr_)->size;                            \
             }                                                   \
             else                                                \
@@ -232,11 +232,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     do {                                                        \
         if (IS_BUILTIN(datatype_)) {                            \
             (dt_ptr_)        = NULL;                            \
-            (data_sz_out_)   = (size_t)(count_) *               \
+            (data_sz_out_)   = (MPI_Aint)(count_) *               \
                 MPIR_Datatype_get_basic_size(datatype_);        \
         } else {                                                \
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
-            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *   \
+            (data_sz_out_)   = (dt_ptr_) ? (MPI_Aint)(count_) *   \
                 (dt_ptr_)->size : 0;                            \
         }                                                       \
     } while (0)
@@ -258,14 +258,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     do {                                                        \
         if (IS_BUILTIN(datatype_)) {                            \
             (dt_contig_out_) = TRUE;                            \
-            (data_sz_out_)   = (size_t)(count_) *               \
+            (data_sz_out_)   = (MPI_Aint)(count_) *               \
                 MPIR_Datatype_get_basic_size(datatype_);        \
         } else {                                                \
             MPIR_Datatype *dt_ptr_;                             \
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
             if (dt_ptr_) {                                      \
                 (dt_contig_out_) = (dt_ptr_)->is_contig;        \
-                (data_sz_out_)   = (size_t)(count_) *           \
+                (data_sz_out_)   = (MPI_Aint)(count_) *           \
                     (dt_ptr_)->size;                            \
             } else {                                            \
                 (dt_contig_out_) = 1;                           \
@@ -277,12 +277,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 #define MPIDI_Datatype_check_size(datatype_,count_,data_sz_out_)        \
     do {                                                                \
         if (IS_BUILTIN(datatype_)) {                                    \
-            (data_sz_out_)   = (size_t)(count_) *                       \
+            (data_sz_out_)   = (MPI_Aint)(count_) *                       \
                 MPIR_Datatype_get_basic_size(datatype_);                \
         } else {                                                        \
             MPIR_Datatype *dt_ptr_;                                     \
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));              \
-            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *           \
+            (data_sz_out_)   = (dt_ptr_) ? (MPI_Aint)(count_) *           \
                 (dt_ptr_)->size : 0;                                    \
         }                                                               \
     } while (0)
@@ -291,13 +291,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
                                      dt_true_lb_)                       \
     do {                                                                \
         if (IS_BUILTIN(datatype_)) {                                    \
-            (data_sz_out_)   = (size_t)(count_) *                       \
+            (data_sz_out_)   = (MPI_Aint)(count_) *                       \
                 MPIR_Datatype_get_basic_size(datatype_);                \
             (dt_true_lb_)    = 0;                                       \
         } else {                                                        \
             MPIR_Datatype *dt_ptr_;                                     \
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));              \
-            (data_sz_out_)   = (dt_ptr_) ? (size_t)(count_) *           \
+            (data_sz_out_)   = (dt_ptr_) ? (MPI_Aint)(count_) *           \
                 (dt_ptr_)->size : 0;                                    \
             (dt_true_lb_)    = (dt_ptr_) ? (dt_ptr_)->true_lb : 0;      \
         }                                                               \
@@ -310,7 +310,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     do {                                                        \
         if (IS_BUILTIN(datatype_)) {                            \
             (dt_contig_out_) = TRUE;                            \
-            (data_sz_out_)   = (size_t)(count_) *               \
+            (data_sz_out_)   = (MPI_Aint)(count_) *               \
                 MPIR_Datatype_get_basic_size(datatype_);        \
             (dt_true_lb_)    = 0;                               \
         } else {                                                \
@@ -318,7 +318,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
             MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
             if (dt_ptr_) {                                      \
                 (dt_contig_out_) = (dt_ptr_)->is_contig;        \
-                (data_sz_out_)   = (size_t)(count_) *           \
+                (data_sz_out_)   = (MPI_Aint)(count_) *           \
                     (dt_ptr_)->size;                            \
                 (dt_true_lb_)    = (dt_ptr_)->true_lb;          \
             } else {                                            \

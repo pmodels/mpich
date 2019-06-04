@@ -30,7 +30,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     MPIR_Comm * comm,
                                     int handler_id,
                                     const void *am_hdr,
-                                    size_t am_hdr_sz,
+                                    MPI_Aint am_hdr_sz,
                                     const void *data,
                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
@@ -52,12 +52,12 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                      MPIR_Comm * comm,
                                      int handler_id,
                                      struct iovec *am_hdr,
-                                     size_t iov_len,
+                                     MPI_Aint iov_len,
                                      const void *data,
                                      MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, is_allocated;
-    size_t am_hdr_sz = 0, i;
+    MPI_Aint am_hdr_sz = 0, i;
     char *am_hdr_buf;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AMV);
@@ -99,7 +99,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           int src_rank,
                                           int handler_id,
                                           const void *am_hdr,
-                                          size_t am_hdr_sz,
+                                          MPI_Aint am_hdr_sz,
                                           const void *data,
                                           MPI_Count count,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
@@ -118,20 +118,20 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     return mpi_errno;
 }
 
-static inline size_t MPIDI_NM_am_hdr_max_sz(void)
+static inline MPI_Aint MPIDI_NM_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
-    size_t max_shortsend = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE -
+    MPI_Aint max_shortsend = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE -
         (sizeof(MPIDI_OFI_am_header_t) + sizeof(MPIDI_OFI_lmt_msg_payload_t));
     /* Maximum payload size representable by MPIDI_OFI_am_header_t::am_hdr_sz field */
-    size_t max_representable = (1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1;
+    MPI_Aint max_representable = (1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1;
 
     return MPL_MIN(max_shortsend, max_representable);
 }
 
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
-                                       int handler_id, const void *am_hdr, size_t am_hdr_sz)
+                                       int handler_id, const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR);
@@ -150,7 +150,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
 
 static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                              int src_rank,
-                                             int handler_id, const void *am_hdr, size_t am_hdr_sz)
+                                             int handler_id, const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 

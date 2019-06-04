@@ -46,7 +46,7 @@ int MPIDI_STUBSHM_mpi_finalize_hook(void)
     return MPI_SUCCESS;
 }
 
-void *MPIDI_STUBSHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_STUBSHM_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_ALLOC_MEM);
@@ -90,7 +90,7 @@ int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return MPI_SUCCESS;
 }
 
-int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_LOCAL_UPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_LOCAL_UPIDS);
@@ -101,7 +101,7 @@ int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, c
     return MPI_SUCCESS;
 }
 
-int MPIDI_STUBSHM_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_STUBSHM_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                                   int **remote_lupids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_UPIDS_TO_LUPIDS);

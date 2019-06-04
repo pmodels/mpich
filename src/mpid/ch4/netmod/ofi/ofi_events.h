@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_event(struct fi_cq_tagged_entry *wc,
                                                   MPIR_Request * rreq)
 {
-    size_t count;
+    MPI_Aint count;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
     MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                                   MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t count;
+    MPI_Aint count;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_EVENT);
 
@@ -357,10 +357,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                                                  * receive already and we'll be able to find the
                                                                  * struct describing the transfer. */
         /* Subtract one max_msg_size because we send the first chunk via a regular message instead of the memory region */
-        size_t bytesSent = recv_elem->cur_offset - MPIDI_OFI_global.max_msg_size;
-        size_t bytesLeft =
+        MPI_Aint bytesSent = recv_elem->cur_offset - MPIDI_OFI_global.max_msg_size;
+        MPI_Aint bytesLeft =
             recv_elem->remote_info.msgsize - bytesSent - MPIDI_OFI_global.max_msg_size;
-        size_t bytesToGet =
+        MPI_Aint bytesToGet =
             (bytesLeft <=
              MPIDI_OFI_global.max_msg_size) ? bytesLeft : MPIDI_OFI_global.max_msg_size;
 

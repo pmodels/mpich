@@ -43,7 +43,7 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-    size_t in_data_sz, dt_sz, nbytes;
+    MPI_Aint in_data_sz, dt_sz, nbytes;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);

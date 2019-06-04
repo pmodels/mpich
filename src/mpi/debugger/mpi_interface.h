@@ -339,7 +339,7 @@ typedef int (*mqs_get_process_identity_ft) (mqs_job *);
 #endif
 
 /* Allocate store */
-typedef void *(*mqs_malloc_ft) (size_t);
+typedef void *(*mqs_malloc_ft) (MPI_Aint);
 /* Free it again */
 typedef void (*mqs_free_ft) (void *);
 

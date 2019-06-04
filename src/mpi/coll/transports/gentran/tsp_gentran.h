@@ -101,7 +101,7 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *invtcs);
 
 /* Transport function to allocate memory required for schedule execution */
-void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
+void *MPII_Genutil_sched_malloc(MPI_Aint size, MPII_Genutil_sched_t * sched);
 
 /* Transport function to enqueue and kick start a non-blocking
  * collective */

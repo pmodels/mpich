@@ -28,12 +28,12 @@
 
 #define FPRINTF fprintf
 
-void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname);
-void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
-void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
+void *ADIOI_Malloc_fn(MPI_Aint size, int lineno, const char *fname);
+void *ADIOI_Calloc_fn(MPI_Aint nelem, MPI_Aint elsize, int lineno, const char *fname);
+void *ADIOI_Realloc_fn(void *ptr, MPI_Aint size, int lineno, const char *fname);
 void ADIOI_Free_fn(void *ptr, int lineno, const char *fname);
 
-void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
+void *ADIOI_Malloc_fn(MPI_Aint size, int lineno, const char *fname)
 {
     void *new;
 
@@ -52,7 +52,7 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 }
 
 
-void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname)
+void *ADIOI_Calloc_fn(MPI_Aint nelem, MPI_Aint elsize, int lineno, const char *fname)
 {
     void *new;
 
@@ -66,7 +66,7 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
 }
 
 
-void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
+void *ADIOI_Realloc_fn(void *ptr, MPI_Aint size, int lineno, const char *fname)
 {
     void *new;
 

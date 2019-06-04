@@ -31,7 +31,7 @@
 int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
                                                            int log_pofk, int T, void *recvbuf,
                                                            MPI_Datatype recvtype,
-                                                           size_t recv_extent,
+                                                           MPI_Aint recv_extent,
                                                            const int *recvcounts, const int *displs,
                                                            int tag, MPIR_Comm * comm,
                                                            MPIR_TSP_sched_t * sched);
@@ -39,7 +39,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int nranks,
 int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                    int step1_nrecvs, int is_inplace, int rank,
                                                    int tag, const void *sendbuf, void *recvbuf,
-                                                   size_t recv_extent, const int *recvcounts,
+                                                   MPI_Aint recv_extent, const int *recvcounts,
                                                    const int *displs, MPI_Datatype recvtype,
                                                    int n_invtcs, int *invtx, MPIR_Comm * comm,
                                                    MPIR_TSP_sched_t * sched);
@@ -48,7 +48,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    int **step2_nbrs, int rank, int nranks, int k,
                                                    int p_of_k, int log_pofk, int T, int *nrecvs_,
                                                    int **recv_id_, int tag, void *recvbuf,
-                                                   size_t recv_extent, const int *recvcounts,
+                                                   MPI_Aint recv_extent, const int *recvcounts,
                                                    const int *displs, MPI_Datatype recvtype,
                                                    int is_dist_halving, MPIR_Comm * comm,
                                                    MPIR_TSP_sched_t * sched);

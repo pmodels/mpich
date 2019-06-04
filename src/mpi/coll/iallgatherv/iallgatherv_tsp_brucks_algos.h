@@ -54,7 +54,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
 #ifdef MPL_USE_DBG_LOGGING
-    size_t sendtype_size;
+    MPI_Aint sendtype_size;
 #endif
 
     int tag;

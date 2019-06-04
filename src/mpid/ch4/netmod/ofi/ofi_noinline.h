@@ -88,10 +88,10 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             MPIR_Comm * comm_self, int spawned, int *n_vcis_provided);
 int MPIDI_OFI_mpi_finalize_hook(void);
 int MPIDI_OFI_get_vci_attr(int vci);
-void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
+void *MPIDI_OFI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr);
 int MPIDI_OFI_mpi_free_mem(void *ptr);
-int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids);
-int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids);
+int MPIDI_OFI_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                               int **remote_lupids);
 int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[]);
 

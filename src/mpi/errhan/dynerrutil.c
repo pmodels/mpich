@@ -109,7 +109,7 @@ Input Parameters:
 int MPIR_Err_set_msg(int code, const char *msg_string)
 {
     int errcode, errclass;
-    size_t msg_len;
+    MPI_Aint msg_len;
     char *str;
 
     /* --BEGIN ERROR HANDLING-- */

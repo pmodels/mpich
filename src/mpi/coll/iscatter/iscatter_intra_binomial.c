@@ -24,7 +24,7 @@ static int get_count(MPIR_Comm * comm, int tag, void *state)
 static int calc_send_count_root(MPIR_Comm * comm, int tag, void *state, void *state2)
 {
     struct shared_state *ss = state;
-    int mask = (int) (size_t) state2;
+    int mask = (int) (MPI_Aint) state2;
     ss->send_subtree_count = ss->curr_count - ss->sendcount * mask;
     return MPI_SUCCESS;
 }
@@ -32,7 +32,7 @@ static int calc_send_count_root(MPIR_Comm * comm, int tag, void *state, void *st
 static int calc_send_count_non_root(MPIR_Comm * comm, int tag, void *state, void *state2)
 {
     struct shared_state *ss = state;
-    int mask = (int) (size_t) state2;
+    int mask = (int) (MPI_Aint) state2;
     ss->send_subtree_count = ss->curr_count - ss->nbytes * mask;
     return MPI_SUCCESS;
 }
@@ -205,7 +205,8 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
                  * is it always true the (curr_cnt/2==sendcount*mask)? */
                 send_subtree_cnt = curr_cnt - sendcount * mask;
 #endif
-                mpi_errno = MPIR_Sched_cb2(&calc_send_count_root, ss, ((void *) (size_t) mask), s);
+                mpi_errno =
+                    MPIR_Sched_cb2(&calc_send_count_root, ss, ((void *) (MPI_Aint) mask), s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -220,7 +221,7 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
             } else {
                 /* non-zero root and others */
                 mpi_errno =
-                    MPIR_Sched_cb2(&calc_send_count_non_root, ss, ((void *) (size_t) mask), s);
+                    MPIR_Sched_cb2(&calc_send_count_non_root, ss, ((void *) (MPI_Aint) mask), s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);

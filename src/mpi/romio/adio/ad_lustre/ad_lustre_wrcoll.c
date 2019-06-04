@@ -711,8 +711,8 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
     MPI_Status *statuses, status;
     int sum_recv;
     int data_sieving = *hole;
-    static size_t malloc_srt_num = 0;
-    size_t send_total_size;
+    static MPI_Aint malloc_srt_num = 0;
+    MPI_Aint send_total_size;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
 
     /* create derived datatypes for recv */
@@ -935,7 +935,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
     while (size) { \
         size_in_buf = MPL_MIN(size, flat_buf_sz); \
         ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-        ADIOI_Assert(size_in_buf == (size_t)size_in_buf);               \
+        ADIOI_Assert(size_in_buf == (MPI_Aint)size_in_buf);               \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
         send_buf_idx[p] += size_in_buf; \

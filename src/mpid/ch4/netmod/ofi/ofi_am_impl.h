@@ -97,7 +97,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 }
 
 static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
-                                            size_t am_hdr_sz, MPIR_Request * sreq)
+                                            MPI_Aint am_hdr_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_request_header_t *req_hdr;
@@ -199,7 +199,8 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,
                                                const void *am_hdr,
-                                               size_t am_hdr_sz, MPIR_Request * sreq, int is_reply)
+                                               MPI_Aint am_hdr_sz, MPIR_Request * sreq,
+                                               int is_reply)
 {
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -254,9 +255,9 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                           MPIR_Comm * comm,
                                           int handler_id,
                                           const void *am_hdr,
-                                          size_t am_hdr_sz,
+                                          MPI_Aint am_hdr_sz,
                                           const void *data,
-                                          size_t data_sz, MPIR_Request * sreq, int need_lock)
+                                          MPI_Aint data_sz, MPIR_Request * sreq, int need_lock)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -345,7 +346,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                            MPIR_Comm * comm,
                                            int handler_id,
                                            const void *am_hdr,
-                                           size_t am_hdr_sz,
+                                           MPI_Aint am_hdr_sz,
                                            const void *data,
                                            MPI_Count count, MPIR_Request * sreq, int need_lock)
 {
@@ -398,14 +399,14 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
                                         const void *am_hdr,
-                                        size_t am_hdr_sz,
+                                        MPI_Aint am_hdr_sz,
                                         const void *buf,
-                                        size_t count,
+                                        MPI_Aint count,
                                         MPI_Datatype datatype, MPIR_Request * sreq, int is_reply)
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
     int need_lock = !is_reply;
@@ -477,12 +478,12 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
                                                           const MPIDI_OFI_am_header_t * msg_hdrp,
                                                           const void *am_hdr,
-                                                          size_t am_hdr_sz, int need_lock)
+                                                          MPI_Aint am_hdr_sz, int need_lock)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
     char *ibuf;
-    size_t len;
+    MPI_Aint len;
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -509,14 +510,14 @@ static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
                                       int handler_id,
                                       const void *am_hdr,
-                                      size_t am_hdr_sz,
+                                      MPI_Aint am_hdr_sz,
                                       int is_reply, int use_comm_table, int need_lock)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;
     fi_addr_t addr;
     char *buff;
-    size_t buff_len;
+    MPI_Aint buff_len;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);

@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
     void *buf;
-    size_t count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     char pack_buffer[0];
 } MPIDI_OFI_pack_t;

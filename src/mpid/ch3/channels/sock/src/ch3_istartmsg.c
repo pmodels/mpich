@@ -6,7 +6,7 @@
 
 #include "mpidi_ch3_impl.h"
 
-static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
+static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, MPI_Aint nb)
 {
     MPIR_Request *sreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_REQUEST);
@@ -59,7 +59,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
         /* Connection already formed.  If send queue is empty attempt to send
          * data, queuing any unsent data. */
         if (MPIDI_CH3I_SendQ_empty(vcch)) {     /* MT */
-            size_t nb;
+            MPI_Aint nb;
             int rc;
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "send queue empty, attempting to write");

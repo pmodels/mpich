@@ -18,7 +18,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
     ssize_t err = -1;
     MPI_Count datatype_size, len;
     ADIO_Offset bytes_xfered = 0;
-    size_t rd_count;
+    MPI_Aint rd_count;
     static char myname[] = "ADIOI_NFS_READCONTIG";
     char *p;
 

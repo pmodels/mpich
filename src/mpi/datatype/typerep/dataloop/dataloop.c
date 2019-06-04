@@ -165,7 +165,7 @@ static void dloop_copy(void *dest, void *src, MPI_Aint size)
 #ifdef DEBUG_MEMORY
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,
                     (MPL_DBG_FDEST, "dloop_copy: copying from %x to %x (%z bytes).\n",
-                     (int) src, (int) dest, (size_t) size));
+                     (int) src, (int) dest, (MPI_Aint) size));
 #endif
 
     /* copy region first */

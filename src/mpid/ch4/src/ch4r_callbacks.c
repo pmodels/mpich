@@ -14,7 +14,7 @@
 #include "ch4r_callbacks.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
+static int do_send_target(void **data, MPI_Aint * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
@@ -73,11 +73,11 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
-    size_t nbytes;
+    MPI_Aint nbytes;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-    size_t dt_sz;
+    MPI_Aint dt_sz;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIR_Request *anysource_partner = NULL;
@@ -248,13 +248,13 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 }
 
 
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
+static int do_send_target(void **data, MPI_Aint * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
 {
     int dt_contig;
     MPI_Aint dt_true_lb, num_iov;
     MPIR_Datatype *dt_ptr;
-    size_t data_sz;
+    MPI_Aint data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
@@ -398,7 +398,7 @@ int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
 }
 
 
-int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, MPI_Aint * p_data_sz,
                               int is_local, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
@@ -507,7 +507,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
 }
 
 int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+                                       MPI_Aint * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req)
 {
@@ -620,7 +620,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
 }
 
 int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+                                       MPI_Aint * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req)
 {
@@ -641,7 +641,7 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data
     return mpi_errno;
 }
 
-int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, MPI_Aint * p_data_sz,
                                int is_local, int *is_contig,
                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
@@ -667,7 +667,7 @@ int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     goto fn_exit;
 }
 
-int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, MPI_Aint * p_data_sz,
                                    int is_local, int *is_contig,
                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
@@ -690,7 +690,7 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
 }
 
 int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+                                       MPI_Aint * p_data_sz, int is_local, int *is_contig,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req)
 {
@@ -750,7 +750,7 @@ int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq)
     return MPI_SUCCESS;
 }
 
-int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
+int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void **data, MPI_Aint * p_data_sz,
                                     int is_local, int *is_contig,
                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {

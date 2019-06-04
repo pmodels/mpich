@@ -296,7 +296,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
     int local_size = 0;
     int *local_node_ids = NULL, *remote_node_ids = NULL;
     int *local_lupids = NULL;
-    size_t *local_upid_size = NULL, *remote_upid_size = NULL;
+    MPI_Aint *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
     char *local_upids = NULL, *remote_upids = NULL;
 
@@ -369,7 +369,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                         (MPL_DBG_FDEST, "Intercomm map exchange stage 1: leaders"));
         if (!pure_intracomm) {
             /* Stage 1.1 UPID exchange between leaders */
-            MPIR_CHKLMEM_MALLOC(remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
+            MPIR_CHKLMEM_MALLOC(remote_upid_size, MPI_Aint *, (*remote_size) * sizeof(MPI_Aint),
                                 mpi_errno, "remote_upid_size", MPL_MEM_ADDRESS);
 
             mpi_errno = MPIDI_NM_get_local_upids(local_comm, &local_upid_size, &local_upids);

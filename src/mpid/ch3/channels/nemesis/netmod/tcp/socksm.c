@@ -427,7 +427,7 @@ static int send_id_info(const sockconn_t * const sc)
     struct iovec iov[3];
     int buf_size, iov_cnt = 2;
     ssize_t offset;
-    size_t pg_id_len = 0;
+    MPI_Aint pg_id_len = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SEND_ID_INFO);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_ID_INFO);
@@ -542,7 +542,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_nem_tcp_header_t hdr;
     int iov_cnt = 1;
-    size_t pg_id_len = 0;
+    MPI_Aint pg_id_len = 0;
     ssize_t nread;
     int hdr_len = sizeof(MPIDI_nem_tcp_header_t);
     struct iovec iov[2];

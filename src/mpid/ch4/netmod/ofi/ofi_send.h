@@ -15,7 +15,7 @@
 #include <../mpi/pt2pt/bsendutil.h>
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
-                                                        size_t data_sz,
+                                                        MPI_Aint data_sz,
                                                         int rank,
                                                         int tag, MPIR_Comm * comm,
                                                         int context_offset, MPIDI_av_entry_t * addr)
@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
-                                                                size_t data_sz,
+                                                                MPI_Aint data_sz,
                                                                 int rank,
                                                                 int tag,
                                                                 MPIR_Comm * comm,
@@ -82,26 +82,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
       due to limitations with iovec. Needs to fall back to the pack path.
   Other: An error occurred as indicated in the code.
 */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,        /* data_sz is passed in here for reusing */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, MPI_Aint data_sz,      /* data_sz is passed in here for reusing */
                                                 int rank, uint64_t match_bits, MPIR_Comm * comm,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * sreq,
                                                 MPIR_Datatype * dt_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t countp =
+    MPI_Aint countp =
         MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, INT64_MAX);
-    size_t omax = MPIDI_OFI_global.tx_iov_limit;
-    size_t o_size = sizeof(struct iovec);
-    size_t cur_o = 0;
+    MPI_Aint omax = MPIDI_OFI_global.tx_iov_limit;
+    MPI_Aint o_size = sizeof(struct iovec);
+    MPI_Aint cur_o = 0;
     struct fi_msg_tagged msg;
     uint64_t flags;
     unsigned map_size;
     int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
-    size_t oout = 0;
-    size_t l = 0;
-    size_t countp_huge = 0;
-    size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+    MPI_Aint oout = 0;
+    MPI_Aint l = 0;
+    MPI_Aint countp_huge = 0;
+    MPI_Aint iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    MPI_Datatype datatype, int rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
                                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                   int dt_contig, size_t data_sz,
+                                                   int dt_contig, MPI_Aint data_sz,
                                                    MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
                                                    uint64_t type)
 {
@@ -392,7 +392,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int noreq, uint64_t syncflag)
 {
     int dt_contig, mpi_errno;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
 

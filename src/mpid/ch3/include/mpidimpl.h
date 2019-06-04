@@ -30,7 +30,7 @@
 
 #if defined(HAVE_GETHOSTNAME) && defined(NEEDS_GETHOSTNAME_DECL) && \
    !defined(gethostname)
-int gethostname(char *name, size_t len);
+int gethostname(char *name, MPI_Aint len);
 # endif
 
 /* Default PMI version to use */
@@ -1108,7 +1108,7 @@ int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
 
 
 #ifdef MPIDI_CH3I_HAS_ALLOC_MEM
-void* MPIDI_CH3I_Alloc_mem(size_t size, MPIR_Info *info_ptr);
+void* MPIDI_CH3I_Alloc_mem(MPI_Aint size, MPIR_Info *info_ptr);
 /* fallback to MPL_malloc if channel does not have its own RMA memory allocator */
 #else
 #define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPL_malloc(size, MPL_MEM_USER)

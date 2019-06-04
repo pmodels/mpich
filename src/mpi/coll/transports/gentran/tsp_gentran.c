@@ -272,7 +272,7 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
 
 }
 
-void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
+void *MPII_Genutil_sched_malloc(MPI_Aint size, MPII_Genutil_sched_t * sched)
 {
     void *addr = MPL_malloc(size, MPL_MEM_COLL);
     utarray_push_back(sched->buffers, &addr, MPL_MEM_COLL);

@@ -27,7 +27,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     ssize_t err = -1;
     MPI_Count datatype_size;
     ADIO_Offset len, bytes_xfered = 0;
-    size_t rd_count;
+    MPI_Aint rd_count;
     static char myname[] = "ADIOI_GEN_READCONTIG";
 #ifdef ROMIO_GPFS
     double io_time = 0;

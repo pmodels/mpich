@@ -105,12 +105,12 @@ struct pollinfo {
         } iov;
         struct {
             char *ptr;
-            size_t min;
-            size_t max;
+            MPI_Aint min;
+            MPI_Aint max;
         } buf;
     } read;
     int read_iov_flag;
-    size_t read_nb;
+    MPI_Aint read_nb;
     MPIDI_CH3I_Sock_progress_update_func_t read_progress_update_fn;
     union {
         struct {
@@ -120,12 +120,12 @@ struct pollinfo {
         } iov;
         struct {
             char *ptr;
-            size_t min;
-            size_t max;
+            MPI_Aint min;
+            MPI_Aint max;
         } buf;
     } write;
     int write_iov_flag;
-    size_t write_nb;
+    MPI_Aint write_nb;
     MPIDI_CH3I_Sock_progress_update_func_t write_progress_update_fn;
 };
 
@@ -218,7 +218,7 @@ static void MPIDI_CH3I_Socki_sock_free(struct MPIDI_CH3I_Sock *sock);
 
 static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo,
                                           enum MPIDI_CH3I_Sock_op op,
-                                          size_t num_bytes, void *user_ptr, int error);
+                                          MPI_Aint num_bytes, void *user_ptr, int error);
 static inline int MPIDI_CH3I_Socki_event_dequeue(struct MPIDI_CH3I_Sock_set *sock_set,
                                                  int *set_elem,
                                                  struct MPIDI_CH3I_Sock_event *eventp);
@@ -981,7 +981,7 @@ static void MPIDI_CH3I_Socki_sock_free(struct MPIDI_CH3I_Sock *sock)
 
 
 static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo *pollinfo, MPIDI_CH3I_Sock_op_t op,
-                                          size_t num_bytes, void *user_ptr, int error)
+                                          MPI_Aint num_bytes, void *user_ptr, int error)
 {
     struct MPIDI_CH3I_Sock_set *sock_set = pollinfo->sock_set;
     struct MPIDI_CH3I_Socki_eventq_elem *eventq_elem;
@@ -1960,7 +1960,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
 
 
 /* FIXME: What does this function do? */
-int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t minlen, size_t maxlen,
+int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, MPI_Aint minlen, MPI_Aint maxlen,
                               MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
@@ -2056,8 +2056,8 @@ int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int 
 /* end MPIDI_CH3I_Sock_post_readv() */
 
 
-int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t minlen,
-                               size_t maxlen, MPIDI_CH3I_Sock_progress_update_func_t fn)
+int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, MPI_Aint minlen,
+                               MPI_Aint maxlen, MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
@@ -2455,11 +2455,11 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
 /* end MPIDI_CH3I_Sock_accept() */
 
 
-int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_read)
+int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint len, MPI_Aint * num_read)
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
-    size_t nb;
+    MPI_Aint nb;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_READ);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_READ);
@@ -2495,7 +2495,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
     while (nb == -1 && errno == EINTR);
 
     if (nb > 0) {
-        *num_read = (size_t) nb;
+        *num_read = (MPI_Aint) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (nb == 0) {
@@ -2557,7 +2557,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
 /* end MPIDI_CH3I_Sock_read() */
 
 
-int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read)
+int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, MPI_Aint * num_read)
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
@@ -2592,7 +2592,7 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
     while (nb == -1 && errno == EINTR);
 
     if (nb > 0) {
-        *num_read = (size_t) nb;
+        *num_read = (MPI_Aint) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (nb == 0) {
@@ -2655,7 +2655,7 @@ int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size
 /* end MPIDI_CH3I_Sock_readv() */
 
 
-int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_written)
+int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint len, MPI_Aint * num_written)
 {
     struct pollinfo *pollinfo;
     ssize_t nb;
@@ -2731,7 +2731,7 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 /* end MPIDI_CH3I_Sock_write() */
 
 
-int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
+int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, MPI_Aint * num_written)
 {
     struct pollinfo *pollinfo;
     ssize_t nb;
@@ -2768,7 +2768,7 @@ int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, siz
     while (nb == -1 && errno == EINTR);
 
     if (nb >= 0) {
-        *num_written = (size_t) nb;
+        *num_written = (MPI_Aint) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -2890,7 +2890,7 @@ int MPIDI_CH3I_Sock_get_host_description(int myRank, char *host_description, int
     }
 
     if (env_hostname != NULL) {
-        rc = MPL_strncpy(host_description, env_hostname, (size_t) len);
+        rc = MPL_strncpy(host_description, env_hostname, (MPI_Aint) len);
         /* --BEGIN ERROR HANDLING-- */
         if (rc != 0) {
             mpi_errno =
@@ -3081,7 +3081,7 @@ int MPIDI_CH3I_Sock_get_sock_set_id(struct MPIDI_CH3I_Sock_set *sock_set)
    existing MPI-2 features to extend MPI error classes and code, of to export
    messages to non-MPI application */
 /* --BEGIN ERROR HANDLING-- */
-int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, size_t length)
+int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, MPI_Aint length)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_GET_ERROR_CLASS_STRING);
 

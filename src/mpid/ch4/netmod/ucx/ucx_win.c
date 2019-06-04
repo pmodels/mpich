@@ -15,10 +15,10 @@ struct ucx_share {
     MPI_Aint addr;
 };
 
-static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr);
+static int win_allgather(MPIR_Win * win, MPI_Aint length, uint32_t disp_unit, void **base_ptr);
 static int win_init(MPIR_Win * win);
 
-static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr)
+static int win_allgather(MPIR_Win * win, MPI_Aint length, uint32_t disp_unit, void **base_ptr)
 {
 
     MPIR_Errflag_t err = MPIR_ERR_NONE;
@@ -27,7 +27,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     ucs_status_t status;
     ucp_mem_h mem_h;
     int cntr = 0;
-    size_t rkey_size = 0;
+    MPI_Aint rkey_size = 0;
     int *rkey_sizes = NULL, *recv_disps = NULL, i;
     char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
     struct ucx_share *share_data = NULL;

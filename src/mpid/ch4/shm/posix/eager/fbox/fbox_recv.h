@@ -125,7 +125,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction,
-                              void *dst, const void *src, size_t size)
+                              void *dst, const void *src, MPI_Aint size)
 {
     MPIR_Memcpy(dst, src, size);
 }

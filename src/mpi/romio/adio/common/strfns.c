@@ -45,7 +45,7 @@ Output Parameters:
   Module:
   Utility
   @*/
-int ADIOI_Strncpy(char *dest, const char *src, size_t n)
+int ADIOI_Strncpy(char *dest, const char *src, MPI_Aint n)
 {
     char *restrict d_ptr = dest;
     const char *restrict s_ptr = src;

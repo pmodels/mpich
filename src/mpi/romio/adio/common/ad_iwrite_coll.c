@@ -1185,7 +1185,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
             }
     } else if (nprocs_send) {
         /* buftype is not contig */
-        size_t msgLen = 0;
+        MPI_Aint msgLen = 0;
         for (i = 0; i < nprocs; i++)
             msgLen += send_size[i];
         send_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));

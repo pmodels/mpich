@@ -223,7 +223,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     uint64_t match_bits;
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
-    size_t pkt_len;
+    MPI_Aint pkt_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
@@ -263,7 +263,7 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     uint64_t match_bits;
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
-    size_t pkt_len;
+    MPI_Aint pkt_len;
     int i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISENDIOV);
@@ -306,7 +306,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
     void *data = NULL;
-    size_t pkt_len;
+    MPI_Aint pkt_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_SENDNONCONTIG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
@@ -359,7 +359,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     MPIR_Request *cts_req;
     char *pack_buffer = NULL;
     uint64_t match_bits;
-    size_t pkt_len;
+    MPI_Aint pkt_len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ISTARTCONTIGMSG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ISTARTCONTIGMSG);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));

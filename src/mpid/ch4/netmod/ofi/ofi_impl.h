@@ -306,7 +306,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
-                              void **data, size_t * data_sz, int is_local, int *is_contig,
+                              void **data, MPI_Aint * data_sz, int is_local, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
@@ -319,7 +319,7 @@ void MPIDI_OFI_mr_key_allocator_destroy(void);
  * C and C++ components
  */
 /* Set max size based on OFI acc ordering limit. */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_check_acc_order_size(MPIR_Win * win, MPI_Aint max_size)
 {
     /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR)
@@ -431,10 +431,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
     return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint32_t src, fi_addr_t dest_addr,
-                                                    uint64_t tag, void *context, int is_inject,
-                                                    int do_lock, int do_eagain)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf,
+                                                    MPI_Aint len, void *desc, uint32_t src,
+                                                    fi_addr_t dest_addr, uint64_t tag,
+                                                    void *context, int is_inject, int do_lock,
+                                                    int do_eagain)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -453,16 +454,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
 }
 
 struct MPIDI_OFI_contig_blocks_params {
-    size_t max_pipe;
+    MPI_Aint max_pipe;
     MPI_Aint count;
     MPI_Aint last_loc;
     MPI_Aint start_loc;
-    size_t last_chunk;
+    MPI_Aint last_chunk;
 };
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* number of data elements in dt_datatype */
-                                                    MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
-                                                    size_t max_pipe)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_count_iov(int dt_count,     /* number of data elements in dt_datatype */
+                                                      MPI_Datatype dt_datatype, MPI_Aint total_bytes,   /* total byte size, passed in here for reusing */
+                                                      MPI_Aint max_pipe)
 {
     ssize_t rem_size = total_bytes;
     MPI_Aint num_iov, total_iov = 0;
@@ -474,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
         goto fn_exit;
 
     do {
-        size_t tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
+        MPI_Aint tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
 
         MPIR_Typerep_iov_len(NULL, dt_count, dt_datatype, 0, tmp_size, &num_iov);
         total_iov += num_iov;
@@ -488,10 +489,10 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
 }
 
 /* Find the nearest length of iov that meets alignment requirement */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_OFI_align_iov_len(MPI_Aint len)
 {
-    size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
-    size_t mask = ~pad;
+    MPI_Aint pad = MPIDI_OFI_IOVEC_ALIGN - 1;
+    MPI_Aint mask = ~pad;
 
     return (len + pad) & mask;
 }
@@ -499,7 +500,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 /* Find the minimum address that is >= ptr && meets alignment requirement */
 MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
-    size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
+    MPI_Aint aligned_iov = MPIDI_OFI_align_iov_len((MPI_Aint) ptr);
     return (void *) (uintptr_t) aligned_iov;
 }
 

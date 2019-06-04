@@ -51,11 +51,11 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t message_sz;
+    MPI_Aint message_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-    size_t data_sz ATTRIBUTE((unused)), dt_sz, nbytes;
+    MPI_Aint data_sz ATTRIBUTE((unused)), dt_sz, nbytes;
     void *buf;
     MPI_Aint count;
     MPI_Datatype datatype;

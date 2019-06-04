@@ -12,17 +12,17 @@
 #include "ucx_impl.h"
 //#include "events.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, MPI_Aint msg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
-    size_t data_sz, in_data_sz;
+    MPI_Aint data_sz, in_data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
-    size_t done, curr_len, rem;
+    MPI_Aint done, curr_len, rem;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) msg;
 
     p_data = in_data = (char *) msg_hdr->payload + (msg_sz - msg_hdr->data_sz - sizeof(*msg_hdr));

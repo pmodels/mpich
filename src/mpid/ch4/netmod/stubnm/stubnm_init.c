@@ -35,13 +35,13 @@ int MPIDI_STUBNM_get_vci_attr(int vci)
     return 0;
 }
 
-int MPIDI_STUBNM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_STUBNM_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-int MPIDI_STUBNM_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_STUBNM_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                                  int **remote_lupids)
 {
     MPIR_Assert(0);
@@ -59,7 +59,7 @@ int MPIDI_STUBNM_mpi_free_mem(void *ptr)
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-void *MPIDI_STUBNM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_STUBNM_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }

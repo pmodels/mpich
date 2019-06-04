@@ -396,7 +396,7 @@ typedef struct MPIDI_Request {
        iov_offset points to the current head element in the IOV */
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iov_count;
-    size_t iov_offset;
+    MPI_Aint iov_offset;
 
     /* OnDataAvail is the action to take when data is now available.
        For example, when an operation described by an iov has 
@@ -725,7 +725,7 @@ void MPID_Request_free_hook(MPIR_Request *);
 void MPID_Request_destroy_hook(MPIR_Request *);
 int MPID_Request_complete(MPIR_Request *);
 
-void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
+void *MPID_Alloc_mem( MPI_Aint size, MPIR_Info *info );
 int MPID_Free_mem( void *ptr );
 
 /* Prototypes and definitions for the node ID code.  This is used to support

@@ -44,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
                                                                 am_hdr)
 {
     MPIDI_OFI_am_unordered_msg_t *uo_msg;
-    size_t uo_msg_len, packet_len;
+    MPI_Aint uo_msg_len, packet_len;
     /* Essentially, uo_msg_len == packet_len + sizeof(next,prev pointers) */
 
     uo_msg_len = sizeof(*uo_msg) + am_hdr->am_hdr_sz + am_hdr->data_sz;
@@ -97,11 +97,11 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     void *p_data;
     void *in_data;
 
-    size_t data_sz, in_data_sz;
+    MPI_Aint data_sz, in_data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
-    size_t done, curr_len, rem;
+    MPI_Aint done, curr_len, rem;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
@@ -193,12 +193,12 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
 
 static inline int MPIDI_OFI_do_rdma_read(void *dst,
                                          uint64_t src,
-                                         size_t data_sz,
+                                         MPI_Aint data_sz,
                                          MPIR_Context_id_t context_id,
                                          int src_rank, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t done = 0, curr_len, rem = 0;
+    MPI_Aint done = 0, curr_len, rem = 0;
     MPIDI_OFI_am_request_t *am_req;
     MPIR_Comm *comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_RDMA_READ);
@@ -259,7 +259,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     int num_reads, i, iov_len, c, mpi_errno = MPI_SUCCESS, is_contig = 0;
     MPIR_Request *rreq = NULL;
     void *p_data;
-    size_t data_sz, rem, done, curr_len, in_data_sz;
+    MPI_Aint data_sz, rem, done, curr_len, in_data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
 

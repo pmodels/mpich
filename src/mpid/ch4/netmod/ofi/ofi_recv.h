@@ -26,7 +26,7 @@
       due to limitations with iovec. Needs to fall back to the unpack path.
   Other: An error occurred as indicated in the code.
 */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_Aint data_sz,    /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * rreq,
@@ -34,19 +34,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t max_pipe = INT64_MAX;
-    size_t omax = MPIDI_OFI_global.rx_iov_limit;
-    size_t countp =
+    MPI_Aint max_pipe = INT64_MAX;
+    MPI_Aint omax = MPIDI_OFI_global.rx_iov_limit;
+    MPI_Aint countp =
         MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), data_sz, max_pipe);
-    size_t o_size = sizeof(struct iovec);
+    MPI_Aint o_size = sizeof(struct iovec);
     unsigned map_size;
     int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
-    size_t l = 0;
-    size_t countp_huge = 0;
-    size_t oout = 0;
-    size_t cur_o = 0;
+    MPI_Aint l = 0;
+    MPI_Aint countp_huge = 0;
+    MPI_Aint oout = 0;
+    MPI_Aint cur_o = 0;
     struct fi_msg_tagged msg;
-    size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+    MPI_Aint iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
 
@@ -184,7 +184,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Request *rreq = *request;
     uint64_t match_bits, mask_bits;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
-    size_t data_sz;
+    MPI_Aint data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;

@@ -22,7 +22,7 @@ typedef struct {
     volatile uint64_t data_ready;
 
     int is_header;
-    size_t payload_sz;
+    MPI_Aint payload_sz;
 
     uint8_t payload[MPIDI_POSIX_FBOX_DATA_LEN];
 

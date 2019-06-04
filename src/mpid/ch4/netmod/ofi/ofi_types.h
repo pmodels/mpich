@@ -320,14 +320,14 @@ typedef struct {
     uint64_t max_huge_rmas;
     int rma_key_type_bits;
     int context_shift;
-    size_t tx_iov_limit;
-    size_t rx_iov_limit;
-    size_t rma_iov_limit;
+    MPI_Aint tx_iov_limit;
+    MPI_Aint rx_iov_limit;
+    MPI_Aint rma_iov_limit;
     int max_ch4_vcis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
-    size_t max_order_raw;
-    size_t max_order_war;
-    size_t max_order_waw;
+    MPI_Aint max_order_raw;
+    MPI_Aint max_order_war;
+    MPI_Aint max_order_waw;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
@@ -374,7 +374,7 @@ typedef struct {
     int pname_set;
     int pname_len;
     char addrname[FI_NAME_MAX];
-    size_t addrnamelen;
+    MPI_Aint addrnamelen;
     char kvsname[MPIDI_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
@@ -398,7 +398,7 @@ typedef struct {
     int origin_rank;
     MPIR_Request *ackreq;
     uintptr_t send_buf;
-    size_t msgsize;
+    MPI_Aint msgsize;
     int comm_id;
     int endpoint_id;
     uint64_t rma_key;
@@ -415,28 +415,28 @@ typedef struct MPIDI_OFI_seg_state {
                                  * This value remains constant once seg_state is initialized. */
     MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
 
-    size_t origin_cursor;       /* First byte to pack */
-    size_t origin_end;          /* Last byte to pack */
+    MPI_Aint origin_cursor;     /* First byte to pack */
+    MPI_Aint origin_end;        /* Last byte to pack */
     const void *origin_buf;
-    size_t origin_count;
+    MPI_Aint origin_count;
     MPI_Datatype origin_type;
     MPI_Aint origin_iov_len;    /* Length of data actually packed */
     MPL_IOV origin_iov;         /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
-    size_t target_cursor;
-    size_t target_end;
+    MPI_Aint target_cursor;
+    MPI_Aint target_end;
     MPI_Aint target_buf;
-    size_t target_count;
+    MPI_Aint target_count;
     MPI_Datatype target_type;
     MPI_Aint target_iov_len;
     MPL_IOV target_iov;
     uintptr_t target_addr;
 
-    size_t result_cursor;
-    size_t result_end;
+    MPI_Aint result_cursor;
+    MPI_Aint result_end;
     const void *result_buf;
-    size_t result_count;
+    MPI_Aint result_count;
     MPI_Datatype result_type;
     MPI_Aint result_iov_len;
     MPL_IOV result_iov;
@@ -509,7 +509,7 @@ typedef struct MPIDI_OFI_huge_recv {
     int event_id;               /* fixed field, do not move */
     int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
-    size_t cur_offset;
+    MPI_Aint cur_offset;
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
     struct fi_cq_tagged_entry wc;

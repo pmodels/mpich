@@ -25,10 +25,10 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_Request *sreq = NULL;
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
-    size_t am_hdr_max_size;
+    MPI_Aint am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
@@ -182,10 +182,10 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
                                 MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, n_iov, c;
-    size_t offset;
+    MPI_Aint offset;
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint num_iov;
     struct iovec *dt_iov;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -319,7 +319,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 {
     int mpi_errno = MPI_SUCCESS, c, n_iov;
     MPIR_Request *sreq = NULL;
-    size_t basic_type_size;
+    MPI_Aint basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
     MPI_Aint num_iov;
@@ -500,7 +500,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS, c, n_iov;
     MPIR_Request *sreq = NULL;
-    size_t basic_type_size;
+    MPI_Aint basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
     MPI_Aint num_iov;
@@ -916,7 +916,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
     MPIDIG_cswap_req_msg_t am_hdr;
-    size_t data_sz;
+    MPI_Aint data_sz;
     void *p_data;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_COMPARE_AND_SWAP);

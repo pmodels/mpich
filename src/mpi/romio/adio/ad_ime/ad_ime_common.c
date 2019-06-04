@@ -66,7 +66,7 @@ void ADIOI_IME_Init(int rank, int *error_code)
 char *ADIOI_IME_Add_prefix(const char *filename)
 {
     static char myname[] = "ADIOI_IME_ADD_PREFIX";
-    size_t f_len = strlen(filename) + 1;
+    MPI_Aint f_len = strlen(filename) + 1;
     char *ime_filename = ADIOI_Malloc(f_len + ADIOI_IME_PREFIX_LEN);
 
     if (!ime_filename) {

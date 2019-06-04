@@ -355,9 +355,9 @@ int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
 ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype);
 MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype type, MPI_Count * curr_index);
 void ADIOI_Complete_async(int *error_code);
-void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname);
-void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
-void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
+void *ADIOI_Malloc_fn(MPI_Aint size, int lineno, const char *fname);
+void *ADIOI_Calloc_fn(MPI_Aint nelem, MPI_Aint elsize, int lineno, const char *fname);
+void *ADIOI_Realloc_fn(void *ptr, MPI_Aint size, int lineno, const char *fname);
 void ADIOI_Free_fn(void *ptr, int lineno, const char *fname);
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag);
 void ADIOI_Get_position(ADIO_File fd, ADIO_Offset * offset);
@@ -847,7 +847,7 @@ int ADIOI_Set_lock64(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int w
 #define ADIOI_Realloc(a,b) ADIOI_Realloc_fn(a,b,__LINE__,__FILE__)
 #define ADIOI_Free(a) ADIOI_Free_fn(a,__LINE__,__FILE__)
 
-int ADIOI_Strncpy(char *outstr, const char *instr, size_t maxlen);
+int ADIOI_Strncpy(char *outstr, const char *instr, MPI_Aint maxlen);
 char *ADIOI_Strdup(const char *);
 
 /* the current MPI standard is not const-correct, and modern compilers warn
@@ -988,8 +988,8 @@ void *ADIOI_IO_Thread_Func(void *vptr_args);
 #if (HAVE_DECL_PWRITE == 0)
 #include <sys/types.h>
 #include <unistd.h>
-ssize_t pread(int fd, void *buf, size_t count, off_t offset);
-ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+ssize_t pread(int fd, void *buf, MPI_Aint count, off_t offset);
+ssize_t pwrite(int fd, const void *buf, MPI_Aint count, off_t offset);
 
 #endif
 

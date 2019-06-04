@@ -29,7 +29,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     ssize_t err = -1;
     MPI_Count datatype_size;
     ADIO_Offset len, bytes_xfered = 0;
-    size_t wr_count;
+    MPI_Aint wr_count;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
 #ifdef ROMIO_GPFS
     double io_time = 0;

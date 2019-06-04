@@ -12,7 +12,7 @@
 
 static MPIDU_shm_seg_t memory;
 static MPIDU_shm_barrier_t *barrier;
-static size_t *indices;
+static MPI_Aint *indices;
 static int local_size;
 static char *segment;
 
@@ -37,7 +37,7 @@ int MPIDU_bc_table_destroy(void *bc_table)
 
 
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
-                       void **bc_table, size_t ** bc_indices)
+                       void **bc_table, MPI_Aint ** bc_indices)
 {
     int mpi_errno = MPI_SUCCESS;
     int local_rank = -1, local_leader = -1;
@@ -54,7 +54,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     if (rank != local_leader) {
-        size_t start = local_leader - nodemap[comm->rank] + (local_rank - 1);
+        MPI_Aint start = local_leader - nodemap[comm->rank] + (local_rank - 1);
 
         memcpy(&segment[start * bc_len], bc, bc_len);
     }
@@ -90,7 +90,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 #define KEYLEN 64
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, MPI_Aint ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
@@ -100,7 +100,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     pmix_info_t *info;
     pmix_proc_t proc;
     int local_rank, local_leader;
-    size_t my_bc_len = bc_len;
+    MPI_Aint my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
@@ -186,7 +186,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
   single:
     if (!same_len) {
-        indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
+        indices = MPL_malloc(size * sizeof(MPI_Aint), MPL_MEM_ADDRESS);
         for (i = 0; i < size; i++)
             indices[i] = bc_len * i;
         *bc_indices = indices;
@@ -205,14 +205,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #include <pmi2.h>
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, MPI_Aint ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     int out_len, val_len, rem;
     char *key = NULL, *val = NULL, *val_p;
     int local_rank, local_leader;
-    size_t my_bc_len = bc_len;
+    MPI_Aint my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
@@ -286,7 +286,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
   single:
     if (!same_len) {
-        indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
+        indices = MPL_malloc(size * sizeof(MPI_Aint), MPL_MEM_ADDRESS);
         for (i = 0; i < size; i++)
             indices[i] = bc_len * i;
         *bc_indices = indices;
@@ -306,14 +306,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #include <pmi.h>
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, MPI_Aint ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     int key_max, val_max, name_max, out_len, rem;
     char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
     int local_rank = -1, local_leader = -1;
-    size_t my_bc_len = bc_len;
+    MPI_Aint my_bc_len = bc_len;
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
@@ -401,7 +401,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
   single:
     if (!same_len) {
-        indices = MPL_malloc(size * sizeof(size_t), MPL_MEM_ADDRESS);
+        indices = MPL_malloc(size * sizeof(MPI_Aint), MPL_MEM_ADDRESS);
         MPIR_Assert(indices);
         for (i = 0; i < size; i++)
             indices[i] = bc_len * i;

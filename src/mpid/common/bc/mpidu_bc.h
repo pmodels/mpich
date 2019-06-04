@@ -11,9 +11,9 @@
 #include "build_nodemap.h"
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          int roots_only, void **bc_table, size_t ** bc_indices);
+                          int roots_only, void **bc_table, MPI_Aint ** bc_indices);
 int MPIDU_bc_table_destroy(void *bc_table);
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
-                       void **bc_table, size_t ** bc_indices);
+                       void **bc_table, MPI_Aint ** bc_indices);
 
 #endif /* MPIDU_BC_H_INCLUDED */

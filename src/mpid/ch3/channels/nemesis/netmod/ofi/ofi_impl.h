@@ -71,15 +71,15 @@ typedef int (*req_fn) (MPIDI_VC_t *, MPIR_Request *, int *);
 /* ******************************** */
 typedef struct {
     char bound_addr[OFI_MAX_ADDR_LEN];  /* This ranks bound address    */
-    size_t bound_addrlen;       /* length of the bound address */
+    MPI_Aint bound_addrlen;       /* length of the bound address */
     struct fid_fabric *fabric;  /* fabric object               */
     struct fid_domain *domain;  /* domain object               */
     struct fid_ep *endpoint;    /* endpoint object             */
     struct fid_cq *cq;          /* completion queue            */
     struct fid_av *av;          /* address vector              */
     struct fid_mr *mr;          /* memory region               */
-    size_t iov_limit;           /* Max send iovec limit        */
-    size_t max_buffered_send;   /* Buffered send threshold     */
+    MPI_Aint iov_limit;           /* Max send iovec limit        */
+    MPI_Aint max_buffered_send;   /* Buffered send threshold     */
     int rts_cts_in_flight;      /* Count of incompleted        */
     /*   RTS-CTS-DATA exchanges    */
     int api_set;                /* Used OFI API for send       */
@@ -111,8 +111,8 @@ typedef struct {
     void *addr;                 /* OFI Address                 */
     event_callback_fn event_callback;   /* Callback Event      */
     char *pack_buffer;          /* MPI Pack Buffer             */
-    size_t pack_buffer_size;    /* Pack buffer size            */
-    size_t msg_bytes;           /* msg api bytes               */
+    MPI_Aint pack_buffer_size;    /* Pack buffer size            */
+    MPI_Aint msg_bytes;           /* msg api bytes               */
     int iov_count;              /* Number of iovecs            */
     void *real_hdr;             /* Extended header             */
     int match_state;            /* State of the match          */

@@ -21,7 +21,7 @@
 #endif
 
 #if defined(HAVE_GETHOSTNAME) && defined(NEEDS_GETHOSTNAME_DECL) && !defined(gethostname)
-int gethostname(char *name, size_t len);
+int gethostname(char *name, MPI_Aint len);
 #endif
 
 #ifndef SSIZE_MAX
@@ -39,7 +39,7 @@ int gethostname(char *name, size_t len);
 
 typedef struct MPIDI_CH3I_Sock_set *MPIDI_CH3I_Sock_set_t;
 typedef struct MPIDI_CH3I_Sock *MPIDI_CH3I_Sock_t;
-typedef size_t MPIDI_CH3I_Sock_size_t;
+typedef MPI_Aint MPIDI_CH3I_Sock_size_t;
 
 #define MPIDI_CH3I_SOCKI_STATE_LIST \
 MPID_STATE_MPIDI_CH3I_SOCKI_READ, \

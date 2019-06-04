@@ -274,7 +274,7 @@ static int restore_env(pid_t parent_pid, int rank)
     CHECK_ERR(ret, MPIR_Strerror (errno));
 
     while (fgets(var_val, MAX_STR_LEN, f)) {
-        size_t len = strlen(var_val);
+        MPI_Aint len = strlen(var_val);
         /* remove newline */
         if (var_val[len-1] == '\n')
             var_val[len-1] = '\0';

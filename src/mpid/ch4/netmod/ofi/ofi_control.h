@@ -15,7 +15,7 @@
 
 static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                             char *send_buf,
-                                            size_t msgsize,
+                                            MPI_Aint msgsize,
                                             int rank,
                                             MPIR_Comm * comm_ptr,
                                             MPIR_Request * ackreq, int need_lock)

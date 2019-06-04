@@ -484,7 +484,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
     struct fi_av_attr av_attr;
-    size_t optlen;
+    MPI_Aint optlen;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_INIT);
@@ -1111,7 +1111,7 @@ int MPIDI_OFI_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_OFI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
 
     void *ap;
@@ -1127,7 +1127,7 @@ int MPIDI_OFI_mpi_free_mem(void *ptr)
     return mpi_errno;
 }
 
-int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_size = 0;
@@ -1136,7 +1136,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), MPI_Aint *, comm->local_size * sizeof(MPI_Aint),
                         mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
     MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
                         mpi_errno, "temp_buf", MPL_MEM_BUFFER);
@@ -1166,7 +1166,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     goto fn_exit;
 }
 
-int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_OFI_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                               int **remote_lupids)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -1184,7 +1184,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         int j, k;
         char tbladdr[FI_NAME_MAX];
         int found = 0;
-        size_t sz = 0;
+        MPI_Aint sz = 0;
 
         for (k = 0; k < max_n_avts; k++) {
             if (MPIDIU_get_av_table(k) == NULL) {

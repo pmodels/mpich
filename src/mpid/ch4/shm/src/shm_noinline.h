@@ -48,12 +48,12 @@ int MPIDI_SHMI_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, 
                                 void *baseptr, MPIR_Win ** win);
 int MPIDI_SHMI_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win);
 
-int MPIDI_SHMI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids);
-int MPIDI_SHMI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_SHMI_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids);
+int MPIDI_SHMI_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                                int **remote_lupids);
 int MPIDI_SHMI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[]);
 
-void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
+void *MPIDI_SHMI_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr);
 int MPIDI_SHMI_mpi_free_mem(void *ptr);
 
 #ifdef SHM_INLINE

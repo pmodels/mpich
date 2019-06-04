@@ -7,7 +7,7 @@
 #include "mpidi_ch3_impl.h"
 
 static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
-                           int iov_offset, size_t nb)
+                           int iov_offset, MPI_Aint nb)
 {
     int i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
@@ -52,7 +52,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
         /* Connection already formed.  If send queue is empty attempt to send
          * data, queuing any unsent data. */
         if (MPIDI_CH3I_SendQ_empty(vcch)) {     /* MT */
-            size_t nb;
+            MPI_Aint nb;
             int rc;
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "send queue empty, attempting to write");

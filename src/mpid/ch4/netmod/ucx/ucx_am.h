@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,
                                                const void *am_hdr,
-                                               size_t am_hdr_sz,
+                                               MPI_Aint am_hdr_sz,
                                                const void *data,
                                                MPI_Count count, MPI_Datatype datatype,
                                                MPIR_Request * sreq)
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     ucp_ep_h ep;
     uint64_t ucx_tag;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int dt_contig;
@@ -156,18 +156,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 MPIR_Comm * comm,
                                                 int handler_id,
                                                 struct iovec *am_hdr,
-                                                size_t iov_len,
+                                                MPI_Aint iov_len,
                                                 const void *data,
                                                 MPI_Count count, MPI_Datatype datatype,
                                                 MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t am_hdr_sz = 0, i;
+    MPI_Aint am_hdr_sz = 0, i;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int dt_contig;
@@ -240,7 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      int src_rank,
                                                      int handler_id,
                                                      const void *am_hdr,
-                                                     size_t am_hdr_sz,
+                                                     MPI_Aint am_hdr_sz,
                                                      const void *data, MPI_Count count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
@@ -249,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     ucp_ep_h ep;
     uint64_t ucx_tag;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int dt_contig;
@@ -311,7 +311,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
 
@@ -327,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
-                                                  size_t am_hdr_sz)
+                                                  MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -374,7 +374,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                         int src_rank,
                                                         int handler_id, const void *am_hdr,
-                                                        size_t am_hdr_sz)
+                                                        MPI_Aint am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;

@@ -19,12 +19,12 @@ typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 
 typedef int (*MPIDI_POSIX_eager_send_t) (int grank,
                                          MPIDI_POSIX_am_header_t ** msg_hdr,
-                                         struct iovec ** iov, size_t * iov_num);
+                                         struct iovec ** iov, MPI_Aint * iov_num);
 
 typedef int (*MPIDI_POSIX_eager_recv_begin_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction);
 
 typedef void (*MPIDI_POSIX_eager_recv_memcpy_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction,
-                                                 void *dst, const void *src, size_t size);
+                                                 void *dst, const void *src, MPI_Aint size);
 
 typedef void (*MPIDI_POSIX_eager_recv_commit_t) (MPIDI_POSIX_eager_recv_transaction_t *
                                                  transaction);
@@ -57,14 +57,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize(void) MPL_STATIC_INLINE_
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
                                                     struct iovec **iov,
-                                                    size_t * iov_num) MPL_STATIC_INLINE_SUFFIX;
+                                                    MPI_Aint * iov_num) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
                                                           transaction) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t *
                                                             transaction, void *dst, const void *src,
-                                                            size_t size) MPL_STATIC_INLINE_SUFFIX;
+                                                            MPI_Aint size) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t *
                                                             transaction) MPL_STATIC_INLINE_SUFFIX;

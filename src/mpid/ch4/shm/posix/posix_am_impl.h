@@ -32,7 +32,7 @@ static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t
 }
 
 static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
-                                              size_t am_hdr_sz,
+                                              MPI_Aint am_hdr_sz,
                                               MPIDI_POSIX_am_request_header_t ** req_hdr_ptr,
                                               MPIR_Request * sreq)
 {

@@ -274,7 +274,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
-    size_t type_size, nbytes;
+    MPI_Aint type_size, nbytes;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;

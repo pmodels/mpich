@@ -399,9 +399,9 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t * conf,
 /*    if (conf->aggRatio > 1) conf->aggRatio = 1.; */
         TRACE_ERR
             ("n_aggrs %zd, conf->nProcs %zu, conf->ioMaxSize %zu, ADIOI_BG_NAGG_PSET_DFLT %zu,conf->numBridgeRanks %zu,conf->nAggrs %zu\n",
-             (size_t) n_aggrs, (size_t) conf->nProcs, (size_t) conf->ioMaxSize,
-             (size_t) ADIOI_BG_NAGG_PSET_DFLT, (size_t) conf->numBridgeRanks,
-             (size_t) conf->nAggrs);
+             (MPI_Aint) n_aggrs, (MPI_Aint) conf->nProcs, (MPI_Aint) conf->ioMaxSize,
+             (MPI_Aint) ADIOI_BG_NAGG_PSET_DFLT, (MPI_Aint) conf->numBridgeRanks,
+             (MPI_Aint) conf->nAggrs);
         TRACE_ERR
             ("Maximum ranks under a bridge rank: %d, minimum: %d, nAggrs: %d, numBridgeRanks: %d pset dflt: %d naggrs: %d ratio: %f\n",
              maxcompute, mincompute, conf->nAggrs, conf->numBridgeRanks, ADIOI_BG_NAGG_PSET_DFLT,

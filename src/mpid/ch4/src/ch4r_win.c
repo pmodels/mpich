@@ -19,7 +19,7 @@ enum {
 };
 
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr);
-static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen);
+static void get_info_accu_ops_str(uint32_t val, char *buf, MPI_Aint maxlen);
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init);
 static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model);
@@ -94,7 +94,7 @@ static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
         *ops_ptr = ops;
 }
 
-static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
+static void get_info_accu_ops_str(uint32_t val, char *buf, MPI_Aint maxlen)
 {
     int c = 0;
 
@@ -431,11 +431,11 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
-    size_t total_shm_size = 0LL;
+    MPI_Aint total_shm_size = 0LL;
     MPIDIG_win_shared_info_t *shared_table = NULL;
     MPI_Aint *shm_offsets = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
-    size_t page_sz = 0, mapsize;
+    MPI_Aint page_sz = 0, mapsize;
     bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
     bool symheap_flag = true, global_symheap_flag = false;
 

@@ -107,8 +107,8 @@ struct MPIDU_Sched_entry {
 };
 
 struct MPIDU_Sched {
-    size_t size;                /* capacity (in entries) of the entries array */
-    size_t idx;                 /* index into entries array of first yet-outstanding entry */
+    MPI_Aint size;              /* capacity (in entries) of the entries array */
+    MPI_Aint idx;               /* index into entries array of first yet-outstanding entry */
     int num_entries;            /* number of populated entries, num_entries <= size */
     int tag;
     struct MPIR_Request *req;   /* really needed? could cause MT problems... */

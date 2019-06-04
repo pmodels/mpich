@@ -197,7 +197,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 /* initiates the schedule entry "e" in the NBC described by "s", where
  * "e" is at "idx" in "s".  This means posting nonblocking sends/recvs,
  * performing reductions, calling callbacks, etc. */
-static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPIDU_Sched_entry *e)
+static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, MPI_Aint idx, struct MPIDU_Sched_entry *e)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno = MPI_SUCCESS;
     MPIR_Request *r = s->req;
@@ -357,7 +357,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
 static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t i;
+    MPI_Aint i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_CONTINUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_CONTINUE);
@@ -877,7 +877,7 @@ int MPIDU_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MP
 static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t i;
+    MPI_Aint i;
     struct MPIDU_Sched *s;
     struct MPIDU_Sched *tmp;
     if (made_progress)

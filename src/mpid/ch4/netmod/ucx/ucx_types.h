@@ -31,7 +31,7 @@ typedef struct {
     ucp_worker_h worker;
     char addrname[UCP_PEER_NAME_MAX];
     char *pmi_addr_table;
-    size_t addrname_len;
+    MPI_Aint addrname_len;
     ucp_address_t *if_address;
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];

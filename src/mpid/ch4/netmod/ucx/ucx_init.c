@@ -33,7 +33,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
-    size_t *bc_indices;
+    MPI_Aint *bc_indices;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
@@ -209,13 +209,13 @@ int MPIDI_UCX_get_vci_attr(int vci)
     return MPIDI_VCI_TX | MPIDI_VCI_RX;
 }
 
-int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-int MPIDI_UCX_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_UCX_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                               int **remote_lupids)
 {
     MPIR_Assert(0);
@@ -232,7 +232,7 @@ int MPIDI_UCX_mpi_free_mem(void *ptr)
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_UCX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }

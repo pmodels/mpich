@@ -85,12 +85,12 @@ typedef struct MPIDI_POSIX_am_request_header {
 
     struct iovec *iov_ptr;
     struct iovec iov[MPIDI_POSIX_MAX_IOV_NUM];
-    size_t iov_num;
-    size_t iov_num_total;
+    MPI_Aint iov_num;
+    MPI_Aint iov_num_total;
 
     int is_contig;
 
-    size_t in_total_data_sz;
+    MPI_Aint in_total_data_sz;
 
     /* Structure used with POSIX postponed_queue */
     MPIR_Request *request;      /* Store address of MPIR_Request* sreq */
@@ -103,12 +103,12 @@ typedef struct MPIDI_POSIX_am_request {
     int tag;
     int context_id;
     char *user_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     int type;
     int user_count;
     MPI_Datatype datatype;
-    size_t segment_first;
-    size_t segment_size;
+    MPI_Aint segment_first;
+    MPI_Aint segment_size;
 
     int eager_recv_posted_hook_grank;
 

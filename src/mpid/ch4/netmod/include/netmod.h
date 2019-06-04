@@ -31,27 +31,28 @@ typedef int (*MPIDI_NM_mpi_close_port_t) (const char *port_name);
 typedef int (*MPIDI_NM_mpi_comm_accept_t) (const char *port_name, MPIR_Info * info, int root,
                                            MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_NM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
-                                       const void *am_hdr, size_t am_hdr_sz);
+                                       const void *am_hdr, MPI_Aint am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
-                                    size_t am_hdr_sz, const void *data, MPI_Count count,
+                                    MPI_Aint am_hdr_sz, const void *data, MPI_Count count,
                                     MPI_Datatype datatype, MPIR_Request * sreq);
 typedef int (*MPIDI_NM_am_isendv_t) (int rank, MPIR_Comm * comm, int handler_id,
-                                     struct iovec * am_hdrs, size_t iov_len, const void *data,
+                                     struct iovec * am_hdrs, MPI_Aint iov_len, const void *data,
                                      MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq);
 typedef int (*MPIDI_NM_am_send_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
-                                             int handler_id, const void *am_hdr, size_t am_hdr_sz);
+                                             int handler_id, const void *am_hdr,
+                                             MPI_Aint am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src_rank,
-                                          int handler_id, const void *am_hdr, size_t am_hdr_sz,
+                                          int handler_id, const void *am_hdr, MPI_Aint am_hdr_sz,
                                           const void *data, MPI_Count count, MPI_Datatype datatype,
                                           MPIR_Request * sreq);
-typedef size_t(*MPIDI_NM_am_hdr_max_sz_t) (void);
+typedef MPI_Aint(*MPIDI_NM_am_hdr_max_sz_t) (void);
 typedef int (*MPIDI_NM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
                                          bool is_remote);
-typedef int (*MPIDI_NM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
+typedef int (*MPIDI_NM_get_local_upids_t) (MPIR_Comm * comm, MPI_Aint ** local_upid_size,
                                            char **local_upids);
-typedef int (*MPIDI_NM_upids_to_lupids_t) (int size, size_t * remote_upid_size, char *remote_upids,
-                                           int **remote_lupids);
+typedef int (*MPIDI_NM_upids_to_lupids_t) (int size, MPI_Aint * remote_upid_size,
+                                           char *remote_upids, int **remote_lupids);
 typedef int (*MPIDI_NM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, int size,
                                                        const int lpids[]);
 typedef int (*MPIDI_NM_mpi_comm_create_hook_t) (MPIR_Comm * comm);
@@ -109,7 +110,7 @@ typedef int (*MPIDI_NM_mpi_irecv_t) (void *buf, MPI_Aint count, MPI_Datatype dat
 typedef int (*MPIDI_NM_mpi_imrecv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       MPIR_Request * message);
 typedef int (*MPIDI_NM_mpi_cancel_recv_t) (MPIR_Request * rreq);
-typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (size_t size, MPIR_Info * info_ptr);
+typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (MPI_Aint size, MPIR_Info * info_ptr);
 typedef int (*MPIDI_NM_mpi_free_mem_t) (void *ptr);
 typedef int (*MPIDI_NM_mpi_improbe_t) (int source, int tag, MPIR_Comm * comm, int context_offset,
                                        MPIDI_av_entry_t * addr, int *flag, MPIR_Request ** message,
@@ -669,32 +670,33 @@ int MPIDI_NM_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root, 
                              MPIR_Comm ** newcomm_ptr);
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr,
-                                                  size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPI_Aint am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
-                                               const void *am_hdr, size_t am_hdr_sz,
+                                               const void *am_hdr, MPI_Aint am_hdr_sz,
                                                const void *data, MPI_Count count,
                                                MPI_Datatype datatype,
                                                MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
-                                                struct iovec *am_hdrs, size_t iov_len,
+                                                struct iovec *am_hdrs, MPI_Aint iov_len,
                                                 const void *data, MPI_Count count,
                                                 MPI_Datatype datatype,
                                                 MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                                         int handler_id, const void *am_hdr,
-                                                        size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
+                                                        MPI_Aint am_hdr_sz)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
                                                      int handler_id, const void *am_hdr,
-                                                     size_t am_hdr_sz, const void *data,
+                                                     MPI_Aint am_hdr_sz, const void *data,
                                                      MPI_Count count, MPI_Datatype datatype,
                                                      MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_NM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                     int *lpid_ptr,
                                                     bool is_remote) MPL_STATIC_INLINE_SUFFIX;
-int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids);
-int MPIDI_NM_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDI_NM_get_local_upids(MPIR_Comm * comm, MPI_Aint ** local_upid_size, char **local_upids);
+int MPIDI_NM_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                              int **remote_lupids);
 int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[]);
 int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm);
@@ -784,7 +786,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, MPI_Aint count, MPI_D
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                  MPIR_Request * message) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq) MPL_STATIC_INLINE_SUFFIX;
-void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
+void *MPIDI_NM_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr);
 int MPIDI_NM_mpi_free_mem(void *ptr);
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source, int tag, MPIR_Comm * comm,
                                                   int context_offset, MPIDI_av_entry_t * addr,

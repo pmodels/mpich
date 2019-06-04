@@ -144,7 +144,7 @@ typedef struct MPIDIG_acc_req_t {
     void *target_addr;
     void *dt_iov;
     void *data;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Op op;
     void *result_addr;
     int result_count;
@@ -233,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req
 
 typedef struct MPIDIG_win_shared_info {
     uint32_t disp_unit;
-    size_t size;
+    MPI_Aint size;
     void *shm_base_addr;
 } MPIDIG_win_shared_info_t;
 

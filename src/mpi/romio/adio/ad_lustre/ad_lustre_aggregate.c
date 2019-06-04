@@ -139,7 +139,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
     int *count_my_req_per_proc, count_my_req_procs;
     int i, l, proc;
-    size_t memLen;
+    MPI_Aint memLen;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
 

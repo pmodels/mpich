@@ -81,10 +81,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_count_iovecs(int origin_count,
                                                     MPI_Datatype origin_datatype,
                                                     MPI_Datatype target_datatype,
                                                     MPI_Datatype result_datatype,
-                                                    size_t origin_bytes,
-                                                    size_t target_bytes,
-                                                    size_t result_bytes,
-                                                    size_t max_pipe, size_t * countp)
+                                                    MPI_Aint origin_bytes,
+                                                    MPI_Aint target_bytes,
+                                                    MPI_Aint result_bytes,
+                                                    MPI_Aint max_pipe, MPI_Aint * countp)
 {
     /* Count the max number of iovecs that will be generated, given the iovs    */
     /* and maximum data size.  The code adds the iovecs from all three lists    */
@@ -104,8 +104,8 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
                                                       MPI_Op op,
                                                       MPIR_Win * win,
                                                       enum fi_datatype *fi_dt,
-                                                      enum fi_op *fi_op, size_t * count,
-                                                      size_t * dtsize)
+                                                      enum fi_op *fi_op, MPI_Aint * count,
+                                                      MPI_Aint * dtsize)
 {
     MPIR_Datatype *dt_ptr;
     int op_index, dt_index;
@@ -160,10 +160,10 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     /* We use the minimal max_count of local op and any possible remote op as the limit
      * to validate dt_size in later check. We assume the limit should be symmetric on
      * all processes as long as the hint correctly contains the local op.*/
-    MPIR_Assert(*count >= (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index]);
+    MPIR_Assert(*count >= (MPI_Aint) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index]);
 
     if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
-        *count = (size_t) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index];
+        *count = (MPI_Aint) MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[dt_index];
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 }
@@ -178,16 +178,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
                                                                     int target_rank,
                                                                     MPI_Datatype origin_datatype,
                                                                     MPI_Datatype target_datatype,
-                                                                    size_t origin_bytes,
-                                                                    size_t target_bytes,
-                                                                    size_t max_pipe,
+                                                                    MPI_Aint origin_bytes,
+                                                                    MPI_Aint target_bytes,
+                                                                    MPI_Aint max_pipe,
                                                                     MPIDI_OFI_win_request_t **
                                                                     winreq, uint64_t * flags,
                                                                     struct fid_ep **ep,
                                                                     MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t o_size, t_size, alloc_iovs, alloc_iov_size;
+    MPI_Aint o_size, t_size, alloc_iovs, alloc_iov_size;
     MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
@@ -241,16 +241,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
                                                                        int target_rank,
                                                                        MPI_Datatype origin_datatype,
                                                                        MPI_Datatype target_datatype,
-                                                                       size_t origin_bytes,
-                                                                       size_t target_bytes,
-                                                                       size_t max_pipe,
+                                                                       MPI_Aint origin_bytes,
+                                                                       MPI_Aint target_bytes,
+                                                                       MPI_Aint max_pipe,
                                                                        MPIDI_OFI_win_request_t **
                                                                        winreq, uint64_t * flags,
                                                                        struct fid_ep **ep,
                                                                        MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t o_size, t_size, alloc_iovs, alloc_iov_size;
+    MPI_Aint o_size, t_size, alloc_iovs, alloc_iov_size;
     MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
@@ -306,10 +306,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
                                                                            target_datatype,
                                                                            MPI_Datatype
                                                                            result_datatype,
-                                                                           size_t origin_bytes,
-                                                                           size_t target_bytes,
-                                                                           size_t result_bytes,
-                                                                           size_t max_pipe,
+                                                                           MPI_Aint origin_bytes,
+                                                                           MPI_Aint target_bytes,
+                                                                           MPI_Aint result_bytes,
+                                                                           MPI_Aint max_pipe,
                                                                            MPIDI_OFI_win_request_t
                                                                            ** winreq,
                                                                            uint64_t * flags,
@@ -317,7 +317,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
                                                                            MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t o_size, t_size, r_size, alloc_iovs, alloc_rma_iovs, alloc_iov_size;
+    MPI_Aint o_size, t_size, r_size, alloc_iovs, alloc_rma_iovs, alloc_iov_size;
     MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
@@ -380,7 +380,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 {
     int rc, mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req = NULL;
-    size_t offset, omax, tmax, tout, oout;
+    MPI_Aint offset, omax, tmax, tout, oout;
     uint64_t flags;
     struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
@@ -389,7 +389,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     struct fi_rma_iov *targetv;
     MPIDI_OFI_seg_state_t p;
     int target_contig, origin_contig;
-    size_t target_bytes, origin_bytes;
+    MPI_Aint target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
     struct iovec iov;
     struct fi_rma_iov riov;
@@ -484,7 +484,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                              MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
-    size_t cur_o = 0, cur_t = 0;
+    MPI_Aint cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.put_get.originv[cur_o];
         targetv = &req->noncontig->iov.put_get.targetv[cur_t];
@@ -564,7 +564,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 {
     int rc, mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req = NULL;
-    size_t offset, omax, tmax, tout, oout;
+    MPI_Aint offset, omax, tmax, tout, oout;
     uint64_t flags;
     struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
@@ -574,7 +574,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_OFI_seg_state_t p;
     int origin_contig, target_contig;
     MPI_Aint origin_true_lb, target_true_lb;
-    size_t origin_bytes, target_bytes;
+    MPI_Aint origin_bytes, target_bytes;
     struct fi_rma_iov riov;
     struct iovec iov;
 
@@ -654,7 +654,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                              MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
 
-    size_t cur_o = 0, cur_t = 0;
+    MPI_Aint cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.put_get.originv[cur_o];
         targetv = &req->noncontig->iov.put_get.targetv[cur_t];
@@ -767,7 +767,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
-    size_t offset, max_count, max_size, dt_size, bytes;
+    MPI_Aint offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb;
     void *buffer, *tbuffer, *rbuffer;
     struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
@@ -878,7 +878,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     int rc, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req = NULL;
-    size_t origin_bytes, target_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout, oout;
+    MPI_Aint origin_bytes, target_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout,
+        oout;
     struct fid_ep *ep = NULL;
     MPI_Datatype basic_type;
     enum fi_op fi_op;
@@ -945,7 +946,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     msg.op = fi_op;
     rc = MPIDI_OFI_SEG_EAGAIN;
 
-    size_t cur_o = 0, cur_t = 0;
+    MPI_Aint cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.accumulate.originv[cur_o];
         targetv = &req->noncontig->iov.accumulate.targetv[cur_t];
@@ -1018,7 +1019,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     int rc, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req = NULL;
-    size_t target_bytes, origin_bytes, result_bytes, offset, max_count, max_size, dt_size, omax,
+    MPI_Aint target_bytes, origin_bytes, result_bytes, offset, max_count, max_size, dt_size, omax,
         rmax, tmax, tout, rout, oout;
     struct fid_ep *ep = NULL;
     MPI_Datatype basic_type;
@@ -1105,7 +1106,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     msg.op = fi_op;
     rc = MPIDI_OFI_SEG_EAGAIN;
 
-    size_t cur_o = 0, cur_t = 0, cur_r = 0;
+    MPI_Aint cur_o = 0, cur_t = 0, cur_r = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
         originv = &req->noncontig->iov.get_accumulate.originv[cur_o];
         targetv = &req->noncontig->iov.get_accumulate.targetv[cur_t];
@@ -1292,7 +1293,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
-    size_t offset, max_count, max_size, dt_size, bytes;
+    MPI_Aint offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb ATTRIBUTE((unused));
     void *buffer, *tbuffer, *rbuffer;
     struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);

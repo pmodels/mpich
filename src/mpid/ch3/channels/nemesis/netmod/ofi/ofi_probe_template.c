@@ -41,7 +41,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
     int ret, mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc = 0;
     uint64_t match_bits, mask_bits;
-    size_t len;
+    MPI_Aint len;
     MPIR_Request rreq_s, *rreq;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_IPROBE_IMPL);

@@ -121,10 +121,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
 {
     MPL_IOV typerep_vec;
     MPI_Aint last;
-    size_t *cursor;
+    MPI_Aint *cursor;
     int num_contig = 1;
     const void *buf;
-    size_t count;
+    MPI_Aint count;
     MPI_Datatype type;
 
     switch (side) {
@@ -182,11 +182,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                        const void *origin,
                                                        const MPI_Aint target,
-                                                       size_t origin_count,
-                                                       size_t target_count,
-                                                       size_t origin_bytes,
-                                                       size_t target_bytes,
-                                                       size_t buf_limit,
+                                                       MPI_Aint origin_count,
+                                                       MPI_Aint target_count,
+                                                       MPI_Aint origin_bytes,
+                                                       MPI_Aint target_bytes,
+                                                       MPI_Aint buf_limit,
                                                        MPI_Datatype origin_type,
                                                        MPI_Datatype target_type)
 {
@@ -228,15 +228,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
                                                         const void *origin,
                                                         const void *result,
                                                         const MPI_Aint target,
-                                                        size_t origin_count,
-                                                        size_t result_count,
-                                                        size_t target_count,
-                                                        size_t buf_limit,
+                                                        MPI_Aint origin_count,
+                                                        MPI_Aint result_count,
+                                                        MPI_Aint target_count,
+                                                        MPI_Aint buf_limit,
                                                         MPI_Datatype origin_type,
                                                         MPI_Datatype result_type,
                                                         MPI_Datatype target_type,
-                                                        size_t origin_bytes,
-                                                        size_t result_bytes, size_t target_bytes)
+                                                        MPI_Aint origin_bytes,
+                                                        MPI_Aint result_bytes,
+                                                        MPI_Aint target_bytes)
 {
     /* `seg_state->buflimit` is `MPI_Aint` == `MPI_Aint` (typically, long or other signed types)
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
@@ -278,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state2(MPIDI_OFI_seg_state_
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                       uintptr_t * origin_addr_next,
                                                       uintptr_t * target_addr_next,
-                                                      size_t * buf_len)
+                                                      MPI_Aint * buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0)) {
         uintptr_t buf_size = MPL_MIN(MPL_MIN(seg_state->target_iov_len, seg_state->origin_iov_len),
@@ -298,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state2(MPIDI_OFI_seg_state_t * s
                                                        uintptr_t * origin_addr_next,
                                                        uintptr_t * result_addr_next,
                                                        uintptr_t * target_addr_next,
-                                                       size_t * buf_len)
+                                                       MPI_Aint * buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0) &&
         (seg_state->result_iov_len != 0)) {
@@ -326,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state2(MPIDI_OFI_seg_state_t * s
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                       uintptr_t * next_origin_addr,
                                                       uintptr_t * next_target_addr,
-                                                      size_t * buf_len)
+                                                      MPI_Aint * buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0)) {
         *next_origin_addr = seg_state->origin_addr;
@@ -351,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state2(MPIDI_OFI_seg_state_t * s
                                                        uintptr_t * next_origin_addr,
                                                        uintptr_t * next_result_addr,
                                                        uintptr_t * next_target_addr,
-                                                       size_t * buf_len)
+                                                       MPI_Aint * buf_len)
 {
     if ((seg_state->origin_iov_len != 0) && (seg_state->target_iov_len != 0) &&
         (seg_state->result_iov_len != 0)) {
@@ -372,17 +373,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state2(MPIDI_OFI_seg_state_t * s
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment(MPIDI_OFI_seg_state_t * seg_state,
                                                      struct iovec *origin_iov,
-                                                     size_t origin_max_iovs,
+                                                     MPI_Aint origin_max_iovs,
                                                      struct fi_rma_iov *target_iov,
-                                                     size_t target_max_iovs,
-                                                     size_t * origin_iovs_nout,
-                                                     size_t * target_iovs_nout)
+                                                     MPI_Aint target_max_iovs,
+                                                     MPI_Aint * origin_iovs_nout,
+                                                     MPI_Aint * target_iovs_nout)
 {
     int rc;
     uintptr_t origin_addr = (uintptr_t) NULL, target_addr = (uintptr_t) NULL;
     uintptr_t origin_last_addr = 0, target_last_addr = 0;
     int origin_idx = 0, target_idx = 0;
-    size_t len = 0, last_len = 0;
+    MPI_Aint len = 0, last_len = 0;
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_base) == offsetof(struct fi_rma_iov, addr));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct iovec, iov_len) == offsetof(struct fi_rma_iov, len));
@@ -446,21 +447,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment(MPIDI_OFI_seg_state_t * seg
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment2(MPIDI_OFI_seg_state_t * seg_state,
                                                       struct iovec *origin_iov,
-                                                      size_t origin_max_iovs,
+                                                      MPI_Aint origin_max_iovs,
                                                       struct iovec *result_iov,
-                                                      size_t result_max_iovs,
+                                                      MPI_Aint result_max_iovs,
                                                       struct fi_rma_iov *target_iov,
-                                                      size_t target_max_iovs,
-                                                      size_t * origin_iovs_nout,
-                                                      size_t * result_iovs_nout,
-                                                      size_t * target_iovs_nout)
+                                                      MPI_Aint target_max_iovs,
+                                                      MPI_Aint * origin_iovs_nout,
+                                                      MPI_Aint * result_iovs_nout,
+                                                      MPI_Aint * target_iovs_nout)
 {
     int rc;
     uintptr_t origin_addr = (uintptr_t) NULL, result_addr = (uintptr_t) NULL, target_addr =
         (uintptr_t) NULL;
     uintptr_t origin_last_addr = 0, result_last_addr = 0, target_last_addr = 0;
     int origin_idx = 0, result_idx = 0, target_idx = 0;
-    size_t len = 0, last_len = 0;
+    MPI_Aint len = 0, last_len = 0;
 
     rc = MPIDI_OFI_next_seg_state2(seg_state, &origin_last_addr, &result_last_addr,
                                    &target_last_addr, &last_len);

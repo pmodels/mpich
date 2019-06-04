@@ -765,7 +765,7 @@ static const char *ErrcodeInvalidReasonStr(int);
 #define NEEDS_FIND_GENERIC_MSG_INDEX
 static int FindGenericMsgIndex(const char[]);
 static int FindSpecificMsgIndex(const char[]);
-static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list list);
+static int vsnprintf_mpi(char *str, MPI_Aint maxlen, const char *fmt_orig, va_list list);
 static void ErrcodeCreateID(int error_class, int generic_idx, const char *msg, int *id, int *seq);
 static int convertErrcodeToIndexes(int errcode, int *ring_idx, int *ring_id, int *generic_idx);
 static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen);
@@ -1309,8 +1309,8 @@ static const char *GetAssertString(int d)
 {
     static char str[ASSERT_STR_MAXLEN] = "";
     char *cur;
-    size_t len = ASSERT_STR_MAXLEN;
-    size_t n;
+    MPI_Aint len = ASSERT_STR_MAXLEN;
+    MPI_Aint n;
 
     if (d == 0) {
         MPL_strncpy(str, "assert=0", ASSERT_STR_MAXLEN);
@@ -1464,10 +1464,10 @@ static const char *GetMPIOpString(MPI_Op o)
    will replace these. */
 /* ------------------------------------------------------------------------ */
 
-static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list list)
+static int vsnprintf_mpi(char *str, MPI_Aint maxlen, const char *fmt_orig, va_list list)
 {
     char *begin, *end, *fmt;
-    size_t len;
+    MPI_Aint len;
     MPI_Comm C;
     MPI_Info info;
     MPI_Datatype D;
@@ -1493,8 +1493,8 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
     end = strchr(fmt, '%');
     while (end) {
         len = maxlen;
-        if (len > (size_t) (end - begin)) {
-            len = (size_t) (end - begin);
+        if (len > (MPI_Aint) (end - begin)) {
+            len = (MPI_Aint) (end - begin);
         }
         if (len) {
             MPIR_Memcpy(str, begin, len);

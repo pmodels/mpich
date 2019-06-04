@@ -848,7 +848,7 @@ static void ADIOI_Iread_and_exch_l1_end(ADIOI_NBC_Request * nbc_req, int *error_
         ADIOI_Assert((((ADIO_Offset) (uintptr_t) read_buf) + real_size - for_next_iter) ==
                      (ADIO_Offset) (uintptr_t) (read_buf + real_size - for_next_iter));
         ADIOI_Assert((for_next_iter + vars->coll_bufsize) ==
-                     (size_t) (for_next_iter + vars->coll_bufsize));
+                     (MPI_Aint) (for_next_iter + vars->coll_bufsize));
         memcpy(tmp_buf, read_buf + real_size - for_next_iter, for_next_iter);
         ADIOI_Free(fd->io_buf);
         fd->io_buf = (char *) ADIOI_Malloc(for_next_iter + vars->coll_bufsize);

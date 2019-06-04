@@ -42,7 +42,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-size_t MPIDIU_get_mapsize(size_t size, size_t * psz);
+MPI_Aint MPIDIU_get_mapsize(MPI_Aint size, MPI_Aint * psz);
 int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm * comm,
                            MPIR_Win * win, bool * fail_flag);
 

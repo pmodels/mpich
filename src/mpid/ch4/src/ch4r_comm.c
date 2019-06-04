@@ -12,7 +12,7 @@
 #include "mpidimpl.h"
 #include "ch4r_comm.h"
 
-int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+int MPIDIU_upids_to_lupids(int size, MPI_Aint * remote_upid_size, char *remote_upids,
                            int **remote_lupids, int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -61,7 +61,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
 
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
-                                     size_t * remote_upid_size, char *remote_upids,
+                                     MPI_Aint * remote_upid_size, char *remote_upids,
                                      int **remote_lupids, int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -69,7 +69,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     int upid_recv_size = 0;
     int map_info[4];
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    size_t *_remote_upid_size = NULL;
+    MPI_Aint *_remote_upid_size = NULL;
     char *_remote_upids = NULL;
     int *_remote_node_ids = NULL;
 
@@ -123,7 +123,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         MPIR_CHKPMEM_MALLOC((*remote_lupids), int *, (*remote_size) * sizeof(int),
                             mpi_errno, "remote_lupids", MPL_MEM_COMM);
         if (!pure_intracomm) {
-            MPIR_CHKLMEM_MALLOC(_remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
+            MPIR_CHKLMEM_MALLOC(_remote_upid_size, MPI_Aint *, (*remote_size) * sizeof(MPI_Aint),
                                 mpi_errno, "_remote_upid_size", MPL_MEM_COMM);
             mpi_errno = MPIR_Bcast_intra_auto(_remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
                                               local_leader, local_comm, &errflag);

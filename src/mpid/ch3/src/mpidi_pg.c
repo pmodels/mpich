@@ -682,7 +682,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 					     the pg id is a string */
     char   buf[MPIDI_MAX_KVS_VALUE_LEN];
     int    i, j, rc, mpi_errno = MPI_SUCCESS, len;
-    size_t vallen, curSlen;
+    MPI_Aint vallen, curSlen;
 
     /* Make an initial allocation of a string with an estimate of the
        needed space */

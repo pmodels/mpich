@@ -130,7 +130,7 @@ typedef struct MPIDIG_hdr_t {
 
 typedef struct MPIDIG_send_long_req_mst_t {
     MPIDIG_hdr_t hdr;
-    size_t data_sz;             /* Message size in bytes */
+    MPI_Aint data_sz;           /* Message size in bytes */
     uint64_t sreq_ptr;          /* Pointer value of the request object at the sender side */
 } MPIDIG_send_long_req_mst_t;
 

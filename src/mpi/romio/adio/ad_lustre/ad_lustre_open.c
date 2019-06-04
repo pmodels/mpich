@@ -25,7 +25,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     struct lov_user_md *lum = NULL;
     char *value;
     ADIO_Offset str_factor = -1, str_unit = 0, start_iodev = -1;
-    size_t value_sz = (MPI_MAX_INFO_VAL + 1) * sizeof(char);
+    MPI_Aint value_sz = (MPI_MAX_INFO_VAL + 1) * sizeof(char);
 
 #if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_LUSTRE_OPEN";

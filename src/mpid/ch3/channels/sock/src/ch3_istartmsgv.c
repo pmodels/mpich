@@ -6,7 +6,7 @@
 
 #include "mpidi_ch3_impl.h"
 
-static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset, size_t nb)
+static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset, MPI_Aint nb)
 {
     MPIR_Request *sreq;
     int i;
@@ -84,7 +84,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
          * data, queuing any unsent data. */
         if (MPIDI_CH3I_SendQ_empty(vcch)) {     /* MT */
             int rc;
-            size_t nb;
+            MPI_Aint nb;
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "send queue empty, attempting to write");
             MPL_DBG_PKT(vcch->conn, (MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF, "isend");

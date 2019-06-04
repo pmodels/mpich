@@ -104,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                             MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t data_sz;
+    MPI_Aint data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t data_sz;
+    MPI_Aint data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDI_UCX_ucp_request_t *ucp_request;

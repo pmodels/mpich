@@ -57,7 +57,7 @@ int MPII_Stubutil_sched_selective_sink(MPII_Stubutil_sched_t * sched, int n_in_v
     return MPI_SUCCESS;
 }
 
-void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched)
+void *MPII_Stubutil_sched_malloc(MPI_Aint size, MPII_Stubutil_sched_t * sched)
 {
     return MPI_SUCCESS;
 }

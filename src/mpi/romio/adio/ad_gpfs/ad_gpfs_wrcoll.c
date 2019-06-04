@@ -1127,7 +1127,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
             }
     } else if (nprocs_send) {
         /* buftype is not contig */
-        size_t msgLen = 0;
+        MPI_Aint msgLen = 0;
         for (i = 0; i < nprocs; i++)
             msgLen += send_size[i];
         send_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
@@ -1234,7 +1234,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
     while (size) { \
         size_in_buf = MPL_MIN(size, flat_buf_sz); \
   ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-  ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
+  ADIOI_Assert(size_in_buf == (MPI_Aint)size_in_buf); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
         send_buf_idx[p] += size_in_buf; \

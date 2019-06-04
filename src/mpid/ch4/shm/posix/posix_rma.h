@@ -96,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
                                                 MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t origin_data_sz = 0, target_data_sz = 0;
+    MPI_Aint origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PUT);
@@ -142,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
                                                 MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t origin_data_sz = 0, target_data_sz = 0;
+    MPI_Aint origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_GET);
@@ -192,7 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
-    size_t origin_data_sz = 0, target_data_sz = 0, result_data_sz = 0;
+    MPI_Aint origin_data_sz = 0, target_data_sz = 0, result_data_sz = 0;
     int shm_locked = 0, disp_unit = 0;
     void *base = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_GET_ACCUMULATE);
@@ -258,7 +258,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
-    size_t origin_data_sz = 0, target_data_sz = 0;
+    MPI_Aint origin_data_sz = 0, target_data_sz = 0;
     int disp_unit = 0;
     void *base = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_ACCUMULATE);
@@ -403,7 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
-    size_t data_sz = 0;
+    MPI_Aint data_sz = 0;
     int disp_unit = 0;
     void *base = NULL, *target_addr = NULL;
     MPI_Aint dtype_sz = 0;
@@ -561,7 +561,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
-    size_t data_sz = 0;
+    MPI_Aint data_sz = 0;
     int disp_unit = 0;
     void *base = NULL, *target_addr = NULL;
     MPI_Aint dtype_sz = 0;

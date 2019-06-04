@@ -259,7 +259,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
     int *count_my_req_per_proc, count_my_req_procs;
     MPI_Aint *buf_idx;
     int i, l, proc;
-    size_t memLen;
+    MPI_Aint memLen;
     ADIO_Offset fd_len, rem_len, curr_idx, off, *ptr;
     ADIOI_Access *my_req;
 
@@ -439,7 +439,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     int i, j;
     MPI_Request *requests;
     ADIOI_Access *others_req;
-    size_t memLen;
+    MPI_Aint memLen;
     ADIO_Offset *ptr;
     MPI_Aint *mem_ptrs;
 
@@ -569,7 +569,7 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
     int count_others_req_procs;
     int i, j;
     ADIOI_Access *others_req;
-    size_t memLen;
+    MPI_Aint memLen;
     ADIO_Offset *ptr;
     MPI_Aint *mem_ptrs;
 

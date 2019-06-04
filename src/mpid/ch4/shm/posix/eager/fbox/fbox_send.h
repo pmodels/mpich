@@ -26,14 +26,14 @@
  */
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_send(int grank,
-                       MPIDI_POSIX_am_header_t ** msg_hdr, struct iovec **iov, size_t * iov_num)
+                       MPIDI_POSIX_am_header_t ** msg_hdr, struct iovec **iov, MPI_Aint * iov_num)
 {
     MPIDI_POSIX_fastbox_t *fbox_out;
     int i;
-    size_t iov_done = 0;
+    MPI_Aint iov_done = 0;
     uint8_t *fbox_payload_ptr;
-    size_t fbox_payload_size = MPIDI_POSIX_FBOX_DATA_LEN;
-    size_t fbox_payload_size_left = MPIDI_POSIX_FBOX_DATA_LEN;
+    MPI_Aint fbox_payload_size = MPIDI_POSIX_FBOX_DATA_LEN;
+    MPI_Aint fbox_payload_size_left = MPIDI_POSIX_FBOX_DATA_LEN;
     int ret = MPIDI_POSIX_OK;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_SEND);

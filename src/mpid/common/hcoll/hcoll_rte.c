@@ -70,7 +70,7 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
                                  void *array_of_addresses, void *array_of_datatypes);
 static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type);
 static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type);
-static int get_mpi_constants(size_t * mpi_datatype_size,
+static int get_mpi_constants(MPI_Aint * mpi_datatype_size,
                              int *mpi_order_c, int *mpi_order_fortran,
                              int *mpi_distribute_block,
                              int *mpi_distribute_cyclic,
@@ -120,7 +120,7 @@ static int recv_nb(struct dte_data_representation_t data,
     MPI_Datatype dtype;
     MPIR_Request *request;
     MPIR_Comm *comm;
-    size_t size;
+    MPI_Aint size;
     mpi_errno = MPI_SUCCESS;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
@@ -132,7 +132,7 @@ static int recv_nb(struct dte_data_representation_t data,
     if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
-    size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
+    size = (MPI_Aint) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
     dtype = MPI_CHAR;
     request = NULL;
     mpi_errno = MPIC_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, &request);
@@ -155,7 +155,7 @@ static int send_nb(dte_data_representation_t data,
     MPI_Datatype dtype;
     MPIR_Request *request;
     MPIR_Comm *comm;
-    size_t size;
+    MPI_Aint size;
     mpi_errno = MPI_SUCCESS;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
@@ -167,7 +167,7 @@ static int send_nb(dte_data_representation_t data,
     if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
-    size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
+    size = (MPI_Aint) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
     dtype = MPI_CHAR;
     request = NULL;
     MPIR_Errflag_t err = MPIR_ERR_NONE;
@@ -396,7 +396,7 @@ static int set_hcoll_type(void *mpi_type, dte_data_representation_t hcoll_type)
     return HCOLL_SUCCESS;
 }
 
-static int get_mpi_constants(size_t * mpi_datatype_size,
+static int get_mpi_constants(MPI_Aint * mpi_datatype_size,
                              int *mpi_order_c, int *mpi_order_fortran,
                              int *mpi_distribute_block,
                              int *mpi_distribute_cyclic,

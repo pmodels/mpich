@@ -27,7 +27,7 @@ int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
         ucs_status_t ucx_status;
         ucp_ep_params_t ep_params;
         int i, curr, node;
-        size_t *bc_indices;
+        MPI_Aint *bc_indices;
 
         MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
         MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,

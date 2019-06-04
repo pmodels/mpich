@@ -26,15 +26,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     MPIDI_POSIX_am_request_header_t *curr_rreq_hdr = NULL;
     void *p_data = NULL;
-    size_t p_data_sz = 0;
-    size_t recv_data_sz = 0;
-    size_t in_total_data_sz = 0;
+    MPI_Aint p_data_sz = 0;
+    MPI_Aint recv_data_sz = 0;
+    MPI_Aint in_total_data_sz = 0;
     int iov_done = 0;
     int is_contig;
     void *am_hdr = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr;
     uint8_t *payload;
-    size_t payload_left;
+    MPI_Aint payload_left;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);

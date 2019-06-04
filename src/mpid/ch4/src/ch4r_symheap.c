@@ -23,27 +23,27 @@ enum {
 };
 
 #ifdef USE_SYM_HEAP
-static inline int check_maprange_ok(void *start, size_t size);
-static void *generate_random_addr(size_t size);
+static inline int check_maprange_ok(void *start, MPI_Aint size);
+static void *generate_random_addr(MPI_Aint size);
 static int allocate_symshm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
                                    MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
                                    int *map_result_ptr);
 static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype);
-static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
+static int allreduce_maxloc(MPI_Aint mysz, int myloc, MPIR_Comm * comm, MPI_Aint * maxsz,
                             int *maxsz_loc);
 #endif
 
 /* Returns aligned size and the page size. The page size parameter must
  * be always initialized to 0 or a previously returned value. If page size
  * is set, we can reuse the value and skip sysconf. */
-size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
+MPI_Aint MPIDIU_get_mapsize(MPI_Aint size, MPI_Aint * psz)
 {
-    size_t page_sz, mapsize;
+    MPI_Aint page_sz, mapsize;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_MAPSIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_MAPSIZE);
 
     if (*psz == 0)
-        page_sz = (size_t) sysconf(_SC_PAGESIZE);
+        page_sz = (MPI_Aint) sysconf(_SC_PAGESIZE);
     else
         page_sz = *psz;
 
@@ -55,13 +55,13 @@ size_t MPIDIU_get_mapsize(size_t size, size_t * psz)
 }
 
 #ifdef USE_SYM_HEAP
-static int check_maprange_ok(void *start, size_t size)
+static int check_maprange_ok(void *start, MPI_Aint size)
 {
     int rc = 0;
     int ret = 0;
-    size_t page_sz = 0;
-    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
-    size_t i, num_pages = mapsize / page_sz;
+    MPI_Aint page_sz = 0;
+    MPI_Aint mapsize = MPIDIU_get_mapsize(size, &page_sz);
+    MPI_Aint i, num_pages = mapsize / page_sz;
     char *ptr = (char *) start;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CHECK_MAPRANGE_OK);
@@ -85,7 +85,7 @@ static int check_maprange_ok(void *start, size_t size)
     return ret;
 }
 
-static void *generate_random_addr(size_t size)
+static void *generate_random_addr(MPI_Aint size)
 {
     /* starting position for pointer to map
      * This is not generic, probably only works properly on Linux
@@ -94,9 +94,9 @@ static void *generate_random_addr(size_t size)
 #define MPIDIU_MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
     uintptr_t map_pointer;
     char random_state[256];
-    size_t page_sz = 0;
+    MPI_Aint page_sz = 0;
     uint64_t random_unsigned;
-    size_t mapsize = MPIDIU_get_mapsize(size, &page_sz);
+    MPI_Aint mapsize = MPIDIU_get_mapsize(size, &page_sz);
     MPL_time_t ts;
     unsigned int ts_32 = 0;
     int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
@@ -297,7 +297,7 @@ static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Dataty
  * supports only pairtypes with signed {short, int, long}. We internally
  * cast size_t to unsigned long long which is large enough to hold size type
  * and matches an MPI basic datatype. */
-static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
+static int allreduce_maxloc(MPI_Aint mysz, int myloc, MPIR_Comm * comm, MPI_Aint * maxsz,
                             int *maxsz_loc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -336,7 +336,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
         MPIR_ERR_POP(mpi_errno);
 
     *maxsz_loc = maxloc_result.loc;
-    *maxsz = (size_t) maxloc_result.sz;
+    *maxsz = (MPI_Aint) maxloc_result.sz;
 
   fn_exit:
     if (maxloc_type != MPI_DATATYPE_NULL)
@@ -373,7 +373,7 @@ int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm 
     void **base_ptr = &MPIDIG_WIN(win, mmap_addr);
     int all_map_result = MPIDIU_SYMSHM_MAP_FAIL;
 
-    size_t mapsize = 0, page_sz = 0, maxsz = 0;
+    MPI_Aint mapsize = 0, page_sz = 0, maxsz = 0;
     int maxsz_loc = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *shm_comm_ptr = comm->node_comm;

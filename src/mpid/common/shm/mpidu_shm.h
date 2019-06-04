@@ -17,7 +17,7 @@ typedef struct MPIDU_shm_barrier {
 } MPIDU_shm_barrier_t;
 
 typedef struct MPIDU_shm_seg {
-    size_t segment_len;
+    MPI_Aint segment_len;
     /* Handle to shm seg */
     MPL_shm_hnd_t hnd;
     /* Pointers */
@@ -29,11 +29,11 @@ typedef struct MPIDU_shm_seg {
 } MPIDU_shm_seg_t;
 
 typedef struct MPIDU_shm_seg_info {
-    size_t size;
+    MPI_Aint size;
     char *addr;
 } MPIDU_shm_seg_info_t;
 
-int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class);
+int MPIDU_shm_seg_alloc(MPI_Aint len, void **ptr_p, MPL_memory_class class);
 int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
                          int num_local, int local_rank, int local_procs_0, int rank,
                          MPL_memory_class class);

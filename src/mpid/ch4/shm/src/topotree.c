@@ -452,12 +452,12 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     MPL_shm_hnd_t fd;
     int num_ranks, rank;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    size_t shm_size;
+    MPI_Aint shm_size;
     int **bind_map = NULL;
     int *max_entries_per_level = NULL;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
-    size_t topo_depth = 0;
+    MPI_Aint topo_depth = 0;
     int package_level = 0, i, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 
@@ -509,7 +509,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
         /* STEP 3.1. Count the maximum entries at each level - used for breaking the tree into
          * intra/inter socket */
-        max_entries_per_level = (int *) MPL_calloc(topo_depth, sizeof(size_t), MPL_MEM_OTHER);
+        max_entries_per_level = (int *) MPL_calloc(topo_depth, sizeof(MPI_Aint), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!max_entries_per_level, mpi_errno, MPI_ERR_OTHER, "**nomem");
         package_level =
             MPIDI_SHM_topotree_get_package_level(topo_depth, max_entries_per_level, num_ranks,

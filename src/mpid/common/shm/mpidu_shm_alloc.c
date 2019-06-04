@@ -35,7 +35,7 @@ extern int mkstemp(char *t);
 typedef struct alloc_elem {
     struct alloc_elem *next;
     void **ptr_p;
-    size_t len;
+    MPI_Aint len;
 } alloc_elem_t;
 
 static struct {
@@ -51,7 +51,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
 #define ALLOCQ_ENQUEUE(ep) GENERIC_Q_ENQUEUE(&allocq, ep, next)
 #define ALLOCQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&allocq, epp, next)
 
-static size_t segment_len = 0;
+static MPI_Aint segment_len = 0;
 
 static int num_segments = 0;
 
@@ -74,7 +74,7 @@ static asym_check_region *asym_check_region_p = NULL;
    and the *ptr_p pointer will be valid only after
    MPIDU_SHM_Seg_commit() is called.
 */
-int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
+int MPIDU_shm_seg_alloc(MPI_Aint len, void **ptr_p, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS;
     alloc_elem_t *ep;
@@ -85,7 +85,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 
     /* round up to multiple of 8 to ensure the start of the next
      * region is 64-bit aligned. */
-    len = MPL_ROUND_UP_ALIGN(len, (size_t) 8);
+    len = MPL_ROUND_UP_ALIGN(len, (MPI_Aint) 8);
     MPIR_Assert(len);
     MPIR_Assert(ptr_p);
 
@@ -141,7 +141,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     char *serialized_hnd = NULL;
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
-    size_t size_left;
+    MPI_Aint size_left;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
@@ -328,7 +328,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     } else {
         pmix_proc_t proc, *procs;
         char *nodename = NULL;
-        size_t nprocs;
+        MPI_Aint nprocs;
         pmix_value_t value, *pvalue = NULL;
         pmix_info_t *info;
         int flag = 1;

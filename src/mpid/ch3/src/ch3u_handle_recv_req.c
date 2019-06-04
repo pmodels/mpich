@@ -1025,7 +1025,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_get_t *get_pkt = &((target_lock_entry->pkt).get);
     MPIR_Request *sreq = NULL;
     MPI_Aint type_size;
-    size_t len;
+    MPI_Aint len;
     int iovcnt;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int is_contig;
@@ -1073,7 +1073,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
 
     /* length of target data */
     MPIR_Datatype_get_size_macro(get_pkt->datatype, type_size);
-    MPIR_Assign_trunc(len, get_pkt->count * type_size, size_t);
+    MPIR_Assign_trunc(len, get_pkt->count * type_size, MPI_Aint);
 
     MPIR_Datatype_is_contig(get_pkt->datatype, &is_contig);
 
@@ -1199,7 +1199,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &((target_lock_entry->pkt).get_accum);
     MPIR_Request *sreq = NULL;
     MPI_Aint type_size;
-    size_t len;
+    MPI_Aint len;
     int iovcnt;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int is_contig;
@@ -1231,7 +1231,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIR_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
 
     /* length of target data */
-    MPIR_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
+    MPIR_Assign_trunc(len, get_accum_pkt->count * type_size, MPI_Aint);
 
     if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);

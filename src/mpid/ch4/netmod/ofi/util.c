@@ -177,7 +177,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
-                              size_t * data_sz,
+                              MPI_Aint * data_sz,
                               int is_local,
                               int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
@@ -443,7 +443,7 @@ static MPI_Op mpi_ops[] = {
 static inline void create_dt_map()
 {
     int i, j;
-    size_t dtsize[FI_DATATYPE_LAST];
+    MPI_Aint dtsize[FI_DATATYPE_LAST];
     dtsize[FI_INT8] = sizeof(int8_t);
     dtsize[FI_UINT8] = sizeof(uint8_t);
     dtsize[FI_INT16] = sizeof(int16_t);
@@ -478,7 +478,7 @@ static inline void create_dt_map()
             _TBL.max_compare_atomic_count = 0;
             _TBL.mpi_acc_valid = check_mpi_acc_valid(mpi_dtypes[i], mpi_ops[j]);
             ssize_t ret;
-            size_t atomic_count;
+            MPI_Aint atomic_count;
 
             if (fi_dt != FI_DATATYPE_LAST && fi_op != FI_ATOMIC_OP_LAST) {
                 CHECK_ATOMIC(fi_atomicvalid, atomic_valid, max_atomic_count);

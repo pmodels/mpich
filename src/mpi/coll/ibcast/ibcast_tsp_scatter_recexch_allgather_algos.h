@@ -25,12 +25,12 @@ int MPIR_TSP_Ibcast_sched_intra_scatter_recexch_allgather(void *buffer, int coun
                                                           MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank;
     int is_contig;
     void *tmp_buf = NULL;
-    size_t nbytes;
+    MPI_Aint nbytes;
     int scatter_k = MPIR_CVAR_IBCAST_SCATTER_KVAL;
     int allgather_k = MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL;
 

@@ -26,7 +26,7 @@ static void IME_IOContig(ADIO_File fd,
 {
     ssize_t ret;
     MPI_Count datatype_size;
-    size_t mem_len;
+    MPI_Aint mem_len;
     uint64_t file_offset = offset;
     static char myname[] = "ADIOI_IME_IOCONTIG";
 

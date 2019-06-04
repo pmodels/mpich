@@ -16,7 +16,7 @@
 
 /* immed_copy() copys data from origin buffer to
    IMMED packet header. */
-static inline int immed_copy(void *src, void *dest, size_t len)
+static inline int immed_copy(void *src, void *dest, MPI_Aint len)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IMMED_COPY);

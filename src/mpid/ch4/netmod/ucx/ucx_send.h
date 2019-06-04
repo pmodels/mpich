@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
                                             MPIR_Request ** request, int have_request, int is_sync)
 {
     int dt_contig;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int mpi_errno = MPI_SUCCESS;

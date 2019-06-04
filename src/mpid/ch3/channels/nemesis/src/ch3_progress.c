@@ -832,7 +832,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 		
             while (n_iov && buflen >= iov->MPL_IOV_LEN)
             {
-                size_t iov_len = iov->MPL_IOV_LEN;
+                MPI_Aint iov_len = iov->MPL_IOV_LEN;
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %d", (int)iov_len);
                 if (rreq->dev.drop_data == FALSE) {
                     MPIR_Memcpy (iov->MPL_IOV_BUF, buf, iov_len);

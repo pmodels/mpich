@@ -436,7 +436,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         /* basic datatype. send the data. */
         MPIDI_CH3_Pkt_t upkt;
         MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
-        size_t len;
+        MPI_Aint len;
         int iovcnt;
         int is_contig;
 
@@ -467,7 +467,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         MPIR_Datatype_is_contig(get_pkt->datatype, &is_contig);
 
         if (get_pkt->pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
-            MPIR_Assign_trunc(len, get_pkt->count * type_size, size_t);
+            MPIR_Assign_trunc(len, get_pkt->count * type_size, MPI_Aint);
             void *src = (void *) (get_pkt->addr), *dest = (void *) &(get_resp_pkt->info.data);
             mpi_errno = immed_copy(src, dest, len);
             if (mpi_errno != MPI_SUCCESS)
@@ -830,7 +830,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     }
 
     if (pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
-        size_t len;
+        MPI_Aint len;
         void *src = NULL, *dest = NULL;
         MPIR_Request *resp_req = NULL;
         MPIDI_CH3_Pkt_t upkt;
@@ -860,7 +860,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
         /* Calculate the length of reponse data, ensure that it fits into immed packet. */
         MPIR_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
-        MPIR_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
+        MPIR_Assign_trunc(len, get_accum_pkt->count * type_size, MPI_Aint);
 
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
         get_accum_resp_pkt->request_handle = get_accum_pkt->request_handle;

@@ -18,7 +18,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
     ssize_t err = -1;
     MPI_Count datatype_size, len;
     ADIO_Offset bytes_xfered = 0;
-    size_t wr_count;
+    MPI_Aint wr_count;
     static char myname[] = "ADIOI_NFS_WRITECONTIG";
     char *p;
 

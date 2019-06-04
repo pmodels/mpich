@@ -57,10 +57,10 @@ static void MPIR_Bsend_dump(void);
 static struct BsendBuffer {
     void *buffer;               /* Pointer to the begining of the user-
                                  * provided buffer */
-    size_t buffer_size;         /* Size of the user-provided buffer */
+    MPI_Aint buffer_size;       /* Size of the user-provided buffer */
     void *origbuffer;           /* Pointer to the buffer provided by
                                  * the user */
-    size_t origbuffer_size;     /* Size of the buffer as provided
+    MPI_Aint origbuffer_size;   /* Size of the buffer as provided
                                  * by the user */
     MPII_Bsend_data_t *avail;   /* Pointer to the first available block
                                  * of space */
@@ -79,8 +79,8 @@ static int initialized = 0;     /* keep track of the first call to any
 /* Forward references */
 static void MPIR_Bsend_retry_pending(void);
 static int MPIR_Bsend_check_active(void);
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t);
-static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t *, size_t);
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(MPI_Aint);
+static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t *, MPI_Aint);
 static int MPIR_Bsend_finalize(void *);
 static void MPIR_Bsend_free_segment(MPII_Bsend_data_t *);
 
@@ -91,7 +91,7 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t *);
 int MPIR_Bsend_attach(void *buffer, int buffer_size)
 {
     MPII_Bsend_data_t *p;
-    size_t offset, align_sz;
+    MPI_Aint offset, align_sz;
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -133,7 +133,7 @@ int MPIR_Bsend_attach(void *buffer, int buffer_size)
      * Further, GCC 4.5.1 generates bad code on 32-bit platforms when this is
      * only 4-byte aligned (see #1149). */
     align_sz = MPL_MAX(sizeof(void *), sizeof(double));
-    offset = ((size_t) buffer) % align_sz;
+    offset = ((MPI_Aint) buffer) % align_sz;
     if (offset) {
         offset = align_sz - offset;
         buffer = (char *) buffer + offset;
@@ -520,7 +520,7 @@ static void MPIR_Bsend_retry_pending(void)
  * Find a slot in the avail buffer that can hold size bytes.  Does *not*
  * remove the slot from the avail buffer (see MPIR_Bsend_take_buffer)
  */
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t size)
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(MPI_Aint size)
 {
     MPII_Bsend_data_t *p = BsendBuffer.avail;
 
@@ -542,10 +542,10 @@ static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t size)
  * If there isn't enough left of p, remove the entire segment from
  * the avail list.
  */
-static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, size_t size)
+static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, MPI_Aint size)
 {
     MPII_Bsend_data_t *prev;
-    size_t alloc_size;
+    MPI_Aint alloc_size;
 
     /* Compute the remaining size.  This must include any padding
      * that must be added to make the new block properly aligned */

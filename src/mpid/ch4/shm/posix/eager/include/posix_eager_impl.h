@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
-                                                    struct iovec **iov, size_t * iov_num)
+                                                    struct iovec **iov, MPI_Aint * iov_num)
 {
     return MPIDI_POSIX_eager_func->send(grank, msg_hdr, iov, iov_num);
 }
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t *
                                                             transaction, void *dst, const void *src,
-                                                            size_t size)
+                                                            MPI_Aint size)
 {
     return MPIDI_POSIX_eager_func->recv_memcpy(transaction, dst, src, size);
 }

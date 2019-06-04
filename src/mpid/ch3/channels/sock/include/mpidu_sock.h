@@ -99,7 +99,7 @@ Utility-Sock
 S*/
 typedef struct MPIDI_CH3I_Sock_event {
     MPIDI_CH3I_Sock_op_t op_type;
-    size_t num_bytes;
+    MPI_Aint num_bytes;
     void *user_ptr;
     int error;
 } MPIDI_CH3I_Sock_event_t;
@@ -560,7 +560,7 @@ internal progress engine could block on an application routine.
 Module:
 Utility-Sock
 E*/
-typedef int (*MPIDI_CH3I_Sock_progress_update_func_t) (size_t num_bytes, void *user_ptr);
+typedef int (*MPIDI_CH3I_Sock_progress_update_func_t) (MPI_Aint num_bytes, void *user_ptr);
 
 
 /*@
@@ -619,7 +619,7 @@ one thread is not attempting to post a new operation while another thread is att
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_post_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t minbr, size_t maxbr,
+int MPIDI_CH3I_Sock_post_read(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint minbr, MPI_Aint maxbr,
                               MPIDI_CH3I_Sock_progress_update_func_t fn);
 
 
@@ -739,7 +739,7 @@ need this flexibility?
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_post_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t min, size_t max,
+int MPIDI_CH3I_Sock_post_write(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint min, MPI_Aint max,
                                MPIDI_CH3I_Sock_progress_update_func_t fn);
 
 
@@ -909,7 +909,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_read);
+int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint len, MPI_Aint * num_read);
 
 
 /*@
@@ -959,7 +959,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read);
+int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, MPI_Aint * num_read);
 
 
 /*@
@@ -1008,7 +1008,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t * num_written);
+int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, MPI_Aint len, MPI_Aint * num_written);
 
 
 /*@
@@ -1057,7 +1057,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written);
+int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, MPI_Aint * num_written);
 
 
 /*@
@@ -1121,7 +1121,7 @@ The returned string is the generic error message for the supplied error code.
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, size_t length);
+int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, MPI_Aint length);
 
 
 CPLUSPLUS_END
