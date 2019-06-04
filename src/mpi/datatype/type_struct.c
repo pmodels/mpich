@@ -225,7 +225,7 @@ int MPIR_Type_struct(int count,
             tmp_el_sz = MPIR_Datatype_get_basic_size(oldtype_array[i]);
             tmp_el_type = oldtype_array[i];
 
-            MPII_DATATYPE_BLOCK_LB_UB((size_t) (blocklength_array[i]),
+            MPII_DATATYPE_BLOCK_LB_UB((ssize_t) (blocklength_array[i]),
                                       displacement_array[i],
                                       0, tmp_el_sz, tmp_el_sz, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb;
@@ -243,7 +243,7 @@ int MPIR_Type_struct(int count,
             tmp_el_sz = old_dtp->builtin_element_size;
             tmp_el_type = old_dtp->basic_type;
 
-            MPII_DATATYPE_BLOCK_LB_UB((size_t) blocklength_array[i],
+            MPII_DATATYPE_BLOCK_LB_UB((ssize_t) blocklength_array[i],
                                       displacement_array[i],
                                       old_dtp->lb, old_dtp->ub, old_dtp->extent, tmp_lb, tmp_ub);
             tmp_true_lb = tmp_lb + (old_dtp->true_lb - old_dtp->lb);

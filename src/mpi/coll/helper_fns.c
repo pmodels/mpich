@@ -111,9 +111,6 @@ int MPIC_Send(const void *buf, size_t count, MPI_Datatype datatype, int dest, in
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
     switch (*errflag) {
         case MPIR_ERR_NONE:
             break;
@@ -171,9 +168,6 @@ int MPIC_Recv(void *buf, size_t count, MPI_Datatype datatype, int source, int ta
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
@@ -227,9 +221,6 @@ int MPIC_Ssend(const void *buf, size_t count, MPI_Datatype datatype, int dest, i
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SSEND);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
-
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
@@ -289,11 +280,6 @@ int MPIC_Sendrecv(const void *sendbuf, size_t sendcount, MPI_Datatype sendtype,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SENDRECV);
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
-
-    MPIR_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", sendcount);
-    MPIR_ERR_CHKANDJUMP1((recvcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", recvcount);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
@@ -376,9 +362,6 @@ int MPIC_Sendrecv_replace(void *buf, size_t count, MPI_Datatype datatype,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE);
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
-
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
 
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
@@ -468,9 +451,6 @@ int MPIC_Isend(const void *buf, size_t count, MPI_Datatype datatype, int dest, i
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
     switch (*errflag) {
         case MPIR_ERR_NONE:
             break;
@@ -508,9 +488,6 @@ int MPIC_Issend(const void *buf, size_t count, MPI_Datatype datatype, int dest, 
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
     switch (*errflag) {
         case MPIR_ERR_NONE:
             break;
@@ -545,9 +522,6 @@ int MPIC_Irecv(void *buf, size_t count, MPI_Datatype datatype, int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_IRECV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_IRECV);
-
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;

@@ -92,10 +92,12 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
     /* Calculate how much data we already have */
-    curr_size = MPL_MIN(scatter_size,
-                        nbytes - ((rank - root + comm_size) % comm_size) * scatter_size);
-    if (curr_size < 0)
+    size_t tmp_offset = ((rank - root + comm_size) % comm_size) * scatter_size;
+    if (nbytes < tmp_offset) {
         curr_size = 0;
+    } else {
+        curr_size = MPL_MIN(scatter_size, nbytes - tmp_offset);
+    }
 
     left = (comm_size + rank - 1) % comm_size;
     right = (rank + 1) % comm_size;

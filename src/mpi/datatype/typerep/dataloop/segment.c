@@ -668,7 +668,6 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
              * piecefn_indicated_exit)
              */
             MPIR_Assert(piecefn_indicated_exit >= 0);
-            MPIR_Assert(myblocks >= 0);
             stream_off += myblocks * stream_el_size;
 
             /* myblocks of 0 or less than cur_elmp->curblock indicates
@@ -697,7 +696,6 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                         while (myblocks > 0 && myblocks >= (size_t) (cur_elmp->curblock)) {
                             myblocks -= (size_t) (cur_elmp->curblock);
                             cur_elmp->curcount--;
-                            MPIR_Assert(cur_elmp->curcount >= 0);
 
                             count_index = cur_elmp->orig_count - cur_elmp->curcount;
                             cur_elmp->curblock = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, count_index);
@@ -751,7 +749,6 @@ void MPII_Segment_manipulate(struct MPIR_Segment *segp,
                         while (myblocks > 0 && myblocks >= (size_t) (cur_elmp->curblock)) {
                             myblocks -= (size_t) (cur_elmp->curblock);
                             cur_elmp->curcount--;
-                            MPIR_Assert(cur_elmp->curcount >= 0);
 
                             count_index = cur_elmp->orig_count - cur_elmp->curcount;
                             cur_elmp->curblock = cur_elmp->orig_block;

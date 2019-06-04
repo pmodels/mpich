@@ -168,7 +168,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
         datatype == MPI_DOUBLE_INT ||
         datatype == MPI_LONG_INT || datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
-    } else if (datatype_ptr->builtin_element_size >= 0) {
+    } else if (datatype_ptr->builtin_element_size >= 0) { /* FIXME NOW!!! */
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;
         MPIR_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
         return MPIR_Type_get_basic_type_elements(bytes_p,

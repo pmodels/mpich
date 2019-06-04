@@ -106,9 +106,11 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
     /* curr_size is the amount of data that this process now has stored in
      * buffer at byte offset (relative_rank*scatter_size) */
-    curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
-    if (curr_size < 0)
+    if (nbytes < relative_rank * scatter_size) {
         curr_size = 0;
+    } else {
+        curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
+    }
 
     /* medium size allgather and pof2 comm_size. use recurive doubling. */
 
@@ -138,7 +140,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
             mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset),
                                       curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG,
                                       ((char *) tmp_buf + recv_offset),
-                                      (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
+                                      (nbytes < recv_offset ? 0 : nbytes - recv_offset),
                                       MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* --BEGIN ERROR HANDLING-- */

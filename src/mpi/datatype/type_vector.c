@@ -136,9 +136,9 @@ int MPIR_Type_vector(int count,
         eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
 
-    MPII_DATATYPE_VECTOR_LB_UB((size_t) count,
+    MPII_DATATYPE_VECTOR_LB_UB((ssize_t) count,
                                eff_stride,
-                               (size_t) blocklength,
+                               (ssize_t) blocklength,
                                old_lb, old_ub, old_extent, new_dtp->lb, new_dtp->ub);
     new_dtp->true_lb = new_dtp->lb + (old_true_lb - old_lb);
     new_dtp->true_ub = new_dtp->ub + (old_true_ub - old_ub);

@@ -30,7 +30,7 @@ void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, size_
     size_t size;
 
     MPIR_Datatype_get_size_macro(datatype, size);
-    MPIR_Assert(size >= 0 && MPIR_STATUS_GET_COUNT(*status) >= 0);
+    MPIR_Assert(MPIR_STATUS_GET_COUNT(*status) >= 0);
     if (size != 0) {
         /* MPI-3 says return MPI_UNDEFINED if too large for an int */
         if ((MPIR_STATUS_GET_COUNT(*status) % size) != 0)
