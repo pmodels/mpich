@@ -150,7 +150,7 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
                                   ADIO_Offset offset, ADIO_Status * status,
                                   int io_mode, int *error_code)
 {
-    ssize_t err = -1;
+    ssize_t err = 0;
     size_t rw_count;
     ADIO_Offset bytes_xfered = 0;
     MPI_Count datatype_size, len;
