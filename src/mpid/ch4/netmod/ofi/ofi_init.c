@@ -755,6 +755,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                         &av_attr,       /* In:  Configuration object  */
                         &MPIDI_OFI_global.av,   /* Out: AV Object             */
                         NULL)) {        /* Context: AV events         */
+        printf("Not supported yet for multiple VNIs\n");
         do_av_insert = 0;
 
         /* TODO - the copy from the pre-existing av map into the 'MPIDI_OFI_AV' */
@@ -762,7 +763,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* directly references the mapped fi_addr_t array instead               */
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0 /*WRONG*/] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
@@ -830,11 +831,17 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */
-        prov_use->ep_attr->tx_ctx_cnt = MPIDI_OFI_VNI_POOL(max_vnis);
-        prov_use->ep_attr->rx_ctx_cnt = MPIDI_OFI_VNI_POOL(max_vnis);
+        prov_use->ep_attr->tx_ctx_cnt = 1;
+        prov_use->ep_attr->rx_ctx_cnt = 1;
     }
 
     for (i = 0; i < MPIDI_OFI_VNI_POOL(max_vnis); i++) {
+        MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, prov_use, &MPIDI_OFI_VNI(i).domain, NULL),
+                       opendomain);
+        MPIDI_OFI_CALL(fi_av_open(MPIDI_OFI_VNI(i).domain,      /* In:  Domain Object    */
+                                  &av_attr,     /* In:  Configuration object */
+                                  &MPIDI_OFI_VNI(i).av, /* Out: AV Object            */
+                                  NULL), avopen);       /* Context: AV events        */
         MPIDI_OFI_MPI_CALL_POP(create_endpoint(prov_use, MPIDI_OFI_global.domain,
                                                MPIDI_OFI_global.p2p_cq,
                                                MPIDI_OFI_global.rma_cmpl_cntr,
@@ -848,8 +855,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Get our endpoint name and publish  */
         /* the socket to the KVS              */
         /* ---------------------------------- */
+
+        /* Exchange only the first VNI's address */
+        /* Use the first VNI to exchange the addresses of other VNIs */
         MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ep, MPIDI_OFI_global.addrname,
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_VNI(0).sep, MPIDI_OFI_global.addrname,
                                   &MPIDI_OFI_global.addrnamelen), getname);
         MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
@@ -863,6 +873,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Table is constructed.  Map it    */
         /* -------------------------------- */
         if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+            printf("Roots only optimization not supported with multiple VNIs;");
             int *node_roots, num_nodes;
 
             MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
@@ -872,7 +883,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                            avmap);
 
             for (i = 0; i < num_nodes; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0 /*WRONG*/] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
 #else
@@ -885,11 +896,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPL_free(node_roots);
         } else {
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, size, mapped_table, 0ULL, NULL),
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_VNI(0).av, table, size, mapped_table, 0ULL, NULL),
                            avmap);
 
             for (i = 0; i < size; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
@@ -1043,6 +1054,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_CTX(i).tx), epclose);
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_CTX(i).rx), epclose);
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_CTX(i).cq), cqclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_VNI(i).av), avclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_VNI(i).domain), domainclose);
         }
     }
 
@@ -1056,7 +1069,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
     if (MPIDI_OFI_global.rma_stx_ctx != NULL)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_stx_ctx->fid), stx_ctx_close);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
+    //MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.av->fid), avclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.p2p_cq->fid), cqclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_cmpl_cntr->fid), cntrclose);
@@ -1172,6 +1185,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
 int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
                               int **remote_lupids)
 {
+    printf("Not supported for multiple VNIs\n");
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
     char **new_upids;
@@ -1223,8 +1237,8 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, new_upids[i],
                                         1,
                                         (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                        NULL), avmap);
+                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0 /*WRONG*/],
+                                        0ULL, NULL), avmap);
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #else
@@ -1234,7 +1248,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
+                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0 /*WRONG*/]));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
@@ -1269,15 +1283,16 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         struct fi_cq_attr cq_attr;
 
-        if (*ep == NULL) {
-            /* First call to this function -- set up scalable endpoint */
-            MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
-            MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
-        }
+        /* Create scalable endpoint */
+        MPIDI_OFI_CALL(fi_scalable_ep
+                       (MPIDI_OFI_VNI(index).domain, prov_use, &MPIDI_OFI_VNI(index).sep, NULL),
+                       ep);
+        MPIDI_OFI_CALL(fi_scalable_ep_bind
+                       (MPIDI_OFI_VNI(index).sep, &MPIDI_OFI_VNI(index).av->fid, 0), bind);
 
         memset(&cq_attr, 0, sizeof(cq_attr));
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
-        MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_global.domain,
+        MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_VNI(index).domain,
                                   &cq_attr, &MPIDI_OFI_CTX(index).cq, NULL), opencq);
 
         tx_attr = *prov_use->tx_attr;
@@ -1297,12 +1312,13 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         /* MSG */
         tx_attr.caps |= FI_MSG;
 
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_OFI_CTX(index).tx, NULL), ep);
+        MPIDI_OFI_CALL(fi_tx_context
+                       (MPIDI_OFI_VNI(index).sep, 0, &tx_attr, &MPIDI_OFI_CTX(index).tx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
                        (MPIDI_OFI_CTX(index).tx, &MPIDI_OFI_CTX(index).cq->fid,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
-        MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_CTX(index).tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
+        //MPIDI_OFI_CALL(fi_ep_bind
+        //               (MPIDI_OFI_CTX(index).tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
@@ -1319,11 +1335,12 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
 
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_CTX(index).rx, NULL), ep);
-        MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_CTX(index).rx, &MPIDI_OFI_CTX(index).cq->fid, FI_RECV), bind);
+        MPIDI_OFI_CALL(fi_rx_context
+                       (MPIDI_OFI_VNI(index).sep, 0, &rx_attr, &MPIDI_OFI_CTX(index).rx, NULL), ep);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_CTX(index).rx, &MPIDI_OFI_CTX(index).cq->fid, FI_RECV),
+                       bind);
 
-        MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_VNI(index).sep), ep_enable);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_CTX(index).tx), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_CTX(index).rx), ep_enable);

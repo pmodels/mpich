@@ -338,6 +338,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else if (unlikely(1)) {
+        printf("Not supported for multiple VNIs with a domain per VNI\n");
         MPIDI_OFI_send_control_t ctrl;
         int c;
         uint64_t rma_key = 0;
