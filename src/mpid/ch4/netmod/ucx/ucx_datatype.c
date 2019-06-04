@@ -20,14 +20,14 @@ struct pack_state {
     MPI_Datatype datatype;
 };
 
-static void *start_pack(void *context, const void *buffer, MPI_Aint count);
-static void *start_unpack(void *context, void *buffer, MPI_Aint count);
-static MPI_Aint pack_size(void *state);
-static MPI_Aint pack(void *state, MPI_Aint offset, void *dest, MPI_Aint max_length);
-static ucs_status_t unpack(void *state, MPI_Aint offset, const void *src, MPI_Aint count);
+static void *start_pack(void *context, const void *buffer, size_t count);
+static void *start_unpack(void *context, void *buffer, size_t count);
+static size_t pack_size(void *state);
+static size_t pack(void *state, size_t offset, void *dest, size_t max_length);
+static ucs_status_t unpack(void *state, size_t offset, const void *src, size_t count);
 static void finish_pack(void *state);
 
-static void *start_pack(void *context, const void *buffer, MPI_Aint count)
+static void *start_pack(void *context, const void *buffer, size_t count)
 {
     struct pack_state *state;
 
@@ -41,7 +41,7 @@ static void *start_pack(void *context, const void *buffer, MPI_Aint count)
     return (void *) state;
 }
 
-static void *start_unpack(void *context, void *buffer, MPI_Aint count)
+static void *start_unpack(void *context, void *buffer, size_t count)
 {
     struct pack_state *state;
 
@@ -55,20 +55,20 @@ static void *start_unpack(void *context, void *buffer, MPI_Aint count)
     return (void *) state;
 }
 
-static MPI_Aint pack_size(void *state)
+static size_t pack_size(void *state)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
     MPI_Aint packsize;
 
     MPIR_Pack_size_impl(pack_state->count, pack_state->datatype, &packsize);
 
-    return (MPI_Aint) packsize;
+    return (size_t) packsize;
 }
 
-static MPI_Aint pack(void *state, MPI_Aint offset, void *dest, MPI_Aint max_length)
+static size_t pack(void *state, size_t offset, void *dest, size_t max_length)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
-    MPI_Aint actual_pack_bytes;
+    size_t actual_pack_bytes;
 
     MPIR_Typerep_pack(pack_state->buffer, pack_state->count, pack_state->datatype, offset,
                       dest, max_length, &actual_pack_bytes);
@@ -76,7 +76,7 @@ static MPI_Aint pack(void *state, MPI_Aint offset, void *dest, MPI_Aint max_leng
     return actual_pack_bytes;
 }
 
-static ucs_status_t unpack(void *state, MPI_Aint offset, const void *src, MPI_Aint count)
+static ucs_status_t unpack(void *state, size_t offset, const void *src, size_t count)
 {
     struct pack_state *pack_state = (struct pack_state *) state;
     MPI_Aint max_unpack_bytes;
