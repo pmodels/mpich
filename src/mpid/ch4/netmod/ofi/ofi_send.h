@@ -93,10 +93,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
 */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,        /* data_sz is passed in here for reusing */
                                                 int rank, uint64_t match_bits, MPIR_Comm * comm,
-                                                MPIDI_av_entry_t * addr, MPIR_Request * sreq,
+                                                MPIDI_av_entry_t * addr, int vci, MPIR_Request * sreq,
                                                 MPIR_Datatype * dt_ptr)
 {
-    printf("OFI_send_iov: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t countp =
@@ -114,6 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIR_Segment *seg;
     MPI_Aint last_byte = dt_ptr->size * count;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+    int my_vni, dest_vni;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -204,7 +204,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
         originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
         oout = k;
     }
-
+    
+    my_vni = MPIDI_VCI(vci).vni;
+    /* For now, VNI i communicates with only VNI i of every other process */
+    dest_vni = my_vni;
+    
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
     msg.msg_iov = originv;
     msg.desc = NULL;
@@ -213,10 +217,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = comm->rank;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
+    msg.addr = MPIDI_OFI_av_to_phys_target_vni(addr, dest_vni);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_CTX(0).tx, &msg, flags), tsendv,
-                         MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_CTX(my_vni).tx, &msg, flags), tsendv,
+                         MPIDI_OFI_CALL_LOCK, FALSE, vci);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -250,10 +254,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
-    MPIDI_REQUEST(*request, vci) = vci;
-    my_vni = MPIDI_VCI(vci).vni;
-    /* For now, VNI i communicates with only VNI i of every other process */
-    dest_vni = my_vni;
+    MPIDI_REQUEST(*request, vci) = vci; 
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -289,7 +290,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
-                MPIDI_OFI_send_iov(buf, count, data_sz, rank, match_bits, comm, addr, sreq, dt_ptr);
+                MPIDI_OFI_send_iov(buf, count, data_sz, rank, match_bits, comm, addr, vci, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
@@ -319,7 +320,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) = NULL;
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
-
+    
+    my_vni = MPIDI_VCI(vci).vni;
+    /* For now, VNI i communicates with only VNI i of every other process */
+    dest_vni = my_vni;
     if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_CTX(my_vni).tx, send_buf, data_sz, NULL, comm->rank,

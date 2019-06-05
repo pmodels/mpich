@@ -29,10 +29,9 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
-                                                MPIDI_av_entry_t * addr, MPIR_Request * rreq,
+                                                MPIDI_av_entry_t * addr, int vci, MPIR_Request * rreq,
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
 {
-    printf("OFI_recv_iov: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t max_pipe = INT64_MAX;
@@ -49,6 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPIR_Segment *seg;
     struct fi_msg_tagged msg;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+    int my_vni, src_vni;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
 
@@ -145,6 +145,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
+    my_vni = MPIDI_VCI(vci).vni;
+    /* For now, VCI i communicates only with VCI i on other ranks */
+    src_vni = my_vni;
+    
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
     msg.msg_iov = originv;
     msg.desc = NULL;
@@ -153,10 +157,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.ignore = mask_bits;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
-    msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr);
+    msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys_target_vni(addr, src_vni);
 
-    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_CTX(0).rx, &msg, flags), trecv,
-                         MPIDI_OFI_CALL_LOCK, FALSE, MPIDI_VCI_ROOT);
+    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_CTX(my_vni).rx, &msg, flags), trecv,
+                         MPIDI_OFI_CALL_LOCK, FALSE, vci);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -193,10 +197,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     char *recv_buf;
     int my_vni, src_vni;
 
-    my_vni = MPIDI_VCI(vci).vni;
-    /* For now, VCI i communicates only with VCI i on other ranks */
-    src_vni = my_vni;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
@@ -226,7 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
-                                   context_id, addr, rreq, dt_ptr, flags);
+                                   context_id, addr, vci, rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS)       /* Receive posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_RECV_NEEDS_UNPACK)
@@ -259,7 +259,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         data_sz = MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
-
+    
+    my_vni = MPIDI_VCI(vci).vni;
+    /* For now, VCI i communicates only with VCI i on other ranks */
+    src_vni = my_vni;
+    
     if (!flags) /* Branch should compile out */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_CTX(my_vni).rx,
                                       recv_buf,
