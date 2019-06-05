@@ -1,4 +1,25 @@
 ===============================================================================
+                               Changes in 3.3.1
+===============================================================================
+
+ # Fix bug in MPI_Testany/MPI_Waitany that could cause deadlock
+
+ # Add missing functionality in Argobots library support
+
+ # Fix configure-time detection for thread local storage support
+
+ # Better support for reproducible builds. Thanks to Bernhard
+   Wiedemann for the report and fixes
+
+ # Fix support for XL compiler toolchain
+
+ # Add support for -static-intel linking option
+
+ # Fix building on systems without weak symbols
+
+ # Fix several static analysis and compiler warnings
+
+===============================================================================
                                Changes in 3.3
 ===============================================================================
 
@@ -59,7 +80,7 @@
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3
+     http://git.mpich.org/mpich.git/shortlog/v3.3..v3.3.1
 
    A list of bugs that have been fixed is available at the following
    link:
