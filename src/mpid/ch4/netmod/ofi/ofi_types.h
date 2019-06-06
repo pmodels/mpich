@@ -311,13 +311,14 @@ typedef struct {
     struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
     /* Queryable limits */
-    uint64_t max_buffered_send;
-    uint64_t max_buffered_write;
-    uint64_t max_msg_size;
-    uint64_t max_short_send;
-    uint64_t max_mr_key_size;
-    uint64_t max_rma_key_bits;
-    uint64_t max_huge_rmas;
+    /* FIXME: max_short_send, max_rma_key_bits, max_huge_rmas: where are they used? */
+    MPI_Aint max_buffered_send;
+    MPI_Aint max_buffered_write;
+    MPI_Aint max_msg_size;
+    MPI_Aint max_short_send;
+    MPI_Aint max_mr_key_size;
+    MPI_Aint max_rma_key_bits;
+    MPI_Aint max_huge_rmas;
     int rma_key_type_bits;
     int context_shift;
     MPI_Aint tx_iov_limit;
