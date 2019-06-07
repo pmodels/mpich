@@ -134,22 +134,6 @@ static MPI_Aint MPII_Type_struct_alignsize(int count,
     return max_alignsize;
 }
 
-
-/*@
-  MPIR_Type_struct - create a struct datatype
-
-Input Parameters:
-+ count - number of blocks in vector
-. blocklength_array - number of elements in each block
-. displacement_array - offsets of blocks from start of type in bytes
-- oldtype_array - types (using handle) of datatypes on which vector is based
-
-Output Parameters:
-. newtype - handle of new struct datatype
-
-  Return Value:
-  MPI_SUCCESS on success, MPI errno on failure.
-@*/
 int MPIR_Type_struct(int count,
                      const int *blocklength_array,
                      const MPI_Aint * displacement_array,
