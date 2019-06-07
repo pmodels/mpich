@@ -6,10 +6,6 @@
 
 #include "tcp_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

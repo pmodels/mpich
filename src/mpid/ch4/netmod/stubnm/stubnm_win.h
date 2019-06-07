@@ -13,17 +13,10 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
-{
-    return MPIDIG_mpi_win_set_info(win, info);
-}
-
-
 static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     return MPIDIG_mpi_win_start(group, assert, win);
 }
-
 
 static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
@@ -35,12 +28,10 @@ static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win
     return MPIDIG_mpi_win_post(group, assert, win);
 }
 
-
 static inline int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
     return MPIDIG_mpi_win_wait(win);
 }
-
 
 static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
@@ -53,21 +44,9 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
     return MPIDIG_mpi_win_lock(lock_type, rank, assert, win);
 }
 
-
 static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDIG_mpi_win_unlock(rank, win);
-}
-
-static inline int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
-{
-    return MPIDIG_mpi_win_get_info(win, info_p_p);
-}
-
-
-static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
-{
-    return MPIDIG_mpi_win_free(win_ptr);
 }
 
 static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
@@ -75,47 +54,11 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     return MPIDIG_mpi_win_fence(assert, win);
 }
 
-static inline int MPIDI_NM_mpi_win_create(void *base,
-                                          MPI_Aint length,
-                                          int disp_unit,
-                                          MPIR_Info * info, MPIR_Comm * comm_ptr,
-                                          MPIR_Win ** win_ptr)
-{
-    return MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
-}
-
-static inline int MPIDI_NM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
-{
-    return MPIDIG_mpi_win_attach(win, base, size);
-}
-
-static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
-                                                   int disp_unit,
-                                                   MPIR_Info * info_ptr,
-                                                   MPIR_Comm * comm_ptr,
-                                                   void **base_ptr, MPIR_Win ** win_ptr)
-{
-    return MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
-}
-
-static inline int MPIDI_NM_mpi_win_detach(MPIR_Win * win, const void *base)
-{
-    return MPIDIG_mpi_win_detach(win, base);
-}
-
 static inline int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
                                                 int rank,
                                                 MPI_Aint * size, int *disp_unit, void *baseptr)
 {
     return MPIDIG_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
-}
-
-static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
-                                            int disp_unit,
-                                            MPIR_Info * info,
-                                            MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
-{
-    return MPIDIG_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
 }
 
 static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
@@ -131,12 +74,6 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
     return MPIDIG_mpi_win_unlock_all(win);
-}
-
-static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
-                                                  MPIR_Win ** win)
-{
-    return MPIDIG_mpi_win_create_dynamic(info, comm, win);
 }
 
 static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
@@ -157,41 +94,6 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     return MPIDIG_mpi_win_lock_all(assert, win);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared_hook(MPIR_Win * win)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_dynamic_hook(MPIR_Win * win)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win, const void *base)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
-{
-    return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)

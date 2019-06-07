@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule linear algorithm fir neighbor_allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
                                                        MPI_Datatype sendtype, void *recvbuf,
                                                        const int recvcounts[], const int displs[],
@@ -32,15 +28,12 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int comm_size;
     int tag;
     MPI_Aint recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
@@ -80,10 +73,6 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
 
 /* Non-blocking linear algo based neighbor_allgatherv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ineighbor_allgatherv_allcomm_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ineighbor_allgatherv_allcomm_linear(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  const int recvcounts[], const int displs[],

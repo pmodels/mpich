@@ -27,7 +27,6 @@
 /*
  * Notes:
  * Segment processor transforms MPI datatype into OFI datatype as follows:
- * - MPIR_Segment is initialized for MPI datatype.
  * - A single OFI call can only take number of iovecs up to origin/target/result_max_iovs,
  *   MPIDI_OFI_merge_segment/MPIDI_OFI_merge_segment2 generates iovs subject to this limit.
  */
@@ -120,27 +119,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
                                                     MPL_IOV * out_vector,
                                                     MPIDI_OFI_segment_side_t side)
 {
-    MPL_IOV dloop;
+    MPL_IOV typerep_vec;
     MPI_Aint last;
-    MPIR_Segment *seg;
     size_t *cursor;
     int num_contig = 1;
+    const void *buf;
+    size_t count;
+    MPI_Datatype type;
 
     switch (side) {
         case MPIDI_OFI_SEGMENT_ORIGIN:
             last = state->origin_end;
-            seg = state->origin_seg;
             cursor = &state->origin_cursor;
+            buf = state->origin_buf;
+            count = state->origin_count;
+            type = state->origin_type;
             break;
         case MPIDI_OFI_SEGMENT_TARGET:
             last = state->target_end;
-            seg = state->target_seg;
             cursor = &state->target_cursor;
+            buf = (const void *) state->target_buf;
+            count = state->target_count;
+            type = state->target_type;
             break;
         case MPIDI_OFI_SEGMENT_RESULT:
             last = state->result_end;
-            seg = state->result_seg;
             cursor = &state->result_cursor;
+            buf = state->result_buf;
+            count = state->result_count;
+            type = state->result_type;
             break;
         default:
             MPIR_Assert(0);
@@ -152,24 +159,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
          * vector is processed, and we try to pack as much as possible
          * using last byte of datatype.  If pack is complete,
          * num_contig returns as 0. */
-        MPIR_Segment_to_iov(seg, *cursor, &last, &dloop, &num_contig);
+        MPI_Aint actual_iov_bytes;
+        MPIR_Typerep_to_iov(buf, count, type, *cursor, &typerep_vec, 1, last - *cursor,
+                            &num_contig, &actual_iov_bytes);
         MPIR_Assert(num_contig <= 1);
+        last = *cursor + actual_iov_bytes;
     } else {
-        dloop.iov_base = NULL;
-        dloop.iov_len = 0;
+        typerep_vec.iov_base = NULL;
+        typerep_vec.iov_len = 0;
         num_contig = 0;
     }
 
     *cursor = last;
-    *out_vector = dloop;
+    *out_vector = typerep_vec;
     return num_contig == 0 ? 1 : 0;
 }
 
+/* _count: count of data elements of certain datatype
+ * _type: the datatype
+ * _bytes: total byte size
+ * Note: _bytes is calculated based on _count & _type and passed in here for reusing. */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * seg_state,
                                                        const void *origin,
                                                        const MPI_Aint target,
                                                        size_t origin_count,
                                                        size_t target_count,
+                                                       size_t origin_bytes,
+                                                       size_t target_bytes,
                                                        size_t buf_limit,
                                                        MPI_Datatype origin_type,
                                                        MPI_Datatype target_type)
@@ -185,12 +201,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
     seg_state->buf_limit_left = buf_limit;
 
     seg_state->origin_cursor = 0;
-    MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
+    seg_state->origin_end = origin_bytes;
+    seg_state->origin_buf = origin;
+    seg_state->origin_count = origin_count;
+    seg_state->origin_type = origin_type;
 
     seg_state->target_cursor = 0;
-    MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
+    seg_state->target_end = target_bytes;
+    seg_state->target_buf = target;
+    seg_state->target_count = target_count;
+    seg_state->target_type = target_type;
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);
@@ -198,10 +218,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state(MPIDI_OFI_seg_state_t * s
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state(MPIDI_OFI_seg_state_t seg_state)
 {
-    MPIR_Segment_free(seg_state.origin_seg);
-    MPIR_Segment_free(seg_state.target_seg);
 }
 
+/* _count: count of data elements of certain datatype
+ * _type: the datatype
+ * _bytes: total byte size
+ * Note: _bytes is calculated based on _count & _type and passed in here for reusing. */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * seg_state,
                                                         const void *origin,
                                                         const void *result,
@@ -212,7 +234,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
                                                         size_t buf_limit,
                                                         MPI_Datatype origin_type,
                                                         MPI_Datatype result_type,
-                                                        MPI_Datatype target_type)
+                                                        MPI_Datatype target_type,
+                                                        size_t origin_bytes,
+                                                        size_t result_bytes, size_t target_bytes)
 {
     /* `seg_state->buflimit` is `MPI_Aint` == `MPI_Aint` (typically, long or other signed types)
      * and its maximum value is likely to be smaller than that of `buf_limit` of `size_t`.
@@ -225,16 +249,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
     seg_state->buf_limit_left = buf_limit;
 
     seg_state->origin_cursor = 0;
-    MPIDI_Datatype_check_size(origin_type, origin_count, seg_state->origin_end);
-    seg_state->origin_seg = MPIR_Segment_alloc(origin, origin_count, origin_type);
+    seg_state->origin_end = origin_bytes;
+    seg_state->origin_buf = origin;
+    seg_state->origin_count = origin_count;
+    seg_state->origin_type = origin_type;
 
     seg_state->target_cursor = 0;
-    MPIDI_Datatype_check_size(target_type, target_count, seg_state->target_end);
-    seg_state->target_seg = MPIR_Segment_alloc((const void *) target, target_count, target_type);
+    seg_state->target_end = target_bytes;
+    seg_state->target_buf = target;
+    seg_state->target_count = target_count;
+    seg_state->target_type = target_type;
 
     seg_state->result_cursor = 0;
-    MPIDI_Datatype_check_size(result_type, result_count, seg_state->result_end);
-    seg_state->result_seg = MPIR_Segment_alloc(result, result_count, result_type);
+    seg_state->result_end = result_bytes;
+    seg_state->result_buf = result;
+    seg_state->result_count = result_count;
+    seg_state->result_type = result_type;
 
     MPIDI_OFI_INIT_SEG_STATE(target, TARGET);
     MPIDI_OFI_INIT_SEG_STATE(origin, ORIGIN);
@@ -243,9 +273,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_init_seg_state2(MPIDI_OFI_seg_state_t * 
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_finalize_seg_state2(MPIDI_OFI_seg_state_t seg_state)
 {
-    MPIR_Segment_free(seg_state.origin_seg);
-    MPIR_Segment_free(seg_state.target_seg);
-    MPIR_Segment_free(seg_state.result_seg);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * seg_state,

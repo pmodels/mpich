@@ -16,10 +16,6 @@
 #include "ch4r_proc.h"
 #include "ch4r_recv.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_prepare_recv_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
                                           void *buf, MPI_Aint count, MPI_Datatype datatype,
                                           MPIR_Request * rreq)
@@ -39,20 +35,15 @@ static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t c
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_handle_unexpected
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                            MPIR_Comm * comm, int context_offset,
                                            MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
-    MPI_Aint dt_true_lb, last;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t in_data_sz, dt_sz, nbytes;
-    MPIR_Segment *segment_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXPECTED);
@@ -78,21 +69,25 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     /* Copy the data from the message. */
 
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
-
-        last = nbytes;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
-        MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) (nbytes)) {
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf, count, datatype, 0,
+                            &actual_unpack_bytes);
+        if (actual_unpack_bytes != (MPI_Aint) (nbytes)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
             rreq->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
+        /* Note: buf could be NULL.  In one case it is a zero size message such as
+         * the one used in MPI_Barrier.  In another case, the datatype can specify
+         * the absolute address of the buffer (e.g. buf == MPI_BOTTOM).
+         */
+        if (nbytes > 0) {
+            char *addr = (char *) buf + dt_true_lb;
+            assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
+            MPIR_Memcpy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
+        }
     }
 
     MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
@@ -119,10 +114,6 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_do_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                   int tag, MPIR_Comm * comm, int context_offset,
                                   MPIR_Request ** request, int alloc_req, uint64_t flags)
@@ -221,10 +212,6 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
                                              MPI_Aint count,
                                              MPI_Datatype datatype,
@@ -250,10 +237,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
                                                   int count,
                                                   MPI_Datatype datatype,
@@ -293,10 +276,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_imrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype, MPIR_Request * message)
@@ -340,10 +319,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
                                               MPI_Aint count,
                                               MPI_Datatype datatype,
@@ -367,10 +342,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_cancel_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, found;

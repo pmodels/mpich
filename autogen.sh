@@ -96,7 +96,7 @@ do_geterrmsgs=yes
 do_getcvars=yes
 do_f77=yes
 do_build_configure=yes
-do_genstates=yes
+do_genstates=no
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
@@ -110,7 +110,8 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl src/util/logging/rlog"
+amdirs=". src/mpl"
+# amdirs="$amdirs src/util/logging/rlog"
 
 autoreconf_args="-if"
 export autoreconf_args
@@ -548,6 +549,20 @@ fi
 
 
 ########################################################################
+## Checking for UNIX patch
+########################################################################
+
+echo_n "Checking for UNIX patch... "
+patch -v > /dev/null 2>&1
+if [ $? = 0 ] ; then
+    echo "done"
+else
+    echo "not found (error)"
+    exit 1
+fi
+
+
+########################################################################
 ## Checking if xargs rm -rf works
 ########################################################################
 
@@ -887,6 +902,7 @@ echo
 
 # Run some of the simple codes
 echo_n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
+touch src/include/mpiallstates.h # silience build errors when do_genstates is disabled
 if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
     ./maint/extractstates
 fi
@@ -931,6 +947,22 @@ if [ "$do_build_configure" = "yes" ] ; then
 	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
             (cd $amdir && $autoreconf $autoreconf_args) || exit 1
+            # Patching ltmain.sh
+            if [ -f $amdir/confdb/ltmain.sh ] ; then
+                echo_n "Patching ltmain.sh for compatibility with Intel compiler options... "
+                patch -N -s -l $amdir/confdb/ltmain.sh maint/patches/optional/confdb/intel-compiler.patch
+                if [ $? -eq 0 ] ; then
+                    # Remove possible leftovers, which don't imply a failure
+                    rm -f $amdir/confdb/ltmain.sh.orig
+                    echo "done"
+                else
+                    echo "failed"
+                fi
+                # Rebuild configure
+                (cd $amdir && $autoconf -f) || exit 1
+                # Reset ltmain.sh timestamps to avoid confusing make
+                touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/ltmain.sh
+            fi
             # Patching libtool.m4
             # This works with libtool versions 2.4 - 2.4.2.
             # Older versions are not supported to build mpich.
@@ -941,6 +973,17 @@ if [ "$do_build_configure" = "yes" ] ; then
                 oracle_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
+                sys_lib_dlsearch_path_patch_requires_rebuild=no
+                echo_n "Patching libtool.m4 for system dynamic library search path..."
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch
+                if [ $? -eq 0 ] ; then
+                    sys_lib_dlsearch_path_patch_requires_rebuild=yes
+                    # Remove possible leftovers, which don't imply a failure
+                    rm -f $amdir/confdb/libtool.m4.orig
+                    echo "done"
+                else
+                    echo "failed"
+                fi
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
                     patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch
@@ -985,7 +1028,8 @@ if [ "$do_build_configure" = "yes" ] ; then
                 fi
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
-                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ]; then
+                    || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
+                    [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make

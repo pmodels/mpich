@@ -13,10 +13,6 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_handle_cq_error_util
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
 {
     int mpi_errno;
@@ -92,12 +88,12 @@ uint64_t MPIDI_OFI_mr_key_alloc()
     return -1;
 }
 
-void MPIDI_OFI_mr_key_free(uint64_t index)
+void MPIDI_OFI_mr_key_free(uint64_t idx)
 {
     uint64_t int_index, bitpos, numbits;
     numbits = sizeof(uint64_t) * 8;
-    int_index = (index + 1) / numbits;
-    bitpos = index % numbits;
+    int_index = (idx + 1) / numbits;
+    bitpos = idx % numbits;
 
     mr_key_allocator.last_free_mr_key = MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
     mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
@@ -112,7 +108,7 @@ void MPIDI_OFI_mr_key_allocator_destroy()
  * actually perform the data transfer. */
 static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
-    MPIDI_OFI_huge_recv_t *recv = NULL;
+    MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_HUGE);
@@ -140,7 +136,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
-                recv = (MPIDI_OFI_huge_recv_t *)
+                recv_elem = (MPIDI_OFI_huge_recv_t *)
                     MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
                                       list_ptr->rreq->handle);
 
@@ -150,26 +146,26 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         }
     }
 
-    if (recv == NULL) { /* Put the struct describing the transfer on an
-                         * unexpected list to be retrieved later */
+    if (recv_elem == NULL) {    /* Put the struct describing the transfer on an
+                                 * unexpected list to be retrieved later */
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
                         (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
                          info->comm_id, info->origin_rank, info->tag));
 
         /* If this is unexpected, create a new tracker and put it in the unexpected list. */
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_COMM);
-        if (!recv)
+        recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
+        if (!recv_elem)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
+        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv_elem);
     }
 
-    recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv->cur_offset = MPIDI_OFI_global.max_msg_size;
-    recv->remote_info = *info;
-    recv->comm_ptr = comm_ptr;
-    recv->next = NULL;
-    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv);
+    recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+    recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+    recv_elem->remote_info = *info;
+    recv_elem->comm_ptr = comm_ptr;
+    recv_elem->next = NULL;
+    MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_HUGE);
 
@@ -246,10 +242,6 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
 
-#undef FUNCNAME
-#define FUNCNAME check_mpi_acc_valid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(check_mpi_acc_valid)
 MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 {
     bool valid_flag = false;
@@ -273,10 +265,6 @@ MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-#undef FUNCNAME
-#define FUNCNAME mpi_to_ofi
-#undef FCNAME
-#define FCNAME MPL_QUOTE(mpi_to_ofi)
 static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
@@ -502,103 +490,103 @@ static inline void create_dt_map()
         }
 }
 
-static inline void add_index(MPI_Datatype datatype, int *index)
+static inline void add_index(MPI_Datatype datatype, int *idx)
 {
     MPIR_Datatype *dt_ptr;
     MPIR_Datatype_get_ptr(datatype, dt_ptr);
-    MPIDI_OFI_DATATYPE(dt_ptr).index = *index;
-    (*index)++;
+    MPIDI_OFI_DATATYPE(dt_ptr).index = *idx;
+    (*idx)++;
 }
 
 void MPIDI_OFI_index_datatypes()
 {
     static bool needs_init = true;
-    int index = 0;
+    int idx = 0;
 
     if (!needs_init)
         return;
 
-    add_index(MPI_CHAR, &index);
-    add_index(MPI_UNSIGNED_CHAR, &index);
-    add_index(MPI_SIGNED_CHAR, &index);
-    add_index(MPI_BYTE, &index);
-    add_index(MPI_WCHAR, &index);
-    add_index(MPI_SHORT, &index);
-    add_index(MPI_UNSIGNED_SHORT, &index);
-    add_index(MPI_INT, &index);
-    add_index(MPI_UNSIGNED, &index);
-    add_index(MPI_LONG, &index);        /* count=10 */
-    add_index(MPI_UNSIGNED_LONG, &index);
-    add_index(MPI_FLOAT, &index);
-    add_index(MPI_DOUBLE, &index);
-    add_index(MPI_LONG_DOUBLE, &index);
-    add_index(MPI_LONG_LONG, &index);
-    add_index(MPI_UNSIGNED_LONG_LONG, &index);
-    add_index(MPI_PACKED, &index);
-    add_index(MPI_LB, &index);
-    add_index(MPI_UB, &index);
-    add_index(MPI_2INT, &index);        /* count=20 */
+    add_index(MPI_CHAR, &idx);
+    add_index(MPI_UNSIGNED_CHAR, &idx);
+    add_index(MPI_SIGNED_CHAR, &idx);
+    add_index(MPI_BYTE, &idx);
+    add_index(MPI_WCHAR, &idx);
+    add_index(MPI_SHORT, &idx);
+    add_index(MPI_UNSIGNED_SHORT, &idx);
+    add_index(MPI_INT, &idx);
+    add_index(MPI_UNSIGNED, &idx);
+    add_index(MPI_LONG, &idx);  /* count=10 */
+    add_index(MPI_UNSIGNED_LONG, &idx);
+    add_index(MPI_FLOAT, &idx);
+    add_index(MPI_DOUBLE, &idx);
+    add_index(MPI_LONG_DOUBLE, &idx);
+    add_index(MPI_LONG_LONG, &idx);
+    add_index(MPI_UNSIGNED_LONG_LONG, &idx);
+    add_index(MPI_PACKED, &idx);
+    add_index(MPI_LB, &idx);
+    add_index(MPI_UB, &idx);
+    add_index(MPI_2INT, &idx);  /* count=20 */
 
     /* C99 types */
-    add_index(MPI_INT8_T, &index);
-    add_index(MPI_INT16_T, &index);
-    add_index(MPI_INT32_T, &index);
-    add_index(MPI_INT64_T, &index);
-    add_index(MPI_UINT8_T, &index);
-    add_index(MPI_UINT16_T, &index);
-    add_index(MPI_UINT32_T, &index);
-    add_index(MPI_UINT64_T, &index);
-    add_index(MPI_C_BOOL, &index);
-    add_index(MPI_C_FLOAT_COMPLEX, &index);     /* count=30 */
-    add_index(MPI_C_DOUBLE_COMPLEX, &index);
-    add_index(MPI_C_LONG_DOUBLE_COMPLEX, &index);
+    add_index(MPI_INT8_T, &idx);
+    add_index(MPI_INT16_T, &idx);
+    add_index(MPI_INT32_T, &idx);
+    add_index(MPI_INT64_T, &idx);
+    add_index(MPI_UINT8_T, &idx);
+    add_index(MPI_UINT16_T, &idx);
+    add_index(MPI_UINT32_T, &idx);
+    add_index(MPI_UINT64_T, &idx);
+    add_index(MPI_C_BOOL, &idx);
+    add_index(MPI_C_FLOAT_COMPLEX, &idx);       /* count=30 */
+    add_index(MPI_C_DOUBLE_COMPLEX, &idx);
+    add_index(MPI_C_LONG_DOUBLE_COMPLEX, &idx);
 
     /* address/offset/count types */
-    add_index(MPI_AINT, &index);
-    add_index(MPI_OFFSET, &index);
-    add_index(MPI_COUNT, &index);       /* count=35 */
+    add_index(MPI_AINT, &idx);
+    add_index(MPI_OFFSET, &idx);
+    add_index(MPI_COUNT, &idx); /* count=35 */
 
     /* Fortran types (count=23) */
 #ifdef HAVE_FORTRAN_BINDING
-    add_index(MPI_COMPLEX, &index);
-    add_index(MPI_DOUBLE_COMPLEX, &index);
-    add_index(MPI_LOGICAL, &index);
-    add_index(MPI_REAL, &index);
-    add_index(MPI_DOUBLE_PRECISION, &index);    /* count=40 */
-    add_index(MPI_INTEGER, &index);
-    add_index(MPI_2INTEGER, &index);
+    add_index(MPI_COMPLEX, &idx);
+    add_index(MPI_DOUBLE_COMPLEX, &idx);
+    add_index(MPI_LOGICAL, &idx);
+    add_index(MPI_REAL, &idx);
+    add_index(MPI_DOUBLE_PRECISION, &idx);      /* count=40 */
+    add_index(MPI_INTEGER, &idx);
+    add_index(MPI_2INTEGER, &idx);
 #ifdef MPICH_DEFINE_2COMPLEX
-    add_index(MPI_2COMPLEX, &index);
-    add_index(MPI_2DOUBLE_COMPLEX, &index);
+    add_index(MPI_2COMPLEX, &idx);
+    add_index(MPI_2DOUBLE_COMPLEX, &idx);
 #endif
-    add_index(MPI_2REAL, &index);
-    add_index(MPI_2DOUBLE_PRECISION, &index);
-    add_index(MPI_CHARACTER, &index);
-    add_index(MPI_REAL4, &index);
-    add_index(MPI_REAL8, &index);
-    add_index(MPI_REAL16, &index);      /* count=50 */
-    add_index(MPI_COMPLEX8, &index);
-    add_index(MPI_COMPLEX16, &index);
-    add_index(MPI_COMPLEX32, &index);
-    add_index(MPI_INTEGER1, &index);
-    add_index(MPI_INTEGER2, &index);
-    add_index(MPI_INTEGER4, &index);
-    add_index(MPI_INTEGER8, &index);
+    add_index(MPI_2REAL, &idx);
+    add_index(MPI_2DOUBLE_PRECISION, &idx);
+    add_index(MPI_CHARACTER, &idx);
+    add_index(MPI_REAL4, &idx);
+    add_index(MPI_REAL8, &idx);
+    add_index(MPI_REAL16, &idx);        /* count=50 */
+    add_index(MPI_COMPLEX8, &idx);
+    add_index(MPI_COMPLEX16, &idx);
+    add_index(MPI_COMPLEX32, &idx);
+    add_index(MPI_INTEGER1, &idx);
+    add_index(MPI_INTEGER2, &idx);
+    add_index(MPI_INTEGER4, &idx);
+    add_index(MPI_INTEGER8, &idx);
 
     if (MPI_INTEGER16 == MPI_DATATYPE_NULL)
-        index++;
+        idx++;
     else
-        add_index(MPI_INTEGER16, &index);
+        add_index(MPI_INTEGER16, &idx);
 
 #endif
-    add_index(MPI_FLOAT_INT, &index);
-    add_index(MPI_DOUBLE_INT, &index);  /* count=60 */
-    add_index(MPI_LONG_INT, &index);
-    add_index(MPI_SHORT_INT, &index);
-    add_index(MPI_LONG_DOUBLE_INT, &index);
+    add_index(MPI_FLOAT_INT, &idx);
+    add_index(MPI_DOUBLE_INT, &idx);    /* count=60 */
+    add_index(MPI_LONG_INT, &idx);
+    add_index(MPI_SHORT_INT, &idx);
+    add_index(MPI_LONG_DOUBLE_INT, &idx);
 
     /* check if static dt_size is correct */
-    MPIR_Assert(MPIDI_OFI_DT_SIZES == index);
+    MPIR_Assert(MPIDI_OFI_DT_SIZES == idx);
 
     /* do not generate map when atomics are not enabled */
     if (MPIDI_OFI_ENABLE_ATOMICS)

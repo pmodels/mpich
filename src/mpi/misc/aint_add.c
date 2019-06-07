@@ -27,8 +27,6 @@ MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) __attribute__ ((weak, alias(
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Aint_add
 
 /*@
 MPI_Aint_add - Returns the sum of base and disp

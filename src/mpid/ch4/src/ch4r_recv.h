@@ -14,10 +14,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_reply_ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -52,20 +48,14 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_handle_unexp_mrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t message_sz;
-    MPI_Aint last;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t data_sz ATTRIBUTE((unused)), dt_sz, nbytes;
-    MPIR_Segment *segment_ptr;
     void *buf;
     MPI_Aint count;
     MPI_Datatype datatype;
@@ -95,14 +85,13 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (!dt_contig) {
-        segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
+        MPI_Aint actual_unpack_bytes;
+        mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf,
+                                        count, datatype, 0, &actual_unpack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
-        last = nbytes;
-        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDIG_REQUEST(rreq, buffer));
-        MPIR_Segment_free(segment_ptr);
-        if (last != (MPI_Aint) nbytes) {
+        if (actual_unpack_bytes != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);

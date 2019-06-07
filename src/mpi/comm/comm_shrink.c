@@ -41,10 +41,6 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
 #undef MPIX_Comm_shrink
 #define MPIX_Comm_shrink PMPIX_Comm_shrink
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_shrink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm shrink impl; assumes that standard error checking has already taken
  * place in the calling function */
 int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
@@ -118,10 +114,6 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_shrink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPIX_Comm_shrink - Creates a new communitor from an existing communicator while
                   excluding failed processes
@@ -199,12 +191,12 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpix_comm_shrink",
                                  "**mpix_comm_shrink %C %p", comm, newcomm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

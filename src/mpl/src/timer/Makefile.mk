@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+noinst_HEADERS += src/timer/mpl_timer_common.h
+
 lib@MPLLIBNAME@_la_SOURCES += \
     src/timer/mpl_timer_clock_gettime.c \
     src/timer/mpl_timer_gcc_ia64_cycle.c \

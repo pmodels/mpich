@@ -26,10 +26,6 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
 #undef MPI_Win_get_attr
 #define MPI_Win_get_attr PMPI_Win_get_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Win_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
                       int *flag, MPIR_Attr_type outAttrType)
 {
@@ -203,21 +199,17 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpir_wingetattr", "**mpir_wingetattr %W %d %p %p", win,
                                  win_keyval, attribute_val, flag);
     }
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 
@@ -273,12 +265,12 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
                                  win_keyval, attribute_val, flag);
     }
     MPIR_Win_get_ptr(win, win_ptr);
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
 #endif
     goto fn_exit;
     /* --END ERROR HANDLING-- */

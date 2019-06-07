@@ -28,10 +28,6 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_get_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_errhandler - Get the error handler for the MPI RMA window
 
@@ -119,11 +115,11 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_get_errhandler", "**mpi_win_get_errhandler %W %p", win,
                                  errhandler);
     }
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

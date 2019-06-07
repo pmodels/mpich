@@ -7,10 +7,6 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_send_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -53,7 +49,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
-    MPIDI_CH3_Pkt_flags_t flags = sreq->dev.flags;
+    int pkt_flags = sreq->dev.pkt_flags;
 
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
@@ -91,7 +87,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
      * on the same request again (in release_lock()). Marking this request as
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
-                                    flags, MPI_WIN_NULL);
+                                    pkt_flags, MPI_WIN_NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -103,15 +99,11 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
-    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
+    int pkt_flags = rreq->dev.pkt_flags;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
@@ -156,7 +148,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
      * on the same request again (in release_lock()). Marking this request as
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
-                                    flags, MPI_WIN_NULL);
+                                    pkt_flags, MPI_WIN_NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -171,15 +163,11 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_CASSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
-    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
+    int pkt_flags = rreq->dev.pkt_flags;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
@@ -224,7 +212,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
      * on the same request again (in release_lock()). Marking this request as
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
-                                    flags, MPI_WIN_NULL);
+                                    pkt_flags, MPI_WIN_NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -238,15 +226,11 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_FOPSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
-    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
+    int pkt_flags = rreq->dev.pkt_flags;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
@@ -291,7 +275,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
      * on the same request again (in release_lock()). Marking this request as
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
-                                    flags, MPI_WIN_NULL);
+                                    pkt_flags, MPI_WIN_NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

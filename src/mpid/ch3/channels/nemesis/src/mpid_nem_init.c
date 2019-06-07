@@ -58,7 +58,7 @@ cvars:
 #ifdef MEM_REGION_IN_HEAP
 MPID_nem_mem_region_t *MPID_nem_mem_region_ptr = 0;
 #else /* MEM_REGION_IN_HEAP */
-MPID_nem_mem_region_t MPID_nem_mem_region = {{0}};
+MPID_nem_mem_region_t MPID_nem_mem_region;
 #endif /* MEM_REGION_IN_HEAP */
 
 char MPID_nem_hostname[MAX_HOSTNAME_LEN] = "UNKNOWN";
@@ -71,10 +71,6 @@ char *MPID_nem_asymm_base_addr = 0;
 /* used by mpid_nem_inline.h and mpid_nem_finalize.c */
 unsigned long long *MPID_nem_fbox_fall_back_to_queue_count = NULL;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_init_stats
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_init_stats(int n_local_ranks)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -103,10 +99,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 {
@@ -435,10 +427,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 }
 
 /* MPID_nem_vc_init initialize nemesis' part of the vc */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_vc_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_vc_init (MPIDI_VC_t *vc)
 {
@@ -502,6 +490,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         /* local processes use the default method */
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
+        vc_ch->iSendIov     = NULL;
 
 #if MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_SHM_COPY
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_shm_initiate_lmt;
@@ -619,10 +608,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_vc_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 {
@@ -666,10 +651,6 @@ int MPID_nem_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
    calculates these values for processes MPI_COMM_WORLD, i.e., not for
    spawned or attached processes.
 */
-#undef FUNCNAME
-#define FUNCNAME get_local_procs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
                            int **local_procs_p, int *local_rank_p)
 {

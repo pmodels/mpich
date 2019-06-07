@@ -16,10 +16,6 @@ static size_t *indices;
 static int local_size;
 static char *segment;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_destroy(void *bc_table)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -40,10 +36,6 @@ int MPIDU_bc_table_destroy(void *bc_table)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
                        void **bc_table, size_t ** bc_indices)
 {
@@ -97,16 +89,12 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 #define VALLEN 1024
 #define KEYLEN 64
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
-    char *key = NULL, *val = NULL, *val_p;
+    char *val = NULL, *val_p;
     int out_len, val_len, rem, flag;
     pmix_value_t value, *pvalue;
     pmix_info_t *info;
@@ -141,16 +129,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
     MPIR_Assert(rem >= 0);
 
-    key = MPL_malloc(KEYLEN, MPL_MEM_ADDRESS);
-    MPIR_Assert(key);
-    sprintf(key, "bc-%d", rank);
-
     if (!roots_only || rank == local_leader) {
         value.type = PMIX_STRING;
         value.data.string = val;
-        rc = PMIx_Put(PMIX_LOCAL, key, &value);
+        rc = PMIx_Put(PMIX_LOCAL, "bc", &value);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
-        rc = PMIx_Put(PMIX_REMOTE, key, &value);
+        rc = PMIx_Put(PMIX_REMOTE, "bc", &value);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
         rc = PMIx_Commit();
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_commit");
@@ -168,11 +152,10 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         if (local_rank == local_size - 1)
             end += size % local_size;
         for (i = start; i < end; i++) {
-            sprintf(key, "bc-%d", i);
             PMIX_PROC_CONSTRUCT(&proc);
             MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
             proc.rank = i;
-            rc = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+            rc = PMIx_Get(&proc, "bc", NULL, 0, &pvalue);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
             rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
@@ -187,11 +170,10 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         if (local_rank == local_size - 1)
             end += num_nodes % local_size;
         for (i = start; i < end; i++) {
-            sprintf(key, "bc-%d", i);
             PMIX_PROC_CONSTRUCT(&proc);
             MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
             proc.rank = i;
-            rc = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+            rc = PMIx_Get(&proc, "bc", NULL, 0, &pvalue);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
             rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
@@ -211,7 +193,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     }
 
   fn_exit:
-    MPL_free(key);
     MPL_free(val);
     *bc_table = segment;
 
@@ -223,10 +204,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #elif defined(USE_PMI2_API)
 #include <pmi2.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {
@@ -328,10 +305,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #else
 #include <pmi.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_bc_table_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {

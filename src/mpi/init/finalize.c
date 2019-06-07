@@ -127,10 +127,6 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 #endif
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalize - Terminates MPI execution environment
 
@@ -335,6 +331,16 @@ int MPI_Finalize(void)
     }
 #endif
 
+#if defined(MPICH_IS_THREADED)
+    /* Finalize the threading library after releasing all synchronization
+     * objects (e.g., mutexes) */
+    {
+        int thread_err;
+        MPL_thread_finalize(&thread_err);
+        MPIR_Assert(thread_err == 0);
+    }
+#endif
+
     /* ... end of body of routine ... */
   fn_exit:
     MPIR_FUNC_TERSE_FINALIZE_EXIT(MPID_STATE_MPI_FINALIZE);
@@ -345,10 +351,10 @@ int MPI_Finalize(void)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_finalize", 0);
+                                         __func__, __LINE__, MPI_ERR_OTHER, "**mpi_finalize", 0);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_MPI_STATE__POST_FINALIZED) {
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }

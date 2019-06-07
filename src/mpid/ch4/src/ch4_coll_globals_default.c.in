@@ -95,6 +95,12 @@ const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_composition_beta_cnt = {
                                                        .allreduce = MPIDI_COLL_AUTO_SELECT}
 };
 
+const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_composition_gamma_cnt = {
+    .id = MPIDI_Allreduce_intra_composition_gamma_id,
+    .params.ch4_allreduce_params.ch4_allreduce_gamma = {
+                                                        .allreduce = MPIDI_COLL_AUTO_SELECT}
+};
+
 const MPIDI_coll_algo_container_t MPIDI_Allreduce_inter_composition_alpha_cnt = {
     .id = MPIDI_Allreduce_inter_composition_alpha_id
 };

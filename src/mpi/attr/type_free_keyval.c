@@ -28,10 +28,6 @@ int MPI_Type_free_keyval(int *type_keyval) __attribute__ ((weak, alias("PMPI_Typ
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_free_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_free_keyval - Frees an attribute key for datatypes
 
@@ -113,11 +109,11 @@ int MPI_Type_free_keyval(int *type_keyval)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_free_keyval", "**mpi_type_free_keyval %p",
                                  type_keyval);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

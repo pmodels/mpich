@@ -43,31 +43,24 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 */
 
 /* Routine to schedule a ring based allgather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_sched_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst, copy_dst;
-    /* for storing task ids, we need only upto two phases back */
-    int vtcs[3], send_id[3], recv_id[3], dtcopy_id[3];
 
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;
-    int nvtcs;
     int tag;
 
     int size = MPIR_Comm_size(comm);
     int rank = MPIR_Comm_rank(comm);
     int is_inplace = (sendbuf == MPI_IN_PLACE);
 
-    size_t recvtype_lb, recvtype_extent;
-    size_t sendtype_lb, sendtype_extent;
-    size_t sendtype_true_extent, recvtype_true_extent;
+    MPI_Aint recvtype_lb, recvtype_extent;
+    MPI_Aint sendtype_lb, sendtype_extent;
+    MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
@@ -96,6 +89,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     /* copy my data to buf1 which will be forwarded in phase 0 of the ring.
      * TODO: We could avoid this copy but that would make the implementation more
      * complicated */
+    int dtcopy_id[3];
     dtcopy_id[0] = MPIR_TSP_sched_localcopy((char *) data_buf, size * recvcount, recvtype,
                                             (char *) buf1, size * recvcount, recvtype, sched, 0,
                                             NULL);
@@ -124,6 +118,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 
     sbuf = buf1;
     rbuf = buf2;
+    int send_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
+    int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
@@ -131,6 +127,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
+        int vtcs[3], nvtcs;
         /* schedule send */
         if (i == 0) {
             nvtcs = 1;
@@ -190,10 +187,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
 }
 
 /* Non-blocking ring based Alltoall */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoall_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                   MPIR_Comm * comm, MPIR_Request ** req)

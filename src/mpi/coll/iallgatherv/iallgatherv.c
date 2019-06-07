@@ -33,7 +33,7 @@ cvars:
 
     - name        : MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -44,14 +44,14 @@ cvars:
         brucks             - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
         ring               - Force ring algorithm
-        recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
-        recexch_distance_halving     - Force generic transport recursive exchange with neighbours halving in distance in each phase
-        gentran_ring              - Force generic transport ring algorithm
-        gentran_brucks     - Force generic transport based brucks algorithm
+        gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        gentran_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
+        gentran_ring             - Force generic transport ring algorithm
+        gentran_brucks           - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -135,10 +135,6 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 
    End Algorithm: MPI_Allgatherv
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -190,10 +186,6 @@ int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -208,10 +200,6 @@ int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Da
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, const int recvcounts[], const int displs[],
                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -220,24 +208,24 @@ int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallgatherv_intra_algo_choice) {
-            case MPIR_IALLGATHERV_INTRA_ALGO_BRUCKS:
+        switch (MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_brucks:
                 mpi_errno = MPIR_Iallgatherv_sched_intra_brucks(sendbuf, sendcount, sendtype,
                                                                 recvbuf, recvcounts, displs,
                                                                 recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno =
                     MPIR_Iallgatherv_sched_intra_recursive_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
                                                                     recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_RING:
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_ring:
                 mpi_errno = MPIR_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype,
                                                               recvbuf, recvcounts, displs, recvtype,
                                                               comm_ptr, s);
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallgatherv_sched_intra_auto(sendbuf, sendcount, sendtype,
@@ -247,15 +235,15 @@ int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iallgatherv_inter_algo_choice) {
-            case MPIR_IALLGATHERV_INTER_ALGO_REMOTE_GATHER_LOCAL_BCAST:
+        switch (MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_remote_gather_local_bcast:
                 mpi_errno =
                     MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(sendbuf, sendcount,
                                                                            sendtype, recvbuf,
                                                                            recvcounts, displs,
                                                                            recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLGATHERV_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallgatherv_sched_inter_auto(sendbuf, sendcount, sendtype,
@@ -268,10 +256,6 @@ int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
                            MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -289,10 +273,6 @@ int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype send
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -310,32 +290,32 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallgatherv_intra_algo_choice) {
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+        switch (MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_doubling:
                 /* This algo cannot handle unordered data */
                 if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
                     break;
                 mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
-                                                                     recvbuf, recvcounts, displs,
-                                                                     recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                goto fn_exit;
-                break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
-                /* This algo cannot handle unordered data */
-                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
-                    break;
-                mpi_errno =
-                    MPIR_Iallgatherv_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
                                                                     recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RING:
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_halving:
+                /* This algo cannot handle unordered data */
+                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
+                    break;
+                mpi_errno =
+                    MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
+                                                                   recvbuf, recvcounts, displs,
+                                                                   recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcounts, displs,
@@ -344,7 +324,7 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_BRUCKS:
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_brucks(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcounts, displs,
@@ -382,10 +362,6 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, const int recvcounts[], const int displs[],
                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -405,10 +381,6 @@ int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iallgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iallgatherv - Gathers data from all tasks and deliver the combined data
                   to all tasks in a nonblocking way
@@ -542,13 +514,13 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_iallgatherv",
                                  "**mpi_iallgatherv %p %d %D %p %p %p %D %C %p", sendbuf, sendcount,
                                  sendtype, recvbuf, recvcounts, displs, recvtype, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

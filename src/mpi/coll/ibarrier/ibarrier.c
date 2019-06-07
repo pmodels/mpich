@@ -22,7 +22,7 @@ cvars:
 
     - name        : MPIR_CVAR_IBARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -31,11 +31,11 @@ cvars:
         Variable to select ibarrier algorithm
         auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
-        recexch            - Force generic transport based recursive exchange algorithm
+        gentran_recexch    - Force generic transport based recursive exchange algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -83,10 +83,6 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -98,10 +94,6 @@ int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 
 /* It will choose between several different algorithms based on the given
  * parameters. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
@@ -111,21 +103,17 @@ int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ibarrier_intra_algo_choice) {
-            case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+        switch (MPIR_CVAR_IBARRIER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
                 break;
-            case MPIR_IBARRIER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);
@@ -133,11 +121,11 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ibarrier_inter_algo_choice) {
-            case MPIR_IBARRIER_INTER_ALGO_BCAST:
+        switch (MPIR_CVAR_IBARRIER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_bcast:
                 mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
                 break;
-            case MPIR_IBARRIER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibarrier_sched_inter_auto(comm_ptr, s);
@@ -148,10 +136,6 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -165,10 +149,6 @@ int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -184,9 +164,9 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ibarrier_intra_algo_choice) {
-            case MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH:
-                mpi_errno = MPIR_Ibarrier_intra_recexch(comm_ptr, request);
+        switch (MPIR_CVAR_IBARRIER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_gentran_recexch:
+                mpi_errno = MPIR_Ibarrier_intra_gentran_recexch(comm_ptr, request);
 
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
@@ -220,10 +200,6 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -239,10 +215,6 @@ int MPIR_Ibarrier(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ibarrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ibarrier - Notifies the process that it has reached the barrier and returns
                immediately
@@ -334,11 +306,11 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ibarrier", "**mpi_ibarrier %C %p", comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

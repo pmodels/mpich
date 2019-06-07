@@ -23,6 +23,9 @@ AH_BOTTOM([
 #endif /* !defined(DTPOOLSCONF_H_INCLUDED) */
 ])
 
+AC_CONFIG_AUX_DIR([../confdb])
+AC_CONFIG_MACRO_DIR([../confdb])
+
 # Ensure we have an MPI compiler wrapper
 if test -n "$MPICC" ; then
   CC=$MPICC
@@ -31,6 +34,7 @@ fi
 # Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -44,24 +48,6 @@ AM_PROG_AR
 LT_PREREQ([2.2.6])
 LT_INIT
 
-AC_ARG_VAR([DTP_NUM_OBJS],
-           [used to limit the number of objects to test from each pool])
-
-# begin framework MPI datatype initialization
-AC_ARG_VAR([DTP_DATATYPE_FILE],
-           [used to pass MPI datatypes to the DTPools framework (default: "basictypelist.txt")])
-
-# we must have a valid file containing MPI datatypes for framework initialization
-DTP_DATATYPE_FILE=${DTP_DATATYPE_FILE:-$srcdir/basictypelist.txt}
-if test ! -f "$DTP_DATATYPE_FILE" ; then
-   AC_MSG_ERROR([Need a valid file for MPI datatypes.])
-fi
-
-# get comma separated list of MPI datatypes for static datatype array initialization in src/dtpools.c
-DTP_DATATYPES=$(types=""; while read -r line; do types+="$line"; done < $DTP_DATATYPE_FILE; echo "$types")
-AC_SUBST([DTP_DATATYPES])
-# end of framework initialization
-
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h limits.h stdint.h sys/types.h],,
                  [AC_MSG_ERROR([Cannot find headers.])],)
@@ -69,6 +55,12 @@ AC_CHECK_HEADERS([stdlib.h string.h limits.h stdint.h sys/types.h],,
 # Must be able to find mpi.h
 MPI_H_INCLUDE="-I${master_top_builddir}/src/include"
 AC_SUBST([MPI_H_INCLUDE])
+
+# check if we need declarations
+AC_CHECK_FUNCS(strdup)
+if test "$ac_cv_func_strdup" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 

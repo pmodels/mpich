@@ -45,10 +45,6 @@ static int group_id(rte_grp_handle_t group);
 
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
 
-#undef FUNCNAME
-#define FUNCNAME progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void progress(void)
 {
     int ret;
@@ -81,10 +77,6 @@ static int get_mpi_constants(size_t * mpi_datatype_size,
                              int *mpi_distribute_none, int *mpi_distribute_dflt_darg);
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME init_module_fns
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void init_module_fns(void)
 {
     hcoll_rte_functions.send_fn = send_nb;
@@ -113,19 +105,11 @@ static void init_module_fns(void)
 #endif
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_rte_fns_setup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void hcoll_rte_fns_setup(void)
 {
     init_module_fns();
 }
 
-#undef FUNCNAME
-#define FUNCNAME recv_nb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int recv_nb(struct dte_data_representation_t data,
                    uint32_t count,
                    void *buffer,
@@ -161,10 +145,6 @@ static int recv_nb(struct dte_data_representation_t data,
     return HCOLL_ERROR;
 }
 
-#undef FUNCNAME
-#define FUNCNAME send_nb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_nb(dte_data_representation_t data,
                    uint32_t count,
                    void *buffer,
@@ -201,10 +181,6 @@ static int send_nb(dte_data_representation_t data,
     return HCOLL_ERROR;
 }
 
-#undef FUNCNAME
-#define FUNCNAME test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int test(rte_request_handle_t * request, int *completed)
 {
     MPIR_Request *req;
@@ -223,10 +199,6 @@ static int test(rte_request_handle_t * request, int *completed)
     return HCOLL_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ec_handle_compare
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ec_handle_compare(rte_ec_handle_t handle_1,
                              rte_grp_handle_t
                              group_handle_1,
@@ -235,10 +207,6 @@ static int ec_handle_compare(rte_ec_handle_t handle_1,
     return handle_1.handle == handle_2.handle;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_ec_handles
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_ec_handles(int num_ec,
                           int *ec_indexes, rte_grp_handle_t grp_h, rte_ec_handle_t * ec_handles)
 {
@@ -256,28 +224,16 @@ static int get_ec_handles(int num_ec,
     return HCOLL_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME group_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int group_size(rte_grp_handle_t grp_h)
 {
     return MPIR_Comm_size((MPIR_Comm *) grp_h);
 }
 
-#undef FUNCNAME
-#define FUNCNAME my_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int my_rank(rte_grp_handle_t grp_h)
 {
     return MPIR_Comm_rank((MPIR_Comm *) grp_h);
 }
 
-#undef FUNCNAME
-#define FUNCNAME ec_on_local_node
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
 {
     MPIR_Comm *comm;
@@ -291,29 +247,17 @@ static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME get_world_group_handle
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static rte_grp_handle_t get_world_group_handle(void)
 {
     return (rte_grp_handle_t) (MPIR_Process.comm_world);
 }
 
-#undef FUNCNAME
-#define FUNCNAME jobid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static uint32_t jobid(void)
 {
     /* not used currently */
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME group_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int group_id(rte_grp_handle_t group)
 {
     MPIR_Comm *comm;
@@ -321,10 +265,6 @@ static int group_id(rte_grp_handle_t group)
     return comm->context_id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME get_coll_handle
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void *get_coll_handle(void)
 {
     MPIR_Request *req;
@@ -333,10 +273,6 @@ static void *get_coll_handle(void)
     return (void *) req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME coll_handle_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int coll_handle_test(void *handle)
 {
     int completed;
@@ -346,10 +282,6 @@ static int coll_handle_test(void *handle)
     return completed;
 }
 
-#undef FUNCNAME
-#define FUNCNAME coll_handle_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void coll_handle_free(void *handle)
 {
     MPIR_Request *req;
@@ -359,10 +291,6 @@ static void coll_handle_free(void *handle)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME coll_handle_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void coll_handle_complete(void *handle)
 {
     MPIR_Request *req;
@@ -372,10 +300,6 @@ static void coll_handle_complete(void *handle)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME world_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
 #ifdef MPIDCH4_H_INCLUDED

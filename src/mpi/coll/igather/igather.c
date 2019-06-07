@@ -12,16 +12,16 @@
 cvars:
     - name        : MPIR_CVAR_IGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto     - Internal algorithm selection
-        binomial - Force binomial algorithm
-        tree     - Force genetric transport based tree algorithm
+        auto         - Internal algorithm selection
+        binomial     - Force binomial algorithm
+        gentran_tree - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_IGATHER_TREE_KVAL
       category    : COLLECTIVE
@@ -35,16 +35,16 @@ cvars:
 
     - name        : MPIR_CVAR_IGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto        - Internal algorithm selection
-        long_inter  - Force long inter algorithm
-        short_inter - Force short inter algorithm
+        auto  - Internal algorithm selection
+        long  - Force long inter algorithm
+        short - Force short inter algorithm
 
     - name        : MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -84,10 +84,6 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Igather
 #define MPI_Igather PMPI_Igather
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -106,10 +102,6 @@ int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dataty
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -149,10 +141,6 @@ int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Dataty
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
                             int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -161,13 +149,13 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Igather_intra_algo_choice) {
-            case MPIR_IGATHER_INTRA_ALGO_BINOMIAL:
+        switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_binomial:
                 mpi_errno = MPIR_Igather_sched_intra_binomial(sendbuf, sendcount, sendtype,
                                                               recvbuf, recvcount, recvtype, root,
                                                               comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igather_sched_intra_auto(sendbuf, sendcount, sendtype,
@@ -177,18 +165,18 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Igather_inter_algo_choice) {
-            case MPIR_IGATHER_INTER_ALGO_LONG:
+        switch (MPIR_CVAR_IGATHER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_long:
                 mpi_errno = MPIR_Igather_sched_inter_long(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype, root,
                                                           comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTER_ALGO_SHORT:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_short:
                 mpi_errno = MPIR_Igather_sched_inter_short(sendbuf, sendcount, sendtype,
                                                            recvbuf, recvcount, recvtype, root,
                                                            comm_ptr, s);
                 break;
-            case MPIR_IGATHER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igather_sched_inter_auto(sendbuf, sendcount, sendtype, recvbuf,
@@ -199,10 +187,6 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -220,10 +204,6 @@ int MPIR_Igather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_impl(const void *sendbuf, int sendcount,
                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -242,11 +222,12 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Igather_intra_algo_choice) {
-            case MPIR_IGATHER_INTRA_ALGO_TREE:
+        switch (MPIR_CVAR_IGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Igather_intra_tree(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, root, comm_ptr, request);
+                    MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                    request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -280,10 +261,6 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                  void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                  MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -303,10 +280,6 @@ int MPIR_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Igather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Igather - Gathers together values from a group of processes in
               a nonblocking way
@@ -481,13 +454,13 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_igather", "**mpi_igather %p %d %D %p %d %D %d %C %p",
                                  sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
                                  comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

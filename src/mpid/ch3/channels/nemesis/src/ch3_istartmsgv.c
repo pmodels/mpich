@@ -26,10 +26,6 @@
    implies that CH3_iStartMsgv() can only be used when the entire message can be described by a single iovec of size
    MPL_IOV_LIMIT. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iStartMsgv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request **sreq_ptr)
 {
     MPIR_Request * sreq = *sreq_ptr = NULL;
@@ -89,8 +85,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 
                 MPL_DBG_MSG_D (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "   + len=%d ", total);
             });
-	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
-	                                         NULL, 0, vc, &again);
+	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov, vc, &again);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	while (!again && (remaining_n_iov > 0))
 	{

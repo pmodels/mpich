@@ -14,10 +14,6 @@
 #include "ch4r_proc.h"
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_iprobe_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
                                                  int tag, MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * av, int *flag,
@@ -54,10 +50,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_improbe_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
                                                   int tag, MPIR_Comm * comm,
                                                   int context_offset,
@@ -111,10 +103,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_iprobe_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
                                                int tag, MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * av, int *flag,
@@ -142,10 +130,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_improbe_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
                                                 int tag, MPIR_Comm * comm,
                                                 int context_offset,
@@ -175,10 +159,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
                                         int tag, MPIR_Comm * comm, int context_offset,
                                         MPI_Status * status)
@@ -216,10 +196,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Mprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                          int tag,
                                          MPIR_Comm * comm,
@@ -259,10 +235,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
                                           int tag,
                                           MPIR_Comm * comm,
@@ -304,10 +276,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
                                          int tag,
                                          MPIR_Comm * comm,

@@ -16,10 +16,6 @@
  * Cost = lgp.alpha + n.((p-1)/p).beta
  * where n is total size of data gathered on each process.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                 int sendcount,
                                 MPI_Datatype sendtype,
@@ -31,8 +27,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint recvtype_extent;
-    MPI_Aint recvtype_true_extent, recvbuf_extent, recvtype_true_lb;
+    MPI_Aint recvtype_extent, recvtype_sz;
     int pof2, src, rem;
     void *tmp_buf = NULL;
     int curr_cnt, dst;
@@ -46,29 +41,22 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     rank = comm_ptr->rank;
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
     /* allocate a temporary buffer of the same size as recvbuf. */
-
-    /* get true extent of recvtype */
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
-
-    recvbuf_extent = recvcount * comm_size * (MPL_MAX(recvtype_true_extent, recvtype_extent));
-
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
-    /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *) ((char *) tmp_buf - recvtype_true_lb);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcount * comm_size * recvtype_sz, mpi_errno,
+                        "tmp_buf", MPL_MEM_BUFFER);
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, tmp_buf, recvcount, recvtype);
+        mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
+                                   tmp_buf, recvcount * recvtype_sz, MPI_BYTE);
         if (mpi_errno) {
             MPIR_ERR_POP(mpi_errno);
         }
     } else {
-        mpi_errno = MPIR_Localcopy(((char *) recvbuf +
-                                    rank * recvcount * recvtype_extent),
-                                   recvcount, recvtype, tmp_buf, recvcount, recvtype);
+        mpi_errno = MPIR_Localcopy((char *) recvbuf + rank * recvcount * recvtype_extent,
+                                   recvcount, recvtype, tmp_buf, recvcount * recvtype_sz, MPI_BYTE);
         if (mpi_errno) {
             MPIR_ERR_POP(mpi_errno);
         }
@@ -82,10 +70,10 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        mpi_errno = MPIC_Sendrecv(tmp_buf, curr_cnt, recvtype, dst,
+        mpi_errno = MPIC_Sendrecv(tmp_buf, curr_cnt * recvtype_sz, MPI_BYTE, dst,
                                   MPIR_ALLGATHER_TAG,
-                                  ((char *) tmp_buf + curr_cnt * recvtype_extent),
-                                  curr_cnt, recvtype,
+                                  ((char *) tmp_buf + curr_cnt * recvtype_sz),
+                                  curr_cnt * recvtype_sz, MPI_BYTE,
                                   src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -106,10 +94,10 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        mpi_errno = MPIC_Sendrecv(tmp_buf, rem * recvcount, recvtype,
+        mpi_errno = MPIC_Sendrecv(tmp_buf, rem * recvcount * recvtype_sz, MPI_BYTE,
                                   dst, MPIR_ALLGATHER_TAG,
-                                  ((char *) tmp_buf + curr_cnt * recvtype_extent),
-                                  rem * recvcount, recvtype,
+                                  ((char *) tmp_buf + curr_cnt * recvtype_sz),
+                                  rem * recvcount * recvtype_sz, MPI_BYTE,
                                   src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -124,8 +112,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     /* Rotate blocks in tmp_buf down by (rank) blocks and store
      * result in recvbuf. */
 
-    mpi_errno = MPIR_Localcopy(tmp_buf, (comm_size - rank) * recvcount,
-                               recvtype, (char *) recvbuf + rank * recvcount * recvtype_extent,
+    mpi_errno = MPIR_Localcopy(tmp_buf, (comm_size - rank) * recvcount * recvtype_sz, MPI_BYTE,
+                               (char *) recvbuf + rank * recvcount * recvtype_extent,
                                (comm_size - rank) * recvcount, recvtype);
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
@@ -133,8 +121,9 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
 
     if (rank) {
         mpi_errno = MPIR_Localcopy((char *) tmp_buf +
-                                   (comm_size - rank) * recvcount * recvtype_extent,
-                                   rank * recvcount, recvtype, recvbuf, rank * recvcount, recvtype);
+                                   (comm_size - rank) * recvcount * recvtype_sz,
+                                   rank * recvcount * recvtype_sz, MPI_BYTE, recvbuf,
+                                   rank * recvcount, recvtype);
         if (mpi_errno) {
             MPIR_ERR_POP(mpi_errno);
         }

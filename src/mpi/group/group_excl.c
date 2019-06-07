@@ -27,10 +27,6 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 #undef MPI_Group_excl
 #define MPI_Group_excl PMPI_Group_excl
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_excl_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
                          MPIR_Group ** new_group_ptr)
 {
@@ -81,10 +77,6 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_excl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -184,12 +176,12 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_excl", "**mpi_group_excl %G %d %p %p", group, n,
                                  ranks, newgroup);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

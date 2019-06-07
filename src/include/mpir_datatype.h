@@ -76,7 +76,7 @@ typedef struct MPIR_Datatype_contents {
   invalidate the dup'ed datatype.
 
   Originally we attempted to keep contents/envelope data in a non-optimized
-  dataloop.  The subarray and darray types were particularly problematic,
+  typerep.  The subarray and darray types were particularly problematic,
   and eventually we decided it would be simpler to just keep contents/
   envelope data in arrays separately.
 
@@ -134,11 +134,8 @@ struct MPIR_Datatype {
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
 
-    /* dataloop members, including a pointer to the loop, the size in bytes,
-     * and a depth used to verify that we can process it (limited stack depth
-     */
-    struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
-    MPI_Aint dataloop_size;
+    /* internal type representation */
+    void *typerep;              /* might be optimized for homogenous */
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
@@ -150,7 +147,7 @@ extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
-static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
+void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
 #define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
@@ -162,7 +159,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     if ((err == MPI_SUCCESS) && !((ptr)->is_committed))         \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME,                      \
+                                   __func__,                      \
                                    __LINE__,                    \
                                    MPI_ERR_TYPE,                \
                                    "**dtypecommit",             \
@@ -286,7 +283,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
          mpi_errno = (datatype_ptr->free_fn)(datatype_ptr);               \
           if (mpi_errno) {                                                  \
            MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);                  \
-           return MPIR_Err_return_comm(0, FCNAME, mpi_errno);             \
+           return MPIR_Err_return_comm(0, __func__, mpi_errno);             \
           }                                                                 \
      } */                                                                   \
         if (lmpi_errno == MPI_SUCCESS) {                                    \
@@ -320,6 +317,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Assert(dtp_ != NULL);                                  \
         MPIR_Datatype_ptr_add_ref(dtp_);                            \
     }                                                               \
     } while (0)
@@ -359,47 +357,6 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 
     MPL_free(dtp->contents);
     dtp->contents = NULL;
-}
-
-/*@
-  MPIR_Datatype_free
-
-Input Parameters:
-. MPIR_Datatype ptr - pointer to MPID datatype structure that is no longer
-  referenced
-
-Output Parameters:
-  none
-
-  Return Value:
-  none
-
-  This function handles freeing dynamically allocated memory associated with
-  the datatype.  In the process MPIR_Datatype_free_contents() is also called,
-  which handles decrementing reference counts to constituent types (in
-  addition to freeing the space used for contents information).
-  MPIR_Datatype_free_contents() will call MPIR_Datatype_free() on constituent
-  types that are no longer referenced as well.
-
-  @*/
-static inline void MPIR_Datatype_free(MPIR_Datatype * ptr)
-{
-    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "type %x freed.", ptr->handle);
-
-#ifdef MPID_Type_free_hook
-    MPID_Type_free_hook(ptr);
-#endif /* MPID_Type_free_hook */
-
-    /* before freeing the contents, check whether the pointer is not
-     * null because it is null in the case of a datatype shipped to the target
-     * for RMA ops */
-    if (ptr->contents) {
-        MPIR_Datatype_free_contents(ptr);
-    }
-    if (ptr->dataloop) {
-        MPIR_Dataloop_free(&(ptr->dataloop));
-    }
-    MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
 }
 
 /*@
@@ -551,11 +508,7 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
                           MPI_Datatype * newtype_p);
 int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
                           const MPI_Datatype old_types[], MPI_Datatype * newtype);
-int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf,
-                   MPI_Aint outcount, MPI_Aint * position);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
-int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
-                     void *outbuf, int outcount, MPI_Datatype datatype);
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
@@ -581,10 +534,6 @@ int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addr
                            MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
 int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
-int MPIR_Type_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_size);
-int MPIR_Type_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
-int MPIR_Type_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
-
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
 char *MPIR_Datatype_combiner_to_string(int combiner);
@@ -603,6 +552,5 @@ MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
                                                  MPI_Aint blklen,
                                                  const void *disp_array,
                                                  int dispinbytes, MPI_Aint old_extent);
-
 
 #endif /* MPIR_DATATYPE_H_INCLUDED */

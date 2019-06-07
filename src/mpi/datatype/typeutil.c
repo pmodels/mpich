@@ -13,10 +13,8 @@
    that is used by ROMIO to test to see if datatypes are contiguous */
 
 /* Preallocated datatype objects */
-MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN] = { {0}
-};
-MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC] = { {0}
-};
+MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
+MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
@@ -140,10 +138,6 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) - 1
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init(void)
 {
     int i;
@@ -189,10 +183,6 @@ int MPIR_Datatype_init(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
 {
     int i;
@@ -212,10 +202,6 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
    That routine calls it from within a single-init section to
    ensure thread-safety. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_builtin_fillin
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -247,7 +233,7 @@ int MPIR_Datatype_builtin_fillin(void)
             if (dptr < MPIR_Datatype_builtin ||
                 dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_FATAL, FCNAME,
+                                                 MPIR_ERR_FATAL, __func__,
                                                  __LINE__, MPI_ERR_INTERN,
                                                  "**typeinitbadmem", "**typeinitbadmem %d", i);
                 return mpi_errno;
@@ -268,7 +254,7 @@ int MPIR_Datatype_builtin_fillin(void)
         if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
             /* We did not hit the end-of-list */
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__,
+                                             __func__, __LINE__,
                                              MPI_ERR_INTERN, "**typeinitfail",
                                              "**typeinitfail %d", i - 1);
             return mpi_errno;
@@ -353,8 +339,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
     new_dtp->size = 0;
     new_dtp->has_sticky_ub = 0;
@@ -572,4 +557,43 @@ MPI_Aint MPII_Datatype_blockindexed_count_contig(MPI_Aint count,
         }
     }
     return contig_count;
+}
+
+/*@
+  MPIR_Datatype_free
+
+Input Parameters:
+. MPIR_Datatype ptr - pointer to MPID datatype structure that is no longer
+  referenced
+
+Output Parameters:
+  none
+
+  Return Value:
+  none
+
+  This function handles freeing dynamically allocated memory associated with
+  the datatype.  In the process MPIR_Datatype_free_contents() is also called,
+  which handles decrementing reference counts to constituent types (in
+  addition to freeing the space used for contents information).
+  MPIR_Datatype_free_contents() will call MPIR_Datatype_free() on constituent
+  types that are no longer referenced as well.
+
+  @*/
+void MPIR_Datatype_free(MPIR_Datatype * ptr)
+{
+    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "type %x freed.", ptr->handle);
+
+    MPID_Type_free_hook(ptr);
+
+    /* before freeing the contents, check whether the pointer is not
+     * null because it is null in the case of a datatype shipped to the target
+     * for RMA ops */
+    if (ptr->contents) {
+        MPIR_Datatype_free_contents(ptr);
+    }
+    if (ptr->typerep) {
+        MPIR_Typerep_free(&(ptr->typerep));
+    }
+    MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
 }

@@ -13,39 +13,46 @@
  * datatype cases.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_SendNoncontig_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
-   sreq->dev.segment as well as segment_first and segment_size. */
+   sreq->dev.segment as well as msg_offset and msgsize.
+   The optional hdr_iov and n_hdr_iov are used for variable-length extended
+   header, specify NULL and zero if unused. Note that we assume n_hdr_iov is
+   small and does not exceed MPL_IOV_LIMIT - 2 (one for header and one for
+   packed data) at most.  */
 int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
-                                 void *header, intptr_t hdr_sz )
+                                 void *header, intptr_t hdr_sz,
+                                 MPL_IOV *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
-    int iov_n;
+    int iov_n, iovcnt = 0;
     MPL_IOV iov[MPL_IOV_LIMIT];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
-    iov[0].MPL_IOV_BUF = header;
-    iov[0].MPL_IOV_LEN = hdr_sz;
+    iov[iovcnt].MPL_IOV_BUF = header;
+    iov[iovcnt].MPL_IOV_LEN = hdr_sz;
+    iovcnt++;
 
     iov_n = MPL_IOV_LIMIT - 1;
 
-    if (sreq->dev.ext_hdr_sz > 0) {
-        /* When extended packet header exists, here we leave one IOV slot
-         * before loading data to IOVs, so that there will be enough
-         * IOVs for hdr/ext_hdr/data. */
-        iov_n--;
+    /* If extended header iov exists, merge into the iov array. */
+    if (n_hdr_iov > 0) {
+        int i;
+        MPIR_Assert(iov_n - n_hdr_iov > 0); /* secure at least 1 iov for data */
+        for (i = 0; i < n_hdr_iov; i++) {
+             iov[iovcnt].MPL_IOV_BUF = hdr_iov[i].MPL_IOV_BUF;
+             iov[iovcnt].MPL_IOV_LEN = hdr_iov[i].MPL_IOV_LEN;
+             iovcnt++;
+             iov_n--;
+        }
     }
 
-    mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[1], &iov_n);
+    mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[iovcnt], &iov_n);
     if (mpi_errno == MPI_SUCCESS)
     {
-	iov_n += 1;
+	iov_n += iovcnt;  /* add count of hdr iovs */
 	
 	/* Note this routine is invoked withing a CH3 critical section */
 	/* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
@@ -80,15 +87,11 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 
 /* This function will allocate a segment.  That segment must be freed when
    it is no longer needed */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerNoncontigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_EagerNoncontigSend - Eagerly send noncontiguous data */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 				  MPIDI_CH3_Pkt_type_t reqtype, 
 				  const void * buf, MPI_Aint count,
-				  MPI_Datatype datatype, intptr_t data_sz,
+				  MPI_Datatype datatype,
 				  int rank, 
 				  int tag, MPIR_Comm * comm,
 				  int context_offset )
@@ -98,7 +101,12 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     MPIR_Request *sreq = *sreq_p;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
-    
+    MPI_Aint data_sz;
+    MPIR_Datatype *dt_ptr;
+
+    MPIR_Datatype_get_ptr(datatype, dt_ptr);
+    data_sz = count * dt_ptr->size;
+
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                      "sending non-contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
@@ -120,16 +128,17 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 
     MPL_DBG_MSGPKT(vc,tag,eager_pkt->match.parts.context_id,rank,data_sz,
                     "Eager");
-	    
-    sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
-    sreq->dev.segment_first = 0;
-    sreq->dev.segment_size = data_sz;
+    sreq->dev.user_buf = (void *) buf;
+    sreq->dev.user_count = count;
+    sreq->dev.datatype = datatype;
+    sreq->dev.msg_offset = 0;
+    sreq->dev.msgsize = data_sz;
 	    
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
-                                     sizeof(MPIDI_CH3_Pkt_eager_send_t));
+                                     sizeof(MPIDI_CH3_Pkt_eager_send_t),
+                                     NULL, 0);
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -146,10 +155,6 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
    Make sure that buf is at the beginning of the data to send; 
    adjust by adding dt_true_lb if necessary 
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
 			       MPIDI_CH3_Pkt_type_t reqtype, 
 			       const void * buf, intptr_t data_sz, int rank,
@@ -212,10 +217,6 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
    We may need a nonblocking (cancellable) version of this, which will 
    have a smaller payload.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigShortSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
 				    MPIDI_CH3_Pkt_type_t reqtype,
 				    const void * buf, intptr_t data_sz, int rank,
@@ -283,10 +284,6 @@ int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
 
 /* This is the matching handler for the EagerShort message defined above */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerShortSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					 intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -359,7 +356,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 				          PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 		rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+                     MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TRUNCATE,
 		     "**truncate", "**truncate %d %d %d %d", 
 		     rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, 
 		     rreq->dev.recv_data_sz, userbuf_sz );
@@ -396,26 +393,20 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 	    }
 	    else {
 		intptr_t recv_data_sz;
-		MPI_Aint last;
-		/* user buffer is not contiguous.  Use the segment
-		   code to unpack it, handling various errors and 
-		   exceptional cases */
-		/* FIXME: The MPICH tests do not exercise this branch */
-		/* printf( "Surprise!\n" ); fflush(stdout);*/
-		rreq->dev.segment_ptr = MPIR_Segment_alloc(rreq->dev.user_buf, rreq->dev.user_count, 
-				  rreq->dev.datatype);
-                MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
-
+		/* user buffer is not contiguous.  Unpack it, handling
+		   various errors and exceptional cases */
 		recv_data_sz = rreq->dev.recv_data_sz;
-		last    = recv_data_sz;
-		MPIR_Segment_unpack( rreq->dev.segment_ptr, 0, 
-				     &last, eagershort_pkt->data );
-		if (last != recv_data_sz) {
+
+		MPI_Aint actual_unpack_bytes;
+		MPIR_Typerep_unpack(eagershort_pkt->data, recv_data_sz, rreq->dev.user_buf,
+				 rreq->dev.user_count, rreq->dev.datatype, 0, &actual_unpack_bytes);
+
+		if (actual_unpack_bytes != recv_data_sz) {
 		    /* --BEGIN ERROR HANDLING-- */
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
 		       need to distinguish between these two types. */
-		    MPIR_STATUS_SET_COUNT(rreq->status, last);
+		    MPIR_STATUS_SET_COUNT(rreq->status, actual_unpack_bytes);
 		    if (rreq->dev.recv_data_sz <= userbuf_sz) {
 			MPIR_ERR_SETSIMPLE(rreq->status.MPI_ERROR,MPI_ERR_TYPE,
 					   "**dtypemismatch");
@@ -518,10 +509,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
    Make sure that buf is at the beginning of the data to send; 
    adjust by adding dt_true_lb if necessary 
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerContigIsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
 				MPIDI_CH3_Pkt_type_t reqtype, 
 				const void * buf, intptr_t data_sz, int rank,
@@ -597,10 +584,6 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
 /* FIXME: This is not optimized for short messages, which 
    should have the data in the same packet when the data is
    particularly short (e.g., one 8 byte long word) */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				    intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -685,10 +668,6 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_ReadySend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				    intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -775,7 +754,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 	   mark the request with an error. */
 	
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-				      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
+				      MPIR_ERR_RECOVERABLE, __func__, __LINE__, 
 				      MPI_ERR_OTHER, "**rsendnomatch", 
 				      "**rsendnomatch %d %d", 
 				      ready_pkt->match.parts.rank,
@@ -785,8 +764,8 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 	{
 	    /* force read of extra data */
 	    *rreqp = rreq;
-	    rreq->dev.segment_first = 0;
-	    rreq->dev.segment_size = 0;
+	    rreq->dev.msg_offset = 0;
+	    rreq->dev.msgsize = 0;
 	    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,

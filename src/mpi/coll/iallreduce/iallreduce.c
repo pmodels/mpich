@@ -71,7 +71,7 @@ cvars:
 
     - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -82,13 +82,13 @@ cvars:
         naive                    - Force naive algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
-        recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
-        recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
-        tree                     - Force generic transport tree algorithm
+        gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
+        gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
+        gentran_tree                     - Force generic transport tree algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -135,10 +135,6 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef MPI_Iallreduce
 #define MPI_Iallreduce PMPI_Iallreduce
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -185,10 +181,6 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -202,10 +194,6 @@ int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int cou
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -218,23 +206,23 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
                 MPIR_Iallreduce_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         } else {
             /* intracommunicator */
-            switch (MPIR_Iallreduce_intra_algo_choice) {
-                case MPIR_IALLREDUCE_INTRA_ALGO_NAIVE:
+            switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
                     mpi_errno = MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count,
                                                                   datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
                     mpi_errno =
                         MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count,
                                                                        datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
                     mpi_errno =
                         MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf,
                                                                              count, datatype, op,
                                                                              comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
+                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
                     MPL_FALLTHROUGH;
                 default:
                     mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
@@ -244,14 +232,14 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iallreduce_inter_algo_choice) {
-            case MPIR_IALLREDUCE_INTER_ALGO_REMOTE_REDUCE_LOCAL_BCAST:
+        switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_remote_reduce_local_bcast:
                 mpi_errno =
                     MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           s);
                 break;
-            case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallreduce_sched_inter_auto(sendbuf, recvbuf, count,
@@ -263,10 +251,6 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                           MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -281,10 +265,6 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Request ** request)
@@ -301,27 +281,29 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallreduce_intra_algo_choice) {
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER:
+        switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_single_buffer:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
-                                                                op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
+                                                                        datatype, op, comm_ptr,
+                                                                        request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
-                                                                  op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
+                                                                          datatype, op, comm_ptr,
+                                                                          request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_TREE:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Iallreduce_intra_tree(sendbuf, recvbuf, count, datatype,
-                                               op, comm_ptr, request);
+                    MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
+                                                       op, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -353,10 +335,6 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -373,10 +351,6 @@ int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iallreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iallreduce - Combines values from all processes and distributes the result
                  back to all processes in a nonblocking way
@@ -498,12 +472,12 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_iallreduce", "**mpi_iallreduce %p %p %d %D %O %C %p",
                                  sendbuf, recvbuf, count, datatype, op, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

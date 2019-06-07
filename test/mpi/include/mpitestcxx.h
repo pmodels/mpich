@@ -8,22 +8,32 @@
 #ifndef MPITESTCXX_H_INCLUDED
 #define MPITESTCXX_H_INCLUDED
 
-#ifndef MPITESTCONF_H_INCLUDED
-#error Required mpitestconf.h file not included first!
-#endif
+#include "mpi.h"
+#include "mpitestconf.h"
 
+/* *INDENT-OFF* */
+extern "C" {
+#include "mtest_common.h"
+}
+/* *INDENT-ON* */
+
+#ifdef HAVE_IOSTREAM
+#include <iostream>
+#ifdef HAVE_NAMESPACE_STD
+using namespace std;
+#endif
+#else
+#include <iostream.h>
+#endif
 #include <string.h>
-/*
- * Init and finalize test
- */
+
+/* Init and finalize test */
 void MTest_Init(void);
 void MTest_Finalize(int);
 void MTestPrintError(int);
 void MTestPrintErrorMsg(const char[], int);
 void MTestPrintfMsg(int, const char[], ...);
 void MTestError(const char[]);
-
-int MTestInitBasicSignatureX(int, char **, int *, MPI::Datatype *);
 
 int MTestGetIntracomm(MPI::Intracomm &, int);
 int MTestGetIntracommGeneral(MPI::Intracomm &, int, bool);

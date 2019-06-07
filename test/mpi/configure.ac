@@ -251,6 +251,19 @@ AC_ARG_ENABLE(collalgo-tests,
                               [Run extended collective algorithm tests])],,
               [enable_collalgo_tests=no])
 
+# DTPools test generation
+AC_ARG_WITH(dtpools-datatypes,
+    [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
+        [Comma separated list of MPI datatypes to use for DTPools tests
+         generation. Typelist can be of the form: 'MPI_INT,MPI_DOUBLE,...',
+         for single element types, 'MPI_INT:4+MPI_DOUBLE:8,...', for multiple
+         element types, or a combination of both.])],,[with_dtpools_datatypes=MPI_INT,MPI_INT:4+MPI_DOUBLE:8])
+
+# parse args for typegen.sh script
+dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
+
+AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -617,7 +630,8 @@ export CC
 AC_CONFIG_SUBDIRS([dtpools])
 
 # Running C compiler tests
-PAC_PROG_CC
+AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 # Note that some versions of autoconf will insist that the compiler 
@@ -679,18 +693,8 @@ AC_C_RESTRICT
 AC_PROG_RANLIB
 AM_PROG_AR
 
-# Enable STRICT CFLAGS
-AC_ARG_ENABLE(stricttest,
-AC_HELP_STRING([--enable-stricttest], [Turn on strict GCC compilation]))
-dnl Initialize enable_strict_done so PAC_CC_STRICT won't exit right away
-dnl When it is configuring from within MPICH, because enable_strict_done=yes
-dnl is set in the environment by MPICH.
-enable_strict_done=no
-PAC_CC_STRICT($enable_stricttest)
-# -Wfloat-equal isn't meaningful in testsuite,
-# remove it if it is in strict flags.
-pac_cc_strict_flags="`echo $pac_cc_strict_flags | sed -e 's|-Wfloat-equal||g'`"
-CFLAGS="$CFLAGS $pac_cc_strict_flags"
+# Check for --enable-strict
+PAC_ARG_STRICT
 
 # General headers
 AC_HEADER_STDC
@@ -720,7 +724,9 @@ AC_SUBST(largetest)
 
 # Extended collectives test
 if test "$enable_collalgo_tests" = "yes" ; then
-    source $srcdir/coll/test_coll_algos.sh
+    AC_MSG_NOTICE([running $srcdir/coll/test_coll_algos.sh])
+    . $srcdir/coll/test_coll_algos.sh
+    test $? != 0 &&  AC_MSG_ERROR([$srcdir/coll/test_coll_algos.sh failed.])
 else
     coll_algo_tests=""
 fi
@@ -752,7 +758,7 @@ PAC_ARG_THREAD_PACKAGE
 THREAD_PACKAGE_NAME=THREAD_PACKAGE_INVALID
 threadlib=""
 case $with_thread_package in
-    yes|posix|pthreads|solaris)
+    yes|posix|pthreads|solaris|uti)
         AC_CHECK_HEADERS(pthread.h)
         AC_CHECK_LIB([pthread],[pthread_key_create],[threadlib="-lpthread"])
         THREAD_PACKAGE_NAME=THREAD_PACKAGE_POSIX
@@ -1678,7 +1684,6 @@ AC_OUTPUT(maint/testmerge \
           f08/misc/Makefile \
           f08/profile/Makefile \
      cxx/Makefile \
-          cxx/util/Makefile \
           cxx/attr/Makefile \
           cxx/attr/testlist \
           cxx/pt2pt/Makefile \

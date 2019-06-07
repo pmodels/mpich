@@ -14,10 +14,6 @@
 #include "ch4_coll_params.h"
 #include "coll_algo_params.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Barrier_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
@@ -74,10 +70,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Barrier_intra_composition_beta
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
@@ -97,10 +89,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Barrier_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
@@ -121,10 +109,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_composition_alpha(MPIR_Comm * c
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, int count,
                                                                  MPI_Datatype datatype,
                                                                  int root, MPIR_Comm * comm,
@@ -178,10 +162,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_intra_composition_beta
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, int count,
                                                                 MPI_Datatype datatype,
                                                                 int root, MPIR_Comm * comm,
@@ -242,10 +222,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_intra_composition_gamma
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, int count,
                                                                  MPI_Datatype datatype,
                                                                  int root, MPIR_Comm * comm,
@@ -267,10 +243,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, int count,
                                                                  MPI_Datatype datatype,
                                                                  int root, MPIR_Comm * comm,
@@ -293,10 +265,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allreduce_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, int count,
                                                                      MPI_Datatype datatype,
@@ -380,10 +348,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allreduce_intra_composition_gamma
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
                                                                     void *recvbuf, int count,
                                                                     MPI_Datatype datatype,
@@ -409,10 +373,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allreduce_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
+                                                                     void *recvbuf, int count,
+                                                                     MPI_Datatype datatype,
+                                                                     MPI_Op op,
+                                                                     MPIR_Comm * comm,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     const
+                                                                     MPIDI_coll_algo_container_t
+                                                                     *
+                                                                     ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno =
+        MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                allred_container);
+#else
+    mpi_errno =
+        MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                               allred_container);
+#endif
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, int count,
                                                                      MPI_Datatype datatype,
@@ -437,10 +429,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf, int count,
                                                                   MPI_Datatype datatype,
@@ -535,10 +523,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_intra_composition_beta
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sendbuf,
                                                                  void *recvbuf, int count,
                                                                  MPI_Datatype datatype,
@@ -687,10 +671,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_intra_composition_gamma
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *sendbuf,
                                                                   void *recvbuf, int count,
                                                                   MPI_Datatype datatype,
@@ -716,10 +696,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf, int count,
                                                                   MPI_Datatype datatype,
@@ -744,10 +720,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_composition_alpha(const void *se
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoall_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *sendbuf,
                                                                     int sendcount,
                                                                     MPI_Datatype sendtype,
@@ -775,10 +747,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoall_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_inter_composition_alpha(const void *sendbuf,
                                                                     int sendcount,
                                                                     MPI_Datatype sendtype,
@@ -806,10 +774,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_inter_composition_alpha(const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoallv_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void *sendbuf,
                                                                      const int *sendcounts,
                                                                      const int *sdispls,
@@ -841,10 +805,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoallv_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_inter_composition_alpha(const void *sendbuf,
                                                                      const int *sendcounts,
                                                                      const int *sdispls,
@@ -875,10 +835,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_inter_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoallw_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void *sendbuf,
                                                                      const int sendcounts[],
                                                                      const int sdispls[],
@@ -912,10 +868,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoallw_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void *sendbuf,
                                                                      const int sendcounts[],
                                                                      const int sdispls[],
@@ -948,10 +900,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allgather_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
                                                                      int sendcount,
                                                                      MPI_Datatype sendtype,
@@ -981,10 +929,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allgather_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_inter_composition_alpha(const void *sendbuf,
                                                                      int sendcount,
                                                                      MPI_Datatype sendtype,
@@ -1012,10 +956,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_inter_composition_alpha(const void 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allgatherv_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void *sendbuf,
                                                                       int sendcount,
                                                                       MPI_Datatype sendtype,
@@ -1046,10 +986,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Allgatherv_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_composition_alpha(const void *sendbuf,
                                                                       int sendcount,
                                                                       MPI_Datatype sendtype,
@@ -1079,10 +1015,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_composition_alpha(const void
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Gather_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *sendbuf,
                                                                   int sendcount,
                                                                   MPI_Datatype sendtype,
@@ -1109,10 +1041,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *se
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Gather_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_inter_composition_alpha(const void *sendbuf,
                                                                   int sendcount,
                                                                   MPI_Datatype sendtype,
@@ -1139,10 +1067,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_inter_composition_alpha(const void *se
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Gatherv_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
@@ -1171,10 +1095,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Gatherv_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
@@ -1203,10 +1123,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_composition_alpha(const void *s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scatter_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
@@ -1234,10 +1150,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scatter_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_composition_alpha(const void *sendbuf,
                                                                    int sendcount,
                                                                    MPI_Datatype sendtype,
@@ -1266,10 +1178,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_composition_alpha(const void *s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scatterv_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *sendbuf,
                                                                     const int *sendcounts,
                                                                     const int *displs,
@@ -1298,10 +1206,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scatterv_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_composition_alpha(const void *sendbuf,
                                                                     const int *sendcounts,
                                                                     const int *displs,
@@ -1330,10 +1234,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_composition_alpha(const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_scatter_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
                                                                           const int
@@ -1362,10 +1262,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_scatter_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
                                                                           void *recvbuf,
                                                                           const int
@@ -1396,10 +1292,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_scatter_block_inter_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_inter_composition_alpha(const void
                                                                                 *sendbuf,
                                                                                 void *recvbuf,
@@ -1430,10 +1322,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_inter_composition_alpha(
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_scatter_block_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(const void
                                                                                 *sendbuf,
                                                                                 void *recvbuf,
@@ -1466,10 +1354,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scan_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *sendbuf,
                                                                 void *recvbuf,
                                                                 int count,
@@ -1639,10 +1523,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Scan_intra_composition_beta
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendbuf,
                                                                void *recvbuf,
                                                                int count,
@@ -1668,10 +1548,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendb
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Exscan_intra_composition_alpha
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *sendbuf,
                                                                   void *recvbuf,
                                                                   int count,

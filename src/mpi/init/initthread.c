@@ -98,8 +98,8 @@ MPIR_Process_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT)
      /* all other fields in MPIR_Process are irrelevant */
 MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
 
-#if defined(MPICH_IS_THREADED) && defined(MPL_TLS_SPECIFIER)
-MPL_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread = { 0 };
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
+MPL_TLS MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 #else
 MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 #endif
@@ -204,10 +204,6 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 #endif
 
 /* These routine handle any thread initialization that my be required */
-#undef FUNCNAME
-#define FUNCNAME thread_cs_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int thread_cs_init(void)
 {
     int err;
@@ -256,10 +252,6 @@ static int thread_cs_init(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Thread_CS_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Thread_CS_Finalize(void)
 {
     int err;
@@ -344,10 +336,6 @@ MPL_dbg_class MPIR_DBG_ASSERT;
 MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -356,14 +344,17 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int thread_provided = 0;
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
+#if defined(MPICH_IS_THREADED)
+    bool cs_initialized = false;
 
-#if (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
-    int rc = ABT_initialized();
-    if (rc != ABT_SUCCESS) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPI_Init_thread", __LINE__, MPI_ERR_OTHER,
-                                         "**argobots_uninitialized", 0);
-        goto fn_fail;
+    /* The threading library must be initialized at the very beginning because
+     * it manages all synchronization objects (e.g., mutexes) that will be
+     * initialized later */
+    {
+        int thread_err;
+        MPL_thread_init(&thread_err);
+        if (thread_err)
+            goto fn_fail;
     }
 #endif
 
@@ -401,6 +392,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
 #if defined(MPICH_IS_THREADED)
     mpi_errno = thread_cs_init();
+    cs_initialized = true;
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -675,17 +667,15 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 #if defined(MPICH_IS_THREADED)
-    MPIR_Thread_CS_Finalize();
+    if (cs_initialized) {
+        MPIR_Thread_CS_Finalize();
+    }
 #endif
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 
@@ -801,12 +791,12 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 #ifdef HAVE_ERROR_REPORTING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_init_thread", "**mpi_init_thread %p %p %d %p", argc, argv,
                                  required, provided);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

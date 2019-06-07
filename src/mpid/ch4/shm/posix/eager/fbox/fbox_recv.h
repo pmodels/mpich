@@ -30,10 +30,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_begin
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
@@ -46,18 +42,39 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 
     /* Rather than polling all of the fastboxes on every loop, do a small number and rely on calling
      * this function again if needed. */
-    for (j = 0; j < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_BATCH_SIZE; j++) {
+    for (j = 0; j < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE +
+         MPIR_CVAR_CH4_POSIX_EAGER_FBOX_BATCH_SIZE; j++) {
+
+        /* Before polling *all* of the fastboxes, poll the ones that are most likely to have messages
+         * (where receives have been preposted). */
+        if (j < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE) {
+            /* Get the next fastbox to poll. */
+            local_rank = MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[j];
+        }
+        /* If we have finished the cached fastboxes, continue polling the rest of the fastboxes
+         * where we left off last time. */
+        else {
+            int16_t last_cache =
+                MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks
+                [MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE];
+            /* Figure out the next fastbox to poll by incrementing the counter. */
+            last_cache = (last_cache + 1) % (int16_t) MPIDI_POSIX_global.num_local;
+            local_rank = last_cache;
+            MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks
+                [MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE] = last_cache;
+        }
+
+        if (local_rank == -1) {
+            continue;
+        }
 
         /* Find the correct fastbox and update the pointer for the next time around the loop. */
-        local_rank = MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank;
         fbox_in = MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[local_rank];
-        MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank =
-            (local_rank + 1) % MPIDI_POSIX_eager_fbox_control_global.num_local;
 
         /* If the data ready flag is set, there is a message waiting. */
         if (fbox_in->data_ready) {
             /* Initialize public transaction part */
-            grank = MPIDI_POSIX_eager_fbox_control_global.local_procs[local_rank];
+            grank = MPIDI_POSIX_global.local_procs[local_rank];
 
             if (likely(fbox_in->is_header)) {
                 /* Only received the header for the message */
@@ -106,10 +123,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_memcpy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction,
                               void *dst, const void *src, size_t size)
@@ -117,10 +130,6 @@ MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIR_Memcpy(dst, src, size);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_eager_recv_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
@@ -141,11 +150,25 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_POSTED_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_POSTED_HOOK);
 
-    int local_rank;
+    int local_rank, i;
 
     if (grank >= 0) {
-        local_rank = MPIDI_POSIX_eager_fbox_control_global.local_ranks[grank];
-        MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank = local_rank;
+        local_rank = MPIDI_POSIX_global.local_ranks[grank];
+
+        /* Put the posted receive in the list of fastboxes to be polled first. If the list is full,
+         * it will get polled after the boxes in the list are polled, which will be slower, but will
+         * still match the message. */
+        for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
+            if (MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] == -1) {
+                MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = local_rank;
+                break;
+            } else if (MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] ==
+                       local_rank) {
+                break;
+            } else {
+                continue;
+            }
+        }
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_POSTED_HOOK);
@@ -153,8 +176,25 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 {
+    int i, local_rank;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMPLETED_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMPLETED_HOOK);
+
+    if (grank >= 0) {
+        local_rank = MPIDI_POSIX_global.local_ranks[grank];
+
+        /* Remove the posted receive from the list of fastboxes to be polled first now that the
+         * request is done. */
+        for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
+            if (MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] == local_rank) {
+                MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = -1;
+                break;
+            } else {
+                continue;
+            }
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMPLETED_HOOK);
 }

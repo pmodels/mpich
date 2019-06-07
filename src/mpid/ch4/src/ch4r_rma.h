@@ -15,10 +15,6 @@
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_do_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
                                 MPI_Datatype origin_datatype, int target_rank,
                                 MPI_Aint target_disp, int target_count,
@@ -30,8 +26,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
     size_t data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     size_t am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -108,21 +103,20 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -182,10 +176,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_do_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
                                 int target_rank, MPI_Aint target_disp, int target_count,
                                 MPI_Datatype target_datatype, MPIR_Win * win,
@@ -194,10 +184,9 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     int mpi_errno = MPI_SUCCESS, n_iov, c;
     size_t offset;
     MPIR_Request *sreq = NULL;
-    MPIDIG_put_req_msg_t am_hdr;
+    MPIDIG_get_msg_t am_hdr;
     size_t data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -239,6 +228,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -276,21 +266,20 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
         goto fn_exit;
     }
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDIG_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
@@ -321,10 +310,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_do_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
                                                   MPI_Datatype origin_datatype, int target_rank,
                                                   MPI_Aint target_disp, int target_count,
@@ -337,8 +322,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -427,21 +411,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -502,10 +485,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_do_get_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
                                                       int origin_count,
                                                       MPI_Datatype origin_datatype,
@@ -524,8 +503,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
-    MPI_Aint last, num_iov;
-    MPIR_Segment *segment_ptr;
+    MPI_Aint num_iov;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -624,21 +602,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIR_Segment_alloc(NULL, target_count, target_datatype);
-    MPIR_Assert(segment_ptr);
-
-    last = data_sz;
-    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
     dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
-    last = data_sz;
-    MPIR_Segment_to_iov(segment_ptr, 0, &last, dt_iov, &n_iov);
-    MPIR_Assert(last == (MPI_Aint) data_sz);
-    MPL_free(segment_ptr);
+    int actual_iov_len;
+    MPI_Aint actual_iov_bytes;
+    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
+                        &actual_iov_len, &actual_iov_bytes);
+    n_iov = actual_iov_len;
+
+    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -699,10 +676,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_put(const void *origin_addr, int origin_count,
                                             MPI_Datatype origin_datatype, int target_rank,
                                             MPI_Aint target_disp, int target_count,
@@ -729,10 +702,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_put(const void *origin_addr, int origin_
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_rput
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin_count,
                                              MPI_Datatype origin_datatype, int target_rank,
                                              MPI_Aint target_disp, int target_count,
@@ -762,10 +731,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
                                             MPI_Datatype origin_datatype, int target_rank,
                                             MPI_Aint target_disp, int target_count,
@@ -792,10 +757,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_rget
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count,
                                              MPI_Datatype origin_datatype, int target_rank,
                                              MPI_Aint target_disp, int target_count,
@@ -825,10 +786,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_raccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int origin_count,
                                                     MPI_Datatype origin_datatype, int target_rank,
                                                     MPI_Aint target_disp, int target_count,
@@ -857,10 +814,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_accumulate(const void *origin_addr, int origin_count,
                                                    MPI_Datatype origin_datatype, int target_rank,
                                                    MPI_Aint target_disp, int target_count,
@@ -889,10 +842,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_accumulate(const void *origin_addr, int 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_rget_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget_accumulate(const void *origin_addr,
                                                         int origin_count,
                                                         MPI_Datatype origin_datatype,
@@ -926,10 +875,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget_accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_get_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
                                                        int origin_count,
                                                        MPI_Datatype origin_datatype,
@@ -962,10 +907,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_compare_and_swap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr,
                                                          const void *compare_addr,
                                                          void *result_addr, MPI_Datatype datatype,
@@ -1036,10 +977,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_fetch_and_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_fetch_and_op(const void *origin_addr, void *result_addr,
                                                      MPI_Datatype datatype, int target_rank,
                                                      MPI_Aint target_disp, MPI_Op op,

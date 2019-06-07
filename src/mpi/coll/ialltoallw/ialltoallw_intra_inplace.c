@@ -18,10 +18,6 @@
  * single buffer across the whole loop.  Something like MADRE is probably the
  * best solution for the MPI_IN_PLACE scenario.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_intra_inplace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
@@ -31,10 +27,9 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;
     int dst, rank;
-    int recv_extent;
-    MPI_Aint true_extent, true_lb;
+    MPI_Aint recvtype_sz;
     int max_size;
-    void *tmp_buf = NULL, *adj_tmp_buf = NULL;
+    void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -56,9 +51,8 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
     for (i = 0; i < comm_size; ++i) {
         /* only look at recvtypes/recvcounts because the send vectors are
          * ignored when sendbuf==MPI_IN_PLACE */
-        MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
-        MPIR_Datatype_get_extent_macro(recvtypes[i], recv_extent);
-        max_size = MPL_MAX(max_size, recvcounts[i] * MPL_MAX(recv_extent, true_extent));
+        MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
+        max_size = MPL_MAX(max_size, recvcounts[i] * recvtype_sz);
     }
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf",
                               MPL_MEM_BUFFER);
@@ -74,20 +68,18 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
                 else
                     dst = i;
 
-                MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
-                adj_tmp_buf = (void *) ((char *) tmp_buf - true_lb);
-
+                MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
                                             recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
-                mpi_errno =
-                    MPIR_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
+                                            dst, comm_ptr, s);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
-                mpi_errno = MPIR_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
+                mpi_errno = MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
                                             ((char *) recvbuf + rdispls[dst]),
                                             recvcounts[dst], recvtypes[dst], s);
                 if (mpi_errno)

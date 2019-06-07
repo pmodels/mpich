@@ -15,7 +15,10 @@ typedef union {
 typedef enum {
     MPIDI_POSIX_Bcast_intra_binomial_id,
     MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id,
-    MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id
+    MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id,
+    MPIDI_POSIX_Bcast_intra_auto_id,
+    MPIDI_POSIX_Bcast_intra_invalid_id,
+    MPIDI_POSIX_Bcast_intra_release_gather_id
 } MPIDI_POSIX_Bcast_id_t;
 
 typedef union {
@@ -24,34 +27,64 @@ typedef union {
         int radix;
         int block_size;
     } posix_bcast_knomial_parameters;
+    struct MPIDI_POSIX_Bcast_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_bcast_release_gather_parameters;
     struct MPIDI_POSIX_Bcast_empty_parameters {
         int empty;
     } posix_bcast_empty_parameters;
 } MPIDI_POSIX_Bcast_params_t;
 
+extern MPIDI_POSIX_Bcast_id_t MPIDI_POSIX_Bcast_algo_choice;
+
 typedef enum {
     MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id,
-    MPIDI_POSIX_Reduce_intra_binomial_id
+    MPIDI_POSIX_Reduce_intra_binomial_id,
+    MPIDI_POSIX_Reduce_intra_auto_id,
+    MPIDI_POSIX_Reduce_intra_invalid_id,
+    MPIDI_POSIX_Reduce_intra_release_gather_id
 } MPIDI_POSIX_Reduce_id_t;
 
 typedef union {
     /* reserved for parameters related to SHM specific collectives */
+    struct MPIDI_POSIX_Reduce_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_reduce_release_gather_parameters;
     struct MPIDI_POSIX_Reduce_empty_parameters {
         int empty;
     } posix_reduce_empty_parameters;
 } MPIDI_POSIX_Reduce_params_t;
 
+extern MPIDI_POSIX_Reduce_id_t MPIDI_POSIX_Reduce_algo_choice;
+
 typedef enum {
     MPIDI_POSIX_Allreduce_intra_recursive_doubling_id,
-    MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id
+    MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id,
+    MPIDI_POSIX_Allreduce_intra_auto_id,
+    MPIDI_POSIX_Allreduce_intra_invalid_id,
+    MPIDI_POSIX_Allreduce_intra_release_gather_id
 } MPIDI_POSIX_Allreduce_id_t;
 
 typedef union {
     /* reserved for parameters related to SHM specific collectives */
+    struct MPIDI_POSIX_Allreduce_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_allreduce_release_gather_parameters;
     struct MPIDI_POSIX_Allreduce_empty_parameters {
         int empty;
     } posix_allreduce_empty_parameters;
 } MPIDI_POSIX_Allreduce_params_t;
+
+extern MPIDI_POSIX_Allreduce_id_t MPIDI_POSIX_Allreduce_algo_choice;
 
 typedef enum {
     MPIDI_POSIX_Alltoall_intra_brucks_id,

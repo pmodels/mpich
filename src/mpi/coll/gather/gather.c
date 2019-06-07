@@ -25,7 +25,7 @@ cvars:
 
     - name        : MPIR_CVAR_GATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -38,7 +38,7 @@ cvars:
 
     - name        : MPIR_CVAR_GATHER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -87,10 +87,6 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #undef MPI_Gather
 #define MPI_Gather PMPI_Gather
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                            int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                            MPIR_Errflag_t * errflag)
@@ -112,10 +108,6 @@ int MPIR_Gather_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype send
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                            int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                            MPIR_Errflag_t * errflag)
@@ -152,10 +144,6 @@ int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype send
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -164,18 +152,18 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Gather_intra_algo_choice) {
-            case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
+        switch (MPIR_CVAR_GATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_binomial:
                 mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype, root,
                                                        comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTRA_ALGO_NB:
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Gather_allcomm_nb(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
                                                    errflag);
                 break;
-            case MPIR_GATHER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_GATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_intra_auto(sendbuf, sendcount, sendtype,
@@ -185,23 +173,23 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Gather_inter_algo_choice) {
-            case MPIR_GATHER_INTER_ALGO_LINEAR:
+        switch (MPIR_CVAR_GATHER_INTER_ALGORITHM) {
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_linear:
                 mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
                                                      recvbuf, recvcount, recvtype, root,
                                                      comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_local_gather_remote_send:
                 mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
                                                                        recvbuf, recvcount, recvtype,
                                                                        root, comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_NB:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_nb:
                 mpi_errno = MPIR_Gather_allcomm_nb(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
                                                    errflag);
                 break;
-            case MPIR_GATHER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_GATHER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_inter_auto(sendbuf, sendcount, sendtype,
@@ -219,10 +207,6 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -242,10 +226,6 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Gather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Gather - Gathers together values from a group of processes
@@ -421,12 +401,12 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_gather", "**mpi_gather %p %d %D %p %d %D %d %C", sendbuf,
                                  sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

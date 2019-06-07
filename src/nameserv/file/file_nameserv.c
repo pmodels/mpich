@@ -62,10 +62,6 @@ struct MPID_NS_Handle {
 
 /* Create a structure that we will use to remember files created for
    publishing.  */
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
     const char *dirname;
@@ -76,8 +72,8 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     /* --BEGIN ERROR HANDLING-- */
     if (!*handle_ptr) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -113,10 +109,6 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Publish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
@@ -136,7 +128,7 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     } else {
         /* --BEGIN ERROR HANDLING-- */
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                   FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                   __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
         return err;
         /* --END ERROR HANDLING-- */
     }
@@ -181,7 +173,7 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                 MPL_snprintf(rstr, sizeof(rstr), "errno = %d", errno);
         }
 #endif
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                    MPI_ERR_OTHER, "**namepubfile",
                                    "**namepubfile %s %s %s", service_name, filename, reason);
         return err;
@@ -194,10 +186,6 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
@@ -240,10 +228,6 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Unpublish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
     char filename[MAXPATHLEN];
@@ -270,7 +254,7 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     if (i == handle->nactive) {
         /* --BEGIN ERROR HANDLING-- */
         /* Error: this name was not found */
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                    MPI_ERR_SERVICE, "**namepubnotpub",
                                    "**namepubnotpub %s", service_name);
         return err;
@@ -282,10 +266,6 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     int i;

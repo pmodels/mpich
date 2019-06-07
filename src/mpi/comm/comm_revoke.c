@@ -30,10 +30,6 @@ int MPIX_Comm_revoke(MPI_Comm comm) __attribute__ ((weak, alias("PMPIX_Comm_revo
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_revoke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPIX_Comm_revoke - Prevent a communicator from being used in the future
 
@@ -106,11 +102,11 @@ int MPIX_Comm_revoke(MPI_Comm comm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpix_comm_revoke", "**mpix_comm_revoke %C", comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -29,10 +29,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Sendrecv_replace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 
@@ -142,7 +138,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         MPIR_Request *rreq = NULL;
         void *tmpbuf = NULL;
         MPI_Aint tmpbuf_size = 0;
-        MPI_Aint tmpbuf_count = 0;
+        MPI_Aint actual_pack_bytes = 0;
 
         if (count > 0 && dest != MPI_PROC_NULL) {
             MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
@@ -150,7 +146,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             MPIR_CHKLMEM_MALLOC_ORJUMP(tmpbuf, void *, tmpbuf_size, mpi_errno,
                                        "temporary send buffer", MPL_MEM_BUFFER);
 
-            mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
+            mpi_errno =
+                MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
         }
@@ -160,7 +157,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
-        mpi_errno = MPID_Isend(tmpbuf, tmpbuf_count, MPI_PACKED, dest,
+        mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
                                sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
@@ -213,13 +210,13 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_sendrecv_replace",
                                  "**mpi_sendrecv_replace %p %d %D %i %t %i %t %C %p", buf, count,
                                  datatype, dest, sendtag, source, recvtag, comm, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

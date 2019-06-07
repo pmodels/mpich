@@ -46,10 +46,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode) __attribute__ ((weak, alias("PMPI_Ab
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Abort - Terminates MPI execution environment
 
@@ -75,8 +71,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    /* FIXME: 100 is arbitrary and may not be long enough */
-    char abort_str[100] = "", comm_name[MPI_MAX_OBJECT_NAME];
     int len = MPI_MAX_OBJECT_NAME;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ABORT);
 
@@ -125,15 +119,17 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
         comm_ptr = MPIR_Process.comm_self;
     }
 
-
+    char abort_str[MPI_MAX_OBJECT_NAME + 100] = "";
+    char comm_name[MPI_MAX_OBJECT_NAME];
     MPIR_Comm_get_name_impl(comm_ptr, comm_name, &len);
     if (len == 0) {
         MPL_snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);
     }
     if (!MPIR_CVAR_SUPPRESS_ABORT_MESSAGE)
         /* FIXME: This is not internationalized */
-        MPL_snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name,
-                     errorcode, comm_ptr->rank);
+        MPL_snprintf(abort_str, sizeof(abort_str),
+                     "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode,
+                     comm_ptr->rank);
     mpi_errno = MPID_Abort(comm_ptr, mpi_errno, errorcode, abort_str);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
@@ -155,11 +151,11 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_abort", "**mpi_abort %C %d", comm, errorcode);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

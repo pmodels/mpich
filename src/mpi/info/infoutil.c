@@ -15,10 +15,8 @@
 #endif
 
 /* Preallocated info objects */
-MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN] = { {0}
-};
-MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC] = { {0}
-};
+MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
+MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, MPIR_INFO,
     sizeof(MPIR_Info), MPIR_Info_direct,
@@ -27,10 +25,6 @@ MPIR_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, MPIR_INFO,
 
 /* Free an info structure.  In the multithreaded case, this routine
    relies on the SINGLE_CS in the info routines (particularly MPI_Info_free) */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Info_free(MPIR_Info * info_ptr)
 {
     MPIR_Info *curr_ptr, *last_ptr;
@@ -54,10 +48,6 @@ void MPIR_Info_free(MPIR_Info * info_ptr)
 /* Allocate and initialize an MPIR_Info object.
  *
  * Returns MPICH error codes */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_alloc(MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;

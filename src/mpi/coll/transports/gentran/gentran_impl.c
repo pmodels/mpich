@@ -36,11 +36,7 @@ MPII_Coll_queue_t coll_queue = { NULL };
 
 int MPII_Genutil_progress_hook_id = 0;
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Gentran_init()
+int MPII_Gentran_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -57,10 +53,6 @@ int MPII_Gentran_init()
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_comm_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Gentran_comm_init(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -69,10 +61,6 @@ int MPII_Gentran_comm_init(MPIR_Comm * comm_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_comm_cleanup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Gentran_comm_cleanup(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -81,11 +69,7 @@ int MPII_Gentran_comm_cleanup(MPIR_Comm * comm_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Gentran_finalize()
+int MPII_Gentran_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -95,11 +79,7 @@ int MPII_Gentran_finalize()
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Gentran_scheds_are_pending
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Gentran_scheds_are_pending()
+int MPII_Gentran_scheds_are_pending(void)
 {
     return coll_queue.head != NULL;
 }

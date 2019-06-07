@@ -9,18 +9,13 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
-MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC] = { {0}
-};
+MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Request_mem = {
     0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct,
     MPIR_REQUEST_PREALLOC
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_completion_processing
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
    If debugger information is being provided for pending (user-initiated)
    send operations, the macros MPII_SENDQ_FORGET will be defined to
@@ -147,10 +142,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_handle_proc_failed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
 {
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
@@ -162,10 +153,6 @@ int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
     return request_ptr->status.MPI_ERROR;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_get_error
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* This routine is for obtaining the error code of an existing request.
  * It is similar as MPIR_Request_completion_processing without any "free" + status setting.
  *
@@ -250,10 +237,6 @@ void MPII_Grequest_set_lang_f77(MPI_Request greq)
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_cancel
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 {
     int rc;
@@ -303,10 +286,6 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_query(MPIR_Request * request_ptr)
 {
     int rc;
@@ -356,10 +335,6 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_free(MPIR_Request * request_ptr)
 {
     int rc;

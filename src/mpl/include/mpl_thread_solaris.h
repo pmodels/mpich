@@ -22,6 +22,16 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
  * Threads
  */
 
+#define MPL_thread_init(err_ptr_)               \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
+#define MPL_thread_finalize(err_ptr_)           \
+    do {                                        \
+        *(int *)(err_ptr_) = 0;                 \
+    } while (0)
+
 #define MPL_thread_exit()                       \
     do {                                        \
         thr_exit(NULL);                         \

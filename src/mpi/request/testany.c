@@ -30,10 +30,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 #undef MPI_Testany
 #define MPI_Testany PMPI_Testany
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testany_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
                       int *indx, int *flag, MPI_Status * status)
 {
@@ -81,10 +77,6 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testany
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testany - Tests for completion of any previdously initiated
                   requests
@@ -122,7 +114,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     int i;
     int n_inactive;
     int last_disabled_anysource = -1;
-    int first_nonnull = 0;
+    int first_nonnull = count;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTANY);
@@ -195,7 +187,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                     request_ptrs[i] = NULL;
                 }
             } else {
-                if (!first_nonnull)
+                if (first_nonnull == count)
                     first_nonnull = i;
             }
         } else {
@@ -263,12 +255,12 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_testany", "**mpi_testany %d %p %p %p %p", count,
                                  array_of_requests, indx, flag, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -15,10 +15,6 @@
 #include "posix_impl.h"
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_improbe(int source,
                                                      int tag,
                                                      MPIR_Comm * comm,
@@ -29,10 +25,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_improbe(int source,
     return MPIDIG_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_iprobe(int source,
                                                     int tag,
                                                     MPIR_Comm * comm,

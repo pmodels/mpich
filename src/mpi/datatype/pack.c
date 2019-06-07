@@ -25,81 +25,8 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Pack
 #define MPI_Pack PMPI_Pack
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Pack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Pack_impl(const void *inbuf,
-                   MPI_Aint incount,
-                   MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPI_Aint first, last;
-    MPIR_Segment *segp;
-    int contig;
-    MPI_Aint dt_true_lb;
-    MPI_Aint data_sz;
-
-    if (incount == 0) {
-        goto fn_exit;
-    }
-
-    /* Handle contig case quickly */
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-        contig = TRUE;
-        dt_true_lb = 0;
-        data_sz = incount * MPIR_Datatype_get_basic_size(datatype);
-    } else {
-        MPIR_Datatype *dt_ptr;
-        MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        MPIR_Datatype_is_contig(datatype, &contig);
-        dt_true_lb = dt_ptr->true_lb;
-        data_sz = incount * dt_ptr->size;
-    }
-
-    if (contig) {
-        MPIR_Memcpy((char *) outbuf + *position, (char *) inbuf + dt_true_lb, data_sz);
-        *position = (int) ((MPI_Aint) * position + data_sz);
-        goto fn_exit;
-    }
-
-
-    /* non-contig case */
-
-    /* TODO: CHECK RETURN VALUES?? */
-    /* TODO: SHOULD THIS ALL BE IN A MPID_PACK??? */
-    segp = MPIR_Segment_alloc(inbuf, incount, datatype);
-    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "MPIR_Segment");
-
-    /* NOTE: the use of buffer values and positions in MPI_Pack and in
-     * MPIR_Segment_pack are quite different.  See code or docs or something.
-     */
-    first = 0;
-    last = MPIR_SEGMENT_IGNORE_LAST;
-
-    MPIR_Segment_pack(segp, first, &last, (void *) ((char *) outbuf + *position));
-
-    /* Ensure that calculation fits into an int datatype. */
-    MPIR_Ensure_Aint_fits_in_int((MPI_Aint) * position + last);
-
-    *position = (int) ((MPI_Aint) * position + last);
-
-    MPIR_Segment_free(segp);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 
@@ -227,10 +154,15 @@ int MPI_Pack(const void *inbuf,
     /* ... body of routine ... */
 
     position_x = *position;
-    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outsize, &position_x);
-    MPIR_Assign_trunc(*position, position_x, int);
+
+    MPI_Aint actual_pack_bytes;
+    void *buf = (void *) ((char *) outbuf + position_x);
+    mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
     if (mpi_errno)
         goto fn_fail;
+    position_x += actual_pack_bytes;
+
+    MPIR_Assign_trunc(*position, position_x, int);
 
     /* ... end of body of routine ... */
 
@@ -243,12 +175,12 @@ int MPI_Pack(const void *inbuf,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_pack", "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount,
                                  datatype, outbuf, outsize, position, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

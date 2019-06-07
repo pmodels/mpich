@@ -15,10 +15,6 @@
 #include "ch4_impl.h"
 #include <../mpi/pt2pt/bsendutil.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -94,10 +90,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_prequest_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDIG_prequest_free_hook(MPIR_Request * req)
 {
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(req, datatype));

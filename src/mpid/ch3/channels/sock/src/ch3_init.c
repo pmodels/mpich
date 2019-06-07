@@ -17,10 +17,6 @@ char MPIDI_CH3_ABIVersion[] = "1.1";
  *                    (sock + shm) channel.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -84,14 +80,12 @@ int MPIDI_CH3_VC_Init(MPIDI_VC_t * vc)
     return 0;
 }
 
+#ifdef MPL_USE_DBG_LOGGING
 const char *MPIDI_CH3_VC_GetStateString(struct MPIDI_VC *vc)
 {
-#ifdef MPL_USE_DBG_LOGGING
     return MPIDI_CH3_VC_SockGetStateString(vc);
-#else
-    return "unknown";
-#endif
 }
+#endif
 
 /* Select the routine that uses sockets to connect two communicators
    using a socket */

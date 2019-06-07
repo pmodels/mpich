@@ -17,10 +17,6 @@
 
 /* Routine to schedule a scattered based alltoallv */
 /* Alltoallv doesn't support MPI_IN_PLACE */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_sched_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
@@ -29,7 +25,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 {
     int mpi_errno = MPI_SUCCESS;
     int src, dst;
-    int i, j, ww, index = 0;
+    int i, j, ww;
     int invtcs;
     int tag;
     int *vtcs, *recv_id, *send_id;
@@ -42,9 +38,9 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     int batch_size = MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE;
     int bblock = MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS;
 
-    size_t recvtype_lb, recvtype_extent;
-    size_t sendtype_lb, sendtype_extent;
-    size_t sendtype_true_extent, recvtype_true_extent;
+    MPI_Aint recvtype_lb, recvtype_extent;
+    MPI_Aint sendtype_lb, sendtype_extent;
+    MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
@@ -88,14 +84,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 
     /* Post more send/recv pairs as the previous ones finish */
     for (i = bblock; i < size; i += batch_size) {
+        int i_vtcs = 0;
         ww = MPL_MIN(size - i, batch_size);
-        index = 0;
         /* Add dependency to ensure not to run until previous block the batch portion
          * is finished -- effectively limiting the on-going tasks to bblock
          */
         for (j = 0; j < ww; j++) {
-            vtcs[index++] = recv_id[(i + j) % bblock];
-            vtcs[index++] = send_id[(i + j) % bblock];
+            vtcs[i_vtcs++] = recv_id[(i + j) % bblock];
+            vtcs[i_vtcs++] = send_id[(i + j) % bblock];
         }
         invtcs = MPIR_TSP_sched_selective_sink(sched, 2 * ww, vtcs);
         for (j = 0; j < ww; j++) {
@@ -120,10 +116,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 }
 
 /* Scattered sliding window based Alltoallv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                         const int recvcounts[], const int rdispls[],

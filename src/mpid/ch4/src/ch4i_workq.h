@@ -39,8 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *, MPI_Aint, MPI_Datatype, i
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
                                                 MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                 MPIR_Request **);
-MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *,
-                                                 MPIR_Request **);
+MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *, MPI_Aint, MPI_Datatype, MPIR_Request *);
 MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *, int, MPI_Datatype, int, MPI_Aint, int,
                                               MPI_Datatype, MPIR_Win *);
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *, int, MPI_Datatype, int, MPI_Aint, int,
@@ -135,8 +134,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
         case IPROBE:
             {
                 struct MPIDI_workq_iprobe *wd = &pt2pt_elemt->params.pt2pt.iprobe;
-                wd->count = count;
-                wd->datatype = datatype;
                 wd->rank = rank;
                 wd->tag = tag;
                 wd->comm_ptr = comm_ptr;
@@ -150,8 +147,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
         case IMPROBE:
             {
                 struct MPIDI_workq_improbe *wd = &pt2pt_elemt->params.pt2pt.improbe;
-                wd->count = count;
-                wd->datatype = datatype;
                 wd->rank = rank;
                 wd->tag = tag;
                 wd->comm_ptr = comm_ptr;
@@ -217,7 +212,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                 wd->target_count = target_count;
                 wd->target_datatype = target_datatype;
                 wd->win_ptr = win_ptr;
-                wd->addr = addr;
                 break;
             }
         case GET:
@@ -231,7 +225,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                 wd->target_count = target_count;
                 wd->target_datatype = target_datatype;
                 wd->win_ptr = win_ptr;
-                wd->addr = addr;
                 break;
             }
         default:
@@ -318,9 +311,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
             }
         case IMRECV:{
                 struct MPIDI_workq_imrecv *wd = &workq_elemt->params.pt2pt.imrecv;
-                req = wd->request;
                 datatype = wd->datatype;
-                MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, *wd->message, &req);
+                MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, *wd->message);
                 MPIR_Datatype_release_if_not_builtin(datatype);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
                 if (!MPIDI_REQUEST(*wd->message, is_local))

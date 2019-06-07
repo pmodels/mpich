@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_sched_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op,
                                          MPIR_Comm * comm, int tree_type, int k, int maxbytes,
@@ -37,12 +33,11 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int size;
     int rank;
     int num_children = 0;
-    int is_tree_leaf;           /* Variables to store location of this rank in the tree */
-    MPII_Treealgo_tree_t my_tree;
+    MPIR_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
-    int sink_id, bcast_recv_id;
+    int sink_id;
     int nvtcs;
     int buffer_per_child = MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
@@ -66,7 +61,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
 
     /* calculate chunking information for pipelining */
-    MPII_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
+    MPIR_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
     /* print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
@@ -81,13 +76,10 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
     /* initialize the tree */
     my_tree.children = NULL;
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
-
-    /* identify my locaion in the tree */
-    is_tree_leaf = (num_children == 0) ? 1 : 0;
 
     /* Allocate buffers to receive data from children. Any memory required for execution
      * of the schedule, for example child_buffer, reduce_buffer below, is allocated using
@@ -96,7 +88,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
      * programmer need not free this memory. This is unlike the MPL_malloc function that
      * will be used for any memory required to generate the schedule and then freed by
      * the programmer once that memory is no longer required */
-    if (!is_tree_leaf) {
+    if (num_children > 0) {
         child_buffer = MPIR_TSP_sched_malloc(sizeof(void *) * num_children, sched);
         child_buffer[0] = MPIR_TSP_sched_malloc(extent * count, sched);
         child_buffer[0] = (void *) ((char *) child_buffer[0] - type_lb);
@@ -108,6 +100,9 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
                 child_buffer[i] = child_buffer[0];
             }
         }
+    } else {
+        /* silence warnings */
+        child_buffer = NULL;
     }
 
     /* Set reduce_buffer based on location in the tree */
@@ -203,6 +198,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         sink_id = MPIR_TSP_sched_sink(sched);
 
         /* Receive message from parent */
+        int bcast_recv_id = sink_id;
         if (my_tree.parent != -1) {
             bcast_recv_id =
                 MPIR_TSP_sched_irecv(reduce_address, msgsize, datatype,
@@ -212,11 +208,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         if (num_children) {
             /* Multicast data to the children */
             nvtcs = 1;
-            if (my_tree.parent != -1) {
-                vtcs[0] = bcast_recv_id;
-            } else {
-                vtcs[0] = sink_id;
-            }
+            vtcs[0] = bcast_recv_id;
             MPIR_TSP_sched_imcast(reduce_address, msgsize, datatype,
                                   my_tree.children, num_children, tag, comm, sched, nvtcs, vtcs);
         }
@@ -224,7 +216,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         offset += msgsize;
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPL_free(vtcs);
@@ -238,10 +230,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
 
 /* Non-blocking tree based allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallreduce_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                    MPIR_Request ** req, int tree_type, int k, int maxbytes)

@@ -15,11 +15,7 @@
 #include "treeutil.h"
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME tree_add_child
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
+static int tree_add_child(MPIR_Treealgo_tree_t * t, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -30,11 +26,7 @@ static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_kary_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Treealgo_tree_t * ct)
 {
     int lrank, child;
     int mpi_errno = MPI_SUCCESS;
@@ -83,14 +75,10 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
  *                     |
  *                     3
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_knomial_1_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
-                                      MPII_Treealgo_tree_t * ct)
+                                      MPIR_Treealgo_tree_t * ct)
 {
-    int lrank, i, j, maxtime, tmp, time, parent, current_rank, running_rank, crank;
+    int lrank, i, j, maxstep, tmp, step, parent, current_rank, running_rank, crank;
     int mpi_errno = MPI_SUCCESS;
 
     ct->rank = rank;
@@ -106,20 +94,20 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
     MPIR_Assert(k >= 2);
 
     /* maximum number of steps while generating the knomial tree */
-    maxtime = 0;
+    maxstep = 0;
     for (tmp = nranks - 1; tmp; tmp /= k)
-        maxtime++;
+        maxstep++;
 
     utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
     ct->num_children = 0;
-    time = 0;
+    step = 0;
     parent = -1;        /* root has no parent */
     current_rank = 0;   /* start at root of the tree */
     running_rank = current_rank + 1;    /* used for calculation below
                                          * start with first child of the current_rank */
 
-    for (time = 0;; time++) {
-        MPIR_Assert(time <= nranks);    /* actually, should not need more steps than log_k(nranks) */
+    for (step = 0;; step++) {
+        MPIR_Assert(step <= nranks);    /* actually, should not need more steps than log_k(nranks) */
 
         /* desired rank found */
         if (lrank == current_rank)
@@ -127,7 +115,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
 
         /* check if rank lies in this range */
         for (j = 1; j < k; j++) {
-            if (lrank >= running_rank && lrank < running_rank + MPL_ipow(k, maxtime - time - 1)) {
+            if (lrank >= running_rank && lrank < running_rank + MPL_ipow(k, maxstep - step - 1)) {
                 /* move to the corresponding subtree */
                 parent = current_rank;
                 current_rank = running_rank;
@@ -135,7 +123,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                 break;
             }
 
-            running_rank += MPL_ipow(k, maxtime - time - 1);
+            running_rank += MPL_ipow(k, maxstep - step - 1);
         }
     }
 
@@ -150,7 +138,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "parent of rank %d is %d, total ranks = %d (root=%d)", rank,
                      ct->parent, nranks, root));
-    for (i = time; i < maxtime; i++) {
+    for (i = step; i < maxstep; i++) {
         for (j = 1; j < k; j++) {
             if (crank < nranks) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -160,7 +148,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             }
-            crank += MPL_ipow(k, maxtime - i - 1);
+            crank += MPL_ipow(k, maxstep - i - 1);
         }
     }
 
@@ -182,12 +170,8 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
  *                      |
  *                      7
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_knomial_2_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
-                                      MPII_Treealgo_tree_t * ct)
+                                      MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
     int lrank, i, j, depth;

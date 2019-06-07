@@ -12,10 +12,6 @@
  * intracommunicator, and then does an intercommunicator broadcast.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_inter_local_gather_remote_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           int recvcount, MPI_Datatype recvtype,
@@ -23,7 +19,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size, root;
-    MPI_Aint true_extent, true_lb = 0, extent, send_extent;
+    MPI_Aint sendtype_sz;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
@@ -35,16 +31,12 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
     if ((rank == 0) && (sendcount != 0)) {
         /* In each group, rank 0 allocates temp. buffer for local
          * gather */
-        MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
-
-        MPIR_Datatype_get_extent_macro(sendtype, send_extent);
-        extent = MPL_MAX(send_extent, true_extent);
-
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, extent * sendcount * local_size, mpi_errno,
+        MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount * local_size * sendtype_sz, mpi_errno,
                                   "tmp_buf", MPL_MEM_BUFFER);
-
-        /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
+    } else {
+        /* silence -Wmaybe-uninitialized due to MPIR_{Igather,Ibcast}_sched by non-zero ranks */
+        sendtype_sz = 0;
     }
 
     /* Get the local intracommunicator */
@@ -55,7 +47,8 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
 
     if (sendcount != 0) {
         mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
-                                       tmp_buf, sendcount, sendtype, 0, newcomm_ptr, s);
+                                       tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
+                                       0, newcomm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -67,8 +60,8 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
         /* bcast to right */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size,
-                                          sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size * sendtype_sz,
+                                          MPI_BYTE, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
@@ -99,8 +92,8 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size,
-                                          sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size * sendtype_sz,
+                                          MPI_BYTE, root, comm_ptr, s);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

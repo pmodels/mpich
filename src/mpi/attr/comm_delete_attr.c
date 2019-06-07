@@ -27,10 +27,6 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 #undef MPI_Comm_delete_attr
 #define MPI_Comm_delete_attr PMPI_Comm_delete_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_delete_attr_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -84,10 +80,6 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_delete_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_delete_attr - Deletes an attribute value associated with a key on
    a  communicator
@@ -171,12 +163,12 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_delete_attr", "**mpi_comm_delete_attr %C %d", comm,
                                  comm_keyval);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

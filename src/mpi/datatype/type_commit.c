@@ -25,17 +25,6 @@ int MPI_Type_commit(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_T
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
 
-/*@
-  MPIR_Type_commit
-
-Input Parameters:
-. datatype_p - pointer to MPI datatype
-
-Output Parameters:
-
-  Return Value:
-  0 on success, -1 on failure.
-@*/
 int MPIR_Type_commit(MPI_Datatype * datatype_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,23 +37,17 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
     if (datatype_ptr->is_committed == 0) {
         datatype_ptr->is_committed = 1;
 
-        MPIR_Dataloop_create(*datatype_p, &datatype_ptr->dataloop, &datatype_ptr->dataloop_size);
+        MPIR_Typerep_create(*datatype_p, &datatype_ptr->typerep);
 
         MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
                       (int) datatype_ptr->max_contig_blocks);
 
-#ifdef MPID_Type_commit_hook
         MPID_Type_commit_hook(datatype_ptr);
-#endif /* MPID_Type_commit_hook */
 
     }
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_commit_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -90,10 +73,6 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_commit - Commits the datatype
 
@@ -167,11 +146,11 @@ int MPI_Type_commit(MPI_Datatype * datatype)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_commit", "**mpi_type_commit %p", datatype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

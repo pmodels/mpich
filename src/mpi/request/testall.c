@@ -31,10 +31,6 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #define MPI_Testall PMPI_Testall
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testall_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[], int requests_property)
 {
@@ -91,10 +87,6 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                  MPI_Status array_of_statuses[])
 {
@@ -265,10 +257,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testall - Tests for the completion of all previously initiated
     requests
@@ -364,12 +352,12 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_testall", "**mpi_testall %d %p %p %p", count,
                                  array_of_requests, flag, array_of_statuses);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

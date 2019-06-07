@@ -32,10 +32,6 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[], const int pe
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
                      const int periods[], int reorder, MPI_Comm * comm_cart)
 {
@@ -170,10 +166,6 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
                           const int periods[], int reorder, MPI_Comm * comm_cart)
 {
@@ -202,10 +194,6 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_create - Makes a new communicator to which topology information
@@ -284,7 +272,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
             if (ndims < 0) {
                 /* Must have a non-negative number of dimensions */
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_DIMS, "**dims", "**dims %d", 0);
                 goto fn_fail;
             }
@@ -316,12 +304,12 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_cart_create", "**mpi_cart_create %C %d %p %p %d %p",
                                  comm_old, ndims, dims, periods, reorder, comm_cart);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }

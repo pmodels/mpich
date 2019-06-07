@@ -27,10 +27,6 @@ struct MPID_NS_Handle {
     int dummy;
 };                              /* unused for now */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
     static struct MPID_NS_Handle nsHandleWithNoData;
@@ -41,10 +37,6 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Publish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
@@ -70,10 +62,6 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
@@ -99,10 +87,6 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Unpublish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -127,10 +111,6 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     /* MPID_NS_Handle is Null */
@@ -160,10 +140,6 @@ struct MPID_NS_Handle {
     char *kvsname;
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
     int err;
@@ -174,8 +150,8 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     /* --BEGIN ERROR HANDLING-- */
     if (!*handle_ptr) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -184,8 +160,8 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**fail", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**fail", 0);
     }
     /* --END ERROR HANDLING-- */
 
@@ -193,8 +169,8 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     /* --BEGIN ERROR HANDLING-- */
     if (!(*handle_ptr)->kvsname) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -207,7 +183,7 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
         /* --BEGIN ERROR HANDLING-- */
         if (err != PMI_SUCCESS) {
             err =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**fail", 0);
         }
         /* --END ERROR HANDLING-- */
@@ -217,10 +193,6 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Publish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
@@ -231,8 +203,8 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**pmi_kvs_put", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**pmi_kvs_put", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -240,8 +212,8 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**pmi_kvs_commit", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**pmi_kvs_commit", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -249,10 +221,6 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
@@ -263,8 +231,8 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_NAME,
-                                 "**pmi_kvs_get", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_NAME, "**pmi_kvs_get", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -275,10 +243,6 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Unpublish
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
     int err;
@@ -289,8 +253,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**pmi_kvs_put", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**pmi_kvs_put", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -298,8 +262,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     /* --BEGIN ERROR HANDLING-- */
     if (err != PMI_SUCCESS) {
         err =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**pmi_kvs_commit", 0);
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**pmi_kvs_commit", 0);
         return err;
     }
     /* --END ERROR HANDLING-- */
@@ -307,10 +271,6 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_NS_Free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     int err;

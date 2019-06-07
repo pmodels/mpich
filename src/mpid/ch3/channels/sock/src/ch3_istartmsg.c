@@ -6,10 +6,6 @@
 
 #include "mpidi_ch3_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME create_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 {
     MPIR_Request *sreq;
@@ -43,10 +39,6 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
  * An error condition also results in a request be allocated and the errror
  * being returned in the status field of the request.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iStartMsg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Request ** sreq_ptr)
 {
     MPIR_Request *sreq = NULL;
@@ -106,7 +98,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
                         mpi_errno =
-                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__,
                                                  MPI_ERR_OTHER, "**ch3|sock|postwrite",
                                                  "ch3|sock|postwrite %p %p %p", sreq, vcch->conn,
                                                  vc);
@@ -126,7 +118,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
                 sreq->kind = MPIR_REQUEST_KIND__SEND;
                 MPIR_cc_set(&(sreq->cc), 0);
                 sreq->status.MPI_ERROR = MPIR_Err_create_code(rc,
-                                                              MPIR_ERR_RECOVERABLE, FCNAME,
+                                                              MPIR_ERR_RECOVERABLE, __func__,
                                                               __LINE__, MPI_ERR_INTERN,
                                                               "**ch3|sock|writefailed",
                                                               "**ch3|sock|writefailed %d", rc);
@@ -184,7 +176,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
         MPIR_cc_set(&sreq->cc, 0);
 
         sreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
-                                                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                      MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                       MPI_ERR_INTERN, "**ch3|sock|connectionfailed",
                                                       0);
         /* Make sure that the caller sees this error */

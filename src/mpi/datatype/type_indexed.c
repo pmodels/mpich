@@ -28,26 +28,6 @@ int MPI_Type_indexed(int count, const int *array_of_blocklengths,
 #undef MPI_Type_indexed
 #define MPI_Type_indexed PMPI_Type_indexed
 
-/*@
-  MPIR_Type_indexed - create an indexed datatype
-
-Input Parameters:
-+ count - number of blocks in type
-. blocklength_array - number of elements in each block
-. displacement_array - offsets of blocks from start of type (see next
-  parameter for units)
-. dispinbytes - if nonzero, then displacements are in bytes (the
-  displacement_array is an array of ints), otherwise they in terms of
-  extent of oldtype (the displacement_array is an array of MPI_Aints)
-- oldtype - type (using handle) of datatype on which new type is based
-
-Output Parameters:
-. newtype - handle of new indexed datatype
-
-  Return Value:
-  0 on success, -1 on failure.
-@*/
-
 int MPIR_Type_indexed(int count,
                       const int *blocklength_array,
                       const void *displacement_array,
@@ -91,14 +71,13 @@ int MPIR_Type_indexed(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin) {
         /* builtins are handled differently than user-defined types because
-         * they have no associated dataloop or datatype structure.
+         * they have no associated typerep or datatype structure.
          */
         el_sz = MPIR_Datatype_get_basic_size(oldtype);
         old_sz = el_sz;
@@ -143,6 +122,8 @@ int MPIR_Type_indexed(int count,
 
         new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
         new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
+
+        new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->builtin_element_size = (MPI_Aint) el_sz;
         new_dtp->basic_type = el_type;
 
@@ -228,10 +209,6 @@ int MPIR_Type_indexed(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_indexed_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
                            const int *array_of_displacements,
                            MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -281,10 +258,6 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_indexed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_indexed - Creates an indexed datatype
 
@@ -393,12 +366,12 @@ int MPI_Type_indexed(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_indexed", "**mpi_type_indexed %d %p %p %D %p", count,
                                  array_of_blocklengths, array_of_displacements, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

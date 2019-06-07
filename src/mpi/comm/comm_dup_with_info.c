@@ -27,10 +27,6 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #undef MPI_Comm_dup_with_info
 #define MPI_Comm_dup_with_info PMPI_Comm_dup_with_info
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_dup_with_info_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
                                  MPIR_Comm ** newcomm_p_p)
 {
@@ -51,10 +47,6 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_dup_with_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_dup_with_info - Duplicates an existing communicator with all its cached
@@ -147,13 +139,13 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_dup_with_info",
                                  "**mpi_comm_dup_with_info %C %I %p", comm, info, newcomm);
     }
 #endif
     *newcomm = MPI_COMM_NULL;
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

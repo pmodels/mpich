@@ -96,10 +96,6 @@ static void MPIR_Init_err_dyncodes(void)
     MPIR_Add_finalize(MPIR_Dynerrcodes_finalize, (void *) 0, 9);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Err_set_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*
   MPIR_Err_set_msg - Change the message for an error code or class
 
@@ -137,7 +133,7 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
     if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK)) {
         /* Check for invalid error code */
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                    FCNAME, __LINE__,
+                                    __func__, __LINE__,
                                     MPI_ERR_ARG, "**argerrcode", "**argerrcode %d", code);
     }
     /* --END ERROR HANDLING-- */
@@ -148,7 +144,7 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
     /* --BEGIN ERROR HANDLING-- */
     if (!str) {
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                    FCNAME, __LINE__, MPI_ERR_OTHER,
+                                    __func__, __LINE__, MPI_ERR_OTHER,
                                     "**nomem", "**nomem %s %d", "error message string", msg_len);
     }
     /* --END ERROR HANDLING-- */

@@ -58,7 +58,7 @@ cvars:
 
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -69,9 +69,9 @@ cvars:
         binomial                             - Force Binomial algorithm
         scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
-        tree                                 - Force Generic Transport Tree algorithm
-        scatter_recexch_allgather            - Force Generic Transport Scatter followed by Recursive Exchange Allgather algorithm
-        ring                                 - Force Generic Transport Ring algorithm
+        gentran_tree                         - Force Generic Transport Tree algorithm
+        gentran_scatter_recexch_allgather    - Force Generic Transport Scatter followed by Recursive Exchange Allgather algorithm
+        gentran_ring                         - Force Generic Transport Ring algorithm
 
     - name        : MPIR_CVAR_IBCAST_SCATTER_KVAL
       category    : COLLECTIVE
@@ -95,7 +95,7 @@ cvars:
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -145,10 +145,6 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 /* Provides a "flat" broadcast that doesn't know anything about
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -194,10 +190,6 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
 /* Provides a "flat" broadcast for intercommunicators that doesn't
  * know anything about hierarchy.  It will choose between several
  * different algorithms based on the given parameters. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_inter_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -208,10 +200,6 @@ int MPIR_Ibcast_sched_inter_auto(void *buffer, int count, MPI_Datatype datatype,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                            MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -223,23 +211,23 @@ int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int r
             mpi_errno = MPIR_Ibcast_sched_intra_smp(buffer, count, datatype, root, comm_ptr, s);
         } else {
             /* intercommunicator */
-            switch (MPIR_Ibcast_intra_algo_choice) {
-                case MPIR_IBCAST_INTRA_ALGO_BINOMIAL:
+            switch (MPIR_CVAR_IBCAST_INTRA_ALGORITHM) {
+                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_binomial:
                     mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype,
                                                                  root, comm_ptr, s);
                     break;
-                case MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER:
+                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_recursive_doubling_allgather:
                     mpi_errno =
                         MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count,
                                                                                      datatype, root,
                                                                                      comm_ptr, s);
                     break;
-                case MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER:
+                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_ring_allgather:
                     mpi_errno =
                         MPIR_Ibcast_sched_intra_scatter_ring_allgather(buffer, count, datatype,
                                                                        root, comm_ptr, s);
                     break;
-                case MPIR_IBCAST_INTRA_ALGO_AUTO:
+                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
                     MPL_FALLTHROUGH;
                 default:
                     mpi_errno = MPIR_Ibcast_sched_intra_auto(buffer, count, datatype,
@@ -249,12 +237,12 @@ int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int r
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ibcast_inter_algo_choice) {
-            case MPIR_IBCAST_INTER_ALGO_FLAT:
+        switch (MPIR_CVAR_IBCAST_INTER_ALGORITHM) {
+            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_flat:
                 mpi_errno = MPIR_Ibcast_sched_inter_flat(buffer, count, datatype, root,
                                                          comm_ptr, s);
                 break;
-            case MPIR_IBCAST_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibcast_sched_inter_auto(buffer, count, datatype, root,
@@ -266,10 +254,6 @@ int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int r
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -284,10 +268,6 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                      MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
@@ -307,27 +287,29 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ibcast_intra_algo_choice) {
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE:
+        switch (MPIR_CVAR_IBCAST_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
+                                                   request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_SCATTER_RECEXCH_ALLGATHER:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_scatter_recexch_allgather:
                 if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
                     break;
                 mpi_errno =
-                    MPIR_Ibcast_intra_scatter_recexch_allgather(buffer, count, datatype, root,
-                                                                comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(buffer, count, datatype,
+                                                                        root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_RING:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
-                    MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
+                                                   request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
@@ -361,10 +343,6 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                 MPIR_Request ** request)
 {
@@ -381,10 +359,6 @@ int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_C
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ibcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ibcast - Broadcasts a message from the process with rank "root" to
              all other processes of the communicator in a nonblocking way
@@ -487,12 +461,12 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ibcast", "**mpi_ibcast %p %d %D %C %p", buffer, count,
                                  datatype, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

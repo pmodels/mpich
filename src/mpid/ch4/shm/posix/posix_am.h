@@ -81,10 +81,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id,
@@ -130,17 +126,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     /* If the data being sent is not contiguous, pack it into a contiguous buffer using the datatype
      * engine. */
     if (unlikely(!dt_contig && (data_sz > 0))) {
-        size_t segment_first;
-        MPI_Aint last;
-        struct MPIR_Segment *segment_ptr = NULL;
-
-        segment_ptr = MPIR_Segment_alloc(data, count, datatype);
-        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-
-        segment_first = 0;
-        last = data_sz;
-
         MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
 
         /* Prepare private storage with information about the pack buffer. */
@@ -156,9 +141,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         MPIR_ERR_CHKANDJUMP1(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPIR_Segment_pack(segment_ptr, segment_first, &last,
-                          MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIR_Segment_free(segment_ptr);
+        MPI_Aint actual_pack_bytes;
+        mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0,
+                                      MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer),
+                                      data_sz, &actual_pack_bytes);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == data_sz);
 
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
@@ -231,10 +220,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    MPIR_Comm * comm,
                                                    int handler_id,
@@ -286,10 +271,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_isend_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
                                                         int handler_id,
                                                         const void *am_hdr,
@@ -311,10 +292,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_hdr_max_sz
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
@@ -328,10 +305,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     return MPL_MIN(max_shortsend, max_representable);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_enqueue_req_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
@@ -373,10 +346,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_send_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                      MPIR_Comm * comm,
                                                      int handler_id,
@@ -438,10 +407,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_send_am_hdr_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                            int src_rank, int handler_id,
                                                            const void *am_hdr, size_t am_hdr_sz)
@@ -459,10 +424,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_am_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;

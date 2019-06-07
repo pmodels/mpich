@@ -81,7 +81,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll);
 int MPID_nem_tcp_sm_init(void);
 int MPID_nem_tcp_sm_finalize(void);
 int MPID_nem_tcp_set_sockopts(int fd);
-MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd);
+int MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd);
 int MPID_nem_tcp_send_finalize(void);
 int MPID_nem_tcp_bind(int sockfd);
 int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc);
@@ -103,7 +103,10 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
                                  intptr_t data_sz, MPIR_Request ** sreq_ptr);
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
                                         intptr_t data_sz, MPIR_Request ** sreq_ptr);
-int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz);
+int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz,
+                               MPL_IOV * hdr_iov, int n_hdr_iov);
+int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
+                          MPL_IOV * iov, int n_iov);
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr,
                                        in_port_t * port);
 

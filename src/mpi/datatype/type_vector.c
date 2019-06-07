@@ -27,24 +27,6 @@ int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype
 #undef MPI_Type_vector
 #define MPI_Type_vector PMPI_Type_vector
 
-/*@
-  MPIR_Type_vector - create a vector datatype
-
-Input Parameters:
-+ count - number of blocks in vector
-. blocklength - number of elements in each block
-. stride - distance from beginning of one block to the next (see next
-  parameter for units)
-. strideinbytes - if nonzero, then stride is in bytes, otherwise stride
-  is in terms of extent of oldtype
-- oldtype - type (using handle) of datatype on which vector is based
-
-Output Parameters:
-. newtype - handle of new vector datatype
-
-  Return Value:
-  0 on success, MPI error code on failure.
-@*/
 int MPIR_Type_vector(int count,
                      int blocklength,
                      MPI_Aint stride,
@@ -78,8 +60,7 @@ int MPIR_Type_vector(int count,
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
@@ -164,10 +145,6 @@ int MPIR_Type_vector(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_vector_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype,
                           MPI_Datatype * newtype)
 {
@@ -203,10 +180,6 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_vector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_vector - Creates a vector (strided) datatype
 
@@ -281,12 +254,12 @@ int MPI_Type_vector(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_vector", "**mpi_type_vector %d %d %d %D %p", count,
                                  blocklength, stride, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

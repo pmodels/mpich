@@ -28,10 +28,6 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_set_name
-#undef FCNAME
-#define FCNAME "MPI_Comm_set_name"
 
 /*@
    MPI_Comm_set_name - Sets the print name for a communicator
@@ -107,11 +103,11 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_set_name", "**mpi_comm_set_name %C %s", comm,
                                  comm_name);
     }
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

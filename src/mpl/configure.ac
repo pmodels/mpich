@@ -14,7 +14,8 @@ AC_CONFIG_MACRO_DIR(confdb)
 AM_INIT_AUTOMAKE([subdir-objects] [-Wall -Werror foreign 1.12.3])
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
-PAC_PROG_CC
+AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 AC_USE_SYSTEM_EXTENSIONS
@@ -72,7 +73,7 @@ AC_ARG_ENABLE(g,
 	    none|no   - No debugging
 	    log       - Enable debug event logging
 	    mem       - Enable memory tracing
-	    yes|all   - All of the above choices (except "none", obviously)
+	    most|yes|all   - All of the above choices (except "none", obviously)
 	]),,[enable_g=none])
 
 # enable-g
@@ -85,11 +86,11 @@ for option in $enable_g ; do
 	 enable_g_log=yes
 	 ;;
 
-	 mem)
+	 mem|memarena)
 	 enable_g_mem=yes
 	 ;;
 
-	 all|yes)
+	 most|yes|all)
 	 enable_g_log=yes
 	 enable_g_mem=yes
 	 ;;
@@ -681,9 +682,9 @@ esac
 # know what's used in MPL
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
-# check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
+# check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS
+    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
 fi
 
 #######################################################################
@@ -893,47 +894,8 @@ if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "y
    AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
 fi
 
-AC_CHECK_FUNCS(backtrace_symbols)
-
-# Check for libbacktrace support
-PAC_PUSH_FLAG([LIBS])
-PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
-AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([
-#include <backtrace.h>
-],[
-backtrace_create_state(0, 0, 0, 0);
-backtrace_print(0, 0, 0);
-])],
-    [ac_cv_lib_backtrace=yes],
-    [ac_cv_lib_backtrace=no]
-)
-PAC_POP_FLAG([LIBS])
-
-if test "$ac_cv_lib_backtrace" = "yes" ; then
-    AC_DEFINE([HAVE_LIBBACKTRACE],[1],[Define to 1 if you have the backtrace header (backtrace.h) and library (-lbacktrace)])
-    PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
-fi
-AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
-
-# Check for libunwind support
-PAC_PUSH_FLAG([LIBS])
-PAC_PREPEND_FLAG([-lunwind],[LIBS])
-AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([
-#include<libunwind.h>
-],[
-unw_backtrace(0, 0);
-])],
-    [ac_cv_lib_libunwind=yes],
-    [ac_cv_lib_libunwind=no]
-)
-PAC_POP_FLAG([LIBS])
-
-if test "$ac_cv_lib_libunwind" = "yes" ; then
-    AC_DEFINE([HAVE_LIBUNWIND],[1],[Define to 1 if you have the libunwind header (libunwind.h) and library (-lunwind)])
-    PAC_PREPEND_FLAG([-lunwind],[LIBS])
-fi
+# Check for execinfo backtrace support
+AX_EXECINFO
 
 AX_LIB_SOCKET_NSL
 AC_CHECK_HEADERS(ifaddrs.h arpa/inet.h)

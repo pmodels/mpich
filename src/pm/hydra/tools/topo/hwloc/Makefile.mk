@@ -8,7 +8,7 @@ libhydra_la_SOURCES += tools/topo/hwloc/topo_hwloc.c
 
 noinst_HEADERS += tools/topo/hwloc/topo_hwloc.h
 
-if hydra_use_embedded_hwloc
+if HYDRA_USE_EMBEDDED_HWLOC
 AM_CPPFLAGS += @HWLOC_EMBEDDED_CPPFLAGS@
 AM_CFLAGS += @HWLOC_EMBEDDED_CFLAGS@
 

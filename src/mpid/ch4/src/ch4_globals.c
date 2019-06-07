@@ -23,8 +23,7 @@ MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
-struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC] = { {0}
-};
+struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 
 MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
     0, 0, 0, 0, MPIR_WORKQ_ELEM, sizeof(struct MPIDI_workq_elemt), MPIDI_workq_elemt_direct,
@@ -75,24 +74,18 @@ void MPIDI_sigusr1_handler(int sig)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
-    char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
-    char comm_str[MPI_MAX_ERROR_STRING] = "";
-    char world_str[MPI_MAX_ERROR_STRING] = "";
-    char error_str[2 * MPI_MAX_ERROR_STRING + 128];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ABORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ABORT);
 
+    char world_str[MPI_MAX_ERROR_STRING] = "";
     if (MPIR_Process.comm_world) {
         int rank = MPIR_Process.comm_world->rank;
         snprintf(world_str, sizeof(world_str), " on node %d", rank);
     }
 
+    char comm_str[MPI_MAX_ERROR_STRING] = "";
     if (comm) {
         int rank = comm->rank;
         int context_id = comm->context_id;
@@ -102,11 +95,14 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     if (!error_msg)
         error_msg = "Internal error";
 
+    char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
     if (mpi_errno != MPI_SUCCESS) {
         char msg[MPI_MAX_ERROR_STRING] = "";
         MPIR_Err_get_string(mpi_errno, msg, MPI_MAX_ERROR_STRING, NULL);
-        snprintf(sys_str, sizeof(msg), " (%s)", msg);
+        snprintf(sys_str, sizeof(sys_str), " (%s)", msg);
     }
+
+    char error_str[3 * MPI_MAX_ERROR_STRING + 128];
     MPL_snprintf(error_str, sizeof(error_str), "Abort(%d)%s%s: %s%s\n",
                  exit_code, world_str, comm_str, error_msg, sys_str);
     MPL_error_printf("%s", error_str);
@@ -131,10 +127,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_for_failed_procs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;

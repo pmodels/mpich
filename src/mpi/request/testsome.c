@@ -31,10 +31,6 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Testsome
 #define MPI_Testsome PMPI_Testsome
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Testsome_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
 {
@@ -82,10 +78,6 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Testsome
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testsome - Tests for some given requests to complete
 
@@ -259,12 +251,12 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_testsome", "**mpi_testsome %d %p %p %p %p", incount,
                                  array_of_requests, outcount, array_of_indices, array_of_statuses);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

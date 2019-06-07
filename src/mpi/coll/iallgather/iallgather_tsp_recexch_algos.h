@@ -16,10 +16,6 @@
 #include "recexchalgo.h"
 #include "tsp_namespace_def.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, int k, int p_of_k,
                                                           int log_pofk, int T, void *recvbuf,
                                                           MPI_Datatype recvtype, size_t recv_extent,
@@ -62,10 +58,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_recexch_step1
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int is_inplace, int rank,
                                                   int tag, const void *sendbuf, void *recvbuf,
@@ -103,10 +95,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_r
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_recexch_step2
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_nphases,
                                                   int **step2_nbrs, int rank, int nranks, int k,
                                                   int p_of_k, int log_pofk, int T, int *nrecvs_,
@@ -179,10 +167,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_recexch_step3
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int step2_nphases,
                                                   void *recvbuf, int recvcount, int nranks, int k,
@@ -220,10 +204,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_r
  * paper, Sack et al, "Faster topology-aware collective algorithms through
  * non-minimal communication", 2012.
  * */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_sched_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                             MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -327,10 +307,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking recexch based Allgather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iallgather_intra_recexch
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm, MPIR_Request ** req, int allgather_type,

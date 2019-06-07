@@ -37,10 +37,6 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPID_Open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -88,10 +84,6 @@ Input Parameters:
 .N MPI_ERR_OTHER
 
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPID_Close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Close_port(const char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -124,10 +116,6 @@ int MPID_Close_port(const char *port_name)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
 		     MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
@@ -162,10 +150,6 @@ int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
 		      MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
@@ -277,10 +261,6 @@ static void free_port_name_tag(int tag)
 /*
  * MPIDI_Open_port()
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -324,10 +304,6 @@ fn_fail:
 /*
  * MPIDI_Close_port()
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;

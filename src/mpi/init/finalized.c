@@ -25,10 +25,6 @@ int MPI_Finalized(int *flag) __attribute__ ((weak, alias("PMPI_Finalized")));
 #define MPI_Finalized PMPI_Finalized
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Finalized
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalized - Indicates whether 'MPI_Finalize' has been called.
 
@@ -82,12 +78,12 @@ int MPI_Finalized(int *flag)
     if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
         OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
         {
-            mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                              MPI_ERR_OTHER, "**mpi_finalized",
                                              "**mpi_finalized %p", flag);
         }
 
-        mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+        mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     }
     goto fn_exit;
 #endif

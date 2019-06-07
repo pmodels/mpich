@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 #include "hcoll.h"
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Barrier
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     int rc = -1;
@@ -24,10 +20,6 @@ int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
@@ -53,10 +45,6 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Reduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                  int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
@@ -86,10 +74,6 @@ int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Allreduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
@@ -118,10 +102,6 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
                     void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
                     MPIR_Errflag_t * err)
@@ -154,10 +134,6 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Alltoall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
                    void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
                    MPIR_Errflag_t * err)
@@ -190,10 +166,6 @@ int hcoll_Alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_Alltoallv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Alltoallv(const void *sbuf, const int *scounts, const int *sdispls, MPI_Datatype sdtype,
                     void *rbuf, const int *rcounts, const int *rdispls, MPI_Datatype rdtype,
                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)

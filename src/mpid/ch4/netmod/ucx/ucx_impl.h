@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
                              "**ucx_nm_status %s %d %s %s",             \
                              __SHORT_FILE__,                            \
                              __LINE__,                                  \
-                             FCNAME,                                    \
+                             __func__,                                    \
                              ucs_status_string(STATUS));                \
     } while (0)
 
@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
                              "**ucx_nm_pmi_error %s %d %s %s",  \
                              __SHORT_FILE__,                    \
                              __LINE__,                          \
-                             FCNAME,                            \
+                             __func__,                            \
                              "pmi_error");                      \
     } while (0)
 
@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
                              "**ucx_nm_str_error %s %d %s %s",  \
                              __SHORT_FILE__,                    \
                              __LINE__,                          \
-                             FCNAME,                            \
+                             __func__,                            \
                              "strng_error");                    \
     } while (0)
 
@@ -134,7 +134,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
                              "**ucx_nm_rq_error %s %d %s %s",           \
                              __SHORT_FILE__,                            \
                              __LINE__,                                  \
-                             FCNAME,                                    \
+                             __func__,                                    \
                              ucs_status_string(UCS_PTR_STATUS(_req)));  \
     } while (0)
 
@@ -151,4 +151,5 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
     return MPIDI_UCX_is_reachable_win(win) && rank != MPI_PROC_NULL &&
         MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
 }
+
 #endif /* UCX_IMPL_H_INCLUDED */

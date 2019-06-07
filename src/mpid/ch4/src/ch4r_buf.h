@@ -23,6 +23,9 @@
    - use huge pages
 */
 
+MPIDIU_buf_pool_t *MPIDIU_create_buf_pool(int num, int size);
+void MPIDIU_destroy_buf_pool(MPIDIU_buf_pool_t * pool);
+
 static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool_internal(int num, int size,
                                                                  MPIDIU_buf_pool_t * parent_pool)
 {
@@ -54,18 +57,6 @@ static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool_internal(int num, int si
     curr->next = NULL;
     curr->pool = parent_pool ? parent_pool : buf_pool;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CREATE_BUF_POOL_INTERNAL);
-    return buf_pool;
-}
-
-static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool(int num, int size)
-{
-    MPIDIU_buf_pool_t *buf_pool;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CREATE_BUF_POOL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CREATE_BUF_POOL);
-
-    buf_pool = MPIDIU_create_buf_pool_internal(num, size, NULL);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CREATE_BUF_POOL);
     return buf_pool;
 }
 
@@ -111,7 +102,6 @@ static inline void *MPIDIU_get_buf_safe(MPIDIU_buf_pool_t * pool)
     return buf;
 }
 
-
 static inline void *MPIDIU_get_buf(MPIDIU_buf_pool_t * pool)
 {
     void *buf;
@@ -153,24 +143,6 @@ static inline void MPIDIU_release_buf(void *buf)
     MPID_THREAD_CS_EXIT(VCI, curr_buf->pool->lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_BUF);
-}
-
-
-static inline void MPIDIU_destroy_buf_pool(MPIDIU_buf_pool_t * pool)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_DESTROY_BUF_POOL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_DESTROY_BUF_POOL);
-
-    if (pool->next)
-        MPIDIU_destroy_buf_pool(pool->next);
-
-    MPID_Thread_mutex_destroy(&pool->lock, &ret);
-    MPL_free(pool->memory_region);
-    MPL_free(pool);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_DESTROY_BUF_POOL);
 }
 
 #endif /* CH4R_BUF_H_INCLUDED */

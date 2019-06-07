@@ -29,10 +29,6 @@ int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Unpack_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Unpack_external - Unpack a buffer (packed with MPI_Pack_external)
    according to a datatype into contiguous memory
@@ -65,8 +61,6 @@ int MPI_Unpack_external(const char datarep[],
                         MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint first, last;
-    MPIR_Segment *segp;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -108,22 +102,12 @@ int MPI_Unpack_external(const char datarep[],
         goto fn_exit;
     }
 
-    segp = MPIR_Segment_alloc(outbuf, outcount, datatype);
-    MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "MPIR_Segment_alloc");
-
-    /* NOTE: buffer values and positions in MPI_Unpack_external are used very
-     * differently from use in MPIR_Segment_unpack_external...
-     */
-    first = 0;
-    last = MPIR_SEGMENT_IGNORE_LAST;
-
-    MPIR_Segment_unpack_external32(segp, first, &last, (void *) ((char *) inbuf + *position));
-
-    *position += last;
-
-    MPIR_Segment_free(segp);
-
+    MPI_Aint actual_unpack_bytes;
+    mpi_errno = MPIR_Typerep_unpack_external((void *) ((char *) inbuf + *position),
+                                             outbuf, outcount, datatype, &actual_unpack_bytes);
+    if (mpi_errno)
+        goto fn_fail;
+    *position += actual_unpack_bytes;
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -135,13 +119,13 @@ int MPI_Unpack_external(const char datarep[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_unpack_external",
                                  "**mpi_unpack_external %s %p %d %p %p %d %D", datarep, inbuf,
                                  insize, position, outbuf, outcount, datatype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

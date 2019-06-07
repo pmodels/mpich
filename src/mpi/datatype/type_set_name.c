@@ -29,10 +29,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_set_name
-#undef FCNAME
-#define FCNAME "MPI_Type_set_name"
 
 /*@
    MPI_Type_set_name - set datatype name
@@ -120,11 +116,11 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_set_name", "**mpi_type_set_name %D %s", datatype,
                                  type_name);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

@@ -11,7 +11,7 @@
 #include "treealgo.h"
 #include "treeutil.h"
 
-int MPII_Treealgo_init()
+int MPII_Treealgo_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -35,17 +35,13 @@ int MPII_Treealgo_comm_cleanup(MPIR_Comm * comm)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treealgo_tree_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int root,
-                              MPII_Treealgo_tree_t * ct)
+int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int root,
+                              MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_TREEALGO_TREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TREEALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
 
     switch (tree_type) {
         case MPIR_TREE_TYPE_KARY:
@@ -72,7 +68,7 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_TREEALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
 
   fn_exit:
     return mpi_errno;
@@ -82,11 +78,7 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treealgo_tree_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-void MPII_Treealgo_tree_free(MPII_Treealgo_tree_t * tree)
+void MPIR_Treealgo_tree_free(MPIR_Treealgo_tree_t * tree)
 {
     utarray_free(tree->children);
 }

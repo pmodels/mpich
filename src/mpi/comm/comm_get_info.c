@@ -27,10 +27,6 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info)
 #undef MPI_Comm_get_info
 #define MPI_Comm_get_info PMPI_Comm_get_info
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_get_info_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,10 +44,6 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_info - Returns a new info object containing the hints
    of the communicator associated with comm. The current setting of
@@ -137,12 +129,12 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_get_info",
                                  "**mpi_comm_get_info %W %p", comm, info_used);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -84,31 +84,6 @@ extern "C" {
         memcpy((dst), (src), (len));            \
     } while (0)
 
-#ifdef USE_MEMORY_TRACING
-
-/* Define these as invalid C to catch their use in the code */
-#define malloc(a)         'Error use MPL_malloc' :::
-#define calloc(a,b)       'Error use MPL_calloc' :::
-#define free(a)           'Error use MPL_free'   :::
-#define realloc(a)        'Error use MPL_realloc' :::
-/* These two functions can't be guarded because we use #include <sys/mman.h>
- * throughout the code to be able to use other symbols in that header file.
- * Because we include that header directly, we bypass this guard and cause
- * compile problems.
- * #define mmap(a,b,c,d,e,f) 'Error use MPL_mmap'   :::
- * #define munmap(a,b)       'Error use MPL_munmap' :::
- */
-#if defined(strdup) || defined(__strdup)
-#undef strdup
-#endif                          /* defined(strdup) || defined(__strdup) */
-    /* The ::: should cause the compiler to choke; the string
-     * will give the explanation */
-#undef strdup                   /* in case strdup is a macro */
-#define strdup(a)         'Error use MPL_strdup' :::
-
-#endif                          /* USE_MEMORY_TRACING */
-
-
 /* Memory allocation macros. See document. */
 
 /* Standard macro for generating error codes.  We set the error to be
@@ -116,7 +91,7 @@ extern "C" {
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_)                           \
     rc_=MPIR_Err_create_code(MPI_SUCCESS,                               \
-                             MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,    \
+                             MPIR_ERR_RECOVERABLE, __func__, __LINE__,    \
                              MPI_ERR_OTHER, "**nomem2", "**nomem2 %d %s", nbytes_, name_)
 #else                           /* HAVE_ERROR_CHECKING */
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_) rc_=MPI_ERR_OTHER
@@ -154,7 +129,7 @@ extern "C" {
         pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \
         if (pointer_) {                                                 \
             MPIR_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);     \
-            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_;       \
+            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = (void *) pointer_; \
         } else if (nbytes_ > 0) {                                       \
             MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
             stmt_;                                                      \

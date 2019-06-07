@@ -28,22 +28,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 
 #endif
 
-/*@
-  MPIR_Type_dup - create a copy of a datatype
-
-Input Parameters:
-- oldtype - handle of original datatype
-
-Output Parameters:
-. newtype - handle of newly created copy of datatype
-
-  Return Value:
-  0 on success, MPI error code on failure.
-@*/
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -92,16 +76,15 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
-        new_dtp->dataloop = NULL;
-        new_dtp->dataloop_size = old_dtp->dataloop_size;
+        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
+
+        new_dtp->typerep = NULL;
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
-            MPIR_Assert(old_dtp->dataloop != NULL);
-            MPIR_Dataloop_dup(old_dtp->dataloop, old_dtp->dataloop_size, &new_dtp->dataloop);
-#ifdef MPID_Type_commit_hook
+            MPIR_Assert(old_dtp->typerep != NULL);
+            MPIR_Typerep_dup(old_dtp->typerep, &new_dtp->typerep);
             MPID_Type_commit_hook(new_dtp);
-#endif /* MPID_Type_commit_hook */
         }
     }
 
@@ -128,10 +111,6 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -221,11 +200,11 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_dup", "**mpi_type_dup %D %p", oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

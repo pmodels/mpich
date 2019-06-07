@@ -186,7 +186,7 @@ typedef struct MPIDIG_put_ack_msg_t {
     uint64_t preq_ptr;
 } MPIDIG_put_ack_msg_t;
 
-typedef struct MPIDIG_put_req_msg_t {
+typedef struct MPIDIG_get_msg_t {
     int src_rank;
     uint64_t win_id;
     uint64_t greq_ptr;
@@ -194,7 +194,7 @@ typedef struct MPIDIG_put_req_msg_t {
     uint64_t count;
     MPI_Datatype datatype;
     int n_iov;
-} MPIDIG_put_req_msg_t;
+} MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
     uint64_t greq_ptr;

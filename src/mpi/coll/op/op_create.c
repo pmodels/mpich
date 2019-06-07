@@ -31,8 +31,8 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 #endif
 
 /* Preallocated op objects */
-MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN] = { {0} };
-MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC] = { {0} };
+MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
+MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, MPIR_OP,
     sizeof(MPIR_Op),
@@ -66,10 +66,6 @@ void MPII_Op_set_fc(MPI_Op op)
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Op_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     MPIR_Op *op_ptr;
@@ -79,8 +75,8 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
     /* --BEGIN ERROR HANDLING-- */
     if (!op_ptr) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", "**nomem %s", "MPI_Op");
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Op");
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -93,9 +89,7 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
     MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
 
-#ifdef MPID_Op_commit_hook
     MPID_Op_commit_hook(op_ptr);
-#endif
 
   fn_exit:
     return mpi_errno;
@@ -105,10 +99,6 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 
@@ -169,12 +159,12 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_op_create", "**mpi_op_create %p %d %p", user_fn, commute,
                                  op);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

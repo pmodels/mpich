@@ -36,10 +36,6 @@ void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultl
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_name
-#undef FCNAME
-#define FCNAME "MPI_Comm_get_name"
 
 /*@
   MPI_Comm_get_name - Return the print name from the communicator
@@ -122,11 +118,11 @@ int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_get_name", "**mpi_comm_get_name %C %p %p", comm,
                                  comm_name, resultlen);
     }
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

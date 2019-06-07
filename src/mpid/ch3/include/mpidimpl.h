@@ -725,9 +725,13 @@ typedef struct MPIDI_VC
     /* noncontiguous send function pointer.  Called to send a
        noncontiguous message.  Caller must initialize
        sreq->dev.segment, _first and _size.  Contiguous messages are
-       called directly from CH3 and cannot be overridden. */
+       called directly from CH3 and cannot be overridden.
+       The optional hdr_iov and n_hdr_iov input parameters are used for
+       variable-length extended header, specify NULL and zero if unused.
+       n_hdr_iov should not exceed MPL_IOV_LIMIT - 2 (one for header and one
+       for packed data).*/
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
-			      void *header, intptr_t hdr_sz );
+			      void *header, intptr_t hdr_sz, MPL_IOV *hdr_iov, int n_hdr_iov);
 
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_ops_t *comm_ops;
@@ -874,7 +878,6 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
 #ifdef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 #define MPIDI_CH3_VC_GetStateString( _c ) "none"
 #else
-/* FIXME: This duplicates a value in util/sock/ch3usock.h */
 const char *MPIDI_CH3_VC_GetStateString(struct MPIDI_VC *);
 const char *MPIDI_CH3_VC_SockGetStateString(struct MPIDI_VC *);
 #endif
@@ -885,6 +888,9 @@ int MPIDI_PrintConnStr( const char *file, int line,
 			const char *label, const char *str );
 int MPIDI_PrintConnStrToFile( FILE *fd, const char *file, int line, 
 			      const char *label, const char *str );
+
+/* Defined and used in sock channel. */
+const char * MPIDI_Conn_GetStateString(int state);
 #endif
 
 /* These macros simplify and unify the debugging of changes in the
@@ -1766,7 +1772,7 @@ int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt );
 /* Routines to create packets (used in implementing MPI communications */
 int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
 				  const void *, MPI_Aint,
-				  MPI_Datatype, intptr_t, int, int, MPIR_Comm *,
+				  MPI_Datatype, int, int, MPIR_Comm *,
 				  int );
 int MPIDI_CH3_EagerContigSend( MPIR_Request **, MPIDI_CH3_Pkt_type_t,
 			       const void *, intptr_t, int,
@@ -1788,7 +1794,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **, const void *, int,
 int MPIDI_CH3_EagerSyncZero(MPIR_Request **, int, int, MPIR_Comm *, int );
 
 int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
-                                 void *header, intptr_t hdr_sz );
+                                 void *header, intptr_t hdr_sz,
+                                 MPL_IOV *hdr_iov, int n_hdr_iov);
 
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */

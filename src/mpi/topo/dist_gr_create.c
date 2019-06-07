@@ -31,10 +31,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[], const i
  * correctly handle weak symbols and the profiling interface */
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_create - MPI_DIST_GRAPH_CREATE returns a handle to a new
 communicator to which the distributed graph topology information is
@@ -460,13 +456,13 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     MPIR_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno =
-        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                              "**mpi_dist_graph_create",
                              "**mpi_dist_graph_create %C %d %p %p %p %p %I %d %p", comm_old, n,
                              sources, degrees, destinations, weights, info, reorder,
                              comm_dist_graph);
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

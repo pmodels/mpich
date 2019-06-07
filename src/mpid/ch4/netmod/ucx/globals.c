@@ -10,6 +10,4 @@
 #include "ucx_impl.h"
 #include "ucx_types.h"
 
-/* *INDENT-OFF* */
-MPIDI_UCX_global_t MPIDI_UCX_global = { {0} };
-/* *INDENT-ON* */
+MPIDI_UCX_global_t MPIDI_UCX_global;

@@ -14,10 +14,6 @@
 
 #define COPY_BUFFER_SZ 16384
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Localcopy
-#undef FCNAME
-#define FCNAME "MPIR_Localcopy"
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype)
 {
@@ -71,60 +67,48 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_Memcpy(((char *) recvbuf + recvtype_true_lb),
                     ((char *) sendbuf + sendtype_true_lb), copy_sz);
     } else if (sendtype_iscontig) {
-        MPIR_Segment *seg;
-        MPI_Aint last;
-
-        seg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
-        last = copy_sz;
-        MPIR_Segment_unpack(seg, 0, &last, (char *) sendbuf + sendtype_true_lb);
-        MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_unpack_bytes;
+        MPIR_Typerep_unpack((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount,
+                            recvtype, 0, &actual_unpack_bytes);
+        MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                            "**dtypemismatch");
     } else if (recvtype_iscontig) {
-        MPIR_Segment *seg;
-        MPI_Aint last;
-
-        seg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
-        last = copy_sz;
-        MPIR_Segment_pack(seg, 0, &last, (char *) recvbuf + recvtype_true_lb);
-        MPIR_ERR_CHKANDJUMP(last != copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-        MPIR_Segment_free(seg);
+        MPI_Aint actual_pack_bytes;
+        MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0, (char *) recvbuf + recvtype_true_lb,
+                          copy_sz, &actual_pack_bytes);
+        MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                            "**dtypemismatch");
     } else {
         char *buf;
-        intptr_t buf_off;
-        MPIR_Segment *sseg;
         intptr_t sfirst;
-        MPIR_Segment *rseg;
         intptr_t rfirst;
 
         MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
 
-        sseg = MPIR_Segment_alloc(sendbuf, sendcount, sendtype);
-        rseg = MPIR_Segment_alloc(recvbuf, recvcount, recvtype);
-
         sfirst = 0;
         rfirst = 0;
-        buf_off = 0;
 
         while (1) {
-            MPI_Aint last;
-            char *buf_end;
-
-            if (copy_sz - sfirst > COPY_BUFFER_SZ - buf_off) {
-                last = sfirst + (COPY_BUFFER_SZ - buf_off);
+            MPI_Aint max_pack_bytes;
+            if (copy_sz - sfirst > COPY_BUFFER_SZ) {
+                max_pack_bytes = COPY_BUFFER_SZ;
             } else {
-                last = copy_sz;
+                max_pack_bytes = copy_sz - sfirst;
             }
 
-            MPIR_Segment_pack(sseg, sfirst, &last, buf + buf_off);
-            MPIR_Assert(last > sfirst);
+            MPI_Aint actual_pack_bytes;
+            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, sfirst, buf,
+                              max_pack_bytes, &actual_pack_bytes);
+            MPIR_Assert(actual_pack_bytes > 0);
 
-            buf_end = buf + buf_off + (last - sfirst);
-            sfirst = last;
+            sfirst += actual_pack_bytes;
 
-            MPIR_Segment_unpack(rseg, rfirst, &last, buf);
-            MPIR_Assert(last > rfirst);
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(buf, actual_pack_bytes, recvbuf, recvcount, recvtype,
+                                rfirst, &actual_unpack_bytes);
+            MPIR_Assert(actual_unpack_bytes > 0);
 
-            rfirst = last;
+            rfirst += actual_unpack_bytes;
 
             if (rfirst == copy_sz) {
                 /* successful completion */
@@ -133,16 +117,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
             /* if the send side finished, but the recv side couldn't unpack it, there's a datatype mismatch */
             MPIR_ERR_CHKANDJUMP(sfirst == copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
-
-            /* if not all data was unpacked, copy it to the front of the buffer for next time */
-            buf_off = sfirst - rfirst;
-            if (buf_off > 0) {
-                memmove(buf, buf_end - buf_off, buf_off);
-            }
         }
-
-        MPIR_Segment_free(sseg);
-        MPIR_Segment_free(rseg);
     }
 
   fn_exit:

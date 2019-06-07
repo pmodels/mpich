@@ -25,10 +25,6 @@ int MPI_Query_thread(int *provided) __attribute__ ((weak, alias("PMPI_Query_thre
 #define MPI_Query_thread PMPI_Query_thread
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Query_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Query_thread - Return the level of thread support provided by the MPI
     library
@@ -95,10 +91,10 @@ int MPI_Query_thread(int *provided)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_query_thread", "**mpi_query_thread %p", provided);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

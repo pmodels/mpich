@@ -35,10 +35,6 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef MPI_Comm_split_type
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_self
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -72,10 +68,6 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -613,59 +605,73 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
               num_processes_at_node[node_index] < subcomm_min_size))) {
             MPIR_Comm *node_comm;
             int subcomm_rank;
-            int min_tree_depth;
-            hwloc_cpuset_t *node_comm_bindset;
+            int tree_depth;
+            int min_tree_depth = -1;
             int num_procs;
 
             num_procs = num_processes_at_node[node_index];
             node_comm = *newcomm_ptr;
             subcomm_rank = MPIR_Comm_rank(node_comm);
-            node_comm_bindset =
-                (hwloc_cpuset_t *) MPL_calloc(num_procs, sizeof(hwloc_cpuset_t), MPL_MEM_OTHER);
-            node_comm_bindset[subcomm_rank] = MPIR_Process.bindset;
+            hwloc_obj_t obj_containing_cpuset =
+                hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
 
-            /* Send the bindset to processes in node communicator */
-            mpi_errno =
-                MPID_Allreduce(MPI_IN_PLACE, node_comm_bindset,
-                               num_procs * sizeof(hwloc_cpuset_t), MPI_BYTE,
-                               MPI_NO_OP, node_comm, &errflag);
+            /* get depth in topology tree */
+            tree_depth = obj_containing_cpuset->depth;
 
-
-            min_tree_depth = -1;
-            for (i = 0; i < num_procs; i++) {
-                hwloc_obj_t obj_containing_cpuset =
-                    hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology,
-                                                  node_comm_bindset[i]);
-                if (obj_containing_cpuset->depth < min_tree_depth || min_tree_depth == -1) {
-                    min_tree_depth = obj_containing_cpuset->depth;
-                }
-            }
+            /* get min tree depth to all processes */
+            MPID_Allreduce(&tree_depth, &min_tree_depth, 1, MPI_INT, MPI_MIN, node_comm, &errflag);
 
             if (min_tree_depth) {
-                int num_hwloc_objs_at_depth =
-                    hwloc_get_nbobjs_by_depth(MPIR_Process.hwloc_topology, min_tree_depth);
+                int num_hwloc_objs_at_depth;
+                int *parent_idx = MPL_calloc(num_procs, sizeof(int), MPL_MEM_OTHER);
+
+                while (obj_containing_cpuset->depth != min_tree_depth)
+                    obj_containing_cpuset = obj_containing_cpuset->parent;
+                parent_idx[subcomm_rank] = obj_containing_cpuset->logical_index;
+
+                /* get parent_idx to all processes */
+                MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPI_INT,
+                               node_comm, &errflag);
+
+                /* reorder parent indices */
+                for (i = 0; i < num_procs - 1; i++) {
+                    for (j = 0; j < num_procs - i - 1; j++) {
+                        if (parent_idx[j] > parent_idx[j + 1]) {
+                            int tmp = parent_idx[j];
+                            parent_idx[j] = parent_idx[j + 1];
+                            parent_idx[j + 1] = tmp;
+                        }
+                    }
+                }
+
+                /* get number of parents and unique indices */
+                int *obj_idx_at_depth = MPL_malloc(sizeof(int) * num_procs, MPL_MEM_OTHER);
+                obj_idx_at_depth[0] = parent_idx[0];
+                int current_idx = parent_idx[0];
+                num_hwloc_objs_at_depth = 1;
+                for (i = 1; i < num_procs; i++) {
+                    if (parent_idx[i] != current_idx) {
+                        obj_idx_at_depth[num_hwloc_objs_at_depth++] = parent_idx[i];
+                        current_idx = parent_idx[i];
+                    }
+                }
+
                 int *processes_cpuset =
                     (int *) MPL_calloc(num_hwloc_objs_at_depth, sizeof(int), MPL_MEM_OTHER);
-                hwloc_obj_t parent_obj;
+
                 int hw_obj_index;
                 int current_proc_index = -1;
 
-                parent_obj = NULL;
-                hw_obj_index = 0;
-                while ((parent_obj =
-                        hwloc_get_next_obj_by_depth(MPIR_Process.hwloc_topology, min_tree_depth,
-                                                    parent_obj)) != NULL) {
+                for (hw_obj_index = 0; hw_obj_index < num_hwloc_objs_at_depth; hw_obj_index++) {
                     for (i = 0; i < num_procs; i++) {
-                        if (hwloc_bitmap_isincluded(parent_obj->cpuset, node_comm_bindset[i]) ||
-                            hwloc_bitmap_isequal(parent_obj->cpuset, node_comm_bindset[i])) {
-                            processes_cpuset[hw_obj_index] = 1;
+                        if (parent_idx[i] == obj_idx_at_depth[hw_obj_index]) {
+                            processes_cpuset[hw_obj_index]++;
                             if (i == subcomm_rank) {
                                 current_proc_index = hw_obj_index;
                             }
                             break;
                         }
                     }
-                    hw_obj_index++;
                 }
 
                 color =
@@ -676,9 +682,10 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 MPL_free(processes_cpuset);
+                MPL_free(parent_idx);
+                MPL_free(obj_idx_at_depth);
                 MPIR_Comm_free_impl(node_comm);
             }
-            MPL_free(node_comm_bindset);
         }
         MPL_free(num_processes_at_node);
     }
@@ -833,10 +840,6 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node_topo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -915,10 +918,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_network_topo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr)
 {
@@ -946,10 +945,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -989,10 +984,6 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_nbhd_common_dir
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                          MPIR_Comm ** newcomm_ptr)
 {
@@ -1016,10 +1007,6 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_neighborhood
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -1075,10 +1062,6 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -1105,10 +1088,6 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_split_type - Creates new communicators based on split types and keys
@@ -1204,12 +1183,12 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
         /* FIXME this error code is wrong, it's the error code for
          * regular MPI_Comm_split */
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_split",
                                  "**mpi_comm_split %C %d %d %p", comm, split_type, key, newcomm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

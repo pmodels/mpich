@@ -13,10 +13,6 @@
 
 extern void *MPIDI_CH3_packet_buffer;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iSendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -73,7 +69,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iSendv");
 	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
-	                                         sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz,
 	                                         vc, &again);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	while (!again && remaining_n_iov > 0)

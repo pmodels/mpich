@@ -26,10 +26,6 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 #undef MPI_Info_get
 #define MPI_Info_get PMPI_Info_get
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_get_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char *value, int *flag)
 {
     MPIR_Info *curr_ptr;
@@ -54,7 +50,7 @@ int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char
     /* --BEGIN ERROR HANDLING-- */
     if (err != 0) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_INFO_VALUE, "**infovallong", NULL);
     }
     /* --END ERROR HANDLING-- */
@@ -88,10 +84,6 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_INFO_VALUE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int *flag)
 {
     MPIR_Info *info_ptr = 0;
@@ -161,12 +153,12 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
                                          "**mpi_info_get",
                                          "**mpi_info_get %I %s %d %p %p", info, key, valuelen,
                                          value, flag);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
 #endif
     goto fn_exit;
     /* --END ERROR HANDLING-- */

@@ -16,13 +16,13 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
-algo_names="tree scatter_recexch_allgather ring"
+algo_names="gentran_tree gentran_scatter_recexch_allgather gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        if [ ${algo_name} = "tree" ]; then
+        if [ ${algo_name} = "gentran_tree" ]; then
             for tree_type in ${tree_types}; do
                 #set the environment
                 env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
@@ -52,7 +52,7 @@ testing_env="env=MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="tree ring"
+algo_names="gentran_tree gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
@@ -90,7 +90,7 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_single_buffer recexch_multiple_buffer tree"
+algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree"
 tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
@@ -139,7 +139,7 @@ testing_env="env=MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_brucks gentran_ring"
+algo_names="gentran_recexch_doubling gentran_recexch_halving gentran_brucks gentran_ring"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -162,7 +162,7 @@ testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring gentran_brucks"
+algo_names="gentran_recexch_doubling gentran_recexch_halving gentran_ring gentran_brucks"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -195,7 +195,7 @@ testing_env="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
-algo_names="recexch"
+algo_names="gentran_recexch"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -223,7 +223,7 @@ testing_env="env=MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch"
+algo_names="gentran_recexch"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -249,7 +249,7 @@ testing_env="env=MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_SCATTER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE=0 "
-algo_names="tree"
+algo_names="gentran_tree"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -272,7 +272,7 @@ testing_env="env=MPIR_CVAR_GATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_GATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="tree"
+algo_names="gentran_tree"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
@@ -441,6 +441,84 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name} "
 
     coll_algo_tests+="neighb_alltoallv 4 mpiversion=3.0 ${env}${nl}"
+done
+
+########## Add tests for intra-node bcast algorithms ############
+
+#use release gather based intra-node bcast
+testing_env="env=MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384 32768"
+num_cells="2 4"
+tree_types="knomial_1 knomial_2"
+kvalues="8 64"
+
+for buf_size in ${buffer_sizes}; do
+    for num_cell in ${num_cells}; do
+        for kval in ${kvalues}; do
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS=${num_cell} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL=${kval} "
+                env+="env=MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE=${tree_type} "
+
+                coll_algo_tests+="bcasttest 10 ${env}${nl}"
+                coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+            done
+        done
+    done
+done
+
+########## Add tests for intra-node reduce algorithms ############
+
+#use release gather based intra-node reduce
+testing_env="env=MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384 32768"
+num_cells="2 4"
+tree_types="knomial_1 knomial_2"
+kvalues="4 8"
+
+for buf_size in ${buffer_sizes}; do
+    for num_cell in ${num_cells}; do
+        for kval in ${kvalues}; do
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS=${num_cell} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=${kval} "
+                env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE=${tree_type} "
+
+                coll_algo_tests+="reduce 5 ${env}${nl}"
+                coll_algo_tests+="reduce 10 ${env}${nl}"
+                coll_algo_tests+="red3 10 ${env}${nl}"
+                coll_algo_tests+="red4 10 ${env}${nl}"
+            done
+        done
+    done
+done
+
+########## Add tests for intra-node allreduce algorithms ############
+
+#use release gather based intra-node allreduce
+testing_env="env=MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM=release_gather "
+
+testing_env+="env=MPIR_CVAR_COLL_SHM_LIMIT_PER_NODE=131072 " #128MB
+buffer_sizes="16384"
+kvalues="4 8"
+
+for buf_size in ${buffer_sizes}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size} "
+        env+="env=MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=${kval} "
+
+        coll_algo_tests+="allred 4 ${env}${nl}"
+        coll_algo_tests+="allred2 4 ${env}${nl}"
+    done
 done
 
 export coll_algo_tests

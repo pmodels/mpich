@@ -27,10 +27,6 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgrou
 #undef MPI_Group_difference
 #define MPI_Group_difference PMPI_Group_difference
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_difference_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                                MPIR_Group ** new_group_ptr)
 {
@@ -105,10 +101,6 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_difference
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -201,12 +193,12 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgrou
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_difference", "**mpi_group_difference %G %G %p",
                                  group1, group2, newgroup);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

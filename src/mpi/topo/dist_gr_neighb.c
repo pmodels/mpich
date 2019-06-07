@@ -29,10 +29,6 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int sources[], int 
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Dist_graph_neighbors_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr,
                                    int maxindegree, int sources[], int sourceweights[],
                                    int maxoutdegree, int destinations[], int destweights[])
@@ -63,10 +59,6 @@ int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_neighbors
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_neighbors - Provides adjacency information for a distributed graph topology.
 
@@ -160,12 +152,12 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno =
-        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                              "**mpi_dist_graph_neighbors",
                              "**mpi_dist_graph_neighbors %C %d %p %p %d %p %p", comm, maxindegree,
                              sources, sourceweights, maxoutdegree, destinations, destweights);
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

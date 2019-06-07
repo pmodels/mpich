@@ -23,10 +23,6 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 
 unsigned short *MPID_nem_recv_seqno = 0;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_init(void)
 {
@@ -75,10 +71,6 @@ fn_fail:
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_send_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -103,6 +95,19 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         sreq->dev.OnDataAvail = 0;
     }
 
+    /* directly use the iov-based send API if it is provided */
+    if (vc->ch.iSendIov) {
+        MPIR_Assert(n_iov >= 1 && n_iov <= MPL_IOV_LIMIT);
+
+        /* header and remaining iovs */
+        mpi_errno = vc->ch.iSendIov(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, &iov[1], n_iov - 1);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        *sreq_ptr = sreq;
+        goto fn_exit;
+    }
+
     data_sz = 0;
     for (i = 0; i < data_n_iov; ++i)
         data_sz += data_iov[i].MPL_IOV_LEN;
@@ -116,7 +121,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         {
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"SRBuf allocation failure");
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                             __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
             sreq->status.MPI_ERROR = mpi_errno;
             goto fn_exit;
         }

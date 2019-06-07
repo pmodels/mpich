@@ -26,10 +26,6 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #define MPI_Op_free PMPI_Op_free
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Op_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Op_free_impl(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
@@ -41,19 +37,13 @@ void MPIR_Op_free_impl(MPI_Op * op)
     MPIR_Op_ptr_release_ref(op_ptr, &in_use);
     if (!in_use) {
         MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
-#ifdef MPID_Op_free_hook
         MPID_Op_free_hook(op_ptr);
-#endif
     }
     *op = MPI_OP_NULL;
 }
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
 
@@ -96,7 +86,7 @@ int MPI_Op_free(MPI_Op * op)
             if (!mpi_errno) {
                 if (op_ptr->kind < MPIR_OP_KIND__USER_NONCOMMUTE) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                     MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                      MPI_ERR_OP, "**permop", 0);
                 }
             }
@@ -125,10 +115,10 @@ int MPI_Op_free(MPI_Op * op)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_op_free", "**mpi_op_free %p", op);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

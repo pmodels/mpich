@@ -26,10 +26,6 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
 #define MPI_T_enum_get_item PMPI_T_enum_get_item
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_enum_get_item
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_enum_get_item - Get the information about an item in an enumeration
 
@@ -40,7 +36,7 @@ Input Parameters:
 . enumtype - enumeration to be queried (handle)
 
 Output Parameters:
-+ index - number of the value to be queried in this enumeration (integer)
++ indx - number of the value to be queried in this enumeration (integer)
 . value - variable value (integer)
 - name - buffer to return the string containing the name of the enumeration item (string)
 
@@ -52,7 +48,7 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_INVALID_ITEM
 @*/
-int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, int *name_len)
+int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
     enum_item_t *item;
@@ -68,7 +64,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
-            MPIR_ERRTEST_ENUM_ITEM(enumtype, index, mpi_errno);
+            MPIR_ERRTEST_ENUM_ITEM(enumtype, indx, mpi_errno);
             MPIR_ERRTEST_ARGNULL(value, "value", mpi_errno);
             /* Do not do TEST_ARGNULL for name or name_len, since this is
              * permitted per MPI_T standard.
@@ -80,7 +76,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
 
     /* ... body of routine ...  */
 
-    item = (enum_item_t *) utarray_eltptr(enumtype->items, index);
+    item = (enum_item_t *) utarray_eltptr(enumtype->items, indx);
     *value = item->value;
     MPIR_T_strncpy(name, item->name, name_len);
 
@@ -98,11 +94,11 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
     /* --BEGIN ERROR HANDLING-- */
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p",
-                                 enumtype, index, value, name, name_len);
+                                 enumtype, indx, value, name, name_len);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif

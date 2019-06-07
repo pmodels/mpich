@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a tree based gather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Igathert_sched_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm,
@@ -30,13 +26,13 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
-    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
-    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
+    MPI_Aint sendtype_lb, sendtype_extent, sendtype_true_extent;
+    MPI_Aint recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id, *recv_id = NULL;
     void *tmp_buf = NULL;
     const void *data_buf = NULL;
     int tree_type;
-    MPII_Treealgo_tree_t my_tree, parents_tree;
+    MPIR_Treealgo_tree_t my_tree, parents_tree;
     int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
     int offset, recv_size, num_dependencies;
 
@@ -52,7 +48,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
         is_inplace = (sendbuf == MPI_IN_PLACE); /* For gather, MPI_IN_PLACE is significant only at root */
 
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for gather */
-    mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
@@ -87,7 +83,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 
     /* get tree information of the parent */
     if (my_tree.parent != -1) {
-        MPII_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
+        MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
     } else {    /* initialize an empty children array */
         utarray_new(parents_tree.children, &ut_int_icd, MPL_MEM_COLL);
         parents_tree.num_children = 0;
@@ -120,7 +116,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
         recv_size += child_subtree_size[i];
     }
 
-    MPII_Treealgo_tree_free(&parents_tree);
+    MPIR_Treealgo_tree_free(&parents_tree);
 
     recv_size *= (lrank == 0) ? recvcount : sendcount;
     offset = (lrank == 0) ? recvcount : sendcount;
@@ -188,7 +184,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 
     }
 
-    MPII_Treealgo_tree_free(&my_tree);
+    MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
     MPL_free(child_subtree_size);
@@ -202,10 +198,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
 
 
 /* Non-blocking tree based gather */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Igather_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,

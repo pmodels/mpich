@@ -383,13 +383,11 @@ typedef struct MPIDI_Request {
     MPI_Datatype datatype;
     int drop_data;
 
-    /* segment, segment_first, and segment_size are used when processing 
+    /* msg_offset, and msgsize are used when processing
        non-contiguous datatypes */
-    /*    MPIR_Segment   segment; */
-    struct MPIR_Segment *segment_ptr;
-    intptr_t segment_first;
-    intptr_t segment_size;
-    intptr_t orig_segment_first;
+    intptr_t msg_offset;
+    intptr_t msgsize;
+    intptr_t orig_msg_offset;
 
     /* Pointer to datatype for reference counting purposes */
     struct MPIR_Datatype* datatype_ptr;
@@ -450,7 +448,7 @@ typedef struct MPIDI_Request {
     MPI_Request request_handle;
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags; /* flags that were included in the original RMA packet header */
+    int pkt_flags; /* pkt_flags that were included in the original RMA packet header */
     struct MPIDI_RMA_Target_lock_entry *target_lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
@@ -734,5 +732,10 @@ int MPID_Free_mem( void *ptr );
    hierarchical collectives in a (mostly) device-independent way. */
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
 int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
+
+int MPID_Type_commit_hook(MPIR_Datatype * type);
+int MPID_Type_free_hook(MPIR_Datatype * type);
+int MPID_Op_commit_hook(MPIR_Op * op);
+int MPID_Op_free_hook(MPIR_Op * op);
 
 #endif /* MPIDPRE_H_INCLUDED */

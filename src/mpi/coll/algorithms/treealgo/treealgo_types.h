@@ -18,6 +18,6 @@ typedef struct {
     int parent;
     int num_children;
     UT_array *children;
-} MPII_Treealgo_tree_t;
+} MPIR_Treealgo_tree_t;
 
 #endif /* TREEALGO_TYPES_H_INCLUDED */

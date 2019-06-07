@@ -1,0 +1,56 @@
+--- /Users/flyxian/libtool.m4	2019-03-06 15:31:23.000000000 -0600
++++ confdb/libtool.m4	2019-03-07 14:13:16.000000000 -0600
+@@ -2876,9 +2876,50 @@
+   # 'ldconfig -N -X -v | grep ^/' on 64bit Fedora does not report /usr/lib64,
+   # even though it is searched at run-time.  Try to do the best guess by
+   # appending ld.so.conf contents (and includes) to the search path.
+-  if test -f /etc/ld.so.conf; then
+-    lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
+-    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
++
++  # There is no easy way to reliably detect the sys dlsearch path. We will first
++  # assume ldconfig reports the path correctly, but check it with the current
++  # ld cache. If any cached path is not present in the generated path_spec, then
++  # we know ldconfig is bad and should manually parse the ld.so.conf files.
++  # Note the reported paths can be a superset of the cached paths.
++  # The catch is that the default path may not be in the ld.so.conf. We have to
++  # add any missing one back to the path_spec (from the cached paths).
++
++  if test -x /sbin/ldconfig; then
++    sys_lib_dlsearch_path_spec=`/sbin/ldconfig -N -X -v 2>/dev/null | grep ^/ | sed -e 's/:.*//g' | tr '\n' ' '`
++    cached_lib_dlsearch_path=`/sbin/ldconfig -p | sed -e 's/.*=> //g' | grep '^/' | while read p; do dirname $p; done | sort | uniq | tr '\n' ' '`
++    for p in `echo $cached_lib_dlsearch_path`; do
++      case "$sys_lib_dlsearch_path_spec" in
++        *$p*)
++            bad_ldconfig=no
++            ;;
++           *)
++            # ldconfig is bad if cached path is not reported
++            bad_ldconfig=yes
++            break
++            ;;
++      esac
++    done
++  else
++    bad_ldconfig=yes
++  fi
++
++  if test "$bad_ldconfig" = "yes"; then
++    if test -f /etc/ld.so.conf; then
++      lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \[$]2)); skip = 1; } { if (!skip) print \[$]0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
++      sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
++    fi
++
++    # catch anything that in the cached path but not in the conf files
++    for p in `echo $cached_lib_dlsearch_path`; do
++      case "$sys_lib_dlsearch_path_spec" in
++        *$p*)
++            ;;
++           *)
++            sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $p"
++            ;;
++      esac
++    done
+   fi
+ 
+   # We used to test for /lib/ld.so.1 and disable shared libraries on

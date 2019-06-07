@@ -17,22 +17,17 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based scan */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iscan_sched_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t extent, true_extent;
+    MPI_Aint extent, true_extent;
     MPI_Aint lb;
     int nranks, rank;
     int is_commutative;
-    int mask, dtcopy_id, send_id, recv_id, reduce_id, recv_reduce = -1;
+    int mask, recv_reduce = -1;
     int dst, loop_count;
-    int nvtcs, vtcs[2];
     void *partial_scan = NULL;
     void *tmp_buf = NULL;
     int tag = 0;
@@ -60,6 +55,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
     partial_scan = MPIR_TSP_sched_malloc(count * extent, sched);
 
+    int dtcopy_id;
     if (sendbuf != MPI_IN_PLACE) {
         /* Since this is an inclusive scan, copy local contribution into
          * recvbuf. */
@@ -77,9 +73,13 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     mask = 0x1;
     loop_count = 0;
 
+    int send_id, recv_id;
+    int reduce_id = 0;          /* warning fix: icc: maybe used before set */
     while (mask < nranks) {
         dst = rank ^ mask;
         if (dst < nranks) {
+            int nvtcs, vtcs[2];
+
             /* Send partial_scan to dst. Recv into tmp_buf */
             nvtcs = 1;
             vtcs[0] = (loop_count == 0) ? dtcopy_id : reduce_id;
@@ -130,10 +130,6 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
 
 /* Non-blocking recursive_doubling based SCAN */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Iscan_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op,
                                             MPIR_Comm * comm, MPIR_Request ** req)

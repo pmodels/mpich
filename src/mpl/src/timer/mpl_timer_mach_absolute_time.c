@@ -10,13 +10,15 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
 
-static double MPIR_Wtime_mult;
+#include "mpl_timer_common.h"
+
+static double wtime_mult;
 
 int MPL_wtime_init(void)
 {
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
-    MPIR_Wtime_mult = 1.0e-9 * ((double) info.numer / (double) info.denom);
+    wtime_mult = 1.0e-9 * ((double) info.numer / (double) info.denom);
     init_wtick();
 
     return MPL_TIMER_SUCCESS;
@@ -31,7 +33,7 @@ int MPL_wtime(MPL_time_t * timeval)
 
 int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
-    *diff = (*t2 - *t1) * MPIR_Wtime_mult;
+    *diff = (*t2 - *t1) * wtime_mult;
 
     return MPL_TIMER_SUCCESS;
 }
@@ -45,7 +47,7 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
-    *val = *t * MPIR_Wtime_mult;
+    *val = *t * wtime_mult;
 
     return MPL_TIMER_SUCCESS;
 }

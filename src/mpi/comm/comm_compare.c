@@ -28,10 +28,6 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_compare
-#undef FCNAME
-#define FCNAME "MPI_Comm_compare"
 
 /*@
 
@@ -203,13 +199,13 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_compare", "**mpi_comm_compare %C %C %p", comm1, comm2,
                                  result);
     }
     /* Use whichever communicator is non-null if possible */
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr1 ? comm_ptr1 : comm_ptr2, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr1 ? comm_ptr1 : comm_ptr2, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -28,6 +28,7 @@ enum {
 #define MPIDI_POSIX_AMREQUEST_HDR(req, field) ((req)->dev.ch4.am.shm_am.posix.req_hdr->field)
 #define MPIDI_POSIX_AMREQUEST_HDR_PTR(req)    ((req)->dev.ch4.am.shm_am.posix.req_hdr)
 #define MPIDI_POSIX_REQUEST(req, field)       ((req)->dev.ch4.shm.posix.field)
+#define MPIDI_POSIX_COMM(comm)                (&(comm)->dev.ch4.shm.posix)
 
 typedef struct {
     MPIDIU_buf_pool_t *am_buf_pool;
@@ -37,6 +38,17 @@ typedef struct {
 
     /* Active recv requests array */
     MPIR_Request **active_rreq;
+
+    MPIDU_shm_seg_t memory;
+    MPIDU_shm_barrier_t *barrier;
+
+    /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
+     * in that communicator. */
+    int num_local;
+    int my_local_rank;
+    int *local_ranks;
+    int *local_procs;
+    int local_rank_0;
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;

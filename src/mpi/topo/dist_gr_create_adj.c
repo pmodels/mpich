@@ -32,10 +32,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int so
  * correctly handle weak symbols and the profiling interface */
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dist_graph_create_adjacent
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_create_adjacent - returns a handle to a new communicator to
 which the distributed graph topology information is attached.
@@ -198,13 +194,13 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno =
-        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                              "**mpi_dist_graph_create_adjacent",
                              "**mpi_dist_graph_create_adjacent %C %d %p %p %d %p %p %I %d %p",
                              comm_old, indegree, sources, sourceweights, outdegree, destinations,
                              destweights, info, reorder, comm_dist_graph);
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

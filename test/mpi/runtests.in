@@ -415,13 +415,8 @@ sub RunList {
     my $listfile = $_[0];
     my $ResultTest = "";
     my $InitForRun = "";
-    my $listfileSource = $listfile;
     my @TYPES = "";
     my $DTP_SWITCH = "@DTP_SWITCH@";
-
-    if (! defined $ENV{"DTP_NUM_OBJS"}) {
-        $ENV{"DTP_NUM_OBJS"} = "5";
-    }
 
     if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
         @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
@@ -430,10 +425,19 @@ sub RunList {
         @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
     }
 
-    print "Looking in $curdir/$listfile\n" if $debug;
-    if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
-	$listfileSource = "$srcdir/$curdir/$listfile";
-    }
+    # eg: runtests -tests='testlist,testlist.dtp'
+    my @all_listfiles = split /,\s*/, $listfile;
+    foreach my $_f (@all_listfiles){
+        print "Looking in $curdir/$_f\n" if $debug;
+        my $listfileSource = $_f;
+        if (! -s "$_f" && -s "$srcdir/$curdir/$_f" ) {
+            $listfileSource = "$srcdir/$curdir/$_f";
+        }
+        if (!-f $listfileSource && $_f ne "testlist") {
+            # just skip, do not complain missing unless it is "testlist"
+            next;
+        }
+        # FIXME: keeping the indentation to facilitate review, indent back on merge
     open( $LIST, "<$listfileSource" ) || 
 	die "Could not open $listfileSource\n";
     while (<$LIST>) {
@@ -622,6 +626,13 @@ sub RunList {
 	}
 	else {
 	    $total_run++;
+            my $save_dir;
+            if ($programname =~/^(\S+)\/(\S+)$/) {
+                $save_dir = `pwd`;
+                chomp $save_dir;
+                $programname = $2;
+                chdir $1 or warn "Can't chdir $1\n";
+            }
 	    if (&BuildMPIProgram( $programname, $xfail ) == 0) {
 		if ($batchRun == 1) {
 		    &AddMPIProgram( $programname, $np, $ResultTest, 
@@ -643,9 +654,13 @@ sub RunList {
 	    if ($batchRun == 0) {
 		&CleanUpAfterRun( $programname );
 	    }
+            if ($save_dir) {
+                chdir $save_dir;
+            }
 	}
     }
     close( $LIST );
+    }
 }
 #
 # This routine tries to run all of the files in the current
@@ -736,7 +751,7 @@ sub RunMPIProgram {
     my $extraArgs = "";
     my $runtime = 0;
 
-    &RunPreMsg( $programname, $np, $curdir );
+    &RunPreMsg( $programname, $np, $progArgs, $curdir );
 
     unlink "err";
 
@@ -1167,9 +1182,10 @@ sub TestErrFatal {
 #  RunPostMsg               - Call at end of each test
 #
 sub RunPreMsg {
-    my ($programname,$np,$workdir) = @_;
+    my ($programname,$np,$progArgs,$workdir) = @_;
     if ($xmloutput) {
 	print XMLOUT "<MPITEST>$newline<NAME>$programname</NAME>$newline";
+    print XMLOUT "<ARGS>$progArgs</ARGS>$newline";
 	print XMLOUT "<NP>$np</NP>$newline";
 	print XMLOUT "<WORKDIR>$workdir</WORKDIR>$newline";
     }

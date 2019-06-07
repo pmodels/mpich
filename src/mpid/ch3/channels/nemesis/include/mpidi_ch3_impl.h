@@ -56,7 +56,8 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id);
 int MPIDI_CH3I_Shm_send_progress(void);
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 
-int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz );
+int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
+                              MPL_IOV *hdr_iov, int n_hdr_iov);
 
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR_Request *req);
 int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie);
@@ -204,10 +205,6 @@ extern MPIDI_SHM_Wins_list_t shm_wins_list;
 
 #define MPIDI_SHM_Wins_next_and_continue(elem) {elem = elem->next; continue;}
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_SHM_Wins_append
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -236,10 +233,6 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
  * @param IN    list      Pointer to the SHM window list
  * @param IN    elem      Pointer to the element to be unlinked
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_SHM_Wins_unlink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR_Win * shm_win)
 {
     MPIDI_SHM_Win_t *elem = NULL;

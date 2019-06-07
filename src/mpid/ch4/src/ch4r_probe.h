@@ -13,10 +13,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
                                                int context_offset, int *flag, MPI_Status * status)
 {
@@ -50,28 +46,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        /* FIXME: we do this because vci_lock is not a recursive lock that can
-         * be yielded easily. Recursive locking currently only works for the global
-         * lock. One way to improve this is to fix the lock yielding API to avoid this
-         * constraint.*/
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IPROBE);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm * comm,
                                                 int context_offset, int *flag,
                                                 MPIR_Request ** message, MPI_Status * status)
@@ -116,35 +98,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
         MPIR_STATUS_SET_COUNT(*status, MPIDIG_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMPROBE);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_mprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_mprobe(int source, int tag, MPIR_Comm * comm,
-                                               int context_offset, MPIR_Request ** message,
-                                               MPI_Status * status)
-{
-    int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_MPROBE);
-    while (!flag) {
-        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_MPROBE);
     return mpi_errno;
 }
 

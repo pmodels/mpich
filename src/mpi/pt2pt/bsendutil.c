@@ -88,10 +88,6 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t *);
  * Attach a buffer.  This checks for the error conditions and then
  * initialized the avail buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_attach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_attach(void *buffer, int buffer_size)
 {
     MPII_Bsend_data_t *p;
@@ -164,10 +160,6 @@ int MPIR_Bsend_attach(void *buffer, int buffer_size)
  * argument as an "int" (the definition predates that of ssize_t as a
  * standard type).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach(void *bufferp, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -213,10 +205,6 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
 /*
  * Initiate an ibsend.  We'll used this for Bsend as well.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                      int dest, int tag, MPIR_Comm * comm_ptr,
                      MPII_Bsend_kind_t kind, MPIR_Request ** request)
@@ -272,10 +260,13 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
              * use MPIR_Memcpy and the provided datatype */
             msg->count = 0;
             if (dtype != MPI_PACKED) {
+                MPI_Aint actual_pack_bytes;
+                void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
-                    MPIR_Pack_impl(buf, count, dtype, p->msg.msgbuf, packsize, &p->msg.count);
+                    MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
+                p->msg.count += actual_pack_bytes;
             } else {
                 MPIR_Memcpy(p->msg.msgbuf, buf, count);
                 p->msg.count = count;
@@ -335,10 +326,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
  * and frees it. The request is assumed to be completed. This routine
  * is called by only MPIR_Ibsend_free.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_free_seg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_free_req_seg(MPIR_Request * req)
 {
     int mpi_errno = MPI_ERR_INTERN;
@@ -370,10 +357,6 @@ int MPIR_Bsend_free_req_seg(MPIR_Request * req)
 /* Add block p to the free list. Merge into adjacent blocks.  Used only
    within the check_active */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_free_segment
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
 {
     MPII_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
@@ -462,10 +445,6 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
  * track of the type of MPI routine (ibsend, bsend, or bsend_init/start)
  * that created the bsend entry.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_check_active
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Bsend_check_active(void)
 {
     int mpi_errno = MPI_SUCCESS;

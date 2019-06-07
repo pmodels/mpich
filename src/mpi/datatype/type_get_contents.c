@@ -7,7 +7,7 @@
 
 #include "mpiimpl.h"
 #include "mpir_datatype.h"
-#include "mpir_dataloop.h"
+#include "mpir_typerep.h"
 #include "datatype.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_get_contents */
@@ -31,21 +31,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addre
 #undef MPI_Type_get_contents
 #define MPI_Type_get_contents PMPI_Type_get_contents
 
-/*@
-  MPIR_Type_get_contents - get content information from datatype
-
-Input Parameters:
-+ datatype - MPI datatype
-. max_integers - size of array_of_integers
-. max_addresses - size of array_of_addresses
-- max_datatypes - size of array_of_datatypes
-
-Output Parameters:
-+ array_of_integers - integers used in creating type
-. array_of_addresses - MPI_Aints used in creating type
-- array_of_datatypes - MPI_Datatypes used in creating type
-
-@*/
 int MPIR_Type_get_contents(MPI_Datatype datatype,
                            int max_integers,
                            int max_addresses,
@@ -105,10 +90,6 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_contents
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_contents - get type contents
 
@@ -167,7 +148,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
             if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_TYPE, "**contentspredef", 0);
                 goto fn_fail;
             }
@@ -181,7 +162,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
                 datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_TYPE, "**contentspredef", 0);
                 goto fn_fail;
             }
@@ -221,14 +202,14 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_contents",
                                  "**mpi_type_get_contents %D %d %d %d %p %p %p", datatype,
                                  max_integers, max_addresses, max_datatypes, array_of_integers,
                                  array_of_addresses, array_of_datatypes);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

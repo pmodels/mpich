@@ -346,13 +346,23 @@ typedef struct {
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
+#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+#else
+    /* need bigger alignment */
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+#endif
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
+    /* Sequence number trackers for active messages */
+    void *am_send_seq_tracker;
+    void *am_recv_seq_tracker;
+    /* Queue (utlist) to store early-arrival active messages */
+    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
 
     /* Completion queue buffering */
     MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
@@ -405,23 +415,29 @@ typedef struct MPIDI_OFI_seg_state {
                                  * This value remains constant once seg_state is initialized. */
     MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
 
-    MPIR_Segment *origin_seg;   /* Segment structure */
     size_t origin_cursor;       /* First byte to pack */
     size_t origin_end;          /* Last byte to pack */
+    const void *origin_buf;
+    size_t origin_count;
+    MPI_Datatype origin_type;
     MPI_Aint origin_iov_len;    /* Length of data actually packed */
     MPL_IOV origin_iov;         /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
-    MPIR_Segment *target_seg;
     size_t target_cursor;
     size_t target_end;
+    MPI_Aint target_buf;
+    size_t target_count;
+    MPI_Datatype target_type;
     MPI_Aint target_iov_len;
     MPL_IOV target_iov;
     uintptr_t target_addr;
 
-    MPIR_Segment *result_seg;
     size_t result_cursor;
     size_t result_end;
+    const void *result_buf;
+    size_t result_count;
+    MPI_Datatype result_type;
     MPI_Aint result_iov_len;
     MPL_IOV result_iov;
     uintptr_t result_addr;

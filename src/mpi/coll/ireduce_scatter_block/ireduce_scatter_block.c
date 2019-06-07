@@ -22,7 +22,7 @@ cvars:
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -34,11 +34,11 @@ cvars:
         recursive_doubling - Force recursive doubling algorithm
         pairwise           - Force pairwise algorithm
         recursive_halving  - Force recursive halving algorithm
-        recexch  - Force generic transport recursive exchange algorithm
+        gentran_recexch    - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -86,10 +86,6 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #undef MPI_Ireduce_scatter_block
 #define MPI_Ireduce_scatter_block PMPI_Ireduce_scatter_block
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -149,10 +145,6 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -167,10 +159,6 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s)
@@ -179,31 +167,31 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ireduce_scatter_block_intra_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_noncommutative:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_noncommutative(sendbuf, recvbuf,
                                                                                   recvcount,
                                                                                   datatype, op,
                                                                                   comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE:
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_pairwise:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_pairwise(sendbuf, recvbuf,
                                                                             recvcount, datatype, op,
                                                                             comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING:
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_recursive_halving:
                 mpi_errno =
                     MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(sendbuf, recvbuf,
                                                                              recvcount, datatype,
                                                                              op, comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno =
                     MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(sendbuf, recvbuf,
                                                                               recvcount, datatype,
                                                                               op, comm_ptr, s);
                 break;
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_auto(sendbuf, recvbuf,
@@ -213,8 +201,8 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ireduce_scatter_block_inter_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM_remote_reduce_local_scatterv:
                 mpi_errno =
                     MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(sendbuf,
                                                                                         recvbuf,
@@ -224,7 +212,7 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
                                                                                         comm_ptr,
                                                                                         s);
                 break;
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_auto(sendbuf, recvbuf,
@@ -236,10 +224,6 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
@@ -257,10 +241,6 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                     int recvcount, MPI_Datatype datatype,
                                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -279,12 +259,13 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ireduce_scatter_block_intra_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_GENTRAN_RECEXCH:
+        switch (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_gentran_recexch:
                 if (is_commutative) {
                     mpi_errno =
-                        MPIR_Ireduce_scatter_block_intra_recexch(sendbuf, recvbuf, recvcount,
-                                                                 datatype, op, comm_ptr, request);
+                        MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
+                                                                         recvcount, datatype, op,
+                                                                         comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     goto fn_exit;
@@ -317,10 +298,6 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                int recvcount, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -340,10 +317,6 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ireduce_scatter_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ireduce_scatter_block - Combines values and scatters the results in
                             a nonblocking way
@@ -461,13 +434,13 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ireduce_scatter_block",
                                  "**mpi_ireduce_scatter_block %p %p %d %D %O %C %p", sendbuf,
                                  recvbuf, recvcount, datatype, op, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -29,10 +29,6 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * messag
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Imrecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Imrecv - Nonblocking receive of message matched by MPI_Mprobe or MPI_Improbe.
 
@@ -134,12 +130,12 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * messag
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_imrecv", "**mpi_imrecv %p %d %D %p %p", buf, count,
                                  datatype, message, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

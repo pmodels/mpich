@@ -12,7 +12,7 @@
 cvars:
     - name        : MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -22,18 +22,18 @@ cvars:
         auto              - Internal algorithm selection
         blocked           - Force blocked algorithm
         inplace           - Force inplace algorithm
-        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallw algorithm
-        auto - Internal algorithm selection
+        auto              - Internal algorithm selection
+        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -73,10 +73,6 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #undef MPI_Ialltoallw
 #define MPI_Ialltoallw PMPI_Ialltoallw
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const int recvcounts[], const int rdispls[],
@@ -98,10 +94,6 @@ int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const int recvcounts[], const int rdispls[],
@@ -117,10 +109,6 @@ int MPIR_Ialltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                                const MPI_Datatype sendtypes[], void *recvbuf,
                                const int recvcounts[], const int rdispls[],
@@ -130,18 +118,18 @@ int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], cons
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ialltoallw_intra_algo_choice) {
-            case MPIR_IALLTOALLW_INTRA_ALGO_BLOCKED:
+        switch (MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_blocked:
                 mpi_errno = MPIR_Ialltoallw_sched_intra_blocked(sendbuf, sendcounts, sdispls,
                                                                 sendtypes, recvbuf, recvcounts,
                                                                 rdispls, recvtypes, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLW_INTRA_ALGO_INPLACE:
+            case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_inplace:
                 mpi_errno = MPIR_Ialltoallw_sched_intra_inplace(sendbuf, sendcounts, sdispls,
                                                                 sendtypes, recvbuf, recvcounts,
                                                                 rdispls, recvtypes, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLW_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoallw_sched_intra_auto(sendbuf, sendcounts, sdispls,
@@ -151,14 +139,14 @@ int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], cons
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ialltoallw_inter_algo_choice) {
-            case MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_EXCHANGE:
+        switch (MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM_pairwise_exchange:
                 mpi_errno =
                     MPIR_Ialltoallw_sched_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                                                   sendtypes, recvbuf, recvcounts,
                                                                   rdispls, recvtypes, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLW_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoallw_sched_inter_auto(sendbuf, sendcounts, sdispls,
@@ -171,10 +159,6 @@ int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], cons
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
@@ -193,10 +177,6 @@ int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
@@ -231,10 +211,6 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
                     const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                     const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
@@ -255,10 +231,6 @@ int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdisp
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ialltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ialltoallw - Nonblocking generalized all-to-all communication allowing
    different datatypes, counts, and displacements for each partner
@@ -368,14 +340,14 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ialltoallw",
                                  "**mpi_ialltoallw %p %p %p %p %p %p %p %p %C %p", sendbuf,
                                  sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
                                  recvtypes, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -13,10 +13,6 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -28,10 +24,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
     return MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -43,10 +35,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
     return MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf,
                                                     int count,
                                                     MPI_Datatype datatype,
@@ -60,10 +48,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf,
                                 request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_ssend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -77,10 +61,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf,
                                  request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_bsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -94,10 +74,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf,
                                  request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf,
                                                      int count,
                                                      MPI_Datatype datatype,
@@ -111,10 +87,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf,
                                  request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -126,10 +98,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     return MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype,
@@ -141,10 +109,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
     return MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_cancel_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
     return MPIDIG_mpi_cancel_send(sreq);

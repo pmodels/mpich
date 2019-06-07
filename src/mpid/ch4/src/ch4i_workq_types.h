@@ -29,12 +29,6 @@ enum {
 #define MPIDI_CH4_USE_WORK_QUEUES
 #endif
 
-static const char *MPIDI_CH4_mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
-    "direct",
-    "handoff",
-    "trylock",
-};
-
 /* Define the work queue implementation type */
 #if defined(ENABLE_IZEM_QUEUE)
 #include <queue/zm_queue.h>
@@ -122,8 +116,6 @@ typedef struct MPIDI_workq_elemt {
                 MPIR_Request *request;
             } irecv;
             struct MPIDI_workq_iprobe {
-                MPI_Aint count;
-                MPI_Datatype datatype;
                 int rank;
                 int tag;
                 MPIR_Comm *comm_ptr;
@@ -134,8 +126,6 @@ typedef struct MPIDI_workq_elemt {
                 int *flag;
             } iprobe;
             struct MPIDI_workq_improbe {
-                MPI_Aint count;
-                MPI_Datatype datatype;
                 int rank;
                 int tag;
                 MPIR_Comm *comm_ptr;
@@ -164,7 +154,6 @@ typedef struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                struct MPIDI_av_entry *addr;
             } put;
             struct MPIDI_workq_get {
                 void *origin_addr;
@@ -175,16 +164,9 @@ typedef struct MPIDI_workq_elemt {
                 int target_count;
                 MPI_Datatype target_datatype;
                 MPIR_Win *win_ptr;
-                struct MPIDI_av_entry *addr;
             } get;
         } rma;
     } params;
 } MPIDI_workq_elemt_t;
-
-/* List structure to implement per-object (e.g. per-communicator, per-window) work queues */
-struct MPIDI_workq_list {
-    MPIDI_workq_t pend_ops;
-    struct MPIDI_workq_list *next, *prev;
-};
 
 #endif /* CH4I_WORKQ_TYPES_H_INCLUDED */

@@ -111,6 +111,7 @@ typedef struct MPIDIG_put_req_t {
     int origin_count;
     MPI_Datatype origin_datatype;
     int n_iov;
+    void *target_addr;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
@@ -535,17 +536,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Progress_deactivate_hook(id_) MPID_Progress_deactivate(id_)
 
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Comm_create_hook   MPIDI_Comm_create_hook
-#define MPID_Comm_free_hook     MPIDI_Comm_free_hook
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type);
-MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type);
-
-#define MPID_Type_commit_hook   MPIDI_Type_commit_hook
-#define MPID_Type_free_hook     MPIDI_Type_free_hook
-
-#define MPID_Op_commit_hook     MPIDI_Op_commit_hook
-#define MPID_Op_free_hook       MPIDI_Op_free_hook
 
 /*
  * operation for (avtid, lpid) to/from "lupid"

@@ -13,10 +13,6 @@
  * MPI_Issend for short messages.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerSyncNoncontigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_EagerSyncNoncontigSend - Eagerly send noncontiguous data in
    synchronous mode.
 
@@ -92,15 +88,16 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "sending non-contiguous sync eager message, data_sz=%" PRIdPTR,
 		       data_sz);
-	
-	sreq->dev.segment_ptr = MPIR_Segment_alloc(buf, count, datatype);
-        MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
-	sreq->dev.segment_first = 0;
-	sreq->dev.segment_size = data_sz;
+	sreq->dev.user_buf = (void *) buf;
+	sreq->dev.user_count = count;
+	sreq->dev.datatype = datatype;
+	sreq->dev.msg_offset = 0;
+	sreq->dev.msgsize = data_sz;
 	
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-        mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t));
+        mpi_errno = vc->sendNoncontig_fn(vc, sreq, es_pkt, sizeof(MPIDI_CH3_Pkt_eager_sync_send_t),
+                                         NULL, 0);
 	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -207,10 +204,6 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPIR_Request *rreq )
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSyncSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 					intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -338,10 +331,6 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSyncAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 				       intptr_t *buflen, MPIR_Request **rreqp )
 {

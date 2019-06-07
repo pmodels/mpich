@@ -13,7 +13,7 @@
 cvars:
     - name        : MPIR_CVAR_SCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -61,10 +61,6 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #undef MPI_Scan
 #define MPI_Scan PMPI_Scan
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_intra_auto(const void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Errflag_t * errflag)
@@ -96,26 +92,22 @@ int MPIR_Scan_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    switch (MPIR_Scan_intra_algo_choice) {
-        case MPIR_SCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+    switch (MPIR_CVAR_SCAN_INTRA_ALGORITHM) {
+        case MPIR_CVAR_SCAN_INTRA_ALGORITHM_recursive_doubling:
             mpi_errno =
                 MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                    errflag);
             break;
-        case MPIR_SCAN_INTRA_ALGO_NB:
+        case MPIR_CVAR_SCAN_INTRA_ALGORITHM_nb:
             mpi_errno =
                 MPIR_Scan_allcomm_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
-        case MPIR_SCAN_INTRA_ALGO_AUTO:
+        case MPIR_CVAR_SCAN_INTRA_ALGORITHM_auto:
             MPL_FALLTHROUGH;
         default:
             mpi_errno =
@@ -132,10 +124,6 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -152,10 +140,6 @@ int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Scan
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of
@@ -279,12 +263,12 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_scan", "**mpi_scan %p %p %d %D %O %C", sendbuf, recvbuf,
                                  count, datatype, op, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

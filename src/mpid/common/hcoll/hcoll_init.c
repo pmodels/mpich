@@ -48,10 +48,6 @@ MPL_dbg_class MPIR_DBG_HCOLL;
 
 void hcoll_rte_fns_setup(void);
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 int hcoll_destroy(void *param ATTRIBUTE((unused)))
 {
@@ -73,10 +69,6 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
         } \
     } while (0)
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_initialize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_initialize(void)
 {
     int mpi_errno;
@@ -137,10 +129,6 @@ int hcoll_initialize(void)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_comm_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
@@ -186,10 +174,6 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME hcoll_comm_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;

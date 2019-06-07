@@ -6,10 +6,6 @@
 
 #include "mpidi_ch3_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME update_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void update_request(MPIR_Request * sreq, void *hdr, intptr_t hdr_sz, size_t nb)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
@@ -23,10 +19,6 @@ static void update_request(MPIR_Request * sreq, void *hdr, intptr_t hdr_sz, size
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -87,7 +79,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                             /* --BEGIN ERROR HANDLING-- */
                             if (mpi_errno != MPI_SUCCESS) {
                                 mpi_errno =
-                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME,
+                                    MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__,
                                                          __LINE__, MPI_ERR_OTHER,
                                                          "**ch3|sock|postwrite",
                                                          "ch3|sock|postwrite %p %p %p", sreq,
@@ -113,7 +105,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
                         mpi_errno =
-                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__,
+                            MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__,
                                                  MPI_ERR_OTHER, "**ch3|sock|postwrite",
                                                  "ch3|sock|postwrite %p %p %p", sreq, vcch->conn,
                                                  vc);
@@ -135,7 +127,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                 /* FIXME: Shouldn't the vc->state also change? */
                 vcch->state = MPIDI_CH3I_VC_STATE_FAILED;
                 sreq->status.MPI_ERROR = MPIR_Err_create_code(rc,
-                                                              MPIR_ERR_RECOVERABLE, FCNAME,
+                                                              MPIR_ERR_RECOVERABLE, __func__,
                                                               __LINE__, MPI_ERR_INTERN,
                                                               "**ch3|sock|writefailed",
                                                               "**ch3|sock|writefailed %d", rc);

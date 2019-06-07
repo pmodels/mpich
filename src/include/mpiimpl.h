@@ -97,6 +97,10 @@ int usleep(useconds_t usec);
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
+/* Just in case __func__ is not supported won't break code */
+#ifndef HAVE__FUNC__
+#define __func__ "__func__"
+#endif
 
 /*****************************************************************************
  * We use the following ordering of information in this file:
@@ -222,7 +226,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_err.h"
 #include "mpir_nbc.h"
 #include "mpir_process.h"
-#include "mpir_dataloop.h"
+#include "mpir_typerep.h"
 #include "mpir_datatype.h"
 #include "mpir_cvars.h"
 #include "mpir_misc_post.h"
@@ -235,8 +239,6 @@ typedef struct MPIR_Topology MPIR_Topology;
 
 #include "mpidpost.h"
 
-/* avoid conflicts in source files with old-style "char FCNAME[]" vars */
-#undef FUNCNAME
-#undef FCNAME
+/* avoid conflicts in source files with old-style "char __func__[]" vars */
 
 #endif /* MPIIMPL_H_INCLUDED */

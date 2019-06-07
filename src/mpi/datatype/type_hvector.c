@@ -26,10 +26,6 @@ int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype o
 #undef MPI_Type_hvector
 #define MPI_Type_hvector PMPI_Type_hvector
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_hvector_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
                            MPI_Datatype * newtype)
 {
@@ -64,10 +60,6 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_hvector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_hvector - type_hvector
 
@@ -140,12 +132,12 @@ int MPI_Type_hvector(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_hvector", "**mpi_type_hvector %d %d %d %D %p", count,
                                  blocklength, stride, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

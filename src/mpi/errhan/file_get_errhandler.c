@@ -29,10 +29,6 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_File_get_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_get_errhandler - Get the error handler attached to a file
 
@@ -111,7 +107,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_file_get_errhandler", "**mpi_file_get_errhandler %F %p",
                                  file, errhandler);
     }

@@ -32,7 +32,7 @@ cvars:
 
     - name        : MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -40,17 +40,17 @@ cvars:
       description : |-
         Variable to select iallgather algorithm
         auto               - Internal algorithm selection
+        ring               - Force ring algorithm
         brucks             - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
-        ring               - Force ring algorithm
-        recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
-        recexch_distance_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
-        gentran_brucks     - Force generic transport based brucks algorithm
         gentran_ring       - Force generic transport ring algorithm
+        gentran_brucks     - Force generic transport based brucks algorithm
+        gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        gentran_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
 
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
-      type        : string
+      type        : enum
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -142,10 +142,6 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
    End Algorithm: MPI_Allgather
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -184,10 +180,6 @@ int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dat
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount,
                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -201,10 +193,6 @@ int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
                                MPI_Datatype sendtype, void *recvbuf,
                                int recvcount, MPI_Datatype recvtype,
@@ -214,23 +202,23 @@ int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallgather_intra_algo_choice) {
-            case MPIR_IALLGATHER_INTRA_ALGO_BRUCKS:
+        switch (MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_brucks:
                 mpi_errno = MPIR_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcount, recvtype,
                                                                comm_ptr, s);
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_RECURSIVE_DOUBLING:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_recursive_doubling:
                 mpi_errno = MPIR_Iallgather_sched_intra_recursive_doubling(sendbuf, sendcount,
                                                                            sendtype, recvbuf,
                                                                            recvcount, recvtype,
                                                                            comm_ptr, s);
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_RING:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_ring:
                 mpi_errno = MPIR_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,
                                                              recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_AUTO:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallgather_sched_intra_auto(sendbuf, sendcount, sendtype, recvbuf,
@@ -239,15 +227,15 @@ int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iallgather_inter_algo_choice) {
-            case MPIR_IALLGATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_BCAST:
+        switch (MPIR_CVAR_IALLGATHER_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_local_gather_remote_bcast:
                 mpi_errno =
                     MPIR_Iallgather_sched_inter_local_gather_remote_bcast(sendbuf, sendcount,
                                                                           sendtype, recvbuf,
                                                                           recvcount, recvtype,
                                                                           comm_ptr, s);
                 break;
-            case MPIR_IALLGATHER_INTER_ALGO_AUTO:
+            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallgather_sched_inter_auto(sendbuf, sendcount, sendtype,
@@ -260,10 +248,6 @@ int MPIR_Iallgather_sched_impl(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                           int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                           MPIR_Sched_t s)
@@ -281,10 +265,6 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                          MPI_Datatype sendtype, void *recvbuf, int recvcount,
                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -302,26 +282,26 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iallgather_intra_algo_choice) {
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+        switch (MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_recexch_doubling:
                 mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcount, recvtype,
-                                                                    comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                goto fn_exit;
-                break;
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
-                mpi_errno =
-                    MPIR_Iallgather_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                    MPIR_Iallgather_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_recexch_halving:
+                mpi_errno =
+                    MPIR_Iallgather_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
+                                                                  recvbuf, recvcount, recvtype,
+                                                                  comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                          recvcount, recvtype, comm_ptr, request);
@@ -329,7 +309,7 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RING:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype, comm_ptr,
@@ -367,10 +347,6 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -390,10 +366,6 @@ int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Iallgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Iallgather - Gathers data from all tasks and distribute the combined data
                  to all tasks in a nonblocking way
@@ -521,13 +493,13 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_iallgather", "**mpi_iallgather %p %d %D %p %d %D %C %p",
                                  sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
                                  request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

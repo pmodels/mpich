@@ -22,10 +22,6 @@ UT_icd vtx_t_icd = {
     MPII_Genutil_vtx_dtor
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 {
     sched->total_vtcs = 0;
@@ -44,10 +40,6 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -79,10 +71,6 @@ int MPII_Genutil_sched_isend(const void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_irecv(void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -115,10 +103,6 @@ int MPII_Genutil_sched_irecv(void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_imcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
                               MPI_Datatype dt,
@@ -155,10 +139,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
     return vtx_id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_reduce_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPII_Genutil_sched_t * sched,
                                     int n_in_vtcs, int *in_vtcs)
@@ -186,10 +166,6 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_localcopy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
@@ -220,10 +196,6 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 
 /* Transport function that adds a no op vertex in the graph that has
  * all the vertices posted before it as incoming vertices */
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_sink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
 {
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -268,10 +240,6 @@ int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_fence
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
 {
     int fence_id;
@@ -286,10 +254,6 @@ void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
     sched->last_fence = fence_id;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_selective_sink
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
 {
     vtx_t *vtxp;
@@ -308,10 +272,6 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_malloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
 {
     void *addr = MPL_malloc(size, MPL_MEM_COLL);
@@ -319,10 +279,6 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
     return addr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

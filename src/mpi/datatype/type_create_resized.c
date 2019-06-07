@@ -61,10 +61,9 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->name[0] = 0;
     new_dtp->contents = 0;
 
-    new_dtp->dataloop = NULL;
-    new_dtp->dataloop_size = -1;
+    new_dtp->typerep = NULL;
 
-    /* if oldtype is a basic, we build a contiguous dataloop of count = 1 */
+    /* if oldtype is a basic, we build a contiguous typerep of count = 1 */
     if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {
         int oldsize = MPIR_Datatype_get_basic_size(oldtype);
 
@@ -115,10 +114,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_resized
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_resized - Create a datatype with a new lower bound and
      extent from an existing datatype
@@ -205,13 +200,13 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_resized",
                                  "**mpi_type_create_resized %D %L %L %p", oldtype, lb, extent,
                                  newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

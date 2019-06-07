@@ -13,10 +13,6 @@
 /*
  * MPID_Rsend()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Rsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 	       MPIR_Request ** request)
 {
@@ -91,7 +87,7 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
+	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
 	    goto fn_exit;
 	}
 	/* --END ERROR HANDLING-- */
@@ -122,7 +118,7 @@ int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int
             mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq,
                                                       MPIDI_CH3_PKT_READY_SEND,
                                                       buf, count, datatype,
-                                                      data_sz, rank, tag,
+                                                      rank, tag,
                                                       comm, context_offset );
         }
     } else {

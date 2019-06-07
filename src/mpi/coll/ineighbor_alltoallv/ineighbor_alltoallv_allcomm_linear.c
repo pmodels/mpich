@@ -13,10 +13,6 @@
  * neighbor.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallv_sched_allcomm_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
@@ -27,11 +23,8 @@ int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;
-    int comm_size;
     MPI_Aint sendtype_extent, recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

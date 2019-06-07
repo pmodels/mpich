@@ -9,10 +9,6 @@
 /*
  * MPID_Send()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	      int tag, MPIR_Comm * comm, int context_offset,
 	      MPIR_Request ** request)
@@ -152,7 +148,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	    mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq, 
                                                       MPIDI_CH3_PKT_EAGER_SEND,
                                                       buf, count, datatype,
-                                                      data_sz, rank, tag, 
+                                                      rank, tag,
                                                       comm, context_offset );
 	}
     }
