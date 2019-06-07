@@ -27,24 +27,6 @@ int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype
 #undef MPI_Type_vector
 #define MPI_Type_vector PMPI_Type_vector
 
-/*@
-  MPIR_Type_vector - create a vector datatype
-
-Input Parameters:
-+ count - number of blocks in vector
-. blocklength - number of elements in each block
-. stride - distance from beginning of one block to the next (see next
-  parameter for units)
-. strideinbytes - if nonzero, then stride is in bytes, otherwise stride
-  is in terms of extent of oldtype
-- oldtype - type (using handle) of datatype on which vector is based
-
-Output Parameters:
-. newtype - handle of new vector datatype
-
-  Return Value:
-  0 on success, MPI error code on failure.
-@*/
 int MPIR_Type_vector(int count,
                      int blocklength,
                      MPI_Aint stride,

@@ -28,18 +28,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 
 #endif
 
-/*@
-  MPIR_Type_dup - create a copy of a datatype
-
-Input Parameters:
-- oldtype - handle of original datatype
-
-Output Parameters:
-. newtype - handle of newly created copy of datatype
-
-  Return Value:
-  0 on success, MPI error code on failure.
-@*/
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;

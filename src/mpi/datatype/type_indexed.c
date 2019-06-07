@@ -28,26 +28,6 @@ int MPI_Type_indexed(int count, const int *array_of_blocklengths,
 #undef MPI_Type_indexed
 #define MPI_Type_indexed PMPI_Type_indexed
 
-/*@
-  MPIR_Type_indexed - create an indexed datatype
-
-Input Parameters:
-+ count - number of blocks in type
-. blocklength_array - number of elements in each block
-. displacement_array - offsets of blocks from start of type (see next
-  parameter for units)
-. dispinbytes - if nonzero, then displacements are in bytes (the
-  displacement_array is an array of ints), otherwise they in terms of
-  extent of oldtype (the displacement_array is an array of MPI_Aints)
-- oldtype - type (using handle) of datatype on which new type is based
-
-Output Parameters:
-. newtype - handle of new indexed datatype
-
-  Return Value:
-  0 on success, -1 on failure.
-@*/
-
 int MPIR_Type_indexed(int count,
                       const int *blocklength_array,
                       const void *displacement_array,

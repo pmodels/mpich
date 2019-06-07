@@ -27,19 +27,6 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 #undef MPI_Type_contiguous
 #define MPI_Type_contiguous PMPI_Type_contiguous
 
-/*@
-  MPIR_Type_contiguous - create a contiguous datatype
-
-Input Parameters:
-+ count - number of elements in the contiguous block
-- oldtype - type (using handle) of datatype on which vector is based
-
-Output Parameters:
-. newtype - handle of new contiguous datatype
-
-  Return Value:
-  MPI_SUCCESS on success, MPI error code on failure.
-@*/
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
