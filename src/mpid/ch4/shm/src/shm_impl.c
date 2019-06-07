@@ -4,11 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpl.h"
-
-MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
-
 #include "posix_impl.h"
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
