@@ -25,17 +25,6 @@ int MPI_Type_commit(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_T
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
 
-/*@
-  MPIR_Type_commit
-
-Input Parameters:
-. datatype_p - pointer to MPI datatype
-
-Output Parameters:
-
-  Return Value:
-  0 on success, -1 on failure.
-@*/
 int MPIR_Type_commit(MPI_Datatype * datatype_p)
 {
     int mpi_errno = MPI_SUCCESS;
