@@ -126,8 +126,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     bufsize = buftype_size * count;
 
 
-    daos_sg_list_t *sgl, loc_sgl;
-    daos_iov_t *iovs;
+    d_sg_list_t *sgl, loc_sgl;
+    d_iov_t *iovs;
     daos_array_iod_t *iod, loc_iod;
     daos_range_t *rgs;
 
@@ -176,7 +176,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         flat_buf = ADIOI_Flatten_and_find(datatype);
 	mem_list_count = count*flat_buf->count;
 
-        iovs = (daos_iov_t *)ADIOI_Malloc(mem_list_count * sizeof(daos_iov_t));
+        iovs = (d_iov_t *)ADIOI_Malloc(mem_list_count * sizeof(d_iov_t));
 
         k = 0;
         for (j = 0; j < count; j++) {
@@ -191,7 +191,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
 
                 tmp_off = ((size_t)buf + j*buftype_extent + flat_buf->indices[i]);
                 file_length += flat_buf->blocklens[i];
-                daos_iov_set(&iovs[k++], (char *) tmp_off, flat_buf->blocklens[i]);
+                d_iov_set(&iovs[k++], (char *) tmp_off, flat_buf->blocklens[i]);
 
 #ifdef D_PRINT_IO_MEM
                 printf("(MEM %d) %d: off %lld len %zu\n", mpi_rank, k,
@@ -202,9 +202,9 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     }
     else {
         k = 1;
-        iovs = (daos_iov_t *)ADIOI_Malloc(sizeof(daos_iov_t));
+        iovs = (d_iov_t *)ADIOI_Malloc(sizeof(d_iov_t));
         file_length = bufsize;
-        daos_iov_set(iovs, (void *)buf, bufsize);
+        d_iov_set(iovs, (void *)buf, bufsize);
 #ifdef D_PRINT_IO_MEM
         printf("(MEM SINGLE) off %lld len %zu\n", buf, bufsize);
 #endif

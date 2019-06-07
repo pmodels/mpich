@@ -187,7 +187,7 @@ adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
 
     rc = daos_pool_connect(uuid, group, svcl, DAOS_PC_RW, &phdl->open_hdl,
                            &pool_info, NULL);
-    daos_rank_list_free(svcl);
+    d_rank_list_free(svcl);
     if (rc < 0) {
         PRINT_MSG(stderr, "Failed to connect to pool (%d)\n", rc);
         goto free_hdl;

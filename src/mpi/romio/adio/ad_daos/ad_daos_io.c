@@ -35,8 +35,8 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     uint64_t len;
     daos_array_iod_t *iod, loc_iod;
     daos_range_t *rg, loc_rg;
-    daos_sg_list_t *sgl, loc_sgl;
-    daos_iov_t *iov, loc_iov;
+    d_sg_list_t *sgl, loc_sgl;
+    d_iov_t *iov, loc_iov;
     int ret;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     struct ADIO_DAOS_req *aio_req;
@@ -82,7 +82,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     /** set memory location */
     sgl->sg_nr = 1;
     sgl->sg_nr_out = 0;
-    daos_iov_set(iov, buf, len);
+    d_iov_set(iov, buf, len);
     sgl->sg_iovs = iov;
 #ifdef D_PRINT_IO_MEM
     printf("MEM : off %lld len %zu\n", buf, len);

@@ -81,10 +81,10 @@ struct ADIO_DAOS_req {
     daos_event_t daos_event;
     daos_array_iod_t iod;
     daos_range_t rg;
-    daos_sg_list_t sgl;
-    daos_iov_t iov;
+    d_sg_list_t sgl;
+    d_iov_t iov;
     daos_range_t *rgs;
-    daos_iov_t *iovs;
+    d_iov_t *iovs;
 };
 
 static inline void
@@ -115,7 +115,7 @@ static inline void
 handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
              MPI_Comm comm)
 {
-    daos_iov_t	ghdl = { NULL, 0, 0 };
+    d_iov_t	ghdl = { NULL, 0, 0 };
     int		rc;
 
     if (rank == 0) {
