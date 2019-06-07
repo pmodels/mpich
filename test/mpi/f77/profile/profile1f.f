@@ -50,15 +50,7 @@ C     check that we used the profiling versions of the routines
           endif
        endif
 
-       call mpi_allreduce( MPI_IN_PLACE, toterrs, 1, MPI_INT, MPI_SUM,
-     $      MPI_COMM_WORLD, ierr )
-       if (wrank .eq. 0) then
-          if (toterrs .eq. 0) then
-             print *, " No Errors"
-          else
-             print *, " Found ", toterrs, " errors"
-          endif
-       endif
+       call mtest_finalize( toterrs )
 C
        end
 C
