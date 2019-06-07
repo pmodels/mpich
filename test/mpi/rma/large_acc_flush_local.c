@@ -42,15 +42,15 @@ int main(int argc, char *argv[])
 
     for (j = 0; j < LOOP; j++) {
 
-        MPI_Win_create(tar_buf, MAX_DATA_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+        MPI_Win_create(tar_buf, MAX_DATA_SIZE, sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
         MPI_Win_lock_all(0, win);
 
         if (rank != 0) {
             for (data_size = MIN_DATA_SIZE; data_size <= MAX_DATA_SIZE; data_size *= 2) {
                 for (i = 0; i < OPS_NUM; i++) {
-                    MPI_Accumulate(orig_buf, data_size, MPI_BYTE,
-                                   0, 0, data_size, MPI_BYTE, MPI_SUM, win);
+                    MPI_Accumulate(orig_buf, data_size / sizeof(int), MPI_INT,
+                                   0, 0, data_size / sizeof(int), MPI_INT, MPI_SUM, win);
                     MPI_Win_flush_local(0, win);
                 }
                 MPI_Win_flush(0, win);
