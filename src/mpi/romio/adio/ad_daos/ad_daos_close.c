@@ -66,8 +66,8 @@ bcast_rc:
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
 
-    free(cont->obj_name);
-    free(cont->cont_name);
+    ADIOI_Free(cont->obj_name);
+    ADIOI_Free(cont->cont_name);
     ADIOI_Free(fd->fs_ptr);
     fd->fs_ptr = NULL;
 

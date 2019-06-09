@@ -177,8 +177,8 @@ duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
 static void
 parse_filename(const char *path, char **_obj_name, char **_cont_name)
 {
-    char *f1 = strdup(path);
-    char *f2 = strdup(path);
+    char *f1 = ADIOI_Strdup(path);
+    char *f2 = ADIOI_Strdup(path);
     char *fname = basename(f1);
     char *cont_name = dirname(f2);
     
@@ -188,11 +188,11 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
         getcwd(cwd, 1024);
 
         if (strcmp(cont_name, ".") == 0) {
-            cont_name = strdup(cwd);
+            cont_name = ADIOI_Strdup(cwd);
         }
         else {
-            char *new_dir = calloc(strlen(cwd) + strlen(cont_name) + 1,
-                                   sizeof(char));
+            char *new_dir = ADIOI_Calloc(strlen(cwd) + strlen(cont_name) + 1,
+                                         sizeof(char));
 
             strcpy(new_dir, cwd);
             if (cont_name[0] == '.')
@@ -206,13 +206,13 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
         *_cont_name = cont_name;
     }
     else {
-        *_cont_name = strdup(cont_name);
+        *_cont_name = ADIOI_Strdup(cont_name);
     }
    
-    *_obj_name = strdup(fname);
+    *_obj_name = ADIOI_Strdup(fname);
 
-    free(f1);
-    free(f2);
+    ADIOI_Free(f1);
+    ADIOI_Free(f2);
 }
 
 int
@@ -524,9 +524,9 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 
 err_free:
     if (cont->obj_name)
-        free(cont->obj_name);
+        ADIOI_Free(cont->obj_name);
     if (cont->cont_name)
-        free(cont->cont_name);
+        ADIOI_Free(cont->cont_name);
     ADIOI_Free(cont);
     return;
 }
@@ -616,7 +616,7 @@ out_cont:
 out_pool:
     adio_daos_poh_release(p);
 out_free:
-    free(obj_name);
-    free(cont_name);
+    ADIOI_Free(obj_name);
+    ADIOI_Free(cont_name);
     return;
 }

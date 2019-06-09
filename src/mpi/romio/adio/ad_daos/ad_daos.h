@@ -136,7 +136,7 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
     assert(rc == MPI_SUCCESS);
 
     /** allocate buffer for global pool handle */
-    ghdl.iov_buf = malloc(ghdl.iov_buf_len);
+    ghdl.iov_buf = ADIOI_Malloc(ghdl.iov_buf_len);
     ghdl.iov_len = ghdl.iov_buf_len;
 
     if (rank == 0) {
@@ -165,7 +165,7 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
         assert(rc == 0);
     }
 
-    free(ghdl.iov_buf);
+    ADIOI_Free(ghdl.iov_buf);
     MPI_Barrier(comm);
 }
 
