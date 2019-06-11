@@ -14,7 +14,13 @@
 #include "ofi_impl.h"
 #include <opa_primitives.h>
 
-static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
+/* Blocking progress function to complete outstanding RMA operations on the input window.
+ *
+ * win - Window on which to complete operations
+ * do_free - Flag to indicate whether it is safe to free the operations (whether this progress
+ *           function is being called internally or by the user).
+ */
+static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free)
 {
     int mpi_errno = MPI_SUCCESS;
     int itercount = 0;
@@ -22,8 +28,8 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
     uint64_t tcount, donecount;
     MPIDI_OFI_win_request_t *r;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
 
     tcount = *MPIDI_OFI_WIN(win).issued_cntr;
     donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
@@ -52,18 +58,61 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
 
     r = MPIDI_OFI_WIN(win).syncQ;
 
-    while (r) {
-        MPIDI_OFI_win_request_t *next = r->next;
-        MPIDI_OFI_rma_done_event(NULL, (MPIR_Request *) r);
-        r = next;
+    /* Should not free the RMA request when do_free = 0; manual RMA flush could happen in
+     * the middle of issuing one MPI-level RMA op and it could lead to premature freeing of
+     * the request. */
+    if (do_free) {
+        while (r) {
+            MPIDI_OFI_win_request_t *next = r->next;
+            MPIDI_OFI_rma_done_event(NULL, (MPIR_Request *) r);
+            r = next;
+        }
+
+        MPIDI_OFI_WIN(win).syncQ = NULL;
+        MPIDI_OFI_WIN(win).progress_counter = 1;
     }
 
-    MPIDI_OFI_WIN(win).syncQ = NULL;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* If the OFI provider does not have automatic progress, check to see if the progress engine should
+ * be manually triggered to keep performance from suffering when doing large, non-continuguous
+ * transfers. */
+static inline int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+
+    if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
+        if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
+            MPIDI_OFI_win_progress_fence_impl(win, false);
+            MPIDI_OFI_WIN(win).progress_counter = 1;
+        }
+        MPIDI_OFI_WIN(win).progress_counter++;
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
+
+    return mpi_errno;
+}
+
+static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+
+    mpi_errno = MPIDI_OFI_win_progress_fence_impl(win, true);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+    return mpi_errno;
 }
 
 static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
