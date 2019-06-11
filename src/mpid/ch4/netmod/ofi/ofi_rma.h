@@ -507,6 +507,11 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         msg.rma_iov_count = tout;
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
                               fi_writemsg(ep, &msg, flags), rdma_write);
+
+        /* By default, progress is called only during fence, which significantly
+         * slows down the RMA operations for large non-contiguous data. Adding manual
+         * progress helps improve the performance. */
+        MPIDI_OFI_win_trigger_rma_progress(win);
     }
 
     MPIDI_OFI_finalize_seg_state(p);
@@ -680,6 +685,11 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         msg.rma_iov_count = tout;
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
                               fi_readmsg(ep, &msg, flags), rdma_write);
+
+        /* By default, progress is called only during fence, which significantly
+         * slows down the RMA operations for large non-contiguous data. Adding manual
+         * progress helps improve the performance. */
+        MPIDI_OFI_win_trigger_rma_progress(win);
     }
 
     MPIDI_OFI_finalize_seg_state(p);
@@ -977,6 +987,11 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         msg.rma_iov_count = tout;
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
                               fi_atomicmsg(ep, &msg, flags), rdma_atomicto);
+
+        /* By default, progress is called only during fence, which significantly
+         * slows down the RMA operations for large non-contiguous data. Adding manual
+         * progress helps improve the performance. */
+        MPIDI_OFI_win_trigger_rma_progress(win);
     }
 
     MPIDI_OFI_finalize_seg_state(p);
@@ -1155,6 +1170,10 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
                               fi_fetch_atomicmsg(ep, &msg, resultv,
                                                  NULL, rout, flags), rdma_readfrom);
+        /* By default, progress is called only during fence, which significantly
+         * slows down the RMA operations for large non-contiguous data. Adding manual
+         * progress helps improve the performance. */
+        MPIDI_OFI_win_trigger_rma_progress(win);
     }
 
     if (op != MPI_NO_OP)
