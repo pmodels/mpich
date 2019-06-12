@@ -52,10 +52,6 @@
              print *, "real array size is ", size2, " sizeof claims ", size1
           endif
 
-          if (errs .gt. 0) then
-             print *, ' Found ', errs, ' errors'
-          else
-             print *, ' No Errors'
-          endif
+          call mtest_finalize( errs )
           
         end program main
