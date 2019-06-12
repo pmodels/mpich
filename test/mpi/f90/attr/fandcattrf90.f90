@@ -48,11 +48,7 @@
       call mpi_type_free_keyval( ctype2_keyval, ierr )
       call mpi_win_free_keyval( cwin2_keyval, ierr )
 
-      if (errs .eq. 0) then
-         print *, ' No Errors'
-      else
-         print *, ' Found ', errs, ' errors'
-      endif
+      call mtest_finalize( errs )
 
       end
 !
