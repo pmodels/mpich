@@ -329,7 +329,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_ISCAN_INTRA_ALGORITHM=${algo_name} "
 
-    coll_algo_tests+="scantst 4"
+    coll_algo_tests+="scantst 4 ${env}${nl}"
 done
 
 ######### Add tests for ineighbor_alltoallw algorithms ###########
