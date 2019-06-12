@@ -24,6 +24,33 @@
         }                                                               \
     } while (0)
 
+static void generate_random_blklens(DTP_pool_s dtp, int numblks, int *blklens, MPI_Aint real_count)
+{
+    MPI_Aint count = real_count;
+    DTPI_pool_s *dtpi = dtp.priv;
+
+    /* find a random divisor of count by randomly choosing which
+     * factors of count to use */
+    int total_blklen = 1;
+    while (count > 1) {
+        if (DTPI_low_count(count) == 1) {
+            total_blklen *= (DTPI_rand(dtpi) % 2) ? 1 : count;
+            break;
+        } else {
+            /* randomly pick or ignore this divisor */
+            MPI_Aint lowcount = DTPI_low_count(count);
+            total_blklen *= (DTPI_rand(dtpi) % 2) ? 1 : lowcount;
+            count /= lowcount;
+        }
+    }
+
+    for (int i = 0; i < numblks; i++)
+        blklens[i] = 0;
+
+    for (int i = 0; i < total_blklen; i++)
+        blklens[DTPI_rand(dtpi) % numblks]++;
+}
+
 static int construct_contig(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * attr,
                             MPI_Datatype * newtype, MPI_Aint * new_count)
 {
@@ -761,6 +788,11 @@ static int construct_indexed(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * 
                 attr->u.indexed.array_of_blklens[idx]--;
                 total_blklen--;
             }
+        } else if (blklen_attr == DTPI_ATTR_INDEXED_BLKLEN__RANDOM) {
+            generate_random_blklens(dtp, attr->u.indexed.numblks, attr->u.indexed.array_of_blklens,
+                                    count);
+            for (int i = 0; i < attr->u.indexed.numblks; i++)
+                total_blklen += attr->u.indexed.array_of_blklens[i];
         } else {
             DTPI_ERR_ASSERT(0, rc);
         }
@@ -932,6 +964,11 @@ static int construct_hindexed(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s *
                 attr->u.hindexed.array_of_blklens[idx]--;
                 total_blklen--;
             }
+        } else if (blklen_attr == DTPI_ATTR_HINDEXED_BLKLEN__RANDOM) {
+            generate_random_blklens(dtp, attr->u.hindexed.numblks,
+                                    attr->u.hindexed.array_of_blklens, count);
+            for (int i = 0; i < attr->u.hindexed.numblks; i++)
+                total_blklen += attr->u.hindexed.array_of_blklens[i];
         } else {
             DTPI_ERR_ASSERT(0, rc);
         }
@@ -1224,6 +1261,11 @@ static int construct_struct(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * a
                 attr->u.structure.array_of_blklens[idx]--;
                 total_blklen--;
             }
+        } else if (blklen_attr == DTPI_ATTR_STRUCTURE_BLKLEN__RANDOM) {
+            generate_random_blklens(dtp, attr->u.structure.numblks,
+                                    attr->u.structure.array_of_blklens, count);
+            for (int i = 0; i < attr->u.structure.numblks; i++)
+                total_blklen += attr->u.structure.array_of_blklens[i];
         } else {
             DTPI_ERR_ASSERT(0, rc);
         }
