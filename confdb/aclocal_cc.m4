@@ -1695,3 +1695,29 @@ if test x$have_builtin_expect = xyes ; then
     AC_DEFINE([HAVE_BUILTIN_EXPECT], [1], [Define to 1 if the compiler supports __builtin_expect.])
 fi
 ])
+
+dnl
+dnl PAC_CC_CHECK_TLS - Test for thread local storage support
+dnl
+dnl will AC_DEFINE([TLS]) to a compiler supported TLS keyword
+dnl
+AC_DEFUN([PAC_CC_CHECK_TLS], [
+    AC_CACHE_CHECK([for thread local storage], [pac_cv_tls], [
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([_Thread_local int foo=0;],[foo=1])],
+            [pac_cv_tls=_Thread_local])
+    fi
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE( [AC_LANG_PROGRAM([__thread int foo=0;],[foo=1])],
+            [pac_cv_tls=__thread])
+    fi
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE( [AC_LANG_PROGRAM([__declspec(thread) int foo=0;],[foo=1])],
+            [pac_cv_tls="__declspec(thread)"])
+    fi])
+    if test -z $pac_cv_tls ; then
+        AC_MSG_WARN([Compiler does not support thread local storage])
+    else
+        AC_DEFINE_UNQUOTED([TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
+    fi
+])
