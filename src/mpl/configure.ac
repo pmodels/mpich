@@ -737,7 +737,7 @@ AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
+    PAC_CC_CHECK_TLS
 fi
 
 #######################################################################
