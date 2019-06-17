@@ -7,6 +7,14 @@
 #ifndef MPL_TRMEM_H_INCLUDED
 #define MPL_TRMEM_H_INCLUDED
 
+/* Sometime we have memory allocated from external library but requires
+ * us to free. Use MPL_external_free for these cases.
+*/
+MPL_STATIC_INLINE_PREFIX void MPL_external_free(void *buf)
+{
+    free(buf);
+}
+
 #if defined MPL_NEEDS_STRDUP_DECL && !defined strdup
 extern char *strdup(const char *);
 #endif /* MPL_NEEDS_STRDUP_DECL */
