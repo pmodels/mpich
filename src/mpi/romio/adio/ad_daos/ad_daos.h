@@ -161,7 +161,7 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t parent,
         else if (type == HANDLE_CO)
             rc = daos_cont_global2local(parent, ghdl, hdl);
         else
-            rc = daos_array_global2local(parent, ghdl, hdl);
+            rc = daos_array_global2local(parent, ghdl, 0, hdl);
         assert(rc == 0);
     }
 
