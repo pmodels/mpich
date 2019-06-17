@@ -8,13 +8,6 @@
 #define BUILD_NODEMAP_H_INCLUDED
 
 #include "mpl.h"
-#ifdef USE_PMIX_API
-#include "pmix.h"
-#elif defined(USE_PMI2_API)
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

@@ -12,10 +12,6 @@
 #include "hwloc.h"
 #endif
 
-#ifdef USE_PMIX_API
-#include "pmix.h"
-#endif
-
 #ifdef HAVE_NETLOC
 #include "netloc_util.h"
 #endif
