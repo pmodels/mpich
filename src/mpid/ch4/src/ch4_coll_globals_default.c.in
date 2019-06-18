@@ -227,6 +227,79 @@ const MPIDIG_coll_algo_generic_container_t MPIDI_Exscan_intra_composition_alpha_
     {.id = MPIDI_COLL_AUTO_SELECT}      /* exscan */
 };
 
+/* Default containers initialization */
+const MPIDIG_coll_algo_generic_container_t *MPIDI_Coll_intra_composition_default_container[] = {
+    MPIDI_Allgather_intra_composition_alpha_cnt,
+    MPIDI_Allgatherv_intra_composition_alpha_cnt,
+    MPIDI_Allreduce_intra_composition_beta_cnt,
+    MPIDI_Alltoall_intra_composition_alpha_cnt,
+    MPIDI_Alltoallv_intra_composition_alpha_cnt,
+    MPIDI_Alltoallw_intra_composition_alpha_cnt,
+    MPIDI_Barrier_intra_composition_beta_cnt,
+    MPIDI_Bcast_intra_composition_gamma_cnt,
+    MPIDI_Exscan_intra_composition_alpha_cnt,
+    MPIDI_Gather_intra_composition_alpha_cnt,
+    MPIDI_Gatherv_intra_composition_alpha_cnt,
+    MPIDI_Reduce_scatter_intra_composition_alpha_cnt,
+    MPIDI_Reduce_scatter_block_intra_composition_alpha_cnt,
+    MPIDI_Reduce_intra_composition_beta_cnt,
+    MPIDI_Scan_intra_composition_alpha_cnt,
+    MPIDI_Scatter_intra_composition_alpha_cnt,
+    MPIDI_Scatterv_intra_composition_alpha_cnt,
+    NULL,       /* iallgather default container */
+    NULL,       /* iallgatherv default container */
+    NULL,       /* iallreduce default container */
+    NULL,       /* ialltoall default container */
+    NULL,       /* ialltoallv default container */
+    NULL,       /* ialltoallw default container */
+    NULL,       /* ibarrier default container */
+    NULL,       /* iexscan default container */
+    NULL,       /* igather default container */
+    NULL,       /* igatherv default container */
+    NULL,       /* ireduce_scatter default container */
+    NULL,       /* ireduce_scatter_block default container */
+    NULL,       /* ireduce default container */
+    NULL,       /* iscan default container */
+    NULL,       /* iscatter default container */
+    NULL,       /* iscatterv default container */
+};
+
+const MPIDIG_coll_algo_generic_container_t *MPIDI_Coll_inter_composition_default_container[] = {
+    &MPIDI_Allgather_inter_composition_alpha_cnt,
+    &MPIDI_Allgatherv_inter_composition_alpha_cnt,
+    &MPIDI_Allreduce_inter_composition_alpha_cnt,
+    &MPIDI_Alltoall_inter_composition_alpha_cnt,
+    &MPIDI_Alltoallv_inter_composition_alpha_cnt,
+    &MPIDI_Alltoallw_inter_composition_alpha_cnt,
+    &MPIDI_Barrier_inter_composition_alpha_cnt,
+    &MPIDI_Bcast_inter_composition_alpha_cnt,
+    NULL,       /*Exscan default container */
+    &MPIDI_Gather_inter_composition_alpha_cnt,
+    &MPIDI_Gatherv_inter_composition_alpha_cnt,
+    &MPIDI_Reduce_scatter_inter_composition_alpha_cnt,
+    &MPIDI_Reduce_scatter_block_inter_composition_alpha_cnt,
+    &MPIDI_Reduce_inter_composition_alpha_cnt,
+    NULL,       /* Reduce default container */
+    &MPIDI_Scatter_inter_composition_alpha_cnt,
+    &MPIDI_Scatterv_inter_composition_alpha_cnt,
+    NULL,       /* iallgather default container */
+    NULL,       /* iallgatherv default container */
+    NULL,       /* iallreduce default container */
+    NULL,       /* ialltoall default container */
+    NULL,       /* ialltoallv default container */
+    NULL,       /* ialltoallw default container */
+    NULL,       /* ibarrier default container */
+    NULL,       /* iexscan default container */
+    NULL,       /* igather default container */
+    NULL,       /* igatherv default container */
+    NULL,       /* ireduce_scatter default container */
+    NULL,       /* ireduce_scatter_block default container */
+    NULL,       /* ireduce default container */
+    NULL,       /* iscan default container */
+    NULL,       /* iscatter default container */
+    NULL,       /* iscatterv default container */
+};
+
 /* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@
 #ifndef MPIDI_CH4_DIRECT_NETMOD

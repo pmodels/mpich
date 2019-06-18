@@ -80,4 +80,8 @@ extern const MPIDIG_coll_algo_generic_container_t MPIDI_Scan_intra_composition_b
 /* Exscan CH4 level containers declaration */
 extern const MPIDIG_coll_algo_generic_container_t MPIDI_Exscan_intra_composition_alpha_cnt[];
 
+/* Default CH4 level containers declaration */
+extern const MPIDIG_coll_algo_generic_container_t *MPIDI_Coll_intra_composition_default_container[];
+extern const MPIDIG_coll_algo_generic_container_t *MPIDI_Coll_inter_composition_default_container[];
+
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */
