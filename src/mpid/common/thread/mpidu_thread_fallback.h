@@ -488,6 +488,8 @@ M*/
                 MPIDU_Thread_yield(&mutex, &err_);                          \
                 MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
                 MPIR_Assert(err_ == 0);                                 \
+            } else {                                                    \
+                MPL_thread_schedule();                                  \
             }                                                           \
         }                                                               \
     } while (0)
@@ -561,8 +563,10 @@ M*/
         int saved_count_ = (mutex_ptr_)->count;                         \
         MPL_thread_id_t saved_owner_ = (mutex_ptr_)->owner;             \
         MPIR_Assert(saved_count_ > 0);                                  \
-        if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
+        if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0) {     \
+            MPL_thread_schedule();                                      \
             break;                                                      \
+        }                                                               \
         (mutex_ptr_)->count = 0;                                        \
         (mutex_ptr_)->owner = 0;                                        \
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
