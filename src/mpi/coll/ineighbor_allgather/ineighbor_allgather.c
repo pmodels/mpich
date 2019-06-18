@@ -22,6 +22,7 @@ cvars:
         auto            - Internal algorithm selection
         linear          - Force linear algorithm
         gentran_linear  - Force generic transport based linear algorithm
+        cart_bcast      - Force bcast-based algorithm for cartesian comms
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -127,6 +128,12 @@ int MPIR_Ineighbor_allgather_sched_impl(const void *sendbuf, int sendcount, MPI_
                     MPIR_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                   recvbuf, recvcount, recvtype,
                                                                   comm_ptr, s);
+                break;
+            case MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM_cart_bcast:
+                mpi_errno =
+                    MPIR_Ineighbor_allgather_sched_cart_bcast(sendbuf, sendcount, sendtype,
+                                                              recvbuf, recvcount, recvtype,
+                                                              comm_ptr, s);
                 break;
             case MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
