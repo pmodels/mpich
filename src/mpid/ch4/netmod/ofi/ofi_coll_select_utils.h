@@ -46,8 +46,9 @@ MPL_STATIC_INLINE_PREFIX const MPIDI_OFI_coll_algo_container_t
                 MPIDI_NM_get_default_container(coll_sig->coll_id);
         }
     } else if (storage != NULL) {
-        /* Initizlaize match pattern fields to default values and then set fileds like coll name and msg size, etc., and whatever applicable from coll_sig
-         *          This function bascially initializes the match key from coll_sig*/
+        /* Initialize match pattern fields to default values and
+         * then set fileds like coll name and msg size, etc., and
+         * whatever applicable from coll_sig */
         MPIDU_SELECTION_init_match_pattern(&match_pattern);
         MPIDU_SELECTION_init_coll_match_pattern(coll_sig, &match_pattern,
                                                 MPIDU_SELECTION_CONTAINER);

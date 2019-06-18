@@ -8,6 +8,26 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, collective algorithms will be picked through
+        collective selection infrastructure instead of CVAR based
+        selection.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef CH4_COLL_SELECT_H_INCLUDED
 #define CH4_COLL_SELECT_H_INCLUDED
 
@@ -15,6 +35,7 @@
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
 #include "ch4_coll_containers.h"
+#include "ch4_coll_select_utils.h"
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "../shm/include/shm.h"
@@ -43,28 +64,43 @@ MPIDIG_coll_algo_generic_container_t *MPIDI_Bcast_select(void *buffer,
                                                          int root,
                                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int nbytes = 0;
-    MPI_Aint type_size = 0;
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
+    if (MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION) {
+        MPIDU_SELECTON_coll_signature_t coll_sig = {
+            .coll_id = MPIDU_SELECTION_BCAST,
+            .comm = comm,
+            .coll.bcast = {
+                           .buffer = buffer,
+                           .count = count,
+                           .datatype = datatype,
+                           .root = root,
+                           .errflag = errflag}
+        };
+        return MPIDI_coll_select(&coll_sig);
+    } else {
+        int nbytes = 0;
+        MPI_Aint type_size = 0;
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Bcast_inter_composition_alpha_cnt;
-    }
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+        /* No auto selection for intercomm */
+        if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+            return &MPIDI_Bcast_inter_composition_alpha_cnt;
+        }
 
-    nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
-        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
-        if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
-            (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-            return MPIDI_Bcast_intra_composition_alpha_cnt;
-        } else {
-            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-                return MPIDI_Bcast_intra_composition_beta_cnt;
+        nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
+        if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
+            nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
+            if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
+                (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
+                return MPIDI_Bcast_intra_composition_alpha_cnt;
+            } else {
+                if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
+                    return MPIDI_Bcast_intra_composition_beta_cnt;
+                }
             }
         }
+        return MPIDI_Bcast_intra_composition_gamma_cnt;
     }
-    return MPIDI_Bcast_intra_composition_gamma_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

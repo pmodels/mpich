@@ -159,3 +159,40 @@ const MPIDI_UCX_coll_algo_container_t MPIDI_UCX_Scan_intra_recursive_doubling_cn
 const MPIDI_UCX_coll_algo_container_t MPIDI_UCX_Exscan_intra_recursive_doubling_cnt = {
     .id = MPIDI_UCX_Exscan_intra_recursive_doubling_id
 };
+
+/* Default UCX containers initialization*/
+const MPIDI_UCX_coll_algo_container_t *MPIDI_UCX_coll_default_container[] = {
+    &MPIDI_UCX_Allgather_intra_recursive_doubling_cnt,
+    &MPIDI_UCX_Allgatherv_intra_recursive_doubling_cnt,
+    &MPIDI_UCX_Allreduce_intra_recursive_doubling_cnt,
+    &MPIDI_UCX_Alltoall_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_UCX_Alltoallv_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_UCX_Alltoallw_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_UCX_Barrier_intra_dissemination_cnt,
+    &MPIDI_UCX_Bcast_intra_binomial_cnt,
+    &MPIDI_UCX_Exscan_intra_recursive_doubling_cnt,
+    &MPIDI_UCX_Gather_intra_binomial_cnt,
+    &MPIDI_UCX_Gatherv_allcomm_linear_cnt,
+    &MPIDI_UCX_Reduce_scatter_intra_pairwise_cnt,
+    &MPIDI_UCX_Reduce_scatter_block_intra_pairwise_cnt,
+    &MPIDI_UCX_Reduce_intra_binomial_cnt,
+    &MPIDI_UCX_Scan_intra_recursive_doubling_cnt,
+    &MPIDI_UCX_Scatter_intra_binomial_cnt,
+    &MPIDI_UCX_Scatterv_allcomm_linear_cnt,
+    NULL,       /* iallgather default container */
+    NULL,       /* iallgatherv default container */
+    NULL,       /* iallreduce default container */
+    NULL,       /* ialltoall default container */
+    NULL,       /* ialltoallv default container */
+    NULL,       /* ialltoallw default container */
+    NULL,       /* ibarrier default container */
+    NULL,       /* iexscan default container */
+    NULL,       /* igather default container */
+    NULL,       /* igatherv default container */
+    NULL,       /* ireduce_scatter default container */
+    NULL,       /* ireduce_scatter_block default container */
+    NULL,       /* ireduce default container */
+    NULL,       /* iscan default container */
+    NULL,       /* iscatter default container */
+    NULL,       /* iscatterv default container */
+};

@@ -3,6 +3,7 @@
 
 #include "posix_impl.h"
 #include "ch4_impl.h"
+#include "posix_coll_select_utils.h"
 #include "coll_algo_params.h"
 
 MPL_STATIC_INLINE_PREFIX const
@@ -14,52 +15,68 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Barrier_select(MPIR_Comm * comm,
     return &MPIDI_POSIX_Barrier_intra_dissemination_cnt;
 }
 
+
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
                                                             int count, MPI_Datatype
                                                             datatype, int root,
                                                             MPIR_Comm * comm,
                                                             MPIR_Errflag_t * errflag, const void
-                                                            *ch4_algo_parameters_container_in
-                                                            ATTRIBUTE((unused)))
+                                                            *ch4_algo_parameters_container_in)
 {
-    int nbytes = 0;
-    MPI_Aint type_size = 0;
+    if (MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION) {
+        MPIDU_SELECTON_coll_signature_t coll_sig = {
+            .coll_id = MPIDU_SELECTION_BCAST,
+            .comm = comm,
+            .coll.bcast = {
+                           .buffer = buffer,
+                           .count = count,
+                           .datatype = datatype,
+                           .root = root,
+                           .errflag = errflag}
+        };
 
-    if (MPIDI_POSIX_Bcast_algo_choice == MPIDI_POSIX_Bcast_intra_release_gather_id) {
-        /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
-         * and MPICH is not multi-threaded */
+        return MPIDI_POSIX_coll_select(&coll_sig, ch4_algo_parameters_container_in);
+    } else {
+        int nbytes = 0;
+        MPI_Aint type_size = 0;
+
+        if (MPIDI_POSIX_Bcast_algo_choice == MPIDI_POSIX_Bcast_intra_release_gather_id) {
+            /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
+             * and MPICH is not multi-threaded */
 #ifdef ENABLE_IZEM_ATOMIC
 #ifdef MPICH_IS_THREADED
-        if (!MPIR_ThreadInfo.isThreaded) {
-            /* MPICH configured with threading support but not actually used */
-            return &MPIDI_POSIX_Bcast_intra_release_gather_cnt;
-        }
+            if (!MPIR_ThreadInfo.isThreaded) {
+                /* MPICH configured with threading support but not actually used */
+                return &MPIDI_POSIX_Bcast_intra_release_gather_cnt;
+            }
 #else
-        /* MPICH not configured with threading support */
-        return &MPIDI_POSIX_Bcast_intra_release_gather_cnt;
+            /* MPICH not configured with threading support */
+            return &MPIDI_POSIX_Bcast_intra_release_gather_cnt;
 #endif /* MPICH_IS_THREADED */
 #else
-        /* release_gather algo is chosen through CVAR but izem is not built */
-        return &MPIDI_POSIX_Bcast_intra_invalid_cnt;
+            /* release_gather algo is chosen through CVAR but izem is not built */
+            return &MPIDI_POSIX_Bcast_intra_invalid_cnt;
 #endif /* ENABLE_IZEM_ATOMIC */
-    }
-
-    /* Choose from pt2pt based algorithms */
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
-
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        return &MPIDI_POSIX_Bcast_intra_binomial_cnt;
-    } else {
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-            return &MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
-        } else {
-            return &MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
         }
-    }
 
-    return NULL;
+        /* Choose from pt2pt based algorithms */
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+        nbytes = type_size * count;
+
+        if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
+            (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
+            return &MPIDI_POSIX_Bcast_intra_binomial_cnt;
+        } else {
+            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
+                return &MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
+            } else {
+                return &MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
+            }
+        }
+
+        return NULL;
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX const

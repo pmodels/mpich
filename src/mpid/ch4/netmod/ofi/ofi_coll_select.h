@@ -2,6 +2,7 @@
 #define OFI_COLL_SELECT_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "ofi_coll_select_utils.h"
 #include "coll_algo_params.h"
 
 MPL_STATIC_INLINE_PREFIX const
@@ -18,28 +19,43 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
                                                         MPI_Datatype datatype,
                                                         int root,
                                                         MPIR_Comm * comm,
-                                                        MPIR_Errflag_t * errflag,
-                                                        const void *ch4_algo_parameters_container_in
-                                                        ATTRIBUTE((unused)))
+                                                        MPIR_Errflag_t * errflag, const void
+                                                        *ch4_algo_parameters_container_in)
 {
-    int nbytes = 0;
-    MPI_Aint type_size = 0;
+    if (MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION) {
+        MPIDU_SELECTON_coll_signature_t coll_sig = {
+            .coll_id = MPIDU_SELECTION_BCAST,
+            .comm = comm,
+            .coll.bcast = {
+                           .buffer = buffer,
+                           .count = count,
+                           .datatype = datatype,
+                           .root = root,
+                           .errflag = errflag}
+        };
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    nbytes = type_size * count;
-
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        return &MPIDI_OFI_Bcast_intra_binomial_cnt;
+        return MPIDI_OFI_coll_select(&coll_sig, ch4_algo_parameters_container_in);
     } else {
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-            return &MPIDI_OFI_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
+        int nbytes = 0;
+        MPI_Aint type_size = 0;
+
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+
+        nbytes = type_size * count;
+
+        if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
+            (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
+            return &MPIDI_OFI_Bcast_intra_binomial_cnt;
         } else {
-            return &MPIDI_OFI_Bcast_intra_scatter_ring_allgather_cnt;
+            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
+                return &MPIDI_OFI_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
+            } else {
+                return &MPIDI_OFI_Bcast_intra_scatter_ring_allgather_cnt;
+            }
+
+            return NULL;
         }
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const

@@ -13,25 +13,112 @@
 #include <mpidimpl.h>
 #include "ofi_noinline.h"
 
+const char *MPIDU_SELECTION_Bcast_ofi[] = {
+    "binomial",
+    "scatter_recursive_doubling_allgather",
+    "scatter_ring_allgatherv",
+};
+
+const char *MPIDU_SELECTION_Barrier_ofi[] = {
+    "dissemination",
+};
+
+const char *MPIDU_SELECTION_Allreduce_ofi[] = {
+    "recursive_doubling",
+    "reduce_scatter_allgather",
+};
+
+const char *MPIDU_SELECTION_Allgather_ofi[] = {
+    "recursive_doubling",
+    "brucks",
+    "ring",
+};
+
+const char *MPIDU_SELECTION_Allgatherv_ofi[] = {
+    "recursive_doubling",
+    "brucks",
+    "ring",
+};
+
+const char *MPIDU_SELECTION_Gather_ofi[] = {
+    "binomial",
+};
+
+const char *MPIDU_SELECTION_Gatherv_ofi[] = {
+    "allcomm_linear",
+};
+
+const char *MPIDU_SELECTION_Scatter_ofi[] = {
+    "binomial",
+};
+
+const char *MPIDU_SELECTION_Scatterv_ofi[] = {
+    "allcomm_linear",
+};
+
+const char *MPIDU_SELECTION_Alltoall_ofi[] = {
+    "brucks",
+    "scattered",
+    "pairwise",
+    "pairwise_sendrecv_replace",
+};
+
+const char *MPIDU_SELECTION_Alltoallv_ofi[] = {
+    "pairwise_sendrecv_replace",
+    "scattered",
+};
+
+const char *MPIDU_SELECTION_Alltoallw_ofi[] = {
+    "pairwise_sendrecv_replace",
+    "scattered",
+};
+
+const char *MPIDU_SELECTION_Reduce_ofi[] = {
+    "reduce_scatter_gather",
+    "binomial",
+};
+
+const char *MPIDU_SELECTION_Reduce_scatter_ofi[] = {
+    "noncommutative",
+    "pairwise",
+    "recursive_doubling",
+    "recursive_halving",
+};
+
+const char *MPIDU_SELECTION_Reduce_scatter_block_ofi[] = {
+    "noncommutative",
+    "pairwise",
+    "recursive_doubling",
+    "recursive_halving",
+};
+
+const char *MPIDU_SELECTION_Scan_ofi[] = {
+    "recursive_doubling",
+};
+
+const char *MPIDU_SELECTION_Exscan_ofi[] = {
+    "recursive_doubling",
+};
+
 int MPIDU_SELECTION_MAX_OFI_ALGORITHM_INDICES[MPIDU_SELECTION_COLLECTIVES_MAX]
     = {
-    0,  /* ALLGATHER */
-    0,  /* ALLGATHERV */
-    0,  /* ALLREDUCE */
-    0,  /* ALLTOALL */
-    0,  /* ALLTOALLV */
-    0,  /* ALLTOALLW */
-    0,  /* BARRIER */
-    0,  /* BCAST */
-    0,  /* EXSCAN */
-    0,  /* GATHER */
-    0,  /* GATHERV */
-    0,  /* REDUCE_SCATTER */
-    0,  /* REDUCE */
-    0,  /* SCAN */
-    0,  /* SCATTER */
-    0,  /* SCATTERV */
-    0,  /* REDUCE_SCATTER_BLOCK */
+    sizeof(MPIDU_SELECTION_Allgather_ofi) / sizeof(char *),     /* ALLGATHER */
+    sizeof(MPIDU_SELECTION_Allgatherv_ofi) / sizeof(char *),    /* ALLGATHERV */
+    sizeof(MPIDU_SELECTION_Allreduce_ofi) / sizeof(char *),     /* ALLREDUCE */
+    sizeof(MPIDU_SELECTION_Alltoall_ofi) / sizeof(char *),      /* ALLTOALL */
+    sizeof(MPIDU_SELECTION_Alltoallv_ofi) / sizeof(char *),     /* ALLTOALLV */
+    sizeof(MPIDU_SELECTION_Alltoallw_ofi) / sizeof(char *),     /* ALLTOALLW */
+    sizeof(MPIDU_SELECTION_Barrier_ofi) / sizeof(char *),       /* BARRIER */
+    sizeof(MPIDU_SELECTION_Bcast_ofi) / sizeof(char *), /* BCAST */
+    sizeof(MPIDU_SELECTION_Exscan_ofi) / sizeof(char *),        /* EXSCAN */
+    sizeof(MPIDU_SELECTION_Gather_ofi) / sizeof(char *),        /* GATHER */
+    sizeof(MPIDU_SELECTION_Gatherv_ofi) / sizeof(char *),       /* GATHERV */
+    sizeof(MPIDU_SELECTION_Reduce_scatter_ofi) / sizeof(char *),        /* REDUCE_SCATTER */
+    sizeof(MPIDU_SELECTION_Reduce_ofi) / sizeof(char *),        /* REDUCE */
+    sizeof(MPIDU_SELECTION_Scan_ofi) / sizeof(char *),  /* SCAN */
+    sizeof(MPIDU_SELECTION_Scatter_ofi) / sizeof(char *),       /* SCATTER */
+    sizeof(MPIDU_SELECTION_Scatterv_ofi) / sizeof(char *),      /* SCATTERV */
+    sizeof(MPIDU_SELECTION_Reduce_scatter_block_ofi) / sizeof(char *),  /* REDUCE_SCATTER_BLOCK */
     0,  /* IALLGATHER */
     0,  /* IALLGATHERV */
     0,  /* IALLREDUCE */
@@ -52,23 +139,23 @@ int MPIDU_SELECTION_MAX_OFI_ALGORITHM_INDICES[MPIDU_SELECTION_COLLECTIVES_MAX]
 };
 
 const char **MPIDU_SELECTION_OFI_ALGORITHMS[MPIDU_SELECTION_COLLECTIVES_MAX] = {
-    NULL,       /* ALLGATHER */
-    NULL,       /* ALLGATHERV */
-    NULL,       /* ALLREDUCE */
-    NULL,       /* ALLTOALL */
-    NULL,       /* ALLTOALLV */
-    NULL,       /* ALLTOALLW */
-    NULL,       /* BARRIER */
-    NULL,       /* BCAST */
-    NULL,       /* EXSCAN */
-    NULL,       /* GATHER */
-    NULL,       /* GATHERV */
-    NULL,       /* REDUCE_SCATTER */
-    NULL,       /* REDUCE */
-    NULL,       /* SCAN */
-    NULL,       /* SCATTER */
-    NULL,       /* SCATTERV */
-    NULL,       /* REDUCE_SCATTER_BLOCK */
+    MPIDU_SELECTION_Allgather_ofi,      /* ALLGATHER */
+    MPIDU_SELECTION_Allgatherv_ofi,     /* ALLGATHERV */
+    MPIDU_SELECTION_Allreduce_ofi,      /* ALLREDUCE */
+    MPIDU_SELECTION_Alltoall_ofi,       /* ALLTOALL */
+    MPIDU_SELECTION_Alltoallv_ofi,      /* ALLTOALLV */
+    MPIDU_SELECTION_Alltoallw_ofi,      /* ALLTOALLW */
+    MPIDU_SELECTION_Barrier_ofi,        /* BARRIER */
+    MPIDU_SELECTION_Bcast_ofi,  /* BCAST */
+    MPIDU_SELECTION_Exscan_ofi, /* EXSCAN */
+    MPIDU_SELECTION_Gather_ofi, /* GATHER */
+    MPIDU_SELECTION_Gatherv_ofi,        /* GATHERV */
+    MPIDU_SELECTION_Reduce_scatter_ofi, /* REDUCE_SCATTER */
+    MPIDU_SELECTION_Reduce_ofi, /* REDUCE */
+    MPIDU_SELECTION_Scan_ofi,   /* SCAN */
+    MPIDU_SELECTION_Scatter_ofi,        /* SCATTER */
+    MPIDU_SELECTION_Scatterv_ofi,       /* SCATTERV */
+    MPIDU_SELECTION_Reduce_scatter_block_ofi,   /* REDUCE_SCATTER_BLOCK */
     NULL,       /* IALLGATHER */
     NULL,       /* IALLGATHERV */
     NULL,       /* IALLREDUCE */

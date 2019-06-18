@@ -11,24 +11,100 @@
 #include "mpiimpl.h"
 #include "ch4_coll_select_tree_build.h"
 
+const char *MPIDU_SELECTION_Bcast_composition[] = {
+    "alpha",
+    "beta",
+    "gamma",
+};
+
+const char *MPIDU_SELECTION_Barrier_composition[] = {
+    "alpha",
+    "beta",
+};
+
+const char *MPIDU_SELECTION_Allreduce_composition[] = {
+    "alpha",
+    "beta",
+    "gamma",
+};
+
+const char *MPIDU_SELECTION_Allgather_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Allgatherv_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Scatter_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Scatterv_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Gather_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Gatherv_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Alltoall_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Alltoallv_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Alltoallw_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Reduce_composition[] = {
+    "alpha",
+    "beta",
+    "gamma",
+};
+
+const char *MPIDU_SELECTION_Reduce_scatter_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Reduce_scatter_block_composition[] = {
+    "alpha",
+};
+
+const char *MPIDU_SELECTION_Scan_composition[] = {
+    "alpha",
+    "beta",
+};
+
+const char *MPIDU_SELECTION_Exscan_composition[] = {
+    "alpha",
+};
+
 int MPIDU_SELECTION_MAX_COMPOSITION_INDICES[MPIDU_SELECTION_COLLECTIVES_MAX] = {
-    0,  /* ALLGATHER */
-    0,  /* ALLGATHERV */
-    0,  /* ALLREDUCE */
-    0,  /* ALLTOALL */
-    0,  /* ALLTOALLV */
-    0,  /* ALLTOALLW */
-    0,  /* BARRIER */
-    0,  /* BCAST */
-    0,  /* EXSCAN */
-    0,  /* GATHER */
-    0,  /* GATHERV */
-    0,  /* REDUCE_SCATTER */
-    0,  /* REDUCE */
-    0,  /* SCAN */
-    0,  /* SCATTER */
-    0,  /* SCATTERV */
-    0,  /* REDUCE_SCATTER_BLOCK */
+    sizeof(MPIDU_SELECTION_Allgather_composition) / sizeof(char *),     /* ALLGATHER */
+    sizeof(MPIDU_SELECTION_Allgatherv_composition) / sizeof(char *),    /* ALLGATHERV */
+    sizeof(MPIDU_SELECTION_Allreduce_composition) / sizeof(char *),     /* ALLREDUCE */
+    sizeof(MPIDU_SELECTION_Alltoall_composition) / sizeof(char *),      /* ALLTOALL */
+    sizeof(MPIDU_SELECTION_Alltoallv_composition) / sizeof(char *),     /* ALLTOALLV */
+    sizeof(MPIDU_SELECTION_Alltoallw_composition) / sizeof(char *),     /* ALLTOALLW */
+    sizeof(MPIDU_SELECTION_Barrier_composition) / sizeof(char *),       /* BARRIER */
+    sizeof(MPIDU_SELECTION_Bcast_composition) / sizeof(char *), /* BCAST */
+    sizeof(MPIDU_SELECTION_Exscan_composition) / sizeof(char *),        /* EXSCAN */
+    sizeof(MPIDU_SELECTION_Gather_composition) / sizeof(char *),        /* GATHER */
+    sizeof(MPIDU_SELECTION_Gatherv_composition) / sizeof(char *),       /* GATHERV */
+    sizeof(MPIDU_SELECTION_Reduce_scatter_composition) / sizeof(char *),        /* REDUCE_SCATTER */
+    sizeof(MPIDU_SELECTION_Reduce_composition) / sizeof(char *),        /* REDUCE */
+    sizeof(MPIDU_SELECTION_Scan_composition) / sizeof(char *),  /* SCAN */
+    sizeof(MPIDU_SELECTION_Scatter_composition) / sizeof(char *),       /* SCATTER */
+    sizeof(MPIDU_SELECTION_Scatterv_composition) / sizeof(char *),      /* SCATTERV */
+    sizeof(MPIDU_SELECTION_Reduce_scatter_block_composition) / sizeof(char *),  /* REDUCE_SCATTER_BLOCK */
     0,  /* IALLGATHER */
     0,  /* IALLGATHERV */
     0,  /* IALLREDUCE */
@@ -49,23 +125,23 @@ int MPIDU_SELECTION_MAX_COMPOSITION_INDICES[MPIDU_SELECTION_COLLECTIVES_MAX] = {
 };
 
 const char **MPIDU_SELECTION_COMPOSITIONS[MPIDU_SELECTION_COLLECTIVES_MAX] = {
-    NULL,       /* ALLGATHER */
-    NULL,       /* ALLGATHERV */
-    NULL,       /* ALLREDUCE */
-    NULL,       /* ALLTOALL */
-    NULL,       /* ALLTOALLV */
-    NULL,       /* ALLTOALLW */
-    NULL,       /* BARRIER */
-    NULL,       /* BCAST */
-    NULL,       /* EXSCAN */
-    NULL,       /* GATHER */
-    NULL,       /* GATHERV */
-    NULL,       /* REDUCE_SCATTER */
-    NULL,       /* REDUCE */
-    NULL,       /* SCAN */
-    NULL,       /* SCATTER */
-    NULL,       /* SCATTERV */
-    NULL,       /* REDUCE_SCATTER_BLOCK */
+    MPIDU_SELECTION_Allgather_composition,      /* ALLGATHER */
+    MPIDU_SELECTION_Allgatherv_composition,     /* ALLGATHERV */
+    MPIDU_SELECTION_Allreduce_composition,      /* ALLREDUCE */
+    MPIDU_SELECTION_Alltoall_composition,       /* ALLTOALL */
+    MPIDU_SELECTION_Alltoallv_composition,      /* ALLTOALLV */
+    MPIDU_SELECTION_Alltoallw_composition,      /* ALLTOALLW */
+    MPIDU_SELECTION_Barrier_composition,        /* BARRIER */
+    MPIDU_SELECTION_Bcast_composition,  /* BCAST */
+    MPIDU_SELECTION_Exscan_composition, /* EXSCAN */
+    MPIDU_SELECTION_Gather_composition, /* GATHER */
+    MPIDU_SELECTION_Gatherv_composition,        /* GATHERV */
+    MPIDU_SELECTION_Reduce_scatter_composition, /* REDUCE_SCATTER */
+    MPIDU_SELECTION_Reduce_composition, /* REDUCE */
+    MPIDU_SELECTION_Scan_composition,   /* SCAN */
+    MPIDU_SELECTION_Scatter_composition,        /* SCATTER */
+    MPIDU_SELECTION_Scatterv_composition,       /* SCATTERV */
+    MPIDU_SELECTION_Reduce_scatter_block_composition,   /* REDUCE_SCATTER_BLOCK */
     NULL,       /* IALLGATHER */
     NULL,       /* IALLGATHERV */
     NULL,       /* IALLREDUCE */
