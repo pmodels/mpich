@@ -19,25 +19,25 @@ typedef struct {
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline int OPA_load_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_int(const OPA_int_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void OPA_store_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_int(OPA_int_t * ptr, int val)
 {
     ptr->v = val;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_ptr(const OPA_ptr_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 {
     ptr->v = val;
 }
@@ -65,7 +65,7 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
  * conditional-branch+isync in some cases (load_acquire?) once we understand it
  * better */
 
-static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_acquire_int(const OPA_int_t * ptr)
 {
     int tmp;
     tmp = ptr->v;
@@ -73,13 +73,13 @@ static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_release_int(OPA_int_t * ptr, int val)
 {
     OPA_ppc_lwsync_();
     ptr->v = val;
 }
 
-static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_acquire_ptr(const OPA_ptr_t * ptr)
 {
     void *tmp;
     tmp = ptr->v;
@@ -87,7 +87,7 @@ static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
 {
     OPA_ppc_lwsync_();
     ptr->v = val;
@@ -99,7 +99,7 @@ static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
    these here, which are arch-specific, then use the generic
    implementations from opa_emulated.h */
 
-static _opa_inline int OPA_LL_int(OPA_int_t * ptr)
+static inline int OPA_LL_int(OPA_int_t * ptr)
 {
     int val;
     __asm__ __volatile__("lwarx %[val],0,%[ptr]":[val] "=r"(val)
@@ -110,7 +110,7 @@ static _opa_inline int OPA_LL_int(OPA_int_t * ptr)
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
-static _opa_inline int OPA_SC_int(OPA_int_t * ptr, int val)
+static inline int OPA_SC_int(OPA_int_t * ptr, int val)
 {
     int ret = 1;                /* init to non-zero, will be reset to 0 if SC was unsuccessful */
     __asm__ __volatile__("stwcx. %[val],0,%[ptr];\n"
@@ -134,7 +134,7 @@ static _opa_inline int OPA_SC_int(OPA_int_t * ptr, int val)
 #endif
 
 
-static _opa_inline void *OPA_LL_ptr(OPA_ptr_t * ptr)
+static inline void *OPA_LL_ptr(OPA_ptr_t * ptr)
 {
     void *val;
     __asm__ __volatile__("l" OPA_SS "arx %[val],0,%[ptr]":[val] "=r"(val)
@@ -145,7 +145,7 @@ static _opa_inline void *OPA_LL_ptr(OPA_ptr_t * ptr)
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
-static _opa_inline int OPA_SC_ptr(OPA_ptr_t * ptr, void *val)
+static inline int OPA_SC_ptr(OPA_ptr_t * ptr, void *val)
 {
     int ret = 1;                /* init to non-zero, will be reset to 0 if SC was unsuccessful */
     __asm__ __volatile__("st" OPA_SS "cx. %[val],0,%[ptr];\n"
