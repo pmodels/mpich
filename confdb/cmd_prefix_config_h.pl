@@ -7,6 +7,26 @@ use strict;
 #
 # The script will read "input_config.h", and write "output_config.h", adding prefix to every defined macros. This script is a replacement to AX_PREFIX_CONFIG_H.
 
+sub add_prefix {
+    my ($name, $prefix) = @_;
+    if($name=~/^(inline|const|restrict)/){
+        # leave c99 keywords alone
+    }
+    elsif($name=~/^_/){
+        # leave underscore keywords alone, e.g _MINIX
+    }
+    elsif($name=~/^$prefix\_/i){
+        # avoid double prefix
+    }
+    elsif($name=~/^[A-Z0-9_]+$/){
+        $name = uc($prefix)."_$name";
+    }
+    else{
+        $name = "_".lc($prefix)."_$name";
+    }
+    return $name;
+}
+
 my ($prefix, $config_in, $config_out)=@ARGV;
 if(!$prefix){
     die "missing prefix!\n";
@@ -21,16 +41,15 @@ my @lines;
 open In, "$config_in" or die "Can't open $config_in.\n";
 while(<In>){
     if(/^#define\s+(\w+)\s*(.+)/){
-        my ($name, $val) = ($1, $2);
-        if($name=~/^[A-Z]/){
-            $name = uc($prefix)."_$name";
-        }
-        else{
-            $name = "_".lc($prefix)."_$name";
-        }
-        push @lines, "#ifndef $name \n";
-        push @lines, "#define $name  $val \n";
+        my $name = add_prefix($1, $prefix);
+        push @lines, "#ifndef $name\n";
+        push @lines, "#define $name $2\n";
         push @lines, "#endif\n";
+        next;
+    }
+    elsif(/^\/\*\s*#undef (\w+)/){
+        my $name = add_prefix($1, $prefix);
+        push @lines, "/* #undef $name */\n";
         next;
     }
     push @lines, $_;
