@@ -43,6 +43,7 @@ void MPL_thread_exit(void);
 void MPL_thread_self(MPL_thread_id_t * id);
 void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same);
 void MPL_thread_yield();
+void MPL_thread_schedule(void);
 
 void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err);
 void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err);

@@ -54,6 +54,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
     } while (0)
 
 #define MPL_thread_yield MPL_sched_yield
+#define MPL_thread_schedule() do {} while (0)
 
 
 /*
