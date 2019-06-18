@@ -170,3 +170,12 @@ neighb_alltoallv 4 mpiversion=3.0
 neighb_alltoallw 4 mpiversion=3.0
 
 @coll_algo_tests@
+
+#Tests for collective selection infrastructure
+@coll_selection_tests@bcasttest 4 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcasttest 8 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcasttest 10 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcastzerotype 1 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcastzerotype 4 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcastzerotype 5 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1
+@coll_selection_tests@bcastzerotype 10 MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION=1

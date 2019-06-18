@@ -264,6 +264,11 @@ dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
+AC_ARG_ENABLE(coll-selection-tests,
+              [AC_HELP_STRING([--enable-coll-selection-tests],
+                              [Run tests for algorithm selection through collective selection infrastructure])],,
+              [enable_coll_selection_tests=no])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -733,6 +738,12 @@ fi
 AC_SUBST(coll_algo_tests)
 AM_SUBST_NOTMAKE(coll_algo_tests)
 
+# Extended collectives test
+coll_selection_tests="#"
+if test "$enable_coll_selection_tests" = "yes" ; then
+    coll_selection_tests=""
+fi
+AC_SUBST(coll_selection_tests)
 
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
