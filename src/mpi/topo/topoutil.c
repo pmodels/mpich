@@ -201,6 +201,13 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
     MPL_UNREFERENCED_ARG(extra_data);
 
     /* FIXME - free the attribute data structure */
+    if (topology->subcomms) {
+        for (int i = 0; i < topology->num_subcomms; i++) {
+            if (topology->subcomms[i])
+                MPIR_Comm_free_impl(topology->subcomms[i]);
+        }
+        MPL_free(topology->subcomms);
+    }
 
     if (topology->kind == MPI_CART) {
         MPL_free(topology->topo.cart.dims);

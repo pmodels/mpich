@@ -56,6 +56,8 @@ struct MPIR_Topology {
         MPII_Cart_topology cart;
         MPII_Dist_graph_topology dist_graph;
     } topo;
+    MPIR_Comm **subcomms;
+    int num_subcomms;
 };
 
 int MPIR_Dims_create(int, int, int *);

@@ -74,6 +74,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             cart_ptr->kind = MPI_CART;
             cart_ptr->topo.cart.nnodes = 1;
             cart_ptr->topo.cart.ndims = 0;
+            cart_ptr->subcomms = NULL;
 
             /* make mallocs of size 1 int so that they get freed as part of the
              * normal free mechanism */
@@ -131,6 +132,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         cart_ptr->kind = MPI_CART;
         cart_ptr->topo.cart.nnodes = newsize;
         cart_ptr->topo.cart.ndims = ndims;
+        cart_ptr->subcomms = NULL;
         MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims, int *, ndims * sizeof(int),
                             mpi_errno, "cart.dims", MPL_MEM_COMM);
         MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic, int *, ndims * sizeof(int),
@@ -155,6 +157,48 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         MPIR_ERR_POP(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
+
+    /* create subcomms */
+    if (newsize > 0 && ndims > 0) {
+        int neighbors[ndims * 2];
+        for (i = 0; i < ndims * 2; i++)
+            neighbors[i] = -1;
+
+        /* get my neighbors */
+        int num_neighbors = 0;
+        for (i = 0; i < ndims; i++) {
+            MPIR_Cart_shift_impl(newcomm_ptr, i, 1, &neighbors[i * 2], &neighbors[i * 2 + 1]);
+
+            if (neighbors[i * 2] != -1)
+                num_neighbors++;
+            if (neighbors[i * 2 + 1] != -1)
+                num_neighbors++;
+        }
+        /* printf("neighbors = [%d, %d]\n", neighbors[0], neighbors[1]); */
+        /* printf("newsize = %d\n", newsize); */
+
+        /* create one subcomm per process (i.e. root) */
+        cart_ptr->subcomms = MPL_malloc(sizeof(MPIR_Comm *) * newsize, MPL_MEM_COMM);
+        cart_ptr->num_subcomms = newsize;
+        for (i = 0; i < newsize; i++) {
+            int color = MPI_UNDEFINED;
+            int key = 0;
+
+            /* the root and neighbors of the root are part of each subcomm */
+            if (i == MPIR_Comm_rank(newcomm_ptr)) {
+                color = 0;
+            } else {
+                for (int j = 0; j < ndims * 2; j++) {
+                    if (neighbors[j] == i) {
+                        color = 0;
+                        key = 1;
+                    }
+                }
+            }
+            /* if (color == 0) printf("%d in comm %d\n", MPIR_Comm_rank(newcomm_ptr), i); */
+            MPIR_Comm_split_impl(newcomm_ptr, color, key, &cart_ptr->subcomms[i]);
+        }
+    }
 
   fn_exit:
     return mpi_errno;
