@@ -39,7 +39,8 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_rma_target_callbacks.h     \
                   src/mpid/ch4/src/ch4r_request.h     \
                   src/mpid/ch4/src/ch4_coll_select_tree_types.h   \
-                  src/mpid/ch4/src/ch4_coll_select_tree_build.h
+                  src/mpid/ch4/src/ch4_coll_select_tree_build.h \
+                  src/mpid/ch4/src/ch4_coll_select_tree_traversal.h
 
 mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4_impl.c           \
@@ -60,7 +61,8 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4r_win.c           \
                     src/mpid/ch4/src/mpid_ch4_net_array.c   \
                     src/mpid/ch4/src/ch4_coll_select_tree_build.c \
-                    src/mpid/ch4/src/ch4_coll_select_container_parsers.c
+                    src/mpid/ch4/src/ch4_coll_select_container_parsers.c \
+                    src/mpid/ch4/src/ch4_coll_select_tree_traversal.c
 
 if BUILD_CH4_COLL_TUNING
 mpi_core_sources += src/mpid/ch4/src/ch4_coll_globals.c
