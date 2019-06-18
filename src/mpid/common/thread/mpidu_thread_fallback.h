@@ -486,6 +486,8 @@ M*/
                 MPIDU_Thread_yield(&mutex, &err_);                          \
                 MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
                 MPIR_Assert(err_ == 0);                                 \
+            } else {                                                    \
+                MPL_thread_schedule();                                  \
             }                                                           \
         }                                                               \
     } while (0)
