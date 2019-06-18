@@ -16,6 +16,7 @@ noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h  \
         src/mpid/ch4/shm/src/shm_p2p.h     \
         src/mpid/ch4/shm/src/shm_startall.h\
         src/mpid/ch4/shm/src/shm_noinline.h\
+        src/mpid/ch4/shm/src/shm_coll_select_utils.h\
         src/mpid/ch4/shm/src/shm_rma.h
 
 mpi_core_sources   += src/mpid/ch4/shm/src/func_table.c \
@@ -25,7 +26,8 @@ mpi_core_sources   += src/mpid/ch4/shm/src/func_table.c \
                       src/mpid/ch4/shm/src/shm_mem.c \
                       src/mpid/ch4/shm/src/shm_misc.c \
                       src/mpid/ch4/shm/src/shm_rma.c \
-                      src/mpid/ch4/shm/src/shm_impl.c
+                      src/mpid/ch4/shm/src/shm_impl.c \
+                      src/mpid/ch4/shm/src/shm_coll.c
 
 if BUILD_TOPOTREES
 noinst_HEADERS += src/mpid/ch4/shm/src/topotree_util.h \

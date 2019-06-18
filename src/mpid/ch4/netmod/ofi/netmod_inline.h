@@ -23,6 +23,7 @@
 #include "ofi_win.h"
 #include "ofi_rma.h"
 #include "ofi_startall.h"
+#include "ofi_coll_select_utils.h"
 
 /* Not-inlined OFI netmod functions */
 #include "ofi_noinline.h"

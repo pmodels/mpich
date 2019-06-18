@@ -27,6 +27,7 @@
 #include "ucx_am.h"
 #include "ucx_proc.h"
 #include "ucx_coll.h"
+#include "ucx_coll_select_utils.h"
 
 /* Not-inlined UCX netmod functions */
 #include "ucx_noinline.h"

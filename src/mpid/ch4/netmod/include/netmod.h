@@ -13,6 +13,7 @@
 #define NETMOD_H_INCLUDED
 
 #include <mpidimpl.h>
+#include "ch4_coll_select_tree_types.h"
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
@@ -467,6 +468,10 @@ typedef int (*MPIDI_NM_mpi_ineighbor_alltoallw_sched_t) (const void *sendbuf,
                                                          const MPI_Aint rdispls[],
                                                          const MPI_Datatype recvtypes[],
                                                          MPIR_Comm * comm, MPIR_Sched_t s);
+typedef void (*MPIDI_NM_algorithm_parser_t) (MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                                             MPIDIG_coll_algo_generic_container_t * cnt,
+                                             char *value);
+typedef const void *(*MPIDI_NM_get_default_container_t) (MPIDU_SELECTION_coll_id_t coll_id);
 typedef int (*MPIDI_NM_mpi_type_commit_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_op_commit_hook_t) (MPIR_Op * op_p);
@@ -514,6 +519,9 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_isend_reply_t am_isend_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_NM_am_recv_t am_recv;
+    /* coll select function */
+    MPIDI_NM_algorithm_parser_t algorithm_parser;
+    MPIDI_NM_get_default_container_t get_default_container;
 } MPIDI_NM_funcs_t;
 
 typedef struct MPIDI_NM_native_funcs {
@@ -1310,6 +1318,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallw_sched(const void *
                                                                     MPIR_Comm * comm,
                                                                     MPIR_Sched_t s)
     MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX const void *MPIDI_NM_get_default_container(MPIDU_SELECTION_coll_id_t
+                                                                    coll_id)
+    MPL_STATIC_INLINE_SUFFIX;
+void MPIDI_NM_algorithm_parser(MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                               MPIDIG_coll_algo_generic_container_t * cnt, char *value);
 int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p);
 int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p);

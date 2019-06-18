@@ -1764,6 +1764,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscatterv(const void *sendbuf, const 
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX const void *MPIDI_SHM_get_default_container(MPIDU_SELECTION_coll_id_t
+                                                                     coll_id)
+{
+    const void *container;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_GET_DEFAULT_CONTAINER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_GET_DEFAULT_CONTAINER);
+
+    container = MPIDI_SHM_src_funcs.get_default_container(coll_id);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_GET_DEFAULT_CONTAINER);
+    return container;
+}
 #endif /* SHM_DISABLE_INLINES  */
 
 #else

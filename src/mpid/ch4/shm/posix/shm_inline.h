@@ -22,6 +22,7 @@
 #include "posix_coll.h"
 #include "posix_unimpl.h"
 #include "posix_proc.h"
+#include "posix_coll_select_utils.h"
 
 /* Not-inlined shm functions */
 #include "posix_noinline.h"

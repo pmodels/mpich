@@ -114,4 +114,10 @@ int MPIDI_OFI_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 #define MPIDI_NM_mpi_type_commit_hook MPIDI_OFI_mpi_type_commit_hook
 #endif
 
+#ifdef NETMOD_INLINE
+#define MPIDI_NM_algorithm_parser MPIDI_OFI_algorithm_parser
+#endif
+
+void MPIDI_OFI_algorithm_parser(MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                                MPIDIG_coll_algo_generic_container_t * cnt, char *value);
 #endif

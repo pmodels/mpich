@@ -2154,6 +2154,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallw_sched(const void *
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX const void *MPIDI_NM_get_default_container(MPIDU_SELECTION_coll_id_t
+                                                                    coll_id)
+{
+    const void *container;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_GET_DEFAULT_CONTAINER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_GET_DEFAULT_CONTAINER);
+
+    container = MPIDI_NM_func->get_default_container(coll_id);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_GET_DEFAULT_CONTAINER);
+    return container;
+}
+
 #endif /* NETMOD_DISABLE_INLINES  */
 
 #else

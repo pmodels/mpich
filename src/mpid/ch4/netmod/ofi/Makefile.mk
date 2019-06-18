@@ -19,6 +19,7 @@ mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \
                       src/mpid/ch4/netmod/ofi/ofi_op.c \
                       src/mpid/ch4/netmod/ofi/ofi_spawn.c \
                       src/mpid/ch4/netmod/ofi/ofi_win.c \
+                      src/mpid/ch4/netmod/ofi/ofi_coll_select_container_parsers.c \
                       src/mpid/ch4/netmod/ofi/globals.c \
                       src/mpid/ch4/netmod/ofi/util.c
 errnames_txt_files += src/mpid/ch4/netmod/ofi/errnames.txt

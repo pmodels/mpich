@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "ch4i_workq_types.h"
+#include "ch4_coll_select_tree_types.h"
 
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
@@ -313,6 +314,7 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_workq_t workqueue;
 #endif
     MPIDI_CH4_configurations_t settings;
+    MPIDU_SELECTION_storage_entry coll_selection;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_global;
 #ifdef MPL_USE_DBG_LOGGING

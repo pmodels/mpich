@@ -14,7 +14,8 @@ mpi_core_sources   += src/mpid/ch4/netmod/ucx/func_table.c\
                       src/mpid/ch4/netmod/ucx/ucx_op.c \
                       src/mpid/ch4/netmod/ucx/ucx_spawn.c \
                       src/mpid/ch4/netmod/ucx/ucx_win.c \
-                      src/mpid/ch4/netmod/ucx/globals.c
+                      src/mpid/ch4/netmod/ucx/globals.c \
+                      src/mpid/ch4/netmod/ucx/ucx_coll_select_container_parsers.c
 
 errnames_txt_files += src/mpid/ch4/netmod/ucx/errnames.txt
 

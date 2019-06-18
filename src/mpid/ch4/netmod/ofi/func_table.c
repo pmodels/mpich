@@ -58,7 +58,10 @@ MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
-    .am_recv = MPIDI_NM_am_recv
+    .am_recv = MPIDI_NM_am_recv,
+    /* collective selection */
+    .algorithm_parser = MPIDI_OFI_algorithm_parser,
+    .get_default_container = MPIDI_NM_get_default_container,
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ofi_funcs = {

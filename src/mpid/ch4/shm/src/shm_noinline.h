@@ -55,6 +55,8 @@ int MPIDI_SHMI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, co
 
 void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_SHMI_mpi_free_mem(void *ptr);
+void MPIDI_SHMI_algorithm_parser(MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                                 MPIDIG_coll_algo_generic_container_t * cnt, char *value);
 
 #ifdef SHM_INLINE
 #define MPIDI_SHM_mpi_init_hook MPIDI_SHMI_mpi_init_hook
@@ -92,6 +94,7 @@ int MPIDI_SHMI_mpi_free_mem(void *ptr);
 #define MPIDI_SHM_create_intercomm_from_lpids MPIDI_SHMI_create_intercomm_from_lpids
 #define MPIDI_SHM_mpi_alloc_mem MPIDI_SHMI_mpi_alloc_mem
 #define MPIDI_SHM_mpi_free_mem MPIDI_SHMI_mpi_free_mem
+#define MPIDI_SHM_algorithm_parser MPIDI_SHMI_algorithm_parser
 #endif
 
 #endif

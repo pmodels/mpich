@@ -427,6 +427,11 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
                                           MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
+typedef void (*MPIDI_SHM_algorithm_parser_t) (MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                                              MPIDIG_coll_algo_generic_container_t * cnt,
+                                              char *value);
+typedef const void *(*MPIDI_SHM_get_default_container_t) (MPIDU_SELECTION_coll_id_t coll_id);
+
 /* These structs are used when inlining is turned off and we call functions pointers for the shared
  * memory functions instead of directly inlining the functions into the device code. */
 typedef struct MPIDI_SHM_funcs {
@@ -473,6 +478,9 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_am_isend_reply_t am_isend_reply;
     MPIDI_SHM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_SHM_am_recv_t am_recv;
+    /* collective selection */
+    MPIDI_SHM_algorithm_parser_t algorithm_parser;
+    MPIDI_SHM_get_default_container_t get_default_container;
 } MPIDI_SHM_funcs_t;
 
 typedef struct MPIDI_SHM_native_funcs {
@@ -1103,5 +1111,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscatterv(const void *sendbuf, const 
                                                      MPI_Datatype recvtype, int root,
                                                      MPIR_Comm * comm_ptr,
                                                      MPIR_Request ** req) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX const void *MPIDI_SHM_get_default_container(MPIDU_SELECTION_coll_id_t
+                                                                     coll_id)
+    MPL_STATIC_INLINE_SUFFIX;
+void MPIDI_SHM_algorithm_parser(MPIDU_SELECTION_coll_id_t coll_id, int *cnt_num,
+                                MPIDIG_coll_algo_generic_container_t * cnt, char *value);
 
 #endif /* SHM_H_INCLUDED */
