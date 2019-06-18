@@ -23,25 +23,25 @@ typedef struct {
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline int OPA_load_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_int(const OPA_int_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline void OPA_store_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_int(OPA_int_t * ptr, int val)
 {
     ptr->v = val;
 }
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_ptr(const OPA_ptr_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic on ia64. */
-static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 {
     ptr->v = val;
 }
@@ -57,7 +57,7 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 #if 0
 /* acquire means operations after the acquire will see any memory opeations
  * performed before the corresponding paired release operation */
-static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_acquire_int(const OPA_int_t * ptr)
 {
     int tmp;
     __asm__ __volatile__("ld.acq %0=[%1]":"=r"(tmp)
@@ -66,14 +66,14 @@ static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_release_int(OPA_int_t * ptr, int val)
 {
     __asm__ __volatile__("st.rel [%0]=%1":"=m"(ptr->v)
                          :"r"(val)
                          :"memory");
 }
 
-static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_acquire_ptr(const OPA_ptr_t * ptr)
 {
     int tmp;
     __asm__ __volatile__("ld.acq %0=[%1]":"=r"(tmp)
@@ -82,7 +82,7 @@ static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
 {
     __asm__ __volatile__("st.rel [%0]=%1":"=m"(ptr->v)
                          :"r"(val)
@@ -105,7 +105,7 @@ static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
 #define OPA_fetch_and_decr_int_by_faa OPA_fetch_and_decr_int
 #define OPA_fetch_and_incr_int_by_faa OPA_fetch_and_incr_int
 
-static _opa_inline int OPA_decr_and_test_int(OPA_int_t * ptr)
+static inline int OPA_decr_and_test_int(OPA_int_t * ptr)
 {
     int val;
     __asm__ __volatile__("fetchadd4.rel %0=[%2],%3":"=r"(val), "=m"(ptr->v)
@@ -113,7 +113,7 @@ static _opa_inline int OPA_decr_and_test_int(OPA_int_t * ptr)
     return val == 1;
 }
 
-static _opa_inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
+static inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
 {
     int prev;
 
@@ -147,7 +147,7 @@ static _opa_inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
     break
 
 
-static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
+static inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 {
     switch (val) {
             OPA_IA64_FAA_CASE_MACRO(ptr, -16);
@@ -176,7 +176,7 @@ static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 #undef OPA_IA64_FAA_CASE_MACRO
 
 
-static _opa_inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
+static inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
 {
     void *prev;
     __asm__ __volatile__("mov ar.ccv=%1;;" "cmpxchg8.rel %0=[%3],%4,ar.ccv":"=r"(prev), "=m"(ptr->v)
@@ -184,7 +184,7 @@ static _opa_inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
     return prev;
 }
 
-static _opa_inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
+static inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
 {
     __asm__ __volatile__("xchg8 %0=[%2],%3":"=r"(val), "=m"(ptr->v)
                          :"r"(&ptr->v), "0"(val));
@@ -192,7 +192,7 @@ static _opa_inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
 }
 
 
-static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
+static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 {
     __asm__ __volatile__("xchg8 %0=[%2],%3":"=r"(val), "=m"(ptr->v)
                          :"r"(&ptr->v), "0"(val));
