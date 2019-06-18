@@ -75,9 +75,21 @@ indent_code()
 	/tmp/${USER}.__tmp__ && mv /tmp/${USER}.__tmp__ ${file}
 }
 
+debug=
+run_indent()
+{
+    if test -n "$debug" ; then
+        echo indent_code $1
+    else
+        indent_code $1
+        # indent would sometime toggle code layout. Run it twice to get stability.
+        indent_code $1
+    fi
+}
+
 usage()
 {
-    echo "Usage: $1 [filename | --all] {--recursive} {--debug}"
+    echo "Usage: $1 [filename | --all] {--recursive} {--debug} {--ignore ignore_patterns}"
 }
 
 # Check usage
@@ -86,20 +98,37 @@ if [ -z "$1" ]; then
     exit
 fi
 
-# Make sure the parameters make sense
+filetype_list="\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$"
+
+ignore_list="doc/"
+ignore_list="$ignore_list|src/mpid/ch3/doc"
+ignore_list="$ignore_list|src/mpid/ch3/include|src/mpid/ch3/src"
+ignore_list="$ignore_list|src/mpid/ch3/util"
+ignore_list="$ignore_list|src/mpid/ch3/channels/nemesis/include"
+ignore_list="$ignore_list|src/mpid/ch3/channels/nemesis/src"
+ignore_list="$ignore_list|src/mpid/ch3/channels/nemesis/utils"
+ignore_list="$ignore_list|src/mpi/romio/include/mpiof.h.in"
+ignore_list="$ignore_list|test/mpi/errors/f77/io/addsize.h.in"
+ignore_list="$ignore_list|test/mpi/errors/f77/io/iooffset.h.in"
+ignore_list="$ignore_list|test/mpi/f77/attr/attraints.h.in"
+ignore_list="$ignore_list|test/mpi/f77/datatype/typeaints.h.in"
+ignore_list="$ignore_list|test/mpi/f77/ext/add1size.h.in"
+ignore_list="$ignore_list|test/mpi/f77/io/ioaint.h.in"
+ignore_list="$ignore_list|test/mpi/f77/io/iodisp.h.in"
+ignore_list="$ignore_list|test/mpi/f77/io/iooffset.h.in"
+ignore_list="$ignore_list|test/mpi/f77/pt2pt/attr1aints.h.in"
+ignore_list="$ignore_list|test/mpi/f77/rma/addsize.h.in"
+ignore_list="$ignore_list|test/mpi/f77/spawn/type1aint.h.in"
+ignore_list="$ignore_list|src/include/mpi.h.in"
+ignore_list="$ignore_list|src/mpi/romio/include/mpio.h.in"
+ignore_list="$ignore_list|src/mpi/romio/adio/include/adioi_errmsg.h"
+
+filelist=""
+
 all=0
 recursive=0
-got_file=0
-debug=
 ignore=0
-ignore_list="doc/|src/mpid/ch3/doc|src/mpid/ch3/include|src/mpid/ch3/src|src/mpid/ch3/util"
-ignore_list="$ignore_list|src/mpid/ch3/channels/nemesis/include|src/mpid/ch3/channels/nemesis/src|src/mpid/ch3/channels/nemesis/utils"
-ignore_list="$ignore_list|src/mpi/romio/include/mpiof.h.in|test/mpi/errors/f77/io/addsize.h.in|test/mpi/errors/f77/io/iooffset.h.in"
-ignore_list="$ignore_list|test/mpi/f77/attr/attraints.h.in|test/mpi/f77/datatype/typeaints.h.in|test/mpi/f77/ext/add1size.h.in"
-ignore_list="$ignore_list|test/mpi/f77/io/ioaint.h.in|test/mpi/f77/io/iodisp.h.in|test/mpi/f77/io/iooffset.h.in"
-ignore_list="$ignore_list|test/mpi/f77/pt2pt/attr1aints.h.in|test/mpi/f77/rma/addsize.h.in|test/mpi/f77/spawn/type1aint.h.in"
-ignore_list="$ignore_list|src/include/mpi.h.in|src/mpi/romio/include/mpio.h.in"
-ignore_list="$ignore_list|src/mpi/romio/adio/include/adioi_errmsg.h"
+got_file=0
 for arg in $@; do
     if [ "$ignore" = "1" ] ; then
 	ignore_list="$ignore_list|$arg"
@@ -117,6 +146,7 @@ for arg in $@; do
 	ignore=1
     else
 	got_file=1
+        filelist="$filelist $arg"
     fi
 done
 if [ "$recursive" = "1" -a "$all" = "0" ]; then
@@ -131,18 +161,18 @@ if [ "$got_file" = "1" -a "$all" = "1" ]; then
 fi
 
 if [ "$recursive" = "1" ]; then
-    for i in `git ls-files | egrep '(\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$)' | \
-	egrep -v "($ignore_list)"` ; do
-	${debug} indent_code $i
-	${debug} indent_code $i
+    for i in `git ls-files | egrep "($filetype_list)" | egrep -v "($ignore_list)"` ; do
+	run_indent $i
     done
 elif [ "$all" = "1" ]; then
-    for i in `git ls-files | cut -d/ -f1 | uniq | egrep '(\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$)' | \
-	egrep -v "($ignore_list)"` ; do
-	${debug} indent_code $i
-	${debug} indent_code $i
+    for i in `git ls-files | cut -d/ -f1 | uniq | egrep "($filetype_list)" | egrep -v "($ignore_list)"` ; do
+	run_indent $i
     done
 else
-    ${debug} indent_code $@
-    ${debug} indent_code $@
+    for i in $filelist; do
+        filename=`echo $i | egrep "($filetype_list)" | egrep -v "($ignore_list)"`
+        if [ "$filename" != "" ] ; then
+            run_indent $filename
+        fi
+    done
 fi
