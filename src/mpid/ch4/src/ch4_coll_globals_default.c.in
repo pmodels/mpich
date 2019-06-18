@@ -2,11 +2,10 @@
 #include <mpidimpl.h>
 #include "ch4_impl.h"
 
-/* container traverse function to be implemented  */
-/* e.g. return ((void *) ((char *)container) + sizeof(MPIDIG_coll_algo_generic_container_t)); */
+/* Traverses the container list to help serialize the collective containers. */
 const void *MPIDI_coll_get_next_container(const void *container)
 {
-    return NULL;
+    return ((char *) container) + sizeof(MPIDIG_coll_algo_generic_container_t);
 }
 
 /* Compositions are presumed to be topology aware and the collective call can be composed into multiple calls

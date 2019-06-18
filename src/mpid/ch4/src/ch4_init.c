@@ -12,6 +12,7 @@
 #include "mpidimpl.h"
 #include "mpidch4r.h"
 #include "datatype.h"
+#include "ch4_coll_select_tree_build.h"
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -340,6 +341,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
+
+    mpi_errno = MPIDU_SELECTION_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */

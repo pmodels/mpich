@@ -14,6 +14,7 @@
 #include "coll_algo_params.h"
 #include "ch4_coll_select_tree_types.h"
 #include "ch4_coll_select_tree_build.h"
+#include "ch4_coll_select_tree_traversal.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
