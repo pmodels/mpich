@@ -99,6 +99,10 @@ void MPL_thread_yield(void)
     Sleep(0);
 }
 
+void MPL_thread_schedule(void)
+{
+}
+
 /*
  *    Mutexes
  */
