@@ -45,16 +45,6 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
             MPIR_ERRTEST_KEYVAL(win_keyval, MPIR_WIN, "window", mpi_errno);
-#ifdef NEEDS_POINTER_ALIGNMENT_ADJUST
-            /* A common user error is to pass the address of a 4-byte
-             * int when the address of a pointer (or an address-sized int)
-             * should have been used.  We can test for this specific
-             * case.  Note that this code assumes sizeof(intptr_t) is
-             * a power of 2. */
-            if ((intptr_t) attribute_val & (sizeof(intptr_t) - 1)) {
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**attrnotptr");
-            }
-#endif
         }
         MPID_END_ERROR_CHECKS;
     }
