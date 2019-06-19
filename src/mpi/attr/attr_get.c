@@ -90,15 +90,6 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
-#ifdef NEEDS_POINTER_ALIGNMENT_ADJUST
-            /* A common user error is to pass the address of a 4-byte
-             * int when the address of a pointer (or an address-sized int)
-             * should have been used.  We can test for this specific
-             * case.  Note that this code assumes sizeof(intptr_t) is
-             * a power of 2. */
-            MPIR_ERR_CHKANDJUMP((intptr_t) attribute_val & (sizeof(intptr_t) - 1),
-                                mpi_errno, MPI_ERR_ARG, "**attrnotptr");
-#endif
         }
         MPID_END_ERROR_CHECKS;
     }
