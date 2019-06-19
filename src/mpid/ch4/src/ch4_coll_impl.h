@@ -17,7 +17,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_composition_alpha(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
                                                                  int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
                                                                  const
-                                                                 MPIDI_coll_algo_container_t
+                                                                 MPIDIG_coll_algo_generic_container_t
                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
                                                                 int root, MPIR_Comm * comm,
                                                                 MPIR_Errflag_t * errflag,
                                                                 const
-                                                                MPIDI_coll_algo_container_t
+                                                                MPIDIG_coll_algo_generic_container_t
                                                                 * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -227,7 +227,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, i
                                                                  int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
                                                                  const
-                                                                 MPIDI_coll_algo_container_t
+                                                                 MPIDIG_coll_algo_generic_container_t
                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -248,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, i
                                                                  int root, MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
                                                                  const
-                                                                 MPIDI_coll_algo_container_t
+                                                                 MPIDIG_coll_algo_generic_container_t
                                                                  *
                                                                  ch4_algo_parameters_container
                                                                  ATTRIBUTE((unused)))
@@ -272,7 +272,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                                                      MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container)
 {
@@ -355,7 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
                                                                     MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
                                                                     const
-                                                                    MPIDI_coll_algo_container_t
+                                                                    MPIDIG_coll_algo_generic_container_t
                                                                     * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -380,7 +380,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
                                                                      MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container)
 {
@@ -412,7 +412,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_composition_alpha(const void 
                                                                      MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
@@ -436,7 +436,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
                                                                   MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -530,7 +530,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
                                                                  MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
                                                                  const
-                                                                 MPIDI_coll_algo_container_t
+                                                                 MPIDIG_coll_algo_generic_container_t
                                                                  * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -678,7 +678,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
                                                                   MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -703,7 +703,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_composition_alpha(const void *se
                                                                   MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   *
                                                                   ch4_algo_parameters_container
                                                                   ATTRIBUTE((unused)))
@@ -729,7 +729,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag,
                                                                     const
-                                                                    MPIDI_coll_algo_container_t
+                                                                    MPIDIG_coll_algo_generic_container_t
                                                                     * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -756,7 +756,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_inter_composition_alpha(const void *
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag,
                                                                     const
-                                                                    MPIDI_coll_algo_container_t
+                                                                    MPIDIG_coll_algo_generic_container_t
                                                                     *
                                                                     ch4_algo_parameters_container
                                                                     ATTRIBUTE((unused)))
@@ -785,7 +785,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container)
 {
@@ -816,7 +816,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_inter_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
@@ -848,7 +848,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container)
 {
@@ -881,7 +881,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
@@ -909,7 +909,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container)
 {
@@ -938,7 +938,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_inter_composition_alpha(const void 
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag,
                                                                      const
-                                                                     MPIDI_coll_algo_container_t
+                                                                     MPIDIG_coll_algo_generic_container_t
                                                                      *
                                                                      ch4_algo_parameters_container
                                                                      ATTRIBUTE((unused)))
@@ -966,7 +966,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag,
                                                                       const
-                                                                      MPIDI_coll_algo_container_t
+                                                                      MPIDIG_coll_algo_generic_container_t
                                                                       *
                                                                       ch4_algo_parameters_container)
 {
@@ -996,7 +996,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_composition_alpha(const void
                                                                       MPIR_Comm * comm_ptr,
                                                                       MPIR_Errflag_t * errflag,
                                                                       const
-                                                                      MPIDI_coll_algo_container_t
+                                                                      MPIDIG_coll_algo_generic_container_t
                                                                       *
                                                                       ch4_algo_parameters_container
                                                                       ATTRIBUTE((unused)))
@@ -1023,7 +1023,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *se
                                                                   int root, MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1049,7 +1049,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_inter_composition_alpha(const void *se
                                                                   int root, MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   *
                                                                   ch4_algo_parameters_container
                                                                   ATTRIBUTE((unused)))
@@ -1077,7 +1077,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1105,7 +1105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_composition_alpha(const void *s
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
@@ -1132,7 +1132,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
                                                                    int root, MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1160,7 +1160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_composition_alpha(const void *s
                                                                    MPIR_Comm * comm_ptr,
                                                                    MPIR_Errflag_t * errflag,
                                                                    const
-                                                                   MPIDI_coll_algo_container_t
+                                                                   MPIDIG_coll_algo_generic_container_t
                                                                    *
                                                                    ch4_algo_parameters_container
                                                                    ATTRIBUTE((unused)))
@@ -1188,7 +1188,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
                                                                     int root, MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
                                                                     const
-                                                                    MPIDI_coll_algo_container_t
+                                                                    MPIDIG_coll_algo_generic_container_t
                                                                     * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1216,7 +1216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_composition_alpha(const void *
                                                                     int root, MPIR_Comm * comm,
                                                                     MPIR_Errflag_t * errflag,
                                                                     const
-                                                                    MPIDI_coll_algo_container_t
+                                                                    MPIDIG_coll_algo_generic_container_t
                                                                     *
                                                                     ch4_algo_parameters_container
                                                                     ATTRIBUTE((unused)))
@@ -1244,7 +1244,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const 
                                                                           MPIR_Errflag_t *
                                                                           errflag,
                                                                           const
-                                                                          MPIDI_coll_algo_container_t
+                                                                          MPIDIG_coll_algo_generic_container_t
                                                                           *
                                                                           ch4_algo_parameters_container
                                                                           ATTRIBUTE((unused)))
@@ -1272,7 +1272,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const 
                                                                           MPIR_Errflag_t *
                                                                           errflag,
                                                                           const
-                                                                          MPIDI_coll_algo_container_t
+                                                                          MPIDIG_coll_algo_generic_container_t
                                                                           *
                                                                           ch4_algo_parameters_container)
 {
@@ -1304,7 +1304,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_inter_composition_alpha(
                                                                                 MPIR_Errflag_t
                                                                                 * errflag,
                                                                                 const
-                                                                                MPIDI_coll_algo_container_t
+                                                                                MPIDIG_coll_algo_generic_container_t
                                                                                 *
                                                                                 ch4_algo_parameters_container
                                                                                 ATTRIBUTE((unused)))
@@ -1334,7 +1334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_composition_alpha(
                                                                                 MPIR_Errflag_t
                                                                                 * errflag,
                                                                                 const
-                                                                                MPIDI_coll_algo_container_t
+                                                                                MPIDIG_coll_algo_generic_container_t
                                                                                 *
                                                                                 ch4_algo_parameters_container)
 {
@@ -1362,7 +1362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                                                 MPIR_Comm * comm_ptr,
                                                                 MPIR_Errflag_t * errflag,
                                                                 const
-                                                                MPIDI_coll_algo_container_t
+                                                                MPIDIG_coll_algo_generic_container_t
                                                                 * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1531,7 +1531,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendb
                                                                MPIR_Comm * comm_ptr,
                                                                MPIR_Errflag_t * errflag,
                                                                const
-                                                               MPIDI_coll_algo_container_t
+                                                               MPIDIG_coll_algo_generic_container_t
                                                                * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1556,7 +1556,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *se
                                                                   MPIR_Comm * comm_ptr,
                                                                   MPIR_Errflag_t * errflag,
                                                                   const
-                                                                  MPIDI_coll_algo_container_t
+                                                                  MPIDIG_coll_algo_generic_container_t
                                                                   * ch4_algo_parameters_container)
 {
     int mpi_errno = MPI_SUCCESS;

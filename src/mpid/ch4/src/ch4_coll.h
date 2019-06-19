@@ -18,7 +18,7 @@
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
@@ -51,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
@@ -94,7 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
                                             MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
@@ -142,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
                                             MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHER);
@@ -183,7 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                              MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHERV);
@@ -223,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
                                           MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTER);
@@ -262,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
                                            int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTERV);
@@ -302,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount, MPI
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHER);
@@ -341,7 +341,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
                                           MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHERV);
@@ -379,7 +379,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                            MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
@@ -420,7 +420,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLV);
@@ -462,7 +462,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
@@ -502,7 +502,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
@@ -551,7 +551,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
                                                  MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER);
@@ -587,7 +587,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
                                                        MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
@@ -623,7 +623,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int c
                                        MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCAN);
@@ -658,7 +658,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, int
                                          MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    const MPIDIG_coll_algo_generic_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_EXSCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_EXSCAN);
