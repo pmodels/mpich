@@ -30,8 +30,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     int i, my_rank, num_chunks, chunk_count_floor, chunk_count_ceil;
     int offset = 0, is_contig, ori_count = count;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint position;
-    MPI_Aint lb, true_extent, extent, type_size;
+    MPI_Aint actual_packed_unpacked_bytes;
+    MPI_Aint lb, true_lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
     MPI_Datatype ori_datatype = datatype;
 
@@ -51,8 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 
     my_rank = MPIR_Comm_rank(comm_ptr);
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
 
@@ -67,16 +66,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
         count = type_size * count;
         datatype = MPI_BYTE;
         type_size = 1;
-        extent = 1;
 
         if (!is_contig) {
             buffer = MPL_malloc(count, MPL_MEM_COLL);
+            /* Reset true_lb based on the new datatype (MPI_BYTE) */
+            true_lb = 0;
             if (my_rank == root) {
                 /* Root packs the data before sending, for non contiguous datatypes */
-                position = 0;
                 mpi_errno =
-                    MPIR_Typerep_pack(ori_buffer, ori_count, ori_datatype, buffer, count,
-                                      &position);
+                    MPIR_Typerep_pack(ori_buffer, ori_count, ori_datatype, 0, buffer, count,
+                                      &actual_packed_unpacked_bytes);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_OTHER;
@@ -88,22 +87,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     }
 
     /* Calculate chunking information for pipelining */
-    MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE, type_size,
-                                            count, &num_chunks, &chunk_count_floor,
+    /* Chunking information is calculated in terms of bytes (not type_size), so we may copy only
+     * half a datatype in one chunk, but that is fine */
+    MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE, 1,
+                                            count * type_size, &num_chunks, &chunk_count_floor,
                                             &chunk_count_ceil);
     /* Print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                              "Bcast shmgr pipeline info: segsize=%d count=%d num_chunks=%d chunk_count_floor=%d chunk_count_ceil=%d \n",
-                                             MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE, count,
-                                             num_chunks, chunk_count_floor, chunk_count_ceil));
+                                             MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE,
+                                             (int) (count * type_size), num_chunks,
+                                             chunk_count_floor, chunk_count_ceil));
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
         int chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
 
         mpi_errno =
-            MPIDI_POSIX_mpi_release_gather_release((char *) buffer + offset * extent,
-                                                   chunk_count, datatype, root, comm_ptr,
+            MPIDI_POSIX_mpi_release_gather_release((char *) buffer + offset + true_lb,
+                                                   chunk_count, MPI_BYTE, root, comm_ptr,
                                                    errflag,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
         if (mpi_errno) {
@@ -133,9 +135,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (!is_contig) {
         if (my_rank != root) {
             /* Non-root unpack the data if expecting non-contiguous datatypes */
-            position = 0;
             mpi_errno =
-                MPIR_Typerep_unpack(buffer, count, &position, ori_buffer, ori_count, ori_datatype);
+                MPIR_Typerep_unpack(buffer, count, ori_buffer, ori_count, ori_datatype, 0,
+                                    &actual_packed_unpacked_bytes);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_OTHER;
