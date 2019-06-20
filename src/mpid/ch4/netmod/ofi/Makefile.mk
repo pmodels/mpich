@@ -13,6 +13,7 @@ if BUILD_CH4_NETMOD_OFI
 
 noinst_HEADERS     +=
 mpi_core_sources   += src/mpid/ch4/netmod/ofi/func_table.c \
+                      src/mpid/ch4/netmod/ofi/ofi_noinline.c \
                       src/mpid/ch4/netmod/ofi/ofi_init.c \
                       src/mpid/ch4/netmod/ofi/ofi_comm.c \
                       src/mpid/ch4/netmod/ofi/ofi_datatype.c \
