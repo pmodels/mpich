@@ -27,7 +27,8 @@ int MPIDI_vci_pool_alloc(int num_vnis)
 #endif
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    int i, req_i;
+    MPIR_Request *temp_req[MPIDI_MAX_REQUEST_CACHE_COUNT];
 
     /* Statically allocate the maximum possible size of the CH4 VCI pool.
      *      * The root VCI takes 1 NM and 1 SHM VCI. The rest could be VSI-only
@@ -51,10 +52,16 @@ int MPIDI_vci_pool_alloc(int num_vnis)
         /* A SEND request covers all possible use-cases */
         MPIDI_VCI(i).lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHKANDSTMT(MPIDI_VCI(i).lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                "**nomemreq");
+                            "**nomemreq");
         MPIDI_REQUEST(MPIDI_VCI(i).lw_req, vci) = i;
-         MPIR_cc_set(&MPIDI_VCI(i).lw_req->cc, 0);
-        
+        MPIR_cc_set(&MPIDI_VCI(i).lw_req->cc, 0);
+
+        /* Fill up the request cache for this VCI */
+        for (req_i = 0; req_i < MPIDI_MAX_REQUEST_CACHE_COUNT; req_i++) {
+            MPIDI_VCI(i).request_cache[req_i] = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+        }
+        MPIDI_VCI(i).request_cache_count = MPIDI_MAX_REQUEST_CACHE_COUNT;
+
         MPIDI_VCI(i).ref_count = 0;
 
         MPIDI_VCI(i).vni = MPIDI_NM_VNI_INVALID;
@@ -86,7 +93,7 @@ int MPIDI_vci_pool_alloc(int num_vnis)
 int MPIDI_vci_pool_free(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    int i, req_i;
 
     /* Free the VCIs that have not been freed yet */
     for (i = 0; i < MPIDI_VCI_POOL(max_vcis); i++) {
@@ -95,6 +102,9 @@ int MPIDI_vci_pool_free(void)
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
             }
+        }
+        for (req_i = 0; req_i < MPIDI_VCI(i).request_cache_count; req_i++) {
+            MPIR_Handle_obj_free(&MPIR_Request_mem, MPIDI_VCI(i).request_cache[req_i]);
         }
     }
 

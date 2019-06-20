@@ -51,6 +51,67 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
     return;
 }
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_unsafe(int kind, int vci)
+{
+    MPIR_Request *req;
+
+    if (MPIDI_VCI(vci).request_cache_count > 0) {
+        req = MPIDI_VCI(vci).request_cache[--(MPIDI_VCI(vci).request_cache_count)];
+    } else {
+        req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    }
+
+    if (req != NULL) {
+        MPIR_Request_alloc_success(req, kind);
+    } else {
+        MPIR_Request_alloc_fail();
+    }
+    
+    MPIDI_REQUEST(req, vci) = vci;
+
+    return req;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_safe(MPIR_Request * req)
+{
+    int vci;
+    int inuse;
+
+    vci = MPIDI_REQUEST(req, vci);
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    
+    MPIR_Request_release(req, &inuse);
+    if (inuse == 0) {
+        MPIR_Request_free_not_in_use(req);
+        if (MPIDI_VCI(vci).request_cache_count < MPIDI_MAX_REQUEST_CACHE_COUNT) {
+            MPIDI_VCI(vci).request_cache[(MPIDI_VCI(vci).request_cache_count)++] = req;
+        } else {
+            MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        }
+    }
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_unsafe(MPIR_Request * req)
+{
+    int inuse;
+    int vci;
+
+    MPIR_Request_release(req, &inuse);
+    vci = MPIDI_REQUEST(req, vci);
+
+    if (inuse == 0) {
+        MPIR_Request_free_not_in_use(req);
+        if (MPIDI_VCI(vci).request_cache_count < MPIDI_MAX_REQUEST_CACHE_COUNT) {
+            MPIDI_VCI(vci).request_cache[(MPIDI_VCI(vci).request_cache_count)++] = req;
+        } else {
+            MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        }
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete(int kind, int vci)
 {
     MPIR_Request *req;

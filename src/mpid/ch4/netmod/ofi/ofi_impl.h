@@ -192,6 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
+        printf("Not supported for multiple VCIs\n"); \
         (req) = MPIR_Request_create(kind);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
@@ -232,12 +233,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
     }
 }
 
-#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
+#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind, vci)            \
       do {                                                              \
           if (MPIDI_OFI_need_request_creation(req)) {                   \
               MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
                           (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind);                        \
+              (req) = MPID_Request_create_unsafe(kind, vci);            \
               MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                   "**nomemreq");                        \
           }                                                             \
@@ -251,6 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
         if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
             (req) = MPID_Request_create_complete(MPIR_REQUEST_KIND__SEND, vci); \
         } else {                                                        \
+            printf("Not supported for multiple VCIs\n"); \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
                 (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);   \

@@ -98,6 +98,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
             MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
         }
+        printf("OFI_recv_event not VCI ready\n");
         MPIR_Request_free(rreq);
     }
 #endif
@@ -263,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIR_Request_free(sreq);
+        MPID_Request_free_unsafe(sreq);
     }
     /* c != 0, ssend */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_EVENT);
@@ -311,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIR_Request_free(sreq);
+        MPID_Request_free_unsafe(sreq);
     }
     /* c != 0, ssend */
   fn_exit:
@@ -407,6 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entry *wc,
                                                         MPIR_Request * req)
 {
+    printf("OFI_chunk_done_event not VCI-ready\n");
     int c;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CHUNK_DONE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CHUNK_DONE_EVENT);
@@ -425,6 +427,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entr
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_inject_emu_event(struct fi_cq_tagged_entry *wc,
                                                         MPIR_Request * req)
 {
+    printf("OFI_inject_emu_event not VCI-ready\n");
     int incomplete;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_INJECT_EMU_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_INJECT_EMU_EVENT);

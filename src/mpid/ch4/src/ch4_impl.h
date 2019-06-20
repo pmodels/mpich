@@ -111,6 +111,20 @@ static inline MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win * win)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete_safe(MPIR_Request * req)
+{
+    int incomplete;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_REQUEST_COMPLETE_SAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_REQUEST_COMPLETE_SAFE);
+
+    MPIR_cc_decr(req->cc_ptr, &incomplete);
+    if (!incomplete)
+        MPID_Request_free_safe(req);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE_SAFE);
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 {
     int incomplete;
@@ -120,7 +134,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete)
-        MPIR_Request_free(req);
+        MPID_Request_free_unsafe(req);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE);
 }
