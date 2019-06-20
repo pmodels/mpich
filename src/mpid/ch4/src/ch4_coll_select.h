@@ -16,7 +16,7 @@ cvars:
     - name        : MPIR_CVAR_ENABLE_COLLECTIVE_SELECTION
       category    : COLLECTIVE
       type        : int
-      default     : 0
+      default     : 1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
