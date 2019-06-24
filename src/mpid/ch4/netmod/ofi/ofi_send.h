@@ -16,7 +16,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,
-                                                        int rank,
+                                                        int dst_rank,
                                                         int tag, MPIR_Comm * comm,
                                                         int context_offset, MPIDI_av_entry_t * addr)
 {
@@ -41,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
                                                                 size_t data_sz,
-                                                                int rank,
+                                                                int dst_rank,
                                                                 int tag,
                                                                 MPIR_Comm * comm,
                                                                 int context_offset,
@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
   Other: An error occurred as indicated in the code.
 */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,        /* data_sz is passed in here for reusing */
-                                                int rank, uint64_t match_bits, MPIR_Comm * comm,
+                                                int dst_rank, uint64_t match_bits, MPIR_Comm * comm,
                                                 MPIDI_av_entry_t * addr, MPIR_Request * sreq,
                                                 MPIR_Datatype * dt_ptr)
 {
@@ -222,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint count,
-                                                   MPI_Datatype datatype, int rank, int tag,
+                                                   MPI_Datatype datatype, int dst_rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
                                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                                    int dt_contig, size_t data_sz,
@@ -272,7 +272,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
-                MPIDI_OFI_send_iov(buf, count, data_sz, rank, match_bits, comm, addr, sreq, dt_ptr);
+                MPIDI_OFI_send_iov(buf, count, data_sz, dst_rank, match_bits, comm, addr, sreq,
+                                   dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
@@ -358,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
          * in the MPIDI_OFI_get_huge code where we start the offset at
          * MPIDI_OFI_global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
-        MPIDI_OFI_REQUEST(sreq, util_id) = rank;
+        MPIDI_OFI_REQUEST(sreq, util_id) = dst_rank;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf,
                                            MPIDI_OFI_global.max_msg_size,
                                            NULL,
@@ -375,7 +376,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                               (&ctrl, send_buf, data_sz, rank, comm, sreq, FALSE));
+                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq, FALSE));
     }
 
   fn_exit:
@@ -386,7 +387,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                            int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                            int dst_rank, int tag, MPIR_Comm * comm,
+                                            int context_offset,
                                             MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                             int noreq, uint64_t syncflag)
 {
@@ -402,14 +404,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
         if (noreq)
-            mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
-                                                   rank, tag, comm, context_offset, addr);
+            mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, dst_rank,
+                                                   tag, comm, context_offset, addr);
         else
             mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           rank, tag, comm, context_offset,
-                                                           addr, request);
+                                                           dst_rank, tag,
+                                                           comm, context_offset, addr, request);
     else
-        mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, rank, tag, comm,
+        mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank, tag, comm,
                                           context_offset, addr, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
 
