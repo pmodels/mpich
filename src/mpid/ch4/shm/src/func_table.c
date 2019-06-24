@@ -65,6 +65,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
 
 MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs = {
     .mpi_send = MPIDI_SHM_mpi_send,
+    .send_coll = MPIDI_SHM_send_coll,
     .mpi_ssend = MPIDI_SHM_mpi_ssend,
     .mpi_startall = MPIDI_SHM_mpi_startall,
     .mpi_send_init = MPIDI_SHM_mpi_send_init,
@@ -72,6 +73,7 @@ MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs = {
     .mpi_rsend_init = MPIDI_SHM_mpi_rsend_init,
     .mpi_bsend_init = MPIDI_SHM_mpi_bsend_init,
     .mpi_isend = MPIDI_SHM_mpi_isend,
+    .isend_coll = MPIDI_SHM_isend_coll,
     .mpi_issend = MPIDI_SHM_mpi_issend,
     .mpi_cancel_send = MPIDI_SHM_mpi_cancel_send,
     .mpi_recv_init = MPIDI_SHM_mpi_recv_init,

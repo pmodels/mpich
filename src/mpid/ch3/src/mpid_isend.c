@@ -185,3 +185,29 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISEND);
     return mpi_errno;
 }
+
+int MPID_Isend_coll(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
+                    MPIR_Comm * comm, int context_offset, MPIR_Request ** request,
+                    MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND_COLL);
+
+    switch (*errflag) {
+    case MPIR_ERR_NONE:
+        break;
+    case MPIR_ERR_PROC_FAILED:
+        MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        break;
+    default:
+        MPIR_TAG_SET_ERROR_BIT(tag);
+    }
+
+    mpi_errno = MPID_Isend(buf, count, datatype, rank, tag, comm, context_offset, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISEND_COLL);
+
+    return mpi_errno;
+}

@@ -53,6 +53,57 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_send_coll_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_unsafe(const void *buf,
+                                                    MPI_Aint count,
+                                                    MPI_Datatype datatype,
+                                                    int rank,
+                                                    int tag,
+                                                    MPIR_Comm * comm, int context_offset,
+                                                    MPIDI_av_entry_t * av, MPIR_Request ** request,
+                                                    MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_COLL_UNSAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_COLL_UNSAFE);
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno =
+        MPIDI_NM_send_coll(buf, count, datatype, rank, tag, comm, context_offset, av, request,
+                           errflag);
+#else
+    int r;
+    if ((r = MPIDI_av_is_local(av)))
+        mpi_errno =
+            MPIDI_SHM_send_coll(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                request, errflag);
+    else
+        mpi_errno =
+            MPIDI_NM_send_coll(buf, count, datatype, rank, tag, comm, context_offset, av,
+                               request, errflag);
+    if (mpi_errno == MPI_SUCCESS && *request)
+        MPIDI_REQUEST(*request, is_local) = r;
+#endif
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_COLL_UNSAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_isend_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -90,6 +141,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_isend_coll_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_unsafe(const void *buf,
+                                                     MPI_Aint count,
+                                                     MPI_Datatype datatype,
+                                                     int rank,
+                                                     int tag,
+                                                     MPIR_Comm * comm, int context_offset,
+                                                     MPIDI_av_entry_t * av,
+                                                     MPIR_Request ** request,
+                                                     MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_COLL_UNSAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_COLL_UNSAFE);
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno =
+        MPIDI_NM_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, av, request,
+                            errflag);
+#else
+    int r;
+    if ((r = MPIDI_av_is_local(av)))
+        mpi_errno =
+            MPIDI_SHM_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                 request, errflag);
+    else
+        mpi_errno =
+            MPIDI_NM_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                request, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        MPIDI_REQUEST(*request, is_local) = r;
+#endif
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ISEND_COLL_UNSAFE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_ssend_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -201,6 +302,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_send_coll_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
+                                                  int count,
+                                                  MPI_Datatype datatype,
+                                                  int rank,
+                                                  int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIDI_av_entry_t * av, MPIR_Request ** req,
+                                                  MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_COLL_SAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_COLL_SAFE);
+
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
+
+    if (!cs_acq) {
+        *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIDI_workq_csend_enqueue(CSEND, buf, count, datatype, rank, tag, comm, context_offset, av,
+                                  *req, errflag);
+    } else {
+        *(req) = NULL;
+        MPIDI_workq_vci_progress_unsafe();
+        mpi_errno =
+            MPIDI_send_coll_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req,
+                                   errflag);
+    }
+
+  fn_exit:
+    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_COLL_SAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_isend_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -239,6 +387,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_isend_coll_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
+                                                   int count,
+                                                   MPI_Datatype datatype,
+                                                   int rank,
+                                                   int tag,
+                                                   MPIR_Comm * comm, int context_offset,
+                                                   MPIDI_av_entry_t * av, MPIR_Request ** req,
+                                                   MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_COLL_SAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_COLL_SAFE);
+
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
+
+    if (!cs_acq) {
+        *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIDI_workq_csend_enqueue(ICSEND, buf, count, datatype, rank, tag, comm, context_offset, av,
+                                  *req, errflag);
+    } else {
+        *(req) = NULL;
+        MPIDI_workq_vci_progress_unsafe();
+        mpi_errno =
+            MPIDI_isend_coll_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                    req, errflag);
+    }
+
+  fn_exit:
+    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ISEND_COLL_SAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_ssend_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -348,6 +543,49 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Send_coll
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_COLL);
+
+    if (unlikely(rank == MPI_PROC_NULL)) {
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        goto fn_exit;
+    }
+
+    av = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_send_coll_safe(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                     request, errflag);
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND_COLL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Isend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -377,6 +615,45 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISEND);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Isend_coll
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
+                                             MPI_Aint count,
+                                             MPI_Datatype datatype,
+                                             int rank,
+                                             int tag,
+                                             MPIR_Comm * comm, int context_offset,
+                                             MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND_COLL);
+
+    if (unlikely(rank == MPI_PROC_NULL)) {
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        goto fn_exit;
+    }
+
+    av = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno =
+        MPIDI_isend_coll_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request,
+                              errflag);
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISEND_COLL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

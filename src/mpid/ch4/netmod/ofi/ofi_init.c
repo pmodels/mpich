@@ -357,7 +357,7 @@ static int conn_manager_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
 
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, MPI_ANY_SOURCE, 1);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (max_n_conn > 0) {
@@ -438,7 +438,7 @@ static int dynproc_send_disconnect(int conn_id)
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
-        match_bits = MPIDI_OFI_init_sendtag(context_id, rank, 1, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(context_id, 1, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
         /* we need to get this connection from the sockname     */
