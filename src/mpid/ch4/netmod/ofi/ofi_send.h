@@ -419,10 +419,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_send_coll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPIDI_OFI_send_coll - OFI_send function for collectives which rolls the error flag into the
     source rank.
@@ -477,10 +473,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
@@ -549,10 +541,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
@@ -646,10 +634,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,

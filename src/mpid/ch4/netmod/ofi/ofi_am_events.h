@@ -127,7 +127,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     if (is_contig) {
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, FCNAME,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
                                                           __LINE__, MPI_ERR_TRUNCATE, "**truncate",
                                                           "**truncate %d %d %d %d",
                                                           rreq->status.MPI_SOURCE,
@@ -153,7 +153,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
         if (rem) {
             rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, FCNAME,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
                                                           __LINE__, MPI_ERR_TRUNCATE, "**truncate",
                                                           "**truncate %d %d %d %d",
                                                           rreq->status.MPI_SOURCE,
@@ -305,7 +305,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     if (is_contig) {
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, FCNAME,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
                                                           __LINE__, MPI_ERR_TRUNCATE, "**truncate",
                                                           "**truncate %d %d %d %d",
                                                           rreq->status.MPI_SOURCE,
@@ -350,7 +350,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
         if (rem) {
             rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                          MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                           MPI_ERR_TRUNCATE, "**truncate",
                                                           "**truncate %d %d %d %d",
                                                           rreq->status.MPI_SOURCE,
