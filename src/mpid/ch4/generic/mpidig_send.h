@@ -17,10 +17,6 @@
 #define MPIDI_NONBLOCKING 0
 #define MPIDI_BLOCKING    1
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_isend_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -147,10 +143,6 @@ static inline int MPIDIG_isend_coll_impl(const void *buf, MPI_Aint count, MPI_Da
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                   int rank, int tag, MPIR_Comm * comm, int context_offset,
                                   MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -247,10 +239,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_send_coll(const void *buf, MPI_Aint count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               MPI_Aint count,
                                               MPI_Datatype datatype,
@@ -289,10 +277,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_mpi_rsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
                                               MPI_Aint count,
                                               MPI_Datatype datatype,

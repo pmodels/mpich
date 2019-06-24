@@ -41,8 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_send_coll(const void *buf, MPI_Aint cou
                             errflag);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_ssend(const void *buf, MPI_Aint count,
                                                    MPI_Datatype datatype, int rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
@@ -122,8 +120,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_isend_coll(const void *buf, MPI_Aint co
                              errflag);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_ISSEND)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_issend(const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, int rank, int tag,
                                                     MPIR_Comm * comm, int context_offset,
