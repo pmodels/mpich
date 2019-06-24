@@ -53,10 +53,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_coll_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_unsafe(const void *buf,
                                                     MPI_Aint count,
                                                     MPI_Datatype datatype,
@@ -100,10 +96,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_unsafe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_isend_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -141,10 +133,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_isend_coll_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_unsafe(const void *buf,
                                                      MPI_Aint count,
                                                      MPI_Datatype datatype,
@@ -187,10 +175,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_unsafe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_ssend_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -302,10 +286,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_coll_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
                                                   int count,
                                                   MPI_Datatype datatype,
@@ -345,10 +325,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_isend_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -387,10 +363,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_isend_coll_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
                                                    int count,
                                                    MPI_Datatype datatype,
@@ -430,10 +402,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_ssend_safe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -543,10 +511,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Send_coll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
@@ -582,10 +546,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -620,10 +580,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Isend_coll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
                                              MPI_Aint count,
                                              MPI_Datatype datatype,
