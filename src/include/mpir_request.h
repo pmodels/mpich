@@ -245,9 +245,9 @@ static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
 {
     MPIR_Request *req;
     if (use_lock == LOCK) {
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx].lock);
         req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool_idx]);
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx].lock);
     } else {
         req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool_idx]);
     }
@@ -355,9 +355,9 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Request_destroy(MPIR_Request * req)
     MPIR_Assert(MPIR_Object_get_ref(req) == 0);
 
     pool_idx = HANDLE_POOL_INDEX(req->handle);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx].lock);
     MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool_idx], req);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx].lock);
 }
 
 static inline void MPIR_Request_free(MPIR_Request * req)

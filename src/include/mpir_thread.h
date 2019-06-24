@@ -106,9 +106,20 @@ MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 #define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+/* TODO: Change to MPL_CACHELINE_SIZE */
+#define MPID_CACHE_LINE_SIZE 64
+
+MPL_COMPILE_TIME_ASSERT(sizeof(MPID_Thread_mutex_t) <= MPID_CACHE_LINE_SIZE);
+
+/* MPID mutex structure with padding to avoid false sharing */
+typedef struct MPIR_Thread_aligned_mutex {
+    MPID_Thread_mutex_t lock;
+    char padding[MPID_CACHE_LINE_SIZE - sizeof(MPID_Thread_mutex_t)];
+} MPIR_Thread_aligned_mutex_t;
+
 MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_GLOBAL_MUTEX;
 MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[HANDLE_NUM_POOLS];
+MPIR_EXTERN MPIR_Thread_aligned_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[HANDLE_NUM_POOLS];
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
