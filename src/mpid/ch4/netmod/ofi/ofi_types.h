@@ -38,6 +38,44 @@
 #define MPIDI_OFI_INTERNAL_HANDLER_CONTROL (MPIDI_AM_HANDLERS_MAX-1)
 #define MPIDI_OFI_INTERNAL_HANDLER_NEXT    (MPIDI_AM_HANDLERS_MAX-2)
 
+/* The number of bits in the immediate data field allocated to the source rank. */
+#define MPIDI_OFI_IDATA_SRC_BITS (30)
+/* The number of bits in the immediate data field allocated to the error propagation. */
+#define MPIDI_OFI_IDATA_ERROR_BITS (2)
+/* Bit mask for MPIR_ERR_OTHER */
+#define MPIDI_OFI_ERR_OTHER (0x1)
+/* Bit mask for MPIR_PROC_FAILED */
+#define MPIDI_OFI_ERR_PROC_FAILED (0x2)
+
+/* Set the error bits */
+static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Errflag_t errflag)
+{
+    switch (errflag) {
+        case MPIR_ERR_OTHER:
+            *data_field = (*data_field) | (MPIDI_OFI_ERR_OTHER << MPIDI_OFI_IDATA_SRC_BITS);
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            *data_field = (*data_field) | (MPIDI_OFI_ERR_PROC_FAILED << MPIDI_OFI_IDATA_SRC_BITS);
+            break;
+        case MPIR_ERR_NONE:
+            /*do nothing */
+            break;
+    }
+}
+
+/* Get the error flag from the OFI data field. */
+static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
+{
+    if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_OTHER) {
+        return MPIR_ERR_OTHER;
+    } else if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_PROC_FAILED) {
+        return MPIR_ERR_PROC_FAILED;
+    } else {
+        return MPI_SUCCESS;
+    }
+}
+
+
 #define MPIDI_OFI_PROTOCOL_BITS (2)     /* This is set to 2 event though we actually use 3. The ssend
                                          * ack bit needs to live outside the protocol bit space to avoid
                                          * accidentally matching unintended messages. Because of this,

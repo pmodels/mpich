@@ -63,6 +63,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ofi_funcs = {
     .mpi_send = MPIDI_NM_mpi_send,
+    .send_coll = MPIDI_NM_send_coll,
     .mpi_ssend = MPIDI_NM_mpi_ssend,
     .mpi_startall = MPIDI_NM_mpi_startall,
     .mpi_send_init = MPIDI_NM_mpi_send_init,
@@ -70,6 +71,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_ofi_funcs = {
     .mpi_rsend_init = MPIDI_NM_mpi_rsend_init,
     .mpi_bsend_init = MPIDI_NM_mpi_bsend_init,
     .mpi_isend = MPIDI_NM_mpi_isend,
+    .isend_coll = MPIDI_NM_isend_coll,
     .mpi_issend = MPIDI_NM_mpi_issend,
     .mpi_cancel_send = MPIDI_NM_mpi_cancel_send,
     .mpi_recv_init = MPIDI_NM_mpi_recv_init,

@@ -17,18 +17,22 @@
 #define MPIDI_NONBLOCKING 0
 #define MPIDI_BLOCKING    1
 
-static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                                  int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * addr, MPIR_Request ** request, int is_blocking,
-                                  int type)
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_isend_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                    int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                    int is_blocking, int type, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = *request;
     MPIDIG_hdr_t am_hdr;
     MPIDIG_ssend_req_msg_t ssend_req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
 
     /* If the message is going to MPI_PROC_NULL, we still need to create and complete the request so
      * we have something we can pass back up the call stack to track the request status. */
@@ -60,6 +64,7 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
+    am_hdr.error_bits = errflag;
 
     /* Synchronous send requires a special kind of AM header to track the return message so check
      * for that and fill in the appropriate struct if necessary. */
@@ -105,6 +110,59 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
         }
     }
 #endif
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* This performs the same work as MPIDIG_isend, but sets the
+ * error bits from errflag into the am_hdr instance.
+ * */
+static inline int MPIDIG_isend_coll_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                         int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                         MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                         int is_blocking, int type, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND_COLL);
+
+    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                  request, is_blocking, type, *errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_ISEND_COLL);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_am_isend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                  int is_blocking, int type)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND);
+
+    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                  request, is_blocking, type, MPI_SUCCESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -171,6 +229,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_send_coll(const void *buf, MPI_Aint count,
+                                              MPI_Datatype datatype, int rank,
+                                              int tag, MPIR_Comm * comm, int context_offset,
+                                              MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                              MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_COLL);
+
+    mpi_errno =
+        MPIDIG_isend_coll_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
+                               MPIDI_BLOCKING, MPIDIG_SEND, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_COLL);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_mpi_isend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               MPI_Aint count,
                                               MPI_Datatype datatype,
@@ -190,6 +270,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
 }
 
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
+                                               MPI_Datatype datatype, int rank,
+                                               int tag, MPIR_Comm * comm, int context_offset,
+                                               MPIDI_av_entry_t * addr,
+                                               MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ISEND_COLL);
+
+    mpi_errno =
+        MPIDIG_isend_coll_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
+                               MPIDI_NONBLOCKING, MPIDIG_SEND, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ISEND_COLL);
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_mpi_rsend
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
                                               MPI_Aint count,
                                               MPI_Datatype datatype,
