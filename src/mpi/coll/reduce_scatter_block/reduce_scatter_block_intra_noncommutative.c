@@ -13,8 +13,6 @@
 
 #include "mpiimpl.h"
 
-/* FIXME should we be checking the op_errno here? */
-
 /* Algorithm: Noncommutative
  *
  * Restrictions: Only power-of-two and noncommutative
