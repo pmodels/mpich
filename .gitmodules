@@ -10,3 +10,6 @@
 [submodule "src/mpid/ch4/netmod/ucx/ucx"]
 	path = src/mpid/ch4/netmod/ucx/ucx
 	url = https://github.com/pmodels/ucx
+[submodule "src/mpid/ch4/src/json-c"]
+	path = src/mpid/ch4/src/json-c
+	url = https://github.com/json-c/json-c.git

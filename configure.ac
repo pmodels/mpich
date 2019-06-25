@@ -1276,6 +1276,18 @@ if test "$NEEDSPLIB" = "yes" ; then
     VISIBILITY_CFLAGS=""
 fi
 
+# json-c
+
+jsonsrcdir=""
+AC_SUBST([jsonsrcdir])
+jsonlib=""
+AC_SUBST([jsonlib])
+
+PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/src/json-c],[],[],[AC_MSG_ERROR(json-c configure failed)])
+jsonsrcdir="${master_top_builddir}/src/mpid/ch4/src/json-c"
+jsonlib="${master_top_builddir}/src/mpid/ch4/src/json-c/libjson-c.la"
+PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/src/json-c],[CPPFLAGS])
+PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/src/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
 # HWLOC
