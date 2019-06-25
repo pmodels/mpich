@@ -28,25 +28,25 @@ typedef struct {
 #define OPA_compiler_barrier()   __asm__ __volatile__  (""    ::: "memory")
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline int OPA_load_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_int(const OPA_int_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void OPA_store_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_int(OPA_int_t * ptr, int val)
 {
     ptr->v = val;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_ptr(const OPA_ptr_t * ptr)
 {
     return ptr->v;
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 {
     ptr->v = val;
 }
@@ -55,7 +55,7 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
  * down a full memory barrier.  Spending much time working on the SiCortex platform
  * doesn't really make a lot of sense since there are so few machines in
  * existence and no more will ever be built. */
-static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
+static inline int OPA_load_acquire_int(const OPA_int_t * ptr)
 {
     int tmp;
     tmp = ptr->v;
@@ -63,13 +63,13 @@ static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_int(OPA_int_t * ptr, int val)
+static inline void OPA_store_release_int(OPA_int_t * ptr, int val)
 {
     OPA_read_write_barrier();
     ptr->v = val;
 }
 
-static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
+static inline void *OPA_load_acquire_ptr(const OPA_ptr_t * ptr)
 {
     void *tmp;
     tmp = ptr->v;
@@ -77,7 +77,7 @@ static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t * ptr)
     return tmp;
 }
 
-static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
+static inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
 {
     OPA_read_write_barrier();
     ptr->v = val;
@@ -96,14 +96,14 @@ static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
  */
 #define ICE9A_LLSC_WAR 0
 
-/* For a description of the _opa_inline assembly constraints, see the MIPS section of:
+/* For a description of the inline assembly constraints, see the MIPS section of:
    http://gcc.gnu.org/onlinedocs/gcc-4.3.2/gcc/Machine-Constraints.html#Machine-Constraints
 
    relevant excerpt:
        I - A signed 16-bit constant (for arithmetic instructions).
        J - Integer zero.
 
-   Other _opa_inline asm knowledge worth remembering:
+   Other inline asm knowledge worth remembering:
        r - a general register operand is allowed
        m - a memory address operand
        & - earlyclobber; operand is modified before instruction is finished using the input operands
@@ -115,7 +115,7 @@ static _opa_inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
  */
 
 /* Atomic increment of a 32 bit value, returning the old value */
-static _opa_inline int OPA_shmemi_fetch_add_4(volatile int *v, int inc)
+static inline int OPA_shmemi_fetch_add_4(volatile int *v, int inc)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -155,7 +155,7 @@ static _opa_inline int OPA_shmemi_fetch_add_4(volatile int *v, int inc)
 }
 
 /* Atomic increment of a 64 bit value, returning the old value */
-static _opa_inline long int OPA_shmemi_fetch_add_8(volatile long int *v, long int inc)
+static inline long int OPA_shmemi_fetch_add_8(volatile long int *v, long int inc)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -195,7 +195,7 @@ static _opa_inline long int OPA_shmemi_fetch_add_8(volatile long int *v, long in
 }
 
 /* Atomic swap of a 32 bit value, returning the old contents */
-static _opa_inline int OPA_shmemi_swap_4(volatile int *v, int val)
+static inline int OPA_shmemi_swap_4(volatile int *v, int val)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -235,7 +235,7 @@ static _opa_inline int OPA_shmemi_swap_4(volatile int *v, int val)
 }
 
 /* Atomic swap of a 64 bit value, returning the old contents */
-static _opa_inline long int OPA_shmemi_swap_8(volatile long int *v, long int val)
+static inline long int OPA_shmemi_swap_8(volatile long int *v, long int val)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -276,7 +276,7 @@ static _opa_inline long int OPA_shmemi_swap_8(volatile long int *v, long int val
 
 /* Atomic compare and swap of a 32 bit value, returns the old value
  * but only does the store of the val value if the old value == expect */
-static _opa_inline int OPA_shmemi_cswap_4(volatile int *v, int expect, int val)
+static inline int OPA_shmemi_cswap_4(volatile int *v, int expect, int val)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -321,7 +321,7 @@ static _opa_inline int OPA_shmemi_cswap_4(volatile int *v, int expect, int val)
 
 /* Atomic compare and swap of a 64 bit value, returns the old value
  * but only does the store of the val value if the old value == expect */
-static _opa_inline long int OPA_shmemi_cswap_8(volatile long int *v, long int expect, long int val)
+static inline long int OPA_shmemi_cswap_8(volatile long int *v, long int expect, long int val)
 {
     unsigned long result;
     if (ICE9A_LLSC_WAR) {
@@ -364,12 +364,12 @@ static _opa_inline long int OPA_shmemi_cswap_8(volatile long int *v, long int ex
     return result;
 }
 
-static _opa_inline void OPA_add_int(OPA_int_t * ptr, int val)
+static inline void OPA_add_int(OPA_int_t * ptr, int val)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, val);
 }
 
-static _opa_inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
+static inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
 {
 #if (OPA_SIZEOF_VOID_P == 8)
     return ((int *)
@@ -382,43 +382,43 @@ static _opa_inline void *OPA_cas_ptr(OPA_ptr_t * ptr, void *oldv, void *newv)
 #endif
 }
 
-static _opa_inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
+static inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
 {
     return (OPA_shmemi_cswap_4(&ptr->v, oldv, newv));
 }
 
-static _opa_inline void OPA_decr_int(OPA_int_t * ptr)
+static inline void OPA_decr_int(OPA_int_t * ptr)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, -1);
 }
 
-static _opa_inline int OPA_decr_and_test_int(OPA_int_t * ptr)
+static inline int OPA_decr_and_test_int(OPA_int_t * ptr)
 {
     int old = OPA_shmemi_fetch_add_4(&ptr->v, -1);
     return (old == 1);
 }
 
-static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
+static inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 {
     return (OPA_shmemi_fetch_add_4(&ptr->v, val));
 }
 
-static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t * ptr)
+static inline int OPA_fetch_and_decr_int(OPA_int_t * ptr)
 {
     return (OPA_shmemi_fetch_add_4(&ptr->v, -1));
 }
 
-static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t * ptr)
+static inline int OPA_fetch_and_incr_int(OPA_int_t * ptr)
 {
     return (OPA_shmemi_fetch_add_4(&ptr->v, 1));
 }
 
-static _opa_inline void OPA_incr_int(OPA_int_t * ptr)
+static inline void OPA_incr_int(OPA_int_t * ptr)
 {
     OPA_shmemi_fetch_add_4(&ptr->v, 1);
 }
 
-static _opa_inline int *OPA_swap_ptr(OPA_ptr_t * ptr, int *val)
+static inline int *OPA_swap_ptr(OPA_ptr_t * ptr, int *val)
 {
 #if (OPA_SIZEOF_VOID_P == 8)
     return ((int *) OPA_shmemi_swap_8((volatile long int *) &ptr->v, (uintptr_t) val));
@@ -429,7 +429,7 @@ static _opa_inline int *OPA_swap_ptr(OPA_ptr_t * ptr, int *val)
 #endif
 }
 
-static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
+static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 {
     return (OPA_shmemi_swap_4(&ptr->v, val));
 }

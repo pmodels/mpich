@@ -57,7 +57,7 @@ AH_BOTTOM([])
 dnl Preps an opa_config.h with prefixed macros from config.h for output at
 dnl AC_OUTPUT time.  This way we can safely include opa_config.h in the
 dnl installation and include it in installed headers.
-AX_PREFIX_CONFIG_H([src/opa_config.h],[OPA])
+AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl OPA src/config.h src/opa_config.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -223,15 +223,6 @@ checked_specified_primitive=no
 AC_DEFUN([OPA_PRIMITIVE_TEST_PGM], [AC_LANG_PROGRAM([[
 #define OPA_SIZEOF_INT SIZEOF_INT
 #define OPA_SIZEOF_VOID_P SIZEOF_VOID_P
-#ifndef _opa_inline
-#define _opa_inline inline
-#endif
-#ifndef _opa_restrict
-#define _opa_restrict restrict
-#endif
-#ifndef _opa_const
-#define _opa_const const
-#endif
 #ifdef HAVE_GCC_ATTRIBUTE
 #define OPA_HAVE_GCC_ATTRIBUTE 1
 #endif
