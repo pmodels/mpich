@@ -517,6 +517,29 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Alltoallw algorithms ###########
+
+#disable device collectives for alltoallw to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE=0"
+
+#test nb algorithms
+testing_env="${testing_env} env=MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM=nb"
+testing_env="${testing_env} env=MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE=0"
+algo_names="gentran_blocked"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM=${algo_name}"
+
+    echo "alltoallw1 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallw2 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 1 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 2 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 5 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 8 ${env}" >> ${testlist_cvar}
+    env=""
+done
+
 ########## Add tests for intra-node bcast algorithms ############
 
 #use release gather based intra-node bcast
@@ -617,4 +640,3 @@ for algo_name in ${algo_names}; do
         env=""
     done
 done
-
