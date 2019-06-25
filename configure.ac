@@ -838,26 +838,9 @@ changequote([,])
 
 devicedir=$use_top_srcdir/src/mpid/$device_name
 devicereldir=src/mpid/$device_name
-case "$device_name" in
-     /*)
-     devicedir=$DEVICE
-     # Get the name from the leaf
-     device_name=`echo $device_name ~ sed -e 's%.*/%%'`
-     # FIXME: should the devicereldir be different (perhaps not -
-     # this allows use to build within our tree, even when other data
-     # is outside of the tree)
-     ;;
-     *)
-     ;;
-esac
 export device_name
 export device_args
 export devicedir
-
-# See if the device wants to say something about the compilers
-if test -f $devicedir/mpichprereq ; then
-    . $devicedir/mpichprereq
-fi
 
 # expand all of the prereq macros in the correct order
 m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
@@ -989,16 +972,6 @@ AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable e
 #error-tags
 if test "$enable_tag_error_bits" = "yes" ; then
     AC_DEFINE([HAVE_TAG_ERROR_BITS],[1],[Define to enable tag error bits])
-fi
-
-# ----------------------------------------------------------------------------
-# Check to see if the device does not support spawn.
-# FIXME: This should provide the option of not building the dynamic
-# process routines.  It could also allow us to specialize support
-# for all processes are members of MPI_COMM_WORLD (only one comm_world).
-# ----------------------------------------------------------------------------
-if test "$MPID_NO_SPAWN" = yes ; then
-    AC_MSG_WARN([The device $with_device does not support MPI dynamic process routines])
 fi
 
 # MPL
@@ -1696,13 +1669,6 @@ if test ! -d $devicedir ; then
 elif test -f $devicedir/subconfigure.m4 ; then
     # this is a new-style subconfigure device, don't add it as a subsystem
     :
-elif test ! -x $devicedir/configure ; then
-    if test -s $devicedir/configure ; then
-        AC_MSG_WARN([The configure in $devicedir exists but is not executable])
-    else
-        AC_MSG_WARN([Device $device_name has no configure])
-    fi
-    device_name=""
 else
     # Add the device to the configure list
     devsubsystems="$devsubsystems $devicereldir"
