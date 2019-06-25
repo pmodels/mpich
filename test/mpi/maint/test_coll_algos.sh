@@ -497,6 +497,26 @@ for algo_name in ${algo_names}; do
     env=""
 done
 
+######### Add tests for Gatherv algorithms ###########
+
+#disable device collectives for gatherv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env="${testing_env} env=MPIR_CVAR_GATHERV_INTRA_ALGORITHM=nb"
+testing_env="${testing_env} env=MPIR_CVAR_IGATHERV_DEVICE_COLLECTIVE=0"
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IGATHERV_INTRA_ALGORITHM=${algo_name}"
+
+        echo "gatherv 5 ${env}" >> ${testlist_cvar}
+        env=""
+    done
+done
+
 ########## Add tests for intra-node bcast algorithms ############
 
 #use release gather based intra-node bcast
