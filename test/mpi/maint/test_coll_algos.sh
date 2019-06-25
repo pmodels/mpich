@@ -525,7 +525,7 @@ testing_env="env=MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE=0"
-algo_names="gentran_blocked"
+algo_names="gentran_blocked gentran_inplace"
 
 for algo_name in ${algo_names}; do
     #set the environment
