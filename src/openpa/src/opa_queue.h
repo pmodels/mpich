@@ -61,7 +61,7 @@ typedef struct OPA_Shm_rel_addr_t {
 } OPA_Shm_rel_addr_t;
 
 /* converts a relative pointer to an absolute pointer */
-static _opa_inline void *OPA_Shm_rel_to_abs(OPA_Shm_rel_addr_t r)
+static inline void *OPA_Shm_rel_to_abs(OPA_Shm_rel_addr_t r)
 {
     void *offset = OPA_load_ptr(&r.offset);
     OPA_assert((size_t) OPA_Shm_asymm_base_addr != OPA_SHM_ASYMM_NULL_VAL);
@@ -69,7 +69,7 @@ static _opa_inline void *OPA_Shm_rel_to_abs(OPA_Shm_rel_addr_t r)
 }
 
 /* converts an absolute pointer to a relative pointer */
-static _opa_inline OPA_Shm_rel_addr_t OPA_Shm_abs_to_rel(void *a)
+static inline OPA_Shm_rel_addr_t OPA_Shm_abs_to_rel(void *a)
 {
     OPA_Shm_rel_addr_t ret;
 
@@ -78,7 +78,7 @@ static _opa_inline OPA_Shm_rel_addr_t OPA_Shm_abs_to_rel(void *a)
     return ret;
 }
 
-static _opa_inline
+static inline
     OPA_Shm_rel_addr_t OPA_Shm_swap_rel(OPA_Shm_rel_addr_t * addr, OPA_Shm_rel_addr_t newv)
 {
     OPA_Shm_rel_addr_t oldv;
@@ -89,7 +89,7 @@ static _opa_inline
 /* Compare the relative pointer to (relative) null and swap if equal.  Prevents
    the guts of the _rel_addr_t abstraction from bleeding up into the
    enqueue/dequeue operations. */
-static _opa_inline
+static inline
     OPA_Shm_rel_addr_t OPA_Shm_cas_rel_null(OPA_Shm_rel_addr_t * addr, OPA_Shm_rel_addr_t oldv)
 {
     OPA_Shm_rel_addr_t prev;
@@ -164,7 +164,7 @@ void OPA_Queue_init(OPA_Queue_info_t * qhead);
 /* Used to initialize a queue element header. */
 void OPA_Queue_header_init(OPA_Queue_element_hdr_t * hdr);
 
-static _opa_inline int OPA_Queue_is_empty(OPA_Queue_info_t * qhead)
+static inline int OPA_Queue_is_empty(OPA_Queue_info_t * qhead)
 {
     int __ret = 0;
     if (OPA_SHM_IS_REL_NULL(qhead->shadow_head)) {
@@ -192,7 +192,7 @@ static _opa_inline int OPA_Queue_is_empty(OPA_Queue_info_t * qhead)
    This operation is effectively the same as the dequeue operation (insofar as
    it shares the same calling restrictions) but it does not disturb the actual
    contents of the queue. */
-static _opa_inline void *OPA_Queue_peek_head(OPA_Queue_info_t * qhead_ptr)
+static inline void *OPA_Queue_peek_head(OPA_Queue_info_t * qhead_ptr)
 {
     OPA_assert(qhead_ptr != NULL);
 
