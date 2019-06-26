@@ -1432,3 +1432,11 @@
 /dtpools/libtool
 /dtpools/ltmain.sh
 /dtpools/missing
+
+# dtpool generated files
+/attr/testlist.dtp
+/coll/testlist.dtp
+/cxx/attr/testlist.dtp
+/cxx/datatype/testlist.dtp
+/pt2pt/testlist.dtp
+/rma/testlist.dtp
