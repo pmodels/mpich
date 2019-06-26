@@ -425,6 +425,16 @@ for algo_name in ${algo_names}; do
     fi
 done
 
+algo_names="gentran_blocked"
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name}"
+
+    echo "alltoallv 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
+    env=""
+done
+
 ######### Add tests for Ineighbor_allgather algorithms ###########
 
 #disable device collectives for neighbor_allgather to test MPIR algorithms
