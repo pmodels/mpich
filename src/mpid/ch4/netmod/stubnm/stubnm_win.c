@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "stubnm_impl.h"
 #include "mpidimpl.h"
+#include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
