@@ -85,6 +85,7 @@ cvars:
         gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         gentran_tree                     - Force generic transport tree algorithm
+        gentran_ring                     - Force generic transport ring algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -271,6 +272,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
+    int is_commutative = MPIR_Op_is_commutative(op);
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
@@ -307,6 +309,15 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
+                if (is_commutative) {
+                    mpi_errno =
+                        MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
+                                                           op, comm_ptr, request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
