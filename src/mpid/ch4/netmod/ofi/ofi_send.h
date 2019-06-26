@@ -16,6 +16,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,
+                                                        int src_rank,
                                                         int dst_rank,
                                                         int tag, MPIR_Comm * comm,
                                                         int context_offset, MPIDI_av_entry_t * addr)
@@ -26,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, comm->rank,
+        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain);
@@ -40,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
-                                                                size_t data_sz,
+                                                                size_t data_sz, int src_rank,
                                                                 int dst_rank,
                                                                 int tag,
                                                                 MPIR_Comm * comm,
@@ -55,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, comm->rank,
+        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain);
@@ -403,11 +404,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
         if (noreq)
-            mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, dst_rank,
-                                                   tag, comm, context_offset, addr);
+            mpi_errno =
+                MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, comm->rank, dst_rank,
+                                           tag, comm, context_offset, addr);
         else
             mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           dst_rank, tag,
+                                                           comm->rank, dst_rank, tag,
                                                            comm, context_offset, addr, request);
     else
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank, tag, comm,
@@ -458,11 +460,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
         if (noreq)
             mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
-                                                   dst_rank, tag, comm, context_offset, addr);
+                                                   src_rank, dst_rank, tag, comm, context_offset,
+                                                   addr);
         else
             mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           dst_rank, tag, comm, context_offset,
-                                                           addr, request);
+                                                           src_rank, dst_rank, tag, comm,
+                                                           context_offset, addr, request);
     else
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank,
                                           tag, comm, context_offset, addr, request, dt_contig,
