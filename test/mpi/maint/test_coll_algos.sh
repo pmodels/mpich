@@ -94,18 +94,35 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0"
-algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree"
+algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
-    for kval in ${kvalues}; do
-        if [ "${algo_name}" = "tree" ]; then
-            for tree_type in ${tree_types}; do
+    if [ "${algo_name}" != "gentran_ring" ]; then
+        for kval in ${kvalues}; do
+            if [ "${algo_name}" = "tree" ]; then
+                for tree_type in ${tree_types}; do
+                    #set the environment
+                    env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
+                    env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096"
+                    env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval}"
+
+                    echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
+                    echo "allred 7 ${env}" >> ${testlist_cvar}
+                    echo "allredmany 4 ${env}" >> ${testlist_cvar}
+                    echo "allred2 4 ${env}" >> ${testlist_cvar}
+                    echo "allred3 10 ${env}" >> ${testlist_cvar}
+                    echo "allred4 4 ${env}" >> ${testlist_cvar}
+                    echo "allred5 5 ${env}" >> ${testlist_cvar}
+                    echo "allred6 4 ${env}" >> ${testlist_cvar}
+                    echo "allred6 7 ${env}" >> ${testlist_cvar}
+                    env=""
+                done
+            else #test recursive exchange algorithms
                 #set the environment
                 env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
-                env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096"
-                env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval}"
+                env="${env} env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval}"
 
                 echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
                 echo "allred 7 ${env}" >> ${testlist_cvar}
@@ -117,24 +134,23 @@ for algo_name in ${algo_names}; do
                 echo "allred6 4 ${env}" >> ${testlist_cvar}
                 echo "allred6 7 ${env}" >> ${testlist_cvar}
                 env=""
-            done
-        else
-            #set the environment
-            env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
-            env="${env} env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval}"
+            fi
+        done
+    else #test ring algorithm
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
 
-            echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
-            echo "allred 7 ${env}" >> ${testlist_cvar}
-            echo "allredmany 4 ${env}" >> ${testlist_cvar}
-            echo "allred2 4 ${env}" >> ${testlist_cvar}
-            echo "allred3 10 ${env}" >> ${testlist_cvar}
-            echo "allred4 4 ${env}" >> ${testlist_cvar}
-            echo "allred5 5 ${env}" >> ${testlist_cvar}
-            echo "allred6 4 ${env}" >> ${testlist_cvar}
-            echo "allred6 7 ${env}" >> ${testlist_cvar}
-            env=""
-        fi
-    done
+        echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
+        echo "allred 7 ${env}" >> ${testlist_cvar}
+        echo "allredmany 4 ${env}" >> ${testlist_cvar}
+        echo "allred2 4 ${env}" >> ${testlist_cvar}
+        echo "allred3 10 ${env}" >> ${testlist_cvar}
+        echo "allred4 4 ${env}" >> ${testlist_cvar}
+        echo "allred5 5 ${env}" >> ${testlist_cvar}
+        echo "allred6 4 ${env}" >> ${testlist_cvar}
+        echo "allred6 7 ${env}" >> ${testlist_cvar}
+        env=""
+    fi
 done
 
 ######### Add tests for Allgather algorithms ###########
