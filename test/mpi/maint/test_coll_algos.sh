@@ -425,7 +425,7 @@ for algo_name in ${algo_names}; do
     fi
 done
 
-algo_names="gentran_blocked"
+algo_names="gentran_blocked gentran_inplace"
 for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name}"
