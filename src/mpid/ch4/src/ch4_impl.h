@@ -13,6 +13,7 @@
 
 #include "ch4_types.h"
 #include "mpidig.h"
+#include "ch4_cuda_helper.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
@@ -925,6 +926,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --END ERROR HANDLING-- */
     }
 
+    /* Computation offloading to GPU */
+    if(is_mem_type_device(target_buf) && !(is_mem_type_device(source_buf)))
+    {
+        void *temp_buffer;
+        cudaError_t status;
+
+        status = cudaMalloc(&temp_buffer, (source_count * source_dtp_size));
+        if(status != cudaSuccess)
+        {
+            printf("FAILURE cudaMalloc... Status: %s\n", cudaGetErrorString(status));
+            fflush(stdout);
+            goto fn_exit;
+        }
+
+        status = cudaMemcpy(temp_buffer, source_buf, (source_count * source_dtp_size), cudaMemcpyHostToDevice);
+        if(status != cudaSuccess)
+        {
+            printf("FAILURE cudaMemcpy... Status: %s\n", cudaGetErrorString(status));
+            fflush(stdout);
+            goto fn_exit;
+        }
+        printf("Source Buffer: %p Target Buffer: %p\n", source_buf, target_buf);
+        fflush(stdout);
+        source_buf = temp_buffer;
+    }
 
     if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */

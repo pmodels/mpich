@@ -10,6 +10,9 @@
 #define UCX_AM_H_INCLUDED
 
 #include "ucx_impl.h"
+#include "ch4_cuda_helper.h"
+
+//const int is_mem_type_device (const void *address);
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {
@@ -75,6 +78,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    // Copy data from device to host
+    if(is_mem_type_device(data) == 1)
+    {
+        void *temp_buffer;
+        cudaError_t status;
+        
+        printf("Data buffer: %p\n", data);
+        fflush(stdout);
+        temp_buffer = malloc(data_sz);
+
+        status = cudaMemcpy(temp_buffer, data, data_sz, cudaMemcpyDeviceToHost);
+        if(status != cudaSuccess)
+        {
+            printf("FAILURE... Status: %s\n", cudaGetErrorString(status));
+            fflush(stdout);
+            goto fn_exit;
+        }
+
+        data = temp_buffer;
+    }
+
     if (handler_id == MPIDIG_SEND &&
         am_hdr_sz + sizeof(MPIDI_UCX_am_header_t) + data_sz > MPIDI_UCX_MAX_AM_EAGER_SZ) {
         MPIDIG_send_long_req_mst_t lreq_hdr;
