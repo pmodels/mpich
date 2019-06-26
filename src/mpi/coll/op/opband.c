@@ -22,9 +22,9 @@ void MPIR_BAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LBAND)
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, type_name_, MPIR_LBAND)
             /* no semicolons by necessity */
-            MPIR_OP_TYPE_GROUP(C_INTEGER)
+             MPIR_OP_TYPE_GROUP(C_INTEGER)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
                 MPIR_OP_TYPE_GROUP(BYTE)
                 /* extra types that are not required to be supported by the MPI Standard */

@@ -8,6 +8,9 @@
 #ifndef MPIR_OP_UTIL_H_INCLUDED
 #define MPIR_OP_UTIL_H_INCLUDED
 
+#include "ch4_cuda_helper.h"
+#include "ch4_cuda_kernel_ops.h"
+
 /* The MPI Standard (MPI-2.1, sec 5.9.2) defines which predfined reduction
    operators are valid by groups of types:
      C integer
@@ -45,13 +48,18 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
  * emits a warning and generates invalid arithmetic code.  We could drop the
  * restrict instead, but we are more likely to get an optimization from it than
  * const.  [goodell@ 2010-12-15] */
-#define MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,op_macro_) \
-    case (mpi_type_): {                                       \
-        c_type_ * restrict a = (c_type_ *)inoutvec;           \
-        /*const*/ c_type_ * restrict b = (c_type_ *)invec;    \
-        for (i=0; i<len; i++)                               \
-            a[i] = op_macro_(a[i],b[i]);                      \
-        break;                                                \
+#define MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,type_name_,op_macro_)           \
+    case (mpi_type_): {                                                 \
+        c_type_ * restrict a = (c_type_ *)inoutvec;                     \
+        /*const*/ c_type_ * restrict b = (c_type_ *)invec;              \
+        if(is_mem_type_device(inoutvec) && is_mem_type_device(invec))   \
+        {                                                              \
+            call_##type_name_##_##op_macro_(a, b, len);            \
+        } else {                                                        \
+            for (i=0; i<len; i++)                                       \
+                a[i] = op_macro_(a[i],b[i]);                            \
+        }                                                               \
+        break;                                                          \
     }
 /* helps enforce consistent naming */
 #define MPIR_OP_TYPE_GROUP(group) MPIR_OP_TYPE_GROUP_##group
