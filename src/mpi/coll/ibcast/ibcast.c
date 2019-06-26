@@ -70,10 +70,10 @@ cvars:
         scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         gentran_tree                         - Force Generic Transport Tree algorithm
-        gentran_scatter_recexch_allgather    - Force Generic Transport Scatter followed by Recursive Exchange Allgather algorithm
+        gentran_scatterv_recexch_allgatherv  - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
         gentran_ring                         - Force Generic Transport Ring algorithm
 
-    - name        : MPIR_CVAR_IBCAST_SCATTER_KVAL
+    - name        : MPIR_CVAR_IBCAST_SCATTERV_KVAL
       category    : COLLECTIVE
       type        : int
       default     : 2
@@ -83,7 +83,7 @@ cvars:
       description : >-
         k value for tree based scatter in scatter_recexch_allgather algorithm
 
-    - name        : MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL
+    - name        : MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL
       category    : COLLECTIVE
       type        : int
       default     : 2
@@ -274,10 +274,6 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
-    size_t type_size, nbytes;
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -296,12 +292,10 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_scatter_recexch_allgather:
-                if (nbytes % MPIR_Comm_size(comm_ptr) != 0)     /* currently this algorithm cannot handle this scenario */
-                    break;
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_scatterv_recexch_allgatherv:
                 mpi_errno =
-                    MPIR_Ibcast_intra_gentran_scatter_recexch_allgather(buffer, count, datatype,
-                                                                        root, comm_ptr, request);
+                    MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv(buffer, count, datatype,
+                                                                          root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
