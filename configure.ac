@@ -5621,6 +5621,43 @@ if test "X$f08_works" = "Xyes"; then
     AC_SUBST(F08_C_COUNT)
     AC_SUBST(F08_C_OFFSET)
 fi
+########################################################################
+#For CUDA NVCC
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([[--with-cuda[=DIR]]],
+                            [use the CUDA installation in DIR]) or system], [],
+                            [with_cuda=no])
+                                                        
+# Detect CUDA
+cudaincludedir=""
+cudalibdir=""
+cudalibs=""
+
+AC_SUBST([cudaincludedir])
+AC_SUBST([cudalibs])
+AC_SUBST([cudalibdir])
+
+AM_CONDITIONAL([USE_CUDA], [test "x${with_cuda}" != "xno"])
+if test "${with_cuda}" != "no" ; then
+    if test "${with_cuda}" != "system" ; then
+        AS_IF([test -s "${with_cuda}/include/cuda.h"],
+              [:],[AC_MSG_ERROR([the CUDA installation in "${with_cuda}" appears broken])])
+        cudaincludedir="${with_cuda}/include"
+        cudalibs="-lcuda -lcudart"
+        if test -d ${with_cuda}/lib64 ; then
+            cudalibdir="${with_cuda}/lib64"
+        else
+            cudalibdir="${with_cuda}/lib"
+        fi
+    else
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "cuda.h"
+                        ],
+                        [])],
+                        [AC_MSG_ERROR([the CUDA installation seems to be added from system path])], [])
+    fi
+        AC_SUBST([NVCC],["$with_cuda/bin/nvcc"])
+    AC_DEFINE(USE_CUDA,1,[Define if cuda is available in either user specified path or in system path])
+fi
 
 ########################################################################
 # Some of the settings need to be applied at the end
