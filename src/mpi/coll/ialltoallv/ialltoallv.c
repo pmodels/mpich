@@ -24,6 +24,8 @@ cvars:
         inplace           - Force inplace algorithm
         pairwise_exchange - Force pairwise exchange algorithm
         gentran_scattered - Force generic transport based scattered algorithm
+        gentran_blocked   - Force generic transport blocked algorithm
+        gentran_inplace   - Force generic transport inplace algorithm
 
     - name        : MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -225,6 +227,28 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                                                                 sendtype, recvbuf, recvcounts,
                                                                 rdispls, recvtype, comm_ptr,
                                                                 request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_blocked:
+                if (sendbuf != MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                              sendtype, recvbuf, recvcounts,
+                                                              rdispls, recvtype, comm_ptr, request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_inplace:
+                if (sendbuf == MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallv_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                              sendtype, recvbuf, recvcounts,
+                                                              rdispls, recvtype, comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     goto fn_exit;
