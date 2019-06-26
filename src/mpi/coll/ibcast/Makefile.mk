@@ -23,7 +23,7 @@ mpi_core_sources += \
     src/mpi/coll/ibcast/ibcast_inter_flat.c                                 \
     src/mpi/coll/ibcast/ibcast_gentran_algos.c                              \
     src/mpi/coll/ibcast/ibcast_intra_gentran_tree.c                                 \
-    src/mpi/coll/ibcast/ibcast_intra_gentran_scatter_recexch_allgather.c            \
+    src/mpi/coll/ibcast/ibcast_intra_gentran_scatterv_recexch_allgatherv.c  \
     src/mpi/coll/ibcast/ibcast_intra_gentran_ring.c                                 \
     src/mpi/coll/ibcast/ibcast_utils.c
 
