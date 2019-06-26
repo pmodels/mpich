@@ -38,6 +38,7 @@ INSTALL_DATA_LOCAL_TARGETS =
 doc1_src_txt =
 doc3_src_txt =
 
+
 # add (+=) target names to this variable to add them to the dependencies of the
 # 'clean-local' target
 CLEAN_LOCAL_TARGETS =
@@ -139,21 +140,25 @@ mpi_fc_sources =
 mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
+cuda_sources =
+cuda_objects =
 
 lib_LTLIBRARIES =
+lib_LIBRARIES =
 
 # include our subdir automake fragments
 include maint/Makefile.mk
 include src/Makefile.mk
 
+#AM_CPPFLAGS += $(cuda_objects)
 if BUILD_PROFILING_LIB
 # dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
 # don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI
-lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
+lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI -Isrc/mpid/ch4/src/
+lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(cuda_objects) ./src/mpid/ch4/src/ch4_cuda_kernel_ops.o ./src/mpid/ch4/src/ch4_gpu.o -lcudart
 EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
 
 # lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
@@ -162,18 +167,43 @@ EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources)
 lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
-lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -Isrc/mpid/ch4/src/
+lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs) $(cuda_objects) ./src/mpid/ch4/src/ch4_cuda_kernel_ops.o ./src/mpid/ch4/src/ch4_gpu.o -lcudart
 
 else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -Isrc/mpid/ch4/src/
+lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs) $(cuda_objects) ./src/mpid/ch4/src/ch4_cuda_kernel_ops.o ./src/mpid/ch4/src/ch4_gpu.o -lcudart
 EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+
 endif !BUILD_PROFILING_LIB
+
+if USE_CUDA
+
+#lib_LIBRARIES += lib/libmpichcudahelper.a
+#lib_libmpichcudahelper_a_SOURCES = $(cuda_sources)
+#lib_libmpichcudahelper_a_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+#lib_libmpichcudahelper_a_CPPFLAGS = $(AM_CPPFLAGS)
+#lib_libmpichcudahelper_a_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+#EXTRA_lib_libmpichcudahelper_a_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+#lib_libmpichcudahelper_a_AR = $(NVCC) -arch=sm_30 -lib -o
+#
+#.cu.o: src/mpid/ch4/src/ch4_cuda_helper.h src/mpid/ch4/src/ch4_cuda_kernel_ops.h
+#	$(NVCC) $(AM_CPPFLAGS) $(external_ldflags) -arch=sm_30 -Xcompiler "-fPIC -DPIC" -dc -o $@ $<
+#.src/mpid/ch4/src/ch4_gpu.o:
+#	$(NVCC) -dlink $(cuda_objects) -o src/mpid/ch4/src/ch4_gpu.o
+
+#$(cuda_objects): $(cuda_sources)
+#       $(NVCC) $(AM_CPPFLAGS) -arch=sm_30 -Xcompiler "-fPIC -DPIC" -dc -o $@ $<
+
+#AM_CPPFLAGS += $(cuda_objects)
+#mpi_convenience_libs += $(cuda_objects) -lcudart
+#pmpi_convenience_libs += lib/libmpichcudahelper.a
+
+endif USE_CUDA
 
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
@@ -637,7 +667,6 @@ include $(top_srcdir)/doc/Makefile.mk
 # -local targets
 install-data-local: $(INSTALL_DATA_LOCAL_TARGETS)
 
-
 # sometimes helpful when debugging macros to see the preprocessed output.
 # Also using '-CC' because comments provide useful landmarks
 
@@ -645,3 +674,5 @@ SUFFIXES += .i
 
 .c.i:
 	$(COMPILE) -CC -E -o $@ $<
+
+

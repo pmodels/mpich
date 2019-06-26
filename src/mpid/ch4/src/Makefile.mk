@@ -37,7 +37,9 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_origin_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_target_callbacks.h     \
-                  src/mpid/ch4/src/ch4r_request.h
+                  src/mpid/ch4/src/ch4r_request.h\
+		  src/mpid/ch4/src/ch4_cuda_helper.h\
+		  src/mpid/ch4/src/ch4_cuda_kernel_ops.h
 
 mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4_impl.c           \
@@ -56,7 +58,25 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4r_rma_target_callbacks.c     \
                     src/mpid/ch4/src/ch4r_symheap.c       \
                     src/mpid/ch4/src/ch4r_win.c           \
-                    src/mpid/ch4/src/mpid_ch4_net_array.c
+                    src/mpid/ch4/src/mpid_ch4_net_array.c\
+		    src/mpid/ch4/src/ch4_cuda_helper.c
+
+if USE_CUDA
+
+cuda_sources += src/mpid/ch4/src/ch4_cuda_helper.h\
+                src/mpid/ch4/src/ch4_cuda_helper.cu\
+                src/mpid/ch4/src/ch4_cuda_kernel_ops.h\
+                src/mpid/ch4/src/ch4_cuda_kernel_ops.cu
+
+cuda_objects += src/mpid/ch4/src/ch4_cuda_kernel_ops.o\
+		src/mpid/ch4/src/ch4_gpu.o
+else
+
+mpi_core_sources += src/mpid/ch4/src/ch4_cuda_helper.h\
+                src/mpid/ch4/src/ch4_cuda_helper.cu\
+                src/mpid/ch4/src/ch4_cuda_kernel_ops.h\
+                src/mpid/ch4/src/ch4_cuda_kernel_ops.cu
+endif
 
 if BUILD_CH4_COLL_TUNING
 mpi_core_sources += src/mpid/ch4/src/ch4_coll_globals.c
