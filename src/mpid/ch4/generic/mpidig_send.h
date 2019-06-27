@@ -62,6 +62,11 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     am_hdr.context_id = comm->context_id + context_offset;
     am_hdr.error_bits = errflag;
 
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIDIG_REQUEST(sreq, datatype) = datatype;
+    MPIDIG_REQUEST(sreq, buffer) = (char *) buf;
+    MPIDIG_REQUEST(sreq, count) = count;
+#endif
     /* Synchronous send requires a special kind of AM header to track the return message so check
      * for that and fill in the appropriate struct if necessary. */
 #ifdef MPIDI_CH4_DIRECT_NETMOD

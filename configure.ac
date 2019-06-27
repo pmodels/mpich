@@ -2740,6 +2740,13 @@ on all link lines (consider adding it to LDFLAGS)])
     ## most Unix versions, libtvmpich.dylib for Mac OSX).
     ##ENVVAR END:
 
+    # We need when building CH4. The debugger interface need to build with CH4
+    # AM message queue which is not exposed through abstract device interface.
+    # This is very hacky (unfortunately) but sufficient for now.
+    if test "$device_name" = "ch4" ; then
+        AC_DEFINE(HAVE_CH4_DEBUGGER_SUPPORT,1,[Define if debugger support is included for CH4])
+    fi
+
     if test -z "$MPICH_DEBUGLIBNAME" ; then
         DEBUGLIBNAME=libtvmpich$SHLIB_EXT
     else
