@@ -26,7 +26,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
     int nbytes = 0;
     MPI_Aint type_size = 0;
 
-    if (MPIDI_POSIX_Bcast_algo_choice == MPIDI_POSIX_Bcast_intra_release_gather_id) {
+    if (MPIR_CVAR_ENUM_IS(BCAST_POSIX_INTRA_ALGORITHM, release_gather)) {
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
          * and MPICH is not multi-threaded */
 #ifdef ENABLE_IZEM_ATOMIC
@@ -78,7 +78,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    if (MPIDI_POSIX_Allreduce_algo_choice == MPIDI_POSIX_Allreduce_intra_release_gather_id &&
+    if (MPIR_CVAR_ENUM_IS(ALLREDUCE_POSIX_INTRA_ALGORITHM, release_gather) &&
         (count * type_size) <= MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
         MPIR_Op_is_commutative(op)) {
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
@@ -125,7 +125,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
     MPI_Aint type_size = 0;
     int pof2 = 0;
 
-    if (MPIDI_POSIX_Reduce_algo_choice == MPIDI_POSIX_Reduce_intra_release_gather_id &&
+    if (MPIR_CVAR_ENUM_IS(REDUCE_POSIX_INTRA_ALGORITHM, release_gather) &&
         MPIR_Op_is_commutative(op)) {
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
          * and MPICH is not multi-threaded. Also when the op is commutative */

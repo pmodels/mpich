@@ -200,10 +200,6 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     zm_atomic_store(MPIDI_POSIX_shm_limit_counter, 0, zm_memord_relaxed);
 #endif
 
-    mpi_errno = collective_cvars_init();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_INIT);
     return mpi_errno;
