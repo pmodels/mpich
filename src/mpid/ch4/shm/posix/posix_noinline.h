@@ -13,7 +13,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 int MPIDI_POSIX_mpi_finalize_hook(void);
 int MPIDI_POSIX_get_vci_attr(int vci);
 
-int collective_cvars_init(void);
 int MPIDI_POSIX_coll_init(int rank, int size);
 int MPIDI_POSIX_coll_finalize(void);
 
