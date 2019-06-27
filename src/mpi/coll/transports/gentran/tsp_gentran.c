@@ -22,6 +22,14 @@ UT_icd vtx_t_icd = {
     MPII_Genutil_vtx_dtor
 };
 
+/* UT_icd helper structure for MPII_Genutil_vtx_type_t utarray */
+UT_icd vtx_type_t_icd = {
+    sizeof(MPII_Genutil_vtx_type_t),
+    NULL,
+    NULL,
+    NULL
+};
+
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 {
     sched->total_vtcs = 0;
@@ -32,6 +40,7 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
     utarray_new(sched->vtcs, &vtx_t_icd, MPL_MEM_COLL);
 
     utarray_new(sched->buffers, &ut_ptr_icd, MPL_MEM_COLL);
+    utarray_init(&sched->generic_types, &vtx_type_t_icd);
 
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
@@ -39,6 +48,50 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
     return MPI_SUCCESS;
 }
 
+
+int MPII_Genutil_sched_new_type(MPII_Genutil_sched_t * sched, MPII_Genutil_sched_issue_fn issue_fn,
+                                MPII_Genutil_sched_complete_fn complete_fn,
+                                MPII_Genutil_sched_free_fn free_fn)
+{
+    MPII_Genutil_vtx_type_t *newtype;
+    int type_id;
+
+    type_id = MPII_GENUTIL_VTX_KIND__LAST + utarray_len(&sched->generic_types) + 1;
+    utarray_extend_back(&sched->generic_types, MPL_MEM_COLL);
+    newtype = (MPII_Genutil_vtx_type_t *) utarray_back(&sched->generic_types);
+    newtype->id = type_id;
+    newtype->issue_fn = issue_fn;
+    newtype->complete_fn = complete_fn;
+    newtype->free_fn = free_fn;
+
+    return type_id;
+}
+
+int MPII_Genutil_sched_generic(int type_id, void *data,
+                               MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs,
+                               int *vtx_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    vtx_t *vtxp;
+
+    if (type_id <= MPII_GENUTIL_VTX_KIND__LAST ||
+        type_id - MPII_GENUTIL_VTX_KIND__LAST > utarray_len(&sched->generic_types)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+    }
+    MPIR_Assert(vtx_id);
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+    vtxp->vtx_kind = type_id;
+    vtxp->u.generic.data = data;
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] generic [%d]", *vtx_id, type_id));
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,

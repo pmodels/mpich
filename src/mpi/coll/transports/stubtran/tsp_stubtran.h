@@ -24,6 +24,8 @@
 #undef MPIR_TSP_sched_selective_sink
 #undef MPIR_TSP_sched_sink
 #undef MPIR_TSP_sched_fence
+#undef MPIR_TSP_sched_new_type
+#undef MPIR_TSP_sched_generic
 #undef MPIR_TSP_sched_malloc
 #undef MPIR_TSP_sched_start
 #undef MPIR_TSP_sched_free
@@ -46,10 +48,21 @@
 #define MPIR_TSP_sched_selective_sink       MPII_Stubutil_sched_selective_sink
 #define MPIR_TSP_sched_sink                 MPII_Stubutil_sched_sink
 #define MPIR_TSP_sched_fence                MPII_Stubutil_sched_fence
+#define MPIR_TSP_sched_new_type             MPII_Stubutil_sched_new_type
+#define MPIR_TSP_sched_generic              MPII_Stubutil_sched_generic
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched);
+void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched);
+int MPII_Stubutil_sched_new_type(MPII_Stubutil_sched_t * sched,
+                                 MPII_Stubutil_sched_issue_fn issue_fn,
+                                 MPII_Stubutil_sched_complete_fn complete_fn,
+                                 MPII_Stubutil_sched_free_fn free_fn);
+
+int MPII_Stubutil_sched_generic(int type_id, void *data,
+                                MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *in_vtcs,
+                                int *vtx_id);
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,
                               MPIR_Comm * comm_ptr, MPII_Stubutil_sched_t * sched,
                               int n_invtcs, int *invtcs);
