@@ -709,6 +709,16 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int *sendcounts, const int *
                          const MPI_Datatype * sendtypes, void *recvbuf, const int *recvcounts,
                          const int *rdispls, const MPI_Datatype * recvtypes, MPIR_Comm * comm_ptr,
                          MPIR_Request ** request);
+int MPIR_Ialltoallw_intra_gentran_blocked(const void *sendbuf, const int sendcounts[],
+                                          const int sdispls[], const MPI_Datatype sendtypes[],
+                                          void *recvbuf, const int recvcounts[],
+                                          const int rdispls[], const MPI_Datatype recvtypes[],
+                                          MPIR_Comm * comm_ptr, MPIR_Request ** req);
+int MPIR_Ialltoallw_intra_gentran_inplace(const void *sendbuf, const int sendcounts[],
+                                          const int sdispls[], const MPI_Datatype sendtypes[],
+                                          void *recvbuf, const int recvcounts[],
+                                          const int rdispls[], const MPI_Datatype recvtypes[],
+                                          MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
 /* sched-based functions */
 int MPIR_Ialltoallw_sched(const void *sendbuf, const int *sendcounts, const int *sdispls,
