@@ -164,6 +164,7 @@ int ${fn_ns}_finalize(void);
 
 EOT
 
+our %enum_groups;
 foreach my $p (@cvars) {
     printf OUTPUT_H "/* declared in $p->{location} */\n";
     printf OUTPUT_H "extern %s ${uc_ns}_%s;\n", Type2Ctype($p->{type}), $p->{name};
@@ -178,14 +179,34 @@ foreach my $p (@cvars) {
         foreach my $a (@enum){
             push @t, "    MPIR_CVAR_$p->{name}_$a,";
         }
-        $t[-1]=~s/,$//;
+        die "Failed to parse enum lists in $p->{name}\n" if !@t;
 
-        print OUTPUT_H "enum $p->{name}_choice {\n";
-        foreach my $l (@t){
-            print OUTPUT_H "$l\n";
+        if ($p->{group}) {
+            if (!$enum_groups{$p->{group}}) {
+                $enum_groups{$p->{group}} = [];
+            }
+            my $g = $enum_groups{$p->{group}};
+            push @$g, @t;
         }
-        print OUTPUT_H "};\n";
+        else {
+            $t[-1]=~s/,$//;
+            print OUTPUT_H "enum $p->{name}_choice {\n";
+            foreach my $l (@t){
+                print OUTPUT_H "$l\n";
+            }
+            print OUTPUT_H "};\n";
+        }
     }
+}
+foreach my $g (sort keys %enum_groups){
+    my $t = $enum_groups{$g};
+    print OUTPUT_H "int MPIR_$g\_from_str(const char *s);\n";
+    $t->[-1]=~s/,$//;
+    print OUTPUT_H "enum $g\_group_t {\n";
+    foreach my $l (@$t){
+        print OUTPUT_H "$l\n";
+    }
+    print OUTPUT_H "};\n";
 }
 
 print OUTPUT_H <<EOT;
@@ -195,6 +216,9 @@ print OUTPUT_H <<EOT;
 
 /* Arbitrary, simplifies interaction with external interfaces like MPI_T_ */
 #define ${uc_ns}_MAX_STRLEN (384)
+
+/* Shortens enum value comparisons */
+#define ${uc_ns}_ENUM_IS(A, a) (${uc_ns}_ ## A == ${uc_ns}_ ## A ## _ ## a)
 
 #endif /* $hdr_guard */
 EOT
@@ -442,6 +466,20 @@ print OUTPUT_C <<EOT;
 }
 
 EOT
+
+foreach my $g (sort keys %enum_groups){
+    my $t = $enum_groups{$g};
+    print OUTPUT_C "int MPIR_$g\_from_str(const char *s) {\n";
+    my $t_if="if";
+    foreach my $l (@$t){
+        $l=~s/,$//;
+        print OUTPUT_C "    $t_if (strcmp(s, \"$l\")==0) return $l;\n";
+        $t_if = "else if";
+    }
+    print OUTPUT_C "    else return -1;\n";
+    print OUTPUT_C "};\n";
+}
+
 close(OUTPUT_C);
 
 #===============================================================

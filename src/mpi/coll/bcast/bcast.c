@@ -95,6 +95,7 @@ cvars:
     - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
       default     : auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
