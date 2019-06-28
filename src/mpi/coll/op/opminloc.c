@@ -73,7 +73,6 @@ typedef struct MPIR_longdoubleint_loctype {
 
 void MPIR_MINLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
-    int mpi_errno = MPI_SUCCESS;
     int i, len = *Len;
 
 #ifdef HAVE_FORTRAN_BINDING
