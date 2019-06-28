@@ -17,6 +17,11 @@ int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched)
     return MPI_SUCCESS;
 }
 
+void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched)
+{
+    return;
+}
+
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,
                               MPIR_Comm * comm_ptr, MPII_Stubutil_sched_t * sched,
                               int n_invtcs, int *invtcs)
