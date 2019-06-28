@@ -52,7 +52,7 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
     case (mpi_type_): {                                                 \
         c_type_ * restrict a = (c_type_ *)inoutvec;                     \
         /*const*/ c_type_ * restrict b = (c_type_ *)invec;              \
-        if(is_mem_type_device(inoutvec) && is_mem_type_device(invec))   \
+        if (is_mem_type_device(inoutvec) && is_mem_type_device(invec))   \
         {                                                              \
             call_##type_name_##_##op_macro_(a, b, len);            \
         } else {                                                        \

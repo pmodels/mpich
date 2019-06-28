@@ -925,116 +925,160 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         return mpi_errno;
         /* --END ERROR HANDLING-- */
     }
-
     /* Computation offloading to GPU */
-    if(is_mem_type_device(target_buf) && !(is_mem_type_device(source_buf)))
-    {
+    if (is_mem_type_device(target_buf) && !(is_mem_type_device(source_buf))) {
         void *temp_buffer;
         cudaError_t status;
+#ifdef PROFILE_CUDA
+        cudaEvent_t start_cuda_malloc_event, stop_cuda_malloc_event;
+        float cuda_malloc_time;
+        int iter = 1000;
 
-        status = cudaMalloc(&temp_buffer, (source_count * source_dtp_size));
-        if(status != cudaSuccess)
-        {
-            printf("FAILURE cudaMalloc... Status: %s\n", cudaGetErrorString(status));
-            fflush(stdout);
-            goto fn_exit;
-        }
+        cuda_func(cudaEventCreate(&start_cuda_malloc_event));
+        cuda_func(cudaEventCreate(&stop_cuda_malloc_event));
 
-        status = cudaMemcpy(temp_buffer, source_buf, (source_count * source_dtp_size), cudaMemcpyHostToDevice);
-        if(status != cudaSuccess)
-        {
-            printf("FAILURE cudaMemcpy... Status: %s\n", cudaGetErrorString(status));
-            fflush(stdout);
-            goto fn_exit;
+        cuda_func(cudaEventRecord(start_cuda_malloc_event, 0));
+        for (int i = 0; i < iter; i++) {
+#endif
+            status = cudaMalloc(&temp_buffer, (source_count * source_dtp_size));
+            if (status != cudaSuccess) {
+                printf("FAILURE cudaMalloc... Status: %s\n", cudaGetErrorString(status));
+                fflush(stdout);
+                goto fn_exit;
+            }
+#ifdef PROFILE_CUDA
         }
-        printf("Source Buffer: %p Target Buffer: %p\n", source_buf, target_buf);
-        fflush(stdout);
+        cuda_func(cudaEventRecord(stop_cuda_malloc_event, 0));
+        cuda_func(cudaEventSynchronize(stop_cuda_malloc_event));
+        cuda_func(cudaEventElapsedTime
+                  (&cuda_malloc_time, start_cuda_malloc_event, stop_cuda_malloc_event));
+        printf("CUDA malloc: %f us\t | \t", (cuda_malloc_time * 1e3) / iter);
+
+
+        cudaEvent_t start_cuda_memcpy_event, stop_cuda_memcpy_event;
+        float cuda_memcpy_time;
+
+        cuda_func(cudaEventCreate(&start_cuda_memcpy_event));
+        cuda_func(cudaEventCreate(&stop_cuda_memcpy_event));
+
+        cuda_func(cudaEventRecord(start_cuda_memcpy_event, 0));
+        for (int i = 0; i < iter; i++) {
+#endif
+            status =
+                cudaMemcpy(temp_buffer, source_buf, (source_count * source_dtp_size),
+                           cudaMemcpyHostToDevice);
+            if (status != cudaSuccess) {
+                printf("FAILURE cudaMemcpy... Status: %s\n", cudaGetErrorString(status));
+                fflush(stdout);
+                goto fn_exit;
+            }
+#ifdef PROFILE_CUDA
+        }
+        cuda_func(cudaEventRecord(stop_cuda_memcpy_event, 0));
+        cuda_func(cudaEventSynchronize(stop_cuda_memcpy_event));
+        cuda_func(cudaEventElapsedTime
+                  (&cuda_memcpy_time, start_cuda_memcpy_event, stop_cuda_memcpy_event));
+        printf("H-D Memcpy: %f us\t | \t", (cuda_memcpy_time * 1e3) / iter);
+#endif
         source_buf = temp_buffer;
     }
+#ifdef PROFILE_COMP
+    int iter = 1000;
+    MPL_wtime_init();
+    MPL_time_t comp_start_time, comp_end_time;
+    double time_diff;
+    MPL_wtime(&comp_start_time);
+    for (int i = 0; i < iter; i++) {
+#endif
+        if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
+            /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
+            (*uop) (source_buf, target_buf, &source_count, &source_dtp);
+        } else {
+            printf("Inside ch4_impl derived datatype part\n");
+            /* derived datatype */
+            MPL_IOV *typerep_vec;
+            int vec_len, i, count;
+            MPI_Aint type_extent, type_size, src_type_stride;
+            MPI_Datatype type;
+            MPIR_Datatype *dtp;
+            MPI_Aint curr_len;
+            void *curr_loc;
+            int accumulated_count;
 
-    if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
-        /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
-        (*uop) (source_buf, target_buf, &source_count, &source_dtp);
-    } else {
-        /* derived datatype */
-        MPL_IOV *typerep_vec;
-        int vec_len, i, count;
-        MPI_Aint type_extent, type_size, src_type_stride;
-        MPI_Datatype type;
-        MPIR_Datatype *dtp;
-        MPI_Aint curr_len;
-        void *curr_loc;
-        int accumulated_count;
-
-        MPIR_Datatype_get_ptr(target_dtp, dtp);
-        MPIR_Assert(dtp != NULL);
-        vec_len = dtp->max_contig_blocks * target_count + 1;
-        /* +1 needed because Rob says so */
-        typerep_vec = (MPL_IOV *)
-            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_RMA);
-        /* --BEGIN ERROR HANDLING-- */
-        if (!typerep_vec) {
-            mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPI_ERR_OTHER, "**nomem", 0);
-            goto fn_exit;
-        }
-        /* --END ERROR HANDLING-- */
-
-        int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
-        MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
-                            source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
-        vec_len = actual_iov_len;
-
-        type = dtp->basic_type;
-        MPIR_Assert(type != MPI_DATATYPE_NULL);
-
-        MPIR_Assert(type == source_dtp);
-        type_size = source_dtp_size;
-        type_extent = source_dtp_extent;
-        /* If the source buffer has been packed by the caller, the distance between
-         * two elements can be smaller than extent. E.g., predefined pairtype may
-         * have larger extent than size.*/
-        if (src_kind == MPIDIG_ACC_SRCBUF_PACKED)
-            src_type_stride = source_dtp_size;
-        else
-            src_type_stride = source_dtp_extent;
-
-        i = 0;
-        curr_loc = typerep_vec[0].MPL_IOV_BUF;
-        curr_len = typerep_vec[0].MPL_IOV_LEN;
-        accumulated_count = 0;
-        while (i != vec_len) {
-            if (curr_len < type_size) {
-                MPIR_Assert(i != vec_len);
-                i++;
-                curr_len += typerep_vec[i].MPL_IOV_LEN;
-                continue;
+            MPIR_Datatype_get_ptr(target_dtp, dtp);
+            MPIR_Assert(dtp != NULL);
+            vec_len = dtp->max_contig_blocks * target_count + 1;
+            /* +1 needed because Rob says so */
+            typerep_vec = (MPL_IOV *)
+                MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_RMA);
+            /* --BEGIN ERROR HANDLING-- */
+            if (!typerep_vec) {
+                mpi_errno =
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_OTHER, "**nomem", 0);
+                goto fn_exit;
             }
+            /* --END ERROR HANDLING-- */
 
-            MPIR_Assign_trunc(count, curr_len / type_size, int);
+            int actual_iov_len;
+            MPI_Aint actual_iov_bytes;
+            MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
+                                source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
+            vec_len = actual_iov_len;
 
-            (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
-                    (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+            type = dtp->basic_type;
+            MPIR_Assert(type != MPI_DATATYPE_NULL);
 
-            if (curr_len % type_size == 0) {
-                i++;
-                if (i != vec_len) {
-                    curr_loc = typerep_vec[i].MPL_IOV_BUF;
-                    curr_len = typerep_vec[i].MPL_IOV_LEN;
+            MPIR_Assert(type == source_dtp);
+            type_size = source_dtp_size;
+            type_extent = source_dtp_extent;
+            /* If the source buffer has been packed by the caller, the distance between
+             * two elements can be smaller than extent. E.g., predefined pairtype may
+             * have larger extent than size.*/
+            if (src_kind == MPIDIG_ACC_SRCBUF_PACKED)
+                src_type_stride = source_dtp_size;
+            else
+                src_type_stride = source_dtp_extent;
+
+            i = 0;
+            curr_loc = typerep_vec[0].MPL_IOV_BUF;
+            curr_len = typerep_vec[0].MPL_IOV_LEN;
+            accumulated_count = 0;
+            while (i != vec_len) {
+                if (curr_len < type_size) {
+                    MPIR_Assert(i != vec_len);
+                    i++;
+                    curr_len += typerep_vec[i].MPL_IOV_LEN;
+                    continue;
                 }
-            } else {
-                curr_loc = (void *) ((char *) curr_loc + type_extent * count);
-                curr_len -= type_size * count;
+
+                MPIR_Assign_trunc(count, curr_len / type_size, int);
+
+                (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
+                        (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+
+                if (curr_len % type_size == 0) {
+                    i++;
+                    if (i != vec_len) {
+                        curr_loc = typerep_vec[i].MPL_IOV_BUF;
+                        curr_len = typerep_vec[i].MPL_IOV_LEN;
+                    }
+                } else {
+                    curr_loc = (void *) ((char *) curr_loc + type_extent * count);
+                    curr_len -= type_size * count;
+                }
+
+                accumulated_count += count;
             }
 
-            accumulated_count += count;
+            MPL_free(typerep_vec);
         }
-
-        MPL_free(typerep_vec);
+#ifdef PROFILE_COMP
     }
-
+    MPL_wtime(&comp_end_time);
+    MPL_wtime_diff(&comp_start_time, &comp_end_time, &time_diff);
+    printf("Total Computation: %f \t | \t", (time_diff * 1e6) / iter);
+#endif
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMPUTE_ACC_OP);
     return mpi_errno;

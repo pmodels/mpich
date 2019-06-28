@@ -4,14 +4,14 @@
 #include "mpl_base.h"
 
 extern "C"{
+#include "ch4_cuda_helper.h"
 #include "ch4_cuda_kernel_ops.h"
 
 /* Cuda specific implementation */
-#define generate_kernel_MPIR_LBAND(type_name_, c_type_)                                          \
-    __global__ void kernel_##type_name_##_##MPIR_LBAND(c_type_ *a, c_type_ *b, int n)            \
+#define generate_kernel_MPIR_LBAND(type_name_, c_type_)                                         \
+    __global__ void kernel_##type_name_##_##MPIR_LBAND(c_type_ *a, c_type_ *b, int n)           \
     {                                                                                           \
-        printf("_______________Inside LBAND Kernel____________________");                       \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = ((a[i]) & (b[i]));                                                           \
@@ -50,11 +50,10 @@ generate_kernel_MPIR_LBAND(mpir_typename_integer16, MPIR_INTEGER16_CTYPE);
 generate_kernel_MPIR_LBAND(mpir_typename_byte, unsigned char);
 
 
-#define generate_kernel_MPIR_LBOR(type_name_, c_type_)                                           \
-    __global__ void kernel_##type_name_##_##MPIR_LBOR(c_type_ *a, c_type_ *b, int n)             \
+#define generate_kernel_MPIR_LBOR(type_name_, c_type_)                                          \
+    __global__ void kernel_##type_name_##_##MPIR_LBOR(c_type_ *a, c_type_ *b, int n)            \
     {                                                                                           \
-        printf("_______________Inside LBOR Kernel____________________");                        \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = ((a[i]) | (b[i]));                                                           \
@@ -92,11 +91,10 @@ generate_kernel_MPIR_LBOR(mpir_typename_integer8, MPIR_INTEGER8_CTYPE);
 generate_kernel_MPIR_LBOR(mpir_typename_integer16, MPIR_INTEGER16_CTYPE);
 generate_kernel_MPIR_LBOR(mpir_typename_byte, unsigned char);
 
-#define generate_kernel_MPIR_LBXOR(type_name_, c_type_)                                          \
-    __global__ void kernel_##type_name_##_##MPIR_LBXOR(c_type_ *a, c_type_ *b, int n)            \
+#define generate_kernel_MPIR_LBXOR(type_name_, c_type_)                                         \
+    __global__ void kernel_##type_name_##_##MPIR_LBXOR(c_type_ *a, c_type_ *b, int n)           \
     {                                                                                           \
-        printf("_______________Inside LBXOR Kernel____________________");                       \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = ((a[i]) ^ (b[i]));                                                           \
@@ -134,11 +132,10 @@ generate_kernel_MPIR_LBXOR(mpir_typename_integer8, MPIR_INTEGER8_CTYPE);
 generate_kernel_MPIR_LBXOR(mpir_typename_integer16, MPIR_INTEGER16_CTYPE);
 generate_kernel_MPIR_LBXOR(mpir_typename_byte, unsigned char);
 
-#define generate_kernel_MPIR_LLAND(type_name_, c_type_)                                          \
-    __global__ void kernel_##type_name_##_##MPIR_LLAND(c_type_ *a, c_type_ *b, int n)            \
+#define generate_kernel_MPIR_LLAND(type_name_, c_type_)                                         \
+    __global__ void kernel_##type_name_##_##MPIR_LLAND(c_type_ *a, c_type_ *b, int n)           \
     {                                                                                           \
-        printf("_______________Inside LLAND Kernel____________________");                       \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = ((a[i]) && (b[i]));                                                          \
@@ -187,11 +184,10 @@ generate_kernel_MPIR_LLAND(mpir_typename_logical, MPI_Fint);
 generate_kernel_MPIR_LLAND(mpir_typename_c_bool, _Bool);
 generate_kernel_MPIR_LLAND(mpir_typename_cxx_bool_value, MPIR_CXX_BOOL_CTYPE);
 
-#define generate_kernel_MPIR_LLOR(type_name_, c_type_)                                           \
-    __global__ void kernel_##type_name_##_##MPIR_LLOR(c_type_ *a, c_type_ *b, int n)             \
+#define generate_kernel_MPIR_LLOR(type_name_, c_type_)                                          \
+    __global__ void kernel_##type_name_##_##MPIR_LLOR(c_type_ *a, c_type_ *b, int n)            \
     {                                                                                           \
-        printf("_______________Inside LLOR Kernel____________________");                        \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = ((a[i]) || (b[i]));                                                          \
@@ -240,11 +236,10 @@ generate_kernel_MPIR_LLOR(mpir_typename_logical, MPI_Fint);
 generate_kernel_MPIR_LLOR(mpir_typename_c_bool, _Bool);
 generate_kernel_MPIR_LLOR(mpir_typename_cxx_bool_value, MPIR_CXX_BOOL_CTYPE);
 
-#define generate_kernel_MPIR_LLXOR(type_name_, c_type_)                                          \
-    __global__ void kernel_##type_name_##_##MPIR_LLXOR(c_type_ *a, c_type_ *b, int n)            \
+#define generate_kernel_MPIR_LLXOR(type_name_, c_type_)                                         \
+    __global__ void kernel_##type_name_##_##MPIR_LLXOR(c_type_ *a, c_type_ *b, int n)           \
     {                                                                                           \
-        printf("_______________Inside LLXOR Kernel____________________");                       \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = (((a[i]) && (!b[i])) || ((!a[i]) && (b[i])));                                \
@@ -293,11 +288,10 @@ generate_kernel_MPIR_LLXOR(mpir_typename_logical, MPI_Fint);
 generate_kernel_MPIR_LLXOR(mpir_typename_c_bool, _Bool);
 generate_kernel_MPIR_LLXOR(mpir_typename_cxx_bool_value, MPIR_CXX_BOOL_CTYPE);
 
-#define generate_kernel_MPIR_LPROD(type_name_, c_type_)                                          \
-    __global__ void kernel_##type_name_##_##MPIR_LPROD(c_type_ *a, c_type_ *b, int n)            \
+#define generate_kernel_MPIR_LPROD(type_name_, c_type_)                                         \
+    __global__ void kernel_##type_name_##_##MPIR_LPROD(c_type_ *a, c_type_ *b, int n)           \
     {                                                                                           \
-        printf("_______________Inside LPROD Kernel____________________");                       \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = a[i] * b[i];                                                                 \
@@ -353,11 +347,10 @@ generate_kernel_MPIR_LPROD(mpir_typename_cxx_complex_value, s_complex);
 generate_kernel_MPIR_LPROD(mpir_typename_cxx_double_complex_value, d_complex);
 generate_kernel_MPIR_LPROD(mpir_typename_cxx_long_double_complex_value, ld_complex);*/
 
-#define generate_kernel_MPIR_LSUM(type_name_, c_type_)                                           \
-    __global__ void kernel_##type_name_##_##MPIR_LSUM(c_type_ *a, c_type_ *b, int n)             \
+#define generate_kernel_MPIR_LSUM(type_name_, c_type_)                                          \
+    __global__ void kernel_##type_name_##_##MPIR_LSUM(c_type_ *a, c_type_ *b, int n)            \
     {                                                                                           \
-        printf("_______________Inside LSUM Kernel____________________");                        \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = a[i] + b[i];                                                                 \
@@ -413,11 +406,10 @@ generate_kernel_MPIR_LSUM(mpir_typename_cxx_complex_value, s_complex);
 generate_kernel_MPIR_LSUM(mpir_typename_cxx_double_complex_value, d_complex);
 generate_kernel_MPIR_LSUM(mpir_typename_cxx_long_double_complex_value, ld_complex);*/
 
-#define generate_kernel_MPL_MAX(type_name_, c_type_)                                             \
-    __global__ void kernel_##type_name_##_##MPL_MAX(c_type_ *a, c_type_ *b, int n)               \
+#define generate_kernel_MPL_MAX(type_name_, c_type_)                                            \
+    __global__ void kernel_##type_name_##_##MPL_MAX(c_type_ *a, c_type_ *b, int n)              \
     {                                                                                           \
-        printf("_______________Inside MPL_MAX Kernel____________________");                     \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = (((a[i]) > (b[i])) ? (a[i]) : (b[i]));                                       \
@@ -463,11 +455,10 @@ generate_kernel_MPL_MAX(mpir_typename_real8, MPIR_REAL8_CTYPE);
 generate_kernel_MPL_MAX(mpir_typename_real16, MPIR_REAL16_CTYPE);
 generate_kernel_MPL_MAX(mpir_typename_float16, _Float16);
 
-#define generate_kernel_MPL_MIN(type_name_, c_type_)                                             \
-    __global__ void kernel_##type_name_##_##MPL_MIN(c_type_ *a, c_type_ *b, int n)               \
+#define generate_kernel_MPL_MIN(type_name_, c_type_)                                            \
+    __global__ void kernel_##type_name_##_##MPL_MIN(c_type_ *a, c_type_ *b, int n)              \
     {                                                                                           \
-        printf("_______________Inside MPL_MIN Kernel____________________");                     \
-        int i = threadIdx.x;                                          \
+        int i = threadIdx.x;                                                                    \
         if (i < n)                                                                              \
         {                                                                                       \
             a[i] = (((a[i]) < (b[i])) ? (a[i]) : (b[i]));                                       \
@@ -513,12 +504,32 @@ generate_kernel_MPL_MIN(mpir_typename_real8, MPIR_REAL8_CTYPE);
 generate_kernel_MPL_MIN(mpir_typename_real16, MPIR_REAL16_CTYPE);
 generate_kernel_MPL_MIN(mpir_typename_float16, _Float16);
 
-#define generate_kernel_call(type_name_, c_type_, op_macro_)                                     \
-    void call_##type_name_##_##op_macro_(c_type_ *a, c_type_ *b, int len)                        \
-    {                                                                                           \
-        kernel_##type_name_##_##op_macro_<<<1, len>>>(a, b, len);                                  \
-    }                                                                       
-
+#ifdef PROFILE_CUDA
+#define generate_kernel_call(type_name_, c_type_, op_macro_)                                            \
+    void call_##type_name_##_##op_macro_(c_type_ *a, c_type_ *b, int len)                               \
+    {                                                                                                   \
+        cudaEvent_t kernel_start_event, kernel_stop_event;                                              \
+        float kernel_offload_time;                                                                      \
+        int iter = 1000;                                                                                \
+        cuda_func(cudaEventCreate(&kernel_start_event));                                                \
+        cuda_func(cudaEventCreate(&kernel_stop_event));                                                 \
+        cuda_func(cudaEventRecord(kernel_start_event, 0));                                              \
+        for(int i=0 ; i<iter; i++){                                                                     \
+            kernel_##type_name_##_##op_macro_<<<1, len>>>(a, b, len);                                   \
+        }                                                                                               \
+        cudaThreadSynchronize();                                                                        \
+        cuda_func(cudaEventRecord(kernel_stop_event, 0));                                               \
+        cuda_func(cudaEventSynchronize(kernel_stop_event));                                             \
+        cuda_func(cudaEventElapsedTime(&kernel_offload_time, kernel_start_event, kernel_stop_event));   \
+        printf("Kernel Comp: %f us \t | \t", (kernel_offload_time * 1e3)/1000);                         \
+    }
+#else
+#define generate_kernel_call(type_name_, c_type_, op_macro_)                                            \
+    void call_##type_name_##_##op_macro_(c_type_ *a, c_type_ *b, int len)                               \
+    {                                                                                                   \
+        kernel_##type_name_##_##op_macro_<<<1, len>>>(a, b, len);                                       \
+    }
+#endif
 
 
 generate_kernel_call(mpir_typename_int, int, MPIR_LBAND);

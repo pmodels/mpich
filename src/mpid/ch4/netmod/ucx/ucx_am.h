@@ -80,23 +80,47 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     // Copy data from device to host
-    if(is_mem_type_device(data) == 1)
-    {
+    if (is_mem_type_device(data) == 1) {
         void *temp_buffer;
         cudaError_t status;
-        
-        printf("Data buffer: %p\n", data);
-        fflush(stdout);
-        temp_buffer = malloc(data_sz);
-
-        status = cudaMemcpy(temp_buffer, data, data_sz, cudaMemcpyDeviceToHost);
-        if(status != cudaSuccess)
-        {
-            printf("FAILURE... Status: %s\n", cudaGetErrorString(status));
-            fflush(stdout);
-            goto fn_exit;
+#ifdef PROFILE_CUDA
+        int iter = 1000;
+        MPL_wtime_init();
+        MPL_time_t malloc_start_time, malloc_end_time;
+        double time_diff;
+        MPL_wtime(&malloc_start_time);
+        for (int i = 0; i < iter; i++) {
+#endif
+            temp_buffer = malloc(data_sz);
+#ifdef PROFILE_CUDA
         }
+        MPL_wtime(&malloc_end_time);
+        MPL_wtime_diff(&malloc_start_time, &malloc_end_time, &time_diff);
+        printf("Malloc: %f us \t | \t", (time_diff * 1e6) / iter);
 
+        cudaEvent_t start_event, stop_event;
+        float time;
+
+        cuda_func(cudaEventCreate(&start_event));
+        cuda_func(cudaEventCreate(&stop_event));
+
+        cuda_func(cudaEventRecord(start_event, 0));
+        for (int i = 0; i < iter; i++) {
+#endif
+            status = cudaMemcpy(temp_buffer, data, data_sz, cudaMemcpyDeviceToHost);
+            if (status != cudaSuccess) {
+                printf("FAILURE... Status: %s\n", cudaGetErrorString(status));
+                fflush(stdout);
+                goto fn_exit;
+            }
+#ifdef PROFILE_CUDA
+        }
+        cuda_func(cudaEventRecord(stop_event, 0));
+        cuda_func(cudaEventSynchronize(stop_event));
+
+        cuda_func(cudaEventElapsedTime(&time, start_event, stop_event));
+        printf("D-H Memcpy: %f us \t | \t", (time * 1e3) / iter);
+#endif
         data = temp_buffer;
     }
 

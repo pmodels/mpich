@@ -45,8 +45,10 @@ void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
                 /* C complex types are just simple sums */
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
 #define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,type_name_,MPIR_LSUM)
-                //MPIR_OP_TYPE_GROUP(COMPLEX)
-                // MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+#ifndef USE_CUDA
+                MPIR_OP_TYPE_GROUP(COMPLEX)
+                MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+#endif
                 /* put things back where we found them */
 #undef MPIR_OP_TYPE_MACRO
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
