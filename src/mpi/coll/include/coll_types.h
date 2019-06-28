@@ -47,6 +47,12 @@ enum {
     MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_HALVING
 };
 
+/* enumerator for different reduce scatter types */
+enum {
+    IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
+    IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_HALVING
+};
+
 /* Collectives request data structure */
 typedef struct MPII_Coll_req_t {
     void *sched;                /* pointer to the schedule */

@@ -94,7 +94,7 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0"
-algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree gentran_ring"
+algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree gentran_ring recexch_reduce_scatter_recexch_allgatherv"
 tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 

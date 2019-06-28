@@ -25,4 +25,5 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallreduce/iallreduce_intra_gentran_recexch_single_buffer.c    \
     src/mpi/coll/iallreduce/iallreduce_intra_gentran_recexch_multiple_buffer.c \
     src/mpi/coll/iallreduce/iallreduce_intra_gentran_tree.c       \
-    src/mpi/coll/iallreduce/iallreduce_intra_gentran_ring.c
+    src/mpi/coll/iallreduce/iallreduce_intra_gentran_ring.c	      \
+    src/mpi/coll/iallreduce/iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv.c
