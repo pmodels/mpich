@@ -17,10 +17,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a recursive exchange based alltoallv */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_sched_intra_blocked
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],
@@ -97,10 +93,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
 
 
 /* Non-blocking blocked based ALLTOALLV */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallv_intra_blocked
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                       const int recvcounts[], const int rdispls[],

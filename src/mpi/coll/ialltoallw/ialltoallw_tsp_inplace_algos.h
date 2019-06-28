@@ -17,10 +17,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule inplace algorithm for  alltoallw */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallw_sched_intra_inplace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
                                             const int sdispls[], const MPI_Datatype sendtypes[],
                                             void *recvbuf, const int recvcounts[],
@@ -97,10 +93,6 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendc
 
 
 /* Non-blocking inplace based ALLTOALLW */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ialltoallw_intra_inplace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], const MPI_Datatype sendtypes[],
                                       void *recvbuf, const int recvcounts[],
