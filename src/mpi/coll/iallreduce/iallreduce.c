@@ -86,6 +86,7 @@ cvars:
         gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         gentran_tree                     - Force generic transport tree algorithm
         gentran_ring                     - Force generic transport ring algorithm
+        gentran_recexch_reduce_scatter_recexch_allgatherv  - Force generic transport recursive exchange with reduce scatter and allgatherv
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -273,6 +274,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
     int is_commutative = MPIR_Op_is_commutative(op);
+    int nranks = comm_ptr->local_size;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
@@ -314,6 +316,20 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     mpi_errno =
                         MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                            op, comm_ptr, request);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
+                if (is_commutative &&
+                    count >= nranks) {
+                    /*  This algorithm will work for commutative operations and if the count is
+                     * bigger than total number of ranks. If it not commutative or if the count < nranks,
+                     * MPIR_Iallreduce_sched algorithm will be run */
+                    mpi_errno =
+                        MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
+                        (sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     goto fn_exit;
