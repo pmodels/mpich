@@ -52,6 +52,7 @@
 #define MPIR_TSP_sched_generic              MPII_Stubutil_sched_generic
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
+#define MPIR_TSP_sched_free                 MPII_Stubutil_sched_free
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched);
 void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched);
