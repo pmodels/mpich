@@ -18,17 +18,11 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS;
-
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = hcoll_Barrier(comm, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (MPI_SUCCESS == hcoll_Barrier(comm, errflag))
+        return MPI_SUCCESS;
 #endif
-    mpi_errno = MPIR_Barrier_impl(comm, errflag);
-
-  fn_exit:
-    return mpi_errno;
+    return MPIR_Barrier_impl(comm, errflag);
 }
 
 #undef FUNCNAME
@@ -38,17 +32,11 @@ static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 static inline int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS;
-
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = hcoll_Bcast(buffer, count, datatype, root, comm, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (MPI_SUCCESS == hcoll_Bcast(buffer, count, datatype, root, comm, errflag))
+        return MPI_SUCCESS;
 #endif
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
-
-  fn_exit:
-    return mpi_errno;
+    return MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
 }
 
 #undef FUNCNAME
@@ -59,18 +47,11 @@ static inline int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                  MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS;
-
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (MPI_SUCCESS == hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag))
+        return MPI_SUCCESS;
 #endif
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
-                                    comm, errflag);
-
-  fn_exit:
-    return mpi_errno;
+    return MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 }
 
 #undef FUNCNAME
@@ -81,19 +62,13 @@ static inline int MPID_Allgather(const void *sendbuf, int sendcount, MPI_Datatyp
                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno = MPI_SUCCESS;
-
 #ifdef HAVE_LIBHCOLL
-    mpi_errno = hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
-                                recvcount, recvtype, comm, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (MPI_SUCCESS == hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcount, recvtype, comm, errflag))
+        return MPI_SUCCESS;
 #endif
-    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
+    return MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
                                     recvcount, recvtype, comm, errflag);
-
-  fn_exit:
-    return mpi_errno;
 }
 
 #undef FUNCNAME
