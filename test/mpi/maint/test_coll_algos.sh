@@ -324,12 +324,28 @@ testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE=0"
-algo_names="gentran_ring"
+algo_names="gentran_ring gentran_scattered"
+batchsizes="1 2 4"
+outstandingtasks="4 8"
 
 for algo_name in ${algo_names}; do
-    env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name}"
-    echo "alltoall1 8 ${env}" >> ${testlist_cvar}
-    env=""
+    if [ "${algo_name}" != "gentran_scattered" ]; then
+        env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name}"
+        echo "alltoall1 8 ${env}" >> ${testlist_cvar}
+        env=""
+    else
+        for task in ${outstandingtasks}; do
+            for batchsize in ${batchsizes}; do
+                env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name}"
+                env="${env} env=MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE=${batchsize}"
+                env="${env} env=MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS=${task}"
+
+                echo "alltoall1 8 ${env}" >> ${testlist_cvar}
+                env=""
+            done
+        done
+    fi
+
 done
 
 algo_names="gentran_brucks"
