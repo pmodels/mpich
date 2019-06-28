@@ -16,10 +16,6 @@
 #include "ialltoallw_tsp_inplace_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra_gentran_inplace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_intra_gentran_inplace(const void *sendbuf, const int sendcounts[],
                                           const int sdispls[], const MPI_Datatype sendtypes[],
                                           void *recvbuf, const int recvcounts[],
