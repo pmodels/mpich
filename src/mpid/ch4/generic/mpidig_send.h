@@ -139,7 +139,7 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND);
 
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, is_blocking, type, MPI_SUCCESS);
+                                  request, is_blocking, type, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
