@@ -53,13 +53,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
                                                   int *flag, MPIR_Request ** message,
                                                   MPI_Status * status)
 {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    return MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+#else
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-#else
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
@@ -85,7 +85,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
         if (*flag)
             MPIDI_REQUEST(*message, is_local) = 0;
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
@@ -93,6 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
 
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
