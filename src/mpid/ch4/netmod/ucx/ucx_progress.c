@@ -120,6 +120,5 @@ int MPIDI_UCX_progress(int vci, int blocking)
 
     ucp_worker_progress(MPIDI_UCX_global.worker);
 
-  fn_exit:
     return mpi_errno;
 }
