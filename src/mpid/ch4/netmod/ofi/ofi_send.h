@@ -521,16 +521,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
         mpi_errno =
             MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
                              errflag);
-        goto fn_exit;
-    }
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset,
+                                        addr, request, (*request == NULL), 0ULL, errflag);
+    }
 
-    mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, d_rank, tag, comm,
-                                    context_offset, addr, request, (*request == NULL), 0ULL,
-                                    errflag);
-
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_SEND_COLL);
     return mpi_errno;
 }
@@ -614,16 +611,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
         mpi_errno =
             MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                               request, errflag);
-        goto fn_exit;
+    } else
+#endif
+    {
+        mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, rank, tag, comm,
+                                        context_offset, addr, request, 0, 0ULL, errflag);
     }
-#endif
 
-    mpi_errno = MPIDI_OFI_send_coll(buf, count, datatype, rank, tag, comm,
-                                    context_offset, addr, request, 0, 0ULL, errflag);
-
-#ifdef MPIDI_ENABLE_LEGACY_OFI
-  fn_exit:
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
     return mpi_errno;
 }
