@@ -40,7 +40,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int step1_sendto = -1, step1_nrecvs, *step1_recvfrom = NULL;
     int step2_nphases = 0, **step2_nbrs = NULL;
     int p_of_k, log_pofk, T;
-    int per_nbr_buffer = 0, index = 0, rem = 0;
+    int per_nbr_buffer = 0, rem = 0;
     int nvtcs, sink_id, *recv_id = NULL, *vtcs = NULL;
     int *send_id = NULL, *reduce_id = NULL, *cnts = NULL, *displs = NULL;
     bool in_step2 = false;
@@ -116,17 +116,17 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     if (in_step2) {
         MPIR_CHKLMEM_MALLOC(cnts, int *, sizeof(int) * nranks, mpi_errno, "cnts", MPL_MEM_COLL);
         MPIR_CHKLMEM_MALLOC(displs, int *, sizeof(int) * nranks, mpi_errno, "displs", MPL_MEM_COLL);
-        index = 0;
+        int idx = 0;
         rem = nranks - p_of_k;
 
         for (i = 0; i < nranks; i++)
             cnts[i] = 0;
         for (i = 0; i < (p_of_k - 1); i++) {
-            index = (i < rem / (k - 1)) ? (i * k) + (k - 1) : i + rem;
-            cnts[index] = count / p_of_k;
+            idx = (i < rem / (k - 1)) ? (i * k) + (k - 1) : i + rem;
+            cnts[idx] = count / p_of_k;
         }
-        index = (p_of_k - 1 < rem / (k - 1)) ? (p_of_k - 1 * k) + (k - 1) : p_of_k - 1 + rem;
-        cnts[index] = count - (count / p_of_k) * (p_of_k - 1);
+        idx = (p_of_k - 1 < rem / (k - 1)) ? (p_of_k - 1 * k) + (k - 1) : p_of_k - 1 + rem;
+        cnts[idx] = count - (count / p_of_k) * (p_of_k - 1);
 
         displs[0] = 0;
         for (i = 1; i < nranks; i++) {
