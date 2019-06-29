@@ -1378,6 +1378,9 @@ if test "$enable_cxx" = yes ; then
 fi
 
 AC_LANG_C
+
+LT_INIT()
+
 # IO
 iodir="#"
 if test "$enable_romio" != no ; then
