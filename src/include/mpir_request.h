@@ -83,9 +83,18 @@ typedef void (MPIR_Grequest_f77_query_function) (void *, MPI_Fint *, MPI_Fint *)
 /* vtable-ish structure holding generalized request function pointers and other
  * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
 struct MPIR_Grequest_fns {
-    MPI_Grequest_cancel_function *cancel_fn;
-    MPI_Grequest_free_function *free_fn;
-    MPI_Grequest_query_function *query_fn;
+    union {
+        struct {
+            MPI_Grequest_cancel_function *cancel_fn;
+            MPI_Grequest_free_function *free_fn;
+            MPI_Grequest_query_function *query_fn;
+        } C;
+        struct {
+            MPIR_Grequest_f77_cancel_function *cancel_fn;
+            MPIR_Grequest_f77_free_function *free_fn;
+            MPIR_Grequest_f77_query_function *query_fn;
+        } F;
+    } U;
     MPIX_Grequest_poll_function *poll_fn;
     MPIX_Grequest_wait_function *wait_fn;
     void *grequest_extra_state;
