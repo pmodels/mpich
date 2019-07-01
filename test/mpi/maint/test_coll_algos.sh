@@ -425,6 +425,16 @@ for algo_name in ${algo_names}; do
     fi
 done
 
+algo_names="gentran_blocked gentran_inplace"
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name}"
+
+    echo "alltoallv 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
+    env=""
+done
+
 ######### Add tests for Ineighbor_allgather algorithms ###########
 
 #disable device collectives for neighbor_allgather to test MPIR algorithms
@@ -494,6 +504,49 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name}"
 
     echo "neighb_alltoallv 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    env=""
+done
+
+######### Add tests for Gatherv algorithms ###########
+
+#disable device collectives for gatherv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env="${testing_env} env=MPIR_CVAR_GATHERV_INTRA_ALGORITHM=nb"
+testing_env="${testing_env} env=MPIR_CVAR_IGATHERV_DEVICE_COLLECTIVE=0"
+algo_names="gentran_linear"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IGATHERV_INTRA_ALGORITHM=${algo_name}"
+
+        echo "gatherv 5 ${env}" >> ${testlist_cvar}
+        env=""
+    done
+done
+
+######### Add tests for Alltoallw algorithms ###########
+
+#disable device collectives for alltoallw to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE=0"
+
+#test nb algorithms
+testing_env="${testing_env} env=MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM=nb"
+testing_env="${testing_env} env=MPIR_CVAR_IALLTOALLW_DEVICE_COLLECTIVE=0"
+algo_names="gentran_blocked gentran_inplace"
+
+for algo_name in ${algo_names}; do
+    #set the environment
+    env="${testing_env} env=MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM=${algo_name}"
+
+    echo "alltoallw1 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallw2 10 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 1 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 2 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 5 ${env}" >> ${testlist_cvar}
+    echo "alltoallw_zeros 8 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -597,4 +650,3 @@ for algo_name in ${algo_names}; do
         env=""
     done
 done
-
