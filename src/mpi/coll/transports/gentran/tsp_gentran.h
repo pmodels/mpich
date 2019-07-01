@@ -55,12 +55,16 @@
 #define MPIR_TSP_sched_generic             MPII_Genutil_sched_generic
 #define MPIR_TSP_sched_malloc              MPII_Genutil_sched_malloc
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
+#define MPIR_TSP_sched_free                MPII_Genutil_sched_free
 
 extern MPII_Coll_queue_t coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* Transport function to initialize a new schedule */
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched);
+
+/* Transport function to free a schedule */
+void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched);
 
 int MPII_Genutil_sched_new_type(MPII_Genutil_sched_t * sched, MPII_Genutil_sched_issue_fn issue_fn,
                                 MPII_Genutil_sched_complete_fn complete_fn,

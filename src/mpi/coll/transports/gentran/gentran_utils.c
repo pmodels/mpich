@@ -384,7 +384,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    void **p;
     vtx_t *vtxp, *vtxp_tmp;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
@@ -540,26 +539,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         if (made_progress)
             *made_progress = TRUE;
 
-        /* free up the sched resources */
-        for (i = 0; i < sched->total_vtcs; i++) {
-            vtx_t *vtx = (vtx_t *) utarray_eltptr(sched->vtcs, i);
-            MPIR_Assert(vtx != NULL);
-
-            if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
-                MPL_free(vtx->u.imcast.req);
-                utarray_free(vtx->u.imcast.dests);
-            }
-        }
-
-        /* free up the allocated buffers */
-        p = NULL;
-        while ((p = (void **) utarray_next(sched->buffers, p)))
-            MPL_free(*p);
-
-        utarray_free(sched->vtcs);
-        utarray_free(sched->buffers);
-        utarray_done(&sched->generic_types);
-        MPL_free(sched);
+        MPII_Genutil_sched_free(sched);
     }
 
   fn_exit:

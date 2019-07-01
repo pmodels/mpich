@@ -48,6 +48,42 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
     return MPI_SUCCESS;
 }
 
+void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
+{
+    int i;
+    vtx_t *vtx;
+    void **p;
+
+    /* free up the sched resources */
+    vtx = ut_type_array(sched->vtcs, vtx_t *);
+    MPII_Genutil_vtx_type_t *vtype =
+        ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
+    for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+        MPIR_Assert(vtx != NULL);
+        if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
+            MPL_free(vtx->u.imcast.req);
+            utarray_free(vtx->u.imcast.dests);
+        } else if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
+            MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
+            MPIR_Assert(type != NULL);
+            if (type->free_fn != NULL) {
+                int mpi_errno = type->free_fn(vtx);
+                /* TODO: change this function to return mpi_errno */
+                MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            }
+        }
+    }
+
+    /* free up the allocated buffers */
+    p = NULL;
+    while ((p = (void **) utarray_next(sched->buffers, p)))
+        MPL_free(*p);
+
+    utarray_free(sched->vtcs);
+    utarray_free(sched->buffers);
+    utarray_done(&sched->generic_types);
+    MPL_free(sched);
+}
 
 int MPII_Genutil_sched_new_type(MPII_Genutil_sched_t * sched, MPII_Genutil_sched_issue_fn issue_fn,
                                 MPII_Genutil_sched_complete_fn complete_fn,
@@ -379,6 +415,11 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     *req = reqp;
     MPIR_Request_add_ref(reqp);
 
+    if (unlikely(sched->total_vtcs == 0)) {
+        MPII_Genutil_sched_free(sched);
+        MPID_Request_complete(reqp);
+        goto fn_exit;
+    }
     /* Make some progress */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {
