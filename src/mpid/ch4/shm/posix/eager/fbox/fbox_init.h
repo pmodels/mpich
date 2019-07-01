@@ -48,14 +48,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
 #endif /* MPL_USE_DBG_LOGGING */
 
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL(4);
 
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
-    MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks =
-        MPL_malloc(sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
-                   MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1, MPL_MEM_SHM);
-    if (NULL == MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks,
+                        int16_t *,
+                        sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
+                        MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1, mpi_errno,
+                        "fist_poll_local_ranks", MPL_MEM_SHM);
 
     /* -1 means we aren't looking for anything in particular. */
     for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
