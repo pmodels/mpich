@@ -81,7 +81,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
