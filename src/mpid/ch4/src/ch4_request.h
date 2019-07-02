@@ -120,21 +120,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
      * like MPID_Request_destroy_hook. However, that would always add a few
      * instructions for any kind of request object, even if it's no a request
      * from persistent communications. */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_NM_prequest_free_hook(req);
-#else
-    if (unlikely(NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))) {
-        /* `req` is created by Recv_init(MPI_ANY_SOURCE).
-         * Need to clean up both shmmod and netmod. */
-        MPIDI_SHM_prequest_free_hook(req);
-        MPIDI_NM_prequest_free_hook(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
-    } else {
-        if (MPIDI_REQUEST(req, is_local))
-            MPIDI_SHM_prequest_free_hook(req);
-        else
-            MPIDI_NM_prequest_free_hook(req);
-    }
-#endif
+    MPIR_Datatype_release_if_not_builtin(MPIDI_PREQUEST(req, datatype));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
 }

@@ -189,6 +189,17 @@ typedef struct MPIDIG_req_t {
     MPI_Datatype datatype;
 } MPIDIG_req_t;
 
+/* Structure to capture arguments for pt2pt persistent communications */
+typedef struct MPIDI_prequest {
+    MPIDI_ptype p_type;         /* persistent request type */
+    void *buffer;
+    MPI_Aint count;
+    int rank;
+    int tag;
+    MPIR_Context_id_t context_id;
+    MPI_Datatype datatype;
+} MPIDI_prequest_t;
+
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
@@ -201,6 +212,9 @@ typedef struct {
     union {
         /* The first fields are used by the MPIDIG apis */
         MPIDIG_req_t am;
+
+        /* Used by pt2pt persistent communication */
+        MPIDI_prequest_t preq;
 
         /* Used by the netmod direct apis */
         union {
@@ -220,6 +234,7 @@ typedef struct {
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
+#define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
