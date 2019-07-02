@@ -195,7 +195,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
      * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM) {
+        switch (MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_blocked:
                 if (sendbuf != MPI_IN_PLACE) {
                     mpi_errno =
