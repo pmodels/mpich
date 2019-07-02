@@ -646,7 +646,7 @@ for algo_name in ${algo_names}; do
         #set the environment
         env="${testing_env} env=MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM=${algo_name}"
 
-        echo "scatterv 4 ${env}" >> ${testlist_cvar}`
+        echo "scatterv 4 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
