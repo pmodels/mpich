@@ -43,6 +43,25 @@ static inline int MPIDIG_request_get_context_offset(MPIR_Request * req)
     return context_offset;
 }
 
+/* Reconstruct context offset associated with a persistent request.
+ * Input must be a persistent request. */
+static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
+{
+    int context_offset;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+
+    MPIR_Assert(preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
+                preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
+
+    context_offset = MPIDI_PREQUEST(preq, context_id) - preq->comm->context_id;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+
+    return context_offset;
+}
+
 static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
 {
     int comm_idx = MPIDIG_get_context_index(context_id);
