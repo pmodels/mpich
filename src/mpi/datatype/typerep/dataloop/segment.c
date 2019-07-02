@@ -311,8 +311,10 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                     for (num_blocks = 0; num_blocks < cur_elmp->orig_count; num_blocks++) {
                         blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
 
-                        if (position - segp->stream_off < cur_elmp->loop_p->el_size * blocksize)
+                        if (position - segp->stream_off < cur_elmp->loop_p->el_size * blocksize) {
+                            cur_elmp->orig_block = blocksize;
                             break;
+                        }
 
                         segp->stream_off += cur_elmp->loop_p->el_size * blocksize;
                     }
@@ -367,8 +369,10 @@ static void segment_seek(struct MPIR_Segment *segp, MPI_Aint position,
                         blocksize = STACKELM_INDEXED_BLOCKSIZE(cur_elmp, num_blocks);
                         dloop = STACKELM_STRUCT_DATALOOP(cur_elmp, num_blocks);
 
-                        if (position - segp->stream_off < dloop->el_size * blocksize)
+                        if (position - segp->stream_off < dloop->el_size * blocksize) {
+                            cur_elmp->orig_block = blocksize;
                             break;
+                        }
 
                         segp->stream_off += cur_elmp->loop_p->el_size * blocksize;
                     }

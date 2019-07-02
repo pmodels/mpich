@@ -282,7 +282,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     if (!rreq)
         goto fn_exit;
 
-    MPIDI_OFI_AMREQUEST(rreq, req_hdr) = NULL;
+    MPIDI_OFI_am_clear_request(rreq);
     mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
 
     if (mpi_errno != MPI_SUCCESS)
