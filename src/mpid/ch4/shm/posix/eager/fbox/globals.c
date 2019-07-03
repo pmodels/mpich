@@ -12,9 +12,10 @@
 #include "fbox_impl.h"
 #include "fbox_types.h"
 
-/* *INDENT-OFF* */
-MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
-/* *INDENT-ON* */
+/* Note: without the following initialiazation, the common symbol may get lost
+   during linking. This is manifested by static linking on mac osx.
+*/
+MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { 0 };
 
 #ifdef MPL_USE_DBG_LOGGING
 MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
