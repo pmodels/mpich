@@ -197,6 +197,39 @@ int MPIR_TSP_sched_irecv(void *buf,
     return mpi_errno;
 }
 
+int MPIR_TSP_sched_irecv_status(void *buf,
+                                int count,
+                                MPI_Datatype dt,
+                                int source,
+                                int tag,
+                                MPIR_Comm * comm_ptr, MPI_Status * status,
+                                MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id)
+{
+    vtx_t *vtxp;
+    int mpi_errno = MPI_SUCCESS;;
+
+    /* assign a new vertex */
+    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IRECV_STATUS;
+    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
+
+    /* record the arguments */
+    vtxp->u.irecv_status.buf = buf;
+    vtxp->u.irecv_status.count = count;
+    vtxp->u.irecv_status.dt = dt;
+    vtxp->u.irecv_status.src = source;
+    vtxp->u.irecv_status.tag = tag;
+    vtxp->u.irecv_status.comm = comm_ptr;
+    vtxp->u.irecv_status.status = status;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv_status", *vtx_id));
+
+    return mpi_errno;
+}
+
+
 
 int MPIR_TSP_sched_imcast(const void *buf,
                           int count,
@@ -319,6 +352,28 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
 }
 
 
+/* Transport function that adds a callback type vertex in the graph */
+int MPIR_TSP_sched_cb(MPIR_TSP_cb_t cb_p, void *cb_data, MPIR_TSP_sched_t sched,
+                      int n_in_vtcs, int *in_vtcs)
+{
+    vtx_t *vtxp;
+    int vtx_id;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__CB;
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+
+    /* record the arguments */
+    vtxp->u.cb.cb_p = cb_p;
+    vtxp->u.cb.cb_data = cb_data;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: schedule [%d] cb", vtx_id));
+
+    return vtx_id;
+}
+
 /* Transport function that adds a no op vertex in the graph that has
  * all the vertices posted before it as incoming vertices */
 int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
@@ -429,6 +484,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     *req = reqp;
     MPIR_Request_add_ref(reqp);
+    sched->req = reqp;
 
     if (unlikely(sched->total_vtcs == 0)) {
         if (!sched->is_persistent)

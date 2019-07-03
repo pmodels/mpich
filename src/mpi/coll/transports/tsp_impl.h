@@ -28,6 +28,9 @@ typedef int (*MPIR_TSP_sched_issue_fn) (void *data, int *done);
 typedef int (*MPIR_TSP_sched_complete_fn) (void *data, int *is_completed);
 typedef int (*MPIR_TSP_sched_free_fn) (void *data);
 
+/* callback function for CB vertex type */
+typedef int (*MPIR_TSP_cb_t) (struct MPIR_Comm * comm, int tag, void *data);
+
 /* Transport function to initialize a new schedule */
 int MPIR_TSP_sched_create(MPIR_TSP_sched_t * sched, bool is_persistent);
 
@@ -67,6 +70,15 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
+/* Transport function to schedule a irecv with status vertex */
+int MPIR_TSP_sched_irecv_status(void *buf,
+                                int count,
+                                MPI_Datatype dt,
+                                int source,
+                                int tag,
+                                MPIR_Comm * comm_ptr, MPI_Status * status,
+                                MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
+
 /* Transport function to schedule an imcast vertex */
 int MPIR_TSP_sched_imcast(const void *buf,
                           int count,
@@ -87,6 +99,10 @@ int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
 int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                              MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
+
+/* Transport function that adds a callback type vertex in the graph */
+int MPIR_TSP_sched_cb(MPIR_TSP_cb_t cb_p, void *cb_data, MPIR_TSP_sched_t sched,
+                      int n_in_vtcs, int *in_vtcs);
 
 /* Transport function to schedule a vertex that completes when all the incoming vertices have
  * completed */

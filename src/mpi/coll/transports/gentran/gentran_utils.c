@@ -26,6 +26,7 @@ static inline void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sche
 
 static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
+    MPIR_Request *r = sched->req;
     int i;
 
     MPIR_FUNC_ENTER;
@@ -37,13 +38,12 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 
         switch (vtxp->vtx_kind) {
             case MPII_GENUTIL_VTX_KIND__ISEND:{
-                    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
                     MPIC_Isend(vtxp->u.isend.buf,
                                vtxp->u.isend.count,
                                vtxp->u.isend.dt,
                                vtxp->u.isend.dest,
-                               vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req, &errflag);
+                               vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req,
+                               &r->u.nbc.errflag);
 
                     if (MPIR_Request_is_complete(vtxp->u.isend.req)) {
                         MPIR_Request_free(vtxp->u.isend.req);
@@ -98,16 +98,51 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 }
                 break;
 
-            case MPII_GENUTIL_VTX_KIND__IMCAST:{
-                    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+            case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:{
+                    MPIC_Irecv(vtxp->u.irecv_status.buf,
+                               vtxp->u.irecv_status.count,
+                               vtxp->u.irecv_status.dt,
+                               vtxp->u.irecv_status.src, vtxp->u.irecv_status.tag,
+                               vtxp->u.irecv_status.comm, &vtxp->u.irecv_status.req);
 
+                    if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
+                        if (vtxp->u.irecv_status.status != MPI_STATUS_IGNORE) {
+                            MPI_Aint recvd;
+                            vtxp->u.irecv_status.status->MPI_ERROR =
+                                vtxp->u.irecv_status.req->status.MPI_ERROR;
+                            MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status, MPI_BYTE,
+                                                &recvd);
+                            MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                        }
+                        MPIR_Request_free(vtxp->u.irecv_status.req);
+                        vtxp->u.irecv_status.req = NULL;
+#ifdef MPL_USE_DBG_LOGGING
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                        (MPL_DBG_FDEST,
+                                         "  --> GENTRAN transport (vtx_kind=%d) complete",
+                                         vtxp->vtx_kind));
+                        if (vtxp->u.irecv_status.count >= 1)
+                            MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                            (MPL_DBG_FDEST, "data recvd: %d",
+                                             *(int *) (vtxp->u.irecv_status.buf)));
+#endif
+                        vtx_record_completion(vtxp, sched, 0);
+                    } else {
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                        (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued"));
+                        vtx_record_issue(vtxp, sched);
+                    }
+                }
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__IMCAST:{
                     for (i = 0; i < vtxp->u.imcast.num_dests; i++)
                         MPIC_Isend(vtxp->u.imcast.buf,
                                    vtxp->u.imcast.count,
                                    vtxp->u.imcast.dt,
                                    *(int *) utarray_eltptr(vtxp->u.imcast.dests, i),
                                    vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
-                                   &errflag);
+                                   &r->u.nbc.errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -118,14 +153,12 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 break;
 
             case MPII_GENUTIL_VTX_KIND__ISSEND:{
-                    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
                     MPIC_Issend(vtxp->u.issend.buf,
                                 vtxp->u.issend.count,
                                 vtxp->u.issend.dt,
                                 vtxp->u.issend.dest,
                                 vtxp->u.issend.tag, vtxp->u.issend.comm, &vtxp->u.issend.req,
-                                &errflag);
+                                &r->u.nbc.errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -181,6 +214,23 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed"));
                     /* Nothing to do, just record completion */
+                    vtx_record_completion(vtxp, sched, 0);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__CB:{
+                    /* ignore communicator and tag */
+                    int ret_errno = vtxp->u.cb.cb_p(NULL, -1, vtxp->u.cb.cb_data);
+                    if (unlikely(ret_errno)) {
+                        if (MPIR_ERR_NONE == r->u.nbc.errflag) {
+                            if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
+                                r->u.nbc.errflag = MPIR_ERR_PROC_FAILED;
+                            } else {
+                                r->u.nbc.errflag = MPIR_ERR_OTHER;
+                            }
+                        }
+                    }
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (cb) performed"));
                     vtx_record_completion(vtxp, sched, 0);
                 }
                 break;
@@ -532,6 +582,33 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                 }
                 break;
 
+            case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
+                if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
+                    if (vtxp->u.irecv_status.status != MPI_STATUS_IGNORE) {
+                        MPI_Aint recvd;
+                        vtxp->u.irecv_status.status->MPI_ERROR =
+                            vtxp->u.irecv_status.req->status.MPI_ERROR;
+                        MPIR_Get_count_impl(&vtxp->u.irecv_status.req->status, MPI_BYTE, &recvd);
+                        MPIR_STATUS_SET_COUNT(*(vtxp->u.irecv_status.status), recvd);
+                    }
+                    MPIR_Request_free(vtxp->u.irecv_status.req);
+                    vtxp->u.irecv_status.req = NULL;
+#ifdef MPL_USE_DBG_LOGGING
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (vtx_kind=%d) complete",
+                                     vtxp->vtx_kind));
+                    if (vtxp->u.irecv_status.count >= 1)
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                        (MPL_DBG_FDEST, "data recvd: %d",
+                                         *(int *) (vtxp->u.irecv_status.buf)));
+#endif
+                    vtx_record_completion(vtxp, sched, 1);
+                    if (made_progress)
+                        *made_progress = TRUE;
+                }
+                break;
+
             default:
                 if (vtxp->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
                     int is_completed;
@@ -565,6 +642,19 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     if (*is_complete) {
         if (made_progress)
             *made_progress = TRUE;
+
+        /* error handling */
+        switch (sched->req->u.nbc.errflag) {
+            case MPIR_ERR_PROC_FAILED:
+                MPIR_ERR_SET(sched->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
+                break;
+            case MPIR_ERR_OTHER:
+                MPIR_ERR_SET(sched->req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm");
+                break;
+            case MPIR_ERR_NONE:
+            default:
+                break;
+        }
 
         if (sched->is_persistent == false)
             MPIR_TSP_sched_free(sched);
