@@ -248,6 +248,20 @@ static int thread_cs_init(void)
 
     MPID_THREADPRIV_KEY_CREATE;
 
+    {
+        /*
+         * Hack to workaround an Intel compiler bug on macOS. Touching
+         * MPIR_Per_thread in this file forces the compiler to allocate it as TLS.
+         * See https://github.com/pmodels/mpich/issues/3437.
+         */
+        MPIR_Per_thread_t *per_thread = NULL;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIR_Assert(err == 0);
+        memset(per_thread, 0, sizeof(MPIR_Per_thread_t));
+    }
+
     MPL_DBG_MSG(MPIR_DBG_INIT, TYPICAL, "Created global mutex and private storage");
     return MPI_SUCCESS;
 }
