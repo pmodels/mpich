@@ -27,6 +27,5 @@
 #include "mpidig_send.h"
 #include "ch4r_win.h"
 #include "ch4r_buf.h"
-#include "mpidig_startall.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */

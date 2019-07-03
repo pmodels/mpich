@@ -180,7 +180,6 @@ typedef struct MPIDIG_req_t {
     MPIDI_SHM_REQUEST_AM_DECL} shm_am;
 #endif
     MPIDIG_req_ext_t *req;
-    MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
     uint64_t count;
     int rank;
