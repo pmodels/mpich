@@ -8,13 +8,6 @@
 #define BUILD_NODEMAP_H_INCLUDED
 
 #include "mpl.h"
-#ifdef USE_PMIX_API
-#include "pmix.h"
-#elif defined(USE_PMI2_API)
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -442,7 +435,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
             node = strtok(NULL, ",");
         }
         *out_max_node_id = node_id - 1;
-        MPL_free(nodelist);
+        /* PMIx latest adds pmix_free. We should switch to that at some point */
+        MPL_external_free(nodelist);
         PMIX_PROC_FREE(procs, nprocs);
     }
 #else /* USE_PMI2_API */

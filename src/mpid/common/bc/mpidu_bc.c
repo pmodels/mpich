@@ -7,7 +7,6 @@
 
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
-#include "mpl.h"
 #include "mpidu_bc.h"
 
 static MPIDU_shm_seg_t memory;
@@ -84,7 +83,6 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 }
 
 #ifdef USE_PMIX_API
-#include <pmix.h>
 
 #define VALLEN 1024
 #define KEYLEN 64
@@ -202,7 +200,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 }
 
 #elif defined(USE_PMI2_API)
-#include <pmi2.h>
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
