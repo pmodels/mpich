@@ -171,43 +171,6 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
     goto fn_exit;
 }
 
-static inline int MPIDIG_psend_init(const void *buf, int count, MPI_Datatype datatype, int rank,
-                                    int tag, MPIR_Comm * comm, int context_offset,
-                                    MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PSEND_INIT);
-
-    sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
-    MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    *request = sreq;
-
-    MPIR_Comm_add_ref(comm);
-    sreq->comm = comm;
-
-    MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
-    MPIDIG_REQUEST(sreq, count) = count;
-    MPIDIG_REQUEST(sreq, datatype) = datatype;
-    MPIDIG_REQUEST(sreq, rank) = rank;
-    MPIDIG_REQUEST(sreq, tag) = tag;
-    MPIDIG_REQUEST(sreq, context_id) = comm->context_id + context_offset;
-
-    sreq->u.persist.real_request = NULL;
-    MPID_Request_complete(sreq);
-
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PSEND_INIT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
                                              MPI_Aint count,
                                              MPI_Datatype datatype,
@@ -352,82 +315,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
                                 request, MPIDI_NONBLOCKING, MPIDIG_SSEND_REQ);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ISSEND);
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send_init(const void *buf,
-                                                  int count,
-                                                  MPI_Datatype datatype,
-                                                  int rank,
-                                                  int tag, MPIR_Comm * comm, int context_offset,
-                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_SEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_SEND_INIT);
-
-    mpi_errno = MPIDIG_psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-    MPIDIG_REQUEST((*request), p_type) = MPIDI_PTYPE_SEND;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_SEND_INIT);
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_SSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_SSEND_INIT);
-
-    mpi_errno = MPIDIG_psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-    MPIDIG_REQUEST((*request), p_type) = MPIDI_PTYPE_SSEND;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_SSEND_INIT);
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_bsend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_BSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_BSEND_INIT);
-
-    mpi_errno = MPIDIG_psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-    MPIDIG_REQUEST((*request), p_type) = MPIDI_PTYPE_BSEND;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_BSEND_INIT);
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag, MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RSEND_INIT);
-
-    mpi_errno = MPIDIG_psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-    MPIDIG_REQUEST((*request), p_type) = MPIDI_PTYPE_SEND;
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RSEND_INIT);
     return mpi_errno;
 }
 
