@@ -6,14 +6,6 @@
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#elif defined(USE_PMIX_API)
-#include "pmix.h"
-#else
-#include "pmi.h"
-#endif
-
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
