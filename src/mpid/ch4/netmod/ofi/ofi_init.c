@@ -1282,6 +1282,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         struct fi_cq_attr cq_attr;
+        struct fi_cntr_attr cntr_attr;
 
         /* Create scalable endpoint */
         MPIDI_OFI_CALL(fi_scalable_ep
@@ -1294,6 +1295,14 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         cq_attr.format = FI_CQ_FORMAT_TAGGED;
         MPIDI_OFI_CALL(fi_cq_open(MPIDI_OFI_VNI(index).domain,
                                   &cq_attr, &MPIDI_OFI_CTX(index).cq, NULL), opencq);
+
+        memset(&cntr_attr, 0, sizeof(cntr_attr));
+        cntr_attr.events = FI_CNTR_EVENTS_COMP;
+        cntr_attr.wait_obj = FI_WAIT_UNSPEC;
+        MPIDI_OFI_CALL(fi_cntr_open(MPIDI_OFI_VNI(index).domain,        /* In:  Domain Object        */
+                                    &cntr_attr, /* In:  Configuration object */
+                                    &MPIDI_OFI_CTX(index).rma_cmpl_cntr,        /* Out: Counter Object       */
+                                    NULL), openct);     /* Context: counter events   */
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.op_flags = FI_COMPLETION;
@@ -1317,8 +1326,9 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
         MPIDI_OFI_CALL(fi_ep_bind
                        (MPIDI_OFI_CTX(index).tx, &MPIDI_OFI_CTX(index).cq->fid,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
-        //MPIDI_OFI_CALL(fi_ep_bind
-        //               (MPIDI_OFI_CTX(index).tx, &rma_ctr->fid, FI_WRITE | FI_READ), bind);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_OFI_CTX(index).tx, &MPIDI_OFI_CTX(index).rma_cmpl_cntr->fid,
+                        FI_WRITE | FI_READ), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;

@@ -183,7 +183,8 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
      * that all registered memory regions must be backed by physical memory
      * pages at the time the registration call is made. */
     if (MPIDI_OFI_ENABLE_MR_SCALABLE || base) {
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,       /* In:  Domain Object       */
+        int vni = MPIDI_VCI(MPIDI_COMM_VCI(win->comm_ptr)).vni;;
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_VNI(vni).domain,     /* In:  Domain Object       */
                                  base,  /* In:  Lower memory address */
                                  win->size,     /* In:  Length              */
                                  FI_REMOTE_READ | FI_REMOTE_WRITE,      /* In:  Expose MR for read  */
@@ -246,6 +247,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
  */
 static int win_set_per_win_sync(MPIR_Win * win)
 {
+    printf("Warning: not supported yet for multiple VCIs.\n");
     int ret, mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_SET_PER_WIN_SYNC);
@@ -298,6 +300,7 @@ static int win_set_per_win_sync(MPIR_Win * win)
  */
 static int win_init_sep(MPIR_Win * win)
 {
+    printf("Warning: not supported yet for multiple VCIs.\n");
     int i, ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
 
@@ -420,6 +423,7 @@ static int win_init_sep(MPIR_Win * win)
  */
 static int win_init_stx(MPIR_Win * win)
 {
+    printf("Warning: not supported yet for multiple VCIs.\n");
     /* Activate per-window EP/counter using STX */
     int ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
@@ -508,12 +512,16 @@ static int win_init_stx(MPIR_Win * win)
 
 static int win_init_global(MPIR_Win * win)
 {
+    int vni;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
-    MPIDI_OFI_WIN(win).ep = MPIDI_OFI_CTX(0).tx;
-    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.rma_cmpl_cntr;
-    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.rma_issued_cntr;
+    vni = MPIDI_VCI(MPIDI_COMM_VCI(win->comm_ptr)).vni;;
+
+    MPIDI_OFI_WIN(win).ep = MPIDI_OFI_CTX(vni).tx;
+    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_CTX(vni).rma_cmpl_cntr;
+    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_CTX(vni).rma_issued_cntr;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
