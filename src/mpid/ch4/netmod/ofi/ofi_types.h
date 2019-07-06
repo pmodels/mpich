@@ -239,6 +239,8 @@ typedef struct {
     struct fid_ep *tx;
     struct fid_ep *rx;
     struct fid_cq *cq;
+    struct fid_cntr *rma_cmpl_cntr;
+    uint64_t rma_issued_cntr;
 } MPIDI_OFI_context_t;
 
 typedef struct {
