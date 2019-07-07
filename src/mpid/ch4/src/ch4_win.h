@@ -294,11 +294,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 
 MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
 {
-    int mpi_errno;
+    int mpi_errno, vci;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+    vci = MPIDI_COMM_VCI(win->comm_ptr);
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -313,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
 #endif
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_WIN_FLUSH);
     return mpi_errno;
   fn_fail:
