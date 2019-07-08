@@ -100,8 +100,17 @@ int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn
                             MPIR_TSP_sched_complete_fn complete_fn, MPIR_TSP_sched_free_fn free_fn)
 {
     MPII_Genutil_sched_t *sched = s;
-    MPII_Genutil_vtx_type_t *newtype;
-    int type_id;
+    MPII_Genutil_vtx_type_t *vtype, *newtype;
+    int type_id, i;
+
+    /* search if the new type already exists in the table */
+    vtype = ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
+    for (i = 0; i < utarray_len(&sched->generic_types); i++) {
+        if (vtype->issue_fn == issue_fn && vtype->complete_fn == complete_fn &&
+            vtype->free_fn == free_fn)
+            return MPII_GENUTIL_VTX_KIND__LAST + i + 1;
+        vtype++;
+    }
 
     type_id = MPII_GENUTIL_VTX_KIND__LAST + utarray_len(&sched->generic_types) + 1;
     utarray_extend_back(&sched->generic_types, MPL_MEM_COLL);
