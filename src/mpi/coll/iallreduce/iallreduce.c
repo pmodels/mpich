@@ -288,6 +288,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
                                                                         datatype, op, comm_ptr,
+                                                                        MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
                                                                         request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
@@ -296,6 +297,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
+                                                                          MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
                                                                           request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
@@ -303,7 +305,11 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
-                                                       op, comm_ptr, request);
+                                                       op, comm_ptr, MPIR_Iallreduce_tree_type,
+                                                       MPIR_CVAR_IALLREDUCE_TREE_KVAL,
+                                                       MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE,
+                                                       MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD,
+                                                       request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
@@ -323,7 +329,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                      * MPIR_Iallreduce_sched algorithm will be run */
                     mpi_errno =
                         MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
-                        (sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+                        (sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                         MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
                     MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }

@@ -274,7 +274,10 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
             case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                        recvcount, recvtype, comm_ptr, request);
+                                                        recvcount, recvtype, comm_ptr,
+                                                        MPIR_CVAR_IALLTOALL_BRUCKS_KVAL,
+                                                        MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR,
+                                                        request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
@@ -282,7 +285,10 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_scattered(sendbuf, sendcount,
                                                            sendtype, recvbuf,
-                                                           recvcount, recvtype, comm_ptr, request);
+                                                           recvcount, recvtype, comm_ptr,
+                                                           MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE,
+                                                           MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS,
+                                                           request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

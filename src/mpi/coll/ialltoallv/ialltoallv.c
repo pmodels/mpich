@@ -226,6 +226,8 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                         MPIR_Ialltoallv_intra_gentran_scattered(sendbuf, sendcounts, sdispls,
                                                                 sendtype, recvbuf, recvcounts,
                                                                 rdispls, recvtype, comm_ptr,
+                                                                MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE,
+                                                                MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS,
                                                                 request);
                     MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
@@ -236,7 +238,8 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                     mpi_errno =
                         MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
-                                                              rdispls, recvtype, comm_ptr, request);
+                                                              rdispls, recvtype, comm_ptr,
+                                                              MPIR_CVAR_ALLTOALL_THROTTLE, request);
                     MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }

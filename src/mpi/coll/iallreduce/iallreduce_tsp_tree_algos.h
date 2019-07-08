@@ -21,7 +21,7 @@
 int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op,
                                          MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                         MPIR_TSP_sched_t * sched)
+                                         int buffer_per_child, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
@@ -39,7 +39,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int sink_id;
     int nvtcs;
-    int buffer_per_child = MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
     int root = 0;
 
@@ -230,7 +229,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 /* Non-blocking tree based allreduce */
 int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                   MPIR_Request ** req, int tree_type, int k, int chunk_size)
+                                   MPIR_Request ** req, int tree_type, int k, int chunk_size,
+                                   int buffer_per_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -248,7 +248,7 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
     /* schedule pipelined tree algo */
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, comm,
-                                             tree_type, k, chunk_size, sched);
+                                             tree_type, k, chunk_size, buffer_per_child, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

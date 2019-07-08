@@ -226,7 +226,7 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Igather_intra_gentran_tree(sendbuf, sendcount, sendtype,
                                                     recvbuf, recvcount, recvtype, root, comm_ptr,
-                                                    request);
+                                                    MPIR_CVAR_IGATHER_TREE_KVAL, request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

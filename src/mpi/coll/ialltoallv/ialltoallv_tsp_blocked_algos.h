@@ -21,14 +21,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],
                                             const int rdispls[], MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
     size_t recv_extent, send_extent, sendtype_size, recvtype_size;
     MPI_Aint recv_lb, send_lb, true_extent;
     int nranks, rank;
-    int i, j, bblock, comm_block, dst;
+    int i, j, comm_block, dst;
     int tag = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
@@ -54,7 +54,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
     send_extent = MPL_MAX(send_extent, true_extent);
     MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
 
-    bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
     if (bblock == 0)
         bblock = nranks;
 
@@ -95,7 +94,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
 int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                       const int recvcounts[], const int rdispls[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req)
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, int bblock,
+                                      MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -112,7 +112,7 @@ int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[
 
     mpi_errno =
         MPIR_TSP_Ialltoallv_sched_intra_blocked(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                                recvcounts, rdispls, recvtype, comm, sched);
+                                                recvcounts, rdispls, recvtype, comm, bblock, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

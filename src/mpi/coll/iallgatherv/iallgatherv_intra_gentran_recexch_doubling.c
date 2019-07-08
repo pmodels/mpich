@@ -19,7 +19,7 @@
 int MPIR_Iallgatherv_intra_gentran_recexch_doubling(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int *recvcounts, const int *displs,
-                                                    MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                    MPI_Datatype recvtype, MPIR_Comm * comm, int k,
                                                     MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -28,7 +28,7 @@ int MPIR_Iallgatherv_intra_gentran_recexch_doubling(const void *sendbuf, int sen
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm, req,
                                                        MPIR_IALLGATHERV_RECEXCH_TYPE_DISTANCE_DOUBLING,
-                                                       MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL);
+                                                       k);
 
     return mpi_errno;
 }

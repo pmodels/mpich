@@ -286,7 +286,9 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
-                                                                   comm_ptr, request);
+                                                                   comm_ptr,
+                                                                   MPIR_CVAR_IALLGATHER_RECEXCH_KVAL,
+                                                                   request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
@@ -294,14 +296,17 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                   recvbuf, recvcount, recvtype,
-                                                                  comm_ptr, request);
+                                                                  comm_ptr,
+                                                                  MPIR_CVAR_IALLGATHER_RECEXCH_KVAL,
+                                                                  request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                         recvcount, recvtype, comm_ptr, request);
+                                                         recvcount, recvtype, comm_ptr,
+                                                         MPIR_CVAR_IALLGATHER_BRUCKS_KVAL, request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

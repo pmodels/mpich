@@ -202,7 +202,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                         MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
                                                               sendtypes, recvbuf, recvcounts,
                                                               rdispls, recvtypes, comm_ptr,
-                                                              request);
+                                                              MPIR_CVAR_ALLTOALL_THROTTLE, request);
                     MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
