@@ -28,17 +28,24 @@ void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_set(fd->info, "romio_daos_chunk_size", "0");
         fd->hints->fs_hints.daos.chunk_size = 0;
 
-        ADIOI_Info_set(fd->info, "romio_daos_obj_class", "DAOS_OC_UNKNOWN");
-        fd->hints->fs_hints.daos.obj_class = DAOS_OC_UNKNOWN;
+        ADIOI_Info_set(fd->info, "romio_daos_obj_class", "OC_UNKNOWN");
+        fd->hints->fs_hints.daos.obj_class = OC_UNKNOWN;
 
 	if (users_info != MPI_INFO_NULL) {
+            char *oclass = NULL;
+
 	    /* Chunk size in each dkey */
 	    ADIOI_Info_check_and_install_int(fd, users_info, "romio_daos_chunk_size",
 		    &(fd->hints->fs_hints.daos.chunk_size), myname, error_code);
 
 	    /* object class for each file */
-	    ADIOI_Info_check_and_install_int(fd, users_info, "romio_daos_obj_class",
-		    &(fd->hints->fs_hints.daos.obj_class), myname, error_code);
+	    ADIOI_Info_check_and_install_str(fd, users_info, "romio_daos_obj_class",
+		    &oclass, myname, error_code);
+
+            if (oclass) {
+                fd->hints->fs_hints.daos.obj_class = daos_oclass_name2id(oclass);
+                ADIOI_Free(oclass);
+            }
 	}
     }
 

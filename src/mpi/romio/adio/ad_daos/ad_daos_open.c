@@ -241,8 +241,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
 
         uuid_copy(*puuid, attr.da_puuid);
         uuid_copy(*cuuid, attr.da_cuuid);
-        *oclass = (attr.da_oclass == DAOS_OC_UNKNOWN) ?
-            DAOS_OC_LARGE_RW : attr.da_oclass;
+        *oclass = (attr.da_oclass == OC_UNKNOWN) ? OC_SX : attr.da_oclass;
         *chunk_size = attr.da_chunk_size;
 
         return 0;
@@ -258,7 +257,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
 
     /* Hash container name to create uuid */
     duuid_hash128(path, cuuid, NULL, NULL);
-    *oclass = DAOS_OC_LARGE_RW;
+    *oclass = OC_SX;
     *chunk_size = 0;
 
     return 0;
@@ -282,7 +281,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     }
 
     /** Info object setting should override */
-    if (fd->hints->fs_hints.daos.obj_class != DAOS_OC_UNKNOWN)
+    if (fd->hints->fs_hints.daos.obj_class != OC_UNKNOWN)
         cont->obj_class = fd->hints->fs_hints.daos.obj_class;
     if (fd->hints->fs_hints.daos.chunk_size != 0)
         cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;

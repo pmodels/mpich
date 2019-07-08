@@ -17,11 +17,10 @@
 #include "adio.h"
 #include <assert.h>
 #include <gurt/list.h>
-#include <daos_types.h>
-#include <daos_api.h>
+#include <daos.h>
+#include <daos_obj_class.h>
 #include <daos_addons.h>
 #include <daos_fs.h>
-#include <daos_event.h>
 
 /* #define D_PRINT_IO */
 /* #define D_PRINT_IO_MEM */
