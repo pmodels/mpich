@@ -18,14 +18,15 @@
 
 int MPIR_Ireduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, int root,
-                                    MPIR_Comm * comm_ptr, MPIR_Request ** request)
+                                    MPIR_Comm * comm_ptr, int chunk_size, int buffer_per_child,
+                                    MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* Ring algorithm is equivalent to kary tree with k = 1 */
     mpi_errno = MPII_Gentran_Ireduce_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                 comm_ptr, request, MPIR_TREE_TYPE_KARY,
-                                                1, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE);
+                                                1, buffer_per_child, chunk_size);
 
     return mpi_errno;
 }

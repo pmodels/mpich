@@ -21,7 +21,7 @@
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                      MPIR_TSP_sched_t * sched)
+                                      int buffer_per_child, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
@@ -45,7 +45,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     void *reduce_buffer;        /* Buffer in which reduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int nvtcs;
-    int buffer_per_child = MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
@@ -254,7 +253,8 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 /* Non-blocking tree based reduce */
 int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
-                                MPIR_Request ** req, int tree_type, int k, int chunk_size)
+                                MPIR_Request ** req, int tree_type, int k, int chunk_size,
+                                int buffer_per_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -272,7 +272,7 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     /* schedule pipelined tree algo */
     mpi_errno =
         MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root, comm,
-                                          tree_type, k, chunk_size, sched);
+                                          tree_type, k, chunk_size, buffer_per_child, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

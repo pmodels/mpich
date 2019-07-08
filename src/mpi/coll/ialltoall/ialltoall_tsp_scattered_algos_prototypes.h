@@ -23,9 +23,11 @@
 int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              int recvcount, MPI_Datatype recvtype,
-                                             MPIR_Comm * comm, MPIR_TSP_sched_t * sched);
+                                             MPIR_Comm * comm, int batch_size, int bblock,
+                                             MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, MPIR_Request ** req);
+                                       MPIR_Comm * comm, int batch_size, int bblock,
+                                       MPIR_Request ** req);

@@ -238,7 +238,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Iscatter_intra_gentran_tree(sendbuf, sendcount, sendtype,
                                                      recvbuf, recvcount, recvtype, root, comm_ptr,
-                                                     request);
+                                                     MPIR_CVAR_ISCATTER_TREE_KVAL, request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

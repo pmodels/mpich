@@ -295,7 +295,9 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
-                                                                    recvtype, comm_ptr, request);
+                                                                    recvtype, comm_ptr,
+                                                                    MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL,
+                                                                    request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
@@ -306,7 +308,9 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
-                                                                   recvtype, comm_ptr, request);
+                                                                   recvtype, comm_ptr,
+                                                                   MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL,
+                                                                   request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
@@ -322,7 +326,9 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_brucks(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcounts, displs,
-                                                          recvtype, comm_ptr, request);
+                                                          recvtype, comm_ptr,
+                                                          MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL,
+                                                          request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

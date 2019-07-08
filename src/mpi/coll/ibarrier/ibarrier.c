@@ -166,7 +166,9 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
         /* intracommunicator */
         switch (MPIR_CVAR_IBARRIER_INTRA_ALGORITHM) {
             case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_gentran_recexch:
-                mpi_errno = MPIR_Ibarrier_intra_gentran_recexch(comm_ptr, request);
+                mpi_errno =
+                    MPIR_Ibarrier_intra_gentran_recexch(comm_ptr, MPIR_CVAR_IBARRIER_RECEXCH_KVAL,
+                                                        request);
 
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;

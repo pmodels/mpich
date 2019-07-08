@@ -284,6 +284,9 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
+                                                   MPIR_Ibcast_tree_type,
+                                                   MPIR_CVAR_IBCAST_TREE_KVAL,
+                                                   MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE,
                                                    request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
@@ -291,14 +294,17 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_scatterv_recexch_allgatherv:
                 mpi_errno =
                     MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv(buffer, count, datatype,
-                                                                          root, comm_ptr, request);
+                                                                          root, comm_ptr,
+                                                                          MPIR_CVAR_IBCAST_SCATTERV_KVAL,
+                                                                          MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL,
+                                                                          request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
-                                                   request);
+                                                   MPIR_CVAR_IBCAST_RING_CHUNK_SIZE, request);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;

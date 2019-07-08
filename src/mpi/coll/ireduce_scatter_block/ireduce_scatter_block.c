@@ -261,7 +261,9 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                     mpi_errno =
                         MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
                                                                          recvcount, datatype, op,
-                                                                         comm_ptr, request);
+                                                                         comm_ptr,
+                                                                         MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL,
+                                                                         request);
                     MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
