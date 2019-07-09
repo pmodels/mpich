@@ -197,7 +197,6 @@ const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cnt = {
 };
 
 /* *INDENT-OFF* */
-@ch4_netmod_coll_globals_default@
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "../shm/posix/posix_coll_globals_default.c"
 #endif
