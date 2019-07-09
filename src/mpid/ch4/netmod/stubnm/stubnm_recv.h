@@ -28,18 +28,6 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
     return err;
 }
 
-static inline int MPIDI_NM_mpi_recv_init(void *buf,
-                                         int count,
-                                         MPI_Datatype datatype,
-                                         int rank,
-                                         int tag,
-                                         MPIR_Comm * comm, int context_offset,
-                                         MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
                                       MPI_Aint count, MPI_Datatype datatype, MPIR_Request * message)
 {

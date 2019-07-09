@@ -14,7 +14,6 @@ noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h  \
         src/mpid/ch4/shm/src/shm_init.h    \
         src/mpid/ch4/shm/src/shm_misc.h    \
         src/mpid/ch4/shm/src/shm_p2p.h     \
-        src/mpid/ch4/shm/src/shm_startall.h\
         src/mpid/ch4/shm/src/shm_noinline.h\
         src/mpid/ch4/shm/src/shm_rma.h
 

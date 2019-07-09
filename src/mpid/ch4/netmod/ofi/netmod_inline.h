@@ -22,7 +22,6 @@
 #include "ofi_send.h"
 #include "ofi_win.h"
 #include "ofi_rma.h"
-#include "ofi_startall.h"
 
 /* Not-inlined OFI netmod functions */
 #include "ofi_noinline.h"
