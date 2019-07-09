@@ -195,9 +195,3 @@ const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cnt = {
     .params.ch4_exscan_params.ch4_exscan_alpha = {
                                                   .exscan = MPIDI_COLL_AUTO_SELECT}
 };
-
-/* *INDENT-OFF* */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-#include "../shm/posix/posix_coll_globals_default.c"
-#endif
-/* *INDENT-ON* */

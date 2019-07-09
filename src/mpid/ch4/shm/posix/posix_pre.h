@@ -175,5 +175,4 @@ typedef struct {
 } while (0)
 
 #include "posix_coll_params.h"
-#include "posix_coll_containers.h"
 #endif /* POSIX_PRE_H_INCLUDED */
