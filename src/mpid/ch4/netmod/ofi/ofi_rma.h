@@ -44,17 +44,6 @@
         }                                                               \
     } while (0)
 
-#define MPIDI_OFI_GET_BASIC_TYPE(a,b)   \
-    do {                                        \
-        if (MPIR_DATATYPE_IS_PREDEFINED(a))     \
-            b = a;                              \
-        else {                                  \
-            MPIR_Datatype *dt_ptr;              \
-            MPIR_Datatype_get_ptr(a,dt_ptr);    \
-            b = dt_ptr->basic_type;             \
-        }                                       \
-    } while (0)
-
 static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
 {
     uint32_t ret;
@@ -914,7 +903,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
     /* accept only same predefined basic datatype */
-    MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
+    MPIR_Datatype_get_basic_type(target_datatype, basic_type);
     MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
     MPIDI_OFI_query_acc_atomic_support(basic_type, MPIDI_OFI_QUERY_ATOMIC_COUNT, op,
@@ -1061,7 +1050,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
     /* accept only same predefined basic datatype */
-    MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
+    MPIR_Datatype_get_basic_type(target_datatype, basic_type);
     MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
 
     MPIDI_OFI_query_acc_atomic_support(basic_type, MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT,
