@@ -181,7 +181,7 @@ typedef struct MPIDIG_req_t {
 #endif
     MPIDIG_req_ext_t *req;
     void *buffer;
-    uint64_t count;
+    MPI_Aint count;
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
