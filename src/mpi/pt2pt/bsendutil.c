@@ -215,10 +215,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     MPI_Aint packsize;
     int pass;
 
-    /* Find a free segment and copy the data into it.  If we could
-     * have, we would already have used tBsend to send the message with
-     * no copying.
-     *
+    /*
      * We may want to decide here whether we need to pack at all
      * or if we can just use (a MPIR_Memcpy) of the buffer.
      */

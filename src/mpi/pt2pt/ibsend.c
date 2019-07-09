@@ -96,9 +96,6 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     MPIR_Request *request_ptr, *new_request_ptr;
     ibsend_req_info *ibinfo = 0;
 
-    /* We don't try tbsend in for MPI_Ibsend because we must create a
-     * request even if we can send the message */
-
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, IBSEND, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
