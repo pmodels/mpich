@@ -149,16 +149,6 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     /* ... body of routine ...  */
 
-#ifdef MPID_HAS_TBSEND
-    {
-        mpi_errno = MPID_tBsend(buf, count, datatype, dest, tag, comm_ptr, 0);
-        if (mpi_errno == MPI_SUCCESS) {
-            goto fn_exit;
-        }
-        /* FIXME: Check for MPID_WOULD_BLOCK? */
-    }
-#endif
-
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, BSEND, &request_ptr);
     /* Note that we can ignore the request_ptr because it is handled internally
      * by the bsend util routines */
