@@ -241,45 +241,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
-                                                  int count,
-                                                  MPI_Datatype datatype,
-                                                  int rank,
-                                                  int tag,
-                                                  MPIR_Comm * comm,
-                                                  int context_offset, MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV_INIT);
-
-    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 2);
-    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-    *request = rreq;
-    rreq->comm = comm;
-    MPIR_Comm_add_ref(comm);
-
-    MPIDIG_REQUEST(rreq, buffer) = (void *) buf;
-    MPIDIG_REQUEST(rreq, count) = count;
-    MPIDIG_REQUEST(rreq, datatype) = datatype;
-    MPIDIG_REQUEST(rreq, rank) = rank;
-    MPIDIG_REQUEST(rreq, tag) = tag;
-    MPIDIG_REQUEST(rreq, context_id) = comm->context_id + context_offset;
-    rreq->u.persist.real_request = NULL;
-    MPID_Request_complete(rreq);
-    MPIDIG_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV_INIT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype, MPIR_Request * message)

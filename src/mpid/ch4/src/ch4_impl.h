@@ -29,16 +29,22 @@ int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_seg
 
 
 /* Static inlines */
-static inline int MPIDIG_request_get_context_offset(MPIR_Request * req)
+
+/* Reconstruct context offset associated with a persistent request.
+ * Input must be a persistent request. */
+static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
 {
     int context_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
 
-    context_offset = MPIDIG_REQUEST(req, context_id) - req->comm->context_id;
+    MPIR_Assert(preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
+                preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
+    context_offset = MPIDI_PREQUEST(preq, context_id) - preq->comm->context_id;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
 
     return context_offset;
 }

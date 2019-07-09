@@ -17,7 +17,6 @@
 #include "shm_init.h"
 #include "shm_misc.h"
 #include "shm_p2p.h"
-#include "shm_startall.h"
 #include "shm_rma.h"
 
 /* Not-inlined shm functions */
