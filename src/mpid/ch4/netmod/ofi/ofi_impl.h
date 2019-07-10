@@ -121,31 +121,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
-#define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR)                       \
-    do {                                                    \
-    ssize_t _ret;                                           \
-    FUNC1;                                                  \
-    do {                                                    \
-        _ret = FUNC2;                                       \
-        if (likely(_ret==0)) break;                          \
-        MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
-                              mpi_errno,                    \
-                              MPI_ERR_OTHER,                \
-                              "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
-                              fi_strerror(-_ret));          \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
-        mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
-        if (mpi_errno != MPI_SUCCESS)                                \
-            MPIR_ERR_POP(mpi_errno);                                 \
-    } while (_ret == -FI_EAGAIN);                           \
-    } while (0)
-
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
             (_ret) = FUNC;                                              \
