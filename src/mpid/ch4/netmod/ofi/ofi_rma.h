@@ -423,16 +423,16 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
-                              fi_inject_write(MPIDI_OFI_WIN(win).ep,
-                                              (char *) origin_addr + origin_true_lb, target_bytes,
-                                              MPIDI_OFI_av_to_phys(addr),
-                                              (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
-                                              + target_disp * MPIDI_OFI_winfo_disp_unit(win,
-                                                                                        target_rank)
-                                              + target_true_lb, MPIDI_OFI_winfo_mr_key(win,
-                                                                                       target_rank)),
-                              rdma_inject_write);
+        MPIDI_OFI_win_cntr_incr(win);
+        MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
+                                             (char *) origin_addr + origin_true_lb, target_bytes,
+                                             MPIDI_OFI_av_to_phys(addr),
+                                             (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
+                                             + target_disp * MPIDI_OFI_winfo_disp_unit(win,
+                                                                                       target_rank)
+                                             + target_true_lb, MPIDI_OFI_winfo_mr_key(win,
+                                                                                      target_rank)),
+                             rdma_inject_write, FALSE);
         goto null_op_exit;
     } else if (origin_contig && target_contig) {
         MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
@@ -450,8 +450,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_true_lb);
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
         goto fn_exit;
     }
 
@@ -506,8 +506,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         msg.iov_count = oout;
         msg.rma_iov = targetv;
         msg.rma_iov_count = tout;
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_writemsg(ep, &msg, flags), rdma_write);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(ep, &msg, flags), rdma_write, FALSE);
 
         /* By default, progress is called only during fence, which significantly
          * slows down the RMA operations for large non-contiguous data. Adding manual
@@ -630,8 +630,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_true_lb);
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
         goto fn_exit;
     }
 
@@ -684,8 +684,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         msg.iov_count = oout;
         msg.rma_iov = targetv;
         msg.rma_iov_count = tout;
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_readmsg(ep, &msg, flags), rdma_write);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(ep, &msg, flags), rdma_write, FALSE);
 
         /* By default, progress is called only during fence, which significantly
          * slows down the RMA operations for large non-contiguous data. Adding manual
@@ -857,9 +857,10 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.data = 0;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(&comparev);
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(&resultv);
-    MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
-                          fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
-                                               &comparev, NULL, 1, &resultv, NULL, 1, 0), atomicto);
+    MPIDI_OFI_win_cntr_incr(win);
+    MPIDI_OFI_CALL_RETRY(fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
+                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), atomicto,
+                         FALSE);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
     return mpi_errno;
@@ -986,8 +987,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         msg.iov_count = oout;
         msg.rma_iov = targetv;
         msg.rma_iov_count = tout;
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_atomicmsg(ep, &msg, flags), rdma_atomicto);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_atomicmsg(ep, &msg, flags), rdma_atomicto, FALSE);
 
         /* By default, progress is called only during fence, which significantly
          * slows down the RMA operations for large non-contiguous data. Adding manual
@@ -1168,9 +1169,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         msg.rma_iov = targetv;
         msg.rma_iov_count = tout;
         MPIDI_OFI_ASSERT_IOVEC_ALIGN(resultv);
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq),
-                              fi_fetch_atomicmsg(ep, &msg, resultv,
-                                                 NULL, rout, flags), rdma_readfrom);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(ep, &msg, resultv,
+                                                NULL, rout, flags), rdma_readfrom, FALSE);
         /* By default, progress is called only during fence, which significantly
          * slows down the RMA operations for large non-contiguous data. Adding manual
          * progress helps improve the performance. */
@@ -1390,9 +1391,9 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     msg.context = NULL;
     msg.data = 0;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(&resultv);
-    MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
-                          fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                             NULL, 1, 0), rdma_readfrom);
+    MPIDI_OFI_win_cntr_incr(win);
+    MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
+                                            NULL, 1, 0), rdma_readfrom, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
