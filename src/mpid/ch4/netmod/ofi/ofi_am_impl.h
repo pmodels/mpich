@@ -304,14 +304,13 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                  lmt_info->rma_key,
                                  0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
     else
-        MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_OFI_global.domain,
-                                        data,
-                                        data_sz,
-                                        FI_REMOTE_READ,
-                                        0ULL,
-                                        lmt_info->rma_key,
-                                        0ULL,
-                                        &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,
+                                 data,
+                                 data_sz,
+                                 FI_REMOTE_READ,
+                                 0ULL,
+                                 lmt_info->rma_key,
+                                 0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
     OPA_incr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
 
     if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {

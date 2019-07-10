@@ -74,20 +74,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               fi_strerror(-_ret));          \
     } while (0)
 
-#define MPIDI_OFI_CALL_NOLOCK(FUNC,STR)                              \
-    do {                                                    \
-        ssize_t _ret = FUNC;                                \
-        MPIDI_OFI_ERR(_ret<0,                       \
-                              mpi_errno,                    \
-                              MPI_ERR_OTHER,                \
-                              "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
-                              fi_strerror(-_ret));          \
-    } while (0)
-
 #define MPIDI_OFI_CALL_RETRY(FUNC,STR,EAGAIN)               \
     do {                                                    \
     ssize_t _ret;                                           \
