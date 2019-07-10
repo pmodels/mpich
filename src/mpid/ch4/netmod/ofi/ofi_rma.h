@@ -24,6 +24,7 @@
         MPIDI_OFI_chunk_request *creq;                                  \
         MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                          \
         creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER);       \
+        MPIR_ERR_CHKANDSTMT(creq == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");  \
         creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                    \
         creq->parent   = *sigreq;                                       \
         msg.context    = &creq->context;                                \
