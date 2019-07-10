@@ -29,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
-                               MPIDI_OFI_COMM(comm).eagain);
+                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_COMM(comm).eagain);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -58,8 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
-                               MPIDI_OFI_COMM(comm).eagain);
+                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_COMM(comm).eagain);
     /* If we set CC>0 in case of injection, we need to decrement the CC
      * to tell the main thread we completed the injection. */
     MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
@@ -207,8 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.data = comm->rank;
     msg.addr = MPIDI_OFI_av_to_phys(addr);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv,
-                         MPIDI_OFI_CALL_LOCK, FALSE);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -264,8 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       MPIDI_OFI_av_to_phys(addr),       /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), trecvsync, MPIDI_OFI_CALL_LOCK,
-                             FALSE);
+                                      (void *) &(ackreq->context)), trecvsync, FALSE);
     }
 
     send_buf = (char *) buf + dt_true_lb;
@@ -307,8 +303,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
-                                   match_bits, NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
-                                   FALSE);
+                                   match_bits, NULL, MPIDI_OFI_DO_INJECT, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
@@ -317,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_av_to_phys(addr),
                                    match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                   MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
+                                   MPIDI_OFI_DO_SEND, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else if (unlikely(1)) {
@@ -368,7 +363,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                            MPIDI_OFI_av_to_phys(addr),
                                            match_bits,
                                            (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_NO_LOCK, FALSE);
+                                           MPIDI_OFI_DO_SEND, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
