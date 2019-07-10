@@ -143,8 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, NULL, 0, NULL,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
-                                           ss_bits, NULL, MPIDI_OFI_DO_INJECT,
-                                           MPIDI_OFI_CALL_NO_LOCK, FALSE);
+                                           ss_bits, NULL, MPIDI_OFI_DO_INJECT, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -305,7 +304,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
             uint64_t key = fi_mr_key(huge_send_mr);
             MPIDI_OFI_mr_key_free(key);
         }
-        MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
+        MPIDI_OFI_CALL(fi_close(&huge_send_mr->fid), mr_unreg);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack)) {
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
@@ -395,7 +394,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                      MPIDI_OFI_recv_rbase(recv_elem) + recv_elem->cur_offset,   /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), rdma_readfrom,      /* Context */
-                             MPIDI_OFI_CALL_NO_LOCK, FALSE);
+                             FALSE);
         recv_elem->cur_offset += bytesToGet;
     }
 
