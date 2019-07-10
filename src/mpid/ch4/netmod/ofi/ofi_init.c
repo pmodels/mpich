@@ -389,8 +389,7 @@ static int conn_manager_destroy()
                                                   NULL,
                                                   conn[j],
                                                   match_bits,
-                                                  mask_bits, &req[j].context),
-                                         trecv, MPIDI_OFI_CALL_LOCK, FALSE);
+                                                  mask_bits, &req[j].context), trecv, FALSE);
                     j++;
                     break;
                 default:
@@ -455,7 +454,7 @@ static int dynproc_send_disconnect(int conn_id)
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
-                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
+                             tsendmsg, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
@@ -961,8 +960,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_OFI_global.am_msg[i].iov_count = 1;
             MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                             &MPIDI_OFI_global.am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), prepost,
-                                 MPIDI_OFI_CALL_LOCK, FALSE);
+                                            FI_MULTI_RECV | FI_COMPLETION), prepost, FALSE);
         }
 
         /* Grow the header handlers down */
