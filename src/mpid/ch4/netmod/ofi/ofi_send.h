@@ -331,15 +331,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             rma_key = ctrl.rma_key;
         }
 
-        MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_OFI_global.domain,        /* In:  Domain Object       */
-                                        send_buf,       /* In:  Lower memory address */
-                                        data_sz,        /* In:  Length              */
-                                        FI_REMOTE_READ, /* In:  Expose MR for read  */
-                                        0ULL,   /* In:  offset(not used)    */
-                                        rma_key,        /* In:  requested key       */
-                                        0ULL,   /* In:  flags               */
-                                        &huge_send_mr,  /* Out: memregion object    */
-                                        NULL), mr_reg); /* In:  context             */
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,       /* In:  Domain Object       */
+                                 send_buf,      /* In:  Lower memory address */
+                                 data_sz,       /* In:  Length              */
+                                 FI_REMOTE_READ,        /* In:  Expose MR for read  */
+                                 0ULL,  /* In:  offset(not used)    */
+                                 rma_key,       /* In:  requested key       */
+                                 0ULL,  /* In:  flags               */
+                                 &huge_send_mr, /* Out: memregion object    */
+                                 NULL), mr_reg);        /* In:  context             */
 
         /* Create map to the memory region */
         MPIDIU_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr,
