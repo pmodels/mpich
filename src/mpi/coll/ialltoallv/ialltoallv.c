@@ -221,38 +221,35 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
         /* intracommunicator */
         switch (MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_scattered:
-                if (sendbuf != MPI_IN_PLACE) {
-                    mpi_errno =
-                        MPIR_Ialltoallv_intra_gentran_scattered(sendbuf, sendcounts, sdispls,
-                                                                sendtype, recvbuf, recvcounts,
-                                                                rdispls, recvtype, comm_ptr,
-                                                                MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE,
-                                                                MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS,
-                                                                request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(sendbuf != MPI_IN_PLACE);
+                mpi_errno =
+                    MPIR_Ialltoallv_intra_gentran_scattered(sendbuf, sendcounts, sdispls,
+                                                            sendtype, recvbuf, recvcounts,
+                                                            rdispls, recvtype, comm_ptr,
+                                                            MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE,
+                                                            MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS,
+                                                            request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_blocked:
-                if (sendbuf != MPI_IN_PLACE) {
-                    mpi_errno =
-                        MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
-                                                              sendtype, recvbuf, recvcounts,
-                                                              rdispls, recvtype, comm_ptr,
-                                                              MPIR_CVAR_ALLTOALL_THROTTLE, request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(sendbuf != MPI_IN_PLACE);
+                mpi_errno =
+                    MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                          sendtype, recvbuf, recvcounts,
+                                                          rdispls, recvtype, comm_ptr,
+                                                          MPIR_CVAR_ALLTOALL_THROTTLE, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_inplace:
-                if (sendbuf == MPI_IN_PLACE) {
-                    mpi_errno =
-                        MPIR_Ialltoallv_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
-                                                              sendtype, recvbuf, recvcounts,
-                                                              rdispls, recvtype, comm_ptr, request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(sendbuf == MPI_IN_PLACE);
+                mpi_errno =
+                    MPIR_Ialltoallv_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                          sendtype, recvbuf, recvcounts,
+                                                          rdispls, recvtype, comm_ptr, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
@@ -263,6 +260,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
 
+  fallback:
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);

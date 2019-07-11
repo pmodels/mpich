@@ -313,34 +313,33 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
-                if (is_commutative) {
-                    mpi_errno =
-                        MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
-                                                           op, comm_ptr, request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
-                break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative);
+                mpi_errno =
+                    MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
+                                                       op, comm_ptr, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
-                if (is_commutative &&
-                    count >= nranks) {
-                    /*  This algorithm will work for commutative operations and if the count is
-                     * bigger than total number of ranks. If it not commutative or if the count < nranks,
-                     * MPIR_Iallreduce_sched algorithm will be run */
-                    mpi_errno =
-                        MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
-                        (sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                         MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
-                break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative &&
+                                               count >= nranks);
+                /* This algorithm will work for commutative
+                 * operations and if the count is bigger than total
+                 * number of ranks. If it not commutative or if the
+                 * count < nranks, MPIR_Iallreduce_sched algorithm
+                 * will be run */
+                mpi_errno =
+                    MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
+                    (sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                     MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
                 break;
         }
     }
 
+  fallback:
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
