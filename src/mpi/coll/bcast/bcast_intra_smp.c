@@ -28,9 +28,6 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
 #endif
 
 #ifdef HAVE_ERROR_CHECKING
-    if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {
-        MPIR_Assert(0);
-    }
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
 #endif
 

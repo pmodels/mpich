@@ -71,15 +71,6 @@ cvars:
         broadcast based on a scatter followed by a ring allgather algorithm.
         (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_SHORT_MSG_SIZE)
 
-    - name        : MPIR_CVAR_ENABLE_SMP_BCAST
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : Enable SMP aware broadcast (See also: MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE)
-
     - name        : MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE
       category    : COLLECTIVE
       type        : int
@@ -90,7 +81,6 @@ cvars:
       description : >-
         Maximum message size for which SMP-aware broadcast is used.  A
         value of '0' uses SMP-aware broadcast for all message sizes.
-        (See also: MPIR_CVAR_ENABLE_SMP_BCAST)
 
     - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -175,8 +165,7 @@ int MPIR_Bcast_intra_auto(void *buffer,
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
-        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_parent_comm(comm_ptr)) {
+    if (nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_parent_comm(comm_ptr)) {
         mpi_errno = MPIR_Bcast_intra_smp(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

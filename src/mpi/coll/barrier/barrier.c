@@ -11,15 +11,6 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_ENABLE_SMP_BARRIER
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : Enable SMP aware barrier.
-
     - name        : MPIR_CVAR_BARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -91,8 +82,7 @@ int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     if (size == 1)
         goto fn_exit;
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
-        MPIR_CVAR_ENABLE_SMP_BARRIER && MPIR_Comm_is_parent_comm(comm_ptr)) {
+    if (MPIR_Comm_is_parent_comm(comm_ptr)) {
         mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);

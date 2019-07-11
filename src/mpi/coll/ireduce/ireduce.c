@@ -187,8 +187,7 @@ int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
-            MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
             mpi_errno = MPIR_Ireduce_sched_intra_smp(sendbuf, recvbuf, count,
                                                      datatype, op, root, comm_ptr, s);
         } else {
