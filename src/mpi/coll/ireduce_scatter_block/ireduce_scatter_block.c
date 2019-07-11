@@ -257,16 +257,15 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
         /* intracommunicator */
         switch (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_gentran_recexch:
-                if (is_commutative) {
-                    mpi_errno =
-                        MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
-                                                                         recvcount, datatype, op,
-                                                                         comm_ptr,
-                                                                         MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL,
-                                                                         request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative);
+                mpi_errno =
+                    MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
+                                                                     recvcount, datatype, op,
+                                                                     comm_ptr,
+                                                                     MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL,
+                                                                     request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
@@ -284,6 +283,16 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_block_intra_sched_auto, comm_ptr, request,
+                           sendbuf, recvbuf, recvcount, datatype, op);
+    } else {
+        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_block_inter_sched_auto, comm_ptr, request,
+                           sendbuf, recvbuf, recvcount, datatype, op);
+    }
 
   fn_exit:
     return mpi_errno;

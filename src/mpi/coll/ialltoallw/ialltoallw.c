@@ -197,26 +197,23 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_blocked:
-                if (sendbuf != MPI_IN_PLACE) {
-                    mpi_errno =
-                        MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
-                                                              sendtypes, recvbuf, recvcounts,
-                                                              rdispls, recvtypes, comm_ptr,
-                                                              MPIR_CVAR_ALLTOALL_THROTTLE, request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(sendbuf != MPI_IN_PLACE);
+                mpi_errno =
+                    MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                          sendtypes, recvbuf, recvcounts,
+                                                          rdispls, recvtypes, comm_ptr,
+                                                          MPIR_CVAR_ALLTOALL_THROTTLE, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_inplace:
-                if (sendbuf == MPI_IN_PLACE) {
-                    mpi_errno =
-                        MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
-                                                              sendtypes, recvbuf, recvcounts,
-                                                              rdispls, recvtypes, comm_ptr,
-                                                              request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(sendbuf == MPI_IN_PLACE);
+                mpi_errno =
+                    MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                          sendtypes, recvbuf, recvcounts,
+                                                          rdispls, recvtypes, comm_ptr, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
@@ -224,6 +221,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
         }
     }
 
+  fallback:
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);

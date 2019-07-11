@@ -260,15 +260,14 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
         /* intracommunicator */
         switch (MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_gentran_recexch:
-                if (is_commutative) {
-                    mpi_errno =
-                        MPIR_Ireduce_scatter_intra_gentran_recexch(sendbuf, recvbuf, recvcounts,
-                                                                   datatype, op, comm_ptr,
-                                                                   MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
-                                                                   request);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    goto fn_exit;
-                }
+                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative);
+                mpi_errno =
+                    MPIR_Ireduce_scatter_intra_gentran_recexch(sendbuf, recvbuf, recvcounts,
+                                                               datatype, op, comm_ptr,
+                                                               MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
+                                                               request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
@@ -276,6 +275,7 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
         }
     }
 
+  fallback:
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);

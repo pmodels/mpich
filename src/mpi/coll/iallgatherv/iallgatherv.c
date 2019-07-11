@@ -290,8 +290,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
         switch (MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_doubling:
                 /* This algo cannot handle unordered data */
-                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
-                    break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(MPII_Iallgatherv_is_displs_ordered
+                                               (comm_size, recvcounts, displs));
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
@@ -303,8 +303,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 break;
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_halving:
                 /* This algo cannot handle unordered data */
-                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
-                    break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(MPII_Iallgatherv_is_displs_ordered
+                                               (comm_size, recvcounts, displs));
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
@@ -338,6 +338,7 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
         }
     }
 
+  fallback:
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
