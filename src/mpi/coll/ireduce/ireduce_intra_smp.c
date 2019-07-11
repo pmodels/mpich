@@ -18,7 +18,7 @@ int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
     MPIR_Comm *nrc;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
-    MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     nc = comm_ptr->node_comm;

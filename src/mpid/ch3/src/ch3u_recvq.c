@@ -927,7 +927,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_node_aware(comm_ptr)) {
+        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
             int offset;
             offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + offset;
@@ -1019,7 +1019,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_node_aware(comm_ptr)) {
+        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
             int offset;
             offset = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?  MPIR_CONTEXT_INTRA_PT2PT : MPIR_CONTEXT_INTER_PT2PT;
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + offset;

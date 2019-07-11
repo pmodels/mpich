@@ -176,7 +176,7 @@ int MPIR_Bcast_intra_auto(void *buffer,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
-        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm_ptr)) {
+        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_parent_comm(comm_ptr)) {
         mpi_errno = MPIR_Bcast_intra_smp(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

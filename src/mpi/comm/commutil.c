@@ -625,7 +625,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
-int MPIR_Comm_is_node_aware(MPIR_Comm * comm)
+int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 {
     return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
 }
@@ -638,7 +638,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!MPIR_Comm_is_node_aware(comm))
+    if (!MPIR_Comm_is_parent_comm(comm))
         return 0;
 
     for (; i < comm->local_size; i++) {

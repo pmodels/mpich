@@ -35,7 +35,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
     MPIR_SCHED_CHKPMEM_DECL(1);
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
 #endif
     MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
