@@ -67,7 +67,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
 
     /* perform the internode broadcast */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype,
+        mpi_errno = MPIR_Ibcast_sched_auto(buffer, count, datatype,
                                            MPIR_Get_internode_rank(comm_ptr, root),
                                            comm_ptr->node_roots_comm, s);
         MPIR_ERR_CHECK(mpi_errno);
@@ -77,7 +77,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
     }
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+        mpi_errno = MPIR_Ibcast_sched_auto(buffer, count, datatype, 0, comm_ptr->node_comm, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

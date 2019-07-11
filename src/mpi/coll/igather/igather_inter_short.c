@@ -46,7 +46,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
                                       sendcount * local_size * sendtype_sz,
                                       mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
         } else {
-            /* silience -Wmaybe-uninitialized due to MPIR_Igather_sched_impl by non-zero ranks */
+            /* silience -Wmaybe-uninitialized due to MPIR_Igather_sched_auto by non-zero ranks */
             sendtype_sz = 0;
         }
 
@@ -59,7 +59,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the a local gather on this intracommunicator */
-        mpi_errno = MPIR_Igather_sched_impl(sendbuf, sendcount, sendtype,
+        mpi_errno = MPIR_Igather_sched_auto(sendbuf, sendcount, sendtype,
                                             tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0,
                                             newcomm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
