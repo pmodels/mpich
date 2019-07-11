@@ -8,14 +8,15 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef POSIX_PROGRESS_H_INCLUDED
-#define POSIX_PROGRESS_H_INCLUDED
 
-#include "posix_impl.h"
+#include "mpidimpl.h"
+#include "posix_types.h"
 #include "posix_am_impl.h"
-#include <posix_eager.h>
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
+static int progress_recv(int blocking);
+static int progress_send(int blocking);
+
+static int progress_recv(int blocking)
 {
 
     MPIDI_POSIX_eager_recv_transaction_t transaction;
@@ -240,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
+static int progress_send(int blocking)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -299,18 +300,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
+int MPIDI_POSIX_progress(int blocking)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
 
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_POSIX_progress_recv(blocking);
+    mpi_errno = progress_recv(blocking);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_POSIX_progress_send(blocking);
+    mpi_errno = progress_send(blocking);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -321,58 +322,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_test(void)
+int MPIDI_POSIX_progress_test(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_poke(void)
+int MPIDI_POSIX_progress_poke(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_progress_start(MPID_Progress_state * state)
+void MPIDI_POSIX_progress_start(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_progress_end(MPID_Progress_state * state)
+void MPIDI_POSIX_progress_end(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_wait(MPID_Progress_state * state)
+int MPIDI_POSIX_progress_wait(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
+int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_deregister(int id)
+int MPIDI_POSIX_progress_deregister(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_activate(int id)
+int MPIDI_POSIX_progress_activate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_deactivate(int id)
+int MPIDI_POSIX_progress_deactivate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
-
-#endif /* POSIX_PROGRESS_H_INCLUDED */

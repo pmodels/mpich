@@ -14,7 +14,7 @@
 #include "ch4_types.h"
 #include "mpidig.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 /* Collectively allocate shared memory region.

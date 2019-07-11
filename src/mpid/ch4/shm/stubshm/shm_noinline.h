@@ -57,4 +57,17 @@ int MPIDI_STUBSHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size,
 void *MPIDI_STUBSHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_STUBSHM_mpi_free_mem(void *ptr);
 
+int MPIDI_STUBSHM_do_progress_recv(int blocking, int *completion_count);
+int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_count);
+int MPIDI_STUBSHM_progress(int vci, int blocking);
+int MPIDI_STUBSHM_progress_test(void);
+int MPIDI_STUBSHM_progress_poke(void);
+void MPIDI_STUBSHM_progress_start(MPID_Progress_state * state);
+void MPIDI_STUBSHM_progress_end(MPID_Progress_state * state);
+int MPIDI_STUBSHM_progress_wait(MPID_Progress_state * state);
+int MPIDI_STUBSHM_progress_register(int (*progress_fn) (int *));
+int MPIDI_STUBSHM_progress_deregister(int id);
+int MPIDI_STUBSHM_progress_activate(int id);
+int MPIDI_STUBSHM_progress_deactivate(int id);
+
 #endif

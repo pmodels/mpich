@@ -116,4 +116,28 @@ int MPIDI_STUBNM_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 #define MPIDI_NM_mpi_type_commit_hook MPIDI_STUBNM_mpi_type_commit_hook
 #endif
 
+int MPIDI_STUBNM_progress(int vci, int blocking);
+int MPIDI_STUBNM_progress_test(void);
+int MPIDI_STUBNM_progress_poke(void);
+void MPIDI_STUBNM_progress_start(MPID_Progress_state * state);
+void MPIDI_STUBNM_progress_end(MPID_Progress_state * state);
+int MPIDI_STUBNM_progress_wait(MPID_Progress_state * state);
+int MPIDI_STUBNM_progress_register(int (*progress_fn) (int *), int *id);
+int MPIDI_STUBNM_progress_deregister(int id);
+int MPIDI_STUBNM_progress_activate(int id);
+int MPIDI_STUBNM_progress_deactivate(int id);
+
+#ifdef NETMOD_INLINE
+#define MPIDI_NM_progress MPIDI_STUBNM_progress
+#define MPIDI_NM_progress_test MPIDI_STUBNM_progress_test
+#define MPIDI_NM_progress_poke MPIDI_STUBNM_progress_poke
+#define MPIDI_NM_progress_start MPIDI_STUBNM_progress_start
+#define MPIDI_NM_progress_end MPIDI_STUBNM_progress_end
+#define MPIDI_NM_progress_wait MPIDI_STUBNM_progress_wait
+#define MPIDI_NM_progress_register MPIDI_STUBNM_progress_register
+#define MPIDI_NM_progress_deregister MPIDI_STUBNM_progress_deregister
+#define MPIDI_NM_progress_activate MPIDI_STUBNM_progress_activate
+#define MPIDI_NM_progress_deactivate MPIDI_STUBNM_progress_deactivate
+#endif
+
 #endif

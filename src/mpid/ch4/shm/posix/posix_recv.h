@@ -12,6 +12,7 @@
 #define POSIX_RECV_H_INCLUDED
 
 #include "posix_impl.h"
+#include "posix_eager.h"
 #include "ch4_impl.h"
 
 /* Hook triggered after posting a SHM receive request.

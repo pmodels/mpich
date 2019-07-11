@@ -6,13 +6,15 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef UCX_PROGRESS_H_INCLUDED
-#define UCX_PROGRESS_H_INCLUDED
 
+#include "mpidimpl.h"
 #include "ucx_impl.h"
 //#include "events.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
+static int am_handler(void *msg, size_t msg_sz);
+static void handle_am_recv(void *request, ucs_status_t status, ucp_tag_recv_info_t * info);
+
+static int am_handler(void *msg, size_t msg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -81,13 +83,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
-                                                       ucp_tag_recv_info_t * info)
+static void handle_am_recv(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
 {
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+int MPIDI_UCX_progress(int vci, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;
@@ -104,13 +105,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
                                                                       info.length,
                                                                       ucp_dt_make_contig(1),
                                                                       message_handle,
-                                                                      &MPIDI_UCX_Handle_am_recv);
+                                                                      &handle_am_recv);
         while (!ucp_request_is_completed(ucp_request)) {
             ucp_worker_progress(MPIDI_UCX_global.worker);
         }
 
         ucp_request_release(ucp_request);
-        MPIDI_UCX_am_handler(am_buf, info.length);
+        am_handler(am_buf, info.length);
         MPL_free(am_buf);
         message_handle =
             ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
@@ -122,5 +123,3 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
   fn_exit:
     return mpi_errno;
 }
-
-#endif /* UCX_PROGRESS_H_INCLUDED */
