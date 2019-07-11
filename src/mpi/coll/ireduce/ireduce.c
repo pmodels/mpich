@@ -143,6 +143,15 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
+    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+        mpi_errno = MPIR_Ireduce_sched_intra_smp(sendbuf, recvbuf, count,
+                                                 datatype, op, root, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        goto fn_exit;
+    }
+
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
@@ -187,29 +196,23 @@ int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-            mpi_errno = MPIR_Ireduce_sched_intra_smp(sendbuf, recvbuf, count,
-                                                     datatype, op, root, comm_ptr, s);
-        } else {
-            /* intracommunicator */
-            switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
-                    mpi_errno = MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count,
-                                                                  datatype, op, root, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
-                    mpi_errno =
-                        MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count,
-                                                                       datatype, op, root, comm_ptr,
-                                                                       s);
-                    break;
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
+        /* intracommunicator */
+        switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
+                mpi_errno = MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count,
                                                               datatype, op, root, comm_ptr, s);
-                    break;
-            }
+                break;
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
+                mpi_errno =
+                    MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count,
+                                                                   datatype, op, root, comm_ptr, s);
+                break;
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
+                                                          datatype, op, root, comm_ptr, s);
+                break;
         }
     } else {
         /* intercommunicator */

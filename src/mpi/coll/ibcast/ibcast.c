@@ -154,6 +154,14 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
+    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+        mpi_errno = MPIR_Ibcast_sched_intra_smp(buffer, count, datatype, root, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        goto fn_exit;
+    }
+
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
@@ -203,33 +211,29 @@ int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int r
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-            mpi_errno = MPIR_Ibcast_sched_intra_smp(buffer, count, datatype, root, comm_ptr, s);
-        } else {
-            /* intercommunicator */
-            switch (MPIR_CVAR_IBCAST_INTRA_ALGORITHM) {
-                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_binomial:
-                    mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype,
-                                                                 root, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_recursive_doubling_allgather:
-                    mpi_errno =
-                        MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count,
-                                                                                     datatype, root,
-                                                                                     comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_ring_allgather:
-                    mpi_errno =
-                        MPIR_Ibcast_sched_intra_scatter_ring_allgather(buffer, count, datatype,
-                                                                       root, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Ibcast_sched_intra_auto(buffer, count, datatype,
+        /* intracommunicator */
+        switch (MPIR_CVAR_IBCAST_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_binomial:
+                mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype,
                                                              root, comm_ptr, s);
-                    break;
-            }
+                break;
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_recursive_doubling_allgather:
+                mpi_errno =
+                    MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count,
+                                                                                 datatype, root,
+                                                                                 comm_ptr, s);
+                break;
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_ring_allgather:
+                mpi_errno =
+                    MPIR_Ibcast_sched_intra_scatter_ring_allgather(buffer, count, datatype,
+                                                                   root, comm_ptr, s);
+                break;
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ibcast_sched_intra_auto(buffer, count, datatype,
+                                                         root, comm_ptr, s);
+                break;
         }
     } else {
         /* intercommunicator */

@@ -146,6 +146,15 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
+    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+        mpi_errno =
+            MPIR_Iallreduce_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        goto fn_exit;
+    }
+
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
@@ -200,34 +209,29 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-            mpi_errno =
-                MPIR_Iallreduce_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        } else {
-            /* intracommunicator */
-            switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
-                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
-                    mpi_errno = MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count,
-                                                                  datatype, op, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
-                    mpi_errno =
-                        MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count,
-                                                                       datatype, op, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
-                    mpi_errno =
-                        MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf,
-                                                                             count, datatype, op,
-                                                                             comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
-                                                                 datatype, op, comm_ptr, s);
-                    break;
-            }
+        /* intracommunicator */
+        switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
+                mpi_errno = MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count,
+                                                              datatype, op, comm_ptr, s);
+                break;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
+                mpi_errno =
+                    MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count,
+                                                                   datatype, op, comm_ptr, s);
+                break;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
+                mpi_errno =
+                    MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf,
+                                                                         count, datatype, op,
+                                                                         comm_ptr, s);
+                break;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
+                                                             datatype, op, comm_ptr, s);
+                break;
         }
     } else {
         /* intercommunicator */
