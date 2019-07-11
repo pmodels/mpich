@@ -154,23 +154,6 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
     return mpi_errno;
 }
 
-int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                        const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
-                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
-                                        recvcounts, displs, recvtype, root, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Igatherv_sched_impl(sendbuf, sendcount, sendtype, recvbuf,
-                                             recvcounts, displs, recvtype, root, comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
 int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        const int recvcounts[], const int displs[], MPI_Datatype recvtype,
                        int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
@@ -210,8 +193,8 @@ int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
-        MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
-                            root, comm_ptr, s);
+        MPIR_Igatherv_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                 recvtype, root, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);

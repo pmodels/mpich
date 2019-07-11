@@ -251,20 +251,6 @@ int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MP
     return mpi_errno;
 }
 
-int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iallreduce_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
 int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                          MPIR_Request ** request)
@@ -345,7 +331,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     mpi_errno = MPIR_Sched_create(&s);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Iallreduce_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);

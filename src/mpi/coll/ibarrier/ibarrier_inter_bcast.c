@@ -25,7 +25,7 @@ int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 
     /* do a barrier on the local intracommunicator */
     if (comm_ptr->local_size != 1) {
-        mpi_errno = MPIR_Ibarrier_sched(comm_ptr->local_comm, s);
+        mpi_errno = MPIR_Ibarrier_sched_impl(comm_ptr->local_comm, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -41,26 +41,26 @@ int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
      * left group */
     if (comm_ptr->is_low_group) {
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_sched_impl(buf, 1, MPI_BYTE, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_SCHED_BARRIER(s);
 
         /* receive bcast from right */
         root = 0;
-        mpi_errno = MPIR_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_sched_impl(buf, 1, MPI_BYTE, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* receive bcast from left */
         root = 0;
-        mpi_errno = MPIR_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_sched_impl(buf, 1, MPI_BYTE, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_SCHED_BARRIER(s);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_sched_impl(buf, 1, MPI_BYTE, root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
