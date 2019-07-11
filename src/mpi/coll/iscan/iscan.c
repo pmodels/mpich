@@ -118,20 +118,17 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
     /* TODO - Eventually the intention is to replace all of the
      * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
-            case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_gentran_recursive_doubling:
-                mpi_errno =
-                    MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
-                                                                datatype, op, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
-                break;
-            default:
-                /* go down to the MPIR_Sched-based algorithms */
-                break;
-        }
+    switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_gentran_recursive_doubling:
+            mpi_errno =
+                MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
+                                                            datatype, op, comm_ptr, request);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+            break;
+        default:
+            /* go down to the MPIR_Sched-based algorithms */
+            break;
     }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
