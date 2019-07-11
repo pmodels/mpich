@@ -18,23 +18,20 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int itercount = 0;
-    int ret;
-    uint64_t tcount, donecount;
+    int ret, max_ofi_progress;
+    uint64_t tcount, firstcount, donecount;
     MPIDI_OFI_win_request_t *r;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
 
     tcount = *MPIDI_OFI_WIN(win).issued_cntr;
-    donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
+    firstcount = donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
 
     MPIR_Assert(donecount <= tcount);
 
     while (tcount > donecount) {
         MPIR_Assert(donecount <= tcount);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
-        MPIDI_OFI_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
         itercount++;
 
@@ -49,6 +46,25 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
             itercount = 0;
         }
     }
+
+    /* We need to poll the CQ to process any completion events corresponding
+     * to the progress made by reading the counter.
+     * Since we don't know what the value of the fi_cntr was before reading
+     * it, we might have made progress by reading it. Hence, we need to poll
+     * the CQ at least and then for `max_ofi_progress` times, if needed */
+    itercount = 0;
+    max_ofi_progress =
+        (tcount - firstcount + MPIDI_OFI_NUM_CQ_ENTRIES - 1) / MPIDI_OFI_NUM_CQ_ENTRIES;
+    do {
+        ret = MPIDI_OFI_progress_test(0);
+        if (ret == 0) {
+            break;
+        } else if (ret < 0) {
+            mpi_errno = -ret;
+            goto fn_exit;
+        }
+        itercount++;
+    } while (itercount < max_ofi_progress);
 
     r = MPIDI_OFI_WIN(win).syncQ;
 
