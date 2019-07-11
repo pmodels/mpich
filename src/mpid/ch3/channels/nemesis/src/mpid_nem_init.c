@@ -130,10 +130,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The MPID_nem_cell_rel_ptr_t defined in mpid_nem_datatypes.h
-       should only contain a OPA_ptr_t.  This is to check that
+       should only contain a MPL_atomic_ptr_t.  This is to check that
        absolute pointers are exactly the same size as relative
        pointers. */
-    MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(OPA_ptr_t));
+    MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(MPL_atomic_ptr_t));
 
     /* Make sure the cell structure looks like it should */
     MPIR_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
@@ -373,8 +373,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	{
 	    MPID_nem_mem_region.mailboxes.in [i] = &fastboxes_p[MAILBOX_INDEX(i, local_rank)];
 	    MPID_nem_mem_region.mailboxes.out[i] = &fastboxes_p[MAILBOX_INDEX(local_rank, i)];
-	    OPA_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
-	    OPA_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
 	}
     }
 #undef MAILBOX_INDEX

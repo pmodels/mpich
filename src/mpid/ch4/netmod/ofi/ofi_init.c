@@ -966,8 +966,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_OFI_control_handler;
         MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
     }
-    OPA_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
-    OPA_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
+    MPL_atomic_relaxed_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
+    MPL_atomic_relaxed_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -1025,7 +1025,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     conn_manager_destroy();
 
     /* Progress until we drain all inflight RMA send long buffers */
-    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
+    while (MPL_atomic_relaxed_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
         MPIDI_OFI_PROGRESS();
 
     /* Destroy RMA key allocator */
@@ -1037,9 +1037,9 @@ int MPIDI_OFI_mpi_finalize_hook(void)
                                           MPI_SUM, MPIR_Process.comm_world, &errflag));
 
     /* Progress until we drain all inflight injection emulation requests */
-    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
+    while (MPL_atomic_relaxed_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
         MPIDI_OFI_PROGRESS();
-    MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
+    MPIR_Assert(MPL_atomic_relaxed_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {

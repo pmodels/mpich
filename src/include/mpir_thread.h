@@ -34,7 +34,7 @@ typedef struct MPIR_Thread_sync {
     struct MPIR_Thread_sync *prev;
     int is_server;
     int is_initialized;
-    OPA_int_t count;
+    MPL_atomic_int_t count;
     MPID_Thread_cond_t cond;
 } MPIR_Thread_sync_t;
 
@@ -43,7 +43,7 @@ typedef struct MPIR_Thread_sync_list {
 } MPIR_Thread_sync_list_t;
 
 extern MPIR_Thread_sync_list_t sync_wait_list;
-extern OPA_int_t num_server_thread;
+extern MPL_atomic_int_t num_server_thread;
 #endif
 
 /* ------------------------------------------------------------------------- */
@@ -114,8 +114,8 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_signal(MPIR_Thread_sync_t * sync,
         return;
     }
 
-    OPA_decr_int(&(sync->count));
-    if (OPA_load_int(&(sync->count)) == 0) {
+    MPL_atomic_fetch_sub_int(&(sync->count), 1);
+    if (MPL_atomic_relaxed_load_int(&(sync->count)) == 0) {
         MPID_Thread_cond_signal(&sync->cond, &rc);
     }
 }
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_alloc(MPIR_Thread_sync_t ** sync,
                                  MPIR_Per_thread, per_thread, &rc);
     *sync = &per_thread->sync;
     (*sync)->is_server = FALSE;
-    OPA_store_int(&((*sync)->count), count);
+    MPL_atomic_relaxed_store_int(&((*sync)->count), count);
     if (unlikely(!(*sync)->is_initialized)) {
         MPID_Thread_cond_create(&((*sync)->cond), &rc);
         (*sync)->is_initialized = TRUE;
@@ -138,10 +138,10 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_alloc(MPIR_Thread_sync_t ** sync,
 MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_free(MPIR_Thread_sync_t * sync)
 {
     if (sync->is_server) {
-        OPA_decr_int(&num_server_thread);
+        MPL_atomic_fetch_sub_int(&num_server_thread, 1);
         sync->is_server = FALSE;
     }
-    if (OPA_load_int(&num_server_thread) == 0 && sync_wait_list.head != NULL) {
+    if (MPL_atomic_relaxed_load_int(&num_server_thread) == 0 && sync_wait_list.head != NULL) {
         MPIR_Thread_sync_signal(sync_wait_list.head, /* force */ 1);
     }
 }
@@ -150,13 +150,13 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_wait(MPIR_Thread_sync_t * sync)
 {
     int rc;
 
-    if (!sync->is_server && OPA_load_int(&num_server_thread) == 0) {
-        OPA_incr_int(&num_server_thread);
+    if (!sync->is_server && MPL_atomic_relaxed_load_int(&num_server_thread) == 0) {
+        MPL_atomic_fetch_add_int(&num_server_thread, 1);
         sync->is_server = TRUE;
         return;
     }
 
-    if (!sync->is_server && OPA_load_int(&sync->count) > 0) {
+    if (!sync->is_server && MPL_atomic_relaxed_load_int(&sync->count) > 0) {
         DL_APPEND(sync_wait_list.head, sync);
         MPID_Thread_cond_wait(&sync->cond, &MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &rc);
         DL_DELETE(sync_wait_list.head, sync);

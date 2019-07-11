@@ -7,7 +7,7 @@
 #ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
 #define MPIDU_THREAD_FALLBACK_H_INCLUDED
 
-#include "opa_primitives.h"
+#include "mpl.h"
 
 #if defined(ENABLE_IZEM_SYNC)
 #include "lock/zm_lock.h"

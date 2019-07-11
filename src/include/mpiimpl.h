@@ -119,7 +119,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
  *
  *   1. Start with independent headers that do not have any
  *      dependencies on the rest of the MPICH implementation (e.g.,
- *      mpl, opa, mpi.h).
+ *      mpl, mpi.h).
  *
  *   2. Next is forward declarations of MPIR structures (MPIR_Comm,
  *      MPIR_Win, etc.).
@@ -150,7 +150,6 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
 #include "mpl.h"
-#include "opa_primitives.h"
 #include "mpi.h"
 
 

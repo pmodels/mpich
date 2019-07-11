@@ -45,7 +45,7 @@ extern MPIR_Request ** const MPID_Recvq_posted_tail_ptr;
 extern MPIR_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
-OPA_int_t MPIDI_CH3I_progress_completion_count = OPA_INT_T_INITIALIZER(0);
+MPL_atomic_int_t MPIDI_CH3I_progress_completion_count = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 /* NEMESIS MULTITHREADING: Extra Data Structures Added */
 #ifdef MPICH_IS_THREADED
@@ -441,14 +441,14 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
              * work is done and coming back in again if it's not done.
              * We might as well wait for the other thread to be done
              * before doing that. */
-            if (progress_state->ch.completion_count == OPA_load_int(&MPIDI_CH3I_progress_completion_count))
+            if (progress_state->ch.completion_count == MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count))
                 MPIDI_CH3I_Progress_delay(progress_state->ch.completion_count);
             else {
                 /* if the completion count of our progress state is
                  * different from the current completion count, some
                  * progress happened.  We reset the value for the next
                  * iteration and return from the progress engine. */
-                progress_state->ch.completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
+                progress_state->ch.completion_count = MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count);
                 goto fn_exit;
             }
         }
@@ -581,11 +581,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
-            int completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
+            int completion_count = MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count);
             if (progress_state->ch.completion_count != completion_count) {
                 /* Read barrier to make sure no reads get values before the
                    completion counter was incremented  */
-                OPA_read_barrier();
+                MPL_atomic_read_barrier();
                 /* reset for the next iteration */
                 progress_state->ch.completion_count = completion_count;
                 break;

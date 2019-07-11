@@ -45,9 +45,9 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 #endif
     
     if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
-            OPA_write_barrier();
-            OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
+        if (comm->dev.ch.barrier_vars && MPL_atomic_fetch_sub_int(&comm->dev.ch.barrier_vars->usage_cnt, 1) == 1) {
+            MPL_atomic_write_barrier();
+            MPL_atomic_relaxed_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
         }
     }
     
@@ -66,11 +66,11 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
     if (MPID_nem_mem_region.local_rank == 0)
         for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
         {
-            OPA_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
-            OPA_store_int(&barrier_region[i].usage_cnt, 0);
-            OPA_store_int(&barrier_region[i].cnt, 0);
-            OPA_store_int(&barrier_region[i].sig0, 0);
-            OPA_store_int(&barrier_region[i].sig, 0);
+            MPL_atomic_relaxed_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
+            MPL_atomic_relaxed_store_int(&barrier_region[i].usage_cnt, 0);
+            MPL_atomic_relaxed_store_int(&barrier_region[i].cnt, 0);
+            MPL_atomic_relaxed_store_int(&barrier_region[i].sig0, 0);
+            MPL_atomic_relaxed_store_int(&barrier_region[i].sig, 0);
         }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);

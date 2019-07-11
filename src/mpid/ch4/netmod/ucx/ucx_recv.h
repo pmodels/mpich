@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
 #if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
     /* FIXME: is this too strong? The reason a barrier is needed in fine-grained locking
      * is to avoid detecting request completion before changes to rreq->status is visible.*/
-    OPA_read_write_barrier();
+    MPL_atomic_read_write_barrier();
 #endif
 
     if (ucp_request->req) {
@@ -142,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
 #if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
             /* FIXME: is this too strong? same reason as in the above callback */
-            OPA_read_write_barrier();
+            MPL_atomic_read_write_barrier();
 #endif
             MPIR_cc_set(&req->cc, 0);
             MPIR_Request_free((MPIR_Request *) ucp_request->req);

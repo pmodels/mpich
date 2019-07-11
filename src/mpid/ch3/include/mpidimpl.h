@@ -1217,7 +1217,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     /* MT TODO profiling is needed here.  We currently protect the completion
      * counter with the COMPLETION critical section, which could be a source of
      * contention.  It should be possible to peform these updates atomically via
-     * OPA instead, but the additional complexity should be justified by
+     * MPL/atomic instead, but the additional complexity should be justified by
      * profiling evidence.  [goodell@ 2010-06-29] */
 #   define MPIDI_CH3_Progress_signal_completion()			\
     do {                                                                \

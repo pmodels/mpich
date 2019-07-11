@@ -74,7 +74,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                                         MPIR_Request * request,
                                                         int *flag,
                                                         MPIR_Request ** message,
-                                                        OPA_int_t * processed)
+                                                        MPL_atomic_int_t * processed)
 {
     MPIDI_workq_elemt_t *pt2pt_elemt;
 
@@ -233,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                                                       MPI_Op acc_op,
                                                       MPIR_Win * win_ptr,
                                                       MPIDI_av_entry_t * addr,
-                                                      OPA_int_t * processed)
+                                                      MPL_atomic_int_t * processed)
 {
     MPIDI_workq_elemt_t *rma_elemt = NULL;
     rma_elemt = MPIDI_workq_elemt_create();

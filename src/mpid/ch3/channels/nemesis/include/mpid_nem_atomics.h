@@ -8,6 +8,6 @@
 #define MPID_NEM_ATOMICS_H_INCLUDED
 
 #include "mpichconf.h"
-#include "opa_primitives.h"
+#include "mpl.h"
 
 #endif /* MPID_NEM_ATOMICS_H_INCLUDED */

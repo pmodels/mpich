@@ -1,9 +1,9 @@
 #! /bin/bash
 
-numfiles=`git ls-files | egrep -v '(src/openpa)' | wc -l`
+numfiles=`git ls-files | wc -l`
 
 count=1
-for x in `git ls-files | egrep -v '(src/openpa)'` ; do
+for x in `git ls-files` ; do
 
     if test ! -f $x ; then continue ; fi
 

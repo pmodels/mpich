@@ -278,18 +278,18 @@ typedef int Handle_ref_count;
 
 #elif MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE
 
-#include "opa_primitives.h"
-typedef OPA_int_t Handle_ref_count;
+#include "mpl.h"
+typedef MPL_atomic_int_t Handle_ref_count;
 
-#define MPIR_Object_set_ref(objptr_,val)                        \
-    do {                                                        \
-        OPA_store_int(&(objptr_)->ref_count, val);              \
-        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");        \
+#define MPIR_Object_set_ref(objptr_,val)                          \
+    do {                                                          \
+        MPL_atomic_relaxed_store_int(&(objptr_)->ref_count, val); \
+        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");          \
     } while (0)
 
 /* must be used with care, since there is no synchronization for this read */
 #define MPIR_Object_get_ref(objptr_) \
-    (OPA_load_int(&(objptr_)->ref_count))
+    (MPL_atomic_acquire_load_int(&(objptr_)->ref_count))
 
 #ifdef MPICH_DEBUG_HANDLES
 /*
@@ -304,13 +304,13 @@ typedef OPA_int_t Handle_ref_count;
 #define MPIR_Object_add_ref_always(objptr_)                             \
     do {                                                                \
         int new_ref_;                                                   \
-        new_ref_ = OPA_fetch_and_incr_int(&((objptr_)->ref_count)) + 1; \
+        new_ref_ = MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1) + 1; \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "incr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"incr");                 \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
-        int new_ref_ = OPA_fetch_and_decr_int(&((objptr_)->ref_count)) - 1; \
+        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
         *(inuse_ptr) = new_ref_;                                        \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                 \
@@ -319,11 +319,11 @@ typedef OPA_int_t Handle_ref_count;
 /* MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE && !MPICH_DEBUG_HANDLES */
 #define MPIR_Object_add_ref_always(objptr_)     \
     do {                                        \
-        OPA_incr_int(&((objptr_)->ref_count));  \
+        MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1);  \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
-        int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
+        int got_zero_ = (MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) == 1); \
         *(inuse_ptr) = got_zero_ ? 0 : 1;                               \
     } while (0)
 #endif /* MPICH_DEBUG_HANDLES */

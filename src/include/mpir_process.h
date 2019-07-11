@@ -28,8 +28,8 @@ typedef struct PreDefined_attrs {
 } PreDefined_attrs;
 
 typedef struct MPIR_Process_t {
-    OPA_int_t mpich_state;      /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
-                                 * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
+    MPL_atomic_int_t mpich_state;       /* State of MPICH. Use MPL_atomic_int_t to make MPI_Initialized() etc.
+                                         * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
     int do_error_checks;        /* runtime error check control */
     struct MPIR_Comm *comm_world;       /* Easy access to comm_world for
                                          * error handler */

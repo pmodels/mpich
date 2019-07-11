@@ -12,8 +12,8 @@
 #define MPIDU_SHM_CACHE_LINE_LEN 64
 
 typedef struct MPIDU_shm_barrier {
-    OPA_int_t val;
-    OPA_int_t wait;
+    MPL_atomic_int_t val;
+    MPL_atomic_int_t wait;
 } MPIDU_shm_barrier_t;
 
 typedef struct MPIDU_shm_seg {

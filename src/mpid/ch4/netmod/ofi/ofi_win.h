@@ -12,7 +12,6 @@
 #define OFI_WIN_H_INCLUDED
 
 #include "ofi_impl.h"
-#include <opa_primitives.h>
 
 /* Blocking progress function to complete outstanding RMA operations on the input window.
  *

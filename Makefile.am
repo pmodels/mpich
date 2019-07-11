@@ -49,11 +49,11 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mplsrcdir@ @opasrcdir@ @zmsrcdir@ @hwlocsrcdir@
-external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
+external_subdirs = @mplsrcdir@ @zmsrcdir@ @hwlocsrcdir@
+external_ldflags = @mpllibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
 external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
-pmpi_convenience_libs = @opalib@ @mpllib@ @zmlib@ @hwloclib@
+pmpi_convenience_libs = @mpllib@ @zmlib@ @hwloclib@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
@@ -253,9 +253,6 @@ install-exec-hook:
 		if test "@MPILIBNAME@" != "mpl" ; then \
 			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
 		fi ; \
-		if test "@MPILIBNAME@" != "opa" ; then \
-			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \
-		fi ; \
 		if test "@MPILIBNAME@" != "mpich" ; then \
 			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpich@SHLIB_EXT@ ; \
 		fi ; \
@@ -294,7 +291,7 @@ uninstall-local:
 	for x in @MPICPP_NAME@ @MPIF90_NAME@ @MPIF77_NAME@ ; do \
 		rm -f ${DESTDIR}${bindir}/$$x ; \
 	done ; \
-	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
+	for x in mpl mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
 	done
 

@@ -49,7 +49,7 @@ static int num_segments = 0;
 
 typedef struct asym_check_region {
     void *base_ptr;
-    OPA_int_t is_asym;
+    MPL_atomic_int_t is_asym;
 } asym_check_region;
 
 static asym_check_region *asym_check_region_p = NULL;
@@ -120,10 +120,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int pmi_errno;
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
     int ret;
     int ipc_lock_offset;
-    OPA_emulation_ipl_t *ipc_lock;
+    MPL_atomic_emulation_ipl_t *ipc_lock;
 #endif
     int key_max_sz;
     int val_max_sz;
@@ -165,17 +165,17 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     MPIR_Assert(MPIDU_SHM_CACHE_LINE_LEN >= sizeof(MPIDU_shm_barrier_t));
     segment_len += MPIDU_SHM_CACHE_LINE_LEN;
 
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* We have a similar bootstrapping problem when using OpenPA in
-     * lock-based emulation mode.  We use OPA_* functions during the
-     * check_alloc function but we were previously initializing OpenPA
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+    /* We have a similar bootstrapping problem when using MPL/atomic in
+     * lock-based emulation mode.  We use MPL_atomic_* functions during the
+     * check_alloc function but we were previously initializing MPL/atomic
      * after return from this function.  So we put the emulation lock
      * right after the barrier var space. */
 
     /* offset from memory->base_addr to the start of ipc_lock */
     ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
 
-    MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
+    MPIR_Assert(ipc_lock_offset >= sizeof(MPL_atomic_emulation_ipl_t));
     segment_len += MPIDU_SHM_CACHE_LINE_LEN;
 #endif
 
@@ -195,10 +195,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
+        /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+        ipc_lock = (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+        ret = MPL_atomic_interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -221,10 +221,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -232,7 +233,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             MPIR_ERR_CHECK(mpi_errno);
 
-            /* The opa and barrier initializations must come before we (the
+            /* The MPL/atomic and barrier initializations must come before we (the
              * leader) put the sharedFilename attribute.  Since this is a
              * serializing operation with our peers on the local node this
              * ensures that these initializations have occurred before any peer
@@ -257,13 +258,14 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                          (void **) &memory->base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
+            /* Right now we rely on the assumption that MPL_atomic_interprocess_lock_init only
              * needs to be called by the leader and the current process before use by the
              * current process.  That is, we don't assume that this collective call is
              * synchronizing and we don't assume that it requires total external
@@ -300,10 +302,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
+        /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+        ipc_lock = (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+        ret = MPL_atomic_interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -333,10 +335,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -344,7 +347,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             MPIR_ERR_CHECK(mpi_errno);
 
-            /* The opa and barrier initializations must come before we (the
+            /* The MPL/atomic and barrier initializations must come before we (the
              * leader) put the sharedFilename attribute.  Since this is a
              * serializing operation with our peers on the local node this
              * ensures that these initializations have occurred before any peer
@@ -398,13 +401,14 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                          (void **) &memory->base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
+            /* Right now we rely on the assumption that MPL_atomic_interprocess_lock_init only
              * needs to be called by the leader and the current process before use by the
              * current process.  That is, we don't assume that this collective call is
              * synchronizing and we don't assume that it requires total external
@@ -446,10 +450,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier",
                              "**pmi_barrier %d", pmi_errno);
 
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
+        /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+        ipc_lock = (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+        ret = MPL_atomic_interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
         mpi_errno =
@@ -489,10 +493,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                  "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -521,10 +526,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                          (void **) &memory->base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
+            /* must come before barrier_init since we use MPL/atomic in that function */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+            ipc_lock =
+                (MPL_atomic_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
+            ret = MPL_atomic_interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
@@ -556,8 +562,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
     size_left -= MPIDU_SHM_CACHE_LINE_LEN;
 
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* reserve room for the opa emulation lock */
+#ifdef MPL_USE_LOCK_BASED_PRIMITIVES
+    /* reserve room for the MPL/atomic emulation lock */
     current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
     MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
     size_left -= MPIDU_SHM_CACHE_LINE_LEN;
@@ -636,21 +642,21 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
 
     if (local_rank == 0) {
         asym_check_region_p->base_ptr = memory->base_addr;
-        OPA_store_int(&asym_check_region_p->is_asym, 0);
+        MPL_atomic_relaxed_store_int(&asym_check_region_p->is_asym, 0);
     }
 
     mpi_errno = MPIDU_shm_barrier(barrier, num_local);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (asym_check_region_p->base_ptr != memory->base_addr)
-        OPA_store_int(&asym_check_region_p->is_asym, 1);
+        MPL_atomic_relaxed_store_int(&asym_check_region_p->is_asym, 1);
 
-    OPA_read_write_barrier();
+    MPL_atomic_read_write_barrier();
 
     mpi_errno = MPIDU_shm_barrier(barrier, num_local);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (OPA_load_int(&asym_check_region_p->is_asym)) {
+    if (MPL_atomic_acquire_load_int(&asym_check_region_p->is_asym)) {
         memory->symmetrical = 0;
     } else {
         memory->symmetrical = 1;

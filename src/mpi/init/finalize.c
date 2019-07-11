@@ -89,8 +89,8 @@ void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
          * MPIR_Process.mpich_state to decide how to signal the error */
         (void) MPL_internal_error_printf("overflow in finalize stack! "
                                          "Is MAX_FINALIZE_FUNC too small?\n");
-        if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
-            OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
+        if (MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
+            MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
             MPID_Abort(NULL, MPI_SUCCESS, 13, NULL);
         } else {
             exit(1);
@@ -278,7 +278,7 @@ int MPI_Finalize(void)
      * finalize callbacks */
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
+    MPL_atomic_relaxed_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
 #if defined(MPICH_IS_THREADED)
     MPIR_Thread_CS_Finalize();
@@ -350,7 +350,7 @@ int MPI_Finalize(void)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-    if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_MPI_STATE__POST_FINALIZED) {
+    if (MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) < MPICH_MPI_STATE__POST_FINALIZED) {
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
     goto fn_exit;

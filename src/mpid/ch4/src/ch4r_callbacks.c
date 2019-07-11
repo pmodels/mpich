@@ -27,8 +27,9 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
 
-    if (MPIDIG_REQUEST(req, req->seq_no) == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
-        OPA_incr_int(&MPIDI_global.exp_seq_no);
+    if (MPIDIG_REQUEST(req, req->seq_no) ==
+        (uint64_t) MPL_atomic_relaxed_load_int(&MPIDI_global.exp_seq_no)) {
+        MPL_atomic_fetch_add_int(&MPIDI_global.exp_seq_no, 1);
         ret = 1;
         goto fn_exit;
     }
@@ -56,7 +57,7 @@ void MPIDIG_progress_compl_list(void)
     /* MPIDI_CS_ENTER(); */
   do_check_again:
     DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
-        if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
+        if (curr->seq_no == (uint64_t) MPL_atomic_relaxed_load_int(&MPIDI_global.exp_seq_no)) {
             DL_DELETE(MPIDI_global.cmpl_list, curr);
             req = (MPIR_Request *) curr->request;
             target_cmpl_cb = (MPIDIG_am_target_cmpl_cb) curr->target_cmpl_cb;
@@ -257,7 +258,7 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
 
     *target_cmpl_cb = recv_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_int(&MPIDI_global.nxt_seq_no, 1);
 
     if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
         return MPI_SUCCESS;

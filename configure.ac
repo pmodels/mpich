@@ -816,7 +816,6 @@ export LDFLAGS
 export LIBS
 export MPILIBNAME
 export PMPILIBNAME
-export OPALIBNAME
 export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
@@ -1011,86 +1010,6 @@ else
     PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="-L${with_mpl_prefix}/lib"
-fi
-
-# OpenPA
-AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])
-OPALIBNAME=${OPALIBNAME:-"opa"}
-export OPALIBNAME
-AC_SUBST(OPALIBNAME)
-AC_ARG_WITH([openpa-prefix],
-            [AS_HELP_STRING([[--with-openpa-prefix[=DIR]]],
-                            [use the OpenPA atomics library installed in DIR,
-                             rather than the one included in src/openpa.  Pass
-                             "embedded" to force usage of the OpenPA source
-                             distributed with MPICH.])],
-            [],
-            [# see if OPA is already installed on the system
-             PAC_PUSH_FLAG([LIBS])
-             PAC_PREPEND_FLAG([-l${OPALIBNAME}],[LIBS])
-             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
-#include "opa_primitives.h"
-],[
-OPA_int_t i;
-OPA_store_int(i,10);
-OPA_fetch_and_incr_int(&i,5);
-])dnl
-                             ],
-                            [with_openpa_prefix=system],[with_openpa_prefix=embedded])
-             PAC_POP_FLAG([LIBS])
-             ])
-
-opasrcdir=""
-AC_SUBST([opasrcdir])
-opalibdir=""
-AC_SUBST([opalibdir])
-opalib=""
-AC_SUBST([opalib])
-
-if test "$with_openpa_prefix" = "embedded" ; then
-    if test -e "${use_top_srcdir}/src/openpa" ; then
-        opasrcdir="src/openpa"
-        opalib="src/openpa/src/lib${OPALIBNAME}.la"
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
-
-        # OPA defaults to "auto", but in MPICH we want "auto_allow_emulation" to
-        # easily permit using channels like ch3:sock that don't care about atomics
-        AC_ARG_WITH([atomic-primitives],
-                    [AS_HELP_STRING([--with-atomic-primitives],
-                                    [Force OPA to use a specific atomic primitives
-                                     implementation.  See the src/openpa directory
-                                     for more info.])],
-                    [],[with_atomic_primitives=not_specified])
-        # no need for libtool versioning when embedding OPA
-        opa_subdir_args="--disable-versioning --enable-embedded"
-        if test "$with_atomic_primitives" = "not_specified" ; then
-            PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
-        fi
-        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
-    else
-        AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
-    fi
-elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-elif test "$with_openpa_prefix" = "no" ; then
-    # The user doesn't want to use OPA.  This may or may not cause MPICH to
-    # fail to configure/build, depending on many other factors.
-    :
-else
-    # The user specified an already-installed OPA; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
-          [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-    if test -d ${with_openpa_prefix}/lib64 ; then
-        PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
-        opalibdir="-L${with_openpa_prefix}/lib64"
-    else
-        opalibdir="-L${with_openpa_prefix}/lib"
-    fi
-    PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
 
 # Izem
@@ -4973,12 +4892,12 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
-# Find the size of OPA_ptr_t. This step needs to come after the OPA
-# configure above in order to get the size OPA_ptr_t evaluated for
-# this platform.
-AC_CHECK_SIZEOF(OPA_ptr_t,0,[
-#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"
-pthread_mutex_t *OPA_emulation_lock;
+# Find the size of MPL_atomic_ptr_t. This step needs to come after the MPL
+# configuration in order to get the size MPL_atomic_ptr_t evaluated for this
+# platform.
+AC_CHECK_SIZEOF(MPL_atomic_ptr_t,0,[
+#include "${master_top_srcdir}/src/mpl/include/mpl_atomic.h"
+pthread_mutex_t *MPL_atomic_emulation_lock;
 ])
 
 if test "$enable_f77" != "yes" ; then

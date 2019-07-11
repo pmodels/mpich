@@ -62,7 +62,7 @@ int MPI_Initialized(int *flag)
 
     /* ... body of routine ...  */
 
-    *flag = (OPA_load_int(&MPIR_Process.mpich_state) >= MPICH_MPI_STATE__POST_INIT);
+    *flag = (MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) >= MPICH_MPI_STATE__POST_INIT);
 
     /* ... end of body of routine ... */
 
@@ -75,8 +75,8 @@ int MPI_Initialized(int *flag)
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
-        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
+    if (MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
+        MPL_atomic_relaxed_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
         {
             mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                              MPI_ERR_OTHER, "**mpi_initialized",

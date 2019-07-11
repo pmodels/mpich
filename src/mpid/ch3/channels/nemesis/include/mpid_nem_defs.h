@@ -34,22 +34,22 @@ typedef MPI_Aint MPID_nem_addr_t;
 extern  char *MPID_nem_asymm_base_addr;
 
 #define MPID_NEM_REL_NULL (0x0)
-#define MPID_NEM_IS_REL_NULL(rel_ptr) (OPA_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
-#define MPID_NEM_SET_REL_NULL(rel_ptr) (OPA_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
+#define MPID_NEM_IS_REL_NULL(rel_ptr) (MPL_atomic_relaxed_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
+#define MPID_NEM_SET_REL_NULL(rel_ptr) (MPL_atomic_relaxed_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
 #define MPID_NEM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
-    (OPA_load_ptr(&(rel_ptr1).p) == OPA_load_ptr(&(rel_ptr2).p))
+    (MPL_atomic_relaxed_load_ptr(&(rel_ptr1).p) == MPL_atomic_relaxed_load_ptr(&(rel_ptr2).p))
 
 #ifndef MPID_NEM_SYMMETRIC_QUEUES
 
 static inline MPID_nem_cell_ptr_t MPID_NEM_REL_TO_ABS (MPID_nem_cell_rel_ptr_t r)
 {
-    return (MPID_nem_cell_ptr_t)((char*)OPA_load_ptr(&r.p) + (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    return (MPID_nem_cell_ptr_t)((char*)MPL_atomic_relaxed_load_ptr(&r.p) + (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
 }
 
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    OPA_store_ptr(&ret.p, (char *)a - (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    MPL_atomic_relaxed_store_ptr(&ret.p, (char *)a - (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
     return ret;
 }
 
@@ -69,14 +69,14 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a
 #define MPID_NEM_NUM_BARRIER_VARS 16
 typedef struct MPID_nem_barrier_vars
 {
-    OPA_int_t context_id;
-    OPA_int_t usage_cnt;
-    OPA_int_t cnt;
+    MPL_atomic_int_t context_id;
+    MPL_atomic_int_t usage_cnt;
+    MPL_atomic_int_t cnt;
 #if MPID_NEM_CACHE_LINE_LEN != SIZEOF_INT
     char padding0[MPID_NEM_CACHE_LINE_LEN - sizeof(int)];
 #endif
-    OPA_int_t sig0;
-    OPA_int_t sig;
+    MPL_atomic_int_t sig0;
+    MPL_atomic_int_t sig;
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2* sizeof(int)];
 }
 MPID_nem_barrier_vars_t;

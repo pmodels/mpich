@@ -18,9 +18,9 @@ int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t * barrier_region,
 
     *barrier = barrier_region;
     if (init_values) {
-        OPA_store_int(&(*barrier)->val, 0);
-        OPA_store_int(&(*barrier)->wait, 0);
-        OPA_write_barrier();
+        MPL_atomic_relaxed_store_int(&(*barrier)->val, 0);
+        MPL_atomic_relaxed_store_int(&(*barrier)->wait, 0);
+        MPL_atomic_write_barrier();
     }
     sense = 0;
     barrier_init = 1;
@@ -43,13 +43,13 @@ int MPIDU_shm_barrier(MPIDU_shm_barrier_t * barrier, int num_local)
 
     MPIR_ERR_CHKINTERNAL(!barrier_init, mpi_errno, "barrier not initialized");
 
-    if (OPA_fetch_and_incr_int(&barrier->val) == num_local - 1) {
-        OPA_store_int(&barrier->val, 0);
-        OPA_store_int(&barrier->wait, 1 - sense);
-        OPA_write_barrier();
+    if (MPL_atomic_fetch_add_int(&barrier->val, 1) == num_local - 1) {
+        MPL_atomic_relaxed_store_int(&barrier->val, 0);
+        MPL_atomic_relaxed_store_int(&barrier->wait, 1 - sense);
+        MPL_atomic_write_barrier();
     } else {
         /* wait */
-        while (OPA_load_int(&barrier->wait) == sense)
+        while (MPL_atomic_relaxed_load_int(&barrier->wait) == sense)
             MPL_sched_yield();  /* skip */
     }
     sense = 1 - sense;

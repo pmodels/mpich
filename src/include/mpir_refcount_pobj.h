@@ -8,9 +8,9 @@
 #define MPIR_REFCOUNT_POBJ_H_INCLUDED
 
 /* define a type for the completion counter */
-#include "opa_primitives.h"
+#include "mpl.h"
 
-typedef OPA_int_t MPIR_cc_t;
+typedef MPL_atomic_int_t MPIR_cc_t;
 
 /* implies no barrier, since this routine should only be used for request
  * initialization */
@@ -26,7 +26,7 @@ static inline void MPIR_cc_set(MPIR_cc_t * cc_ptr, int val)
         /* barrier ensures that any state written before indicating completion is
          * seen by the thread polling on the cc.  If OPA adds store-release
          * semantics, we can convert to that instead. */
-        OPA_write_barrier();
+        MPL_atomic_write_barrier();
         MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr);
     }
 #if defined(MPL_VG_AVAILABLE)
@@ -34,9 +34,9 @@ static inline void MPIR_cc_set(MPIR_cc_t * cc_ptr, int val)
      * view the store/load pair as a race.  Using an atomic operation for the
      * store side makes all three happy.  DRD & TSan also support
      * ANNOTATE_BENIGN_RACE, but Helgrind does not. */
-    OPA_swap_int(cc_ptr, val);
+    MPL_atomic_swap_int(cc_ptr, val);
 #else
-    OPA_store_int(cc_ptr, val);
+    MPL_atomic_release_store_int(cc_ptr, val);
 #endif
 }
 
@@ -45,10 +45,10 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 {
     int complete;
 
-    complete = (0 == OPA_load_int(cc_ptr));
+    complete = (0 == MPL_atomic_relaxed_load_int(cc_ptr));
     if (complete) {
         MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr);
-        OPA_read_barrier();
+        MPL_atomic_read_barrier();
     }
 
     return complete;
@@ -58,9 +58,9 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 #define MPIR_cc_decr(cc_ptr_, incomplete_)                      \
     do {                                                        \
         int ctr_;                                               \
-        OPA_write_barrier();                                    \
+        MPL_atomic_write_barrier();                             \
         MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr_);                \
-        ctr_ = OPA_fetch_and_decr_int(cc_ptr_);                 \
+        ctr_ = MPL_atomic_fetch_sub_int(cc_ptr_, 1);            \
         MPIR_Assert(ctr_ >= 1);                                 \
         *(incomplete_) = (ctr_ != 1);                           \
         /* TODO check if this HA is actually necessary */       \
@@ -74,10 +74,10 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 /* was_incomplete_==TRUE iff the cc==0 before the decr */
 #define MPIR_cc_incr(cc_ptr_, was_incomplete_)                  \
     do {                                                        \
-        *(was_incomplete_) = OPA_fetch_and_incr_int(cc_ptr_);   \
+        *(was_incomplete_) = MPL_atomic_fetch_add_int(cc_ptr_, 1); \
     } while (0)
 
-#define MPIR_cc_get(cc_) OPA_load_int(&(cc_))
+#define MPIR_cc_get(cc_) MPL_atomic_relaxed_load_int(&(cc_))
 
 /* "publishes" the obj with handle value (handle_) via the handle pointer
  * (hnd_lval_).  That is, it is a version of the following statement that fixes
@@ -98,7 +98,7 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
         if (MPIR_ThreadInfo.isThreaded) {                               \
             /* wmb ensures all read-only object field values are seen before the */ \
             /* handle value is seen at the application level */         \
-            OPA_write_barrier();                                        \
+            MPL_atomic_write_barrier();                                 \
             /* volatile ensures lval is not speculatively read or written */ \
             *(volatile int *)&(hnd_lval_) = (handle_);                  \
         }                                                               \
