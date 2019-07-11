@@ -8,7 +8,7 @@
 #define MPIDI_CH3_IMPL_H_INCLUDED
 
 #include "mpidimpl.h"
-#include "mpidu_generic_queue.h"
+#include "mpir_generic_queue.h"
 #include "utlist.h"
 
 #if defined(HAVE_ASSERT_H)

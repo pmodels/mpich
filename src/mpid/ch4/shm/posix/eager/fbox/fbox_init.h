@@ -67,23 +67,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = 0;
 
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.seg,
-                        MPIDU_shm_seg_info_t *,
+                        MPIR_shm_seg_info_t *,
                         MPIDI_POSIX_eager_fbox_control_global.num_seg *
-                        sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments",
-                        MPL_MEM_SHM);
+                        sizeof(MPIR_shm_seg_info_t), mpi_errno, "mem_region segments", MPL_MEM_SHM);
 
     /* Create region with one fastbox for every pair of local processes. */
     mpi_errno =
-        MPIDU_shm_seg_alloc(MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local *
-                            sizeof(MPIDI_POSIX_fastbox_t), (void **) &fastboxes_p, MPL_MEM_SHM);
+        MPIR_shm_seg_alloc(MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local *
+                           sizeof(MPIDI_POSIX_fastbox_t), (void **) &fastboxes_p, MPL_MEM_SHM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
-                                     &MPIDI_POSIX_global.barrier,
-                                     MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
-                                     MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
+    mpi_errno = MPIR_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
+                                    &MPIDI_POSIX_global.barrier,
+                                    MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
+                                    MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -108,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
                sizeof(MPIDI_POSIX_fastbox_t));
     }
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIR_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -131,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIR_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -141,8 +140,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
 
-    mpi_errno = MPIDU_shm_seg_destroy(&MPIDI_POSIX_eager_fbox_control_global.memory,
-                                      MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIR_shm_seg_destroy(&MPIDI_POSIX_eager_fbox_control_global.memory,
+                                     MPIDI_POSIX_global.num_local);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);

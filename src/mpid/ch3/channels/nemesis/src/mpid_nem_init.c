@@ -159,7 +159,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif /* MEM_REGION_IN_HEAP */
 
     MPID_nem_mem_region.num_seg        = 7;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIDU_shm_seg_info_t *, MPID_nem_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIR_shm_seg_info_t *, MPID_nem_mem_region.num_seg * sizeof(MPIR_shm_seg_info_t), mpi_errno, "mem_region segments", MPL_MEM_SHM);
     MPID_nem_mem_region.rank           = pg_rank;
     MPID_nem_mem_region.num_local      = num_local;
     MPID_nem_mem_region.num_procs      = num_procs;
@@ -230,29 +230,29 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif  /*FORCE_ASYM */
 
     /* Request fastboxes region */
-    mpi_errno = MPIDU_shm_seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
+    mpi_errno = MPIR_shm_seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
                                      (void **)&fastboxes_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* Request data cells region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p, MPL_MEM_SHM);
+    mpi_errno = MPIR_shm_seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request free q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p, MPL_MEM_SHM);
+    mpi_errno = MPIR_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request recv q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p, MPL_MEM_SHM);
+    mpi_errno = MPIR_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request shared collectives barrier vars region */
-    mpi_errno = MPIDU_shm_seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
+    mpi_errno = MPIR_shm_seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
                                      (void **)&MPID_nem_mem_region.barrier_vars, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory, &MPID_nem_mem_region.barrier,
+    mpi_errno = MPIR_shm_seg_commit(&MPID_nem_mem_region.memory, &MPID_nem_mem_region.barrier,
                                  num_local, local_rank, MPID_nem_mem_region.local_procs[0],
                                  MPID_nem_mem_region.rank, MPL_MEM_SHM);
     /* check_alloc steps */
@@ -272,7 +272,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* local procs barrier */
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* find our cell region */
@@ -347,7 +347,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     
     /* local barrier */
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     
@@ -398,11 +398,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPL_free(publish_bc_orig);
 
 
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_mpich_init();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 #ifdef ENABLE_CHECKPOINTING
     mpi_errno = MPIDI_nem_ckpt_init();

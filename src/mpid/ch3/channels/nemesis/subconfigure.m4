@@ -24,9 +24,6 @@ else
     nemesis_networks=`echo ${channel_args} | sed -e 's/,/ /g'`
 fi
 export nemesis_networks
-
-# the nemesis channel depends on the common shm code
-build_mpid_common_shm=yes
 ])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
 ])dnl
 dnl

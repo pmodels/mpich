@@ -46,7 +46,7 @@ int MPID_nem_finalize(void)
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* free the shared memory segment */
-    mpi_errno = MPIDU_shm_seg_destroy(&MPID_nem_mem_region.memory, MPID_nem_mem_region.num_local);
+    mpi_errno = MPIR_shm_seg_destroy(&MPID_nem_mem_region.memory, MPID_nem_mem_region.num_local);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
 #ifdef PAPI_MONITOR

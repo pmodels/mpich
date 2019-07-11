@@ -6,11 +6,11 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidu_shm.h"
+#include "mpir_shm.h"
 #include "mpidu_bc.h"
 
-static MPIDU_shm_seg_t memory;
-static MPIDU_shm_barrier_t *barrier;
+static MPIR_shm_seg_t memory;
+static MPIR_shm_barrier_t *barrier;
 static size_t *indices;
 static int local_size;
 static char *segment;
@@ -19,10 +19,10 @@ int MPIDU_bc_table_destroy(void *bc_table)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
+    mpi_errno = MPIR_shm_seg_destroy(&memory, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -42,7 +42,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     int local_rank = -1, local_leader = -1;
     int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -58,7 +58,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
         memcpy(&segment[start * bc_len], bc, bc_len);
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -70,7 +70,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
                             MPI_BYTE, allgather_comm, &errflag);
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -105,12 +105,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = VALLEN;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno = MPIR_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
-        MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+        MPIR_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -178,7 +178,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             PMIX_VALUE_RELEASE(pvalue);
         }
     }
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -216,12 +216,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = PMI2_MAX_VALLEN;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno = MPIR_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
-        MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+        MPIR_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -277,7 +277,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         }
         MPL_free(node_roots);
     }
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -324,12 +324,12 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = val_max;
-    mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno = MPIR_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     mpi_errno =
-        MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
-                             MPL_MEM_ADDRESS);
+        MPIR_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
+                            MPL_MEM_ADDRESS);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -392,7 +392,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         }
         MPL_free(node_roots);
     }
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIR_shm_barrier(barrier, local_size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

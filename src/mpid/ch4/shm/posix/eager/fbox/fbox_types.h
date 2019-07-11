@@ -12,7 +12,7 @@
 #define POSIX_EAGER_FBOX_TYPES_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidu_shm.h"
+#include "mpir_shm.h"
 
 #define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))
 #define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
@@ -35,8 +35,8 @@ typedef struct MPIDI_POSIX_fbox_arrays {
 
 typedef struct MPIDI_POSIX_eager_fbox_control {
 
-    MPIDU_shm_seg_t memory;
-    MPIDU_shm_seg_info_t *seg;
+    MPIR_shm_seg_t memory;
+    MPIR_shm_seg_info_t *seg;
 
     int num_seg;
 

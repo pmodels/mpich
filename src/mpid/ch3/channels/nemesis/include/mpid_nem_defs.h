@@ -10,7 +10,7 @@
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
 #include "mpiimpl.h"
-#include "mpidu_shm.h"
+#include "mpir_shm.h"
 
 /* FIXME: This definition should be gotten from mpidi_ch3_impl.h */
 #ifndef MAX_HOSTNAME_LEN
@@ -83,8 +83,8 @@ MPID_nem_barrier_vars_t;
 
 typedef struct MPID_nem_mem_region
 {
-    MPIDU_shm_seg_t             memory;
-    MPIDU_shm_seg_info_t       *seg;
+    MPIR_shm_seg_t              memory;
+    MPIR_shm_seg_info_t        *seg;
     int                         num_seg;
     int                         map_lock;
     int                         num_local;
@@ -98,7 +98,7 @@ typedef struct MPID_nem_mem_region
     MPID_nem_cell_ptr_t         Elements;
     MPID_nem_queue_ptr_t       *FreeQ;
     MPID_nem_queue_ptr_t       *RecvQ;
-    MPIDU_shm_barrier_t        *barrier;
+    MPIR_shm_barrier_t         *barrier;
     MPID_nem_queue_ptr_t        my_freeQ;
     MPID_nem_queue_ptr_t        my_recvQ;
     MPID_nem_barrier_vars_t    *barrier_vars;

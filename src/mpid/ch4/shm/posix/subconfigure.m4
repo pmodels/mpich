@@ -105,8 +105,6 @@ MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
             src/mpid/ch4/shm/posix/eager/include/posix_eager_pre.h
     ])
 
-    # the POSIX shmmod depends on the common shm code
-    build_mpid_common_shm=yes
     AM_CONDITIONAL([BUILD_SHM_POSIX],[test "X$build_ch4_shm_posix" = "Xyes"])
 ])dnl
 

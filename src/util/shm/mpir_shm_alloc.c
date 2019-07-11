@@ -21,8 +21,8 @@
 extern int mkstemp(char *t);
 #endif
 
-#include "mpidu_shm_impl.h"
-#include "mpidu_generic_queue.h"
+#include "mpir_shm_impl.h"
+#include "mpir_generic_queue.h"
 
 typedef struct alloc_elem {
     struct alloc_elem *next;
@@ -35,7 +35,7 @@ static struct {
 } allocq = {
 0};
 
-static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
+static int check_alloc(MPIR_shm_seg_t * memory, MPIR_shm_barrier_t * barrier,
                        int num_local, int local_rank);
 
 #define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
@@ -54,26 +54,26 @@ typedef struct asym_check_region {
 
 static asym_check_region *asym_check_region_p = NULL;
 
-/* MPIDU_shm_seg_alloc(len, ptr_p)
+/* MPIR_shm_seg_alloc(len, ptr_p)
 
    This function is used to allow the caller to reserve a len sized
    region in the shared memory segment.  Once the shared memory
-   segment is actually allocated, when MPIDU_SHM_Seg_commit() is
+   segment is actually allocated, when MPIR_SHM_Seg_commit() is
    called, the pointer *ptr_p will be set to point to the reserved
    region in the shared memory segment.
 
    Note that no shared memory is actually allocated by this function,
    and the *ptr_p pointer will be valid only after
-   MPIDU_SHM_Seg_commit() is called.
+   MPIR_SHM_Seg_commit() is called.
 */
-int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
+int MPIR_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS;
     alloc_elem_t *ep;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SHM_SEG_ALLOC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SHM_SEG_ALLOC);
 
     /* round up to multiple of 8 to ensure the start of the next
      * region is 64-bit aligned. */
@@ -92,18 +92,18 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SHM_SEG_ALLOC);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
-/* MPIDU_shm_seg_commit(memory, num_local, local_rank)
+/* MPIR_shm_seg_commit(memory, num_local, local_rank)
 
    This function allocates a shared memory segment large enough to
    hold all of the regions previously requested by calls to
-   MPIDU_shm_seg_alloc().  For each request, this function sets the
+   MPIR_shm_seg_alloc().  For each request, this function sets the
    associated pointer to point to the reserved region in the allocated
    shared memory segment.
 
@@ -111,12 +111,12 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
    memory region is not allocated.  Instead, memory is allocated from
    the heap.
 
-   At least one call to MPIDU_SHM_Seg_alloc() must be made before
-   calling MPIDU_SHM_Seg_commit().
+   At least one call to MPIR_SHM_Seg_alloc() must be made before
+   calling MPIR_SHM_Seg_commit().
  */
-int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
-                         int num_local, int local_rank, int local_procs_0, int rank,
-                         MPL_memory_class class)
+int MPIR_shm_seg_commit(MPIR_shm_seg_t * memory, MPIR_shm_barrier_t ** barrier,
+                        int num_local, int local_rank, int local_procs_0, int rank,
+                        MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int pmi_errno;
@@ -136,16 +136,16 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     size_t size_left;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SHM_SEG_COMMIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SHM_SEG_COMMIT);
 
-    /* MPIDU_shm_seg_alloc() needs to have been called before this function */
+    /* MPIR_shm_seg_alloc() needs to have been called before this function */
     MPIR_Assert(!ALLOCQ_EMPTY());
     MPIR_Assert(segment_len > 0);
 
     /* allocate an area to check if the segment was allocated symmetrically */
-    mpl_err = MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p, class);
+    mpl_err = MPIR_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p, class);
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
@@ -162,8 +162,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
      * region containing the barrier vars. */
 
     /* add space for local barrier region.  Use a whole cacheline. */
-    MPIR_Assert(MPIDU_SHM_CACHE_LINE_LEN >= sizeof(MPIDU_shm_barrier_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
+    MPIR_Assert(MPIR_SHM_CACHE_LINE_LEN >= sizeof(MPIR_shm_barrier_t));
+    segment_len += MPIR_SHM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     /* We have a similar bootstrapping problem when using OpenPA in
@@ -173,10 +173,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
      * right after the barrier var space. */
 
     /* offset from memory->base_addr to the start of ipc_lock */
-    ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
+    ipc_lock_offset = MPIR_SHM_CACHE_LINE_LEN;
 
     MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
+    segment_len += MPIR_SHM_CACHE_LINE_LEN;
 #endif
 
     memory->segment_len = segment_len;
@@ -186,13 +186,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
+        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIR_SHM_CACHE_LINE_LEN, mpi_errno,
                             "segment", class);
 
         memory->base_addr = addr;
         current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
+            (char *) (((uintptr_t) addr + (uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1) &
+                      (~((uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
         /* must come before barrier_init since we use OPA in that function */
@@ -202,8 +202,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+        mpi_errno = MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -230,7 +229,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -276,12 +275,12 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, FALSE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
+        mpi_errno = MPIR_shm_barrier(*barrier, num_local);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -297,13 +296,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
+        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIR_SHM_CACHE_LINE_LEN, mpi_errno,
                             "segment", class);
 
         memory->base_addr = addr;
         current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
+            (char *) (((uintptr_t) addr + (uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1) &
+                      (~((uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
         /* must come before barrier_init since we use OPA in that function */
@@ -313,8 +312,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+        mpi_errno = MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -348,7 +346,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -421,12 +419,12 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, FALSE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
+        mpi_errno = MPIR_shm_barrier(*barrier, num_local);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -442,13 +440,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
+        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIR_SHM_CACHE_LINE_LEN, mpi_errno,
                             "segment", class);
 
         memory->base_addr = addr;
         current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
+            (char *) (((uintptr_t) addr + (uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1) &
+                      (~((uintptr_t) MPIR_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
         /* we still need to call barrier */
@@ -462,8 +460,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+        mpi_errno = MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -509,7 +506,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -542,12 +539,12 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
 
             mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
+                MPIR_shm_barrier_init((MPIR_shm_barrier_t *) memory->base_addr, barrier, FALSE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
+        mpi_errno = MPIR_shm_barrier(*barrier, num_local);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -567,15 +564,15 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     size_left = segment_len;
 
     /* reserve room for shared mem barrier (We used a whole cacheline) */
-    current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
-    MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
-    size_left -= MPIDU_SHM_CACHE_LINE_LEN;
+    current_addr = (char *) current_addr + MPIR_SHM_CACHE_LINE_LEN;
+    MPIR_Assert(size_left >= MPIR_SHM_CACHE_LINE_LEN);
+    size_left -= MPIR_SHM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     /* reserve room for the opa emulation lock */
-    current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
-    MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
-    size_left -= MPIDU_SHM_CACHE_LINE_LEN;
+    current_addr = (char *) current_addr + MPIR_SHM_CACHE_LINE_LEN;
+    MPIR_Assert(size_left >= MPIR_SHM_CACHE_LINE_LEN);
+    size_left -= MPIR_SHM_CACHE_LINE_LEN;
 #endif
 
     do {
@@ -604,7 +601,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     segment_len = 0;
 
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SHM_SEG_COMMIT);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -615,13 +612,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     /* --END ERROR HANDLING-- */
 }
 
-/* MPIDU_SHM_Seg_destroy() free the shared memory segment */
-int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
+/* MPIR_SHM_Seg_destroy() free the shared memory segment */
+int MPIR_shm_seg_destroy(MPIR_shm_seg_t * memory, int num_local)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SHM_SEG_DESTROY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SHM_SEG_DESTROY);
 
     if (num_local == 1)
         MPL_free(memory->base_addr);
@@ -633,7 +630,7 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 
   fn_exit:
     MPL_shm_hnd_finalize(&(memory->hnd));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SHM_SEG_DESTROY);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -642,20 +639,20 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
+static int check_alloc(MPIR_shm_seg_t * memory, MPIR_shm_barrier_t * barrier,
                        int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SHM_CHECK_ALLOC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_SHM_CHECK_ALLOC);
 
     if (local_rank == 0) {
         asym_check_region_p->base_ptr = memory->base_addr;
         OPA_store_int(&asym_check_region_p->is_asym, 0);
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(barrier, num_local);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -664,7 +661,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
 
     OPA_read_write_barrier();
 
-    mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+    mpi_errno = MPIR_shm_barrier(barrier, num_local);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -675,7 +672,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SHM_CHECK_ALLOC);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
