@@ -86,8 +86,7 @@ MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag
         return &MPIDI_empty_cnt;
     }
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
-        MPIR_Comm_is_parent_comm(comm)) {
+    if (MPIR_Comm_is_parent_comm(comm)) {
         return &MPIDI_Barrier_intra_composition_alpha_cnt;
     }
 
@@ -111,8 +110,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
     }
 
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
-        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_parent_comm(comm)) {
+    if (nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_parent_comm(comm)) {
         if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
             (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
             return &MPIDI_Bcast_intra_composition_alpha_cnt;
@@ -158,12 +156,10 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
     }
 #endif
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
-        nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
-        if (MPIR_Comm_is_parent_comm(comm) && is_commutative &&
-            nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
-            return &MPIDI_Allreduce_intra_composition_alpha_cnt;
-        }
+    nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
+    if (MPIR_Comm_is_parent_comm(comm) && is_commutative &&
+        nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
+        return &MPIDI_Allreduce_intra_composition_alpha_cnt;
     }
     return &MPIDI_Allreduce_intra_composition_beta_cnt;
 }
@@ -184,19 +180,17 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_select(const void *sendbuf,
         return &MPIDI_empty_cnt;
     }
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
-        /* is the op commutative? We do SMP optimizations only if it is. */
-        is_commutative = MPIR_Op_is_commutative(op);
+    /* is the op commutative? We do SMP optimizations only if it is. */
+    is_commutative = MPIR_Op_is_commutative(op);
 
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-        nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
-        if (MPIR_Comm_is_parent_comm(comm) && is_commutative &&
-            nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
-            if (nbytes <= MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) {
-                return &MPIDI_Reduce_intra_composition_beta_cnt;
-            } else {
-                return &MPIDI_Reduce_intra_composition_alpha_cnt;
-            }
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
+    if (MPIR_Comm_is_parent_comm(comm) && is_commutative &&
+        nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
+        if (nbytes <= MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) {
+            return &MPIDI_Reduce_intra_composition_beta_cnt;
+        } else {
+            return &MPIDI_Reduce_intra_composition_alpha_cnt;
         }
     }
     return &MPIDI_Reduce_intra_composition_gamma_cnt;

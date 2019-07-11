@@ -21,26 +21,6 @@ cvars:
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
 
-    - name        : MPIR_CVAR_ENABLE_SMP_COLLECTIVES
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Enable SMP aware collective communication.
-
-    - name        : MPIR_CVAR_ENABLE_SMP_ALLREDUCE
-      category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Enable SMP aware allreduce.
-
     - name        : MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE
       category    : COLLECTIVE
       type        : int
@@ -159,9 +139,7 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
         goto fn_exit;
 
     /* is the op commutative? We do SMP optimizations only if it is. */
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
-        MPIR_CVAR_ENABLE_SMP_ALLREDUCE &&
-        MPIR_Comm_is_parent_comm(comm_ptr) &&
+    if (MPIR_Comm_is_parent_comm(comm_ptr) &&
         is_commutative && nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
         mpi_errno =
             MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
