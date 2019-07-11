@@ -31,8 +31,8 @@
  */
 /* It would be nice to just call:
  * ----8<----
- * MPIR_Iscatter_sched_impl(...);
- * MPIR_Iallgather_sched_impl(...);
+ * MPIR_Iscatter_sched_auto(...);
+ * MPIR_Iallgather_sched_auto(...);
  * ----8<----
  *
  * But that results in inefficient additional memory allocation and copies

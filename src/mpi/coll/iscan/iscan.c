@@ -77,39 +77,10 @@ int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     return mpi_errno;
 }
 
-int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
-        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_recursive_doubling:
-            mpi_errno =
-                MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                          comm_ptr, s);
-            break;
-        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_auto:
-            MPL_FALLTHROUGH;
-        default:
-            mpi_errno =
-                MPIR_Iscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-            break;
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
@@ -123,23 +94,22 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
             mpi_errno =
                 MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
                                                             datatype, op, comm_ptr, request);
-            MPIR_ERR_CHECK(mpi_errno);
-            goto fn_exit;
             break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_recursive_doubling:
+            MPII_SCHED_WRAPPER(MPIR_Iscan_sched_intra_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_auto:
+            MPL_FALLTHROUGH;
+
         default:
-            /* go down to the MPIR_Sched-based algorithms */
+            MPII_SCHED_WRAPPER(MPIR_Iscan_sched_intra_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op);
             break;
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Iscan_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

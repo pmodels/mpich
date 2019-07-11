@@ -203,54 +203,19 @@ int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int cou
 }
 
 
-int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Iallreduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM) {
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
-                mpi_errno = MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count,
-                                                              datatype, op, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
-                mpi_errno =
-                    MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count,
-                                                                   datatype, op, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
-                mpi_errno =
-                    MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf,
-                                                                         count, datatype, op,
-                                                                         comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
-                                                             datatype, op, comm_ptr, s);
-                break;
-        }
+        mpi_errno =
+            MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_remote_reduce_local_bcast:
-                mpi_errno =
-                    MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(sendbuf, recvbuf, count,
-                                                                          datatype, op, comm_ptr,
-                                                                          s);
-                break;
-            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Iallreduce_sched_inter_auto(sendbuf, recvbuf, count,
-                                                             datatype, op, comm_ptr, s);
-                break;
-        }
-
+        mpi_errno =
+            MPIR_Iallreduce_sched_inter_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
+
     return mpi_errno;
 }
 
@@ -259,10 +224,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                          MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
     int is_commutative = MPIR_Op_is_commutative(op);
     int nranks = comm_ptr->local_size;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -279,18 +242,16 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                                                                         datatype, op, comm_ptr,
                                                                         MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
                                                                         request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
                                                                           request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
@@ -299,15 +260,15 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                                                        MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE,
                                                        MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD,
                                                        request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                break;
+
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
                 MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative);
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                        op, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                break;
+
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
                 MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative &&
                                                count >= nranks);
@@ -320,25 +281,59 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
                     (sendbuf, recvbuf, count, datatype, op, comm_ptr,
                      MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_intra_naive, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_intra_recursive_doubling, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_intra_reduce_scatter_allgather, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_intra_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op);
+                break;
+        }
+    } else {
+        switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_remote_reduce_local_bcast:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+
+            default:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_inter_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op);
                 break;
         }
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
   fallback:
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Iallreduce_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_intra_auto, comm_ptr, request, sendbuf,
+                           recvbuf, count, datatype, op);
+    } else {
+        MPII_SCHED_WRAPPER(MPIR_Iallreduce_sched_inter_auto, comm_ptr, request, sendbuf,
+                           recvbuf, count, datatype, op);
+    }
 
   fn_exit:
     return mpi_errno;

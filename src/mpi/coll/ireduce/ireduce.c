@@ -190,46 +190,17 @@ int MPIR_Ireduce_sched_inter_auto(const void *sendbuf, void *recvbuf,
     return mpi_errno;
 }
 
-int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                             MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
-                mpi_errno = MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count,
-                                                              datatype, op, root, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
-                mpi_errno =
-                    MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count,
-                                                                   datatype, op, root, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
-                                                          datatype, op, root, comm_ptr, s);
-                break;
-        }
+        mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
+                                                  datatype, op, root, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_local_reduce_remote_send:
-                mpi_errno =
-                    MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
-                                                                      datatype, op, root, comm_ptr,
-                                                                      s);
-                break;
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ireduce_sched_inter_auto(sendbuf, recvbuf, count,
-                                                          datatype, op, root, comm_ptr, s);
-                break;
-        }
+        mpi_errno = MPIR_Ireduce_sched_inter_auto(sendbuf, recvbuf, count,
+                                                  datatype, op, root, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -240,8 +211,6 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                       MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -250,7 +219,6 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
      * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
         switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
@@ -260,35 +228,51 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                                                     MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE,
                                                     MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD,
                                                     request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                     comm_ptr, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
                                                     MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD,
                                                     request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_binomial, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_reduce_scatter_gather, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+        }
+    } else {
+        switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_local_reduce_remote_send:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_inter_local_reduce_remote_send, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_auto:
+                MPL_FALLTHROUGH;
+
+            default:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_inter_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
                 break;
         }
     }
 
-    /* If the user doesn't pick a transport-enabled algorithm, go to the old
-     * sched function. */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Ireduce_sched_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
