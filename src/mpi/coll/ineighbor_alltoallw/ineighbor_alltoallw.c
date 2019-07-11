@@ -166,26 +166,6 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
     return mpi_errno;
 }
 
-int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
-                                   const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                   void *recvbuf, const int recvcounts[],
-                                   const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
-                                                   recvcounts, rdispls, recvtypes, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ineighbor_alltoallw_sched_impl(sendbuf, sendcounts, sdispls, sendtypes,
-                                                        recvbuf, recvcounts, rdispls, recvtypes,
-                                                        comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
 int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                                   const MPI_Aint sdispls[],
                                   const MPI_Datatype sendtypes[],
@@ -245,9 +225,9 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
-                                               recvbuf, recvcounts, rdispls, recvtypes, comm_ptr,
-                                               s);
+    mpi_errno = MPIR_Ineighbor_alltoallw_sched_impl(sendbuf, sendcounts, sdispls, sendtypes,
+                                                    recvbuf, recvcounts, rdispls, recvtypes,
+                                                    comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
