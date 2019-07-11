@@ -20,7 +20,6 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
                   src/mpid/ch4/shm/posix/shm_inline.h      \
                   src/mpid/ch4/shm/posix/posix_noinline.h  \
-                  src/mpid/ch4/shm/posix/posix_progress.h  \
                   src/mpid/ch4/shm/posix/posix_recv.h      \
                   src/mpid/ch4/shm/posix/posix_rma.h       \
                   src/mpid/ch4/shm/posix/posix_win.h       \
@@ -38,6 +37,7 @@ if ENABLE_IZEM_ATOMIC
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_coll_release_gather.h
 endif
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
+                    src/mpid/ch4/shm/posix/posix_progress.c \
                     src/mpid/ch4/shm/posix/posix_comm.c \
                     src/mpid/ch4/shm/posix/posix_init.c \
                     src/mpid/ch4/shm/posix/posix_op.c \

@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "stubnm_impl.h"
 #include "mpidimpl.h"
+#include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_op_free_hook(MPIR_Op * op_p)
 {

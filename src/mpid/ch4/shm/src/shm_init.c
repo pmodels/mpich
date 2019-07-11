@@ -47,3 +47,16 @@ int MPIDI_SHMI_get_vci_attr(int vci)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_QUERY_VCI);
     return ret;
 }
+
+int MPIDI_SHMI_progress(int vci, int blocking)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHMI_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_PROGRESS);
+
+    ret = MPIDI_POSIX_progress(blocking);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_PROGRESS);
+    return ret;
+}

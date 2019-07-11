@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "stubnm_impl.h"
 #include "mpidimpl.h"
+#include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
                                MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,

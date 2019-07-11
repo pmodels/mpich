@@ -12,7 +12,6 @@
 
 #include "stubshm_init.h"
 #include "stubshm_probe.h"
-#include "stubshm_progress.h"
 #include "stubshm_recv.h"
 #include "stubshm_request.h"
 #include "stubshm_send.h"
