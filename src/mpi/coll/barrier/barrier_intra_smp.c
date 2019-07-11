@@ -13,7 +13,7 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     int mpi_errno_ret = MPI_SUCCESS;
 
     MPIR_Assert(MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
-                MPIR_Comm_is_node_aware(comm_ptr));
+                MPIR_Comm_is_parent_comm(comm_ptr));
 
     /* do the intranode barrier on all nodes */
     if (comm_ptr->node_comm != NULL) {

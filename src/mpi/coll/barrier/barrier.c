@@ -92,7 +92,7 @@ int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
         goto fn_exit;
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
-        MPIR_CVAR_ENABLE_SMP_BARRIER && MPIR_Comm_is_node_aware(comm_ptr)) {
+        MPIR_CVAR_ENABLE_SMP_BARRIER && MPIR_Comm_is_parent_comm(comm_ptr)) {
         mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);

@@ -161,7 +161,7 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
         MPIR_CVAR_ENABLE_SMP_ALLREDUCE &&
-        MPIR_Comm_is_node_aware(comm_ptr) &&
+        MPIR_Comm_is_parent_comm(comm_ptr) &&
         is_commutative && nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
         mpi_errno =
             MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);

@@ -185,7 +185,7 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
         MPIR_CVAR_ENABLE_SMP_REDUCE &&
-        MPIR_Comm_is_node_aware(comm_ptr) &&
+        MPIR_Comm_is_parent_comm(comm_ptr) &&
         is_commutative && nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
         mpi_errno = MPIR_Reduce_intra_smp(sendbuf, recvbuf, count, datatype,
                                           op, root, comm_ptr, errflag);
