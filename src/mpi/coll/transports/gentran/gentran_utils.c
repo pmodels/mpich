@@ -24,8 +24,9 @@ static inline void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sche
     LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
 }
 
-static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
+static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r = sched->req;
     int i;
 
@@ -235,13 +236,14 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 }
                 break;
             default:{
-                    int mpi_errno, done;
+                    int done = 0;
                     MPII_Genutil_vtx_type_t *vtype = ut_type_array(&sched->generic_types,
                                                                    MPII_Genutil_vtx_type_t *) +
                         vtxp->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
                     MPIR_Assert(vtype != NULL);
                     mpi_errno = vtype->issue_fn(vtxp->u.generic.data, &done);
-                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno,
+                                        MPI_ERR_OTHER, "**other");
                     if (done)
                         vtx_record_completion(vtxp, sched, 0);
                     else
@@ -262,7 +264,11 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #endif
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -488,7 +494,8 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
         /* Go over all the vertices and issue ready vertices */
         vtx_t *vtx = ut_type_array(&sched->vtcs, vtx_t *);
         for (i = 0; i < sched->total_vtcs; i++, vtx++) {
-            vtx_issue(i, vtx, sched);
+            mpi_errno = vtx_issue(i, vtx, sched);
+            MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**other");
         }
 
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
