@@ -22,10 +22,10 @@ static int MPII_Algo_compare_int(const void *a, const void *b)
 }
 
 /* Avoid unused function warning in certain configurations */
-static inline int MPIR_Algo_calculate_pipeline_chunk_info(int maxbytes, int type_size, int count,
+static inline int MPIR_Algo_calculate_pipeline_chunk_info(int chunk_size, int type_size, int count,
                                                           int *num_segments, int *segsize_floor,
                                                           int *segsize_ceil) ATTRIBUTE((unused));
-static inline int MPIR_Algo_calculate_pipeline_chunk_info(int maxbytes,
+static inline int MPIR_Algo_calculate_pipeline_chunk_info(int chunk_size,
                                                           int type_size, int count,
                                                           int *num_segments,
                                                           int *segsize_floor, int *segsize_ceil)
@@ -41,7 +41,7 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(int maxbytes,
         goto fn_exit;
     }
 
-    maxelems = maxbytes / type_size;
+    maxelems = chunk_size / type_size;
 
     if (maxelems == 0 || maxelems >= count) {   /* disable pipelining */
         *num_segments = 1;
