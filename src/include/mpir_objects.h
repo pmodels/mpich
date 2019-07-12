@@ -501,11 +501,12 @@ void MPIR_Object_alloc_populate(MPIR_Object_alloc_t * objmem,
 
 /* Convert handles to objects for MPI types that are divided into multiple pools,
    and do not have any predefined objects */
-#define MPIR_Getp_ptr(kind,a,ptr)                                       \
+#define MPIR_Getp_ptr(KIND,kind,a,ptr)                                  \
 {                                                                       \
     int p = HANDLE_POOL_INDEX(a);                                       \
     switch (HANDLE_GET_KIND(a)) {                                       \
     case HANDLE_KIND_DIRECT:                                            \
+        MPIR_Assert(HANDLE_PINDEX(a) < MPIR_##KIND##_PREALLOC);         \
         ptr=MPIR_##kind##_direct[p]+HANDLE_PINDEX(a);                   \
         break;                                                          \
     case HANDLE_KIND_INDIRECT:                                          \
@@ -526,7 +527,7 @@ void MPIR_Object_alloc_populate(MPIR_Object_alloc_t * objmem,
 #define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,OP,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
-#define MPIR_Request_get_ptr(a,ptr)    MPIR_Getp_ptr(Request,a,ptr)
+#define MPIR_Request_get_ptr(a,ptr)    MPIR_Getp_ptr(REQUEST,Request,a,ptr)
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPIR_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition,
