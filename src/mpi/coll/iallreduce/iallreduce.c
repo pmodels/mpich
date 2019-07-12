@@ -80,6 +80,7 @@ cvars:
         Variable to select iallreduce algorithm
         sched_auto                       - Internal algorithm selection
         sched_naive                      - Force naive algorithm
+        sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
         sched_reduce_scatter_allgather   - Force reduce scatter allgather algorithm
         gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
@@ -295,6 +296,11 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_reduce_scatter_allgather:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_reduce_scatter_allgather, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_smp:
+                MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_smp, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op);
                 break;
 

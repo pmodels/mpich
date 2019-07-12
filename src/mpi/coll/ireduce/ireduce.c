@@ -80,6 +80,7 @@ cvars:
       description : |-
         Variable to select ireduce algorithm
         sched_auto                  - Internal algorithm selection
+        sched_smp                   - Force smp algorithm
         sched_binomial              - Force binomial algorithm
         sched_reduce_scatter_gather - Force reduce scatter gather algorithm
         gentran_tree                - Force Generic Transport Tree
@@ -240,6 +241,11 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
 
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_binomial, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_smp:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_smp, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
 

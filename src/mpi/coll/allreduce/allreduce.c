@@ -43,6 +43,7 @@ cvars:
         Variable to select allreduce algorithm
         auto                     - Internal algorithm selection
         nb                       - Force nonblocking algorithm
+        smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
@@ -227,6 +228,11 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
             case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
                                                       datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_smp:
+                mpi_errno =
+                    MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                             errflag);
                 break;
             case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;

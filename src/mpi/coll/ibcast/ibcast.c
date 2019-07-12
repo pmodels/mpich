@@ -67,6 +67,7 @@ cvars:
         Variable to select ibcast algorithm
         sched_auto                                 - Internal algorithm selection
         sched_binomial                             - Force Binomial algorithm
+        sched_smp                                  - Force smp algorithm
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         sched_scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         gentran_tree                               - Force Generic Transport Tree algorithm
@@ -258,6 +259,11 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
 
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_binomial, comm_ptr, request, buffer,
+                                   count, datatype, root);
+                break;
+
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_smp:
+                MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_smp, comm_ptr, request, buffer,
                                    count, datatype, root);
                 break;
 
