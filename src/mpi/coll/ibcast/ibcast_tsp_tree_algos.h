@@ -19,7 +19,7 @@
 
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm, int tree_type, int k, int maxbytes,
+                                     MPIR_Comm * comm, int tree_type, int k, int chunk_size,
                                      MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -51,12 +51,12 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     extent = MPL_MAX(extent, true_extent);
 
     /* calculate chunking information for pipelining */
-    MPIR_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
+    MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
     /* print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Broadcast pipeline info: maxbytes=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d",
-                                             maxbytes, count, num_chunks,
+                                             "Broadcast pipeline info: chunk_size=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d",
+                                             chunk_size, count, num_chunks,
                                              chunk_size_floor, chunk_size_ceil));
 
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
@@ -104,7 +104,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 /* Non-blocking tree based broadcast */
 int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
-                               int maxbytes)
+                               int chunk_size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -121,7 +121,7 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
 
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
-                                                 tree_type, k, maxbytes, sched);
+                                                 tree_type, k, chunk_size, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
