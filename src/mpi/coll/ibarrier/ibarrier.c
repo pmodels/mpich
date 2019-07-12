@@ -165,18 +165,17 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 break;
         }
     }
-    if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Sched_create(&s);
-        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Ibarrier_sched_impl(comm_ptr, s);
-        MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Sched_create(&s);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    mpi_errno = MPIR_Ibarrier_sched_impl(comm_ptr, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
