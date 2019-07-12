@@ -45,6 +45,7 @@ cvars:
         auto                  - Internal algorithm selection
         binomial              - Force binomial algorithm
         nb                    - Force nonblocking algorithm
+        smp                   - Force smp algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
@@ -260,6 +261,11 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
             case MPIR_CVAR_REDUCE_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Reduce_allcomm_nb(sendbuf, recvbuf,
                                                    count, datatype, op, root, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_REDUCE_INTRA_ALGORITHM_smp:
+                mpi_errno =
+                    MPIR_Reduce_intra_smp(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                          errflag);
                 break;
             case MPIR_CVAR_REDUCE_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;

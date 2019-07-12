@@ -20,6 +20,7 @@ cvars:
       description : |-
         Variable to select allgather algorithm
         sched_auto                 - Internal algorithm selection
+        sched_smp                  - Force smp algorithm
         sched_recursive_doubling   - Force recursive doubling algorithm
         gentran_recursive_doubling - Force generic transport recursive doubling algorithm
 
@@ -98,6 +99,11 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
 
         case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_recursive_doubling:
             MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_smp:
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_smp, comm_ptr, request,
                                sendbuf, recvbuf, count, datatype, op);
             break;
 

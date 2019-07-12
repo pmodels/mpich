@@ -95,6 +95,7 @@ cvars:
         auto                                    - Internal algorithm selection
         binomial                                - Force Binomial Tree
         nb                                      - Force nonblocking algorithm
+        smp                                     - Force smp algorithm
         scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
         scatter_ring_allgather                  - Force Scatter Ring
 
@@ -259,6 +260,9 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
                 break;
             case MPIR_CVAR_BCAST_INTRA_ALGORITHM_nb:
                 mpi_errno = MPIR_Bcast_allcomm_nb(buffer, count, datatype, root, comm_ptr, errflag);
+                break;
+            case MPIR_CVAR_BCAST_INTRA_ALGORITHM_smp:
+                mpi_errno = MPIR_Bcast_intra_smp(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_BCAST_INTRA_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
