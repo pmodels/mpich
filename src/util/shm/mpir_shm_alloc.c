@@ -21,7 +21,7 @@
 extern int mkstemp(char *t);
 #endif
 
-#include "mpir_shm_impl.h"
+#include "mpir_shm.h"
 #include "mpir_generic_queue.h"
 
 typedef struct alloc_elem {

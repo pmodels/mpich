@@ -4,7 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpir_shm_impl.h"
+#include <mpidimpl.h>
+#include "mpir_shm.h"
 
 static int sense;
 static int barrier_init = 0;

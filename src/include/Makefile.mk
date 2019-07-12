@@ -70,7 +70,9 @@ noinst_HEADERS +=                   \
     src/include/nopackage.h         \
     src/include/rlog.h              \
     src/include/rlog_macros.h       \
-    src/include/mpir_op_util.h
+    src/include/mpir_op_util.h      \
+    src/include/mpir_generic_queue.h\
+    src/include/mpir_shm.h
 
 src/include/mpir_cvars.h:
 	$(top_srcdir)/maint/extractcvars --dirs="`cat $(top_srcdir)/maint/cvardirs`"
