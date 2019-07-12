@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Ialltoallw_sched_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[],
                                                   const MPI_Datatype sendtypes[], void *recvbuf,
                                                   const int recvcounts[], const int rdispls[],

@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_Ibcast_inter_sched_flat(void *buffer, int count, MPI_Datatype datatype,
                                  int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

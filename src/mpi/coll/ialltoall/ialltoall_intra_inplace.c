@@ -18,7 +18,7 @@
  * Note that this is not an especially efficient algorithm in terms of time.
  * Something like MADRE is probably the best solution for the MPI_IN_PLACE
  * scenario. */
-int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

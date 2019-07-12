@@ -134,7 +134,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef MPI_Ireduce
 #define MPI_Ireduce PMPI_Ireduce
 
-int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
@@ -144,7 +144,7 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Ireduce_sched_intra_smp(sendbuf, recvbuf, count,
+        mpi_errno = MPIR_Ireduce_intra_sched_smp(sendbuf, recvbuf, count,
                                                  datatype, op, root, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -161,13 +161,13 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
         (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno =
-            MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
+            MPIR_Ireduce_intra_sched_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
                                                            root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* use a binomial tree algorithm */
         mpi_errno =
-            MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+            MPIR_Ireduce_intra_sched_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                               s);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -178,13 +178,13 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Ireduce_sched_inter_auto(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                   int count, MPI_Datatype datatype, MPI_Op op, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Ireduce_inter_sched_local_reduce_remote_send(sendbuf, recvbuf, count,
                                                                   datatype, op, root, comm_ptr, s);
 
     return mpi_errno;
@@ -196,10 +196,10 @@ int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_D
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
+        mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count,
                                                   datatype, op, root, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ireduce_sched_inter_auto(sendbuf, recvbuf, count,
+        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count,
                                                   datatype, op, root, comm_ptr, s);
     }
 
@@ -239,12 +239,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_binomial, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_binomial, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
 
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_reduce_scatter_gather, comm_ptr,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_reduce_scatter_gather, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op, root);
                 break;
 
@@ -252,14 +252,14 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_intra_auto, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_local_reduce_remote_send:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_inter_local_reduce_remote_send, comm_ptr,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_local_reduce_remote_send, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op, root);
                 break;
 
@@ -267,7 +267,7 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_sched_inter_auto, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
         }

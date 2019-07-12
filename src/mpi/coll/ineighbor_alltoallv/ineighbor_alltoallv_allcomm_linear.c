@@ -13,7 +13,7 @@
  * neighbor.
  */
 
-int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_allcomm_sched_linear(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,

@@ -17,7 +17,7 @@
  * max_size if dst < remote_size.
  */
 
-int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_inter_sched_pairwise_exchange(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)

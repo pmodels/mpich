@@ -100,7 +100,7 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
 /* any non-MPI functions go here, especially non-static ones */
 
-int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const int recvcounts[], const int rdispls[],
                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
@@ -110,11 +110,11 @@ int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[]
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Ialltoallv_sched_intra_inplace(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_intra_sched_inplace(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
                                                         rdispls, recvtype, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ialltoallv_sched_intra_blocked(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_intra_sched_blocked(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
                                                         rdispls, recvtype, comm_ptr, s);
     }
@@ -122,14 +122,14 @@ int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallv_inter_sched_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const int recvcounts[], const int rdispls[],
                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoallv_sched_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Ialltoallv_inter_sched_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
                                                               rdispls, recvtype, comm_ptr, s);
 
@@ -144,11 +144,11 @@ int MPIR_Ialltoallv_sched_auto(const void *sendbuf, const int sendcounts[], cons
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ialltoallv_sched_intra_auto(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls,
                                                      sendtype, recvbuf, recvcounts, rdispls,
                                                      recvtype, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ialltoallv_sched_inter_auto(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls,
                                                      sendtype, recvbuf, recvcounts, rdispls,
                                                      recvtype, comm_ptr, s);
     }
@@ -202,13 +202,13 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_blocked:
-                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_intra_blocked, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_blocked, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_inplace:
-                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_intra_inplace, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_inplace, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
@@ -217,7 +217,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_intra_auto, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
@@ -225,7 +225,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
     } else {
         switch (MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM_pairwise_exchange:
-                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_inter_pairwise_exchange, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_inter_sched_pairwise_exchange, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
@@ -234,7 +234,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_inter_auto, comm_ptr, request, sendbuf,
+                MPII_SCHED_WRAPPER(MPIR_Ialltoallv_inter_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
@@ -246,10 +246,10 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
 
   fallback:
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_intra_auto, comm_ptr, request, sendbuf,
+        MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_auto, comm_ptr, request, sendbuf,
                            sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype);
     } else {
-        MPII_SCHED_WRAPPER(MPIR_Ialltoallv_sched_inter_auto, comm_ptr, request, sendbuf,
+        MPII_SCHED_WRAPPER(MPIR_Ialltoallv_inter_sched_auto, comm_ptr, request, sendbuf,
                            sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype);
     }
 

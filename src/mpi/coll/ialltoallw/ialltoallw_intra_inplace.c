@@ -18,7 +18,7 @@
  * single buffer across the whole loop.  Something like MADRE is probably the
  * best solution for the MPI_IN_PLACE scenario.
  */
-int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,

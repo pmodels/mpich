@@ -60,17 +60,17 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #undef MPI_Iscan
 #define MPI_Iscan PMPI_Iscan
 
-int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                 MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
         mpi_errno =
-            MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+            MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                       comm_ptr, s);
     }
 
@@ -97,7 +97,7 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
             break;
 
         case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_recursive_doubling:
-            MPII_SCHED_WRAPPER(MPIR_Iscan_sched_intra_recursive_doubling, comm_ptr, request,
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_recursive_doubling, comm_ptr, request,
                                sendbuf, recvbuf, count, datatype, op);
             break;
 
@@ -105,7 +105,7 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
             MPL_FALLTHROUGH;
 
         default:
-            MPII_SCHED_WRAPPER(MPIR_Iscan_sched_intra_auto, comm_ptr, request, sendbuf, recvbuf,
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
                                count, datatype, op);
             break;
     }

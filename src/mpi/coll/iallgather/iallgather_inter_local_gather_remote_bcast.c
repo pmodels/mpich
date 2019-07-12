@@ -12,7 +12,7 @@
  * intracommunicator, and then does an intercommunicator broadcast.
  */
 
-int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           int recvcount, MPI_Datatype recvtype,
                                                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)

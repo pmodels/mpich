@@ -14,7 +14,7 @@
  *
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
-int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_inter_sched_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

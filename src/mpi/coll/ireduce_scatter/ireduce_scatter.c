@@ -85,7 +85,7 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 #undef MPI_Ireduce_scatter
 #define MPI_Ireduce_scatter PMPI_Ireduce_scatter
 
-int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
                                           const int recvcounts[], MPI_Datatype datatype, MPI_Op op,
                                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -111,12 +111,12 @@ int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf,
     /* select an appropriate algorithm based on commutivity and message size */
     if (is_commutative && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
-            MPIR_Ireduce_scatter_sched_intra_recursive_halving(sendbuf, recvbuf, recvcounts,
+            MPIR_Ireduce_scatter_intra_sched_recursive_halving(sendbuf, recvbuf, recvcounts,
                                                                datatype, op, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
-            MPIR_Ireduce_scatter_sched_intra_pairwise(sendbuf, recvbuf, recvcounts, datatype, op,
+            MPIR_Ireduce_scatter_intra_sched_pairwise(sendbuf, recvbuf, recvcounts, datatype, op,
                                                       comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (!is_commutative) */
@@ -132,13 +132,13 @@ int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf,
         if (MPL_is_pof2(comm_size, NULL) && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
             mpi_errno =
-                MPIR_Ireduce_scatter_sched_intra_noncommutative(sendbuf, recvbuf, recvcounts,
+                MPIR_Ireduce_scatter_intra_sched_noncommutative(sendbuf, recvbuf, recvcounts,
                                                                 datatype, op, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
             mpi_errno =
-                MPIR_Ireduce_scatter_sched_intra_recursive_doubling(sendbuf, recvbuf, recvcounts,
+                MPIR_Ireduce_scatter_intra_sched_recursive_doubling(sendbuf, recvbuf, recvcounts,
                                                                     datatype, op, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -150,14 +150,14 @@ int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf,
     goto fn_exit;
 }
 
-int MPIR_Ireduce_scatter_sched_inter_auto(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                           const int recvcounts[], MPI_Datatype datatype, MPI_Op op,
                                           MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcounts,
+        MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcounts,
                                                                       datatype, op, comm_ptr, s);
 
     return mpi_errno;
@@ -170,10 +170,10 @@ int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const in
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ireduce_scatter_sched_intra_auto(sendbuf, recvbuf,
+        mpi_errno = MPIR_Ireduce_scatter_intra_sched_auto(sendbuf, recvbuf,
                                                           recvcounts, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ireduce_scatter_sched_inter_auto(sendbuf, recvbuf, recvcounts,
+        mpi_errno = MPIR_Ireduce_scatter_inter_sched_auto(sendbuf, recvbuf, recvcounts,
                                                           datatype, op, comm_ptr, s);
     }
 
@@ -206,22 +206,22 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_noncommutative:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_noncommutative, comm_ptr,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_noncommutative, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_pairwise:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_pairwise, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_pairwise, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_halving:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_recursive_halving, comm_ptr,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_recursive_halving, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_doubling:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_recursive_doubling, comm_ptr,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_recursive_doubling, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
@@ -229,14 +229,14 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_auto, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_auto, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_remote_reduce_local_scatterv:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv,
                                    comm_ptr, request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
@@ -244,7 +244,7 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_inter_auto, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_inter_sched_auto, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
         }
@@ -255,10 +255,10 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
 
   fallback:
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_intra_auto, comm_ptr, request,
+        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_auto, comm_ptr, request,
                            sendbuf, recvbuf, recvcounts, datatype, op);
     } else {
-        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_sched_inter_auto, comm_ptr, request,
+        MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_inter_sched_auto, comm_ptr, request,
                            sendbuf, recvbuf, recvcounts, datatype, op);
     }
 

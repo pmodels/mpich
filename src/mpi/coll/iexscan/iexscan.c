@@ -59,14 +59,14 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef MPI_Iexscan
 #define MPI_Iexscan PMPI_Iexscan
 
-int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+        MPIR_Iexscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                     s);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -87,7 +87,7 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
 
     switch (MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM) {
         case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_recursive_doubling:
-            MPII_SCHED_WRAPPER(MPIR_Iexscan_sched_intra_recursive_doubling, comm_ptr, request,
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_recursive_doubling, comm_ptr, request,
                                sendbuf, recvbuf, count, datatype, op);
             break;
 
@@ -95,7 +95,7 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
             MPL_FALLTHROUGH;
 
         default:
-            MPII_SCHED_WRAPPER(MPIR_Iexscan_sched_intra_auto, comm_ptr, request, sendbuf, recvbuf,
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
                                count, datatype, op);
             break;
     }

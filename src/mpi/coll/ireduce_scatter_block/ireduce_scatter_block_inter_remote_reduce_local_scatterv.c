@@ -13,7 +13,7 @@
  * by local intracommunicator scattervs in each group.
  */
 
-int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const void *sendbuf,
+int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const void *sendbuf,
                                                                         void *recvbuf,
                                                                         int recvcount,
                                                                         MPI_Datatype datatype,

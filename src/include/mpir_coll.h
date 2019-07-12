@@ -436,17 +436,17 @@ int MPIR_Iallgather_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype 
                                MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgather_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,
                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iallgather_intra_gentran_recexch_doubling(const void *sendbuf, int sendcount,
@@ -463,10 +463,10 @@ int MPIR_Iallgather_intra_gentran_ring(const void *sendbuf, int sendcount, MPI_D
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm_ptr, MPIR_Request ** request);
 /* sched-based intercomm-only functions */
-int MPIR_Iallgather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgather_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           int recvcount, MPI_Datatype recvtype,
                                                           MPIR_Comm * comm_ptr, MPIR_Sched_t s);
@@ -491,19 +491,19 @@ int MPIR_Iallgatherv_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype
                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int *recvcounts, const int *displs,
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, const int recvcounts[], const int displs[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
-int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
+int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int recvcounts[], const int displs[],
                                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                     MPIR_Sched_t s);
-int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iallgatherv_intra_gentran_recexch_doubling(const void *sendbuf, int sendcount,
@@ -522,10 +522,10 @@ int MPIR_Iallgatherv_intra_gentran_ring(const void *sendbuf, int sendcount, MPI_
                                         MPIR_Request ** request);
 
 /* sched-based intercomm-only functions */
-int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int *recvcounts, const int *displs,
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(const void *sendbuf, int sendcount,
+int MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(const void *sendbuf, int sendcount,
                                                            MPI_Datatype sendtype, void *recvbuf,
                                                            const int *recvcounts, const int *displs,
                                                            MPI_Datatype recvtype,
@@ -544,16 +544,16 @@ int MPIR_Iallreduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MP
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s);
-int MPIR_Iallreduce_sched_intra_naive(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_naive(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                       MPIR_Sched_t s);
-int MPIR_Iallreduce_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                    MPI_Datatype datatype, MPI_Op op,
                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
+int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                          int count, MPI_Datatype datatype,
                                                          MPI_Op op, MPIR_Comm * comm_ptr,
                                                          MPIR_Sched_t s);
@@ -581,15 +581,15 @@ int MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(cons
                                                                             int k,
                                                                             MPIR_Request **
                                                                             request);
-int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_inter_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s);
-int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, void *recvbuf,
+int MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(const void *sendbuf, void *recvbuf,
                                                           int count, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
                                                           MPIR_Sched_t s);
@@ -622,28 +622,28 @@ int MPIR_Ialltoall_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype s
                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoall_sched_intra_permuted_sendrecv(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_intra_sched_permuted_sendrecv(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ialltoall_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_inter_sched_pairwise_exchange(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
@@ -666,16 +666,16 @@ int MPIR_Ialltoallv_sched_auto(const void *sendbuf, const int *sendcounts, const
                                MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                      MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                                      const int *rdispls, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallv_intra_sched_blocked(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                         const int recvcounts[], const int rdispls[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
-int MPIR_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                         const int recvcounts[], const int rdispls[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -698,11 +698,11 @@ int MPIR_Ialltoallv_intra_gentran_inplace(const void *sendbuf, const int sendcou
                                           MPIR_Request ** request);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Ialltoallv_inter_sched_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                      MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                                      const int *rdispls, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,
@@ -737,29 +737,29 @@ int MPIR_Ialltoallw_sched_auto(const void *sendbuf, const int *sendcounts, const
                                MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Ialltoallw_intra_sched_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                      const MPI_Datatype * sendtypes, void *recvbuf,
                                      const int *recvcounts, const int *rdispls,
                                      const MPI_Datatype * recvtypes, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s);
-int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
-int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ialltoallw_sched_inter_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Ialltoallw_inter_sched_auto(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                      const MPI_Datatype * sendtypes, void *recvbuf,
                                      const int *recvcounts, const int *rdispls,
                                      const MPI_Datatype * recvtypes, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s);
-int MPIR_Ialltoallw_sched_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[],
                                                   const MPI_Datatype sendtypes[], void *recvbuf,
                                                   const int recvcounts[], const int rdispls[],
@@ -776,13 +776,13 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIR_Ibarrier_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_intra_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_intra_sched_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibarrier_intra_gentran_recexch(MPIR_Comm * comm_ptr, int k, MPIR_Request ** request);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_inter_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_inter_sched_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 
 /******************************** Ibcast ********************************/
@@ -807,23 +807,23 @@ int MPIR_Ibcast_sched_auto(void *buffer, int count, MPI_Datatype datatype, int r
                            MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_intra_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_intra_sched_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
+int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, int count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,
                                                                  MPIR_Sched_t s);
-int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
                                                    int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_intra_sched_smp(void *buffer, int count, MPI_Datatype datatype, int root,
                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ibcast_sched_inter_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_inter_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Ibcast_inter_sched_flat(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 
@@ -835,10 +835,10 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatyp
                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s);
-int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
@@ -861,21 +861,21 @@ int MPIR_Igather_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
                             MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_intra_sched_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Igather_sched_inter_long(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_inter_sched_long(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igather_inter_sched_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
@@ -899,19 +899,19 @@ int MPIR_Igatherv_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype se
                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Igatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igatherv_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const int *recvcounts, const int *displs,
                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                    MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Igatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igatherv_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const int *recvcounts, const int *displs,
                                    MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                    MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, const int *recvcounts, const int *displs,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                        MPIR_Sched_t s);
@@ -936,19 +936,19 @@ int MPIR_Ineighbor_allgather_sched_auto(const void *sendbuf, int sendcount, MPI_
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ineighbor_allgather_sched_intra_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgather_intra_sched_auto(const void *sendbuf, int sendcount,
                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                               MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ineighbor_allgather_sched_inter_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgather_inter_sched_auto(const void *sendbuf, int sendcount,
                                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                               MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgather_allcomm_sched_linear(const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype,
                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s);
@@ -976,21 +976,21 @@ int MPIR_Ineighbor_allgatherv_sched_auto(const void *sendbuf, int sendcount, MPI
                                          MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_intra_sched_auto(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_inter_sched_auto(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
                                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                                MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_allgatherv_allcomm_sched_linear(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    const int recvcounts[], const int displs[],
                                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
@@ -1016,19 +1016,19 @@ int MPIR_Ineighbor_alltoall_sched_auto(const void *sendbuf, int sendcount, MPI_D
                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ineighbor_alltoall_sched_intra_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_alltoall_intra_sched_auto(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                              MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ineighbor_alltoall_sched_inter_auto(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_alltoall_inter_sched_auto(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                              MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int sendcount,
+int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
@@ -1058,21 +1058,21 @@ int MPIR_Ineighbor_alltoallv_sched_auto(const void *sendbuf, const int sendcount
                                         MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_intra_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ineighbor_alltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_inter_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_allcomm_sched_linear(const void *sendbuf, const int sendcounts[],
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,
@@ -1106,7 +1106,7 @@ int MPIR_Ineighbor_alltoallw_sched_auto(const void *sendbuf, const int sendcount
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallw_intra_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const MPI_Aint sdispls[],
                                               const MPI_Datatype sendtypes[], void *recvbuf,
                                               const int recvcounts[], const MPI_Aint rdispls[],
@@ -1114,7 +1114,7 @@ int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sen
                                               MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ineighbor_alltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallw_inter_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const MPI_Aint sdispls[],
                                               const MPI_Datatype sendtypes[], void *recvbuf,
                                               const int recvcounts[], const MPI_Aint rdispls[],
@@ -1122,7 +1122,7 @@ int MPIR_Ineighbor_alltoallw_sched_inter_auto(const void *sendbuf, const int sen
                                               MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const int sendcounts[],
                                                   const MPI_Aint sdispls[],
                                                   const MPI_Datatype sendtypes[], void *recvbuf,
                                                   const int recvcounts[], const MPI_Aint rdispls[],
@@ -1150,24 +1150,24 @@ int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_D
                             MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s);
-int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
                                                    MPI_Datatype datatype, MPI_Op op, int root,
                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                  MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ireduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s);
-int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_inter_sched_local_reduce_remote_send(const void *sendbuf, void *recvbuf, int count,
                                                       MPI_Datatype datatype, MPI_Op op, int root,
                                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
@@ -1187,21 +1187,21 @@ int MPIR_Ireduce_scatter_sched_auto(const void *sendbuf, void *recvbuf, const in
                                     MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
+int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_sched_intra_noncommutative(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
                                                     const int *recvcounts, MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm_ptr,
                                                     MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_intra_sched_pairwise(const void *sendbuf, void *recvbuf,
                                               const int *recvcounts, MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                         const int *recvcounts,
                                                         MPI_Datatype datatype, MPI_Op op,
                                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_sched_intra_recursive_halving(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void *recvbuf,
                                                        const int *recvcounts, MPI_Datatype datatype,
                                                        MPI_Op op, MPIR_Comm * comm_ptr,
                                                        MPIR_Sched_t s);
@@ -1211,10 +1211,10 @@ int MPIR_Ireduce_scatter_intra_gentran_recexch(const void *sendbuf, void *recvbu
                                                MPIR_Request ** request);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ireduce_scatter_sched_inter_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
+int MPIR_Ireduce_scatter_inter_sched_auto(const void *sendbuf, void *recvbuf, const int *recvcounts,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *sendbuf,
+int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *sendbuf,
                                                                   void *recvbuf,
                                                                   const int *recvcounts,
                                                                   MPI_Datatype datatype, MPI_Op op,
@@ -1241,30 +1241,30 @@ int MPIR_Ireduce_scatter_block_sched_auto(const void *sendbuf, void *recvbuf, in
                                           MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_sched_intra_noncommutative(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
                                                           int recvcount, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
                                                           MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *recvbuf,
                                                     int recvcount, MPI_Datatype datatype, MPI_Op op,
                                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                               int recvcount, MPI_Datatype datatype,
                                                               MPI_Op op, MPIR_Comm * comm_ptr,
                                                               MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf, void *recvbuf,
                                                              int recvcount, MPI_Datatype datatype,
                                                              MPI_Op op, MPIR_Comm * comm_ptr,
                                                              MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Ireduce_scatter_block_inter_sched_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const void *sendbuf,
+int MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(const void *sendbuf,
                                                                         void *recvbuf,
                                                                         int recvcount,
                                                                         MPI_Datatype datatype,
@@ -1281,13 +1281,13 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
                     MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                 MPIR_Sched_t s);
-int MPIR_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                               MPI_Datatype datatype, MPI_Op op,
                                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iscan_intra_gentran_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                 MPI_Datatype datatype, MPI_Op op,
@@ -1312,21 +1312,21 @@ int MPIR_Iscatter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype se
                              MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iscatter_sched_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_inter_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
+int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, int sendcount,
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         int recvcount, MPI_Datatype recvtype,
                                                         int root, MPIR_Comm * comm_ptr,
@@ -1353,19 +1353,19 @@ int MPIR_Iscatterv_sched_auto(const void *sendbuf, const int *sendcounts, const 
                               MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
-int MPIR_Iscatterv_sched_intra_auto(const void *sendbuf, const int *sendcounts, const int *displs,
+int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
-int MPIR_Iscatterv_sched_inter_auto(const void *sendbuf, const int *sendcounts, const int *displs,
+int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                     MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s);
 
 /* sched-based anycomm functions */
-int MPIR_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int *sendcounts,
+int MPIR_Iscatterv_allcomm_sched_linear(const void *sendbuf, const int *sendcounts,
                                         const int *displs, MPI_Datatype sendtype, void *recvbuf,
                                         int recvcount, MPI_Datatype recvtype, int root,
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s);
