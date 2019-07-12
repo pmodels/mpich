@@ -33,16 +33,16 @@ cvars:
     - name        : MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto               - Internal algorithm selection
-        ring               - Force ring algorithm
-        brucks             - Force brucks algorithm
-        recursive_doubling - Force recursive doubling algorithm
+        sched_auto               - Internal algorithm selection
+        sched_ring               - Force ring algorithm
+        sched_brucks             - Force brucks algorithm
+        sched_recursive_doubling - Force recursive doubling algorithm
         gentran_ring       - Force generic transport ring algorithm
         gentran_brucks     - Force generic transport based brucks algorithm
         gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
@@ -51,14 +51,14 @@ cvars:
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto                      - Internal algorithm selection
-        local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
+        sched_auto                      - Internal algorithm selection
+        sched_local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
 
     - name        : MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -258,23 +258,23 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                                                        request);
                 break;
 
-            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_brucks:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_sched_brucks:
                 MPII_SCHED_WRAPPER(MPIR_Iallgather_intra_sched_brucks, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_recursive_doubling:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_sched_recursive_doubling:
                 MPII_SCHED_WRAPPER(MPIR_Iallgather_intra_sched_recursive_doubling, comm_ptr,
                                    request, sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                    recvtype);
                 break;
 
-            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_ring:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_sched_ring:
                 MPII_SCHED_WRAPPER(MPIR_Iallgather_intra_sched_ring, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -284,13 +284,13 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
         }
     } else {
         switch (MPIR_CVAR_IALLGATHER_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_local_gather_remote_bcast:
+            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_sched_local_gather_remote_bcast:
                 MPII_SCHED_WRAPPER(MPIR_Iallgather_inter_sched_local_gather_remote_bcast, comm_ptr,
                                    request, sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                    recvtype);
                 break;
 
-            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IALLGATHER_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

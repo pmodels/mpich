@@ -13,15 +13,15 @@ cvars:
     - name        : MPIR_CVAR_ISCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto         - Internal algorithm selection
-        binomial     - Force binomial algorithm
-        gentran_tree - Force genetric transport based tree algorithm
+        sched_auto         - Internal algorithm selection
+        sched_binomial     - Force binomial algorithm
+        gentran_tree       - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_ISCATTER_TREE_KVAL
       category    : COLLECTIVE
@@ -36,15 +36,15 @@ cvars:
     - name        : MPIR_CVAR_ISCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto                      - Internal algorithm selection
-        linear                    - Force linear algorithm
-        remote_send_local_scatter - Force remote-send-local-scatter algorithm
+        sched_auto                      - Internal algorithm selection
+        sched_linear                    - Force linear algorithm
+        sched_remote_send_local_scatter - Force remote-send-local-scatter algorithm
 
     - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -188,12 +188,12 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
                                                      MPIR_CVAR_ISCATTER_TREE_KVAL, request);
                 break;
 
-            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_binomial:
+            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Iscatter_intra_sched_binomial, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype, root);
                 break;
 
-            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_ISCATTER_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -203,18 +203,18 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
         }
     } else {
         switch (MPIR_CVAR_ISCATTER_INTER_ALGORITHM) {
-            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_linear:
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Iscatter_inter_sched_linear, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype, root);
                 break;
 
-            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_remote_send_local_scatter:
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_sched_remote_send_local_scatter:
                 MPII_SCHED_WRAPPER(MPIR_Iscatter_inter_sched_remote_send_local_scatter, comm_ptr,
                                    request, sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                    recvtype, root);
                 break;
 
-            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_ISCATTER_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

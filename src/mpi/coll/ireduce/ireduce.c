@@ -73,29 +73,29 @@ cvars:
     - name        : MPIR_CVAR_IREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto                  - Internal algorithm selection
-        binomial              - Force binomial algorithm
-        reduce_scatter_gather - Force reduce scatter gather algorithm
-        gentran_tree          - Force Generic Transport Tree
-        gentran_ring          - Force Generic Transport Ring
+        sched_auto                  - Internal algorithm selection
+        sched_binomial              - Force binomial algorithm
+        sched_reduce_scatter_gather - Force reduce scatter gather algorithm
+        gentran_tree                - Force Generic Transport Tree
+        gentran_ring                - Force Generic Transport Ring
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto                     - Internal algorithm selection
-        local_reduce_remote_send - Force local-reduce-remote-send algorithm
+        sched_auto                     - Internal algorithm selection
+        sched_local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
     - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -238,17 +238,17 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                                                     request);
                 break;
 
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_binomial, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
 
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_reduce_scatter_gather:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_reduce_scatter_gather, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op, root);
                 break;
 
-            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -258,12 +258,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_local_reduce_remote_send:
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_local_reduce_remote_send:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_local_reduce_remote_send, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op, root);
                 break;
 
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

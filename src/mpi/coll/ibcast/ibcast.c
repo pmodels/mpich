@@ -59,19 +59,19 @@ cvars:
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto                                 - Internal algorithm selection
-        binomial                             - Force Binomial algorithm
-        scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
-        scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
-        gentran_tree                         - Force Generic Transport Tree algorithm
-        gentran_scatterv_recexch_allgatherv  - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
-        gentran_ring                         - Force Generic Transport Ring algorithm
+        sched_auto                                 - Internal algorithm selection
+        sched_binomial                             - Force Binomial algorithm
+        sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
+        sched_scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
+        gentran_tree                               - Force Generic Transport Tree algorithm
+        gentran_scatterv_recexch_allgatherv        - Force Generic Transport Scatterv followed by Recursive Exchange Allgatherv algorithm
+        gentran_ring                               - Force Generic Transport Ring algorithm
 
     - name        : MPIR_CVAR_IBCAST_SCATTERV_KVAL
       category    : COLLECTIVE
@@ -96,14 +96,14 @@ cvars:
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto - Internal algorithm selection
-        flat - Force flat algorithm
+        sched_auto - Internal algorithm selection
+        sched_flat - Force flat algorithm
 
     - name        : MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -256,22 +256,22 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                                                    MPIR_CVAR_IBCAST_RING_CHUNK_SIZE, request);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_binomial:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_binomial, comm_ptr, request, buffer,
                                    count, datatype, root);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_recursive_doubling_allgather:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_scatter_recursive_doubling_allgather:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather,
                                    comm_ptr, request, buffer, count, datatype, root);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_scatter_ring_allgather:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_scatter_ring_allgather:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_scatter_ring_allgather, comm_ptr,
                                    request, buffer, count, datatype, root);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -281,12 +281,12 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
         }
     } else {
         switch (MPIR_CVAR_IBCAST_INTER_ALGORITHM) {
-            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_flat:
+            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_flat:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_inter_sched_flat, comm_ptr, request, buffer, count,
                                    datatype, root);
                 break;
 
-            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
