@@ -13,32 +13,32 @@ cvars:
     - name        : MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto              - Internal algorithm selection
-        brucks            - Force brucks algorithm
-        inplace           - Force inplace algorithm
-        pairwise          - Force pairwise algorithm
-        permuted_sendrecv - Force permuted sendrecv algorithm
-        gentran_ring      - Force generic transport based ring algorithm
-        gentran_brucks    - Force generic transport based brucks algorithm
-        gentran_scattered - Force generic transport based scattered algorithm
+        sched_auto              - Internal algorithm selection
+        sched_brucks            - Force brucks algorithm
+        sched_inplace           - Force inplace algorithm
+        sched_pairwise          - Force pairwise algorithm
+        sched_permuted_sendrecv - Force permuted sendrecv algorithm
+        gentran_ring            - Force generic transport based ring algorithm
+        gentran_brucks          - Force generic transport based brucks algorithm
+        gentran_scattered       - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto              - Internal algorithm selection
-        pairwise_exchange - Force pairwise exchange algorithm
+        sched_auto              - Internal algorithm selection
+        sched_pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -231,27 +231,27 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                                                            request);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_brucks:
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_brucks:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_brucks, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_inplace:
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_inplace:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_inplace, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_pairwise:
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_pairwise:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_pairwise, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_permuted_sendrecv:
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_permuted_sendrecv:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_permuted_sendrecv, comm_ptr, request,
                                    sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -261,12 +261,12 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
         }
     } else {
         switch (MPIR_CVAR_IALLTOALL_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_pairwise_exchange:
+            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_sched_pairwise_exchange:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoall_inter_sched_pairwise_exchange, comm_ptr, request,
                                    sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
 
-            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

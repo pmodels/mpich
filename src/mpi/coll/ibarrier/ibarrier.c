@@ -23,27 +23,27 @@ cvars:
     - name        : MPIR_CVAR_IBARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto               - Internal algorithm selection
-        recursive_doubling - Force recursive doubling algorithm
-        gentran_recexch    - Force generic transport based recursive exchange algorithm
+        sched_auto               - Internal algorithm selection
+        sched_recursive_doubling - Force recursive doubling algorithm
+        gentran_recexch          - Force generic transport based recursive exchange algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto  - Internal algorithm selection
-        bcast - Force bcast algorithm
+        sched_auto  - Internal algorithm selection
+        sched_bcast - Force bcast algorithm
 
     - name        : MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -137,12 +137,12 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 
                 break;
 
-            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_recursive_doubling:
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_sched_recursive_doubling:
                 MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_intra_sched_recursive_doubling, comm_ptr,
                                          request);
                 break;
 
-            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -151,11 +151,11 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
         }
     } else {
         switch (MPIR_CVAR_IBARRIER_INTER_ALGORITHM) {
-            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_bcast:
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_sched_bcast:
                 MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_inter_sched_bcast, comm_ptr, request);
                 break;
 
-            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

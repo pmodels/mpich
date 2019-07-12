@@ -72,16 +72,16 @@ cvars:
     - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto                     - Internal algorithm selection
-        naive                    - Force naive algorithm
-        recursive_doubling       - Force recursive doubling algorithm
-        reduce_scatter_allgather - Force reduce scatter allgather algorithm
+        sched_auto                       - Internal algorithm selection
+        sched_naive                      - Force naive algorithm
+        sched_recursive_doubling         - Force recursive doubling algorithm
+        sched_reduce_scatter_allgather   - Force reduce scatter allgather algorithm
         gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         gentran_tree                     - Force generic transport tree algorithm
@@ -91,14 +91,14 @@ cvars:
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto                      - Internal algorithm selection
-        remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
+        sched_auto                      - Internal algorithm selection
+        sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -283,22 +283,22 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                      MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, request);
                 break;
 
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_naive:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_naive:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_naive, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op);
                 break;
 
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_recursive_doubling:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_recursive_doubling:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_recursive_doubling, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op);
                 break;
 
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_reduce_scatter_allgather:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_reduce_scatter_allgather:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_reduce_scatter_allgather, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op);
                 break;
 
-            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -308,12 +308,12 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
         }
     } else {
         switch (MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_remote_reduce_local_bcast:
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_sched_remote_reduce_local_bcast:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast, comm_ptr,
                                    request, sendbuf, recvbuf, count, datatype, op);
                 break;
 
-            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

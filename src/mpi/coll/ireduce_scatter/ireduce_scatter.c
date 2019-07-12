@@ -23,30 +23,30 @@ cvars:
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto               - Internal algorithm selection
-        noncommutative     - Force noncommutative algorithm
-        recursive_doubling - Force recursive doubling algorithm
-        pairwise           - Force pairwise algorithm
-        recursive_halving  - Force recursive halving algorithm
-        gentran_recexch    - Force generic transport recursive exchange algorithm
+        sched_auto               - Internal algorithm selection
+        sched_noncommutative     - Force noncommutative algorithm
+        sched_recursive_doubling - Force recursive doubling algorithm
+        sched_pairwise           - Force pairwise algorithm
+        sched_recursive_halving  - Force recursive halving algorithm
+        gentran_recexch          - Force generic transport recursive exchange algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto                         - Internal algorithm selection
-        remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
+        sched_auto                         - Internal algorithm selection
+        sched_remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -205,27 +205,27 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                                                                request);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_noncommutative:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_noncommutative:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_noncommutative, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_pairwise:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_pairwise:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_pairwise, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_halving:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_recursive_halving:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_recursive_halving, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_recursive_doubling:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_recursive_doubling:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_recursive_doubling, comm_ptr,
                                    request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -235,12 +235,12 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM) {
-            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_remote_reduce_local_scatterv:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_sched_remote_reduce_local_scatterv:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv,
                                    comm_ptr, request, sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
 
-            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

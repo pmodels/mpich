@@ -13,27 +13,27 @@ cvars:
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallv algorithm
-        auto            - Internal algorithm selection
-        linear          - Force linear algorithm
+        sched_auto            - Internal algorithm selection
+        sched_linear          - Force linear algorithm
         gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallv algorithm
-        auto            - Internal algorithm selection
-        linear          - Force linear algorithm
+        sched_auto            - Internal algorithm selection
+        sched_linear          - Force linear algorithm
         gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE
@@ -164,13 +164,13 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                                                                     request);
                 break;
 
-            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_linear:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_allcomm_sched_linear, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
 
-            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -189,13 +189,13 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                                                                     request);
                 break;
 
-            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM_linear:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_allcomm_sched_linear, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
 
-            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

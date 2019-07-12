@@ -13,15 +13,15 @@ cvars:
     - name        : MPIR_CVAR_IGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto         - Internal algorithm selection
-        binomial     - Force binomial algorithm
-        gentran_tree - Force genetric transport based tree algorithm
+        sched_auto         - Internal algorithm selection
+        sched_binomial     - Force binomial algorithm
+        gentran_tree       - Force genetric transport based tree algorithm
 
     - name        : MPIR_CVAR_IGATHER_TREE_KVAL
       category    : COLLECTIVE
@@ -36,15 +36,15 @@ cvars:
     - name        : MPIR_CVAR_IGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto  - Internal algorithm selection
-        long  - Force long inter algorithm
-        short - Force short inter algorithm
+        sched_auto  - Internal algorithm selection
+        sched_long  - Force long inter algorithm
+        sched_short - Force short inter algorithm
 
     - name        : MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -181,12 +181,12 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
                                                     MPIR_CVAR_IGATHER_TREE_KVAL, request);
                 break;
 
-            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_binomial:
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_sched_binomial:
                 MPII_SCHED_WRAPPER(MPIR_Igather_intra_sched_binomial, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype, root);
                 break;
 
-            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_IGATHER_INTRA_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:
@@ -196,17 +196,17 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
         }
     } else {
         switch (MPIR_CVAR_IGATHER_INTER_ALGORITHM) {
-            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_long:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_long:
                 MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_long, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype, root);
                 break;
 
-            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_short:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_short:
                 MPII_SCHED_WRAPPER(MPIR_Igather_inter_sched_short, comm_ptr, request, sendbuf,
                                    sendcount, sendtype, recvbuf, recvcount, recvtype, root);
                 break;
 
-            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_IGATHER_INTER_ALGORITHM_sched_auto:
                 MPL_FALLTHROUGH;
 
             default:

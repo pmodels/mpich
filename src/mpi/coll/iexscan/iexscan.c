@@ -13,14 +13,14 @@ cvars:
     - name        : MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iexscan algorithm
-        auto               - Internal algorithm selection
-        recursive_doubling - Force recursive doubling algorithm
+        sched_auto               - Internal algorithm selection
+        sched_recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -86,12 +86,12 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     *request = NULL;
 
     switch (MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM) {
-        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_recursive_doubling:
+        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_sched_recursive_doubling:
             MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_recursive_doubling, comm_ptr, request,
                                sendbuf, recvbuf, count, datatype, op);
             break;
 
-        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_auto:
+        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_sched_auto:
             MPL_FALLTHROUGH;
 
         default:
