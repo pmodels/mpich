@@ -15,7 +15,7 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0"
-algo_names="gentran_tree gentran_scatter_recexch_allgather gentran_ring"
+algo_names="gentran_tree gentran_scatterv_recexch_allgatherv gentran_ring"
 tree_types="kary knomial_1 knomial_2"
 kvalues="3"
 
@@ -94,14 +94,14 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0"
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb"
 testing_env="${testing_env} env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0"
-algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer tree gentran_ring recexch_reduce_scatter_recexch_allgatherv"
+algo_names="gentran_recexch_single_buffer gentran_recexch_multiple_buffer gentran_tree gentran_ring recexch_reduce_scatter_recexch_allgatherv"
 tree_types="kary knomial_1 knomial_2"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     if [ "${algo_name}" != "gentran_ring" ]; then
         for kval in ${kvalues}; do
-            if [ "${algo_name}" = "tree" ]; then
+            if [ "${algo_name}" = "gentran_tree" ]; then
                 for tree_type in ${tree_types}; do
                     #set the environment
                     env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
