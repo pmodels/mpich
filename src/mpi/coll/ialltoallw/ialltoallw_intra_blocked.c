@@ -20,7 +20,7 @@
  * *** Modification: We post only a small number of isends and irecvs at a time
  * and wait on them as suggested by Tony Ladd. ***
  */
-int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcounts[],
+int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,

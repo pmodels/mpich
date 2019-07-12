@@ -14,7 +14,7 @@
  * Cost: p.alpha + n.beta
  */
 
-int MPIR_Iscatter_sched_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_inter_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

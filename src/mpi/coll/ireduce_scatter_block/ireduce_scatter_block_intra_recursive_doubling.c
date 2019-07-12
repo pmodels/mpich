@@ -8,7 +8,7 @@
 
 /* A recursive doubling algorithm for MPI_Ireduce_scatter_block, suitable for
  * noncommutative and (non-pof2 or block irregular). */
-int MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                               int recvcount, MPI_Datatype datatype,
                                                               MPI_Op op, MPIR_Comm * comm_ptr,
                                                               MPIR_Sched_t s)

@@ -23,7 +23,7 @@
  * where n is the total amount of data a process needs to send to all
  * other processes.
  */
-int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

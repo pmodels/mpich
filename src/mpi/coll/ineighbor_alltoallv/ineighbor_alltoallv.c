@@ -75,7 +75,7 @@ int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const i
 #undef MPI_Ineighbor_alltoallv
 #define MPI_Ineighbor_alltoallv PMPI_Ineighbor_alltoallv
 
-int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_intra_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
@@ -84,7 +84,7 @@ int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sen
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls, sendtype,
+        MPIR_Ineighbor_alltoallv_allcomm_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
                                                       recvbuf, recvcounts, rdispls, recvtype,
                                                       comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
@@ -96,7 +96,7 @@ int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sen
     goto fn_exit;
 }
 
-int MPIR_Ineighbor_alltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallv_inter_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
@@ -105,7 +105,7 @@ int MPIR_Ineighbor_alltoallv_sched_inter_auto(const void *sendbuf, const int sen
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls, sendtype,
+        MPIR_Ineighbor_alltoallv_allcomm_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
                                                       recvbuf, recvcounts, rdispls, recvtype,
                                                       comm_ptr, s);
     MPIR_ERR_CHECK(mpi_errno);
@@ -127,12 +127,12 @@ int MPIR_Ineighbor_alltoallv_sched_auto(const void *sendbuf, const int sendcount
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         mpi_errno =
-            MPIR_Ineighbor_alltoallv_sched_intra_auto(sendbuf, sendcounts, sdispls,
+            MPIR_Ineighbor_alltoallv_intra_sched_auto(sendbuf, sendcounts, sdispls,
                                                       sendtype, recvbuf, recvcounts,
                                                       rdispls, recvtype, comm_ptr, s);
     } else {
         mpi_errno =
-            MPIR_Ineighbor_alltoallv_sched_inter_auto(sendbuf, sendcounts, sdispls,
+            MPIR_Ineighbor_alltoallv_inter_sched_auto(sendbuf, sendcounts, sdispls,
                                                       sendtype, recvbuf, recvcounts,
                                                       rdispls, recvtype, comm_ptr, s);
     }
@@ -165,7 +165,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                 break;
 
             case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM_linear:
-                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_sched_allcomm_linear, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_allcomm_sched_linear, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
@@ -174,7 +174,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_sched_intra_auto, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_intra_sched_auto, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
@@ -190,7 +190,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                 break;
 
             case MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTER_ALGORITHM_linear:
-                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_sched_allcomm_linear, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_allcomm_sched_linear, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;
@@ -199,7 +199,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_sched_inter_auto, comm_ptr, request,
+                MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallv_inter_sched_auto, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype);
                 break;

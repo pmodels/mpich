@@ -83,22 +83,22 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_intra_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_intra_sched_recursive_doubling(comm_ptr, s);
 
     return mpi_errno;
 }
 
 /* It will choose between several different algorithms based on the given
  * parameters. */
-int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_inter_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_inter_sched_bcast(comm_ptr, s);
 
     return mpi_errno;
 }
@@ -108,9 +108,9 @@ int MPIR_Ibarrier_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);
+        mpi_errno = MPIR_Ibarrier_intra_sched_auto(comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ibarrier_sched_inter_auto(comm_ptr, s);
+        mpi_errno = MPIR_Ibarrier_inter_sched_auto(comm_ptr, s);
     }
 
     return mpi_errno;
@@ -138,7 +138,7 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 break;
 
             case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_recursive_doubling:
-                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_sched_intra_recursive_doubling, comm_ptr,
+                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_intra_sched_recursive_doubling, comm_ptr,
                                          request);
                 break;
 
@@ -146,20 +146,20 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_sched_intra_auto, comm_ptr, request);
+                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_intra_sched_auto, comm_ptr, request);
                 break;
         }
     } else {
         switch (MPIR_CVAR_IBARRIER_INTER_ALGORITHM) {
             case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_bcast:
-                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_sched_inter_bcast, comm_ptr, request);
+                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_inter_sched_bcast, comm_ptr, request);
                 break;
 
             case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_auto:
                 MPL_FALLTHROUGH;
 
             default:
-                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_sched_inter_auto, comm_ptr, request);
+                MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_inter_sched_auto, comm_ptr, request);
                 break;
         }
     }

@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s)
 {
@@ -27,7 +27,7 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
     if (!is_commutative) {
         /* use flat fallback */
         mpi_errno =
-            MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            MPIR_Iallreduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }

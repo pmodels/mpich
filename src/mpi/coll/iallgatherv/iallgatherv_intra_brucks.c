@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, const int recvcounts[], const int displs[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {

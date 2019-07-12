@@ -14,7 +14,7 @@
  *
  * We use this as our medium-sized-message algorithm.
  */
-int MPIR_Ialltoall_sched_intra_permuted_sendrecv(const void *sendbuf, int sendcount,
+int MPIR_Ialltoall_intra_sched_permuted_sendrecv(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)

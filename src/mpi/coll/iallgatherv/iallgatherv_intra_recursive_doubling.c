@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
+int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int recvcounts[], const int displs[],
                                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
