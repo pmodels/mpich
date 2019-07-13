@@ -375,7 +375,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
             MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                    (&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                    recv_elem->comm_ptr, recv_elem->remote_info.ackreq, FALSE));
+                                    recv_elem->comm_ptr, recv_elem->remote_info.ackreq));
 
             MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);
             MPL_free(recv_elem);

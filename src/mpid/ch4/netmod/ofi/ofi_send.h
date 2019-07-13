@@ -369,7 +369,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq, FALSE));
+                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq));
     }
 
   fn_exit:
