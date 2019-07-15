@@ -4,7 +4,6 @@
 typedef enum {
     MPIDI_Barrier_intra_composition_alpha_id,
     MPIDI_Barrier_intra_composition_beta_id,
-    MPIDI_Barrier_inter_composition_alpha_id,
 } MPIDI_Barrier_id_t;
 
 typedef union {
@@ -22,7 +21,6 @@ typedef enum {
     MPIDI_Bcast_intra_composition_alpha_id,
     MPIDI_Bcast_intra_composition_beta_id,
     MPIDI_Bcast_intra_composition_gamma_id,
-    MPIDI_Bcast_inter_composition_alpha_id,
 } MPIDI_Bcast_id_t;
 
 typedef union {
@@ -44,7 +42,6 @@ typedef enum {
     MPIDI_Reduce_intra_composition_alpha_id,
     MPIDI_Reduce_intra_composition_beta_id,
     MPIDI_Reduce_intra_composition_gamma_id,
-    MPIDI_Reduce_inter_composition_alpha_id,
 } MPIDI_Reduce_id_t;
 
 typedef union {
@@ -65,7 +62,6 @@ typedef enum {
     MPIDI_Allreduce_intra_composition_alpha_id,
     MPIDI_Allreduce_intra_composition_beta_id,
     MPIDI_Allreduce_intra_composition_gamma_id,
-    MPIDI_Allreduce_inter_composition_alpha_id,
 } MPIDI_Allreduce_id_t;
 
 typedef union {
@@ -84,7 +80,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Alltoall_intra_composition_alpha_id,
-    MPIDI_Alltoall_inter_composition_alpha_id
 } MPIDI_Alltoall_id_t;
 
 typedef union {
@@ -95,7 +90,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Alltoallv_intra_composition_alpha_id,
-    MPIDI_Alltoallv_inter_composition_alpha_id
 } MPIDI_Alltoallv_id_t;
 
 typedef union {
@@ -106,7 +100,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Alltoallw_intra_composition_alpha_id,
-    MPIDI_Alltoallw_inter_composition_alpha_id
 } MPIDI_Alltoallw_id_t;
 
 typedef union {
@@ -117,7 +110,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Allgather_intra_composition_alpha_id,
-    MPIDI_Allgather_inter_composition_alpha_id
 } MPIDI_Allgather_id_t;
 
 typedef union {
@@ -128,7 +120,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Allgatherv_intra_composition_alpha_id,
-    MPIDI_Allgatherv_inter_composition_alpha_id
 } MPIDI_allgatherv_id_t;
 
 typedef union {
@@ -139,7 +130,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Gather_intra_composition_alpha_id,
-    MPIDI_Gather_inter_composition_alpha_id
 } MPIDI_Gather_id_t;
 
 typedef union {
@@ -150,7 +140,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Gatherv_intra_composition_alpha_id,
-    MPIDI_Gatherv_inter_composition_alpha_id
 } MPIDI_Gatherv_id_t;
 
 typedef union {
@@ -161,7 +150,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Scatter_intra_composition_alpha_id,
-    MPIDI_Scatter_inter_composition_alpha_id
 } MPIDI_Scatter_id_t;
 
 typedef union {
@@ -172,7 +160,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Scatterv_intra_composition_alpha_id,
-    MPIDI_Scatterv_inter_composition_alpha_id
 } MPIDI_Scatterv_id_t;
 
 typedef union {
@@ -183,7 +170,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Reduce_scatter_intra_composition_alpha_id,
-    MPIDI_Reduce_scatter_inter_composition_alpha_id
 } MPIDI_Reduce_scatter_id_t;
 
 typedef union {
@@ -194,7 +180,6 @@ typedef union {
 
 typedef enum {
     MPIDI_Reduce_scatter_block_intra_composition_alpha_id,
-    MPIDI_Reduce_scatter_block_inter_composition_alpha_id
 } MPIDI_Reduce_scatter_block__id_t;
 
 typedef union {
