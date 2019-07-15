@@ -315,16 +315,12 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
 
         req.done = 0;
         req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx,
-                                           &buf,
-                                           sizeof(int),
-                                           NULL,
-                                           comm_ptr->rank,
-                                           *conn,
-                                           match_bits,
-                                           (void *) &req.context, MPIDI_OFI_DO_SEND, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          &buf, sizeof(int), NULL /* desc */ ,
+                                          comm_ptr->rank,
+                                          *conn,
+                                          match_bits,
+                                          (void *) &req.context), tsenddata, FALSE /* eagain */);
 
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
@@ -348,6 +344,9 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     uint64_t match_bits = 0;
     uint64_t mask_bits = 0;
     struct fi_msg_tagged msg;
+    size_t *local_upid_size = NULL;
+    char *local_upids = NULL;
+    int *local_node_ids = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_EXCHANGE_MAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_EXCHANGE_MAP);
@@ -438,10 +437,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
         /* Send phase maps the entry   */
         int tag = root;
         int local_size = comm_ptr->local_size;
-        size_t *local_upid_size = NULL;
         size_t local_upid_sendsize = 0;
-        char *local_upids = NULL;
-        int *local_node_ids = NULL;
 
         /* Step 1: get local upids (with size) and node ids for sending */
         MPIDI_NM_get_local_upids(comm_ptr, &local_upid_size, &local_upids);
@@ -461,40 +457,38 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
         req[1].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
         req[2].done = 0;
         req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx,
-                                           local_upid_size,
-                                           local_size * sizeof(size_t),
-                                           NULL,
-                                           comm_ptr->rank,
-                                           *conn,
-                                           match_bits,
-                                           (void *) &req[0].context, MPIDI_OFI_DO_SEND, FALSE);
-        if (mpi_errno) {
-            MPL_free(local_upid_size);
-            MPL_free(local_upids);
-            MPL_free(local_node_ids);
-            MPIR_ERR_POP(mpi_errno);
-        }
-
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx,
-                               local_upids,
-                               local_upid_sendsize,
-                               NULL,
-                               comm_ptr->rank,
-                               *conn,
-                               match_bits, (void *) &req[1].context, MPIDI_OFI_DO_SEND, FALSE);
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, local_node_ids, local_size * sizeof(int),
-                               NULL, comm_ptr->rank, *conn, match_bits, (void *) &req[2].context,
-                               MPIDI_OFI_DO_SEND, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          local_upid_size,
+                                          local_size * sizeof(size_t), NULL /* desc */ ,
+                                          comm_ptr->rank,
+                                          *conn,
+                                          match_bits,
+                                          (void *) &req[0].context),
+                             tsenddata, FALSE /* eagain */);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          local_upids, local_upid_sendsize, NULL /* desc */ ,
+                                          comm_ptr->rank,
+                                          *conn,
+                                          match_bits,
+                                          (void *) &req[1].context),
+                             tsenddata, FALSE /* eagain */);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          local_node_ids,
+                                          local_size * sizeof(int), NULL /* desc */ ,
+                                          comm_ptr->rank,
+                                          *conn,
+                                          match_bits,
+                                          (void *) &req[2].context),
+                             tsenddata, FALSE /* eagain */);
 
         MPIDI_OFI_PROGRESS_WHILE(!req[0].done || !req[1].done || !req[2].done);
 
-        MPL_free(local_upid_size);
-        MPL_free(local_upids);
-        MPL_free(local_node_ids);
     }
 
   fn_exit:
+    MPL_free(local_upid_size);
+    MPL_free(local_upids);
+    MPL_free(local_node_ids);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_EXCHANGE_MAP);
     return mpi_errno;
   fn_fail:

@@ -26,12 +26,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
-    mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
-                               MPIDI_OFI_av_to_phys(addr), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_COMM(comm).eagain);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
+                                        buf,
+                                        data_sz,
+                                        src_rank,
+                                        MPIDI_OFI_av_to_phys(addr),
+                                        match_bits), tinjectdata, MPIDI_OFI_COMM(comm).eagain);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     return mpi_errno;
@@ -54,15 +54,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
-    mpi_errno =
-        MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, buf, data_sz, NULL, src_rank,
-                               MPIDI_OFI_av_to_phys(addr), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_COMM(comm).eagain);
+    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
+                                        buf,
+                                        data_sz,
+                                        src_rank,
+                                        MPIDI_OFI_av_to_phys(addr),
+                                        match_bits), tinjectdata, MPIDI_OFI_COMM(comm).eagain);
     /* If we set CC>0 in case of injection, we need to decrement the CC
      * to tell the main thread we completed the injection. */
     MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     return mpi_errno;
@@ -300,21 +300,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
-        mpi_errno =
-            MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_av_to_phys(addr),
-                                   match_bits, NULL, MPIDI_OFI_DO_INJECT, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
+                                            send_buf,
+                                            data_sz,
+                                            comm->rank,
+                                            MPIDI_OFI_av_to_phys(addr),
+                                            match_bits), tinjectdata, FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
-        mpi_errno =
-            MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_av_to_phys(addr),
-                                   match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                   MPIDI_OFI_DO_SEND, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          send_buf, data_sz, NULL /* desc */ ,
+                                          comm->rank,
+                                          MPIDI_OFI_av_to_phys(addr),
+                                          match_bits,
+                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
+                             tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int c;
@@ -356,23 +356,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
          * MPIDI_OFI_global.max_msg_size */
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
         MPIDI_OFI_REQUEST(sreq, util_id) = dst_rank;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, send_buf,
-                                           MPIDI_OFI_global.max_msg_size,
-                                           NULL,
-                                           comm->rank,
-                                           MPIDI_OFI_av_to_phys(addr),
-                                           match_bits,
-                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                           MPIDI_OFI_DO_SEND, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+                                          send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
+                                          comm->rank,
+                                          MPIDI_OFI_av_to_phys(addr),
+                                          match_bits,
+                                          (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
+                             tsenddata, FALSE /* eagain */);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;
 
         /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq, FALSE));
+                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq));
     }
 
   fn_exit:
