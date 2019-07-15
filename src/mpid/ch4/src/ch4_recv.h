@@ -196,10 +196,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #else
-    if (MPIDI_REQUEST(rreq, is_local))
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        if (unlikely(partner_rreq)) {
+            /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
+            mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIR_ERR_POP(mpi_errno);
+            MPIR_Request_free(partner_rreq);
+        }
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
-    else
+    } else {
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
+    }
 #endif
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
