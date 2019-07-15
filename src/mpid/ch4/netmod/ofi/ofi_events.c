@@ -146,12 +146,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);
         int r = rreq->status.MPI_SOURCE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_global.ctx[0].tx, NULL, 0, NULL,
-                                           MPIDI_OFI_REQUEST(rreq, util_comm->rank),
-                                           MPIDI_OFI_comm_to_phys(c, r),
-                                           ss_bits, NULL, MPIDI_OFI_DO_INJECT, FALSE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
+                                            0 /* len */ ,
+                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
+                                            MPIDI_OFI_comm_to_phys(c, r),
+                                            ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
     MPIDIU_request_complete(rreq);
@@ -376,7 +375,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
             MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                    (&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                    recv_elem->comm_ptr, recv_elem->remote_info.ackreq, FALSE));
+                                    recv_elem->comm_ptr, recv_elem->remote_info.ackreq));
 
             MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);
             MPL_free(recv_elem);
