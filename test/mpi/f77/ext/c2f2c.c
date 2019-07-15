@@ -173,13 +173,14 @@ MPI_Fint c2frequest_(MPI_Fint * request)
     MPI_Status status;
     int flag;
     MPI_Test(&req, &flag, &status);
-    MPI_Test_cancelled(&status, &flag);
-    if (!flag) {
-        fprintf(stderr, "Request: Wrong value for flag\n");
-        return 1;
-    } else {
-        *request = MPI_Request_c2f(req);
+    if (flag) {
+        MPI_Test_cancelled(&status, &flag);
+        if (!flag) {
+            fprintf(stderr, "Request: Wrong value for flag\n");
+            return 1;
+        }
     }
+    *request = MPI_Request_c2f(req);
     return 0;
 }
 
