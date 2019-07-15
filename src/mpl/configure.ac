@@ -797,7 +797,7 @@ fi
 # fdopen() converts from an fd to a FILE*
 AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],fdopen)
 fi
 
 AC_CHECK_FUNCS(getpid)
