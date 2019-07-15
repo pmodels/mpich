@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX const
 MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Barrier_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
@@ -107,7 +107,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Bcast_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
@@ -143,7 +143,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Allreduce_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (comm->node_comm != NULL && MPIR_Comm_size(comm) == MPIR_Comm_size(comm->node_comm)) {
@@ -181,7 +181,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_select(const void *sendbuf,
     int nbytes = 0;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Reduce_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
@@ -213,7 +213,7 @@ MPIDI_coll_algo_container_t *MPIDI_Gather_select(const void *sendbuf,
                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Gather_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Gather_intra_composition_alpha_cnt;
@@ -231,7 +231,7 @@ MPIDI_coll_algo_container_t *MPIDI_Gatherv_select(const void *sendbuf,
                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Gatherv_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Gatherv_intra_composition_alpha_cnt;
@@ -249,7 +249,7 @@ MPIDI_coll_algo_container_t *MPIDI_Scatter_select(const void *sendbuf,
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Scatter_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Scatter_intra_composition_alpha_cnt;
@@ -268,7 +268,7 @@ MPIDI_coll_algo_container_t *MPIDI_Scatterv_select(const void *sendbuf,
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Scatterv_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Scatterv_intra_composition_alpha_cnt;
@@ -284,7 +284,7 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoall_select(const void *sendbuf,
                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Alltoall_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Alltoall_intra_composition_alpha_cnt;
@@ -301,7 +301,7 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoallv_select(const void *sendbuf,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Alltoallv_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Alltoallv_intra_composition_alpha_cnt;
@@ -318,7 +318,7 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoallw_select(const void *sendbuf,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Alltoallw_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Alltoallw_intra_composition_alpha_cnt;
@@ -331,7 +331,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allgather_select(const void *sendbuf, int sen
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Allgather_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Allgather_intra_composition_alpha_cnt;
@@ -346,7 +346,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allgatherv_select(const void *sendbuf, int se
                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Allgatherv_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Allgatherv_intra_composition_alpha_cnt;
@@ -362,7 +362,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_scatter_select(const void *sendbuf,
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Reduce_scatter_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Reduce_scatter_intra_composition_alpha_cnt;
@@ -379,7 +379,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_scatter_block_select(const void *sendb
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Reduce_scatter_block_inter_composition_alpha_cnt;
+        return &MPIDI_empty_cnt;
     }
 
     return &MPIDI_Reduce_scatter_block_intra_composition_alpha_cnt;
