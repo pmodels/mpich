@@ -236,14 +236,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
+    ucp_datatype_t dt;
     uint64_t ucx_tag;
     char *send_buf;
+    void *send_buf_p;
     size_t data_sz;
+    size_t total_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
     MPIR_Comm *use_comm;
+    ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
@@ -258,25 +262,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     ucx_hdr.handler_id = handler_id;
     ucx_hdr.data_sz = data_sz;
 
-    /* just pack and send for now */
-    send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
-    MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-    MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
     if (dt_contig) {
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
+        send_buf = MPL_malloc(sizeof(ucx_hdr) + am_hdr_sz, MPL_MEM_BUFFER);
+        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
+        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
+
+        iov[0].buffer = send_buf;
+        iov[0].length = sizeof(ucx_hdr) + am_hdr_sz;
+        iov[1].buffer = (char *) data + dt_true_lb;
+        iov[1].length = data_sz;
+
+        send_buf_p = iov;
+        dt = ucp_dt_make_iov();
+        total_sz = 2;
     } else {
+        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+
+        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
+        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
+
         MPI_Aint actual_pack_bytes;
         mpi_errno =
             MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
                               data_sz, &actual_pack_bytes);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
+
+        send_buf_p = send_buf;
+        dt = ucp_dt_make_contig(1);
+        total_sz = data_sz + am_hdr_sz + sizeof(ucx_hdr);
     }
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              data_sz + am_hdr_sz +
-                                                              sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_isend_callback);
+    ucp_request =
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep,
+                                                    send_buf_p, total_sz, dt, ucx_tag,
+                                                    &MPIDI_UCX_am_isend_callback);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
