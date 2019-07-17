@@ -47,6 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 }
 
 int MPIDI_OFI_progress(int vci, int blocking);
+int MPIDI_OFI_progress_test(int vci, int *ofi_ret_ptr);
 /*
  * Helper routines and macros for request completion
  */
