@@ -1,0 +1,9 @@
+#! /bin/bash
+
+for file in $(ls *.c); do
+  echo "# $file"
+  gcc ${file} -lpthread -o ${file}.out
+  timeout -s 9 4m ./${file}.out
+  gcc ${file} -O3 -lpthread -o ${file}.o3.out
+  timeout -s 9 4m ./${file}.o3.out
+done

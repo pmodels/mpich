@@ -1,0 +1,39 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "atomic_test.h"
+
+BASE_TYPE test_values[] = TEST_VALUES;
+
+int main()
+{
+    int i, j;
+    for (i = 0; i < sizeof(test_values) / sizeof(BASE_TYPE); i++) {
+        for (j = 0; j < sizeof(test_values) / sizeof(BASE_TYPE); j++) {
+            BASE_TYPE val1 = test_values[i];
+            BASE_TYPE val2 = test_values[j];
+            ATOMIC_TYPE atomic_val = ATOMIC_INITIALIZER(val1);
+            BASE_TYPE cas_val;
+
+            cas_val = ATOMIC_CAS(&atomic_val, val1, val1);
+            TEST_ASSERT(cas_val == val1);
+            TEST_ASSERT(ATOMIC_RELAXED_LOAD(&atomic_val) == val1);
+
+            cas_val = ATOMIC_CAS(&atomic_val, val2, val2);
+            TEST_ASSERT(cas_val == val1);
+            TEST_ASSERT(ATOMIC_RELAXED_LOAD(&atomic_val) == val1);
+
+            cas_val = ATOMIC_CAS(&atomic_val, val2, val1);
+            TEST_ASSERT(cas_val == val1);
+            TEST_ASSERT(ATOMIC_RELAXED_LOAD(&atomic_val) == val1);
+
+            cas_val = ATOMIC_CAS(&atomic_val, val1, val2);
+            TEST_ASSERT(cas_val == val1);
+            TEST_ASSERT(ATOMIC_RELAXED_LOAD(&atomic_val) == val2);
+        }
+    }
+    return 0;
+}

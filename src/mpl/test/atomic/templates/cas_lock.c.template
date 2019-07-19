@@ -1,0 +1,73 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "atomic_test.h"
+
+typedef struct lock_add_t {
+    int tid;
+    int num_threads;
+    BASE_TYPE val1;
+    BASE_TYPE val2;
+    ATOMIC_TYPE *p_atomic_val;
+    int64_t *p_protected_val;
+} lock_add_t;
+
+BASE_TYPE test_values[] = TEST_VALUES;
+
+static void lock_add(int num_threads, int tid, void *arg);
+
+int main()
+{
+
+#ifdef MPL_USE_NO_ATOMIC_PRIMITIVES
+    return 0;
+#else
+    int i, j, k;
+    for (i = 0; i < sizeof(test_values) / sizeof(BASE_TYPE); i++) {
+        for (j = 0; j < sizeof(test_values) / sizeof(BASE_TYPE); j++) {
+            BASE_TYPE val1 = test_values[i];
+            BASE_TYPE val2 = test_values[j];
+            if (val1 == val2)
+                continue;
+            for (k = 0; k < sizeof(num_threads_list) / sizeof(int); k++) {
+                int num_threads = num_threads_list[k];
+                ATOMIC_TYPE atomic_val = ATOMIC_INITIALIZER(val1);
+                int64_t protected_val = 0;
+                lock_add_t lock_add_arg;
+                lock_add_arg.val1 = val1;
+                lock_add_arg.val2 = val2;
+                lock_add_arg.p_atomic_val = &atomic_val;
+                lock_add_arg.p_protected_val = &protected_val;
+                test_parallel_for(num_threads, lock_add, &lock_add_arg);
+                TEST_ASSERT(protected_val == 8192 * num_threads);
+            }
+        }
+    }
+    return 0;
+#endif
+}
+
+static void lock_add(int num_threads, int tid, void *arg)
+{
+    lock_add_t *lock_add_arg = (lock_add_t *)arg;
+    BASE_TYPE val1 = lock_add_arg->val1;
+    BASE_TYPE val2 = lock_add_arg->val2;
+    int64_t *p_protected_val = lock_add_arg->p_protected_val;
+    BASE_TYPE cas_val;
+    ATOMIC_TYPE *p_atomic_val = lock_add_arg->p_atomic_val;
+    int i;
+    for (i = 0; i < 8192; i++) {
+        while(1) {
+            cas_val = ATOMIC_CAS(p_atomic_val, val1, val2);
+            if (cas_val == val1)
+                break;
+            TEST_ASSERT(cas_val == val2);
+        }
+        /* critical section */
+        (*p_protected_val) += 1;
+        ATOMIC_RELEASE_STORE(p_atomic_val, val1);
+    }
+}

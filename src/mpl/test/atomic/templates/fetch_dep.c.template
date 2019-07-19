@@ -1,0 +1,99 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "atomic_test.h"
+
+typedef struct deptest_t {
+    int tid;
+    int num_threads;
+    ATOMIC_TYPE *p_atomic_val;
+    ATOMIC_TYPE *p_barrier_val;
+    int *p_data;
+} deptest_t;
+
+BASE_TYPE test_values[] = TEST_VALUES;
+
+static void deptest(int num_threads, int tid, void *arg);
+
+int main()
+{
+#ifdef MPL_USE_NO_ATOMIC_PRIMITIVES
+    return 0;
+#else
+    int i, j;
+    int *p_buffer = (int *)malloc(sizeof(int) * 2000);
+    ATOMIC_TYPE atomic_val = ATOMIC_INITIALIZER(0);
+    ATOMIC_TYPE barrier_val = ATOMIC_INITIALIZER(0);
+    deptest_t deptest_arg;
+    deptest_arg.p_atomic_val = &atomic_val;
+    deptest_arg.p_barrier_val = &barrier_val;
+    deptest_arg.p_data = &p_buffer[1000]; /* avoid cache line sharing */
+    test_parallel_for(2, deptest, &deptest_arg);
+    free(p_buffer);
+    return 0;
+#endif
+}
+
+static void thread_barrier(int tid, ATOMIC_TYPE *p_barrier_val)
+{
+    if (tid == 0) {
+        while (ATOMIC_ACQUIRE_LOAD(p_barrier_val) != 1);
+        ATOMIC_RELEASE_STORE(p_barrier_val, 0);
+    } else {
+        TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_barrier_val) == 0);
+        ATOMIC_RELEASE_STORE(p_barrier_val, 1);
+        while (ATOMIC_ACQUIRE_LOAD(p_barrier_val) != 0);
+    }
+}
+
+static void deptest(int num_threads, int tid, void *arg)
+{
+    deptest_t *deptest_arg = (deptest_t *)arg;
+    int *p_data = deptest_arg->p_data;
+    ATOMIC_TYPE *p_atomic_val = deptest_arg->p_atomic_val;
+    ATOMIC_TYPE *p_barrier_val = deptest_arg->p_barrier_val;
+    int i;
+
+    for (i = 0; i < 8192; i++) {
+        /* store before fetch must be flushed before fetch */
+        if (tid == 0) {
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == 0);
+            *p_data = 1;
+            ATOMIC_FETCH_ADD(p_atomic_val, 1);
+        } else {
+            int val = *p_data; /* dummy */
+            while (ATOMIC_ACQUIRE_LOAD(p_atomic_val) == 0);
+            val = *p_data;
+            TEST_ASSERT(val == 1);
+        }
+
+        thread_barrier(tid, p_barrier_val);
+
+        /* load after fetch must be performed after fetch */
+        if (tid == 0) {
+            *p_data = 0;
+            ATOMIC_RELEASE_STORE(p_atomic_val, 4);
+        } else {
+            int val = *p_data; /* dummy */
+            while (1) {
+                BASE_TYPE fetch_val;
+                fetch_val = ATOMIC_FETCH_ADD(p_atomic_val, 1);
+                if (fetch_val == 4)
+                    break;
+                fetch_val = ATOMIC_FETCH_SUB(p_atomic_val, 1);
+                if (fetch_val == 4)
+                    break;
+            }
+            val = *p_data;
+            TEST_ASSERT(val == 0);
+        }
+
+        thread_barrier(tid, p_barrier_val);
+        if (tid == 0)
+            ATOMIC_RELEASE_STORE(p_atomic_val, 0); /* reset p_atomic_val */
+        thread_barrier(tid, p_barrier_val);
+    }
+}

@@ -1,0 +1,70 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "atomic_test.h"
+
+typedef struct pingpong_t {
+    int tid;
+    int num_threads;
+    BASE_TYPE val1;
+    BASE_TYPE val2;
+    ATOMIC_TYPE *p_atomic_val;
+} pingpong_t;
+
+BASE_TYPE test_values[] = TEST_VALUES;
+
+static void pingpong(int num_threads, int tid, void *arg);
+
+/* Ping-pong between two threads using CAS */
+int main()
+{
+#ifdef MPL_USE_NO_ATOMIC_PRIMITIVES
+    return 0;
+#else
+    int i, j;
+    for (i = 0; i < sizeof(test_values) / sizeof(BASE_TYPE); i++) {
+        for (j = 0; j < sizeof(test_values) / sizeof(BASE_TYPE); j++) {
+            BASE_TYPE val1 = test_values[i];
+            BASE_TYPE val2 = test_values[j];
+            ATOMIC_TYPE atomic_val = ATOMIC_INITIALIZER(val1);
+            pingpong_t pingpong_arg;
+            if (val1 <= val2)
+                continue;
+            pingpong_arg.val1 = val1;
+            pingpong_arg.val2 = val2;
+            pingpong_arg.p_atomic_val = &atomic_val;
+            test_parallel_for(2, pingpong, &pingpong_arg);
+        }
+    }
+    return 0;
+#endif
+}
+
+static void pingpong(int num_threads, int tid, void *arg)
+{
+    pingpong_t *pingpong_arg = (pingpong_t *)arg;
+    BASE_TYPE val1 = pingpong_arg->val1;
+    BASE_TYPE val2 = pingpong_arg->val2;
+    BASE_TYPE fetch_val;
+    ATOMIC_TYPE *p_atomic_val = pingpong_arg->p_atomic_val;
+    int i;
+    TEST_ASSERT(val1 > val2);
+    for (i = 0; i < 8192; i++) {
+        if (tid == 0) {
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val1);
+            fetch_val = ATOMIC_FETCH_SUB(p_atomic_val, val1 - val2);
+            TEST_ASSERT(fetch_val == val1);
+
+            while (ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val2);
+        } else if (tid == 1) {
+            while (ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val1);
+
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val2);
+            fetch_val = ATOMIC_FETCH_ADD(p_atomic_val, val1 - val2);
+            TEST_ASSERT(fetch_val == val2);
+        }
+    }
+}

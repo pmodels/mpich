@@ -1,0 +1,125 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "atomic_test.h"
+
+typedef struct deptest_t {
+    int tid;
+    int num_threads;
+    BASE_TYPE val1;
+    BASE_TYPE val2;
+    BASE_TYPE val3;
+    ATOMIC_TYPE *p_atomic_val;
+    ATOMIC_TYPE *p_barrier_val;
+    int *p_data;
+} deptest_t;
+
+BASE_TYPE test_values[] = TEST_VALUES;
+
+static void deptest(int num_threads, int tid, void *arg);
+
+int main()
+{
+#ifdef MPL_USE_NO_ATOMIC_PRIMITIVES
+    return 0;
+#else
+    int i, j, k;
+    int *p_buffer = (int *)malloc(sizeof(int) * 2000);
+    for (i = 0; i < sizeof(test_values) / sizeof(BASE_TYPE); i++) {
+        for (j = 0; j < sizeof(test_values) / sizeof(BASE_TYPE); j++) {
+            for (k = 0; k < sizeof(test_values) / sizeof(BASE_TYPE); k++) {
+                BASE_TYPE val1 = test_values[i];
+                BASE_TYPE val2 = test_values[j];
+                BASE_TYPE val3 = test_values[k];
+                ATOMIC_TYPE atomic_val = ATOMIC_INITIALIZER(val1);
+                ATOMIC_TYPE barrier_val = ATOMIC_INITIALIZER(val1);
+                deptest_t deptest_arg;
+                if (val1 == val2 || val2 == val3 || val1 == val3)
+                    continue;
+                deptest_arg.p_atomic_val = &atomic_val;
+                deptest_arg.p_barrier_val = &barrier_val;
+                deptest_arg.val1 = val1;
+                deptest_arg.val2 = val2;
+                deptest_arg.val3 = val3;
+                deptest_arg.p_data = &p_buffer[1000]; /* avoid cache line sharing */
+                test_parallel_for(2, deptest, &deptest_arg);
+            }
+        }
+    }
+    free(p_buffer);
+    return 0;
+#endif
+}
+
+static void thread_barrier(int tid, ATOMIC_TYPE *p_barrier_val, BASE_TYPE val1, BASE_TYPE val2)
+{
+    if (tid == 0) {
+        while (ATOMIC_ACQUIRE_LOAD(p_barrier_val) != val2);
+        ATOMIC_RELEASE_STORE(p_barrier_val, val1);
+    } else {
+        TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_barrier_val) == val1);
+        ATOMIC_RELEASE_STORE(p_barrier_val, val2);
+        while (ATOMIC_ACQUIRE_LOAD(p_barrier_val) != val1);
+    }
+}
+
+static void deptest(int num_threads, int tid, void *arg)
+{
+    deptest_t *deptest_arg = (deptest_t *)arg;
+    int *p_data = deptest_arg->p_data;
+    BASE_TYPE val1 = deptest_arg->val1;
+    BASE_TYPE val2 = deptest_arg->val2;
+    BASE_TYPE val3 = deptest_arg->val3;
+    BASE_TYPE cas_val;
+    ATOMIC_TYPE *p_atomic_val = deptest_arg->p_atomic_val;
+    ATOMIC_TYPE *p_barrier_val = deptest_arg->p_barrier_val;
+    int i;
+
+    for (i = 0; i < 8192; i++) {
+        /* store before successful cas must be flushed before cas */
+        if (tid == 0) {
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val1);
+            *p_data = 1;
+            cas_val = ATOMIC_CAS(p_atomic_val, val1, val2);
+            TEST_ASSERT(cas_val == val1);
+        } else {
+            int val = *p_data; /* dummy */
+            while (ATOMIC_ACQUIRE_LOAD(p_atomic_val) != val2);
+            val = *p_data;
+            TEST_ASSERT(val == 1);
+        }
+
+        thread_barrier(tid, p_barrier_val, val1, val2);
+
+        /* load after successful cas must be performed after cas */
+        if (tid == 0) {
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val2);
+            *p_data = 2;
+            ATOMIC_RELEASE_STORE(p_atomic_val, val1);
+        } else {
+            int val = *p_data; /* dummy */
+            while (ATOMIC_CAS(p_atomic_val, val1, val2) != val1);
+            val = *p_data;
+            TEST_ASSERT(val == 2);
+        }
+
+        thread_barrier(tid, p_barrier_val, val1, val2);
+
+        /* load after unsuccessful cas must be performed after cas */
+        if (tid == 0) {
+            TEST_ASSERT(ATOMIC_ACQUIRE_LOAD(p_atomic_val) == val2);
+            *p_data = 0;
+            ATOMIC_RELEASE_STORE(p_atomic_val, val1);
+        } else {
+            int val = *p_data; /* dummy */
+            while (ATOMIC_CAS(p_atomic_val, val3, val2) != val1);
+            val = *p_data;
+            TEST_ASSERT(val == 0);
+        }
+
+        thread_barrier(tid, p_barrier_val, val1, val2);
+    }
+}

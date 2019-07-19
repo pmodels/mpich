@@ -1,0 +1,89 @@
+#! /bin/bash
+
+function replace {
+  sed -i "s/$2/$3/g" "$1"
+}
+
+function create_base {
+  create_base_type="$1"
+  create_base_template="$2"
+  create_base_output="$3"
+  cp "$create_base_template" "$create_base_output"
+  if [ "x$create_base_type" = "xint" ]; then
+    create_base_base_type="int"
+    create_base_suffix_lower="int"
+    create_base_suffix_upper="INT"
+    create_base_test_values="0, -1, 1, 2, INT_MAX, INT_MIN"
+  elif [ "x$create_base_type" = "xint32" ]; then
+    create_base_base_type="int32_t"
+    create_base_suffix_lower="int32"
+    create_base_suffix_upper="INT32"
+    create_base_test_values="0, -1, 1, 2, INT32_MAX, INT32_MIN"
+  elif [ "x$create_base_type" = "xuint32" ]; then
+    create_base_base_type="uint32_t"
+    create_base_suffix_lower="uint32"
+    create_base_suffix_upper="UINT32"
+    create_base_test_values="0, 1, 2, UINT32_MAX"
+  elif [ "x$create_base_type" = "xint64" ]; then
+    create_base_base_type="int64_t"
+    create_base_suffix_lower="int64"
+    create_base_suffix_upper="INT64"
+    create_base_test_values="0, -1, 1, 2, INT64_MAX, INT64_MIN"
+  elif [ "x$create_base_type" = "xuint64" ]; then
+    create_base_base_type="uint64_t"
+    create_base_suffix_lower="uint64"
+    create_base_suffix_upper="UINT64"
+    create_base_test_values="0, 1, 2, UINT64_MAX"
+  elif [ "x$create_base_type" = "xptr" ]; then
+    create_base_base_type="void *"
+    create_base_suffix_lower="ptr"
+    create_base_suffix_upper="PTR"
+    create_base_test_values="NULL, ((void *)(intptr_t)(-1)), ((void *)(intptr_t)(1)), ((void *)(intptr_t)(2))"
+  fi
+
+  replace "$create_base_output" "BASE_TYPE" "$create_base_base_type"
+  replace "$create_base_output" "ATOMIC_TYPE" "MPL_atomic_${create_base_suffix_lower}_t"
+  replace "$create_base_output" "ATOMIC_INITIALIZER" "MPL_ATOMIC_${create_base_suffix_upper}_T_INITIALIZER"
+  replace "$create_base_output" "ATOMIC_RELAXED_LOAD" "MPL_atomic_relaxed_load_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_ACQUIRE_LOAD" "MPL_atomic_acquire_load_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_RELAXED_STORE" "MPL_atomic_relaxed_store_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_RELEASE_STORE" "MPL_atomic_release_store_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_SWAP" "MPL_atomic_swap_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_CAS" "MPL_atomic_cas_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_FETCH_ADD" "MPL_atomic_fetch_add_${create_base_suffix_lower}"
+  replace "$create_base_output" "ATOMIC_FETCH_SUB" "MPL_atomic_fetch_sub_${create_base_suffix_lower}"
+  replace "$create_base_output" "TEST_VALUES" "\{${create_base_test_values}\}"
+}
+
+for type in "int" "int32" "uint32" "int64" "uint64" "ptr"; do
+  # basic
+  create_base $type templates/loadstore_basic.c.template loadstore_basic_$type.c
+  create_base $type templates/cas_basic.c.template cas_basic_$type.c
+  create_base $type templates/swap_basic.c.template swap_basic_$type.c
+  if [ "x$type" != "xptr" ]; then
+    create_base $type templates/fetch_basic.c.template fetch_basic_$type.c
+  fi
+  # pingpong
+  create_base $type templates/loadstore_pingpong.c.template loadstore_pingpong_$type.c
+  create_base $type templates/cas_pingpong.c.template cas_pingpong_$type.c
+  create_base $type templates/swap_pingpong.c.template swap_pingpong_$type.c
+  if [ "x$type" != "xptr" ]; then
+    create_base $type templates/fetch_pingpong.c.template fetch_pingpong_$type.c
+  fi
+  # lock
+  create_base $type templates/cas_lock.c.template cas_lock_$type.c
+  create_base $type templates/swap_lock.c.template swap_lock_$type.c
+  if [ "x$type" != "xptr" ]; then
+    create_base $type templates/fetch_lock.c.template fetch_lock_$type.c
+  fi
+  # dependency
+  create_base $type templates/loadstore_dep.c.template loadstore_dep_$type.c
+  create_base $type templates/cas_dep.c.template cas_dep_$type.c
+  create_base $type templates/swap_dep.c.template swap_dep_$type.c
+  if [ "x$type" != "xptr" ]; then
+    create_base $type templates/fetch_dep.c.template fetch_dep_$type.c
+  fi
+done
+
+# clean up the code
+sh ../../../../maint/code-cleanup.sh *.c
