@@ -128,6 +128,9 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
     char *ptr;
     int i;
 
+    MPIR_Assert(indirect_num_blocks > 0);
+    MPIR_Assert(indirect_num_indices > 0);
+
     /* Must create new storage for dynamically allocated objects */
     /* Create the table */
     if (!*indirect) {
