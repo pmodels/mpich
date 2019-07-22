@@ -194,6 +194,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MP
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPIDI_vci_progress_counter++;
+    if (MPIDI_vci_progress_counter > MPIDI_MAX_VCI_PROGRESS_ATTEMPTS) {
+        return MPIR_Test_impl(request_ptr, flag, status);
+    }
+
     int vci = MPIDI_REQUEST(request_ptr, vci);
     mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
     if (mpi_errno)
@@ -251,6 +256,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Testany(int count, MPIR_Request * request_ptrs
         return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
     }
 
+    MPIDI_vci_progress_counter++;
+    if (MPIDI_vci_progress_counter > MPIDI_MAX_VCI_PROGRESS_ATTEMPTS) {
+        return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
+    }
+
     int i;
     int n_inactive = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -303,6 +313,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_p
 
     int vci = requests_has_single_vci(incount, request_ptrs);
     if (vci < 0) {
+        return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    }
+
+    MPIDI_vci_progress_counter++;
+    if (MPIDI_vci_progress_counter > MPIDI_MAX_VCI_PROGRESS_ATTEMPTS) {
         return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
     }
 

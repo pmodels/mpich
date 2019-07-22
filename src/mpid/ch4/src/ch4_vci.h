@@ -9,6 +9,10 @@
 
 #include "ch4_impl.h"
 
+/* Progress counter to ensure calling global progress every so often */
+#define MPIDI_MAX_VCI_PROGRESS_ATTEMPTS 1000000
+extern int MPIDI_vci_progress_counter;
+
  /** Slow-path function declarations **/
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 int MPIDI_vci_pool_alloc(int num_vsis, int num_vnis);

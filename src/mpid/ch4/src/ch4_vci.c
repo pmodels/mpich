@@ -7,6 +7,9 @@
 #include "mpidimpl.h"
 #include "ch4_vci.h"
 
+/* global counter so we can call global progress every MPIDI_MAX_VCI_PROGRESS_ATTEMPTS */
+int MPIDI_vci_progress_counter; 
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 static void vci_arm(MPIDI_vci_t * vci, int vni, int vsi);
 #else
