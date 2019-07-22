@@ -26,11 +26,12 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_AV_TO_PHYS(av, vni) (MPIDI_OFI_AV(av).dest[vni])
+#define MPIDI_OFI_AV_TO_PHYS(av, local_vni, remote_vni) \
+    (MPIDI_OFI_AV(av).vni_dest[local_vni][remote_vni])
 #define MPIDI_OFI_COMM_TO_PHYS(comm,rank)                       \
-    MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).dest[0]
+    MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).vni_dest[0][0]
 #define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[0]
+    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).vni_dest[0][0]
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -358,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
         int ep_num = MPIDI_OFI_av_to_ep(av);
         int rx_idx = ep_num;
-        return fi_rx_addr(av->dest[0], rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(av->vni_dest[0][0], rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
     }
@@ -368,19 +369,20 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
-        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av, 0), ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av, 0, 0), ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV_TO_PHYS(av, 0);
+        return MPIDI_OFI_AV_TO_PHYS(av, 0, 0);
     }
 }
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys_target_vni(MPIDI_av_entry_t * av,
+                                                                   int local_vni,
                                                                    int target_vni)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av, target_vni), 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av, local_vni, target_vni), 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV_TO_PHYS(av, 0);
+        return MPIDI_OFI_AV_TO_PHYS(av, 0, 0);
     }
 }
 

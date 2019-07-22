@@ -32,6 +32,8 @@ enum {
 #define MPIDI_OFI_MAX_ENDPOINTS_REGULAR         1
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR    0
 
+#define MPIDI_OFI_MAX_VNI 16
+
 /* This needs to be kept in sync with the order in globals.c */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 {

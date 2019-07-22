@@ -191,7 +191,7 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 typedef struct {
-    fi_addr_t dest[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    fi_addr_t vni_dest[MPIDI_OFI_MAX_VNI][MPIDI_OFI_MAX_VNI]; /* [local_vni][remote_vni] */
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
 #else                           /* This is necessary for older GCC compilers that don't properly detect

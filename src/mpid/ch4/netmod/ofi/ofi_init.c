@@ -763,7 +763,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* directly references the mapped fi_addr_t array instead               */
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0 /*WRONG*/] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).vni_dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
@@ -818,8 +818,13 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     MPIDI_OFI_VNI_POOL(max_vnis) = 1;
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
-                                  prov_use->domain_attr->rx_ctx_cnt);
+        #if 0 /* TODO: define option to use SEP contexts or use fi_domain */
+            int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
+                                    prov_use->domain_attr->rx_ctx_cnt);
+        #else
+            /* TODO: check max # of fi_domain by provider */
+            int max_by_prov = MPIDI_OFI_MAX_VNI;
+        #endif
         if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 0)
             MPIDI_OFI_VNI_POOL(max_vnis) = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VNIS, max_by_prov);
         if (MPIDI_OFI_VNI_POOL(max_vnis) < 1) {
@@ -883,7 +888,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                            avmap);
 
             for (i = 0; i < num_nodes; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0 /*WRONG*/] = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).vni_dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
 #else
@@ -900,7 +905,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                            avmap);
 
             for (i = 0; i < size; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0] = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).vni_dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
@@ -1237,7 +1242,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, new_upids[i],
                                         1,
                                         (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0 /*WRONG*/],
+                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).vni_dest[0][0],
                                         0ULL, NULL), avmap);
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
@@ -1248,7 +1253,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0 /*WRONG*/]));
+                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).vni_dest[0][0]));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
