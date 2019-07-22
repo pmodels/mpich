@@ -576,6 +576,9 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
         goto fn_exit;
 
     /* Ensure op completion in netmod and shmmod */
+    // MPL_thread_id_t self;
+    // MPL_thread_self(&self);
+    // printf("MPIDIG_mpi_win_flush: vci=%d, thread=%lx, mutex_owner=%lx\n", vci, self, MPIDI_VCI(0).lock.owner);
     mpi_errno = MPIDI_NM_rma_target_cmpl_hook(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
