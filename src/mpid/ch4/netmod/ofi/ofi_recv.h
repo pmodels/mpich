@@ -407,7 +407,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
 
-    printf("NM_mpi_cancel_recv: Not implemented for multiple VCIs!\n");
+    // printf("NM_mpi_cancel_recv: Not implemented for multiple VCIs!\n");
     int mpi_errno = MPI_SUCCESS;
     ssize_t ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
