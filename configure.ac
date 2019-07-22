@@ -3032,30 +3032,6 @@ if test "$pac_cv_c_double_alignment_exception" = "four" ; then
    AC_DEFINE_UNQUOTED(HAVE_DOUBLE_ALIGNMENT_EXCEPTION,4,[Controls how alignment of doubles is performed, separate from other FP values])
 fi
 
-# Test whether pointers can be aligned on a int boundary or require
-# a pointer boundary.
-AC_MSG_CHECKING([for alignment restrictions on pointers])
-AC_TRY_RUN(
-changequote(<<,>>)
-struct foo { int a; void *b; };
-int main() {
-    int buf[10];
-    struct foo *p1;
-    p1=(struct foo*)&buf[0];
-    p1->b = (void *)0;
-    p1=(struct foo*)&buf[1];
-    p1->b = (void *)0;
-    return 0;
-changequote([,])
-},pac_cv_pointers_have_int_alignment=yes,pac_cv_pointers_have_int_alignment=no,pac_cv_pointers_have_int_alignment=unknown)
-
-if test "$pac_cv_pointers_have_int_alignment" != "yes" ; then
-   AC_DEFINE(NEEDS_POINTER_ALIGNMENT_ADJUST,1,[define if pointers must be aligned on pointer boundaries])
-   AC_MSG_RESULT([pointer])
-else
-   AC_MSG_RESULT([int or better])
-fi
-
 # Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)
 if test "$host_cpu" = "sparc" ; then
     AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
