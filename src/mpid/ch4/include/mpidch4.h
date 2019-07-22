@@ -285,6 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "ch4_proc.h"
 #include "ch4_coll.h"
 #include "ch4_vci.h"
+#include "ch4_wait.h"
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 extern int MPIDI_num_netmods;
