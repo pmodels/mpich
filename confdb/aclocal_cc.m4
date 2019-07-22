@@ -1677,3 +1677,29 @@ AC_DEFUN([PAC_CC_CHECK_TLS], [
         AC_DEFINE_UNQUOTED([TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
     fi
 ])
+
+dnl Test whether pointers can be aligned on a int boundary or require
+dnl a pointer boundary.
+AC_DEFUN([PAC_CHECK_PTR_ALIGN]), [
+    AC_MSG_CHECKING([for alignment restrictions on pointers])
+    AC_TRY_RUN(
+    changequote(<<,>>)
+    struct foo { int a; void *b; };
+    int main() {
+        int buf[10];
+        struct foo *p1;
+        p1=(struct foo*)&buf[0];
+        p1->b = (void *)0;
+        p1=(struct foo*)&buf[1];
+        p1->b = (void *)0;
+        return 0;
+    changequote([,])
+    },pac_cv_pointers_have_int_alignment=yes,pac_cv_pointers_have_int_alignment=no,pac_cv_pointers_have_int_alignment=unknown)
+
+    if test "$pac_cv_pointers_have_int_alignment" != "yes" ; then
+        AC_DEFINE(NEEDS_POINTER_ALIGNMENT_ADJUST,1,[define if pointers must be aligned on pointer boundaries])
+        AC_MSG_RESULT([pointer])
+    else
+        AC_MSG_RESULT([int or better])
+    fi
+])
