@@ -192,7 +192,7 @@ for algo_name in ${algo_names}; do
     if [ "${algo_name}" != "gentran_ring" ]; then
         for kval in ${kvalues}; do
             env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name}"
-            if [ "${algo_name}" != "gentran_brucks" ]; then
+            if [ "${algo_name}" = "gentran_brucks" ]; then
                 env="${env} env=MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL=${kval}"
             else
                 env="${env} env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
