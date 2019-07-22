@@ -190,10 +190,31 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
     goto fn_exit;
 }
 
-/* default */
 MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
-    return MPIR_Test_impl(request_ptr, flag, status);
+    int mpi_errno = MPI_SUCCESS;
+
+    int vci = MPIDI_REQUEST(request_ptr, vci);
+    mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (MPIR_Request_has_poll_fn(request_ptr)) {
+        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+    if (MPIR_Request_is_complete(request_ptr))
+        *flag = TRUE;
+    else
+        *flag = FALSE;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testall(int count, MPIR_Request * request_ptrs[],
@@ -203,17 +224,124 @@ MPL_STATIC_INLINE_PREFIX int MPID_Testall(int count, MPIR_Request * request_ptrs
     return MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses, requests_property);
 }
 
+MPL_STATIC_INLINE_PREFIX int requests_has_single_vci(int count, MPIR_Request * request_ptrs[])
+{
+    int vci = -1;
+    int i;
+    for (i = 0; i < count; i++) {
+        if (request_ptrs[i]) {
+            int t_vci = MPIDI_REQUEST(request_ptrs[i], vci);
+            if (vci >= 0) {
+                if (vci != t_vci)
+                    return -1;
+            }
+            else {
+                vci = t_vci;
+            }
+        }
+    }
+    return vci;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPID_Testany(int count, MPIR_Request * request_ptrs[],
                                           int *indx, int *flag, MPI_Status * status)
 {
-    return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
+    int vci = requests_has_single_vci(count, request_ptrs);
+    if (vci < 0) {
+        return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
+    }
+
+    int i;
+    int n_inactive = 0;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    /* --END ERROR HANDLING-- */
+
+    for (i = 0; i < count; i++) {
+        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+            mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+
+        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
+            mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        }
+        if (!MPIR_Request_is_active(request_ptrs[i])) {
+            n_inactive += 1;
+        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
+            *flag = TRUE;
+            *indx = i;
+            goto fn_exit;
+        }
+    }
+
+    if (n_inactive == count) {
+        *flag = TRUE;
+        *indx = MPI_UNDEFINED;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_ptrs[],
                                            int *outcount, int array_of_indices[],
                                            MPI_Status array_of_statuses[])
 {
-    return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    int i;
+    int n_inactive;
+    int mpi_errno = MPI_SUCCESS;
+
+    int vci = requests_has_single_vci(incount, request_ptrs);
+    if (vci < 0) {
+        return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    }
+
+    mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+    /* --END ERROR HANDLING-- */
+
+    n_inactive = 0;
+    *outcount = 0;
+
+    for (i = 0; i < incount; i++) {
+        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+            mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL, MPIDI_PROGRESS_TYPE__VCI, vci);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+
+        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
+            mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        }
+        if (!MPIR_Request_is_active(request_ptrs[i])) {
+            n_inactive += 1;
+        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
+            array_of_indices[*outcount] = i;
+            *outcount += 1;
+        }
+    }
+
+    if (n_inactive == incount)
+        *outcount = MPI_UNDEFINED;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],
