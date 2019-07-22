@@ -188,6 +188,7 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
 
+#if MPIDI_CH4_VCI_METHOD == MPICH_VCI__COMM
         /* Assign a VCI for this communicator and store the mapping.
          * Current policy: Try allocating an exclusive VCI for this communicator.
          * If the allocation fails, we assign the shared VCI to this communicator.
@@ -212,8 +213,8 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
         }
 
         MPIDI_COMM_VCI(comm) = vci;
+#endif
     }
-
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -293,11 +294,12 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
 
+#if MPIDI_CH4_VCI_METHOD == MPICH_VCI__COMM
     mpi_errno = MPIDI_vci_free(MPIDI_COMM_VCI(comm));
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    
+#endif    
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

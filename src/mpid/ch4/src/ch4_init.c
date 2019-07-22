@@ -454,6 +454,13 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
+#if MPIDI_CH4_VCI_METHOD != MPICH_VCI__COMM
+    for (i = 0; i < n_vnis_provided; i++) {
+        int vci;
+        MPIDI_vci_alloc(MPIDI_VCI_TYPE__EXCLUSIVE, MPIDI_VCI_RESOURCE__GENERIC, MPIDI_VCI_PROPERTY__GENERIC, &vci);
+        assert(vci == i);
+    }
+#else
     /* Allocate the root VCI and store in comm_world */
     mpi_errno =
         MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
@@ -475,6 +482,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
         MPIR_ERR_POPFATAL(mpi_errno);
     }
     MPIDI_COMM_VCI(MPIR_Process.comm_self) = vci;
+#endif
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();

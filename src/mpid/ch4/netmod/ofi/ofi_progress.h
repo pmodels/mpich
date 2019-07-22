@@ -32,8 +32,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
             mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret);
         else if (ret == -FI_EAGAIN)
             mpi_errno = MPI_SUCCESS;
-        else
+        else {
             mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
+        }
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);

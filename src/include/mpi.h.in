@@ -2262,6 +2262,8 @@ int MPIX_Grequest_start(MPI_Grequest_query_function *query_fn,
                         MPIX_Grequest_wait_function *wait_fn, void *extra_state,
                         MPI_Request *request) MPICH_API_PUBLIC;
 
+int MPIX_set_vci(int vci_src, int vci_dst) MPICH_API_PUBLIC;
+
 #if !defined(MPI_BUILD_PROFILING)
 /* Generalized requests extensions */
 int PMPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,

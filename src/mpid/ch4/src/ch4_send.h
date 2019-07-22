@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
                                                int tag,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * av, MPIR_Request ** request,
-                                               int vci)
+                                               int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_UNSAFE);
@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     else
         mpi_errno =
-            MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+            MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
     if (mpi_errno == MPI_SUCCESS && *request)
         MPIDI_REQUEST(*request, is_local) = r;
 #endif
@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
                                                 int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * av, MPIR_Request ** request,
-                                                int vci)
+                                                int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_UNSAFE);
@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     else {
         mpi_errno =
-            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
     }
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_REQUEST(*request, is_local) = r;
@@ -173,13 +173,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
                                              int rank,
                                              int tag,
                                              MPIR_Comm * comm, int context_offset,
-                                             MPIDI_av_entry_t * av, MPIR_Request ** req, int vci)
+                                             MPIDI_av_entry_t * av, MPIR_Request ** req, int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_VCI(vci).lock, cs_acq);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_VCI(src_vci).lock, cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -193,11 +193,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
         *(req) = NULL;
         MPIDI_workq_vci_progress_unsafe();
         mpi_errno =
-            MPIDI_send_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req, vci);
+            MPIDI_send_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req, src_vci, dst_vci);
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_VCI(vci).lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_VCI(src_vci).lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_SAFE);
     return mpi_errno;
 
@@ -211,13 +211,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                                               int rank,
                                               int tag,
                                               MPIR_Comm * comm, int context_offset,
-                                              MPIDI_av_entry_t * av, MPIR_Request ** req, int vci)
+                                              MPIDI_av_entry_t * av, MPIR_Request ** req, int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS, cs_acq = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ISEND_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_VCI(vci).lock, cs_acq);
+    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_VCI(src_vci).lock, cs_acq);
 
     if (!cs_acq) {
         *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -231,11 +231,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
         *(req) = NULL;
         MPIDI_workq_vci_progress_unsafe();
         mpi_errno =
-            MPIDI_isend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req, vci);
+            MPIDI_isend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req, src_vci, dst_vci);
     }
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_VCI(vci).lock, cs_acq);
+    MPID_THREAD_SAFE_END(VCI, MPIDI_VCI(src_vci).lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ISEND_SAFE);
     return mpi_errno;
 
@@ -328,7 +328,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int vci;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
@@ -341,9 +340,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
+    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
+    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
     mpi_errno =
-        MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -364,7 +364,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int vci;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND);
@@ -377,9 +376,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
+    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
+    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
     mpi_errno =
-        MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -407,7 +407,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
      */
 
     int mpi_errno = MPI_SUCCESS;
-    int vci;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
@@ -420,9 +419,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
+    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
+    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
     mpi_errno =
-        MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -449,7 +449,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
      */
 
     int mpi_errno = MPI_SUCCESS;
-    int vci;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRSEND);
@@ -462,9 +461,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
+    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
+    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
     mpi_errno =
-        MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
+        MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

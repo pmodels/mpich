@@ -305,3 +305,28 @@ int MPIDI_vci_free(int vci)
   fn_fail:
     goto fn_exit;
 }
+
+#if MPIDI_CH4_VCI_METHOD == MPICH_VCL__TLS
+
+#ifdef MPL_TLS
+MPL_TLS int MPIDI_vci_src = 0;
+MPL_TLS int MPIDI_vci_dst = 0;
+#else
+int MPIDI_vci_src = 0;
+int MPIDI_vci_dst = 0;
+#endif
+
+int MPIX_set_vci(int vci_src, int vci_dst)
+{
+    MPIDI_vci_src = vci_src % MPIDI_VCI_POOL(max_vcis);
+    MPIDI_vci_dst = vci_dst % MPIDI_VCI_POOL(max_vcis);
+    return MPI_SUCCESS;
+}
+
+#else
+int MPIX_set_vci(int vci_src, int vci_dst)
+{
+    return MPI_SUCCESS;
+}
+
+#endif

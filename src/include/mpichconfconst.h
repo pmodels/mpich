@@ -36,6 +36,13 @@
 #define MPICH_THREAD_GRANULARITY__SINGLE 4
 #define MPICH_THREAD_GRANULARITY__VCI 5
 
+/* Define method to map VCI */
+#define MPICH_VCI__ZERO 0    /* vci === 0 */
+#define MPICH_VCI__COMM 1 /* vci inside comm */
+#define MPICH_VCI__TAG 2     /* vci caculated from tag */
+#define MPICH_VCI__TLS 3     /* e.g. MPIX_Set_vci(...) */
+#define MPICH_VCI__MPIX 4    /* e.g. MPIX_Send_vci(...) */
+
 /* _NONE means no concurrency control, such as when using MPI_THREAD_SINGLE */
 #define MPICH_REFCOUNT__NONE 1
 #define MPICH_REFCOUNT__LOCKFREE 2
