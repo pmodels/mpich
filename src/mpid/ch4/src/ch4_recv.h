@@ -377,8 +377,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
-    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
+    int src_vci = 0;
+    int dst_vci = 0;
+    if (context_offset == 0) { /* pt2pt */
+        src_vci = MPIDI_vci_get_src(comm, rank, tag);
+        dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
+    }
     mpi_errno =
         MPIDI_recv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, status, request,
                         src_vci, dst_vci);
@@ -547,8 +551,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    int src_vci = MPIDI_vci_get_src(comm, rank, tag);
-    int dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
+    int src_vci = 0;
+    int dst_vci = 0;
+    if (context_offset == 0) { /* pt2pt */
+        src_vci = MPIDI_vci_get_src(comm, rank, tag);
+        dst_vci = MPIDI_vci_get_dst(comm, rank, tag);
+    }
     mpi_errno =
         MPIDI_irecv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, src_vci, dst_vci);
 
