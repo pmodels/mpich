@@ -23,8 +23,8 @@ AH_BOTTOM([
 #endif /* !defined(DTPOOLSCONF_H_INCLUDED) */
 ])
 
-AC_CONFIG_AUX_DIR([../confdb])
-AC_CONFIG_MACRO_DIR([../confdb])
+AC_CONFIG_AUX_DIR([confdb])
+AC_CONFIG_MACRO_DIR([confdb])
 
 # Ensure we have an MPI compiler wrapper
 if test -n "$MPICC" ; then
