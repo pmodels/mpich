@@ -42,6 +42,7 @@ C
       logical flag
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
+      integer completed
       common /flags/ verbose
 C
       if (verbose) then
@@ -74,16 +75,16 @@ C
 C
          call MPI_Startall(2, requests, ierr)
 C
-         index = -1
-         do while (index .ne. 1)
+         completed = 0
+         do while (completed .lt. 2)
             call MPI_Testsome(2, requests, outcount,
      .                        indices, statuses, ierr)
             do i = 1,outcount
                if (indices(i) .eq. 1) then
                   call msg_check( recv_buf, next, tag, count,
      .                 statuses(1,i), TEST_SIZE, 'testsome', errs )
-                  index = 1
                end if
+               completed = completed + 1
             end do
          end do
 C
