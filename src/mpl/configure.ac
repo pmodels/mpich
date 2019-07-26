@@ -579,7 +579,9 @@ AC_ARG_ENABLE([yield],
      AS_CASE([$host],
         [*-*-darwin*],
             [# In Lion, sched_yield worked but none of the other options had any effect
-             AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
+             # In Mojave x86_64, sched_yield may yield to threads in thread_wait_barrier which is slow to yield back,
+             #    usleep(0) seems work well.
+             AS_IF([test "x$ac_cv_func_usleep" = "xyes"], [enable_yield=usleep],
                    [enable_yield=nothing])],
         [*-*-linux*],
             [# sched_yield() has been broken in linux since 2.6.23, and no good alternative exists.
