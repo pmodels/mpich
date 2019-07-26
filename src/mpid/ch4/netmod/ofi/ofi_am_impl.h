@@ -199,7 +199,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,
                                                const void *am_hdr,
-                                               size_t am_hdr_sz, MPIR_Request * sreq, int is_reply)
+                                               size_t am_hdr_sz, MPIR_Request * sreq)
 {
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -388,8 +388,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
                                         const void *am_hdr,
                                         size_t am_hdr_sz,
                                         const void *buf,
-                                        size_t count,
-                                        MPI_Datatype datatype, MPIR_Request * sreq, int is_reply)
+                                        size_t count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
@@ -493,8 +492,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
 
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
-                                      int handler_id,
-                                      const void *am_hdr, size_t am_hdr_sz, int is_reply)
+                                      int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;
