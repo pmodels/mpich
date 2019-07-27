@@ -1290,7 +1290,7 @@ static int ADIOI_GEN_irc_wait_fn(int count, void **array_of_states,
 
             /* If the progress engine is blocked, we have to yield for another
              * thread to be able to unblock the progress engine. */
-            MPIR_Ext_cs_yield();
+            ROMIO_THREAD_CS_YIELD();
         }
     }
 
