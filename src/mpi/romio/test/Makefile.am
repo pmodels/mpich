@@ -28,11 +28,11 @@ CTESTS = simple perf async coll_test coll_perf misc file_info excl large_array \
 FTESTS = fcoll_test fperf fmisc pfcoll_test 
 
 
-noinst_PROGRAMS = $(CTESTS)
+check_PROGRAMS = $(CTESTS)
 
 if BUILD_F77_TESTS
 
-noinst_PROGRAMS += $(FTESTS)
+check_PROGRAMS += $(FTESTS)
 fperf_SOURCES = fperf.f
 fcoll_test_SOURCES = fcoll_test.f
 fmisc_SOURCES = fmisc.f
@@ -40,3 +40,4 @@ pfcoll_test_SOURCES = pfcoll_test.f
 
 endif BUILD_F77_TESTS
 
+TESTS = runtests

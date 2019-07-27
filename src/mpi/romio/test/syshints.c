@@ -55,5 +55,5 @@ int main(int argc, char **argv)
     CHECK(MPI_Info_free(&info_used));
     CHECK(MPI_File_close(&fh));
     MPI_Finalize();
-    return nr_errors;
+    return (nr_errors > 0);
 }
