@@ -27,7 +27,7 @@ int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype dataty
         goto fn_exit;
 
     if (is_contig) {
-#ifdef HAVE_MPIIO_CONST
+#if MPI_VERSION >= 3
         mpi_errno = MPI_Pack_external("external32", userbuf, count,
                                       datatype, filebuf, bytes, &position);
 #else
@@ -43,7 +43,7 @@ int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype dataty
             mpi_errno = MPI_ERR_NO_MEM;
             goto fn_exit;
         }
-#ifdef HAVE_MPIIO_CONST
+#if MPI_VERSION >= 3
         mpi_errno = MPI_Pack_external("external32", userbuf, count,
                                       datatype, tmp_buf, bytes, &position);
 #else
