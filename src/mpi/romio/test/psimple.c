@@ -112,5 +112,5 @@ int main(int argc, char **argv)
     free(tmp);
 
     PMPI_Finalize();
-    return 0;
+    return (toterrs > 0);
 }

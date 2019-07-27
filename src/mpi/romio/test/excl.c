@@ -53,8 +53,17 @@ int main(int argc, char **argv)
     }
 
 
-    if (!rank)
+    if (!rank) {
         MPI_File_delete(filename, MPI_INFO_NULL);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE) {   /* ignore this error class */
+                fprintf(stderr, "Process %d: fails to delete file %s\n", rank, filename);
+                errs++;
+            }
+        }
+    }
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* this open should succeed */
@@ -89,5 +98,5 @@ int main(int argc, char **argv)
 
     free(filename);
     MPI_Finalize();
-    return 0;
+    return (toterrs > 0);
 }

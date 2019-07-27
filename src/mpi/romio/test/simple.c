@@ -122,5 +122,5 @@ int main(int argc, char **argv)
     free(tmp);
 
     MPI_Finalize();
-    return 0;
+    return (toterrs > 0);
 }

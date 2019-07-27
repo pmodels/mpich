@@ -172,4 +172,6 @@
 
       call MPI_FINALIZE(ierr)
 
+      if (toterrs .gt. 0) stop 1
+
       end

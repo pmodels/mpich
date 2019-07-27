@@ -28,7 +28,7 @@ static void handle_error(int errcode, const char *str)
 int main(int argc, char **argv)
 {
     int *buf, i, mynod, nprocs, len, b[3];
-    int errs = 0, toterrs;
+    int err, errs = 0, toterrs;
     MPI_Aint d[3];
     MPI_File fh;
     MPI_Status status;
@@ -89,7 +89,13 @@ int main(int argc, char **argv)
         fprintf(stderr,
                 "\ntesting noncontiguous in memory, noncontiguous in file using collective I/O\n");
 #endif
-        MPI_File_delete(filename, MPI_INFO_NULL);
+        err = MPI_File_delete(filename, MPI_INFO_NULL);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -141,7 +147,13 @@ int main(int argc, char **argv)
         fprintf(stderr,
                 "\ntesting noncontiguous in memory, contiguous in file using collective I/O\n");
 #endif
-        MPI_File_delete(filename, MPI_INFO_NULL);
+        err = MPI_File_delete(filename, MPI_INFO_NULL);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -192,7 +204,13 @@ int main(int argc, char **argv)
         fprintf(stderr,
                 "\ntesting contiguous in memory, noncontiguous in file using collective I/O\n");
 #endif
-        MPI_File_delete(filename, MPI_INFO_NULL);
+        err = MPI_File_delete(filename, MPI_INFO_NULL);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -247,5 +265,5 @@ int main(int argc, char **argv)
     free(buf);
     free(filename);
     MPI_Finalize();
-    return 0;
+    return (toterrs > 0);
 }

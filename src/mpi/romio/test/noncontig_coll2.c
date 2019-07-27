@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     free(filename);
     free(cb_config_string);
     MPI_Finalize();
-    return 0;
+    return (sum_errs > 0);
 }
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
@@ -359,7 +359,7 @@ int main(int argc, char **argv)
 int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose)
 {
     MPI_Datatype typevec, newtype, t[3];
-    int *buf, i, b[3], errcode, errors = 0;
+    int *buf, i, b[3], err, errcode, errors = 0;
     MPI_File fh;
     MPI_Aint d[3];
     MPI_Status status;
@@ -401,7 +401,13 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         if (verbose)
             fprintf(stderr,
                     "\ntesting noncontiguous in memory, noncontiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -468,7 +474,13 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         if (verbose)
             fprintf(stderr,
                     "\ntesting noncontiguous in memory, contiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -521,7 +533,13 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         if (verbose)
             fprintf(stderr,
                     "\ntesting contiguous in memory, noncontiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
