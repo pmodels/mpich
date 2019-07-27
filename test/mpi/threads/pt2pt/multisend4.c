@@ -81,6 +81,13 @@ int main(int argc, char **argv)
     int i, pmode, nprocs, rank;
     int errs = 0, err;
 
+    ownerWaits = 0;
+    for (i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-mode=1") == 0) {
+            ownerWaits = 1;
+        }
+    }
+
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
