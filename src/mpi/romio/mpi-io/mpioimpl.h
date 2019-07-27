@@ -53,7 +53,7 @@ MPI_Delete_function ADIOI_End_call;
 /* common initialization routine */
 void MPIR_MPIOInit(int *error_code);
 
-#ifdef HAVE_MPIIO_CONST
+#if MPI_VERSION >= 3
 #define ROMIO_CONST const
 #else
 #define ROMIO_CONST
