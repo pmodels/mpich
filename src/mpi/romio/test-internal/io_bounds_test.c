@@ -15,7 +15,7 @@ typedef struct {
     ADIO_Offset offset;
     int count;
     int type_blocklens[MAX_OFF_LENS];
-    int type_indices[MAX_OFF_LENS];
+    MPI_Aint type_indices[MAX_OFF_LENS];
     MPI_Datatype type_oldtypes[MAX_OFF_LENS];
     int type_count;
 
@@ -25,8 +25,8 @@ typedef struct {
 
 int run_test(test_param_t * test);
 int setup_predefined(test_param_t * tests_arr, int count);
-int print_usage(void);
-int print_test_params(test_param_t * test);
+void print_usage(void);
+void print_test_params(test_param_t * test);
 
 int main(int argc, char **argv)
 {
@@ -156,19 +156,19 @@ int run_test(test_param_t * test)
     return (exp_err || ind_err);
 }
 
-int print_usage()
+void print_usage()
 {
     printf("Usage:\n" "   io_bounds_test -A -T <test #>\n");
 }
 
-int print_test_params(test_param_t * test)
+void print_test_params(test_param_t * test)
 {
     int i;
     printf("I/O offset:     %lld\n"
            "bytes:          %d\n" "Filetype [n](disp, lens, type):\n", test->offset, test->count);
 
     for (i = 0; i < test->type_count; i++) {
-        printf("    [%d](%lld, %d, ", i, test->type_blocklens[i], test->type_indices[i]);
+        printf("    [%d](%d, %ld, ", i, test->type_blocklens[i], test->type_indices[i]);
         if (test->type_oldtypes[i] == MPI_BYTE) {
             printf("%s)\n", "MPI_BYTE");
         } else if (test->type_oldtypes[i] == MPI_UB) {

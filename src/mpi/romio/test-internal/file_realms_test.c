@@ -14,8 +14,8 @@ int main(int argc, char **argv)
     ADIO_Offset min_st_offset, max_end_offset;
     int rank;
     int nprocs_for_coll;
-    int lb;
-    MPI_Count size, extent;
+    MPI_Aint lb, extent;
+    MPI_Count size;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -54,11 +54,11 @@ int main(int argc, char **argv)
     }
     for (i = 0; i < nprocs_for_coll; i++) {
         MPI_Type_size_x(fd->file_realm_types[i], &size);
-        printf("file_realm [%d] size = %d\n", i, size);
+        printf("file_realm [%d] size = %lld\n", i, size);
     }
     for (i = 0; i < nprocs_for_coll; i++) {
         MPI_Type_get_extent(fd->file_realm_types[i], &lb, &extent);
-        printf("file_realm [%d] extent = %d\n", i, extent);
+        printf("file_realm [%d] extent = %ld\n", i, extent);
     }
 
     for (i = 0; i < nprocs_for_coll; i++)
