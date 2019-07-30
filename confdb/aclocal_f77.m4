@@ -797,18 +797,9 @@ AC_MSG_CHECKING([for linker for Fortran main program])
 dnl Create a C program that uses multiplication and division
 dnl in case that requires special libraries
 AC_LANG_PUSH([C])
-AC_COMPILE_IFELSE([
-    AC_LANG_PROGRAM([],[long long a;])
-],[
-    AC_DEFINE(HAVE_LONG_LONG,1,[Define if long long allowed])
-])
 AC_LANG_CONFTEST([
     AC_LANG_SOURCE([
-#ifdef HAVE_LONG_LONG
 int f(int a, long long b) { int c; c = a * ( b / 3 ) / (b-1); return c ; }
-#else
-int f(int a, long b) { int c; c = a * b / (b-1); return c ; }
-#endif
     ])
 ])
 AC_LANG_POP([C])

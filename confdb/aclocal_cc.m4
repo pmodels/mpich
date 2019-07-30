@@ -714,21 +714,15 @@ int main( int argc, char *argv[] )
     struct { char a; long b; } char_long;
     struct { char a; int b; char c; } char_int_char;
     struct { char a; short b; char c; } char_short_char;
-#ifdef HAVE_LONG_LONG_INT
     struct { long long int a; char b; } lli_c;
     struct { char a; long long int b; } c_lli;
-#endif
     int size, extent, extent2;
 
     /* assume max integer alignment isn't 8 if we don't have
      * an eight-byte value :)
      */
-#ifdef HAVE_LONG_LONG_INT
     if (sizeof(int) < 8 && sizeof(long) < 8 && sizeof(long long int) < 8)
 	is_eight = 0;
-#else
-    if (sizeof(int) < 8 && sizeof(long) < 8) is_eight = 0;
-#endif
 
     size = sizeof(char) + sizeof(int);
     extent = sizeof(char_int);
@@ -754,7 +748,6 @@ int main( int argc, char *argv[] )
     if (sizeof(long) == 8 && (extent % 8) != 0) is_eight = 0;
     DBG("char_long",size,extent);
 
-#ifdef HAVE_LONG_LONG_INT
     size = sizeof(char) + sizeof(long long int);
     extent = sizeof(lli_c);
     extent2 = sizeof(c_lli);
@@ -763,7 +756,6 @@ int main( int argc, char *argv[] )
     if ( (extent % 4) != 0 && (extent2 % 4) != 0) is_four = 0;
     if (sizeof(long long int) >= 8 && (extent % 8) != 0 && (extent2 % 8) != 0)
 	is_eight = 0;
-#endif
 
     size = sizeof(char) + sizeof(int) + sizeof(char);
     extent = sizeof(char_int_char);
@@ -845,11 +837,9 @@ int main( int argc, char *argv[] )
     struct { float b; char a; } float_char;
     struct { char a; double b; } char_double;
     struct { double b; char a; } double_char;
-#ifdef HAVE_LONG_DOUBLE
     struct { char a; long double b; } char_long_double;
     struct { long double b; char a; } long_double_char;
     struct { long double a; int b; char c; } long_double_int_char;
-#endif
     int size, extent1, extent2;
 
     size = sizeof(char) + sizeof(float);
@@ -872,7 +862,6 @@ int main( int argc, char *argv[] )
 	is_eight = 0;
     DBG("char_double",size,extent1);
 
-#ifdef HAVE_LONG_DOUBLE
     size = sizeof(char) + sizeof(long double);
     extent1 = sizeof(char_long_double);
     extent2 = sizeof(long_double_char);
@@ -890,9 +879,6 @@ int main( int argc, char *argv[] )
     if ( (extent1 % 4) != 0) is_four = 0;
     if (sizeof(long double) >= 8 && (extent1 % 8) != 0)	is_eight = 0;
     if (sizeof(long double) > 8 && (extent1 % 16) != 0) is_sixteen = 0;
-#else
-    is_sixteen = 0;
-#endif
 
     if (is_sixteen) { is_eight = 0; is_four = 0; is_two = 0; }
 
@@ -1208,7 +1194,6 @@ int main( int argc, char *argv[] )
 {
     FILE *cf;
     int padding_varies_by_pos = 0;
-#ifdef HAVE_LONG_LONG_INT
     struct { char a; long long int b; } char_llint;
     struct { long long int b; char a; } llint_char;
     int extent1, extent2;
@@ -1216,7 +1201,6 @@ int main( int argc, char *argv[] )
     extent1 = sizeof(char_llint);
     extent2 = sizeof(llint_char);
     if (extent1 != extent2) padding_varies_by_pos = 1;
-#endif
 
     cf = fopen( "ctest.out", "w" );
     if (padding_varies_by_pos) fprintf( cf, "yes\n" );
