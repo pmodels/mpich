@@ -3,6 +3,8 @@
 #  MPICH module for use with 'environment-modules' package:
 # 
 
+datarootdir=@datarootdir@
+
 # Define prefix so PATH and MANPATH can be updated.
 setenv        prefix        @prefix@
 setenv        exec_prefix   @exec_prefix@
