@@ -105,9 +105,9 @@ void MPIR_MAXLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
         case MPI_2INTEGER:
             MPIR_MAXLOC_F_CASE(MPI_Fint);
         case MPI_2REAL:
-            MPIR_MAXLOC_F_CASE(MPIR_FC_REAL_CTYPE);
+            MPIR_MAXLOC_F_CASE(MPIR_REAL_CTYPE);
         case MPI_2DOUBLE_PRECISION:
-            MPIR_MAXLOC_F_CASE(MPIR_FC_DOUBLE_CTYPE);
+            MPIR_MAXLOC_F_CASE(MPIR_DOUBLE_PRECISION_CTYPE);
 #endif
 #endif
         default:

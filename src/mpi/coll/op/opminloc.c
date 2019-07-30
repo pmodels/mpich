@@ -104,9 +104,9 @@ void MPIR_MINLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
         case MPI_2INTEGER:
             MPIR_MINLOC_F_CASE(MPI_Fint);
         case MPI_2REAL:
-            MPIR_MINLOC_F_CASE(MPIR_FC_REAL_CTYPE);
+            MPIR_MINLOC_F_CASE(MPIR_REAL_CTYPE);
         case MPI_2DOUBLE_PRECISION:
-            MPIR_MINLOC_F_CASE(MPIR_FC_DOUBLE_CTYPE);
+            MPIR_MINLOC_F_CASE(MPIR_DOUBLE_PRECISION_CTYPE);
 #endif
 #endif
         default:
