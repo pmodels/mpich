@@ -1607,27 +1607,12 @@ if test -n "$perform_dbgmutex" ; then
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
 fi
 
-pac_cross_compiling=no
+# POSIX shell will not source file unless it is in the PATH
+PATH=$PATH:.
 if test "$with_cross" != "no" ; then
     if test -s "$with_cross" ; then
         AC_MSG_RESULT([Reading values from cross-compilation file $with_cross])
         . $with_cross
-	# Autoconf 2.52 no longer sets cross_compiling except with the
-	# awkward "targethost" options.
-	pac_cross_compiling=yes
-	cross_compiling=yes
-	ac_cv_prog_cc_cross=yes
-	ac_cv_prog_f77_cross=yes
- 	ac_cv_prog_fc_cross=yes
-        ac_cv_prog_cxx_cross=yes
-        export cross_compiling
-	# Export all cross variables.  Any subsidiary configure should also
-        # export CROSS_xxx
-	rm -f confcross
-	(set) 2>&1 | grep CROSS_ | \
-	      sed -e 's/^/export /g' -e 's/=.*//g' > confcross
-	. ./confcross
-	rm -f confcross
     fi
 fi
 
