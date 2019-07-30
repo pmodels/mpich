@@ -197,6 +197,30 @@ AH_TEMPLATE([F77_NAME_UPPER_STDCALL],
 ])
 dnl
 dnl/*D
+dnl PAC_PROG_F77_CHECK_TYPE - check whether a F77 type is available.
+dnl
+dnl Synopsis:
+dnl PAC_PROG_F77_CHECK_TYPE(type)
+dnl
+dnl Output Effect:
+dnl Sets HAVE_F77_uctype to 1 if the type is available.
+dnl
+AC_DEFUN([PAC_F77_CHECK_TYPE],[
+changequote(<<, >>)dnl
+define(<<PAC_TYPE_NAME>>, translit(HAVE_F77_$1, [a-z *], [A-Z__]))dnl
+define(<<PAC_CV_NAME>>, translit(pac_cv_f77_have_$1, [ *], [__]))dnl
+changequote([, ])dnl
+    AC_LANG_FORTRAN77
+    AC_CACHE_CHECK([whether $1 is supported],PAC_CV_NAME,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      $1 i])],
+            PAC_CV_NAME=yes,
+            PAC_CV_NAME=no)])
+    if test $PAC_CV_NAME = yes ; then
+        AC_DEFINE_UNQUOTED(PAC_TYPE_NAME,1,[Define if type $1 is available.])
+    fi
+])
+
+dnl/*D
 dnl PAC_PROG_F77_CHECK_SIZEOF - Determine the size in bytes of a Fortran
 dnl type
 dnl
