@@ -13,6 +13,8 @@
 
 #include <stdarg.h>
 
+/* PLACEHOLDER for config_filter */
+
 /* This routine, given an MPI_Errhandler (from a file), returns
    a pointer to the user-supplied error function.  The last argument
    is set to an integer indicating that the function is MPI_ERRORS_RETURN
