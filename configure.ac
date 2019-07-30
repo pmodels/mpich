@@ -2216,28 +2216,11 @@ fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90
 dnl compilers without creating a separate version.
-dnl Note that this is run AFTER the AC_OUTPUT actions
-AC_OUTPUT_COMMANDS([if test "$enable_f77" = yes ; then
-if test "$has_exclaim" = "yes" ; then
-    sed -e 's/^C/\!/g' src/binding/fortran/mpif_h/mpif.h > src/include/mpif.h
-	cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-else
-    cp src/binding/fortran/mpif_h/mpif.h src/include
-fi
-if test "$has_fort_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
-    mv src/include/mpif.h.new src/include/mpif.h
-    cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
-fi
-fi],
-master_top_srcdir=$master_top_srcdir
-enable_f77=$enable_f77
-enable_fc=$enable_fc
-has_exclaim=$has_exclaim
-has_fort_real8=$pac_cv_fort_real8
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
+
+AC_CONFIG_COMMANDS([filter], [perl $srcdir/maint/config_filter.pl], [
+export has_exclaim=$has_exclaim
+export has_fort_real8=$has_fort_real8
+])
 
 if test "$enable_fc" = "yes" ; then
     if test "$enable_f77" != "yes" ; then
