@@ -87,16 +87,12 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
         case MPI_LONG_DOUBLE:
             ASSIGN_COPY(src, dest, scount, long double);
 
-#if 0
-            /* FIXME: we need a configure check to define HAVE_WCHAR_T before
-             * this can be enabled */
+#ifdef HAVE_WCHAR_T 
         case MPI_WCHAR:
             ASSIGN_COPY(src, dest, scount, wchar_t);
 #endif
 
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_BOOL before
-             * this can be enabled */
+#ifdef HAVE_C_BOOL 
         case MPI_C_BOOL:
             ASSIGN_COPY(src, dest, scount, _Bool);
 #endif
@@ -150,23 +146,17 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
         case MPI_OFFSET:
             ASSIGN_COPY(src, dest, scount, MPI_Offset);
 
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_COMPLEX before
-             * this can be enabled */
+#ifdef HAVE_C_FLOAT_COMPLEX 
         case MPI_C_COMPLEX:    /* covers MPI_C_FLOAT_COMPLEX as well */
             ASSIGN_COPY(src, dest, scount, float _Complex);
 #endif
 
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_DOUPLE_COMPLEX
-             * before this can be enabled */
+#ifdef HAVE_C_DOUBLE_COMPLEX
         case MPI_C_DOUBLE_COMPLEX:
             ASSIGN_COPY(src, dest, scount, double _Complex);
 #endif
 
-#if 0
-            /* FIXME: we need a configure check to define
-             * HAVE_C_LONG_DOUPLE_COMPLEX before this can be enabled */
+#ifdef HAVE_C_LONG_DOUBLE_COMPLEX
         case MPI_C_LONG_DOUBLE_COMPLEX:
             ASSIGN_COPY(src, dest, scount, long double _Complex);
 #endif
