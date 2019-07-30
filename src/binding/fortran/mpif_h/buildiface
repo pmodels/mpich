@@ -3854,7 +3854,7 @@ if ($write_mpif) {
     # These are determined and set at configure time
     foreach $key (COMPLEX, DOUBLE_COMPLEX, LOGICAL, REAL, DOUBLE_PRECISION, INTEGER, '2INTEGER', '2DOUBLE_PRECISION', '2REAL', CHARACTER) {
 	print MPIFFD "       INTEGER MPI_$key\n";
-	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_$key\@)\n";
+	print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     # 2COMPLEX and 2DOUBLE_COMPLEX were defined in MPI 1 and removed in 
     # MPI 1.1.  Don't define them for the Fortran interface.
@@ -3864,7 +3864,7 @@ if ($write_mpif) {
     $mpidef{"MPI_BYTE"} = hex "0x4c00010d";
     foreach $key (BYTE, UB, LB, PACKED) {
 	print MPIFFD "       INTEGER MPI_$key\n";
-        print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+        print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     #&print_mpif_int( "MPI_BYTE" );
     #&print_mpif_int( "MPI_UB" );
@@ -3872,12 +3872,10 @@ if ($write_mpif) {
     #&print_mpif_int( "MPI_PACKED" );
 
     # Optional types
-    # Warning: Should these use \@MPI_$key\@, since the 
-    # C-version must also compute these?
     foreach $key (INTEGER1, INTEGER2, INTEGER4, INTEGER8, INTEGER16,
 		  REAL4, REAL8, REAL16, COMPLEX8, COMPLEX16, COMPLEX32) {
 	print MPIFFD "       INTEGER MPI_$key\n";
-	print MPIFFD "       PARAMETER (MPI_$key=\@F77_$key\@)\n";
+	print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     #
     # Fortran 90 types
@@ -3901,14 +3899,14 @@ if ($write_mpif) {
 		  UNSIGNED_LONG_LONG, LONG_LONG, FLOAT_INT, DOUBLE_INT, 
 		  LONG_INT, SHORT_INT, "2INT", LONG_DOUBLE_INT) {
 	print MPIFFD "       INTEGER MPI_$key\n";
-	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+	print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     # C types added in MPI 2.2
     foreach $key (INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, 
 		  UINT32_T, UINT64_T, C_BOOL, C_FLOAT_COMPLEX, C_COMPLEX,
 		  C_DOUBLE_COMPLEX, C_LONG_DOUBLE_COMPLEX, AINT, OFFSET) {
 	print MPIFFD "       INTEGER MPI_$key\n";
-	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+	print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     # C types added in MPI 3.0
     foreach $key (qw(COUNT
@@ -3918,7 +3916,7 @@ if ($write_mpif) {
                      CXX_LONG_DOUBLE_COMPLEX))
     {
 	print MPIFFD "       INTEGER MPI_$key\n";
-	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+	print MPIFFD "       PARAMETER (MPI_$key=-)\n";
     }
     # Datatype combiners
     foreach $key (NAMED, DUP, CONTIGUOUS, VECTOR, HVECTOR_INTEGER, HVECTOR, 
