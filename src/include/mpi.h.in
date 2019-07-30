@@ -102,23 +102,119 @@ extern "C" {
 #define MPI_UNEQUAL   3
 
 typedef int MPI_Datatype;
-#define MPI_CHAR           ((MPI_Datatype)@MPI_CHAR@)
-#define MPI_SIGNED_CHAR    ((MPI_Datatype)@MPI_SIGNED_CHAR@)
-#define MPI_UNSIGNED_CHAR  ((MPI_Datatype)@MPI_UNSIGNED_CHAR@)
-#define MPI_BYTE           ((MPI_Datatype)@MPI_BYTE@)
-#define MPI_WCHAR          ((MPI_Datatype)@MPI_WCHAR@)
-#define MPI_SHORT          ((MPI_Datatype)@MPI_SHORT@)
-#define MPI_UNSIGNED_SHORT ((MPI_Datatype)@MPI_UNSIGNED_SHORT@)
-#define MPI_INT            ((MPI_Datatype)@MPI_INT@)
-#define MPI_UNSIGNED       ((MPI_Datatype)@MPI_UNSIGNED_INT@)
-#define MPI_LONG           ((MPI_Datatype)@MPI_LONG@)
-#define MPI_UNSIGNED_LONG  ((MPI_Datatype)@MPI_UNSIGNED_LONG@)
-#define MPI_FLOAT          ((MPI_Datatype)@MPI_FLOAT@)
-#define MPI_DOUBLE         ((MPI_Datatype)@MPI_DOUBLE@)
-#define MPI_LONG_DOUBLE    ((MPI_Datatype)@MPI_LONG_DOUBLE@)
-#define MPI_LONG_LONG_INT  ((MPI_Datatype)@MPI_LONG_LONG@)
-#define MPI_UNSIGNED_LONG_LONG ((MPI_Datatype)@MPI_UNSIGNED_LONG_LONG@)
-#define MPI_LONG_LONG      MPI_LONG_LONG_INT
+#define MPI_CHAR           ((MPI_Datatype)0x4c000001)
+#define MPI_UNSIGNED_CHAR  ((MPI_Datatype)0x4c000002)
+#define MPI_SHORT          ((MPI_Datatype)0x4c000003)
+#define MPI_UNSIGNED_SHORT ((MPI_Datatype)0x4c000004)
+#define MPI_INT            ((MPI_Datatype)0x4c000005)
+#define MPI_UNSIGNED       ((MPI_Datatype)0x4c000006)
+#define MPI_LONG           ((MPI_Datatype)0x4c000007)
+#define MPI_UNSIGNED_LONG  ((MPI_Datatype)0x4c000008)
+#define MPI_LONG_LONG      ((MPI_Datatype)0x4c000009)
+#define MPI_FLOAT          ((MPI_Datatype)0x4c00000a)
+#define MPI_DOUBLE         ((MPI_Datatype)0x4c00000b)
+#define MPI_LONG_DOUBLE    ((MPI_Datatype)0x4c00000c)
+
+#define MPI_BYTE           ((MPI_Datatype)0x4c00000d)
+#define MPI_WCHAR          ((MPI_Datatype)0x4c00000e)
+#define MPI_PACKED         ((MPI_Datatype)0x4c00000f)
+#define MPI_LB             ((MPI_Datatype)0x4c000010)
+#define MPI_UB             ((MPI_Datatype)0x4c000011)
+
+/* These should define the mixed types *only* for contiguous data.
+*  For example, MPI_SHORT_INT may have a gap; it will need to be defined
+*  as a derived type instead.
+*/
+/* packed contiguous version: */
+/* #define MPI_FLOAT_INT         ((MPI_Datatype)0x4c000012) */
+/* #define MPI_DOUBLE_INT        ((MPI_Datatype)0x4c000013) */
+/* #define MPI_LONG_INT          ((MPI_Datatype)0x4c000014) */
+/* #define MPI_SHORT_INT         ((MPI_Datatype)0x4c000015) */
+/* #define MPI_2INT              ((MPI_Datatype)0x4c000016) */
+/* #define MPI_LONG_DOUBLE_INT   ((MPI_Datatype)0x4c000017) */
+
+#define MPI_FLOAT_INT         ((MPI_Datatype)0x8c000000)
+#define MPI_DOUBLE_INT        ((MPI_Datatype)0x8c000001)
+#define MPI_LONG_INT          ((MPI_Datatype)0x8c000002)
+#define MPI_SHORT_INT         ((MPI_Datatype)0x8c000003)
+#define MPI_2INT              ((MPI_Datatype)0x4c000016)
+#define MPI_LONG_DOUBLE_INT   ((MPI_Datatype)0x8c000004)
+
+#define MPI_SIGNED_CHAR        ((MPI_Datatype)0x4c000018)
+#define MPI_UNSIGNED_LONG_LONG ((MPI_Datatype)0x4c000019)
+
+/* Fortran types */
+#define MPI_CHARACTER         ((MPI_Datatype)0x4c00001a)
+#define MPI_INTEGER           ((MPI_Datatype)0x4c00001b)
+#define MPI_REAL              ((MPI_Datatype)0x4c00001c)
+#define MPI_LOGICAL           ((MPI_Datatype)0x4c00001d)
+#define MPI_COMPLEX           ((MPI_Datatype)0x4c00001e)
+#define MPI_DOUBLE_PRECISION  ((MPI_Datatype)0x4c00001f)
+#define MPI_2INTEGER          ((MPI_Datatype)0x4c000020)
+#define MPI_2REAL             ((MPI_Datatype)0x4c000021)
+#define MPI_DOUBLE_COMPLEX    ((MPI_Datatype)0x4c000022)
+#define MPI_2DOUBLE_PRECISION ((MPI_Datatype)0x4c000023)
+/* 
+ * MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX were defined by accident in 
+ * MPI 1.0 and removed in MPI 1.1.  
+ *
+ * This definition provides backward compatibility.  These definitions
+ * will be removed in a subsequent MPICH release
+ */
+#ifdef MPICH_DEFINE_2COMPLEX
+#define MPI_2COMPLEX          ((MPI_Datatype)0x4c000024)
+#define MPI_2DOUBLE_COMPLEX   ((MPI_Datatype)0x4c000025)
+#endif 
+
+/* Size-specific types (see MPI-2, 10.2.5) */
+#define MPI_REAL4             ((MPI_Datatype)0x4c000027)
+#define MPI_COMPLEX8          ((MPI_Datatype)0x4c000028)
+#define MPI_REAL8             ((MPI_Datatype)0x4c000029)
+#define MPI_COMPLEX16         ((MPI_Datatype)0x4c00002a)
+#define MPI_REAL16            ((MPI_Datatype)0x4c00002b)
+#define MPI_COMPLEX32         ((MPI_Datatype)0x4c00002c)
+#define MPI_INTEGER1          ((MPI_Datatype)0x4c00002d)
+
+#define MPI_INTEGER2          ((MPI_Datatype)0x4c00002f)
+#define MPI_INTEGER4          ((MPI_Datatype)0x4c000030)
+#define MPI_INTEGER8          ((MPI_Datatype)0x4c000031)
+#define MPI_INTEGER16         ((MPI_Datatype)0x4c000032)
+
+/* MPI-3 C++ types */
+#define MPI_CXX_BOOL                ((MPI_Datatype)0x4c000033)
+#define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)0x4c000034)
+#define MPI_CXX_DOUBLE_COMPLEX      ((MPI_Datatype)0x4c000035)
+#define MPI_CXX_LONG_DOUBLE_COMPLEX ((MPI_Datatype)0x4c000036)
+
+/* C99 fixed-width datatypes */
+#define MPI_INT8_T            ((MPI_Datatype)0x4c000037)
+#define MPI_INT16_T           ((MPI_Datatype)0x4c000038)
+#define MPI_INT32_T           ((MPI_Datatype)0x4c000039)
+#define MPI_INT64_T           ((MPI_Datatype)0x4c00003a)
+#define MPI_UINT8_T           ((MPI_Datatype)0x4c00003b)
+#define MPI_UINT16_T          ((MPI_Datatype)0x4c00003c)
+#define MPI_UINT32_T          ((MPI_Datatype)0x4c00003d)
+#define MPI_UINT64_T          ((MPI_Datatype)0x4c00003e)
+
+/* other C99 types */
+#define MPI_C_BOOL                 ((MPI_Datatype)0x4c00003f)
+#define MPI_C_FLOAT_COMPLEX        ((MPI_Datatype)0x4c000040)
+#define MPI_C_DOUBLE_COMPLEX       ((MPI_Datatype)0x4c000041)
+#define MPI_C_LONG_DOUBLE_COMPLEX  ((MPI_Datatype)0x4c000042)
+
+/* address/offset types */
+#define MPI_AINT          ((MPI_Datatype)0x4c000043)
+#define MPI_OFFSET        ((MPI_Datatype)0x4c000044)
+#define MPI_COUNT         ((MPI_Datatype)0x4c000045)
+
+/* other extension types */
+#define MPIX_C_FLOAT16    ((MPI_Datatype)0x4c000046)
+
+#define MPI_LONG_LONG_INT      MPI_LONG_LONG
+#define MPI_C_COMPLEX          MPI_C_FLOAT_COMPLEX
+#define MPI_CXX_COMPLEX        MPI_CXX_FLOAT_COMPLEX
+
+/* PLACEHOLDER FOR config_filter */
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_char               MPICH_ATTR_TYPE_TAG(char)               = MPI_CHAR;
@@ -134,16 +230,12 @@ static const MPI_Datatype mpich_mpi_long               MPICH_ATTR_TYPE_TAG(long)
 static const MPI_Datatype mpich_mpi_unsigned_long      MPICH_ATTR_TYPE_TAG(unsigned long)      = MPI_UNSIGNED_LONG;
 static const MPI_Datatype mpich_mpi_float              MPICH_ATTR_TYPE_TAG(float)              = MPI_FLOAT;
 static const MPI_Datatype mpich_mpi_double             MPICH_ATTR_TYPE_TAG(double)             = MPI_DOUBLE;
-#if @MPI_LONG_DOUBLE@ != 0x0c000000
+#ifdef HAVE_MPI_LONG_DOUBLE
 static const MPI_Datatype mpich_mpi_long_double        MPICH_ATTR_TYPE_TAG(long double)        = MPI_LONG_DOUBLE;
 #endif
 static const MPI_Datatype mpich_mpi_long_long_int      MPICH_ATTR_TYPE_TAG(long long int)      = MPI_LONG_LONG_INT;
 static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsigned long long) = MPI_UNSIGNED_LONG_LONG;
 #endif
-
-#define MPI_PACKED         ((MPI_Datatype)@MPI_PACKED@)
-#define MPI_LB             ((MPI_Datatype)@MPI_LB@)
-#define MPI_UB             ((MPI_Datatype)@MPI_UB@)
 
 /* 
    The layouts for the types MPI_DOUBLE_INT etc are simply
@@ -153,20 +245,13 @@ static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsig
    }
    This is documented in the man pages on the various datatypes.   
  */
-#define MPI_FLOAT_INT         ((MPI_Datatype)@MPI_FLOAT_INT@)
-#define MPI_DOUBLE_INT        ((MPI_Datatype)@MPI_DOUBLE_INT@)
-#define MPI_LONG_INT          ((MPI_Datatype)@MPI_LONG_INT@)
-#define MPI_SHORT_INT         ((MPI_Datatype)@MPI_SHORT_INT@)
-#define MPI_2INT              ((MPI_Datatype)@MPI_2INT@)
-#define MPI_LONG_DOUBLE_INT   ((MPI_Datatype)@MPI_LONG_DOUBLE_INT@)
-
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 struct mpich_struct_mpi_float_int       { float f; int i; };
 struct mpich_struct_mpi_double_int      { double d; int i; };
 struct mpich_struct_mpi_long_int        { long l; int i; };
 struct mpich_struct_mpi_short_int       { short s; int i; };
 struct mpich_struct_mpi_2int            { int i1; int i2; };
-#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
+#ifdef HAVE_MPI_LONG_DOUBLE_INT
 struct mpich_struct_mpi_long_double_int { long double ld; int i; };
 #endif
 
@@ -189,56 +274,10 @@ static const MPI_Datatype mpich_mpi_short_int       MPICH_ATTR_TYPE_TAG_LAYOUT_C
 /* static const MPI_Datatype mpich_mpi_2int            MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_2int)            = MPI_2INT
  */
 
-#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
+#ifdef HAVE_LONG_DOUBLE_INT
 static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_double_int) = MPI_LONG_DOUBLE_INT;
 #endif
 #endif
-
-/* Fortran types */
-#define MPI_COMPLEX           ((MPI_Datatype)@MPI_COMPLEX@)
-#define MPI_DOUBLE_COMPLEX    ((MPI_Datatype)@MPI_DOUBLE_COMPLEX@)
-#define MPI_LOGICAL           ((MPI_Datatype)@MPI_LOGICAL@)
-#define MPI_REAL              ((MPI_Datatype)@MPI_REAL@)
-#define MPI_DOUBLE_PRECISION  ((MPI_Datatype)@MPI_DOUBLE_PRECISION@)
-#define MPI_INTEGER           ((MPI_Datatype)@MPI_INTEGER@)
-#define MPI_2INTEGER          ((MPI_Datatype)@MPI_2INTEGER@)
-/* 
- * MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX were defined by accident in 
- * MPI 1.0 and removed in MPI 1.1.  
- *
- * This definition provides backward compatibility.  These definitions
- * will be removed in a subsequent MPICH release
- */
-#ifdef MPICH_DEFINE_2COMPLEX
-#define MPI_2COMPLEX          ((MPI_Datatype)@MPI_2COMPLEX@)
-#define MPI_2DOUBLE_COMPLEX   ((MPI_Datatype)@MPI_2DOUBLE_COMPLEX@)
-#endif 
-#define MPI_2REAL             ((MPI_Datatype)@MPI_2REAL@)
-#define MPI_2DOUBLE_PRECISION ((MPI_Datatype)@MPI_2DOUBLE_PRECISION@)
-#define MPI_CHARACTER         ((MPI_Datatype)@MPI_CHARACTER@)
-
-/* Size-specific types (see MPI-2, 10.2.5) */
-#define MPI_REAL4             ((MPI_Datatype)@MPI_REAL4@)
-#define MPI_REAL8             ((MPI_Datatype)@MPI_REAL8@)
-#define MPI_REAL16            ((MPI_Datatype)@MPI_REAL16@)
-#define MPI_COMPLEX8          ((MPI_Datatype)@MPI_COMPLEX8@)
-#define MPI_COMPLEX16         ((MPI_Datatype)@MPI_COMPLEX16@)
-#define MPI_COMPLEX32         ((MPI_Datatype)@MPI_COMPLEX32@)
-#define MPI_INTEGER1          ((MPI_Datatype)@MPI_INTEGER1@)
-#define MPI_INTEGER2          ((MPI_Datatype)@MPI_INTEGER2@)
-#define MPI_INTEGER4          ((MPI_Datatype)@MPI_INTEGER4@)
-#define MPI_INTEGER8          ((MPI_Datatype)@MPI_INTEGER8@)
-#define MPI_INTEGER16         ((MPI_Datatype)@MPI_INTEGER16@)
-
-/* C99 fixed-width datatypes */
-#define MPI_INT8_T            ((MPI_Datatype)@MPI_INT8_T@)
-#define MPI_INT16_T           ((MPI_Datatype)@MPI_INT16_T@)
-#define MPI_INT32_T           ((MPI_Datatype)@MPI_INT32_T@)
-#define MPI_INT64_T           ((MPI_Datatype)@MPI_INT64_T@)
-#define MPI_UINT8_T           ((MPI_Datatype)@MPI_UINT8_T@)
-#define MPI_UINT16_T          ((MPI_Datatype)@MPI_UINT16_T@)
-#define MPI_UINT32_T          ((MPI_Datatype)@MPI_UINT32_T@)
-#define MPI_UINT64_T          ((MPI_Datatype)@MPI_UINT64_T@)
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_int8_t   MPICH_ATTR_TYPE_TAG_STDINT(int8_t)   = MPI_INT8_T;
@@ -251,34 +290,14 @@ static const MPI_Datatype mpich_mpi_uint32_t MPICH_ATTR_TYPE_TAG_STDINT(uint32_t
 static const MPI_Datatype mpich_mpi_uint64_t MPICH_ATTR_TYPE_TAG_STDINT(uint64_t) = MPI_UINT64_T;
 #endif
 
-/* other C99 types */
-#define MPI_C_BOOL                 ((MPI_Datatype)@MPI_C_BOOL@)
-#define MPI_C_FLOAT_COMPLEX        ((MPI_Datatype)@MPI_C_FLOAT_COMPLEX@)
-#define MPI_C_COMPLEX              MPI_C_FLOAT_COMPLEX
-#define MPI_C_DOUBLE_COMPLEX       ((MPI_Datatype)@MPI_C_DOUBLE_COMPLEX@)
-#define MPI_C_LONG_DOUBLE_COMPLEX  ((MPI_Datatype)@MPI_C_LONG_DOUBLE_COMPLEX@)
-/* other extension types */
-#define MPIX_C_FLOAT16             ((MPI_Datatype)@MPIX_C_FLOAT16@)
-
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_c_bool                MPICH_ATTR_TYPE_TAG_C99(_Bool)           = MPI_C_BOOL;
 static const MPI_Datatype mpich_mpi_c_float_complex       MPICH_ATTR_TYPE_TAG_C99(float _Complex)  = MPI_C_FLOAT_COMPLEX;
 static const MPI_Datatype mpich_mpi_c_double_complex      MPICH_ATTR_TYPE_TAG_C99(double _Complex) = MPI_C_DOUBLE_COMPLEX;
-#if @MPI_C_LONG_DOUBLE_COMPLEX@ != 0x0c000000
+#ifdef HAVE_C_LONG_DOUBLE_COMPLEX
 static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C99(long double _Complex) = MPI_C_LONG_DOUBLE_COMPLEX;
 #endif
 #endif
-
-/* address/offset types */
-#define MPI_AINT          ((MPI_Datatype)@MPI_AINT_DATATYPE@)
-#define MPI_OFFSET        ((MPI_Datatype)@MPI_OFFSET_DATATYPE@)
-#define MPI_COUNT         ((MPI_Datatype)@MPI_COUNT_DATATYPE@)
-
-/* MPI-3 C++ types */
-#define MPI_CXX_BOOL                ((MPI_Datatype)@MPIR_CXX_BOOL@)
-#define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)@MPIR_CXX_COMPLEX@)
-#define MPI_CXX_DOUBLE_COMPLEX      ((MPI_Datatype)@MPIR_CXX_DOUBLE_COMPLEX@)
-#define MPI_CXX_LONG_DOUBLE_COMPLEX ((MPI_Datatype)@MPIR_CXX_LONG_DOUBLE_COMPLEX@)
 
 /* typeclasses */
 #define MPI_TYPECLASS_REAL 1
@@ -556,27 +575,12 @@ typedef int MPI_Info;
 /* MPICH-specific types */
 #define MPIX_COMM_TYPE_NEIGHBORHOOD 2
 
-/* Definitions that are determined by configure. */
-typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
-typedef @MPI_COUNT@ MPI_Count;
-
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI_AINT;
 #endif
 
-/* FIXME: The following two definition are not defined by MPI and must not be
-   included in the mpi.h file, as the MPI namespace is reserved to the MPI 
-   standard */
-#define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
-#define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
-
 /* Let ROMIO know that MPI_Offset is already defined */
 #define HAVE_MPI_OFFSET
-/* MPI_OFFSET_TYPEDEF is set in configure and is 
-      typedef $MPI_OFFSET MPI_Offset;
-   where $MPI_OFFSET is the correct C type */
-@MPI_OFFSET_TYPEDEF@
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI_OFFSET;
