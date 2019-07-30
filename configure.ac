@@ -389,12 +389,6 @@ AC_ARG_ENABLE([mpit-pvars],
         all      - All variables above
 ],[],[enable_mpit_pvars=none])
 
-dnl We may want to force MPI_Aint to be the same size as MPI_Offset,
-dnl particularly on 32 bit systems with large (64 bit) file systems.
-AC_ARG_WITH(aint-size,
-	AC_HELP_STRING([--with-aint-size], [Override the size of MPI_AINT (in bytes)]),,
-	with_aint_size=0)
-
 AC_ARG_ENABLE(fast,
 [  --enable-fast=option - Control the level of fast execution in the
                          MPICH implementation.  option is a list of
@@ -3115,6 +3109,29 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
   AC_CHECK_TYPES([long double _Complex])
 ])
 
+# MPI_FINT, MPI_AINT, MPI_OFFSET, MPI_COUNT
+MPI_SIZEOF_FINT=$ac_cv_sizeof_int
+MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
+MPI_SIZEOF_OFFSET=8
+if test $MPI_SIZEOF_AINT -gt $MPI_SIZEOF_OFFSET ; then
+    MPI_SIZEOF_COUNT=$MPI_SIZEOF_AINT
+else
+    MPI_SIZEOF_COUNT=$MPI_SIZEOF_OFFSET
+fi
+
+AC_MSG_CHECKING([size of MPI_Fint])
+AC_MSG_RESULT([$MPI_SIZEOF_FINT])
+AC_MSG_CHECKING([size of MPI_Aint])
+AC_MSG_RESULT([$MPI_SIZEOF_AINT])
+AC_MSG_CHECKING([size of MPI_Offset])
+AC_MSG_RESULT([$MPI_SIZEOF_OFFSET])
+AC_MSG_CHECKING([size of MPI_Count])
+AC_MSG_RESULT([$MPI_SIZEOF_COUNT])
+AC_DEFINE_UNQUOTED([SIZEOF_FINT],[$MPI_SIZEOF_FINT],[The size of MPI_Fint.])
+AC_DEFINE_UNQUOTED([SIZEOF_AINT],[$MPI_SIZEOF_AINT],[The size of MPI_Aint.])
+AC_DEFINE_UNQUOTED([SIZEOF_OFFSET],[$MPI_SIZEOF_OFFSET],[The size of MPI_Offset.])
+AC_DEFINE_UNQUOTED([SIZEOF_COUNT],[$MPI_SIZEOF_COUNT],[The size of MPI_Count.])
+
 # ----------------------------------------------------------------------------
 # We can now create the Fortran versions of the datatype values, along with
 # some of the other datatype-dependent sizes
@@ -3186,31 +3203,25 @@ if test "$enable_f77" = yes ; then
         pac_cv_fort_real16=yes,
         pac_cv_fort_real16=no)])
 
-    # We also need to check the size of MPI_Aint vs MPI_Fint, and
-    # define AINT_LARGER_THAN_FINT if aint is larger (this
-    # affects code in MPI_Address)
-    if test "$ac_cv_sizeof_void_p" != "0" -a \
-        "$ac_cv_sizeof_void_p" -gt "$pac_cv_f77_sizeof_integer" ; then
+    if test $pac_cv_f77_sizeof_integer -eq 0 -o \
+            $pac_cv_f77_sizeof_real -eq 0 ; then
+        AC_MSG_ERROR([Unable to configure with Fortran support because configure could not
+determine the size of a Fortran INTEGER, REAL, DOUBLE PRECISION. If cross
+compiling, use --with-cross=file configure option to specify a file containing
+shell assignments to CROSS_F77_SIZEOF_typename, e.g., CROSS_F77_SIZEOF_INTEGER.
+The program maint/getcross.pl can be run on the target system to generate this file.
+])
+    fi
+    if test $MPI_SIZEOF_AINT -gt $pac_cv_f77_sizeof_integer ; then
         AC_DEFINE(HAVE_AINT_LARGER_THAN_FINT,1,[Define if addresses are larger than Fortran integers])
     fi
-    if test "$ac_cv_sizeof_void_p" != 0 -a \
-        "$ac_cv_sizeof_void_p" != "$pac_cv_f77_sizeof_integer" ; then
+    if test $MPI_SIZEOF_AINT -ne $pac_cv_f77_sizeof_integer ; then
 	AC_DEFINE(HAVE_AINT_DIFFERENT_THAN_FINT,1,[Define if addresses are a different size than Fortran integers])
     fi
-
-    # Include a defined value for Fint is int
-    if test "$MPI_FINT" = "int" ; then
+    if test $pac_cv_f77_sizeof_integer = $ac_cv_sizeof_int ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
-    elif test "$SIZEOF_F77_INTEGER" != "$ac_cv_sizeof_int" ; then
-        # Make this fatal because we do not want to build a broken fortran
-	# interface (was error)
-	# Check to see if the f77 binding has enabled the code to support
-	# the case of int != fint.
-	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
-	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
-	else
-            AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
-	fi
+    else
+        AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
     fi
 
     # Try and compute the values of .true. and .false. in Fortran
@@ -3232,26 +3243,9 @@ if test "$enable_f77" = yes ; then
         ])
     fi
     if test "$FC" != "no" ; then
-        # Offset kind should be for 8 bytes if possible (Romio prefers that)
-        # address should be sizeof void * (unless --with-aint-size has
-        # been set)
-        # FIXME in the current configure implementation OFFSET_KIND and
-        # MPI_Offset won't always agree, but generally will.  The MPI Standard
-        # implies that these types must have identical size, so this is a bug
-        # waiting to happen.
-	if test "$with_aint_size" -gt 0 -a \
-	        "$with_aint_size" -gt "$ac_cv_sizeof_void_p" ; then
-	    testsize=$with_aint_size
-        else
-            testsize=$ac_cv_sizeof_void_p
-        fi
-        if test "$testsize" = 0 ; then
-            # Set a default
-            testsize=4
-        fi
-        dnl Using the {} around testsize helps the comments work correctly
-        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
         if test "$testsize" = 8 ; then
+        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,$MPI_SIZEOF_AINT,$CROSS_F90_ADDRESS_KIND)
+        if test "$MPI_SIZEOF_AINT" = 8 ; then
             OFFSET_KIND=$ADDRESS_KIND
         else
             PAC_PROG_FC_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
@@ -3313,9 +3307,16 @@ if test "$enable_f77" = yes ; then
 	    enable_fc=no
         fi
     fi
+
+    AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
+      [ COUNT_KIND="$ADDRESS_KIND"],
+      [ COUNT_KIND="$OFFSET_KIND" ])
+
+
     AC_SUBST(ADDRESS_KIND)
     AC_SUBST(OFFSET_KIND)
     AC_SUBST(INTEGER_KIND)
+    AC_SUBST(COUNT_KIND)
 
     # Some compilers may require special directives to handle the common
     # block in a library.  In particular, directives are needed for Microsoft
@@ -3337,11 +3338,6 @@ if test "$enable_f77" = yes ; then
     DLLIMPORT=""
     AC_SUBST(DLLIMPORT)
 
-    # FIXME:
-    # We also need to include
-    # SIZEOF_FC_MPI_OFFSET
-    # SIZEOF_FC_MPI_AINT
-    #
     # If other "kinds" are supported, MPI_SIZEOF needs to identify
     # those as well.  This is very difficult to do in a general way.
 
@@ -3684,70 +3680,17 @@ if test "$NEEDSPLIB" = "yes" ; then
 fi
 AC_SUBST(LPMPILIBNAME)
 
-# Note that aint_size must be used instead of void_p where the desired check
-# is on the size of MPI_Aint
-aint_size=$ac_cv_sizeof_void_p
-if test "$with_aint_size" -gt 0 ; then
-   aint_size=$with_aint_size
-   if test "$aint_size" != "$ac_cv_sizeof_void_p" ; then
-        AC_MSG_RESULT([Overriding MPI_Aint to be $aint_size bytes])
-   fi
-fi
-MPI_AINT=int
-for type in int long long_long short ; do
-    eval len=\$ac_cv_sizeof_$type
-    if test "$len" = "$aint_size" ; then
-        MPI_AINT=`echo $type | sed -e 's/_/ /'`
-        # Make the sizeof AINT available to other configures
-        MPI_SIZEOF_AINT=$len
-        export MPI_SIZEOF_AINT
-        case $type in
-            int)
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-                ;;
-            long)
-                MPI_AINT_FMT_DEC_SPEC="%ld"
-                MPI_AINT_FMT_HEX_SPEC="%lx"
-                MPIR_AINT_MAX="LONG_MAX"
-                ;;
-            long_long)
-                MPI_AINT_FMT_DEC_SPEC="%lld"
-                MPI_AINT_FMT_HEX_SPEC="%llx"
-                # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
-                # easier there.  See mpiiimpl.h.
-                MPIR_AINT_MAX="LLONG_MAX"
-                ;;
-            short)
-                MPI_AINT_FMT_DEC_SPEC="%hd"
-                MPI_AINT_FMT_HEX_SPEC="%hx"
-                MPIR_AINT_MAX="SHRT_MAX"
-                ;;
-            *)
-                AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
-                MPI_AINT_FMT_DEC_SPEC="%d"
-                MPI_AINT_FMT_HEX_SPEC="%x"
-                MPIR_AINT_MAX="INT_MAX"
-            ;;
-        esac
-        export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
-        break
-    fi
-done
-AC_SUBST(MPI_AINT)
-AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
-AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
-AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
-
 # ----------------------------------------------------------------------------
-
-if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
-    AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
+if test "$ac_cv_sizeof_void_p" -lt "$MPI_SIZEOF_AINT" ; then
+    AC_MSG_ERROR([The size of MPI_Aint greater than the size of void * is no longer supported.])
 fi
 
-# with MPI_AINT defined, now we can
-# Get the size for the bsendoverhead
+# We need define MPI_Aint to find the size of MPII_Bsend_data_t, but we just need a type of matching size to work.
+if test $MPI_SIZEOF_AINT = 4 ; then
+    MPI_AINT=int32_t
+elif test $MPI_SIZEOF_AINT = 8 ; then
+    MPI_AINT=int64_t
+fi
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
 #define MPI_Datatype int
 typedef $MPI_AINT MPI_Aint;
@@ -3892,74 +3835,20 @@ AC_CHECK_SIZEOF(OPA_ptr_t,0,[
 pthread_mutex_t *OPA_emulation_lock;
 ])
 
-# If ROMIO was successfully configured, then ROMIO will have exported the
-# definition of MPI_OFFSET_TYPE through its localdefs file (created by the
-# ROMIO configure in src/mpi/romio/localdefs).  If MPI_OFFSET_TYPE was not
-# defined, this code attempts to find a good choice for MPI_OFFSET_TYPE
-# (As the offset type is used for File operations, the specific type
-# really doesn't matter if ROMIO doesn't provide it).
-if test -n "$MPI_OFFSET_TYPE" ; then
-    # We got the value from the ROMIO configure
-    MPI_OFFSET="$MPI_OFFSET_TYPE"
-    # Get and export the size of this type if possible
-    if test -z "$MPI_SIZEOF_OFFSET" ; then
-        # set a default
-        AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-            ac_cv_sizeof_MPI_Offset=unknown
-            AC_COMPUTE_INT([ac_cv_sizeof_MPI_Offset],[sizeof($MPI_OFFSET)],[],[
-                AC_MSG_WARN([Unable to determine the size of MPI_Offset])
-            ])
-	])
-	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then
-  	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
-        fi
-    fi
-    export MPI_SIZEOF_OFFSET
-else
-    # Make a guess at the appropriate definition for offset.  Try to
-    # find a 64bit type.
-    if test "$ac_cv_sizeof_long" = 8 ; then
-        MPI_OFFSET="long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
-    elif test "$ac_cv_sizeof_long_long" = 8 ; then
-        MPI_OFFSET="long long"
-	# Make the size of this type available to other configures
-	MPI_SIZEOF_OFFSET=8
+if test $enable_f77 = yes ; then
+    # Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
+    # The value for this comes from ROMIO, and is needed in mpif.h.in
+    # First, we check that this works with both Fortran compilers (if
+    # they are defined)
+    #
+    if test $MPI_SIZEOF_OFFSET = $pac_cv_f77_sizeof_integer ; then
+        FORTRAN_MPI_OFFSET=INTEGER
+    elif test $MPI_SIZEOF_OFFSET = 8 ; then
+        FORTRAN_MPI_OFFSET=INTEGER*8
     else
-        MPI_OFFSET=long
-        MPI_SIZEOF_OFFSET=$ac_cv_sizeof_long
+   	AC_MSG_ERROR([Failed to find a FORTRAN integer type for MPI_Offset])
     fi
-    export MPI_SIZEOF_OFFSET
-fi
-AC_SUBST(MPI_OFFSET)
 
-AS_CASE([$MPI_OFFSET],
-        [int],         [MPIR_OFFSET_MAX="INT_MAX"],
-        [long],        [MPIR_OFFSET_MAX="LONG_MAX"],
-        ['long long'], [MPIR_OFFSET_MAX="LLONG_MAX"],
-        [short],       [MPIR_OFFSET_MAX="SHRT_MAX"],
-        [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
-AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
-
-# FIXME: we need an explanation of why we need both MPI_OFFSET and
-# MPI_OFFSET_TYPEDEF.   Why is MPI_OFFSET_TYPEDEF necessary?
-# This appears to be used by the Windows "winconfigure.wsf" which is used
-# to create a multiline definition using an #ifdef check on USE_GCC
-# We may wish to use a different approach
-MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
-AC_SUBST(MPI_OFFSET_TYPEDEF)
-#
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
-# The value for this comes from ROMIO, and is needed in mpif.h.in
-# First, we check that this works with both Fortran compilers (if
-# they are defined)
-#
-# If there is no FORTRAN_MPI_OFFSET type (because ROMIO is disabled),
-# just use INTEGER
-if test -z "$FORTRAN_MPI_OFFSET" ; then
-    FORTRAN_MPI_OFFSET=INTEGER
-fi
 if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
     AC_LANG_PUSH([Fortran 77])
     AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
