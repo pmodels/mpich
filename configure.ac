@@ -34,10 +34,6 @@ dnl are defined and provided to allow the modules to communicate their
 dnl needs or limitations to the other modules.  These are:
 dnl    MPID_MAX_THREAD_LEVEL - thread level supported by device.
 dnl                            if unset, is MPI_THREAD_FUNNELED
-dnl    MPID_NO_LONG_LONG     - if yes, the device does not support the
-dnl                            long long integer type
-dnl    MPID_NO_LONG_DOUBLE   - if yes, the device does not support the
-dnl                            long double type
 dnl    MPID_PM_NAMESERVER    - if set, provides the name of the nameserver
 dnl                            that the process manager supports.
 dnl                            This name server will be used if the
@@ -2857,15 +2853,6 @@ fi
 
 # AC_CHECK_SIZEOF etc. Sets $ac_cv_sizeof_type. Defines SIZEOF_TYPE.
 # Unsigned types are assumed to have the same size as signed types.
-
-# Device layer may overide the sizes, 0 mean unavailable.
-# In addition, --with-cross=crossfile can be used to preset/override them.
-if test x$MPID_NO_LONG_LONG = xyes ; then
-    ac_cv_sizeof_long_long=0
-fi
-if test x$MPID_NO_LONG_DOUBLE = xyes ; then
-    ac_cv_sizeof_long_double=0
-fi
 
 AC_CHECK_SIZEOF(char)
 AC_CHECK_SIZEOF(short)
