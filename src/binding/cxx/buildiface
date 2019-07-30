@@ -1859,10 +1859,9 @@ sub PrintConstants {
     # configure step and inserted into mpicxx.h as #define's
     foreach $dtype (@cppdtypes) {
 	print $OUTFD "${extern}Datatype $dtype";
-	if ($giveValue) { print $OUTFD "(MPIR_CXX_$dtype);\n"; }
+	if ($giveValue) { print $OUTFD "(MPI_CXX_$dtype);\n"; }
 	else { 
 	    print $OUTFD ";\n"; 
-	    print $OUTFD "#define MPIR_CXX_$dtype \@MPIR_CXX_${dtype}\@\n";
 	}
     }
 
@@ -3134,9 +3133,7 @@ void MPIR_CXX_InitDatatypeNames( void )
 	PMPI_Type_set_name( MPI::BOOL, (char *)\"MPI::BOOL\" );
 	PMPI_Type_set_name( MPI::COMPLEX, (char *)\"MPI::COMPLEX\" );\
 	PMPI_Type_set_name( MPI::DOUBLE_COMPLEX, (char *)\"MPI::DOUBLE_COMPLEX\" );\
-#if defined(HAVE_LONG_DOUBLE)
 	PMPI_Type_set_name( MPI::LONG_DOUBLE_COMPLEX, (char *)\"MPI::LONG_DOUBLE_COMPLEX\" );\
-#endif
     }
 }\n";
 
