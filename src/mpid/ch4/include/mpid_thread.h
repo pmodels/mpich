@@ -12,6 +12,7 @@
 #define MPID_THREAD_H_INCLUDED
 
 #include "mpidu_thread_fallback.h"
+#include "mpidu_shm.h"
 
 /* We simply use the fallback timer functionality and do not define
  * our own */
@@ -75,5 +76,6 @@ do {                                                                    \
 #define MPID_THREADPRIV_KEY_GET_ADDR MPIDU_THREADPRIV_KEY_GET_ADDR
 #define MPID_THREADPRIV_KEY_DESTROY MPIDU_THREADPRIV_KEY_DESTROY
 
+#define MPID_CACHE_LINE_SIZE MPIDU_SHM_CACHE_LINE_LEN
 
 #endif /* MPID_THREAD_H_INCLUDED */
