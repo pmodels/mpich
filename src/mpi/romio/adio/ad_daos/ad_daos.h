@@ -18,8 +18,6 @@
 #include <assert.h>
 #include <gurt/list.h>
 #include <daos.h>
-#include <daos_obj_class.h>
-#include <daos_addons.h>
 #include <daos_fs.h>
 
 /* #define D_PRINT_IO */
