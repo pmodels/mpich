@@ -173,7 +173,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             proc.rank = i;
             rc = PMIx_Get(&proc, "bc", NULL, 0, &pvalue);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
-            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            rc = MPL_str_get_binary_arg(pvalue->data.string, "mpi", &segment[i * bc_len], bc_len,
+                                        &out_len);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
             PMIX_VALUE_RELEASE(pvalue);
         }
