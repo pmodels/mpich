@@ -83,11 +83,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
             MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
             MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);                  \
@@ -111,13 +111,13 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
             MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
             MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);                  \
@@ -141,11 +141,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
         if (req_off >= writebuf_off + writebuf_len) {                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = read(fd->fd_sys, writebuf, writebuf_len);             \
             if (err == -1) {                                            \
@@ -161,13 +161,13 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
         while (write_sz != req_len) {                                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = read(fd->fd_sys, writebuf, writebuf_len);             \
             if (err == -1) {                                            \
@@ -192,11 +192,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
             MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
@@ -207,11 +207,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);                  \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
             MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);                  \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
@@ -226,9 +226,9 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
     {                                                                   \
         if (req_off >= writebuf_off + writebuf_len) {                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
             writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
@@ -237,9 +237,9 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
         memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
-            if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             err = write(fd->fd_sys, writebuf, writebuf_len);            \
-            if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
+            if (fd->atomicity) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
@@ -338,7 +338,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);
 #endif
-        if (!(fd->atomicity))
+        if (fd->atomicity)
             ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
@@ -347,7 +347,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
-        if (!(fd->atomicity))
+        if (fd->atomicity)
             ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
         if (err == -1)
             err_flag = 1;
@@ -490,7 +490,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
         writebuf = (char *) ADIOI_Malloc(max_bufsize);
         memset(writebuf, -1, max_bufsize);
         writebuf_len = (int) (MPL_MIN(max_bufsize, end_offset - writebuf_off + 1));
-        if (!(fd->atomicity))
+        if (fd->atomicity)
             ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);
@@ -630,7 +630,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);
 #endif
-        if (!(fd->atomicity))
+        if (fd->atomicity)
             ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
@@ -640,7 +640,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
         MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
 
-        if (!(fd->atomicity))
+        if (fd->atomicity)
             ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
         else
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);

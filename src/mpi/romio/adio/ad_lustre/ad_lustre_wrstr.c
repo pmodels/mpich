@@ -18,7 +18,7 @@
                 ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,  \
                                  ADIO_EXPLICIT_OFFSET, writebuf_off,    \
                                  &status1, error_code);                 \
-                if (!(fd->atomicity))                                   \
+                if (fd->atomicity)                                   \
                     ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
                 if (*error_code != MPI_SUCCESS) {                       \
                     *error_code = MPIO_Err_create_code(*error_code,     \
@@ -35,7 +35,7 @@
             writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
-            if (!(fd->atomicity))                                       \
+            if (fd->atomicity)                                       \
                 ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             ADIO_ReadContig(fd, writebuf, writebuf_len, MPI_BYTE,       \
                             ADIO_EXPLICIT_OFFSET,                       \
@@ -58,7 +58,7 @@
         while (write_sz != req_len) {                                   \
             ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,      \
                              ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code); \
-            if (!(fd->atomicity))                                       \
+            if (fd->atomicity)                                       \
                 ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (*error_code != MPI_SUCCESS) {                           \
                 *error_code = MPIO_Err_create_code(*error_code,         \
@@ -75,7 +75,7 @@
             writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
-            if (!(fd->atomicity))                                       \
+            if (fd->atomicity)                                       \
                 ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             ADIO_ReadContig(fd, writebuf, writebuf_len, MPI_BYTE,       \
                             ADIO_EXPLICIT_OFFSET,                       \
@@ -483,7 +483,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
         if (writebuf_len) {
             ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,
                              ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code);
-            if (!(fd->atomicity))
+            if (fd->atomicity)
                 ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
             if (*error_code != MPI_SUCCESS)
                 return;
