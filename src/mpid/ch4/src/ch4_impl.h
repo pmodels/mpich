@@ -586,11 +586,13 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 /* Generic routine for checking synchronization at every RMA operation.*/
 #define MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win)                                 \
     do {                                                                               \
-        MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
-        MPIDIG_EPOCH_OP_REFENCE(win);                                              \
-        /* Check target sync status for any target_rank except PROC_NULL. */           \
-        if (target_rank != MPI_PROC_NULL)                                              \
-            MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);  \
+        /* Ignore epoch checks when target_rank is PROC_NULL. */           \
+        if (target_rank != MPI_PROC_NULL) {                                            \
+            MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
+            MPIDIG_EPOCH_OP_REFENCE(win);                                              \
+            /* Check target sync status for target_rank. */       \
+            MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail); \
+        }                                                                              \
     } while (0);
 
 /*
