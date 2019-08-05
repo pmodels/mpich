@@ -1703,3 +1703,17 @@ AC_DEFUN([PAC_CHECK_PTR_ALIGN]), [
         AC_MSG_RESULT([int or better])
     fi
 ])
+
+dnl PAC_ARG_ATOMIC_PRIMITIVES
+dnl  - Provide configure option to select atomic primitives. Defaults to auto.
+AC_DEFUN([PAC_ARG_ATOMIC_PRIMITIVES], [
+     AC_ARG_WITH([mpl-atomic-primitives],
+     [  --with-mpl-atomic-primitives=package  Atomic primitives to use. The following is include:
+        auto - Automatically choose the best one (default)
+        c11 - C11 atomics
+        gcc_atomic - GCC atomic builtins
+        gcc_sync - GCC sync builtins
+        win - Windows builtins
+        lock - Mutex-based synchronization
+        no|none - atomic operations are performed without synchronization
+     ],,with_mpl_atomic_primitives=auto)])
