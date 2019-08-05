@@ -786,6 +786,102 @@ fi
 #######################################################################
 
 #######################################################################
+## START OF ATOMIC CODE
+#######################################################################
+
+PAC_ARG_ATOMIC_PRIMITIVES
+
+AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
+        #include "$1"
+    ]],[[
+        MPL_atomic_int_t a, b;
+        int c;
+
+        MPL_atomic_relaxed_store_int(&a, 0);
+        MPL_atomic_relaxed_store_int(&b, 1);
+        c = MPL_atomic_relaxed_load_int(&a);
+
+        MPL_atomic_release_store_int(&a, 0);
+        MPL_atomic_release_store_int(&b, 1);
+        c = MPL_atomic_acquire_load_int(&a);
+
+        MPL_atomic_fetch_add_int(&a, 10);
+        MPL_atomic_fetch_sub_int(&a, 10);
+
+        c = MPL_atomic_cas_int(&a, 10, 11);
+        c = MPL_atomic_swap_int(&a, 10);
+
+        MPL_atomic_write_barrier();
+        MPL_atomic_read_barrier();
+        MPL_atomic_read_write_barrier();
+    ]])]
+)
+
+dnl MPL_TRY_ATOMIC_HEADER([header file from src/ dir],
+dnl                       [HAVE_ macro suffix],[feature description])
+dnl Does an AC_LINK_IFELSE() to see if the header file works.
+AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
+    checked_specified_primitive=yes
+    AC_MSG_CHECKING([for support for $3])
+
+    PAC_PUSH_FLAG([CFLAGS])
+    CFLAGS="$CFLAGS -I${srcdir}/include"
+    AC_LINK_IFELSE([MPL_ATOMIC_TEST_PROGRAM([$1])],
+        [AC_DEFINE([HAVE_$2], [1], [Define to 1 if we have support for $3])]
+        [AC_MSG_RESULT([yes])]
+        [mpl_atomic_primitives_set=true]
+    ,
+        [AC_MSG_RESULT([no])]
+    )
+    PAC_POP_FLAG([CFLAGS])
+])
+
+AC_CHECK_SIZEOF([void *])
+
+mpl_atomic_primitives_set=false
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "gcc_sync"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_gcc_sync.h], [GCC_INTRINSIC_SYNC],
+                          [gcc __sync intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "gcc_atomic"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_gcc_atomic.h], [GCC_INTRINSIC_ATOMIC],
+                          [gcc __atomic intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "c11"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_c11.h], [C11_ATOMICS],
+                          [C11 atomic intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "windows"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_nt_intrinsics.h], [NT_INTRINSICS],
+                          [Windows NT atomic intrinsics])
+fi
+
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "lock" ; then
+    AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
+             [Define to 1 if mutex-based synchronization is used])
+    mpl_atomic_primitives_set=true
+elif test "$with_mpl_atomic_primitives" = "no" \
+          -o "$with_mpl_atomic_primitives" = "none" ; then
+    AC_DEFINE(USE_NO_ATOMIC_PRIMITIVES, 1,
+             [Define to 1 if no atomic primitives are used])
+    mpl_atomic_primitives_set=true
+fi
+
+if test "$mpl_atomic_primitives_set" = "false"; then
+    AC_MSG_ERROR([cannot support atomic primitives (argument: \
+`--with-mpl-atomic-primitives=$with_mpl_atomic_primitives`)])
+fi
+
+#######################################################################
+## END OF ATOMIC CODE
+#######################################################################
+
+#######################################################################
 ## START OF DBG CODE
 #######################################################################
 

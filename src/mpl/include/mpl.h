@@ -12,6 +12,7 @@
 #include "mpl_valgrind.h"
 #include "mpl_argstr.h"
 #include "mpl_arg_serial.h"
+#include "mpl_atomic.h"
 #include "mpl_str.h"
 #include "mpl_trmem.h"
 #include "mpl_env.h"

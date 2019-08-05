@@ -4,6 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+include src/atomic/Makefile.mk
 include src/bt/Makefile.mk
 include src/dbg/Makefile.mk
 include src/env/Makefile.mk
