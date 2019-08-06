@@ -117,15 +117,7 @@ The Fortran binding for 'MPI_Init' has only the error return
 int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc ATTRIBUTE((unused));
-    int provided;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
-
-    rc = MPID_Wtime_init();
-#ifdef MPL_USE_DBG_LOGGING
-    MPL_dbg_pre_init(argc, argv, rc);
-#endif
-
     MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -145,14 +137,6 @@ int MPI_Init(int *argc, char ***argv)
 
     /* ... body of routine ... */
 
-    /* Temporarily disable thread-safety.  This is needed because the
-     * mutexes are not initialized yet, and we don't want to
-     * accidentally use them before they are initialized.  We will
-     * reset this value once it is properly initialized. */
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = 0;
-#endif /* MPICH_IS_THREADED */
-
     int threadLevel = MPI_THREAD_SINGLE;
     const char *tmp_str;
     if (MPL_env2str("MPIR_CVAR_DEFAULT_THREAD_LEVEL", &tmp_str)) {
@@ -170,26 +154,10 @@ int MPI_Init(int *argc, char ***argv)
         }
     }
 
+    int provided;
     mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-
-    if (MPIR_CVAR_ASYNC_PROGRESS) {
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
-        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
-        goto fn_fail;
-#else
-        if (provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPID_Init_async_thread();
-            if (mpi_errno)
-                goto fn_fail;
-
-            MPIR_async_thread_initialized = 1;
-        } else {
-            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
-        }
-#endif
-    }
 
     /* ... end of body of routine ... */
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);
