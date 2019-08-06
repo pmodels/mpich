@@ -359,8 +359,22 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 
+    int rc ATTRIBUTE((unused));
+    rc = MPID_Wtime_init();
+#ifdef MPL_USE_DBG_LOGGING
+    MPL_dbg_pre_init(argc, argv, rc);
+#endif
+
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Temporarily disable thread-safety.  This is needed because the
+     * mutexes are not initialized yet, and we don't want to
+     * accidentally use them before they are initialized.  We will
+     * reset this value once it is properly initialized. */
+#if defined MPICH_IS_THREADED
+    MPIR_ThreadInfo.isThreaded = 0;
+#endif /* MPICH_IS_THREADED */
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
@@ -676,6 +690,24 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+
+    if (MPIR_CVAR_ASYNC_PROGRESS) {
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
+        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
+        goto fn_fail;
+#else
+        if (*provided == MPI_THREAD_MULTIPLE) {
+            mpi_errno = MPID_Init_async_thread();
+            if (mpi_errno)
+                goto fn_fail;
+
+            MPIR_async_thread_initialized = 1;
+        } else {
+            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
+        }
+#endif
+    }
+
     return mpi_errno;
 
   fn_fail:
@@ -737,14 +769,7 @@ Notes for Fortran:
 int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc ATTRIBUTE((unused)), reqd = required;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
-
-    rc = MPID_Wtime_init();
-#ifdef MPL_USE_DBG_LOGGING
-    MPL_dbg_pre_init(argc, argv, rc);
-#endif
-
     MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT_THREAD);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -765,34 +790,9 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* ... body of routine ... */
 
-    /* Temporarily disable thread-safety.  This is needed because the
-     * mutexes are not initialized yet, and we don't want to
-     * accidentally use them before they are initialized.  We will
-     * reset this value once it is properly initialized. */
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = 0;
-#endif /* MPICH_IS_THREADED */
-
-    mpi_errno = MPIR_Init_thread(argc, argv, reqd, provided);
+    mpi_errno = MPIR_Init_thread(argc, argv, required, provided);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-
-    if (MPIR_CVAR_ASYNC_PROGRESS) {
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
-        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
-        goto fn_fail;
-#else
-        if (*provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPID_Init_async_thread();
-            if (mpi_errno)
-                goto fn_fail;
-
-            MPIR_async_thread_initialized = 1;
-        } else {
-            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
-        }
-#endif
-    }
 
     /* ... end of body of routine ... */
 
