@@ -16,7 +16,7 @@
 #include <utlist.h>
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
-struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
+extern struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 extern MPIR_Object_alloc_t MPIDI_workq_elemt_mem;
 
 /* Forward declarations of the routines that can be pushed to a work-queue */
