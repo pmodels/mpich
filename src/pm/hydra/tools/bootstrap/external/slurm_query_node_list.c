@@ -179,7 +179,7 @@ static HYD_status list_to_nodes(char *str)
         gpattern[0] += gmatch[0][0].rm_eo;
     }
 
-    /* match new group-0 pattern: (,|^)(h|h-|h00|h00-)([00-12,14] | [00-12] | 14)(,|$) */
+    /* match new group-0 pattern: (,|^)(h-)([00-12,14] | [00-12] | 14)(,|$) */
     while (*gpattern[0] && regexec(&gmatch_new[0], gpattern[0], MAX_GMATCH, gmatch[0], 0) == 0) {
         /* bound group-0 for group-1 matching: h-[00-h12,14],... -> h-[00-12,14]\0... */
         tmp[0] = *(gpattern[0] + gmatch[0][0].rm_eo);
@@ -262,7 +262,7 @@ static HYD_status list_to_nodes(char *str)
     /* if nodelist format not recognized throw an error message and abort */
     if (global_node_list == NULL) {
         fprintf(stdout,
-                "Error: node list format not recognized. Try using '-hosts=<hostnames>'.\n");
+                "Error: node list format not recognized. Try using '-hosts {node list}'.\n");
         fflush(stdout);
         abort();
     }
