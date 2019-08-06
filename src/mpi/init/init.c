@@ -118,7 +118,7 @@ int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc ATTRIBUTE((unused));
-    int threadLevel, provided;
+    int provided;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
     rc = MPID_Wtime_init();
@@ -153,27 +153,22 @@ int MPI_Init(int *argc, char ***argv)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif /* MPICH_IS_THREADED */
 
-    mpi_errno = MPIR_T_env_init();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
-        threadLevel = MPI_THREAD_MULTIPLE;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SERIALIZED"))
-        threadLevel = MPI_THREAD_SERIALIZED;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_FUNNELED"))
-        threadLevel = MPI_THREAD_FUNNELED;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SINGLE"))
-        threadLevel = MPI_THREAD_SINGLE;
-    else {
-        MPL_error_printf("Unrecognized thread level %s\n", MPIR_CVAR_DEFAULT_THREAD_LEVEL);
-        exit(1);
+    int threadLevel = MPI_THREAD_SINGLE;
+    const char *tmp_str;
+    if (MPL_env2str("MPIR_CVAR_DEFAULT_THREAD_LEVEL", &tmp_str)) {
+        if (!strcasecmp(tmp_str, "MPI_THREAD_MULTIPLE"))
+            threadLevel = MPI_THREAD_MULTIPLE;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_SERIALIZED"))
+            threadLevel = MPI_THREAD_SERIALIZED;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_FUNNELED"))
+            threadLevel = MPI_THREAD_FUNNELED;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_SINGLE"))
+            threadLevel = MPI_THREAD_SINGLE;
+        else {
+            MPL_error_printf("Unrecognized thread level %s\n", tmp_str);
+            exit(1);
+        }
     }
-
-    /* If the user requested for asynchronous progress, request for
-     * THREAD_MULTIPLE. */
-    if (MPIR_CVAR_ASYNC_PROGRESS)
-        threadLevel = MPI_THREAD_MULTIPLE;
 
     mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
     if (mpi_errno != MPI_SUCCESS)

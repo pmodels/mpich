@@ -358,6 +358,15 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int thread_provided = 0;
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
+
+    mpi_errno = MPIR_T_env_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* If the user requested for asynchronous progress, request for
+     * THREAD_MULTIPLE. */
+    if (MPIR_CVAR_ASYNC_PROGRESS)
+        required = MPI_THREAD_MULTIPLE;
+
 #if defined(MPICH_IS_THREADED)
     bool cs_initialized = false;
 
@@ -763,15 +772,6 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 #if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
 #endif /* MPICH_IS_THREADED */
-
-    mpi_errno = MPIR_T_env_init();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    /* If the user requested for asynchronous progress, request for
-     * THREAD_MULTIPLE. */
-    if (MPIR_CVAR_ASYNC_PROGRESS)
-        reqd = MPI_THREAD_MULTIPLE;
 
     mpi_errno = MPIR_Init_thread(argc, argv, reqd, provided);
     if (mpi_errno != MPI_SUCCESS)
