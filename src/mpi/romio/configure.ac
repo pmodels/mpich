@@ -44,7 +44,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # AC_MSG_RESULT([Configuring ROMIO Version $VERSION])
 CONFIGURE_ARGS="$*"
 if test -n "$CONFIGURE_ARGS" ; then
-    echo "Configuring with args $CONFIGURE_ARGS"
+    AC_MSG_NOTICE([Configuring with args $CONFIGURE_ARGS])
 fi
 
 AC_CONFIG_HEADER(adio/include/romioconf.h)
@@ -459,7 +459,7 @@ AC_HAVE_FUNCS(memalign)
 # MPICH provides all of the Fortran interface routines?
 #
 if test $NOF77 = 0 ; then
-    echo "checking Fortran external names"
+    AC_MSG_NOTICE([checking Fortran external names])
     PAC_GET_FORTNAMES
     if test -n "$WDEF" ; then
         CFLAGS="$CFLAGS $WDEF"
@@ -544,7 +544,7 @@ if test "$ac_cv_sizeof_long_long" != 0 ; then
        MPI_OFFSET_KIND1="!"
        MPI_OFFSET_KIND2="!"
     else
-       echo "defining MPI_Offset as long in C and integer in Fortran" 
+       AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
        MPI_OFFSET_TYPE="long"
        DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
        FORTRAN_MPI_OFFSET="integer"
@@ -553,7 +553,7 @@ if test "$ac_cv_sizeof_long_long" != 0 ; then
        MPI_OFFSET_KIND2="!"
     fi
 else
-    echo "defining MPI_Offset as long in C and integer in Fortran" 
+    AC_MSG_NOTICE([defining MPI_Offset as long in C and integer in Fortran])
     MPI_OFFSET_TYPE="long"
     DEFINE_MPI_OFFSET="typedef long MPI_Offset;"
     FORTRAN_MPI_OFFSET="integer"
@@ -1649,7 +1649,7 @@ else
    F77MPIOINC="include 'mpiof.h'"
 fi
 
-echo "setting SYSDEP_INC to $SYSDEP_INC"
+AC_MSG_NOTICE([setting SYSDEP_INC to $SYSDEP_INC])
 AC_SUBST(SYSDEP_INC)
 
 AC_C_RESTRICT
@@ -1658,13 +1658,13 @@ PAC_C_GNU_ATTRIBUTE
 # support gcov test coverage information
 PAC_ENABLE_COVERAGE
 
-echo "setting CC to $CC"
-echo "setting F77 to $F77"
-echo "setting TEST_CC to $TEST_CC"
-echo "setting TEST_F77 to $TEST_F77"
-echo "setting CFLAGS to $CFLAGS"
-echo "setting USER_CFLAGS to $USER_CFLAGS"
-echo "setting USER_FFLAGS to $USER_FFLAGS"
+AC_MSG_NOTICE([setting CC to $CC])
+AC_MSG_NOTICE([setting F77 to $F77])
+AC_MSG_NOTICE([setting TEST_CC to $TEST_CC])
+AC_MSG_NOTICE([setting TEST_F77 to $TEST_F77])
+AC_MSG_NOTICE([setting CFLAGS to $CFLAGS])
+AC_MSG_NOTICE([setting USER_CFLAGS to $USER_CFLAGS])
+AC_MSG_NOTICE([setting USER_FFLAGS to $USER_FFLAGS])
 
 AC_SUBST(ARCH)
 AC_SUBST(FILE_SYSTEM)
