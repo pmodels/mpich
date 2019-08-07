@@ -6,6 +6,7 @@ multisend 2
 multisend2 5
 multisend3 5
 multisend4 5
+multisend4 5 arg=-mode=1
 greq_wait 1
 greq_test 1
 ibsend 2
