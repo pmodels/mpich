@@ -32,11 +32,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
 #else
     int r;
 
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_put(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win);
@@ -73,11 +68,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
                                  target_rank, target_disp, target_count, target_datatype, win, av);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_get(origin_addr, origin_count, origin_datatype,
@@ -118,11 +108,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
 #else
     int r;
 
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
@@ -159,11 +144,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
                                               datatype, target_rank, target_disp, win, av);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
@@ -204,14 +184,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
                                          target_datatype, op, win, av, request);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        /* create a completed request for user. */
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
@@ -258,14 +230,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
 #else
     int r;
 
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        /* create a completed request for user. */
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        goto fn_exit;
-    }
-
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
@@ -305,11 +269,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
 #else
     int r;
 
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_fetch_and_op(origin_addr, result_addr,
                                                datatype, target_rank, target_disp, op, win);
@@ -347,14 +306,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
                                   target_datatype, win, av, request);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        /* create a completed request for user. */
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rget(origin_addr, origin_count, origin_datatype,
@@ -395,14 +346,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
                                   target_datatype, win, av, request);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        /* create a completed request for user. */
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
-        MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rput(origin_addr, origin_count, origin_datatype,
@@ -447,11 +390,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
                                             op, win, av);
 #else
     int r;
-
-    if (unlikely(target_rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
 
     if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,

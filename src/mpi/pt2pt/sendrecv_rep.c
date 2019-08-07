@@ -152,21 +152,37 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                 goto fn_fail;
         }
 
-        mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,
-                               comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &rreq);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
+        /* If source is MPI_PROC_NULL, create a completed request and return. */
+        if (unlikely(source == MPI_PROC_NULL)) {
+            rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
+            MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                "**nomemreq");
+            MPIR_Status_set_procnull(&rreq->status);
+        } else {
+            mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,
+                                   comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &rreq);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        }
 
-        mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
-                               sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno == MPIX_ERR_NOREQ)
-                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
-            /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
-            MPIR_Request_free(rreq);
-            goto fn_fail;
-            /* --END ERROR HANDLING-- */
+
+        /* If dest is MPI_PROC_NULL, create a completed request and return. */
+        if (unlikely(dest == MPI_PROC_NULL)) {
+            sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+            MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                "**nomemreq");
+        } else {
+            mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
+                                   sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
+            if (mpi_errno != MPI_SUCCESS) {
+                /* --BEGIN ERROR HANDLING-- */
+                if (mpi_errno == MPIX_ERR_NOREQ)
+                    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+                /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
+                MPIR_Request_free(rreq);
+                goto fn_fail;
+                /* --END ERROR HANDLING-- */
+            }
         }
 
         mpi_errno = MPID_Wait(rreq, MPI_STATUS_IGNORE);

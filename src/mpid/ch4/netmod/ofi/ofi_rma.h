@@ -399,8 +399,6 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto null_op_exit;
 
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
                                                       origin_count, target_count,
@@ -588,8 +586,6 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto null_op_exit;
 
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
                                                       origin_count, target_count,
@@ -806,8 +802,6 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto fn_exit;
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
@@ -905,8 +899,6 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto null_op_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_bytes);
@@ -1051,8 +1043,6 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto null_op_exit;
 
     MPIDI_Datatype_check_size(target_datatype, target_count, target_bytes);
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
@@ -1339,8 +1329,6 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     }
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (unlikely(target_rank == MPI_PROC_NULL))
-        goto fn_exit;
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 

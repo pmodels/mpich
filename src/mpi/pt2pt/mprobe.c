@@ -87,6 +87,13 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (source == MPI_PROC_NULL) {
+        MPIR_Status_set_procnull(status);
+        *message = MPI_MESSAGE_NO_PROC;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     *message = MPI_MESSAGE_NULL;
@@ -94,12 +101,8 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (msgp == NULL) {
-        MPIR_Assert(source == MPI_PROC_NULL);
-        *message = MPI_MESSAGE_NO_PROC;
-    } else {
-        *message = msgp->handle;
-    }
+    MPIR_Assert(msgp != NULL);
+    *message = msgp->handle;
 
     /* ... end of body of routine ... */
 

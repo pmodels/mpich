@@ -21,12 +21,6 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 			"rank=%d, tag=%d, context=%d", 
 			rank, tag, comm->recvcontext_id + context_offset));
 
-    if (rank == MPI_PROC_NULL)
-    {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
-        goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&

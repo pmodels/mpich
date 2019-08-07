@@ -22,6 +22,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
+        /* continue if the source/dest is MPI_PROC_NULL */
+        if (MPIDIG_REQUEST(preq, rank) == MPI_PROC_NULL)
+            continue;
 
         switch (MPIDI_PREQUEST(preq, p_type)) {
 
