@@ -15,8 +15,6 @@
 #include "topotree_util.h"
 #include "topotree.h"
 
-#include <hwloc.h>
-#include <hwloc/glibc-sched.h>
 #include <math.h>
 
 /* This function allocates and generates a template_tree based on k_val and right_skewed for
@@ -76,49 +74,6 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
     }
     /* template tree is ready here */
     return mpi_errno;
-}
-
-/* This function initializes the bind_map data structure with the binding information from all
- * the ranks that have copied their cpu-affinity information into the shared memory region.
- * */
-void MPIDI_SHM_hwloc_init_bindmap(int num_ranks, int topo_depth, int *shared_region, int **bind_map)
-{
-    int i, level;
-    unsigned int num_obj, curr_obj;
-
-    hwloc_cpuset_t hwloc_cpuset = hwloc_bitmap_alloc();
-    /* STEP 3.1. Collect the binding information from hwloc for all ranks */
-    for (i = 0; i < num_ranks; ++i) {
-        cpu_set_t t = ((cpu_set_t *) (shared_region))[i];
-        hwloc_cpuset_from_glibc_sched_affinity(MPIR_Process.hwloc_topology, hwloc_cpuset, &t,
-                                               sizeof(t));
-        /* HWLOC_OBJ_PU is the smallest unit of computation. We would like to get all the
-         * affinity information for each rank */
-        num_obj =
-            hwloc_get_nbobjs_inside_cpuset_by_type(MPIR_Process.hwloc_topology, hwloc_cpuset,
-                                                   HWLOC_OBJ_PU);
-        /* Go over all objects, and if it is bound to more than one PU at that level, set it
-         * to -1, otherwise update to the binding*/
-        for (curr_obj = 0; curr_obj < num_obj; ++curr_obj) {
-            hwloc_obj_t obj =
-                hwloc_get_obj_inside_cpuset_by_type(MPIR_Process.hwloc_topology, hwloc_cpuset,
-                                                    HWLOC_OBJ_PU, curr_obj);
-            level = 0;
-            do {
-                /* If binding was not set, or is same as previous binding, update.
-                 * Note that we use logical indices from hwloc instead of physical indices
-                 * because logical indices are more portable - see hwloc documentation*/
-                if (bind_map[i][level] == 0 || bind_map[i][level] == obj->logical_index) {
-                    bind_map[i][level] = obj->logical_index;
-                } else {
-                    /* If rank is bound to different PUs at that level, we set to -1 */
-                    bind_map[i][level] = -1;
-                }
-                level++;
-            } while ((obj = obj->parent));
-        }
-    }
-    hwloc_bitmap_free(hwloc_cpuset);
 }
 
 /* This function copies the tree present in shared_region into the my_tree data structure for rank.
@@ -469,7 +424,9 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     rank = MPIR_Comm_rank(comm_ptr);
 
     /* Calculate the size of shared memory that would be needed */
-    shm_size = sizeof(int) * 5 * num_ranks + num_ranks * sizeof(cpu_set_t);
+    MPIR_Node_obj obj = MPIR_Node_get_covering_obj();
+    topo_depth = MPIR_Node_get_obj_depth(obj) + 1;
+    shm_size = sizeof(int) * topo_depth * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
     mpi_errno = MPIDIU_allocate_shm_segment(comm_ptr, shm_size, &fd, (void **) &shared_region,
@@ -482,11 +439,15 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
-    /* STEP 2. Collect cpu_sets for each rank at the root */
-    cpu_set_t my_cpu_set;
-    CPU_ZERO(&my_cpu_set);
-    sched_getaffinity(0, sizeof(my_cpu_set), &my_cpu_set);
-    ((cpu_set_t *) (shared_region))[rank] = my_cpu_set;
+
+    /* STEP 2. Every process fills affinity information in shared_region */
+    int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
+    int depth = 0;
+    while (depth < topo_depth) {
+        MPIR_Node_obj_type type = MPIR_Node_get_obj_type(obj);
+        shared_region_ptr[rank][depth++] = MPIR_Node_get_obj_type_affinity(type);
+        obj = MPIR_Node_get_parent_obj(obj);
+    }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
@@ -496,16 +457,15 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
-    /* STEP 3. Root has all the cpu_set information, now build tree */
+    /* STEP 3. Root has all the bind_map information, now build tree */
     if (rank == root) {
-        topo_depth = hwloc_topology_get_depth(MPIR_Process.hwloc_topology);
         bind_map = (int **) MPL_malloc(num_ranks * sizeof(int *), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!bind_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
         for (i = 0; i < num_ranks; ++i) {
             bind_map[i] = (int *) MPL_calloc(topo_depth, sizeof(int), MPL_MEM_OTHER);
             MPIR_ERR_CHKANDJUMP(!bind_map[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+            MPIR_Memcpy(bind_map[i], shared_region_ptr[i], topo_depth * sizeof(int));
         }
-        MPIDI_SHM_hwloc_init_bindmap(num_ranks, topo_depth, shared_region, bind_map);
         /* Done building the topology information */
 
         /* STEP 3.1. Count the maximum entries at each level - used for breaking the tree into
@@ -519,7 +479,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
             fprintf(stderr, "Breaking topology at :: %d (default= %d)\n", package_level,
                     MPIDI_SHM_TOPOTREE_CUTOFF);
 
-        /* STEP 3.2. allocate space for the entries that go in each package based on hwloc info */
+        /* STEP 3.2. allocate space for the entries that go in each package based on topology info */
         ranks_per_package =
             (int
              **) MPL_malloc(max_entries_per_level[package_level] * sizeof(int *), MPL_MEM_OTHER);
