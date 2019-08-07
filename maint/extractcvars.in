@@ -419,14 +419,10 @@ EOT
             print OUTPUT_C $sp, "    $var_name = $var_name\_$a;\n";
             $c = "else if";
         }
-        # FIXME: There is no failure mode designed for the entire MPIR_T_..._init currently
-        #        MPIR_T_cvar_env_init and MPIR_T_env_init et el returns void
-        #        I don't see why not, but the change is another PR.
-        #        Once we checks the error code, uncomment the following.
-        # print OUTPUT_C $sp, "else {\n";
-        # print OUTPUT_C $sp, "    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,__func__,__LINE__,MPI_ERR_ARG, \"**cvar_val\", \"**cvar_val %s %s\", \"$var_name\", tmp_str);\n";
-        # print OUTPUT_C $sp, "    goto fn_fail;\n";
-        # print OUTPUT_C $sp, "}\n";
+        print OUTPUT_C $sp, "else {\n";
+        print OUTPUT_C $sp, "    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,MPI_ERR_OTHER, \"**cvar_val\", \"**cvar_val %s %s\", \"$var_name\", tmp_str);\n";
+        print OUTPUT_C $sp, "    goto fn_fail;\n";
+        print OUTPUT_C $sp, "}\n";
         print OUTPUT_C "    }\n";
     }
     print OUTPUT_C "\n";
