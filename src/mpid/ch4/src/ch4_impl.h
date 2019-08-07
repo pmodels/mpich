@@ -383,6 +383,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
+/* We assume this routine is never called with rank=MPI_PROC_NULL. */
 static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
@@ -392,12 +393,6 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
-
-    if (unlikely(rank == MPI_PROC_NULL)) {
-        /* Treat PROC_NULL as always valid */
-        ret = 1;
-        goto fn_exit;
-    }
 
     MPIDI_NM_comm_get_lpid(comm, rank, &lpid, FALSE);
 
@@ -583,14 +578,14 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
         }                                                               \
     } while (0)
 
-/* Generic routine for checking synchronization at every RMA operation.*/
+/* Generic routine for checking synchronization at every RMA operation.
+ * Assuming no RMA operation with target_rank=PROC_NULL will call it. */
 #define MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win)                                 \
     do {                                                                               \
         MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
         MPIDIG_EPOCH_OP_REFENCE(win);                                              \
-        /* Check target sync status for any target_rank except PROC_NULL. */           \
-        if (target_rank != MPI_PROC_NULL)                                              \
-            MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);  \
+        /* Check target sync status for target_rank. */       \
+        MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail); \
     } while (0);
 
 /*

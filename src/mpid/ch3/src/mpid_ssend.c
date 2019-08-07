@@ -60,11 +60,6 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 #	endif
 	goto fn_exit;
     }
-    
-    if (rank == MPI_PROC_NULL)
-    {
-	goto fn_exit;
-    }
 
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
 

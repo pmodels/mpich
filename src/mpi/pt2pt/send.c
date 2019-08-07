@@ -119,6 +119,11 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr,

@@ -158,24 +158,37 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno =
-        MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr,
-                   MPIR_CONTEXT_INTRA_PT2PT, &rreq);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     /* FIXME - Performance for small messages might be better if MPID_Send() were used here instead of MPID_Isend() */
-    mpi_errno =
-        MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT,
-                   &sreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPIX_ERR_NOREQ)
-            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
-        /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
-        MPIR_Request_free(rreq);
-        goto fn_fail;
-        /* --END ERROR HANDLING-- */
+    /* If source is MPI_PROC_NULL, create a completed request and return. */
+    if (unlikely(source == MPI_PROC_NULL)) {
+        rreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        MPIR_Status_set_procnull(&rreq->status);
+    } else {
+        mpi_errno =
+            MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr,
+                       MPIR_CONTEXT_INTRA_PT2PT, &rreq);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+    }
+
+    /* If dest is MPI_PROC_NULL, create a completed request and return. */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    } else {
+        mpi_errno =
+            MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr,
+                       MPIR_CONTEXT_INTRA_PT2PT, &sreq);
+        if (mpi_errno != MPI_SUCCESS) {
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno == MPIX_ERR_NOREQ)
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+            /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
+            MPIR_Request_free(rreq);
+            goto fn_fail;
+            /* --END ERROR HANDLING-- */
+        }
     }
 
     if (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq)) {

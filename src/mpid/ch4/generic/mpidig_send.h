@@ -30,24 +30,6 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
 
-    /* If the message is going to MPI_PROC_NULL, we still need to create and complete the request so
-     * we have something we can pass back up the call stack to track the request status. */
-    if (unlikely(rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        /* for blocking calls, we directly complete the request */
-        if (!is_blocking || sreq != NULL) {
-            if (sreq == NULL) {
-                *request = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
-                MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                                    "**nomemreq");
-            } else {
-                MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
-            }
-            MPID_Request_complete((*request));
-        }
-        goto fn_exit;
-    }
-
     if (sreq == NULL) {
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");

@@ -60,11 +60,6 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	goto fn_exit;
     }
 
-    if (rank == MPI_PROC_NULL)
-    {
-	goto fn_exit;
-    }
-
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
 

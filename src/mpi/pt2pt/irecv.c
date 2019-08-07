@@ -119,6 +119,16 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Create a completed request and return immediately for dummy process */
+    if (unlikely(source == MPI_PROC_NULL)) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT((request_ptr) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        MPIR_Status_set_procnull(&request_ptr->status);
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,

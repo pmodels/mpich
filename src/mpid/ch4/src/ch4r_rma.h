@@ -41,8 +41,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 #endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0)
@@ -200,8 +198,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 #endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0)
@@ -338,8 +334,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 #endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -519,8 +513,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 #endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -923,8 +915,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_COMPARE_AND_SWAP);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
-    if (target_rank == MPI_PROC_NULL)
-        goto fn_exit;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0)

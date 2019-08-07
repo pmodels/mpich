@@ -97,6 +97,13 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * statu
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (source == MPI_PROC_NULL) {
+        MPIR_Status_set_procnull(status);
+        *flag = TRUE;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     /* FIXME: Is this correct for intercomms? */

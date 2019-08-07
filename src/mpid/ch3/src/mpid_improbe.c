@@ -18,14 +18,6 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
 
     *message = NULL;
 
-    if (source == MPI_PROC_NULL)
-    {
-        MPIR_Status_set_procnull(status);
-        *flag = TRUE;
-        *message = NULL; /* should be interpreted as MPI_MESSAGE_NO_PROC */
-        goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");

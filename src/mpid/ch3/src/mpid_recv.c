@@ -27,13 +27,6 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                       "rank=%d, tag=%d, context=%d", rank, tag,
 		      comm->recvcontext_id + context_offset));
-    
-    if (rank == MPI_PROC_NULL)
-    {
-	MPIR_Status_set_procnull(status);
-	rreq = NULL;
-	goto fn_exit;
-    }
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
