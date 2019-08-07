@@ -37,4 +37,9 @@ struct ADIOI_Fns_struct ADIO_IME_operations = {
     ADIOI_IME_Delete,   /* Delete */
     ADIOI_IME_Feature,
     ADIOI_IME_PREFIX,
+#if defined(F_SETLKW64)
+    ADIOI_GEN_SetLock   /* SetLock */
+#else
+    ADIOI_GEN_SetLock64 /* SetLock */
+#endif
 };

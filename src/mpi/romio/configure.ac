@@ -724,7 +724,7 @@ AC_TRY_COMPILE([#include <fcntl.h>],
 ],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
 AC_MSG_RESULT($pac_cv_struct_flock_and_mpi_offset)
 # FIXME: We should look for struct flock64 and the F_SETLK64/F_GETLK64
-# ADIOI_Set_lock could use these instead.
+# ADIOI_GEN_SetLock. could use these instead.
 if test "$pac_cv_struct_flock_and_mpi_offset" = no ; then
     AC_MSG_CHECKING([whether struct flock compatible with int])
     AC_TRY_COMPILE([#include <fcntl.h>],
