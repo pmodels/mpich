@@ -5,6 +5,8 @@ os:
   - linux
   - osx
 
+dist: bionic
+
 env:
   - DEVICE=ch3:nemesis
   - DEVICE=ch3:sock
@@ -23,8 +25,6 @@ addons:
     packages: gfortran libnuma-dev
 
 before_script:
-  - MPICH_DEPS_PREFIX=$HOME/autotools ./maint/bootstrap.sh
-  - export PATH=$HOME/autotools/bin:$PATH
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then MPICH_FORTRAN=--disable-fortran; fi
 
 
