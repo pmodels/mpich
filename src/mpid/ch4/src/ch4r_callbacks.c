@@ -339,7 +339,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+    if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
         int continue_matching = 1;
         if (MPIDI_REQUEST(rreq, is_local)) {
             MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_SHM,
@@ -581,7 +581,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDIG_COMM(root_comm, posted_list));
 
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+            if (unlikely(rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
                 anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
 
                 mpi_errno = MPIDI_anysource_matched(anysource_partner,

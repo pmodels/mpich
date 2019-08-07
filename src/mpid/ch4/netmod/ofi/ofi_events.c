@@ -93,7 +93,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 
-    if (MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+    if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
         int continue_matching = 1;
 
         MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_NETMOD,
