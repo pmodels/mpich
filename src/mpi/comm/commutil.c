@@ -423,30 +423,19 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
 
+    /* Notify device of communicator creation */
+    mpi_errno = MPID_Comm_create_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* It's OK to relax these assertions, but we should do so very
      * intentionally.  For now this function is the only place that we create
      * our hierarchy of communicators */
     MPIR_Assert(comm->node_comm == NULL);
     MPIR_Assert(comm->node_roots_comm == NULL);
 
-    /* Notify device of communicator creation */
-    if (comm != MPIR_Process.comm_world) {
-        mpi_errno = MPID_Comm_create_hook(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        /* Create collectives-specific infrastructure */
-        mpi_errno = MPIR_Coll_comm_init(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        MPIR_Comm_map_free(comm);
-    }
-
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
         mpi_errno = MPIR_Comm_create_subcomms(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (comm->node_comm != NULL) {
             MPIR_Comm_commit(comm->node_comm);
@@ -457,25 +446,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         }
     }
 
+    /* Create collectives-specific infrastructure */
+    mpi_errno = MPIR_Coll_comm_init(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm_map_free(comm);
+
   fn_exit:
-    if (comm == MPIR_Process.comm_world) {
-        mpi_errno = MPID_Comm_create_hook(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* Create collectives-specific infrastructure */
-        mpi_errno = MPIR_Coll_comm_init(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        MPIR_Comm_map_free(comm);
-        /* Create collectives-specific infrastructure */
-        mpi_errno = MPIR_Coll_comm_init(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        MPIR_Comm_map_free(comm);
-    }
-
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
     return mpi_errno;
   fn_fail:
