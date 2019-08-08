@@ -286,7 +286,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
 
         (*newcomm_ptr)->recvcontext_id = new_context_id;
         (*newcomm_ptr)->local_size = new_size;
-        (*newcomm_ptr)->pof2 = MPL_pof2(new_size);
         (*newcomm_ptr)->comm_kind = comm_ptr->comm_kind;
         /* Other fields depend on whether this is an intercomm or intracomm */
 

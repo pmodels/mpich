@@ -108,7 +108,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    pof2 = comm_ptr->pof2;
+    pof2 = comm_ptr->coll.pof2;
 
     rem = comm_size - pof2;
 
