@@ -379,6 +379,7 @@ be in the range 0 to %d
 **ioRMWrdwr:Must open file with MPI_MODE_RDWR for read-modify-write
 **iowsrc:Unable to read from the file as part of a strided write operation
 **iowswc:Unable to write to the file as part of a strided write operation
+**iorsrc:Unable to read from the file as part of a strided read operation
 **ioagnomatch:No aggregators match
 **iobadsize:Invalid size argument
 **unsupporteddatarep:Only native data representation currently supported
