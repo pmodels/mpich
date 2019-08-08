@@ -39,10 +39,9 @@ static inline int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_ISEND);
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(rank, comm, handler_id,
-                                          am_hdr, am_hdr_sz, data, count, datatype, sreq, FALSE);
+                                          am_hdr, am_hdr_sz, data, count, datatype, sreq);
     else
-        mpi_errno = MPIDI_OFI_do_am_isend_header(rank, comm, handler_id,
-                                                 am_hdr, am_hdr_sz, sreq, FALSE);
+        mpi_errno = MPIDI_OFI_do_am_isend_header(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISEND);
     return mpi_errno;
@@ -110,10 +109,10 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id),
                                           handler_id, am_hdr, am_hdr_sz, data, count, datatype,
-                                          sreq, TRUE);
+                                          sreq);
     else
         mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank, MPIDIG_context_id_to_comm(context_id),
-                                                 handler_id, am_hdr, am_hdr_sz, sreq, TRUE);
+                                                 handler_id, am_hdr, am_hdr_sz, sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISEND_REPLY);
     return mpi_errno;
 }
@@ -136,7 +135,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_SEND_HDR);
-    mpi_errno = MPIDI_OFI_do_inject(rank, comm, handler_id, am_hdr, am_hdr_sz, FALSE);
+    mpi_errno = MPIDI_OFI_do_inject(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -158,7 +157,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_SEND_HDR_REPLY);
 
     mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
-                                    am_hdr, am_hdr_sz, TRUE);
+                                    am_hdr, am_hdr_sz);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
