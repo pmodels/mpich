@@ -428,7 +428,6 @@ sub RunList {
     # eg: runtests -tests='testlist,testlist.dtp'
     my @all_listfiles = split /,\s*/, $listfile;
     foreach my $_f (@all_listfiles){
-        print "Looking in $curdir/$_f\n" if $debug;
         my $listfileSource = $_f;
         if (! -s "$_f" && -s "$srcdir/$curdir/$_f" ) {
             $listfileSource = "$srcdir/$curdir/$_f";
@@ -437,6 +436,7 @@ sub RunList {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
+        print "Looking in $curdir/$_f\n" if $debug;
         # FIXME: keeping the indentation to facilitate review, indent back on merge
     open( $LIST, "<$listfileSource" ) || 
 	die "Could not open $listfileSource\n";
