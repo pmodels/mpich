@@ -437,229 +437,228 @@ sub RunList {
             next;
         }
         print "Looking in $curdir/$_f\n" if $debug;
-        # FIXME: keeping the indentation to facilitate review, indent back on merge
-    open( $LIST, "<$listfileSource" ) || 
-	die "Could not open $listfileSource\n";
-    while (<$LIST>) {
-	# Check for stop file
-	if (-s $stopfile) {
-	    # Exit because we found a stopfile
-	    print STDERR "Terminating test because stopfile $stopfile found\n";
-	    last;
-	}
-	# Skip comments
-	s/#.*//g;
-	# Remove any trailing newlines/returns
-	s/\r?\n//;
-        # Remove any leading whitespace
-        s/^\s*//;
-	# Some tests require that support routines are built first
-	# This is specified with !<dir>:<target>
-	if (/^\s*\!([^:]*):(.*)/) {
-	    # Hack: just execute in a subshell.  This discards any 
-	    # output.
-	    `cd $1 && make $2`;
-	    next;
-	}
-	# List file entries have the form:
-	# program [ np [ name=value ... ] ]
-	# See files errhan/testlist, init/testlist, and spawn/testlist
-	# for examples of using the key=value form
-	my @args = split(/\s+/,$_);
-	my $programname = $args[0];
-	my $np = "";
-	my $ResultTest = "";
-	my $InitForRun = "";
-	my $timeLimit  = "";
-	my $progArgs   = "";
-	my $mpiexecArgs = "";
-	my $requiresStrict = "";
-	my $requiresMPIX   = "";
-	my $progEnv    = "";
-	my $mpiVersion = "";
-        my $xfail = "";
-    my $dtp_match_type = 0;
-    my $dtp_test_type = "";    # this test type
-    # get the type of this test
-    if ($programname =~ /BASIC/) {
-        $dtp_test_type = "BASIC";
-    } elsif ($programname =~ /STRUCT/) {
-        $dtp_test_type = "STRUCT";
-    }
-	if ($#args >= 1) { $np = $args[1]; }
-	# Process the key=value arguments
-	for (my $i=2; $i <= $#args; $i++) {
-	    if ($args[$i] =~ /([^=]+)=(.*)/) {
-		my $key = $1;
-		my $value = $2;
-		if ($key eq "resultTest") {
-		    $ResultTest = $value;
-		}
-		elsif ($key eq "init") {
-		    $InitForRun = $value;
-		}
-		elsif ($key eq "timeLimit") {
-		    $timeLimit = $value;
-		}
-		elsif ($key eq "arg") {
-            # match allowed datatypes here
-            for my $j (@TYPES) {
-                if ($value eq "-type=$j") {
-                    $dtp_match_type=1;
-                    break;
+        open( $LIST, "<$listfileSource" ) || die "Could not open $listfileSource\n";
+        while (<$LIST>) {
+            # Check for stop file
+            if (-s $stopfile) {
+                # Exit because we found a stopfile
+                print STDERR "Terminating test because stopfile $stopfile found\n";
+                last;
+            }
+            # Skip comments
+            s/#.*//g;
+            # Remove any trailing newlines/returns
+            s/\r?\n//;
+            # Remove any leading whitespace
+            s/^\s*//;
+            # Some tests require that support routines are built first
+            # This is specified with !<dir>:<target>
+            if (/^\s*\!([^:]*):(.*)/) {
+                # Hack: just execute in a subshell.  This discards any 
+                # output.
+                `cd $1 && make $2`;
+                next;
+            }
+            # List file entries have the form:
+            # program [ np [ name=value ... ] ]
+            # See files errhan/testlist, init/testlist, and spawn/testlist
+            # for examples of using the key=value form
+            my @args = split(/\s+/,$_);
+            my $programname = $args[0];
+            my $np = "";
+            my $ResultTest = "";
+            my $InitForRun = "";
+            my $timeLimit  = "";
+            my $progArgs   = "";
+            my $mpiexecArgs = "";
+            my $requiresStrict = "";
+            my $requiresMPIX   = "";
+            my $progEnv    = "";
+            my $mpiVersion = "";
+            my $xfail = "";
+
+            my $dtp_match_type = 0;
+            my $dtp_test_type = "";    # this test type
+            # get the type of this test
+            if ($programname =~ /BASIC/) {
+                $dtp_test_type = "BASIC";
+            } elsif ($programname =~ /STRUCT/) {
+                $dtp_test_type = "STRUCT";
+            }
+            if ($#args >= 1) { $np = $args[1]; }
+            # Process the key=value arguments
+            for (my $i=2; $i <= $#args; $i++) {
+                if ($args[$i] =~ /([^=]+)=(.*)/) {
+                    my $key = $1;
+                    my $value = $2;
+                    if ($key eq "resultTest") {
+                        $ResultTest = $value;
+                    }
+                    elsif ($key eq "init") {
+                        $InitForRun = $value;
+                    }
+                    elsif ($key eq "timeLimit") {
+                        $timeLimit = $value;
+                    }
+                    elsif ($key eq "arg") {
+                        # match allowed datatypes here
+                        for my $j (@TYPES) {
+                            if ($value eq "-type=$j") {
+                                $dtp_match_type=1;
+                                break;
+                            }
+                        }
+
+                        $progArgs = "$progArgs $value";
+                    }
+                    elsif ($key eq "mpiexecarg") {
+                        $mpiexecArgs = "$mpiexecArgs $value";
+                    }
+                    elsif ($key eq "env") {
+                        if ($progEnv eq "") {
+                            $progEnv = "$value";
+                        }
+                        else {
+                            $progEnv = "$progEnv $value";
+                        }
+                    }
+                    elsif ($key eq "mpiversion") {
+                        $mpiVersion = $value;
+                    }
+                    elsif ($key eq "strict") {
+                        $requiresStrict = $value
+                    }
+                    elsif ($key eq "mpix") {
+                        $requiresMPIX = $value
+                    }
+                    elsif ($key eq "xfail") {
+                        if ($value eq "") {
+                            print STDERR "\"xfail=\" requires an argument\n";
+                        }
+                        $xfail = $value;
+                    }
+                    else {
+                        print STDERR "Unrecognized key $key in $listfileSource\n";
+                    }
                 }
             }
 
-            $progArgs = "$progArgs $value";
-        }
-		elsif ($key eq "mpiexecarg") {
-		    $mpiexecArgs = "$mpiexecArgs $value";
-		}
-		elsif ($key eq "env") {
-		    if ($progEnv eq "") {
-			$progEnv = "$value";
-		    }
-		    else {
-			$progEnv = "$progEnv $value";
-		    }
-		}
-		elsif ($key eq "mpiversion") {
-		    $mpiVersion = $value;
-		}
-		elsif ($key eq "strict") {
-		    $requiresStrict = $value
-		}
-		elsif ($key eq "mpix") {
-		    $requiresMPIX = $value
-		}
-                elsif ($key eq "xfail") {
-                    if ($value eq "") {
-                        print STDERR "\"xfail=\" requires an argument\n";
-                    }
-                    $xfail = $value;
+            if ($DTP_SWITCH eq "ON") {
+                # if dtpools tests are ON only run matching types for basic tests
+                if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
+                    $programname = "";
                 }
-		else {
-		    print STDERR "Unrecognized key $key in $listfileSource\n";
-		}
-	    }
-	}
+            } else {
+                # if dtpools tests are OFF only disable dtpools tests, run the rest
+                if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
+                    $programname = "";
+                }
+            }
 
-    if ($DTP_SWITCH eq "ON") {
-        # if dtpools tests are ON only run matching types for basic tests
-        if ($dtp_test_type eq "BASIC" && $dtp_match_type == 0) {
-            $programname = "";
-        }
-    } else {
-        # if dtpools tests are OFF only disable dtpools tests, run the rest
-        if ($dtp_test_type eq "BASIC" || $dtp_test_type eq "STRUCT") {
-            $programname = "";
-        }
-    }
+            # skip empty lines
+            if ($programname eq "") { next; }
 
-	# skip empty lines
-	if ($programname eq "") { next; }
+            if ($np eq "") { $np = $np_default; }
+            if ($np_max > 0 && $np > $np_max) { $np = $np_max; }
 
-	if ($np eq "") { $np = $np_default; }
-	if ($np_max > 0 && $np > $np_max) { $np = $np_max; }
+            # allows us to accurately output TAP test numbers without disturbing the
+            # original totals that have traditionally been reported
+            #
+            # These "unless" blocks are ugly, but permit us to honor skipping
+            # criteria for directories as well without counting directories as tests
+            # in our XML/TAP output.
+            unless (-d $programname) {
+                $total_seen++;
+            }
 
-        # allows us to accurately output TAP test numbers without disturbing the
-        # original totals that have traditionally been reported
-        #
-        # These "unless" blocks are ugly, but permit us to honor skipping
-        # criteria for directories as well without counting directories as tests
-        # in our XML/TAP output.
-        unless (-d $programname) {
-            $total_seen++;
-        }
-
-	# If a minimum MPI version is specified, check against the
-	# available MPI.  If the version is unknown, we ignore this
-	# test (thus, all tests will be run).  
-	if ($mpiVersion ne "" && $MPIMajorVersion ne "unknown" &&
-	    $MPIMinorVersion ne "unknown") {
-	    my ($majorReq,$minorReq) = split(/\./,$mpiVersion);
-            if ($majorReq > $MPIMajorVersion or
-                ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
-            {
+            # If a minimum MPI version is specified, check against the
+            # available MPI.  If the version is unknown, we ignore this
+            # test (thus, all tests will be run).  
+            if ($mpiVersion ne "" && $MPIMajorVersion ne "unknown" &&
+                $MPIMinorVersion ne "unknown") {
+                my ($majorReq,$minorReq) = split(/\./,$mpiVersion);
+                if ($majorReq > $MPIMajorVersion or
+                    ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
+                {
+                    unless (-d $programname) {
+                        SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "requires MPI version $mpiVersion");
+                    }
+                    next;
+                }
+            }
+            # Check whether strict is required by MPI but not by the
+            # test (use strict=false for tests that use non-standard extensions)
+            if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "requires MPI version $mpiVersion");
+                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "non-strict test, strict MPI mode requested");
                 }
                 next;
             }
-	}
-	# Check whether strict is required by MPI but not by the
-	# test (use strict=false for tests that use non-standard extensions)
-        if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
-            unless (-d $programname) {
-                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "non-strict test, strict MPI mode requested");
+
+            if (lc($testIsStrict) eq "true") {
+                # Strict MPI testing was requested, so assume that a non-MPICH MPI
+                # implementation is being tested and the "xfail" implementation
+                # assumptions do not hold.
+                $xfail = '';
             }
-            next;
+
+            if ($xfail ne '' && $runxfail eq "false") {
+                # Skip xfail tests if they are not configured. Strict MPI tests that are
+                # marked xfail will still run with --enable-strictmpi.
+                unless (-d $programname) {
+                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "xfail tests disabled");
+                }
+                next;
+            }
+
+            if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
+                unless (-d $programname) {
+                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "tests MPIX extensions, MPIX testing disabled");
+                }
+                next;
+            }
+
+            if (-d $programname) {
+                # If a directory, go into the that directory and 
+                # look for a new list file
+                &ProcessDir( $programname, $listfile );
+            }
+            else {
+                $total_run++;
+                my $save_dir;
+                if ($programname =~/^(\S+)\/(\S+)$/) {
+                    $save_dir = `pwd`;
+                    chomp $save_dir;
+                    $programname = $2;
+                    chdir $1 or warn "Can't chdir $1\n";
+                }
+                if (&BuildMPIProgram( $programname, $xfail ) == 0) {
+                    if ($batchRun == 1) {
+                        &AddMPIProgram( $programname, $np, $ResultTest, 
+                                        $InitForRun, $timeLimit, $progArgs,
+                                        $progEnv, $mpiexecArgs, $xfail );
+                    }
+                    else {
+                        &RunMPIProgram( $programname, $np, $ResultTest, 
+                                        $InitForRun, $timeLimit, $progArgs, 
+                                        $progEnv, $mpiexecArgs, $xfail );
+                    }
+                }
+                elsif ($xfail eq '') {
+                    # We expected to run this program, so failure to build
+                    # is an error
+                    $found_error = 1;
+                    $err_count++;
+                }
+                if ($batchRun == 0) {
+                    &CleanUpAfterRun( $programname );
+                }
+                if ($save_dir) {
+                    chdir $save_dir;
+                }
+            }
         }
-
-        if (lc($testIsStrict) eq "true") {
-            # Strict MPI testing was requested, so assume that a non-MPICH MPI
-            # implementation is being tested and the "xfail" implementation
-            # assumptions do not hold.
-            $xfail = '';
-        }
-
-	if ($xfail ne '' && $runxfail eq "false") {
-	    # Skip xfail tests if they are not configured. Strict MPI tests that are
-	    # marked xfail will still run with --enable-strictmpi.
-            unless (-d $programname) {
-                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "xfail tests disabled");
-	    }
-	    next;
-	}
-
-        if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
-            unless (-d $programname) {
-                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "tests MPIX extensions, MPIX testing disabled");
-            }
-            next;
-        }
-
-	if (-d $programname) {
-	    # If a directory, go into the that directory and 
-	    # look for a new list file
-	    &ProcessDir( $programname, $listfile );
-	}
-	else {
-	    $total_run++;
-            my $save_dir;
-            if ($programname =~/^(\S+)\/(\S+)$/) {
-                $save_dir = `pwd`;
-                chomp $save_dir;
-                $programname = $2;
-                chdir $1 or warn "Can't chdir $1\n";
-            }
-	    if (&BuildMPIProgram( $programname, $xfail ) == 0) {
-		if ($batchRun == 1) {
-		    &AddMPIProgram( $programname, $np, $ResultTest, 
-				    $InitForRun, $timeLimit, $progArgs,
-				    $progEnv, $mpiexecArgs, $xfail );
-		}
-		else {
-		    &RunMPIProgram( $programname, $np, $ResultTest, 
-				    $InitForRun, $timeLimit, $progArgs, 
-				    $progEnv, $mpiexecArgs, $xfail );
-		}
-	    }
-	    elsif ($xfail eq '') {
-		# We expected to run this program, so failure to build
-		# is an error
-		$found_error = 1;
-		$err_count++;
-	    }
-	    if ($batchRun == 0) {
-		&CleanUpAfterRun( $programname );
-	    }
-            if ($save_dir) {
-                chdir $save_dir;
-            }
-	}
-    }
-    close( $LIST );
+        close( $LIST );
     }
 }
 #
