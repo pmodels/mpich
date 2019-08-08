@@ -41,15 +41,15 @@ rma/lock_dt_flush::17 1018 65530::2:16:1024
 rma/lock_dt_flushlocal::1 512 262144::2:16:1024
 rma/lock_dt_flushlocal::17 1018 65530::2:16:1024
 rma/lockall_dt::1 512 262144::4:16:1024
-rma/lockall_dt::17 1018 65530::4:16:1024
+rma/lockall_dt::17 1018 65530:timeLimit=600:4:16:1024
 rma/lockall_dt_flush::1 512 262144::4:16:1024
-rma/lockall_dt_flush::17 1018 65530::4:16:1024
+rma/lockall_dt_flush::17 1018 65530:timeLimit=600:4:16:1024
 rma/lockall_dt_flushall::1 512 262144::4:16:1024
-rma/lockall_dt_flushall::17 1018 65530::4:16:1024
+rma/lockall_dt_flushall::17 1018 65530:timeLimit=600:4:16:1024
 rma/lockall_dt_flushlocal::1 512 262144::4:16:1024
-rma/lockall_dt_flushlocal::17 1018 65530::4:16:1024
+rma/lockall_dt_flushlocal::17 1018 65530:timeLimit=600:4:16:1024
 rma/lockall_dt_flushlocalall::1 512 262144::4:16:1024
-rma/lockall_dt_flushlocalall::17 1018 65530::4:16:1024
+rma/lockall_dt_flushlocalall::17 1018 65530:timeLimit=600:4:16:1024
 rma/putfence1::1 512 262144::2:16:1024
 rma/putfence1::17 1018 65530::2:16:1024
 rma/putfence1::16000000:timeLimit=1800:2:4:
