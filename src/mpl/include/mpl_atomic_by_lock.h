@@ -37,9 +37,9 @@ extern pthread_mutex_t *MPL_emulation_lock;
 #define MPL_ATOMIC_PTR_T_INITIALIZER(val_)    MPL_ATOMIC_INITIALIZER(val_)
 
 #define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME)                                \
-typedef struct MPL_atomic_ ## NAME ## _t {                                     \
+struct MPL_atomic_ ## NAME ## _t {                                             \
     volatile TYPE v;                                                           \
-} MPL_atomic_ ## NAME ## _t;                                                   \
+};                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
                                        (const MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \

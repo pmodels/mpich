@@ -26,9 +26,9 @@
         MPL_ATOMIC_INITIALIZER((intptr_t)(val_))
 
 #define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)        \
-typedef struct MPL_atomic_ ## NAME ## _t {                                     \
+struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE v;                                                             \
-} MPL_atomic_ ## NAME ## _t;                                                   \
+};                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
                                        (const MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
