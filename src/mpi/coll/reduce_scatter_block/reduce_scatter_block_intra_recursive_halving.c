@@ -105,8 +105,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(recvbuf, total_count, datatype,
                                    tmp_results, total_count, datatype);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     pof2 = comm_ptr->pof2;
 
@@ -154,8 +153,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
              * ordering is right, it doesn't matter whether
              * the operation is commutative or not. */
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, tmp_results, total_count, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* change the rank */
             newrank = rank / 2;
@@ -255,8 +253,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                 mpi_errno = MPIR_Reduce_local((char *) tmp_recvbuf + newdisps[recv_idx] * extent,
                                               (char *) tmp_results + newdisps[recv_idx] * extent,
                                               recv_cnt, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* update send_idx for next iteration */
@@ -269,8 +266,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
         mpi_errno = MPIR_Localcopy((char *) tmp_results +
                                    disps[rank] * extent,
                                    recvcount, datatype, recvbuf, recvcount, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* In the non-power-of-two case, all odd-numbered

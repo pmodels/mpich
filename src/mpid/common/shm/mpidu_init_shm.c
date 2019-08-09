@@ -26,14 +26,12 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
     mpi_errno =
         MPIDU_shm_seg_alloc(local_size * sizeof(MPIDU_Init_shm_block_t), (void **) &baseaddr,
                             MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, my_local_rank, local_leader, rank,
                              MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
 
@@ -52,8 +50,7 @@ int MPIDU_Init_shm_finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_FINALIZE);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
 

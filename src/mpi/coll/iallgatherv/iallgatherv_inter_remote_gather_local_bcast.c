@@ -39,27 +39,23 @@ int MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(const void *sendbuf, 
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
                                         recvcounts, displs, recvtype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* gatherv to right group */
         root = 0;
         mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
                                         recvcounts, displs, recvtype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* gatherv to left group  */
         root = 0;
         mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
                                         recvcounts, displs, recvtype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
                                         recvcounts, displs, recvtype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_SCHED_BARRIER(s);
@@ -70,23 +66,19 @@ int MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(const void *sendbuf, 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
         mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     newcomm_ptr = comm_ptr->local_comm;
 
     mpi_errno = MPIR_Type_indexed_impl(remote_size, recvcounts, displs, recvtype, &newtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Type_commit_impl(&newtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Ibcast_sched(recvbuf, 1, newtype, 0, newcomm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&newtype);
 

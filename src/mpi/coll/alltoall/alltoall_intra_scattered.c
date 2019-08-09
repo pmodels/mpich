@@ -79,8 +79,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                    dst * recvcount * recvtype_extent,
                                    recvcount, recvtype, dst,
                                    MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i]);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         for (i = 0; i < ss; i++) {
@@ -89,8 +88,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                    dst * sendcount * sendtype_extent,
                                    sendcount, sendtype, dst,
                                    MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss], errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* ... then wait for them to finish: */

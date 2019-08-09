@@ -20,9 +20,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
 
     mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* update node_map */
     for (i = 0; i < size; i++) {
@@ -48,9 +46,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
         }
     }
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
@@ -90,31 +86,26 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         map_info[2] = *is_low_group;
         map_info[3] = pure_intracomm;
         mpi_errno = MPIR_Bcast_intra_auto(map_info, 4, MPI_INT, local_leader, local_comm, &errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (!pure_intracomm) {
             mpi_errno = MPIR_Bcast_intra_auto(remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
                                               local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Bcast_intra_auto(remote_upids, upid_recv_size, MPI_BYTE,
                                               local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Bcast_intra_auto(remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
                                       local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno = MPIR_Bcast_intra_auto(*remote_lupids, *remote_size, MPI_INT,
                                               local_leader, local_comm, &errflag);
         }
     } else {
         mpi_errno = MPIR_Bcast_intra_auto(map_info, 4, MPI_INT, local_leader, local_comm, &errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         *remote_size = map_info[0];
         upid_recv_size = map_info[1];
         *is_low_group = map_info[2];
@@ -127,22 +118,19 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
                                 mpi_errno, "_remote_upid_size", MPL_MEM_COMM);
             mpi_errno = MPIR_Bcast_intra_auto(_remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
                                               local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_upids, char *, upid_recv_size * sizeof(char),
                                 mpi_errno, "_remote_upids", MPL_MEM_COMM);
             mpi_errno = MPIR_Bcast_intra_auto(_remote_upids, upid_recv_size, MPI_BYTE,
                                               local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_node_ids, int *,
                                 (*remote_size) * sizeof(int),
                                 mpi_errno, "_remote_node_ids", MPL_MEM_COMM);
             mpi_errno =
                 MPIR_Bcast_intra_auto(_remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
                                       local_leader, local_comm, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPIDIU_upids_to_lupids(*remote_size, _remote_upid_size, _remote_upids,
                                    remote_lupids, _remote_node_ids);

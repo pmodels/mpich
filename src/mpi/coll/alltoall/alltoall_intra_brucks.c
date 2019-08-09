@@ -65,16 +65,12 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
                                rank * sendcount * sendtype_extent,
                                (comm_size - rank) * sendcount, sendtype, recvbuf,
                                (comm_size - rank) * recvcount, recvtype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Localcopy(sendbuf, rank * sendcount, sendtype,
                                (char *) recvbuf +
                                (comm_size - rank) * recvcount * recvtype_extent,
                                rank * recvcount, recvtype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     /* Input data is now stored in recvbuf with datatype recvtype */
 
     /* Now do Phase 2, the communication phase. It takes
@@ -106,17 +102,14 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
 
         mpi_errno = MPIR_Type_create_indexed_block_impl(count, recvcount,
                                                         displs, recvtype, &newtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         newtype_sz = count * recvcount * recvtype_sz;
         mpi_errno = MPIR_Localcopy(recvbuf, 1, newtype, tmp_buf, newtype_sz, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Sendrecv(tmp_buf, newtype_sz, MPI_BYTE, dst,
                                   MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
@@ -142,16 +135,12 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     mpi_errno = MPIR_Localcopy((char *) recvbuf + (rank + 1) * recvcount * recvtype_extent,
                                (comm_size - rank - 1) * recvcount, recvtype, tmp_buf,
                                (comm_size - rank - 1) * recvcount * recvtype_sz, MPI_BYTE);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Localcopy(recvbuf, (rank + 1) * recvcount, recvtype,
                                (char *) tmp_buf + (comm_size - rank - 1)
                                * recvcount * recvtype_sz,
                                (rank + 1) * recvcount * recvtype_sz, MPI_BYTE);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Blocks are in the reverse order now (comm_size-1 to 0).
      * Reorder them to (0 to comm_size-1) and store them in recvbuf. */
@@ -162,8 +151,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
                                    (char *) recvbuf + (comm_size - i -
                                                        1) * recvcount * recvtype_extent, recvcount,
                                    recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

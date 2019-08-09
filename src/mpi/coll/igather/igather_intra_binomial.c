@@ -102,14 +102,12 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
             mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                        ((char *) recvbuf + extent * recvcount * rank),
                                        recvcount, recvtype);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else if (tmp_buf_size && (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)) {
         /* copy from sendbuf into tmp_buf */
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, tmp_buf, nbytes, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     curr_cnt = nbytes;
 
@@ -135,20 +133,16 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                             (char *) recvbuf + (((rank + mask) % comm_size) * recvcount * extent);
                         mpi_errno =
                             MPIR_Sched_recv(rp, (recvblks * recvcount), recvtype, src, comm_ptr, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                         mpi_errno =
                             MPIR_Sched_recv(tmp_buf, (recvblks * nbytes), MPI_BYTE, src,
                                             comm_ptr, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         copy_offset = rank + mask;
                         copy_blks = recvblks;
                     } else {
@@ -158,18 +152,14 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                         displs[1] = 0;
 
                         mpi_errno = MPIR_Type_indexed_impl(2, blocks, displs, recvtype, &tmp_type);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Type_commit_impl(&tmp_type);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         mpi_errno = MPIR_Sched_recv(recvbuf, 1, tmp_type, src, comm_ptr, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
                         MPIR_Type_free_impl(&tmp_type);
@@ -190,11 +180,9 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
                     mpi_errno =
                         MPIR_Sched_recv(((char *) tmp_buf + offset), (recvblks * nbytes),
                                         MPI_BYTE, src, comm_ptr, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     mpi_errno = MPIR_Sched_barrier(s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     curr_cnt += (recvblks * nbytes);
                 }
             }
@@ -205,18 +193,14 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
             if (!tmp_buf_size) {
                 /* leaf nodes send directly from sendbuf */
                 mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_barrier(s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                 mpi_errno = MPIR_Sched_send(tmp_buf, curr_cnt, MPI_BYTE, dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_barrier(s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 blocks[0] = sendcount;
                 struct_displs[0] = (MPI_Aint) sendbuf;
@@ -233,15 +217,12 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
 
                 mpi_errno =
                     MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Type_commit_impl(&tmp_type);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIR_Sched_send(MPI_BOTTOM, 1, tmp_type, dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
@@ -259,14 +240,12 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
         mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes * (comm_size - copy_offset), MPI_BYTE,
                                     ((char *) recvbuf + extent * recvcount * copy_offset),
                                     recvcount * (comm_size - copy_offset), recvtype, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_copy((char *) tmp_buf + nbytes * (comm_size - copy_offset),
                                     nbytes * (copy_blks - comm_size + copy_offset), MPI_BYTE,
                                     recvbuf, recvcount * (copy_blks - comm_size + copy_offset),
                                     recvtype, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);

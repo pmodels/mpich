@@ -63,7 +63,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    {
 		MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 		mpi_errno = MPIDI_CH3_EagerSyncAck( vc, rreq );
-		if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+		MPIR_ERR_CHECK(mpi_errno);
 	    }
 
             /* the request was found in the unexpected queue, so it has a
@@ -117,7 +117,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
 	{
 	    mpi_errno = MPIDI_CH3_RecvFromSelf( rreq, buf, count, datatype );
-	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+	    MPIR_ERR_CHECK(mpi_errno);
 	}
 	else
 	{

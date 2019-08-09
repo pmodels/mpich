@@ -64,8 +64,7 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
         request_ptr->status.MPI_TAG = 0;
 
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
         MPIR_Process_status(&request_ptr->status, errflag);
@@ -130,12 +129,10 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
     mpi_errno = MPID_Send_coll(buf, count, datatype, dest, tag, comm_ptr, context_id,
                                &request_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Request_free(request_ptr);
     }
 
@@ -190,12 +187,10 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 
     mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
                           context_id, status, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr, errflag);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         *status = request_ptr->status;
         mpi_errno = status->MPI_ERROR;
@@ -258,12 +253,10 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     }
 
     mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr, context_id, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Request_free(request_ptr);
     }
 
@@ -323,8 +316,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     } else {
         mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag,
                                comm_ptr, context_id, &recv_req_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* If dest is MPI_PROC_NULL, create a completed request and return. */
@@ -335,13 +327,11 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     } else {
         mpi_errno = MPID_Isend_coll(sendbuf, sendcount, sendtype, dest, sendtag,
                                     comm_ptr, context_id, &send_req_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIC_Wait(send_req_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIC_Wait(recv_req_ptr, errflag);
     if (mpi_errno)
         MPIR_ERR_POPFATAL(mpi_errno);
@@ -422,8 +412,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
         mpi_errno =
             MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* If source is MPI_PROC_NULL, create a completed request and return. */
@@ -434,8 +423,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     } else {
         mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,
                                comm_ptr, context_id_offset, &rreq);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* If dest is MPI_PROC_NULL, create a completed request and return. */
@@ -445,8 +433,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     } else {
         mpi_errno = MPID_Isend_coll(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
                                     sendtag, comm_ptr, context_id_offset, &sreq, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
             /* FIXME: should we cancel the pending (possibly completed) receive
@@ -458,11 +445,9 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     }
 
     mpi_errno = MPIC_Wait(sreq, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIC_Wait(rreq, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *status = rreq->status;
 
@@ -519,8 +504,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 
     mpi_errno = MPID_Isend_coll(buf, count, datatype, dest, tag, comm_ptr, context_id,
                                 request_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISEND);
@@ -567,8 +551,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
     mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr, context_id, request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISSEND);
@@ -604,8 +587,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
     mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, context_id, request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_IRECV);

@@ -45,15 +45,11 @@ int MPID_Rput(const void *origin_addr, int origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -103,15 +99,11 @@ int MPID_Rget(void *origin_addr, int origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -161,15 +153,11 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
                                           origin_datatype, target_rank,
                                           target_disp, target_count,
                                           target_datatype, op, win_ptr, ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -223,15 +211,11 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                                               result_count, result_datatype,
                                               target_rank, target_disp,
                                               target_count, target_datatype, op, win_ptr, ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;

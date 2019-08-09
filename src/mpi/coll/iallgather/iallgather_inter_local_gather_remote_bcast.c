@@ -49,8 +49,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
         mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
                                        tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
                                        0, newcomm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
@@ -62,8 +61,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size * sendtype_sz,
                                           MPI_BYTE, root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* no sched barrier, bcasts are logically concurrent */
@@ -73,8 +71,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
             root = 0;
             mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount * remote_size,
                                           recvtype, root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     } else {
@@ -83,8 +80,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
             root = 0;
             mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount * remote_size,
                                           recvtype, root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* no sched barrier, bcasts are logically concurrent */
@@ -94,8 +90,7 @@ int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, i
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount * local_size * sendtype_sz,
                                           MPI_BYTE, root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     }

@@ -35,11 +35,11 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
     /* MPIU_PG_Printall( stdout ); */
     comm_ptr->dev.is_disconnected = 1;
     mpi_errno = MPIR_Comm_release(comm_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* If any of the VCs were released by this Comm_release, wait
      for those close operations to complete */
     mpi_errno = MPIDI_CH3U_VC_WaitForClose();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* MPIU_PG_Printall( stdout ); */
 
 

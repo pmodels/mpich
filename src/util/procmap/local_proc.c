@@ -55,8 +55,7 @@ int MPIR_Find_local(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
         intranode_table[i] = -1;
 
     mpi_errno = MPID_Get_node_id(comm, comm->rank, &my_node_id);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(my_node_id >= 0);
 
     local_size = 0;
@@ -65,8 +64,7 @@ int MPIR_Find_local(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
     /* Scan through the list of processes in comm. */
     for (i = 0; i < comm->remote_size; ++i) {
         mpi_errno = MPID_Get_node_id(comm, i, &node_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* The upper level can catch this non-fatal error and should be
          * able to recover gracefully. */
@@ -164,8 +162,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
                         "internode_table", MPL_MEM_COMM);
 
     mpi_errno = MPID_Get_max_node_id(comm, &max_node_id);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(max_node_id >= 0);
     MPIR_CHKLMEM_MALLOC(nodes, int *, sizeof(int) * (max_node_id + 1), mpi_errno, "nodes",
                         MPL_MEM_COMM);
@@ -179,8 +176,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
 
     for (i = 0; i < comm->remote_size; ++i) {
         mpi_errno = MPID_Get_node_id(comm, i, &node_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* The upper level can catch this non-fatal error and should be
          * able to recover gracefully. */

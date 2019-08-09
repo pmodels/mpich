@@ -57,21 +57,18 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
         /* Allow the cart map routine to remap the assignment of ranks to
          * processes */
         mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, indx, edges, &nrank);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* Create the new communicator with split, since we need to reorder
          * the ranks (including the related internals, such as the connection
          * tables */
         mpi_errno = MPIR_Comm_split_impl(comm_ptr,
                                          nrank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
                                          nrank, &newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Just use the first nnodes processes in the communicator */
         mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, nnodes, &newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
 

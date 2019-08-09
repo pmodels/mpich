@@ -31,8 +31,7 @@ int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
         mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     newcomm_ptr = comm_ptr->local_comm;

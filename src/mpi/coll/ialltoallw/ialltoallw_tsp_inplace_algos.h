@@ -43,8 +43,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendc
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     max_size = 0;
     for (i = 0; i < nranks; ++i) {
@@ -115,13 +114,11 @@ int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const int sendcounts[
     mpi_errno =
         MPIR_TSP_Ialltoallw_sched_intra_inplace(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                                 recvcounts, rdispls, recvtypes, comm, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLW_INTRA_INPLACE);

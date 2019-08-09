@@ -14,7 +14,7 @@ int MPIDI_CH3_Finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_FINALIZE);
 
     mpi_errno = MPIDI_CH3I_Progress_finalize();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     
     mpi_errno = MPID_nem_finalize();
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);

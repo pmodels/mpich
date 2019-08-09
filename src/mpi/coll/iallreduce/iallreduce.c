@@ -166,15 +166,13 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
         mpi_errno =
             MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                            comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* do a reduce-scatter followed by allgather */
         mpi_errno =
             MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype,
                                                                  op, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -291,8 +289,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
                                                                         datatype, op, comm_ptr,
                                                                         request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
@@ -300,24 +297,21 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
                                                        op, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
                 if (is_commutative) {
                     mpi_errno =
                         MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                            op, comm_ptr, request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -330,8 +324,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     mpi_errno =
                         MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
                         (sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -342,19 +335,15 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -478,8 +467,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

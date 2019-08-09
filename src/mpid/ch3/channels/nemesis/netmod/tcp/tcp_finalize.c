@@ -15,11 +15,9 @@ int MPID_nem_tcp_finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
     mpi_errno = MPID_nem_tcp_send_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPID_nem_tcp_sm_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPID_nem_tcp_g_lstn_sc.fd) {
         CHECK_EINTR(ret, close(MPID_nem_tcp_g_lstn_sc.fd));

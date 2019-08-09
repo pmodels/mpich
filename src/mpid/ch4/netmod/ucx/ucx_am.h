@@ -92,8 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPIDIG_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr));
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -120,8 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         mpi_errno =
             MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
                               data_sz, &actual_pack_bytes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
     }
 
@@ -203,8 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
         mpi_errno =
             MPIR_Typerep_pack(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
                               data_sz, &actual_pack_bytes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
@@ -280,8 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
         mpi_errno =
             MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
                               data_sz, &actual_pack_bytes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(actual_pack_bytes == data_sz);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
@@ -432,8 +428,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
     mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
                                            MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
                                            sizeof(msg));
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);

@@ -88,14 +88,12 @@ int MPIR_Alltoallw_intra_auto(const void *sendbuf, const int sendcounts[], const
             MPIR_Alltoallw_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtypes,
                                                            recvbuf, recvcounts, rdispls, recvtypes,
                                                            comm_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno =
             MPIR_Alltoallw_intra_scattered(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                            recvcounts, rdispls, recvtypes, comm_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -180,8 +178,7 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

@@ -41,8 +41,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_SCATTERV_ALLGATHERV);
@@ -93,8 +92,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
             mpi_errno =
                 MPIR_TSP_sched_localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, sched,
                                          0, NULL);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_TSP_sched_fence(sched);
         }
     }
@@ -102,8 +100,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     /* knomial scatter for bcast */
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for scatter */
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, scatterv_k, root, &my_tree);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
     MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
@@ -114,8 +111,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
         mpi_errno =
             MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, scatterv_k, root,
                                       &parents_tree);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {    /* initialize an empty children array */
         parents_tree.num_children = 0;
     }
@@ -179,10 +175,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     /* Schedule Allgatherv */
     mpi_errno =
         MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf, cnts,
-                                                 displs, MPI_BYTE, comm, 0, allgatherv_k,
-                                                 sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+                                                 displs, MPI_BYTE, comm, 0, allgatherv_k, sched);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     if (!is_contig) {
@@ -192,8 +186,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
             mpi_errno =
                 MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, sched,
                                          1, &sink_id);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -228,13 +221,11 @@ int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datat
     mpi_errno =
         MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root, comm,
                                                         scatterv_k, allgatherv_k, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_SCATTERV_ALLGATHERV);

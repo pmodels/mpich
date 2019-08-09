@@ -37,9 +37,7 @@ int MPID_Cancel_recv(MPIR_Request * rreq)
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         mpi_errno = MPID_Request_complete(rreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else
     {

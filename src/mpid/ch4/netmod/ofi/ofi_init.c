@@ -670,8 +670,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Print some debugging output to give the user some hints */
     mpi_errno = application_hints(rank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_OFI_global.prov_use = fi_dupinfo(prov_use);
     MPIR_Assert(MPIDI_OFI_global.prov_use);
@@ -867,8 +866,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                           &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
                                           TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -923,8 +921,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* Initialize Active Message          */
     /* ---------------------------------- */
     mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
@@ -992,8 +989,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 #endif
 
     mpi_errno = MPIR_Comm_register_hint("eagain", set_eagain, NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
 

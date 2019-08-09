@@ -194,8 +194,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr1, n, ranks1, group_ptr2, ranks2);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

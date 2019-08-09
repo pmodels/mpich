@@ -61,8 +61,7 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
 
             if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
                 mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             if (MPIR_Request_is_complete(request_ptrs[i])) {
                 if (MPIR_Request_is_active(request_ptrs[i])) {
@@ -90,8 +89,7 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
         }
 
         mpi_errno = MPID_Progress_test();
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
@@ -237,8 +235,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         }
 
         mpi_errno = MPID_Waitany(count - first_nonnull, &request_ptrs[first_nonnull], indx, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (*indx != MPI_UNDEFINED) {
             *indx += first_nonnull;
@@ -252,8 +249,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         MPIR_Request_free(request_ptrs[*indx]);
         array_of_requests[*indx] = MPI_REQUEST_NULL;
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

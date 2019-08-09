@@ -258,8 +258,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
     *did_map = 1;       /* reset upon failure */
 
     mpi_errno = MPIR_NODEMAP_parse_mapping(mapping, &mt, &mb, &nblocks);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_NODEMAP_NULL_MAPPING == mt)
         goto fn_fail;
@@ -399,15 +398,13 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         mpi_errno =
             PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping),
                                  &found);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
         mpi_errno =
             MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap,
                                                    out_max_node_id, &did_map);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
                              "unable to populate node ids from PMI_process_mapping");
     }
@@ -469,8 +466,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
                 MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_max_node_id,
                                                        &did_map);
             g_max_node_id = *out_max_node_id;
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             if (did_map) {
                 goto cliques;
             }
@@ -480,8 +476,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
 
     /* fallback algorithm */
     mpi_errno = MPIR_NODEMAP_publish_node_id(sz, myrank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Allocate temporary structures.  These would need to be persistent if
      * we somehow were able to support dynamic processes via this method. */

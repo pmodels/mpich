@@ -63,8 +63,7 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
 
     mpi_errno = MPIR_Dataloop_flatten(datatype_ptr, flattened_dataloop);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -103,8 +102,7 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->contents = NULL;
 
     mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_dataloop);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

@@ -70,8 +70,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     }
 
     mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     (*new_group_ptr)->is_local_dense_monotonic = TRUE;

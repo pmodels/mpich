@@ -31,13 +31,11 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPID_Progress_test();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_Request_has_poll_fn(request_ptr)) {
         mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (MPIR_Request_is_complete(request_ptr))
@@ -68,8 +66,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
     MPIR_Assert(request_ptr != NULL);
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (*flag) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
@@ -77,8 +74,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;
         }
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* Fall through to the exit */
     } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
         MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
