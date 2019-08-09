@@ -106,7 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
 #define MPIDI_UCX_MPI_ERROR(_errno)                                     \
     do                                                                  \
     {                                                                   \
-        if (unlikely(_errno!=MPI_SUCCESS)) MPIR_ERR_POP(mpi_errno);     \
+        MPIR_ERR_CHECK(mpi_errno);                                      \
     } while (0)
 
 #define MPIDI_UCX_STR_ERRCHK(_errno)                            \

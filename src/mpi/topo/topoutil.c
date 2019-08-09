@@ -143,7 +143,7 @@ static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
                 MPIR_Copy_array(old_topology->topo.kind_.count_field_, \
                                 old_topology->topo.kind_.array_field_, \
                                 &mpi_errno); \
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno); \
+            MPIR_ERR_CHECK(mpi_errno); \
             MPIR_CHKPMEM_REGISTER(copy_topology->topo.kind_.array_field_); \
         } while (0)
 

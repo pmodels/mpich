@@ -164,8 +164,7 @@ typedef struct {
 					       __func__,		\
 					       fi_strerror(-_ret));	\
 				mpi_errno = MPID_nem_ofi_poll(0);	\
-				if (mpi_errno != MPI_SUCCESS)		\
-					MPIR_ERR_POP(mpi_errno);	\
+                                MPIR_ERR_CHECK(mpi_errno);	        \
 		} while (_ret == -FI_EAGAIN);				\
 	} while (0)
 
@@ -189,7 +188,7 @@ typedef struct {
   do                                                        \
     {                                                       \
       mpi_errno  = FUNC;                                    \
-      if (mpi_errno) MPIR_ERR_POP(mpi_errno);               \
+      MPIR_ERR_CHECK(mpi_errno);                            \
     } while (0);
 
 #define VC_READY_CHECK(vc)                      \

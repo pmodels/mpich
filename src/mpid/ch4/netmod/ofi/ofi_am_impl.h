@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    fi_strerror(-_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \
-                MPIR_ERR_POP(mpi_errno);                                \
+                MPIR_ERR_CHECK(mpi_errno);                               \
         } while (_ret == -FI_EAGAIN);                                   \
     } while (0)
 
