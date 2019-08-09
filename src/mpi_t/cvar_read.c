@@ -117,8 +117,7 @@ int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_read_impl(handle, buf);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

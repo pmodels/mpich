@@ -126,8 +126,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_write_impl(handle, buf);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

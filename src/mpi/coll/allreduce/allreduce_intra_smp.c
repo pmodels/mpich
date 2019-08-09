@@ -49,8 +49,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
         /* only one process on the node. copy sendbuf to recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

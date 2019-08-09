@@ -252,8 +252,7 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Type_contiguous_impl(count, oldtype, newtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

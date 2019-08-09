@@ -118,8 +118,7 @@ static int src_comm_to_mlut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest, int
 
     if (!mapper_offset) {
         mpi_errno = MPIDIU_alloc_mlut(&mlut, total_mapper_size);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         dest->size = total_mapper_size;
         dest->mode = MPIDI_RANK_MAP_MLUT;
         dest->avtid = -1;
@@ -216,8 +215,7 @@ static int src_mlut_to_mlut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest,
 
     if (!mapper_offset) {
         mpi_errno = MPIDIU_alloc_mlut(&mlut, total_mapper_size);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         dest->size = total_mapper_size;
     }
 
@@ -252,8 +250,7 @@ static int src_map_to_lut(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest, MPIR_
 
     if (!mapper_offset) {
         mpi_errno = MPIDIU_alloc_lut(&lut, total_mapper_size);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         dest->size = total_mapper_size;
     }
 
@@ -575,8 +572,7 @@ static int check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
         src->mode = MPIDI_RANK_MAP_LUT;
     }
     mpi_errno = MPIDIU_alloc_lut(&lut, src->size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     for (i = 0; i < src->size; i++) {
         lut->lpid[i] = src->irreg.mlut.gpid[i].lpid;
     }

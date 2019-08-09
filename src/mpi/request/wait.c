@@ -82,16 +82,14 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
         if (MPIR_Request_has_poll_fn(request_ptr)) {
             while (!MPIR_Request_is_complete(request_ptr)) {
                 mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* Avoid blocking other threads since I am inside an infinite loop */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             }
         } else {
             mpi_errno = MPID_Wait(request_ptr, status);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -100,8 +98,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
         MPIR_Request_free(request_ptr);
         *request = MPI_REQUEST_NULL;
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

@@ -37,8 +37,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
     if (root == MPI_ROOT) {
         /* root sends all data to rank 0 on remote group and returns */
         mpi_errno = MPIR_Sched_send(sendbuf, sendcount * remote_size, sendtype, 0, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         goto fn_exit;
     } else {
@@ -58,8 +57,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
             mpi_errno =
                 MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
                                 root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {
             /* silience -Wmaybe-uninitialized due to MPIR_Iscatter_sched by non-zero ranks */
@@ -76,8 +74,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
         mpi_errno =
             MPIR_Iscatter_sched(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 

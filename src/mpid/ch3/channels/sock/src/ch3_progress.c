@@ -95,8 +95,7 @@ static int MPIDI_CH3i_Progress_test(void)
         if (progress_hooks[i].active == TRUE) {
             MPIR_Assert(progress_hooks[i].func_ptr != NULL);
             mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -182,8 +181,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             if (progress_hooks[i].active == TRUE) {
                 MPIR_Assert(progress_hooks[i].func_ptr != NULL);
                 mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (made_progress) {
                     MPIDI_CH3_Progress_signal_completion();
                     break;      /* break the for loop */
@@ -270,9 +268,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
     vcch->conn->state = CONN_STATE_CLOSING;
     MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Closing sock (Post_close)");
     mpi_errno = MPIDI_CH3I_Sock_post_close(vcch->sock);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -303,27 +299,19 @@ int MPIDI_CH3I_Progress_init(void)
     MPIR_THREAD_CHECK_END;
 
     mpi_errno = MPIDI_CH3I_Sock_init();
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create sock set */
     mpi_errno = MPIDI_CH3I_Sock_create_set(&MPIDI_CH3I_sock_set);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* establish non-blocking listener */
     mpi_errno = MPIDU_CH3I_SetupListener(MPIDI_CH3I_sock_set);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize the code to handle incoming packets */
     mpi_errno = MPIDI_CH3_PktHandler_Init(pktArray, MPIDI_CH3_PKT_END_CH3 + 1);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize progress hook slots */
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
@@ -352,9 +340,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 
     /* Shut down the listener */
     mpi_errno = MPIDU_CH3I_ShutdownListener();
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     /* Close open connections */
@@ -362,9 +348,7 @@ int MPIDI_CH3I_Progress_finalize(void)
     while (conn != NULL) {
         conn->state = CONN_STATE_CLOSING;
         mpi_errno = MPIDI_CH3_Sockconn_handle_close_event(conn);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         MPIDI_CH3I_Sock_close_open_sockets(MPIDI_CH3I_sock_set, (void **) &conn);
     }
 
@@ -459,9 +443,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                         /* conn->pkt is always aligned */
                         mpi_errno = pktArray[conn->pkt.type] (conn->vc, &conn->pkt, NULL,
                                                               &buflen, &rreq);
-                        if (mpi_errno != MPI_SUCCESS) {
-                            MPIR_ERR_POP(mpi_errno);
-                        }
+                        MPIR_ERR_CHECK(mpi_errno);
                         MPIR_Assert(buflen == 0);
 
                         if (rreq == NULL) {
@@ -469,15 +451,11 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                                 /* conn->recv_active = NULL;  --
                                  * already set to NULL */
                                 mpi_errno = connection_post_recv_pkt(conn);
-                                if (mpi_errno != MPI_SUCCESS) {
-                                    MPIR_ERR_POP(mpi_errno);
-                                }
+                                MPIR_ERR_CHECK(mpi_errno);
                             }
                         } else {
                             mpi_errno = ReadMoreData(conn, rreq);
-                            if (mpi_errno) {
-                                MPIR_ERR_POP(mpi_errno);
-                            }
+                            MPIR_ERR_CHECK(mpi_errno);
                         }
                     } else {    /* incoming data */
 
@@ -489,41 +467,30 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                             MPIR_Assert(MPIDI_Request_get_type(rreq) !=
                                         MPIDI_REQUEST_TYPE_GET_RESP);
                             mpi_errno = MPID_Request_complete(rreq);
-                            if (mpi_errno != MPI_SUCCESS) {
-                                MPIR_ERR_POP(mpi_errno);
-                            }
+                            MPIR_ERR_CHECK(mpi_errno);
                             complete = TRUE;
                         } else {
                             mpi_errno = reqFn(conn->vc, rreq, &complete);
-                            if (mpi_errno)
-                                MPIR_ERR_POP(mpi_errno);
+                            MPIR_ERR_CHECK(mpi_errno);
                         }
 
                         if (complete) {
                             conn->recv_active = NULL;
                             mpi_errno = connection_post_recv_pkt(conn);
-                            if (mpi_errno != MPI_SUCCESS) {
-                                MPIR_ERR_POP(mpi_errno);
-                            }
+                            MPIR_ERR_CHECK(mpi_errno);
                         } else {        /* more data to be read */
 
                             mpi_errno = ReadMoreData(conn, rreq);
-                            if (mpi_errno) {
-                                MPIR_ERR_POP(mpi_errno);
-                            }
+                            MPIR_ERR_CHECK(mpi_errno);
                         }
                     }
                 } else if (conn->state == CONN_STATE_OPEN_LRECV_DATA) {
                     mpi_errno = MPIDI_CH3_Sockconn_handle_connopen_event(conn);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {        /* Handling some internal connection establishment or
                                  * tear down packet */
                     mpi_errno = MPIDI_CH3_Sockconn_handle_conn_event(conn);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 break;
             }
@@ -549,22 +516,17 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                     if (!reqFn) {
                         MPIR_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
-                        if (mpi_errno != MPI_SUCCESS) {
-                            MPIR_ERR_POP(mpi_errno);
-                        }
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         complete = TRUE;
                     } else {
                         mpi_errno = reqFn(conn->vc, sreq, &complete);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
 
                     if (complete) {
                         mpi_errno = connection_pop_sendq_req(conn);
-                        if (mpi_errno != MPI_SUCCESS) {
-                            MPIR_ERR_POP(mpi_errno);
-                        }
+                        MPIR_ERR_CHECK(mpi_errno);
                     } else {    /* more data to send */
 
                         for (;;) {
@@ -598,20 +560,15 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                                     MPIR_Assert(MPIDI_Request_get_type(sreq) !=
                                                 MPIDI_REQUEST_TYPE_GET_RESP);
                                     mpi_errno = MPID_Request_complete(sreq);
-                                    if (mpi_errno != MPI_SUCCESS) {
-                                        MPIR_ERR_POP(mpi_errno);
-                                    }
+                                    MPIR_ERR_CHECK(mpi_errno);
                                     complete = TRUE;
                                 } else {
                                     mpi_errno = reqFn(conn->vc, sreq, &complete);
-                                    if (mpi_errno)
-                                        MPIR_ERR_POP(mpi_errno);
+                                    MPIR_ERR_CHECK(mpi_errno);
                                 }
                                 if (complete) {
                                     mpi_errno = connection_pop_sendq_req(conn);
-                                    if (mpi_errno != MPI_SUCCESS) {
-                                        MPIR_ERR_POP(mpi_errno);
-                                    }
+                                    MPIR_ERR_CHECK(mpi_errno);
                                     break;
                                 }
                             } else {
@@ -642,9 +599,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 
                     /* the connection is not active yet */
                     mpi_errno = MPIDI_CH3_Sockconn_handle_connwrite(conn);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 break;
             }
@@ -653,9 +608,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
         case MPIDI_CH3I_SOCK_OP_ACCEPT:
             {
                 mpi_errno = MPIDI_CH3_Sockconn_handle_accept_event();
-                if (mpi_errno) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 
@@ -663,9 +616,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
             {
                 mpi_errno = MPIDI_CH3_Sockconn_handle_connect_event((MPIDI_CH3I_Connection_t *)
                                                                     event->user_ptr, event->error);
-                if (mpi_errno) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 
@@ -673,9 +624,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
             {
                 mpi_errno = MPIDI_CH3_Sockconn_handle_close_event((MPIDI_CH3I_Connection_t *)
                                                                   event->user_ptr);
-                if (mpi_errno) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 
@@ -772,9 +721,7 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
         mpi_errno =
             MPIDI_CH3I_Sock_post_writev(conn->sock, conn->send_active->dev.iov,
                                         conn->send_active->dev.iov_count, NULL);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_fail:
@@ -862,22 +809,17 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
             if (!reqFn) {
                 MPIR_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete(rreq);
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 complete = TRUE;
             } else {
                 mpi_errno = reqFn(conn->vc, rreq, &complete);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             if (complete) {
                 conn->recv_active = NULL;       /* -- already set to NULL */
                 mpi_errno = connection_post_recv_pkt(conn);
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
 
                 break;
             }

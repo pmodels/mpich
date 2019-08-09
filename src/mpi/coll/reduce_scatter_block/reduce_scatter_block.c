@@ -245,8 +245,7 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

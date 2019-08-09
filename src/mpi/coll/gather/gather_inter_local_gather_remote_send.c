@@ -69,8 +69,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
         /* all processes in remote group form new intracommunicator */
         if (!comm_ptr->local_comm) {
             mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         newcomm_ptr = comm_ptr->local_comm;

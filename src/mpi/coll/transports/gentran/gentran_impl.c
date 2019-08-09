@@ -42,8 +42,7 @@ int MPII_Gentran_init(void)
 
     mpi_errno =
         MPID_Progress_register_hook(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

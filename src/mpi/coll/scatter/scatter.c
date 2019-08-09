@@ -94,8 +94,7 @@ int MPIR_Scatter_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
 
     mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -134,8 +133,7 @@ int MPIR_Scatter_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
                                               recvcount, recvtype, root, comm_ptr, errflag);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -200,8 +198,7 @@ int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

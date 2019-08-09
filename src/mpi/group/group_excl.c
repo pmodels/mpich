@@ -40,8 +40,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
     /* Allocate a new group and lrank_to_lpid array */
     mpi_errno = MPIR_Group_create(size - n, new_group_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     /* Use flag fields to mark the members to *exclude* . */

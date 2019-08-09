@@ -88,8 +88,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
     mpi_errno =
         MPIR_Localcopy((sendbuf == MPI_IN_PLACE ? (const void *) recvbuf : sendbuf), count,
                        datatype, partial_scan, count, datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     flag = 0;
     mask = 0x1;
@@ -112,8 +111,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
 
             if (rank > dst) {
                 mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
                  * recvbuf must not change (per MPI-2.2).
@@ -126,30 +124,25 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
                         /* simply copy data recd from rank 0 into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                    recvbuf, count, datatype);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         flag = 1;
                     } else {
                         mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 }
             } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     mpi_errno = MPIR_Reduce_local(partial_scan, tmp_buf, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                partial_scan, count, datatype);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }

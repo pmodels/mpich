@@ -43,15 +43,13 @@ int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
      * it two steps: count and then allocate */
     /* FIXME : multithreaded */
     mpi_errno = MPIR_Info_alloc(&curr_new);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     *new_info_ptr = curr_new;
 
     curr_old = info_ptr->next;
     while (curr_old) {
         mpi_errno = MPIR_Info_alloc(&curr_new->next);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         curr_new = curr_new->next;
         curr_new->key = MPL_strdup(curr_old->key);

@@ -107,7 +107,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
             /* FIXME we are sometimes called from within the progress engine, we
              * shouldn't be calling the progress engine again */
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     
 	*sreq_ptr = sreq;

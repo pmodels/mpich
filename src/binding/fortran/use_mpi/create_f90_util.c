@@ -74,8 +74,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
 
     /* Create a contiguous type from one instance of the named type */
     mpi_errno = MPIR_Type_contiguous(1, old, &type->d);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize the contents data */
     {
@@ -99,8 +98,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
 
         MPIR_Datatype_get_ptr(type->d, new_dtp);
         mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner, nvals, 0, 0, vals, NULL, NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef NDEBUG
         {
@@ -118,8 +116,7 @@ int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
         /* the MPI Standard requires that these types are pre-committed
          * (MPI-2.2, sec 16.2.5, pg 492) */
         mpi_errno = MPIR_Type_commit(&type->d);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *new_ptr = type->d;

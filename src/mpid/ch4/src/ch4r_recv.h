@@ -38,8 +38,7 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
                                     sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REPLY_SSEND);
     return mpi_errno;
@@ -88,8 +87,7 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
         MPI_Aint actual_unpack_bytes;
         mpi_errno = MPIR_Typerep_unpack(MPIDIG_REQUEST(rreq, buffer), nbytes, buf,
                                         count, datatype, 0, &actual_unpack_bytes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (actual_unpack_bytes != (MPI_Aint) nbytes) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -106,8 +104,7 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
         mpi_errno = MPIDIG_reply_ssend(rreq);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     MPID_Request_complete(rreq);
 

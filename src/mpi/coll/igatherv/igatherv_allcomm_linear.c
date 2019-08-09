@@ -42,14 +42,12 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
                         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
                                                     ((char *) recvbuf + displs[rank] * extent),
                                                     recvcounts[rank], recvtype, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 } else {
                     mpi_errno = MPIR_Sched_recv(((char *) recvbuf + displs[i] * extent),
                                                 recvcounts[i], recvtype, i, comm_ptr, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }
@@ -71,8 +69,7 @@ int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_D
                 mpi_errno = MPIR_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
             else
                 mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

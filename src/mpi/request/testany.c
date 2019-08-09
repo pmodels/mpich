@@ -39,15 +39,13 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 
     mpi_errno = MPID_Progress_test();
     /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* --END ERROR HANDLING-- */
 
     for (i = 0; i < count; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
             mpi_errno = MPID_Progress_test();
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
@@ -224,8 +222,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
             MPIR_Request_free(request_ptrs[*indx]);
             array_of_requests[*indx] = MPI_REQUEST_NULL;
         }
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
