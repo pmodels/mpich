@@ -561,6 +561,7 @@ static inline void MPIR_NODEMAP_get_local_info(int rank, int size, int *nodemap,
     int i, node_id = nodemap[rank];
 
     *local_size = 0;
+    *local_leader = -1;
     for (i = 0; i < size; i++) {
         if (nodemap[i] == node_id) {
             if (*local_size == 0)
@@ -570,6 +571,7 @@ static inline void MPIR_NODEMAP_get_local_info(int rank, int size, int *nodemap,
             (*local_size)++;
         }
     }
+    MPIR_Assert(*local_leader >= 0);
 }
 
 static inline void MPIR_NODEMAP_get_node_roots(int *nodemap, int size, int **node_roots,
