@@ -12,7 +12,7 @@
     do {                                                                                                      \
         int gr_tmp_ = (gr_);                                                                                  \
         mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, 1, &(gr_tmp_), comm_ptr->local_group, &(cr_)); \
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);                                                               \
+        MPIR_ERR_CHECK(mpi_errno);                                                                            \
         MPIR_Assert((cr_) != MPI_UNDEFINED);                                                                  \
     } while (0)
 
@@ -51,8 +51,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -102,8 +101,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
              * ordering is right, it doesn't matter whether
              * the operation is commutative or not. */
             mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* change the rank */
             newrank = group_rank / 2;
@@ -152,19 +150,16 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                     if (is_commutative || (dst < group_rank)) {
                         /* op is commutative OR the order is already right */
                         mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     } else {
                         /* op is noncommutative and the order is not right */
                         mpi_errno = MPIR_Reduce_local(recvbuf, tmp_buf, count, datatype, op);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         /* copy result back into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                    recvbuf, count, datatype);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 }
                 mask <<= 1;
@@ -243,8 +238,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                 mpi_errno = MPIR_Reduce_local(((char *) tmp_buf + disps[recv_idx] * extent),
                                               ((char *) recvbuf + disps[recv_idx] * extent),
                                               recv_cnt, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* update send_idx for next iteration */
                 send_idx = recv_idx;
@@ -355,8 +349,7 @@ int MPII_Allreduce_group(void *sendbuf, void *recvbuf, int count,
 
     mpi_errno = MPII_Allreduce_group_intra(sendbuf, recvbuf, count, datatype,
                                            op, comm_ptr, group_ptr, tag, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

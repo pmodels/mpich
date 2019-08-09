@@ -71,8 +71,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
         if (rank == root) {
             mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -146,8 +145,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

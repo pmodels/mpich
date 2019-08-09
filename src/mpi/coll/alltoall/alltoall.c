@@ -154,8 +154,7 @@ int MPIR_Alltoall_intra_auto(const void *sendbuf,
             MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                                          comm_ptr, errflag);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -248,8 +247,7 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

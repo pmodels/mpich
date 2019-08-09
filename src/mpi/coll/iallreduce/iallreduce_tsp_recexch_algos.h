@@ -336,13 +336,11 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count, datatype, op, comm,
                                                 recexch_type, k, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH);

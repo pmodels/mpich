@@ -39,21 +39,18 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int se
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_CHKLMEM_MALLOC(srcs, int *, indegree * sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
     MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree * sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     for (k = 0; k < outdegree; ++k) {
@@ -97,13 +94,11 @@ int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, int sendcoun
     mpi_errno = MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                  recvbuf, recvcount, recvtype,
                                                                  comm_ptr, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm_ptr, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_ALLCOMM_LINEAR);

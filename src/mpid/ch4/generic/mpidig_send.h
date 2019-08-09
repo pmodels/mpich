@@ -93,8 +93,7 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
         }
     }
 #endif
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_ISEND_IMPL);
@@ -119,8 +118,7 @@ static inline int MPIDIG_isend_coll_impl(const void *buf, MPI_Aint count, MPI_Da
 
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                   request, is_blocking, type, *errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_ISEND_COLL);
@@ -142,8 +140,7 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
 
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                   request, is_blocking, type, MPI_SUCCESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_ISEND);

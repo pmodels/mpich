@@ -283,8 +283,7 @@ int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
         mpi_errno = MPIDIU_destroy_shm_segment(sizeof(MPL_proc_mutex_t),
                                                &posix_win->shm_mutex_segment_handle,
                                                (void **) &posix_win->shm_mutex_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

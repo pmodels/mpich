@@ -76,8 +76,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                               (int) MPIDI_UCX_global.addrname_len, FALSE,
                               MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
                               (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         int *node_roots, num_nodes;

@@ -68,8 +68,7 @@ int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     mpi_errno =
         MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                     s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -126,19 +125,15 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -255,8 +250,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

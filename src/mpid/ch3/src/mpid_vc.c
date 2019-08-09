@@ -504,7 +504,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                       remote_size, 1, MPI_INT,
                                       remote_leader, cts_tag,
                                       peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
                                        *remote_size ));
@@ -516,7 +516,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_CHKLMEM_MALLOC(local_lpids,int*,local_size*sizeof(int), mpi_errno,"local_lpids", MPL_MEM_DYNAMIC);
 
         mpi_errno = MPIDI_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Exchange the lpid arrays */
         mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPI_BYTE,
@@ -524,16 +524,16 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                       remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
 
         /* Convert the remote gpids to the lpids */
         mpi_errno = MPIDI_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Get our own lpids */
         mpi_errno = MPIDI_LPID_GetAllInComm( local_comm_ptr, local_size, local_lpids );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
 #       ifdef HAVE_ERROR_CHECKING
         {
@@ -542,7 +542,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                 /* Now that we have both the local and remote processes,
                    check for any overlap */
                 mpi_errno = check_disjoint_lpids( local_lpids, local_size, *remote_lpids, *remote_size );
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             MPID_END_ERROR_CHECKS;
         }
@@ -566,11 +566,11 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         comm_info[1] = *is_low_group;
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to bcast on local_comm");
         mpi_errno = MPIR_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"end of bcast on local_comm of size %d",
                        local_comm_ptr->local_size );
@@ -580,14 +580,14 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         /* we're the other processes */
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to receive bcast on local_comm");
         mpi_errno = MPIR_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         *remote_size = comm_info[0];
         MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
         *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int), MPL_MEM_ADDRESS);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* Extract the context and group sign informatin */
@@ -616,7 +616,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
        group information */
     if (local_comm_ptr->rank != local_leader) {
         mpi_errno = MPIDI_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
 fn_exit:
@@ -753,7 +753,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 
     /* See if everyone is happy */
     mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr, &errflag );
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     
     if (allfound) return MPI_SUCCESS;
@@ -852,7 +852,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     out_nodemap = (int *) MPL_malloc(pg->size * sizeof(int), MPL_MEM_ADDRESS);
 
     mpi_errno = MPIR_NODEMAP_build_nodemap(pg->size, our_pg_rank, out_nodemap, &g_max_node_id);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(g_max_node_id >= 0);
 
     for (i = 0; i < pg->size; i++) {

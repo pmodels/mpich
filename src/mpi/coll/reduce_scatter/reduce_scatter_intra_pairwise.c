@@ -62,8 +62,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
         /* copy local data into recvbuf */
         mpi_errno = MPIR_Localcopy(((char *) sendbuf + disps[rank] * extent),
                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* allocate temporary buffer to store incoming data */
@@ -113,8 +112,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
              * end, we will copy back the result to the
              * beginning of recvbuf. */
         }
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* if MPI_IN_PLACE, move output data to the beginning of
@@ -123,8 +121,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
         mpi_errno = MPIR_Localcopy(((char *) recvbuf +
                                     disps[rank] * extent),
                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

@@ -17,14 +17,12 @@ int MPIR_Reduce_scatter_allcomm_nb(const void *sendbuf, void *recvbuf, const int
     /* just call the nonblocking version and wait on it */
     mpi_errno =
         MPIR_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, &req_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (req_ptr)
         req = req_ptr->handle;
 
     mpi_errno = MPIR_Wait(&req, MPI_STATUS_IGNORE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

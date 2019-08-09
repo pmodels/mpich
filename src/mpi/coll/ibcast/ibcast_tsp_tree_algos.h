@@ -60,8 +60,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
                                              chunk_size_floor, chunk_size_ceil));
 
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
     /* do pipelined tree broadcast */
@@ -74,8 +73,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {
@@ -124,13 +122,11 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
     /* schedule pipelined tree algo */
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
                                                  tree_type, k, maxbytes, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);

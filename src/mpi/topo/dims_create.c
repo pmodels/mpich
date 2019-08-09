@@ -887,8 +887,7 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
     } else {
         mpi_errno = MPIR_Dims_create_impl(nnodes, ndims, dims);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -71,19 +71,16 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
                 MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
                                             recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
                                             dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 mpi_errno = MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
                                             ((char *) recvbuf + rdispls[dst]),
                                             recvcounts[dst], recvtypes[dst], s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
         }

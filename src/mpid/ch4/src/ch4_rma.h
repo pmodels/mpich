@@ -40,9 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
                                      target_rank, target_disp, target_count, target_datatype, win,
                                      av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_UNSAFE);
     return mpi_errno;
@@ -77,9 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
                                      target_rank, target_disp, target_count, target_datatype, win,
                                      av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_UNSAFE);
     return mpi_errno;
@@ -117,9 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
                                             target_rank, target_disp, target_count,
                                             target_datatype, op, win, av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
     return mpi_errno;
@@ -152,9 +146,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
         mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                   datatype, target_rank, target_disp, win, av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
     return mpi_errno;
@@ -194,9 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win, av, request);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
     return mpi_errno;
@@ -241,9 +231,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
                                                  target_rank, target_disp, target_count,
                                                  target_datatype, op, win, av, request);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
     return mpi_errno;
@@ -276,9 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
         mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
                                               datatype, target_rank, target_disp, op, win, av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
     return mpi_errno;
@@ -316,9 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
                                       target_rank, target_disp, target_count,
                                       target_datatype, win, av, request);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET_UNSAFE);
     return mpi_errno;
@@ -356,9 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
                                       target_rank, target_disp, target_count,
                                       target_datatype, win, av, request);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RPUT_UNSAFE);
     return mpi_errno;
@@ -402,9 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
                                                 target_rank, target_disp, target_count,
                                                 target_datatype, op, win, av);
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
     return mpi_errno;
@@ -436,8 +416,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_safe(const void *origin_addr,
         MPIDI_workq_vci_progress_unsafe();
         mpi_errno = MPIDI_put_unsafe(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -474,8 +453,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_safe(void *origin_addr,
         MPIDI_workq_vci_progress_unsafe();
         mpi_errno = MPIDI_get_unsafe(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, win);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -507,8 +485,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
@@ -538,8 +515,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_safe(const void *origin_addr
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
@@ -573,9 +549,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RACCUMULATE_SAFE);
     return mpi_errno;
@@ -610,8 +584,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE_SAFE);
@@ -639,8 +612,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
@@ -672,8 +644,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_safe(void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RGET_SAFE);
@@ -704,8 +675,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RPUT_SAFE);
@@ -739,8 +709,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_safe(const void *origin_addr,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
@@ -764,9 +733,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
 
     mpi_errno = MPIDI_put_safe(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PUT);
     return mpi_errno;
@@ -788,9 +755,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
 
     mpi_errno = MPIDI_get_safe(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET);
     return mpi_errno;
@@ -813,9 +778,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
 
     mpi_errno = MPIDI_accumulate_safe(origin_addr, origin_count, origin_datatype, target_rank,
                                       target_disp, target_count, target_datatype, op, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ACCUMULATE);
     return mpi_errno;
@@ -836,9 +799,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
 
     mpi_errno = MPIDI_compare_and_swap_safe(origin_addr, compare_addr, result_addr,
                                             datatype, target_rank, target_disp, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMPARE_AND_SWAP);
     return mpi_errno;
@@ -863,9 +824,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
                                        target_disp, target_count, target_datatype, op, win,
                                        request);
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RACCUMULATE);
     return mpi_errno;
@@ -893,9 +852,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
     mpi_errno = MPIDI_rget_accumulate_safe(origin_addr, origin_count, origin_datatype, result_addr,
                                            result_count, result_datatype, target_rank, target_disp,
                                            target_count, target_datatype, op, win, request);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET_ACCUMULATE);
     return mpi_errno;
@@ -915,9 +872,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
 
     mpi_errno = MPIDI_fetch_and_op_safe(origin_addr, result_addr,
                                         datatype, target_rank, target_disp, op, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FETCH_AND_OP);
     return mpi_errno;
@@ -941,9 +896,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
 
     mpi_errno = MPIDI_rget_safe(origin_addr, origin_count, origin_datatype, target_rank,
                                 target_disp, target_count, target_datatype, win, request);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET);
     return mpi_errno;
@@ -967,9 +920,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
 
     mpi_errno = MPIDI_rput_safe(origin_addr, origin_count, origin_datatype, target_rank,
                                 target_disp, target_count, target_datatype, win, request);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RPUT);
     return mpi_errno;
@@ -996,9 +947,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
     mpi_errno = MPIDI_get_accumulate_safe(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype, target_rank,
                                           target_disp, target_count, target_datatype, op, win);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_ACCUMULATE);
     return mpi_errno;

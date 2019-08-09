@@ -68,8 +68,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* if there is only 1 rank, copy data from sendbuf
      * to recvbuf and exit */
@@ -215,13 +214,11 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
                                                                                   op, comm, k,
                                                                                   sched);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT

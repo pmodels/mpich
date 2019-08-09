@@ -74,9 +74,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], 
                                            recvcounts[dst], recvtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
                                            &reqarray[outstanding_requests]);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;
                 }
@@ -92,9 +90,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], 
                                            sendcounts[dst], sendtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
                                            &reqarray[outstanding_requests], errflag);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;
                 }

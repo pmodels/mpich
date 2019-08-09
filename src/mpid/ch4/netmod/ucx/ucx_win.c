@@ -76,8 +76,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     rkey_sizes[comm_ptr->rank] = (int) rkey_size;
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 1, MPI_INT, rkey_sizes, 1, MPI_INT, comm_ptr, &err);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     recv_disps = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
 
@@ -93,8 +92,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     mpi_errno = MPIR_Allgatherv(rkey_buffer, rkey_size, MPI_BYTE,
                                 rkey_recv_buff, rkey_sizes, recv_disps, MPI_BYTE, comm_ptr, &err);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If we use the shared memory support in UCX, we have to distinguish between local
      * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
@@ -123,8 +121,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     mpi_errno =
         MPIR_Allgather(MPI_IN_PLACE, sizeof(struct ucx_share), MPI_BYTE, share_data,
                        sizeof(struct ucx_share), MPI_BYTE, comm_ptr, &err);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     for (i = 0; i < comm_ptr->local_size; i++) {
         MPIDI_UCX_WIN_INFO(win, i).disp = share_data[i].disp;

@@ -124,8 +124,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;
         /* schedule send */
@@ -206,13 +205,11 @@ int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Dataty
     mpi_errno =
         MPIR_TSP_Ialltoall_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,
                                             recvcount, recvtype, comm, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_RING);

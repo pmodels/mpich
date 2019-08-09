@@ -201,14 +201,12 @@ int MPI_Finalize(void)
      * in MPID_Finalize) */
     if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
         mpi_errno = MPIR_Process.attr_free(MPI_COMM_SELF, &MPIR_Process.comm_self->attributes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.comm_self->attributes = 0;
     }
     if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
         mpi_errno = MPIR_Process.attr_free(MPI_COMM_WORLD, &MPIR_Process.comm_world->attributes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Process.comm_world->attributes = 0;
     }
 
@@ -252,16 +250,13 @@ int MPI_Finalize(void)
 #endif
 
     mpi_errno = MPID_Finalize();
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Free complete request */
     MPIR_Request_free(MPIR_Process.lw_req);
 
     mpi_errno = MPII_Coll_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);

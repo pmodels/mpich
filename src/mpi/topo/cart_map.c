@@ -71,14 +71,12 @@ int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
         /* --BEGIN USEREXTENSION-- */
         mpi_errno = comm_ptr->topo_fns->cartMap(comm_ptr, ndims,
                                                 (const int *) dims, (const int *) periods, newrank);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Cart_map(comm_ptr, ndims,
                                   (const int *) dims, (const int *) periods, newrank);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -166,8 +164,7 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
     /* ... body of routine ...  */
     mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims,
                                    (const int *) dims, (const int *) periods, newrank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:

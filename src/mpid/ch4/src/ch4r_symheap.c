@@ -317,23 +317,19 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     disps[1] = (MPI_Aint) ((uintptr_t) & maxloc.loc - (uintptr_t) & maxloc.sz);
 
     mpi_errno = MPIR_Type_create_struct_impl(2, blocks, disps, types, &maxloc_type);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Type_commit_impl(&maxloc_type);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Op_create_impl(ull_maxloc_op_func, 0, &maxloc_op);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     maxloc.sz = (unsigned long long) mysz;
     maxloc.loc = myloc;
 
     mpi_errno = MPIR_Allreduce(&maxloc, &maxloc_result, 1, maxloc_type, maxloc_op, comm, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *maxsz_loc = maxloc_result.loc;
     *maxsz = (size_t) maxloc_result.sz;
@@ -447,8 +443,7 @@ int MPIDIU_get_shm_symheap(MPI_Aint shm_size, MPI_Aint * shm_offsets, MPIR_Comm 
             if (shm_comm_ptr != NULL) {
                 /* destroy successful shm segment */
                 mpi_errno = MPIDIU_destroy_shm_segment(mapsize, shm_segment_hdl_ptr, base_ptr);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else
                 MPL_munmap(base_ptr, mapsize, MPL_MEM_RMA);
         }

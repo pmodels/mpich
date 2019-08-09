@@ -53,7 +53,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
         mpi_errno = MPIDI_OFI_progress(0, 0);                     \
-        if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
+        MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
@@ -102,8 +102,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
-        if (mpi_errno != MPI_SUCCESS)                                \
-            MPIR_ERR_POP(mpi_errno);                                 \
+        MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -132,7 +131,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
   do                                                                 \
     {                                                                \
       mpi_errno = FUNC;                                              \
-      if (unlikely(mpi_errno!=MPI_SUCCESS)) MPIR_ERR_POP(mpi_errno); \
+      MPIR_ERR_CHECK(mpi_errno); \
     } while (0)
 
 #define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \

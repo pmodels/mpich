@@ -116,16 +116,12 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
             mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                        ((char *) recvbuf + extent * recvcount * rank),
                                        recvcount, recvtype);
-            if (mpi_errno) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else if (tmp_buf_size && (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)) {
         /* copy from sendbuf into tmp_buf */
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, tmp_buf, nbytes, MPI_BYTE);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     curr_cnt = nbytes;
 
@@ -186,12 +182,10 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                         displs[1] = 0;
 
                         mpi_errno = MPIR_Type_indexed_impl(2, blocks, displs, recvtype, &tmp_type);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         mpi_errno = MPIR_Type_commit_impl(&tmp_type);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 
                         mpi_errno = MPIC_Recv(recvbuf, 1, tmp_type, src,
                                               MPIR_GATHER_TAG, comm_ptr, &status, errflag);
@@ -277,12 +271,10 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                 struct_displs[1] = (MPI_Aint) tmp_buf;
                 mpi_errno =
                     MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIR_Type_commit_impl(&tmp_type);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIC_Send(MPI_BOTTOM, 1, tmp_type, dst,
                                       MPIR_GATHER_TAG, comm_ptr, errflag);
@@ -310,14 +302,12 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
                                    nbytes * (comm_size - copy_offset), MPI_BYTE,
                                    ((char *) recvbuf + extent * recvcount * copy_offset),
                                    recvcount * (comm_size - copy_offset), recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Localcopy((char *) tmp_buf + nbytes * (comm_size - copy_offset),
                                    nbytes * (copy_blks - comm_size + copy_offset), MPI_BYTE,
                                    recvbuf,
                                    recvcount * (copy_blks - comm_size + copy_offset), recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

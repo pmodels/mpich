@@ -37,8 +37,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendc
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If I'm the root, then scatter */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
@@ -109,13 +108,11 @@ int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[
     mpi_errno =
         MPIR_TSP_Iscatterv_sched_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                                 recvcount, recvtype, root, comm, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTERV_ALLCOMM_LINEAR);

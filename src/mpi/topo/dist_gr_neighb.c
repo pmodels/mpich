@@ -138,8 +138,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     mpi_errno = MPIR_Dist_graph_neighbors_impl(comm_ptr,
                                                maxindegree, sources, sourceweights,
                                                maxoutdegree, destinations, destweights);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

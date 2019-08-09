@@ -114,8 +114,7 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, weighted);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

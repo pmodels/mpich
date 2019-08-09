@@ -95,8 +95,7 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * messag
             /* MPI_MESSAGE_NO_PROC should yield a "proc null" status */
             if (*message != MPI_MESSAGE_NO_PROC) {
                 MPIR_Request_valid_ptr(msgp, mpi_errno);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_ERR_CHKANDJUMP((msgp->kind != MPIR_REQUEST_KIND__MPROBE),
                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
             }
@@ -111,8 +110,7 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * messag
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Imrecv(buf, count, datatype, msgp, &rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(rreq != NULL);
     *request = rreq->handle;

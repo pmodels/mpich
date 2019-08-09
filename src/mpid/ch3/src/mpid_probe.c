@@ -38,13 +38,13 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (found) goto fn_exit;
 
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 
                 mpi_errno = MPIDI_CH3_Progress_test();
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } while (1);
         } else {
             /* it's not anysource, see if this is for the netmod */
@@ -58,13 +58,13 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
                     
                     mpi_errno = vc->comm_ops->iprobe(vc, source, tag, comm, context_offset, &found,
                                                      status);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (found) goto fn_exit;
                     
                     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                     
                     mpi_errno = MPIDI_CH3_Progress_test();
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } while (1);
             }
             /* fall-through to shm case */

@@ -66,7 +66,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 		MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
         MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rreq->dev.match.parts.rank);
 		mpi_errno = MPIDI_CH3_EagerSyncAck( vc, rreq );
-		if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+		MPIR_ERR_CHECK(mpi_errno);
 	    }
 	    
             /* the request was found in the unexpected queue, so it has a
@@ -118,7 +118,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	    MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
         MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rreq->dev.match.parts.rank);
 	    mpi_errno = vc->rndvRecv_fn( vc, rreq );
-	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+	    MPIR_ERR_CHECK(mpi_errno);
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
 		MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
@@ -128,7 +128,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
 	{
 	    mpi_errno = MPIDI_CH3_RecvFromSelf( rreq, buf, count, datatype );
-	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+	    MPIR_ERR_CHECK(mpi_errno);
 	    if (status != MPI_STATUS_IGNORE)
 	    {
 		*status = rreq->status;

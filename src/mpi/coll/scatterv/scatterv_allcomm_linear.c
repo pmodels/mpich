@@ -57,15 +57,13 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const int *sendcounts, con
                         mpi_errno = MPIR_Localcopy(((char *) sendbuf + displs[rank] * extent),
                                                    sendcounts[rank], sendtype,
                                                    recvbuf, recvcount, recvtype);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 } else {
                     mpi_errno = MPIC_Isend(((char *) sendbuf + displs[i] * extent),
                                            sendcounts[i], sendtype, i,
                                            MPIR_SCATTERV_TAG, comm_ptr, &reqarray[reqs++], errflag);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }

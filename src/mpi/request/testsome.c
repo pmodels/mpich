@@ -40,8 +40,7 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
 
     mpi_errno = MPID_Progress_test();
     /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* --END ERROR HANDLING-- */
 
     n_inactive = 0;
@@ -50,8 +49,7 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
     for (i = 0; i < incount; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
             mpi_errno = MPID_Progress_test();
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {

@@ -349,8 +349,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              0, rma_op->origin_count * origin_type_size, &curr_req);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (curr_req != NULL) {
@@ -480,8 +479,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              stream_offset, stream_size, &curr_req);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (curr_req != NULL) {
             if (rma_op->reqs_size == 0) {
@@ -706,8 +704,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              stream_offset, stream_size, &curr_req);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (curr_req != NULL) {
             MPIR_Request_free(curr_req);
@@ -991,8 +988,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
         MPIR_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
         mpi_errno = issue_from_origin_buffer(rma_op, vc, NULL, 0,       /*ext_hdr_ptr, ext_hdr_sz */
                                              0, 1 * origin_dtp_size, &curr_req);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (curr_req != NULL) {
@@ -1050,8 +1046,7 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winInvalidOp");
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_RMA_OP);

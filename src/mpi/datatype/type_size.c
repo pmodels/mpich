@@ -96,8 +96,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Type_size_x_impl(datatype, &size_x);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(size_x >= 0);
     /* handle overflow: see MPI-3 p.104 */

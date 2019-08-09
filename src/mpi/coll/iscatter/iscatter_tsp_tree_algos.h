@@ -51,15 +51,13 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
 
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for scatter */
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (rank == root && is_inplace) {
         recvtype = sendtype;
@@ -212,13 +210,11 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
     mpi_errno = MPIR_TSP_Iscatter_sched_intra_tree(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype,
                                                    root, comm, k, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_ISCATTER_INTRA_TREE);

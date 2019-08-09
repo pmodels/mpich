@@ -39,16 +39,13 @@ int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sche
         src = (rank - mask + size) % size;
 
         mpi_errno = MPIR_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Sched_barrier(s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mask <<= 1;
     }

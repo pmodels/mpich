@@ -479,8 +479,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
                                        MPI_INT, MPI_BAND, comm_ptr, &errflag);
         }
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
@@ -643,8 +642,7 @@ static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
     struct gcn_state *st = state;
 
     mpi_errno = MPIR_Comm_commit(st->new_comm);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
     return mpi_errno;
@@ -661,29 +659,24 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
             mpi_errno =
                 MPIR_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
                                 st->s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
                                 st->s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(st->s);
         }
 
         mpi_errno = MPIR_Ibcast_sched(st->ctx1, 1,
                                       MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr, st->s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
     }
 
     mpi_errno = MPIR_Sched_cb(&sched_cb_commit_comm, st, st->s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
     return mpi_errno;
@@ -747,8 +740,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             minfree = nfree;
             mpi_errno =
                 MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             if (minfree > 0) {
                 MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                      "**toomanycommfrag", "**toomanycommfrag %d %d %d",
@@ -780,15 +772,13 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
                 add_gcn_to_list(st);
             }
             mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, st->s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(st->s);
         }
     } else {
         /* Successfully allocated a context id */
         mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
     }
 
@@ -853,13 +843,11 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
     mpi_errno = MPIR_Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
                                       MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
                                       st->comm_ptr, st->s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 
     mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_allocate_cid, st, st->s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 
   fn_fail:
@@ -941,8 +929,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
         eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
     }
     mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
     MPIR_CHKPMEM_COMMIT();
@@ -967,23 +954,19 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
 
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
                                s, MPIR_COMM_KIND__INTRACOMM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
@@ -1007,17 +990,14 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     /* do as much local setup as possible */
     if (!comm_ptr->local_comm) {
         mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* add some entries to it */
 
@@ -1025,13 +1005,11 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
                                s, MPIR_COMM_KIND__INTERCOMM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
@@ -1077,13 +1055,11 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
         mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Get_contextid_sparse(comm_ptr->local_comm, &mycontext_id, FALSE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(mycontext_id != 0);
 
     /* MPIC routine uses an internal context id.  The local leads (process 0)
@@ -1093,16 +1069,14 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
         mpi_errno = MPIC_Sendrecv(&mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                   comm_ptr, MPI_STATUS_IGNORE, &errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* Make sure that all of the local processes now have this
      * id */
     mpi_errno = MPIR_Bcast_impl(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
                                 0, comm_ptr->local_comm, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     /* The recvcontext_id must be the one that was allocated out of the local
      * group, not the remote group.  Otherwise we could end up posting two
