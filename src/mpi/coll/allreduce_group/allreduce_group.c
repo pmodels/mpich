@@ -12,7 +12,7 @@
     do {                                                                                                      \
         int gr_tmp_ = (gr_);                                                                                  \
         mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, 1, &(gr_tmp_), comm_ptr->local_group, &(cr_)); \
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);                                                               \
+        MPIR_ERR_CHECK(mpi_errno);                                                                            \
         MPIR_Assert((cr_) != MPI_UNDEFINED);                                                                  \
     } while (0)
 
