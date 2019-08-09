@@ -13,6 +13,17 @@
 #include "posix_types.h"
 #include "posix_am_impl.h"
 
+/* unused prototypes to supress -Wmissing-prototypes */
+int MPIDI_POSIX_progress_test(void);
+int MPIDI_POSIX_progress_poke(void);
+void MPIDI_POSIX_progress_start(MPID_Progress_state * state);
+void MPIDI_POSIX_progress_end(MPID_Progress_state * state);
+int MPIDI_POSIX_progress_wait(MPID_Progress_state * state);
+int MPIDI_POSIX_progress_register(int (*progress_fn) (int *));
+int MPIDI_POSIX_progress_deregister(int id);
+int MPIDI_POSIX_progress_activate(int id);
+int MPIDI_POSIX_progress_deactivate(int id);
+
 static int progress_recv(int blocking);
 static int progress_send(int blocking);
 
