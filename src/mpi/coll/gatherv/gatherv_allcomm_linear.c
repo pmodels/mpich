@@ -81,15 +81,13 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                                    ((char *) recvbuf + displs[rank] * extent),
                                                    recvcounts[rank], recvtype);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 } else {
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + displs[i] * extent),
                                            recvcounts[i], recvtype, i,
                                            MPIR_GATHERV_TAG, comm_ptr, &reqarray[reqs++]);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }

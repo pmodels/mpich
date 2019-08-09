@@ -177,8 +177,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
         while (p) {
             MPI_Request r = p->request->handle;
             mpi_errno = MPIR_Wait(&r, MPI_STATUS_IGNORE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             p = p->next;
         }
     }
@@ -224,8 +223,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     /* We check the active buffer first.  This helps avoid storage
      * fragmentation */
     mpi_errno = MPIR_Bsend_check_active();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (dtype != MPI_PACKED)
         MPIR_Pack_size_impl(count, dtype, &packsize);
@@ -261,8 +259,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                 void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
                     MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 p->msg.count += actual_pack_bytes;
             } else {
                 MPIR_Memcpy(p->msg.msgbuf, buf, count);
@@ -465,8 +462,7 @@ static int MPIR_Bsend_check_active(void)
             /* XXX DJG FIXME-MT should we be checking this? */
             if (MPIR_Object_get_ref(active->request) == 1) {
                 mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 /* We need to invoke the progress engine in case we
                  * need to advance other, incomplete communication.  */
@@ -474,13 +470,11 @@ static int MPIR_Bsend_check_active(void)
                 MPID_Progress_start(&progress_state);
                 mpi_errno = MPID_Progress_test();
                 MPID_Progress_end(&progress_state);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else {
             mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         if (flag) {
             /* We're done.  Remove this segment */

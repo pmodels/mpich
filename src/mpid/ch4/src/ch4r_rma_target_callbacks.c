@@ -251,8 +251,7 @@ static int ack_put(MPIR_Request * rreq)
                                        &ack_msg, sizeof(ack_msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_PUT);
     return mpi_errno;
@@ -295,8 +294,7 @@ static int ack_cswap(MPIR_Request * rreq)
                                     MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_CSWAP);
     return mpi_errno;
@@ -330,8 +328,7 @@ static int ack_acc(MPIR_Request * rreq)
                                        &ack_msg, sizeof(ack_msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_ACC);
     return mpi_errno;
@@ -371,8 +368,7 @@ static int ack_get_acc(MPIR_Request * rreq)
                                     MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_GET_ACC);
     return mpi_errno;
@@ -424,13 +420,11 @@ static int win_lock_advance(MPIR_Win * win)
                                                    lock->rank, handler_id, &msg, sizeof(msg));
         }
 
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPL_free(lock);
 
         mpi_errno = win_lock_advance(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -518,8 +512,7 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
                                                MPIDIG_WIN_UNLOCK_ACK, &msg, sizeof(msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_UNLOCK_PROC);
     return;
@@ -595,8 +588,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         shm_locked = 1;
     }
@@ -611,8 +603,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
                                           MPIDIG_REQUEST(rreq, req->areq.target_datatype),
                                           MPIDIG_REQUEST(rreq, req->areq.op),
                                           MPIDIG_ACC_SRCBUF_DEFAULT);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         iov = (struct iovec *) MPIDIG_REQUEST(rreq, req->areq.dt_iov);
         src_ptr = (char *) MPIDIG_REQUEST(rreq, req->areq.data);
@@ -626,8 +617,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
                                               MPIDIG_REQUEST(rreq, req->areq.target_datatype),
                                               MPIDIG_REQUEST(rreq, req->areq.op),
                                               MPIDIG_ACC_SRCBUF_DEFAULT);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             src_ptr += count * basic_sz;
         }
         MPL_free(iov);
@@ -636,8 +626,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
 
@@ -646,8 +635,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
 
     MPIDIG_REQUEST(rreq, req->areq.data) = NULL;
     mpi_errno = ack_acc(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Request_complete(rreq);
   fn_exit:
@@ -691,8 +679,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         shm_locked = 1;
     }
 #endif
@@ -710,8 +697,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                                           MPIDIG_REQUEST(rreq, req->areq.target_datatype),
                                           MPIDIG_REQUEST(rreq, req->areq.op),
                                           MPIDIG_ACC_SRCBUF_DEFAULT);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         iov = (struct iovec *) MPIDIG_REQUEST(rreq, req->areq.dt_iov);
         src_ptr = (char *) MPIDIG_REQUEST(rreq, req->areq.data);
@@ -728,8 +714,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                                               MPIDIG_REQUEST(rreq, req->areq.target_datatype),
                                               MPIDIG_REQUEST(rreq, req->areq.op),
                                               MPIDIG_ACC_SRCBUF_DEFAULT);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             src_ptr += count * basic_sz;
         }
         MPL_free(iov);
@@ -738,8 +723,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
 
@@ -748,8 +732,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
 
     MPIDIG_REQUEST(rreq, req->areq.data) = original;
     mpi_errno = ack_get_acc(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Request_complete(rreq);
 
@@ -848,8 +831,7 @@ static int get_target_cmpl_cb(MPIR_Request * req)
         }
 
         MPID_Request_complete(req);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -888,8 +870,7 @@ static int get_target_cmpl_cb(MPIR_Request * req)
     }
 
     MPID_Request_complete(req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
     return mpi_errno;
@@ -911,8 +892,7 @@ static int put_target_cmpl_cb(MPIR_Request * rreq)
     MPL_free(MPIDIG_REQUEST(rreq, req->preq.dt_iov));
 
     mpi_errno = ack_put(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Request_complete(rreq);
   fn_exit:
@@ -951,8 +931,7 @@ static int put_iov_target_cmpl_cb(MPIR_Request * rreq)
                                        &ack_msg, sizeof(ack_msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PUT_IOV_TARGET_CMPL_CB);
@@ -989,8 +968,7 @@ static int acc_iov_target_cmpl_cb(MPIR_Request * rreq)
                                        &ack_msg, sizeof(ack_msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
@@ -1027,8 +1005,7 @@ static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
                                        &ack_msg, sizeof(ack_msg));
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_IOV_TARGET_CMPL_CB);
@@ -1060,8 +1037,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     win = MPIDIG_REQUEST(rreq, req->creq.win_ptr);
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
 
@@ -1076,15 +1052,13 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDIG_WIN(win, shm_allocated)) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
     /* MPIDI_CS_EXIT(); */
 
     mpi_errno = ack_cswap(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPID_Request_complete(rreq);
     MPIDIG_progress_compl_list();
   fn_exit:
@@ -1106,8 +1080,7 @@ static int acc_target_cmpl_cb(MPIR_Request * rreq)
         return mpi_errno;
 
     mpi_errno = handle_acc_cmpl(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_progress_compl_list();
   fn_exit:
@@ -1127,8 +1100,7 @@ static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
         return mpi_errno;
 
     mpi_errno = handle_get_acc_cmpl(rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_progress_compl_list();
   fn_exit:
@@ -1614,8 +1586,7 @@ int MPIDIG_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
                                             rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->preq.origin_datatype));
 
     *target_cmpl_cb = NULL;
@@ -1673,8 +1644,7 @@ int MPIDIG_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
                                             rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;
@@ -1733,8 +1703,7 @@ int MPIDIG_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr, void **da
                                             rreq);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;

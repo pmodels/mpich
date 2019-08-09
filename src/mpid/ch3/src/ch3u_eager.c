@@ -140,7 +140,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
                                      sizeof(MPIDI_CH3_Pkt_eager_send_t),
                                      NULL, 0);
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:
     return mpi_errno;
@@ -488,9 +488,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
      * also kicks the progress engine, which was previously done here via
      * MPIDI_CH3_Progress_signal_completion(). */
     mpi_errno = MPID_Request_complete(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
  fn_fail:
     /* MT note: it may be possible to narrow this CS after careful
@@ -625,9 +623,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
         /* return the number of bytes processed in this function */
         *buflen = 0;
         mpi_errno = MPID_Request_complete(rreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 	*rreqp = NULL;
     }
     else {
@@ -651,9 +647,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
         if (complete) 
         {
             mpi_errno = MPID_Request_complete(rreq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
             *rreqp = NULL;
         }
         else
@@ -710,9 +704,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
             /* return the number of bytes processed in this function */
             *buflen = data_len;;
             mpi_errno = MPID_Request_complete(rreq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
 	    *rreqp = NULL;
 	}
 	else {
@@ -731,9 +723,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
             if (complete) 
             {
                 mpi_errno = MPID_Request_complete(rreq);
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 *rreqp = NULL;
             }
             else
@@ -776,9 +766,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
 	{
 	    /* mark data transfer as complete and decrement CC */
             mpi_errno = MPID_Request_complete(rreq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
 	    *rreqp = NULL;
 	}
         /* we didn't process anything but the header in this case */

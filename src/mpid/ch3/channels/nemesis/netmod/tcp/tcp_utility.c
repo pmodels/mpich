@@ -38,8 +38,7 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
                     (MPL_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
 
     mpi_errno = MPIDI_PG_Find(pg_id, &pg);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_ERR_CHKINTERNAL(pg == NULL, mpi_errno, "invalid PG");
     MPIR_ERR_CHKINTERNAL(pg_rank < 0 ||

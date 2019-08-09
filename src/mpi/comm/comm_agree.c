@@ -41,8 +41,7 @@ int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
 
     /* Get the locally known (not acknowledged) group of failed procs */
     mpi_errno = MPID_Comm_failure_get_acked(comm_ptr, &failed_grp);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* First decide on the group of failed procs. */
     mpi_errno = MPID_Comm_get_all_failed_procs(comm_ptr, &global_failed, MPIR_AGREE_TAG);
@@ -50,13 +49,11 @@ int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
         errflag = MPIR_ERR_PROC_FAILED;
 
     mpi_errno = MPIR_Group_compare_impl(failed_grp, global_failed, &result);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Create a subgroup without the failed procs */
     mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If that group isn't the same as what we think is failed locally, then
      * mark it as such. */
@@ -164,8 +161,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 
     /* ... body of routine ... */
     mpi_errno = MPIR_Comm_agree(comm_ptr, flag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

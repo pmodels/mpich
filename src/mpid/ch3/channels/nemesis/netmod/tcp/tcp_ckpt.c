@@ -79,8 +79,7 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t * vc)
     mpi_errno =
         MPID_nem_tcp_iStartContigMsg_paused(vc, &upkt, sizeof(MPIDI_nem_tcp_pkt_unpause_t), NULL, 0,
                                             &unpause_req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (unpause_req) {
         if (unpause_req->status.MPI_ERROR)
             MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
@@ -113,8 +112,7 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t * vc)
     pkt->subtype = MPIDI_NEM_TCP_PKT_UNPAUSE;
 
     mpi_errno = MPID_nem_tcp_iStartContigMsg_paused(vc, pkt, sizeof(pkt), NULL, 0, &sreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (sreq != NULL) {
         if (sreq->status.MPI_ERROR != MPI_SUCCESS) {

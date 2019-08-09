@@ -119,8 +119,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
         /* ndims=0, or all entries in remain_dims are false.
          * MPI 2.1 says return a 0D Cartesian topology. */
         mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, newcomm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Determine the number of remaining dimensions */
         ndims_in_subcomm = 0;
@@ -144,8 +143,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
             }
         }
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, &newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         *newcomm = newcomm_ptr->handle;
 

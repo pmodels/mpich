@@ -186,12 +186,10 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         }
 
         mpi_errno = MPID_Wait(rreq, MPI_STATUS_IGNORE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (status != MPI_STATUS_IGNORE) {
             *status = rreq->status;

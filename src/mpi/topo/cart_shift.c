@@ -157,8 +157,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Cart_shift_impl(comm_ptr, direction, disp, rank_source, rank_dest);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

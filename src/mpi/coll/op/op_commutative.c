@@ -104,8 +104,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Op_valid_ptr(op_ptr, mpi_errno);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

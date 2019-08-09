@@ -1457,13 +1457,11 @@ int MPIR_Netloc_parse_topology(netloc_topology_t netloc_topology,
 {
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = get_tree_attributes(MPIR_Process.netloc_topology, network_attr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (network_attr->type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
         mpi_errno = get_torus_attributes(MPIR_Process.netloc_topology, network_attr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -1521,8 +1519,7 @@ int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes network_att
         char *physical_address = NULL;
         /* Check if the physical id of the io device matches a node in netloc topology tree */
         mpi_errno = get_physical_address(io_device, &physical_address);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (physical_address != NULL) {
             /* Find the node in netloc tree with the same physical id */
             hti = netloc_dt_lookup_table_iterator_t_construct(*host_nodes);

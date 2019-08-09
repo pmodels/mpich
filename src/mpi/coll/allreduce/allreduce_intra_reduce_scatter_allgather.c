@@ -71,8 +71,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
@@ -120,8 +119,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
              * ordering is right, it doesn't matter whether
              * the operation is commutative or not. */
             mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* change the rank */
             newrank = rank / 2;
@@ -209,8 +207,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
             mpi_errno = MPIR_Reduce_local(((char *) tmp_buf + disps[recv_idx] * extent),
                                           ((char *) recvbuf + disps[recv_idx] * extent),
                                           recv_cnt, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* update send_idx for next iteration */
             send_idx = recv_idx;

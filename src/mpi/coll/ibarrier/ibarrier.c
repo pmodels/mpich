@@ -168,8 +168,7 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
             case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_gentran_recexch:
                 mpi_errno = MPIR_Ibarrier_intra_gentran_recexch(comm_ptr, request);
 
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -179,19 +178,15 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
     }
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_create(&s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Ibarrier_sched(comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -285,8 +280,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ibarrier(comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

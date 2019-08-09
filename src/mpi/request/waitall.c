@@ -119,8 +119,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                     MPID_BEGIN_ERROR_CHECKS;
                     {
                         MPIR_Request_valid_ptr(request_ptrs[i], mpi_errno);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         MPIR_ERR_CHKANDJUMP1((request_ptrs[i]->kind == MPIR_REQUEST_KIND__MPROBE),
                                              mpi_errno, MPI_ERR_ARG, "**msgnotreq",
                                              "**msgnotreq %d", i);
@@ -165,8 +164,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
         }
 
         mpi_errno = MPID_Waitall(icount, &request_ptrs[ii], array_of_statuses, requests_property);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
             /* NOTE-O1: high-message-rate optimization.  For simple send and recv

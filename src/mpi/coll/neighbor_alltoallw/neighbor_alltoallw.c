@@ -85,8 +85,7 @@ int MPIR_Neighbor_alltoallw_intra_auto(const void *sendbuf, const int sendcounts
     mpi_errno =
         MPIR_Neighbor_alltoallw_allcomm_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                            recvcounts, rdispls, recvtypes, comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -106,8 +105,7 @@ int MPIR_Neighbor_alltoallw_inter_auto(const void *sendbuf, const int sendcounts
     mpi_errno =
         MPIR_Neighbor_alltoallw_allcomm_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                            recvcounts, rdispls, recvtypes, comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -160,8 +158,7 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -261,8 +258,7 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
     mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls,
                                              sendtypes, recvbuf, recvcounts,
                                              rdispls, recvtypes, comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

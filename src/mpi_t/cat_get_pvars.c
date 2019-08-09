@@ -91,8 +91,7 @@ int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
         goto fn_exit;
 
     mpi_errno = MPIR_T_category_get_pvars_impl(cat_index, len, indices);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

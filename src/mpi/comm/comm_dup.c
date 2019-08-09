@@ -39,8 +39,7 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
      */
     if (MPIR_Process.attr_dup) {
         mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
 
@@ -49,8 +48,7 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
      * rank of the process in the communicator.  For intercomms,
      * this must be the local size */
     mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     (*newcomm_ptr)->attributes = new_attributes;
 
@@ -152,8 +150,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */

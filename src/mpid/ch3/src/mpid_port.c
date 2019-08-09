@@ -58,9 +58,7 @@ int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
        those channels will set the function pointer to NULL */
     if (portFns.OpenPort) {
 	mpi_errno = portFns.OpenPort( info_ptr, port_name );
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_POP(mpi_errno);
-	}
+	MPIR_ERR_CHECK(mpi_errno);
     }
     else {
 	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
@@ -103,9 +101,7 @@ int MPID_Close_port(const char *port_name)
        init check above; such a function may be named MPIDI_CH3_Close_port */
     if (portFns.ClosePort) {
 	mpi_errno = portFns.ClosePort( port_name );
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_POP(mpi_errno);
-	}
+	MPIR_ERR_CHECK(mpi_errno);
     }
     else {
 	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
@@ -137,9 +133,7 @@ int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
     if (portFns.CommAccept) {
 	mpi_errno = portFns.CommAccept( port_name, info, root, comm, 
 					newcomm_ptr );
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_POP(mpi_errno);
-	}
+	MPIR_ERR_CHECK(mpi_errno);
     }
     else {
 	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
@@ -171,9 +165,7 @@ int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
     if (portFns.CommConnect) {
 	mpi_errno = portFns.CommConnect( port_name, info, root, comm, 
 					 newcomm_ptr );
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_POP(mpi_errno);
-	}
+	MPIR_ERR_CHECK(mpi_errno);
     }
     else {
 	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );

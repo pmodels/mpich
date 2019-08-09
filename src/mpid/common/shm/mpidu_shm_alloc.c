@@ -204,8 +204,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
         mpi_errno =
             MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_CHKLMEM_MALLOC(key, char *, PMI2_MAX_KEYLEN, mpi_errno, "key", MPL_MEM_SHM);
         MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename-%d", num_segments);
@@ -231,8 +230,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* The opa and barrier initializations must come before we (the
              * leader) put the sharedFilename attribute.  Since this is a
@@ -240,8 +238,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
              * ensures that these initializations have occurred before any peer
              * attempts to use the resources. */
             mpi_errno = PMI2_Info_PutNodeAttr(key, serialized_hnd);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {
             int found = FALSE;
 
@@ -250,8 +247,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             /* get name of shared file */
             mpi_errno = PMI2_Info_GetNodeAttr(key, val, PMI2_MAX_VALLEN, &found, TRUE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
 
             mpl_err = MPL_shm_hnd_deserialize(memory->hnd, val, strlen(val));
@@ -277,13 +273,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank == 0) {
             mpl_err = MPL_shm_seg_remove(memory->hnd);
@@ -315,8 +309,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
         mpi_errno =
             MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         pmix_proc_t proc, *procs;
         char *nodename = NULL;
@@ -349,8 +342,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* The opa and barrier initializations must come before we (the
              * leader) put the sharedFilename attribute.  Since this is a
@@ -422,13 +414,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank == 0) {
             mpl_err = MPL_shm_seg_remove(memory->hnd);
@@ -464,8 +454,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 #endif
         mpi_errno =
             MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Allocate space for pmi key and val */
         pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
@@ -477,8 +466,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val", class);
 
         mpi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank == 0) {
             mpl_err =
@@ -510,8 +498,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             pmi_errno = PMI_Barrier();
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -543,13 +530,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank == 0) {
             mpl_err = MPL_shm_seg_remove(memory->hnd);
@@ -595,8 +580,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     while (!ALLOCQ_EMPTY());
 
     mpi_errno = check_alloc(memory, *barrier, num_local, local_rank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
@@ -656,8 +640,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
     }
 
     mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (asym_check_region_p->base_ptr != memory->base_addr)
         OPA_store_int(&asym_check_region_p->is_asym, 1);
@@ -665,8 +648,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
     OPA_read_write_barrier();
 
     mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (OPA_load_int(&asym_check_region_p->is_asym)) {
         memory->symmetrical = 0;

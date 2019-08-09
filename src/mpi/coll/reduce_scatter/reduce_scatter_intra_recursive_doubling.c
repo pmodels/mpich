@@ -83,8 +83,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
         mpi_errno = MPIR_Localcopy(recvbuf, total_count, datatype,
                                    tmp_results, total_count, datatype);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mask = 0x1;
     i = 0;
@@ -119,12 +118,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
             dis[1] += recvcounts[j];
 
         mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* calculate recvtype */
         blklens[0] = blklens[1] = 0;
@@ -139,12 +136,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
             dis[1] += recvcounts[j];
 
         mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         received = 0;
         if (dst < comm_size) {
@@ -250,32 +245,27 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                 {
                     mpi_errno = MPIR_Reduce_local(tmp_recvbuf, tmp_results, blklens[0],
                                                   datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Reduce_local(((char *) tmp_recvbuf + dis[1] * extent),
                                                   ((char *) tmp_results + dis[1] * extent),
                                                   blklens[1], datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             } else {
                 {
                     mpi_errno = MPIR_Reduce_local(tmp_results, tmp_recvbuf, blklens[0],
                                                   datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Reduce_local(((char *) tmp_results + dis[1] * extent),
                                                   ((char *) tmp_recvbuf + dis[1] * extent),
                                                   blklens[1], datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* copy result back into tmp_results */
                 mpi_errno = MPIR_Localcopy(tmp_recvbuf, 1, recvtype, tmp_results, 1, recvtype);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
@@ -289,8 +279,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     /* now copy final results from tmp_results to recvbuf */
     mpi_errno = MPIR_Localcopy(((char *) tmp_results + disps[rank] * extent),
                                recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

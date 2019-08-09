@@ -39,15 +39,13 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
     int n_completed = 0;
 
     mpi_errno = MPID_Progress_test();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) {
         for (i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
                 mpi_errno = MPID_Progress_test();
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) {
@@ -60,15 +58,13 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
         for (i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
                 mpi_errno = MPID_Progress_test();
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             if (request_ptrs[i] != NULL) {
                 if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
                     mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     n_completed++;

@@ -1620,9 +1620,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set,
      * Set and verify the socket buffer size
      */
     mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize(fd, 1);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /*
      * Attempt to establish the connection
@@ -1880,9 +1878,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
      * Set and verify the socket buffer size
      */
     mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize(fd, 1);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /*
      * Start listening for incoming connections...
@@ -2364,9 +2360,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
      * made at that time? */
 #if 1
     mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize(fd, 1);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #else
     if (MPIDI_CH3I_Socki_socket_bufsz > 0) {
         int bufsz;

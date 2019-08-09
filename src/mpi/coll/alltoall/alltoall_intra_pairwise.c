@@ -58,9 +58,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                sendcount, sendtype,
                                ((char *) recvbuf +
                                 rank * recvcount * recvtype_extent), recvcount, recvtype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Is comm_size a power-of-two? */
     i = 1;

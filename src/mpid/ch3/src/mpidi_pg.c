@@ -449,7 +449,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
        it to the find routine */
     /* printf( "Looking for pg with id %s\n", str );fflush(stdout); */
     mpi_errno = MPIDI_PG_Find((void *)str, &existing_pg);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (existing_pg != NULL) {
 	/* return the existing PG */
@@ -467,9 +467,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     vct_sz = atoi(p);
 
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     
     pg_ptr = *pg_pptr;
     pg_ptr->id = MPL_strdup( str );
@@ -552,10 +550,10 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
     mpi_errno = PMI2_KVS_Put(key, connString);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = PMI2_KVS_Fence();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PG_SetConnInfo);
@@ -640,7 +638,7 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     if (mpi_errno) {
 	MPIDI_PG_CheckForSingleton();
 	mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
  fn_exit:
     return mpi_errno;
@@ -778,7 +776,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
     }
     
     mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #else
     int pmi_errno, kvs_name_sz;
     int mpi_errno = MPI_SUCCESS;
@@ -1129,7 +1127,7 @@ int MPIDI_PG_Close_VCs( void )
 	    if (vc->state == MPIDI_VC_STATE_ACTIVE ||
 		vc->state == MPIDI_VC_STATE_REMOTE_CLOSE) {
 		mpi_errno = MPIDI_CH3U_VC_SendClose( vc, i );
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 	    } else if (vc->state == MPIDI_VC_STATE_INACTIVE ||
                        vc->state == MPIDI_VC_STATE_MORIBUND) {
                 /* XXX DJG FIXME-MT should we be checking this? */

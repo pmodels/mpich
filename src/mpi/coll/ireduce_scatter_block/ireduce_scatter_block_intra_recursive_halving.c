@@ -69,8 +69,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
     else
         mpi_errno = MPIR_Sched_copy(recvbuf, total_count, datatype,
                                     tmp_results, total_count, datatype, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
     pof2 = 1;
@@ -89,8 +88,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIR_Sched_send(tmp_results, total_count, datatype, rank + 1, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
@@ -99,16 +97,14 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
             newrank = -1;
         } else {        /* odd */
             mpi_errno = MPIR_Sched_recv(tmp_recvbuf, total_count, datatype, rank - 1, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             /* do the reduction on received data. since the
              * ordering is right, it doesn't matter whether
              * the operation is commutative or not. */
             mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, tmp_results, total_count, datatype, op, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             /* change the rank */
@@ -174,12 +170,10 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
 
                 mpi_errno = MPIR_Sched_send(((char *) tmp_results + newdisps[send_idx] * extent),
                                             send_cnt, datatype, send_dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(((char *) tmp_recvbuf + newdisps[recv_idx] * extent),
                                             recv_cnt, datatype, recv_dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
 
@@ -189,8 +183,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
                 mpi_errno = MPIR_Sched_reduce(((char *) tmp_recvbuf + newdisps[recv_idx] * extent),
                                               ((char *) tmp_results + newdisps[recv_idx] * extent),
                                               recv_cnt, datatype, op, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
 
@@ -203,8 +196,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
         /* copy this process's result from tmp_results to recvbuf */
         mpi_errno = MPIR_Sched_copy(((char *) tmp_results + disps[rank] * extent),
                                     recvcount, datatype, recvbuf, recvcount, datatype, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
     }
@@ -216,13 +208,11 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
         if (rank % 2) { /* odd */
             mpi_errno = MPIR_Sched_send(((char *) tmp_results + disps[rank - 1] * extent),
                                         recvcount, datatype, rank - 1, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {        /* even */
             mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, datatype, rank + 1, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
     }

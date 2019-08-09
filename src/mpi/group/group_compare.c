@@ -151,8 +151,7 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

@@ -91,8 +91,7 @@ int MPI_Type_create_f90_real(int precision, int range, MPI_Datatype * newtype)
                                                        f90_real_model[i].digits,
                                                        f90_real_model[i].exponent,
                                                        &f90_real_model[i].dtype);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -115,8 +114,7 @@ int MPI_Type_create_f90_real(int precision, int range, MPI_Datatype * newtype)
                                                    MPI_COMBINER_F90_REAL, range, precision,
                                                    newtype);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:

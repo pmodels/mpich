@@ -53,8 +53,7 @@ int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const vo
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* sched barrier intentionally omitted here to allow both reductions to
          * proceed in parallel */
@@ -63,15 +62,13 @@ int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const vo
         root = 0;
         mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* sched barrier intentionally omitted here to allow both reductions to
          * proceed in parallel */
@@ -80,24 +77,21 @@ int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const vo
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     MPIR_SCHED_BARRIER(s);
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
         mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     newcomm_ptr = comm_ptr->local_comm;
 
     mpi_errno = MPIR_Iscatter_sched(tmp_buf, recvcount, datatype,
                                     recvbuf, recvcount, datatype, 0, newcomm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
   fn_exit:

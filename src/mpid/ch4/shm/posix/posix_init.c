@@ -120,15 +120,13 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     choose_posix_eager();
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* There is no restriction on the tag_bits from the posix shmod side */
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
 
@@ -149,16 +147,14 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
 
     mpi_errno = MPIDI_POSIX_eager_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIU_destroy_buf_pool(MPIDI_POSIX_global.am_buf_pool);
 
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
     mpi_errno = MPIDI_POSIX_coll_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIDI_POSIX_global.local_ranks);
     MPL_free(MPIDI_POSIX_global.local_procs);
@@ -181,20 +177,17 @@ int MPIDI_POSIX_coll_init(int rank, int size)
      * intra-node collectives */
     mpi_errno =
         MPIDU_shm_seg_alloc(sizeof(int), (void **) &MPIDI_POSIX_shm_limit_counter, MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno =
         MPIDU_shm_seg_commit(&MPIDI_POSIX_global.memory, &MPIDI_POSIX_global.barrier,
                              MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
                              MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Set the counter to 0 */
     zm_atomic_store(MPIDI_POSIX_shm_limit_counter, 0, zm_memord_relaxed);

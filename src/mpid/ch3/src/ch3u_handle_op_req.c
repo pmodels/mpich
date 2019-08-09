@@ -31,9 +31,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
         /* get user request */
         MPIR_Request_get_ptr(sreq->dev.request_handle, ureq);
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

@@ -58,13 +58,11 @@ int MPIR_Topology_put(MPIR_Comm * comm_ptr, MPIR_Topology * topo_ptr)
         mpi_errno = MPIR_Comm_create_keyval_impl(MPIR_Topology_copy_fn,
                                                  MPIR_Topology_delete_fn, &MPIR_Topology_keyval, 0);
         /* Register the finalize handler */
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Add_finalize(MPIR_Topology_finalize, (void *) 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
     }
     mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, MPIR_Topology_keyval, topo_ptr, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -261,13 +259,11 @@ int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegre
     /* TODO consider dispatching via a vtable instead of doing if/else */
     if (topo_ptr->kind == MPI_DIST_GRAPH) {
         mpi_errno = MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, weighted);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (topo_ptr->kind == MPI_GRAPH) {
         int nneighbors = 0;
         mpi_errno = MPIR_Graph_neighbors_count_impl(comm_ptr, comm_ptr->rank, &nneighbors);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         *indegree = *outdegree = nneighbors;
         *weighted = FALSE;
     } else if (topo_ptr->kind == MPI_CART) {
@@ -302,13 +298,11 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
         mpi_errno = MPIR_Dist_graph_neighbors_impl(comm_ptr,
                                                    indegree, sources, inweights,
                                                    outdegree, dests, outweights);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (topo_ptr->kind == MPI_GRAPH) {
         MPIR_Assert(indegree == outdegree);
         mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, comm_ptr->rank, indegree, sources);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Memcpy(dests, sources, outdegree * sizeof(*dests));
         /* ignore inweights/outweights */
     } else if (topo_ptr->kind == MPI_CART) {
@@ -319,8 +313,7 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
 
         for (d = 0; d < topo_ptr->topo.cart.ndims; ++d) {
             mpi_errno = MPIR_Cart_shift_impl(comm_ptr, d, 1, &sources[2 * d], &sources[2 * d + 1]);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             dests[2 * d] = sources[2 * d];
             dests[2 * d + 1] = sources[2 * d + 1];

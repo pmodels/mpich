@@ -171,8 +171,7 @@ int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dat
             MPIR_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                              recvtype, comm_ptr, s);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -288,8 +287,7 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                     MPIR_Iallgather_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_recexch_halving:
@@ -297,16 +295,14 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                     MPIR_Iallgather_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                   recvbuf, recvcount, recvtype,
                                                                   comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                          recvcount, recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM_gentran_ring:
@@ -314,8 +310,7 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                     MPIR_Iallgather_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype, comm_ptr,
                                                        request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -325,21 +320,17 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
     }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Iallgather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr,
                               s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -472,8 +463,7 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     mpi_errno = MPIR_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                 recvtype, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

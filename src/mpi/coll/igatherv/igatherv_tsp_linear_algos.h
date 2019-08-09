@@ -43,8 +43,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount,
     rank = comm_ptr->rank;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
@@ -121,13 +120,11 @@ int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, int sendcount, MPI_Dat
     mpi_errno =
         MPIR_TSP_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
                                                recvcounts, displs, recvtype, root, comm, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);

@@ -43,8 +43,7 @@ int MPIR_Type_create_struct_impl(int count,
                                  array_of_blocklengths,
                                  array_of_displacements, array_of_types, &new_handle);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno,
@@ -59,8 +58,7 @@ int MPIR_Type_create_struct_impl(int count,
                                            count,       /* aints (disps) */
                                            count,       /* types */
                                            ints, array_of_displacements, array_of_types);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 

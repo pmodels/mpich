@@ -119,8 +119,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Graph_neighbors_count_impl(comm_ptr, rank, nneighbors);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 
