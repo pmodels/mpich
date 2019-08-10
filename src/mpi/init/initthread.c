@@ -764,7 +764,9 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif /* MPICH_IS_THREADED */
 
-    MPIR_T_env_init();
+    mpi_errno = MPIR_T_env_init();
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */

@@ -153,7 +153,9 @@ int MPI_Init(int *argc, char ***argv)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif /* MPICH_IS_THREADED */
 
-    MPIR_T_env_init();
+    mpi_errno = MPIR_T_env_init();
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
         threadLevel = MPI_THREAD_MULTIPLE;

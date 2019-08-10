@@ -128,7 +128,7 @@ int MPI_T_init_thread(int required, int *provided)
     ++MPIR_T_init_balance;
     if (MPIR_T_init_balance == 1) {
         MPIR_T_THREAD_CS_INIT();
-        MPIR_T_env_init();
+        mpi_errno = MPIR_T_env_init();
     }
 
     /* ... end of body of routine ... */
