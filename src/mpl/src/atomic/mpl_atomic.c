@@ -9,9 +9,10 @@
  * how to support other threading packages and lock implementations, such as the
  * BG/P lockbox. */
 
+#include "mpl_atomic.h"
+
 #ifdef MPL_HAVE_PTHREAD_H
 #include <pthread.h>
-#include "mpl_atomic.h"
 
 pthread_mutex_t *MPL_emulation_lock = NULL;
 
