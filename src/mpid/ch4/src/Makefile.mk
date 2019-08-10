@@ -12,7 +12,9 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/src
 
-noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
+noinst_HEADERS += \
+                  src/mpid/ch4/src/mpid_init.h    \
+                  src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_request.h  \
                   src/mpid/ch4/src/ch4_send.h     \
                   src/mpid/ch4/src/ch4_types.h    \
