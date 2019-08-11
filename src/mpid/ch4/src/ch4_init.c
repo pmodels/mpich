@@ -236,10 +236,14 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 
     choose_netmod();
 
-    mpi_errno = pmi_init();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
+    /**********************************************/
+    mpi_errno = MPIDU_pmi_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDU_init_shm_init(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.node_map);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /**********************************************/
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);

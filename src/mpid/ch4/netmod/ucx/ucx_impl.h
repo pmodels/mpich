@@ -89,20 +89,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
     } while (0)
 
 
-#define MPIDI_UCX_PMI_ERROR(_errno)                             \
-    do                                                          \
-    {                                                           \
-        MPIR_ERR_CHKANDJUMP4(_errno!=PMI_SUCCESS,               \
-                             mpi_errno,                         \
-                             MPI_ERR_OTHER,                     \
-                             "**ucx_nm_pmi_error",              \
-                             "**ucx_nm_pmi_error %s %d %s %s",  \
-                             __SHORT_FILE__,                    \
-                             __LINE__,                          \
-                             __func__,                            \
-                             "pmi_error");                      \
-    } while (0)
-
 #define MPIDI_UCX_MPI_ERROR(_errno)                                     \
     do                                                                  \
     {                                                                   \
