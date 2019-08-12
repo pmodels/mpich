@@ -68,8 +68,7 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
             if (request_ptrs[i] != NULL) {
                 if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
                     mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     if (MPIR_Request_is_active(request_ptrs[i])) {

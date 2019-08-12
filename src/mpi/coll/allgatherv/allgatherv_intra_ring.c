@@ -63,8 +63,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                    ((char *) recvbuf + displs[rank] * recvtype_extent),
                                    recvcounts[rank], recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     left = (comm_size + rank - 1) % comm_size;

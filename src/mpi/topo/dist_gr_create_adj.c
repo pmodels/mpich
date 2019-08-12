@@ -145,8 +145,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
     mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Create the topology structure */
     MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
@@ -178,8 +177,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     }
 
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
     MPIR_CHKPMEM_COMMIT();

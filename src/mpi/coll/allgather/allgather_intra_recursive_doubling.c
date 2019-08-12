@@ -56,9 +56,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                    ((char *) recvbuf +
                                     rank * recvcount * recvtype_extent), recvcount, recvtype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     curr_cnt = recvcount;

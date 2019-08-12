@@ -83,8 +83,7 @@ int MPIR_Neighbor_allgatherv_intra_auto(const void *sendbuf, int sendcount, MPI_
     mpi_errno = MPIR_Neighbor_allgatherv_allcomm_nb(sendbuf, sendcount, sendtype,
                                                     recvbuf, recvcounts, displs, recvtype,
                                                     comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -102,8 +101,7 @@ int MPIR_Neighbor_allgatherv_inter_auto(const void *sendbuf, int sendcount, MPI_
     mpi_errno = MPIR_Neighbor_allgatherv_allcomm_nb(sendbuf, sendcount, sendtype,
                                                     recvbuf, recvcounts, displs, recvtype,
                                                     comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -150,8 +148,7 @@ int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -261,8 +258,7 @@ int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sen
 
     mpi_errno = MPIR_Neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
                                          recvcounts, displs, recvtype, comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

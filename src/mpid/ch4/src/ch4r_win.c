@@ -272,8 +272,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
     mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_WIN(win, targets) = targets;
 
@@ -320,8 +319,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
-        if (MPI_SUCCESS != mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
 
@@ -372,13 +370,11 @@ static int win_finalize(MPIR_Win ** win_ptr)
     } while (all_completed != 1);
 
     mpi_errno = MPIDI_NM_mpi_win_free_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_free_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     MPIDIG_win_target_cleanall(win);
@@ -393,8 +389,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
                 mpi_errno = MPIDIU_destroy_shm_segment(MPIDIG_WIN(win, mmap_sz),
                                                        &MPIDIG_WIN(win, shm_segment_handle),
                                                        &MPIDIG_WIN(win, mmap_addr));
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* if shared memory allocation fails or zero size window, free the table at allocation. */
@@ -639,8 +634,7 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_SET_INFO);
 
     mpi_errno = win_set_info(win, info, FALSE /* is_init */);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
   fn_exit:
@@ -667,8 +661,7 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "no_locks", "false");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     {
 #define BUFSIZE 32
@@ -694,8 +687,7 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         }
 
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ordering", buf);
-        if (MPI_SUCCESS != mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 #undef BUFSIZE
     }
 
@@ -704,56 +696,49 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ops", "same_op_no_op");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "false");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).same_size)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "false");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).same_disp_unit)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "false");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).alloc_shm)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "false");
 
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     {   /* Keep buf as a local variable for which_accumulate_ops key. */
         char buf[128];
         get_info_accu_ops_str(MPIDIG_WIN(win, info_args).which_accumulate_ops, &buf[0],
                               sizeof(buf));
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "which_accumulate_ops", buf);
-        if (MPI_SUCCESS != mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_noncontig_dtype", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_noncontig_dtype", "false");
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).accumulate_max_bytes >= 0) {
         char buf[32];           /* make sure 64-bit integer can fit */
@@ -761,15 +746,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_max_bytes", buf);
     } else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_max_bytes", "unlimited");
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
-    if (MPI_SUCCESS != mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_GET_INFO);
@@ -825,13 +808,11 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
     win->base = base;
 
     mpi_errno = MPIDI_NM_mpi_win_create_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_create_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
@@ -856,13 +837,11 @@ int MPIDIG_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
                         MPI_ERR_RMA_FLAVOR, goto fn_fail, "**rmaflavor");
 
     mpi_errno = MPIDI_NM_mpi_win_attach_hook(win, base, size);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_attach_hook(win, base, size);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -883,25 +862,21 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
 
     mpi_errno = win_init(size, disp_unit, win_ptr, info_ptr, comm_ptr, MPI_WIN_FLAVOR_SHARED,
                          MPI_WIN_UNIFIED);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = win_shm_alloc_impl(size, disp_unit, comm_ptr, base_ptr, win_ptr, SHM_WIN_REQUIRED);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     win = *win_ptr;
     win->base = *base_ptr;
     win->size = size;
 
     mpi_errno = MPIDI_NM_mpi_win_allocate_shared_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_allocate_shared_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
@@ -924,13 +899,11 @@ int MPIDIG_mpi_win_detach(MPIR_Win * win, const void *base)
                         MPI_ERR_RMA_FLAVOR, goto fn_fail, "**rmaflavor");
 
     mpi_errno = MPIDI_NM_mpi_win_detach_hook(win, base);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_detach_hook(win, base);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -966,13 +939,11 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR
     win->size = size;
 
     mpi_errno = MPIDI_NM_mpi_win_allocate_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_allocate_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     mpi_errno = MPIR_Barrier(comm, &errflag);
@@ -1009,13 +980,11 @@ int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win *
     win->base = MPI_BOTTOM;
 
     mpi_errno = MPIDI_NM_mpi_win_create_dynamic_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_win_create_dynamic_hook(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     mpi_errno = MPIR_Barrier(comm, &errflag);

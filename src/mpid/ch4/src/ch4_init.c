@@ -395,8 +395,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     int i;
@@ -406,8 +405,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     mpi_errno = MPIDIU_build_nodemap(MPIR_Process.comm_world->rank, MPIR_Process.comm_world,
                                      MPIR_Process.comm_world->local_size,
                                      MPIDI_global.node_map[0], &MPIDI_global.max_node_id);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
@@ -460,11 +458,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* -------------------------------- */
     /* Return MPICH Parameters          */
@@ -508,12 +504,10 @@ int MPID_Finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_finalize_hook();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     int i;
@@ -673,9 +667,7 @@ int MPID_Free_mem(void *ptr)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FREE_MEM);
     mpi_errno = MPIDI_NM_mpi_free_mem(ptr);
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FREE_MEM);
@@ -739,9 +731,7 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const in
     MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
     MPIDI_COMM(newcomm_ptr, map).avtid = -1;
     mpi_errno = MPIDIU_alloc_mlut(&mlut, size);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDI_COMM(newcomm_ptr, map).size = size;
     MPIDI_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
     MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
@@ -791,14 +781,10 @@ int MPID_Type_commit_hook(MPIR_Datatype * type)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_TYPE_COMMIT_HOOK);
 
     mpi_errno = MPIDI_NM_mpi_type_commit_hook(type);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_type_commit_hook(type);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -816,14 +802,10 @@ int MPID_Type_free_hook(MPIR_Datatype * type)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_TYPE_FREE_HOOK);
 
     mpi_errno = MPIDI_NM_mpi_type_free_hook(type);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_type_free_hook(type);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -841,14 +823,10 @@ int MPID_Op_commit_hook(MPIR_Op * op)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_OP_COMMIT_HOOK);
 
     mpi_errno = MPIDI_NM_mpi_op_commit_hook(op);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_op_commit_hook(op);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -866,14 +844,10 @@ int MPID_Op_free_hook(MPIR_Op * op)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_OP_FREE_HOOK);
 
     mpi_errno = MPIDI_NM_mpi_op_free_hook(op);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_op_free_hook(op);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:

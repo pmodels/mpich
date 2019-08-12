@@ -46,16 +46,14 @@ int MPIR_Ialltoall_sched_intra_permuted_sendrecv(const void *sendbuf, int sendco
             dst = (rank + i + ii) % comm_size;
             mpi_errno = MPIR_Sched_recv(((char *) recvbuf + dst * recvcount * recvtype_extent),
                                         recvcount, recvtype, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         for (i = 0; i < ss; i++) {
             dst = (rank - i - ii + comm_size) % comm_size;
             mpi_errno = MPIR_Sched_send(((char *) sendbuf + dst * sendcount * sendtype_extent),
                                         sendcount, sendtype, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* force the (2*ss) sends/recvs above to complete before posting additional ops */

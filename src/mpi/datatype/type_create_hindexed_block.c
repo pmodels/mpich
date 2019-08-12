@@ -39,8 +39,7 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 
     mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 1,
                                        oldtype, &new_handle);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     ints[0] = count;
     ints[1] = blocklength;
@@ -50,8 +49,7 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
                                            count,       /* aints */
                                            1,   /* types */
                                            ints, array_of_displacements, &oldtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 

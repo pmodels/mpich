@@ -57,8 +57,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
         }
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* get result from local node's last processor which

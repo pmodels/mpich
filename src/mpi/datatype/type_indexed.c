@@ -221,8 +221,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 
     mpi_errno = MPIR_Type_indexed(count, array_of_blocklengths, array_of_displacements, 0,      /* displacements not in bytes */
                                   oldtype, &new_handle);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* copy all integer values into a temporary buffer; this
      * includes the count, the blocklengths, and the displacements.
@@ -243,8 +242,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
                                            0,   /* aints  */
                                            1,   /* types */
                                            ints, NULL, &oldtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 

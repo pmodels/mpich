@@ -169,8 +169,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, count, datatype, op);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

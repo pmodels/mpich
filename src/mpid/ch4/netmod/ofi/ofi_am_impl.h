@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    fi_strerror(-_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \
-                MPIR_ERR_POP(mpi_errno);                                \
+                MPIR_ERR_CHECK(mpi_errno);                               \
         } while (_ret == -FI_EAGAIN);                                   \
     } while (0)
 
@@ -199,7 +199,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,
                                                const void *am_hdr,
-                                               size_t am_hdr_sz, MPIR_Request * sreq, int is_reply)
+                                               size_t am_hdr_sz, MPIR_Request * sreq)
 {
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -211,8 +211,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -388,8 +387,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
                                         const void *am_hdr,
                                         size_t am_hdr_sz,
                                         const void *buf,
-                                        size_t count,
-                                        MPI_Datatype datatype, MPIR_Request * sreq, int is_reply)
+                                        size_t count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
@@ -420,22 +418,19 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIDIG_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr));
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!dt_contig) {
         send_buf = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
 
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = send_buf;
     } else {
@@ -451,8 +446,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
             MPIDI_OFI_am_isend_long(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                     am_hdr_sz, send_buf, data_sz, sreq);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
@@ -493,8 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
 
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
-                                      int handler_id,
-                                      const void *am_hdr, size_t am_hdr_sz, int is_reply)
+                                      int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;

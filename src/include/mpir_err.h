@@ -779,11 +779,14 @@ cvars:
     MPIR_ERR_SETFATALANDSTMT(err_,MPI_ERR_OTHER,goto fn_fail,"**fail")
 #define MPIR_ERR_POPFATAL_LABEL(err_, label_)                           \
     MPIR_ERR_SETFATALANDSTMT(err_,MPI_ERR_OTHER,goto label_,"**fail")
+#define MPIR_ERR_CHECK(err_) \
+    if (unlikely(err_)) MPIR_ERR_SETANDSTMT(err_,MPI_ERR_OTHER,goto fn_fail,"**fail")
 #else
 #define MPIR_ERR_POP(err_) goto fn_fail
 #define MPIR_ERR_POP_LABEL(err_, label_) goto label_
 #define MPIR_ERR_POPFATAL(err_) goto fn_fail
 #define MPIR_ERR_POPFATAL_LABEL(err_, label_) goto label_
+#define MPIR_ERR_CHECK(err_) if (unlikely(err_)) goto fn_fail
 #endif
 
 /* If you add any macros to this list, make sure that you update

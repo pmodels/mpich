@@ -173,8 +173,7 @@ int MPIR_Datatype_init(void)
                     (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
 
         mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i], (MPIR_Datatype *) ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Add_finalize(MPIR_Datatype_finalize, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);

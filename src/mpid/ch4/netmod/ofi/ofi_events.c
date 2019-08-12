@@ -500,8 +500,7 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
@@ -532,8 +531,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
                          "Enqueueing it to the queue.\n",
                          expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
         mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(am_hdr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -545,32 +543,28 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         case MPIDI_AMTYPE_SHORT_HDR:
             mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr->payload);
 
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
         case MPIDI_AMTYPE_SHORT:
             mpi_errno = MPIDI_OFI_handle_short_am(am_hdr);
 
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
         case MPIDI_AMTYPE_LMT_REQ:
             mpi_errno = MPIDI_OFI_handle_long_am(am_hdr);
 
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
         case MPIDI_AMTYPE_LMT_ACK:
             mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
 
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
@@ -620,8 +614,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr,
                                        MPIDI_AMTYPE_LMT_ACK);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Request_complete(rreq);        /* FIXME: Should not call MPIDI in NM ? */
     ofi_req->req_hdr->target_cmpl_cb(rreq);

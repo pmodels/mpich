@@ -42,9 +42,9 @@
 
 #define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC, \
                                     CAST_TO_ATOMIC, SUFFIX)                    \
-typedef struct MPL_atomic_ ## NAME ## _t {                                     \
+struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE volatile v;                                                    \
-} MPL_atomic_ ## NAME ## _t;                                                   \
+};                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
                                        (const MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \

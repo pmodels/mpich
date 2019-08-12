@@ -36,14 +36,12 @@ int MPIR_Iscatter_sched_inter_linear(const void *sendbuf, int sendcount, MPI_Dat
             mpi_errno =
                 MPIR_Sched_send(((char *) sendbuf + sendcount * i * extent), sendcount, sendtype, i,
                                 comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     } else {
         mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 

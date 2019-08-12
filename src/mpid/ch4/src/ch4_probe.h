@@ -28,9 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         if (!*flag)
             mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
     } else if (MPIDI_rank_is_local(source, comm)) {
@@ -39,9 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
         mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
     }
 #endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROBE_UNSAFE);
@@ -66,30 +62,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (*flag) {
             MPIDI_REQUEST(*message, is_local) = 1;
         } else {
             mpi_errno =
                 MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             if (*flag) {
                 MPIDI_REQUEST(*message, is_local) = 0;
             }
         }
     } else if (MPIDI_av_is_local(av)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (*flag)
             MPIDI_REQUEST(*message, is_local) = 1;
     } else {
         mpi_errno =
             MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (*flag)
             MPIDI_REQUEST(*message, is_local) = 0;
     }
@@ -119,8 +111,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE_SAFE);
@@ -148,8 +139,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE_SAFE);
@@ -171,14 +161,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
         mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, &flag, status);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
@@ -205,14 +191,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     while (!flag) {
         mpi_errno =
             MPIDI_improbe_safe(source, tag, comm, context_offset, av, &flag, message, status);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
@@ -237,15 +219,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     av = MPIDIU_comm_rank_to_av(comm, source);
 
     mpi_errno = MPIDI_improbe_safe(source, tag, comm, context_offset, av, flag, message, status);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!*flag) {
         mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -270,15 +248,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     av = MPIDIU_comm_rank_to_av(comm, source);
 
     mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, flag, status);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!*flag) {
         mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

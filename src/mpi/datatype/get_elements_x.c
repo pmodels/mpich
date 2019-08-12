@@ -405,8 +405,7 @@ int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Cou
 
     byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

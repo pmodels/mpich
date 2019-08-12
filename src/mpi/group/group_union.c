@@ -92,8 +92,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
     /* Allocate a new group and lrank_to_lpid array */
     mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* If this process is in group1, then we can set the rank now.
      * If we are not in this group, this assignment will set the

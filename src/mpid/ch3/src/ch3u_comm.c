@@ -64,7 +64,7 @@ int MPIDI_CH3I_Comm_init(void)
 
     /* register hooks for keeping track of communicators */
     mpi_errno = MPIDI_CH3U_Comm_register_create_hook(comm_created, NULL);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #if defined HAVE_LIBHCOLL
     {
@@ -94,14 +94,14 @@ int MPIDI_CH3I_Comm_init(void)
 #endif
 
         mpi_errno = MPIDI_CH3U_Comm_register_create_hook(hcoll_comm_create, NULL);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(hcoll_comm_destroy, NULL);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
 
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(comm_destroyed, NULL);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_INIT);
@@ -314,15 +314,15 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
 
     LL_FOREACH(destroy_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIDI_VCRT_Release(comm->dev.vcrt, comm->dev.is_disconnected);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIDI_VCRT_Release(comm->dev.local_vcrt, comm->dev.is_disconnected);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
  fn_exit:
@@ -511,7 +511,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs)
             continue;
 
         mpi_errno = nonempty_intersection(comm, new_failed_procs, &flag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (flag) {
             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,

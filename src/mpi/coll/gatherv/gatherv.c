@@ -85,8 +85,7 @@ int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     mpi_errno =
         MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                     recvtype, root, comm_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -107,8 +106,7 @@ int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     mpi_errno =
         MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                     recvtype, root, comm_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -168,8 +166,7 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
   fn_exit:

@@ -104,7 +104,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 
 	/* If we have nothing, then use the host name */
 	mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 	ifname_string = ifname;
 
 	/* If we didn't find a specific name, then try to get an IP address
@@ -112,7 +112,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 	   this platform.  Otherwise, we'll drop into the next step that uses 
 	   the ifname */
 	mpi_errno = MPIDI_CH3U_GetIPInterface( ifaddr, &ifaddrFound );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
 	/* Copy this name into the output name */

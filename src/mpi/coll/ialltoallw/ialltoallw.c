@@ -203,8 +203,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                                                               sendtypes, recvbuf, recvcounts,
                                                               rdispls, recvtypes, comm_ptr,
                                                               request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -215,8 +214,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                                                               sendtypes, recvbuf, recvcounts,
                                                               rdispls, recvtypes, comm_ptr,
                                                               request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -227,21 +225,17 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
                               recvtypes, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -357,8 +351,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 
     mpi_errno = MPIR_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                 recvcounts, rdispls, recvtypes, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

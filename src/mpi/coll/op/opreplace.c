@@ -13,9 +13,7 @@ void MPIR_REPLACE(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Localcopy(invec, *Len, *type, inoutvec, *Len, *type);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return;

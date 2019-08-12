@@ -69,8 +69,7 @@ int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Da
     mpi_errno =
         MPIR_Exscan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                              errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -104,8 +103,7 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Exscan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)

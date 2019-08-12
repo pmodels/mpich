@@ -68,8 +68,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
         /* Get the local intracommunicator */
         if (!comm_ptr->local_comm) {
             mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         newcomm_ptr = comm_ptr->local_comm;
