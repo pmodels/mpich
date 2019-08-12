@@ -45,6 +45,11 @@ lib_LTLIBRARIES = lib@MPLLIBNAME@.la
 endif !MPL_EMBEDDED_MODE
 
 # --------------------------------------------------------------------------
+.PHONY: test
+test:
+	perl unit_test.pl
+
+# --------------------------------------------------------------------------
 .PHONY: coverage
 gcov_sources = $(libmpl_la_SOURCES)
 # assumes that these sources were compiled appropriately ("-fprofile-arcs"
