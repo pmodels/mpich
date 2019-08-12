@@ -136,6 +136,7 @@ void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
     int num_children = child_ctr[rank + 1] - child_ctr[rank];
     int *my_children = &children[child_ctr[rank]];
 
+    *topotree_fail = 0;
     my_tree->parent = parent;
     my_tree->num_children = 0;
     my_tree->rank = rank;
