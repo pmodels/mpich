@@ -611,8 +611,8 @@ if [ "yes" = "$do_izem" ] ; then
 fi
 
 if [ "yes" = "$do_ucx" ] ; then
-    check_submodule_presence src/mpid/ch4/netmod/ucx/ucx
-    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
+    check_submodule_presence modules/ucx
+    externals="${externals} modules/ucx"
 fi
 
 if [ "yes" = "$do_ofi" ] ; then

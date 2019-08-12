@@ -61,13 +61,13 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     
     if test "${ucx_embedded}" = "yes" ; then
         PAC_PUSH_FLAG(CPPFLAGS)
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
+        PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
         PAC_POP_FLAG(CPPFLAGS)
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/modules/ucx/src], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/ucx/src], [CPPFLAGS])
 
-        ucxdir="src/mpid/ch4/netmod/ucx/ucx"
-        ucxlib="src/mpid/ch4/netmod/ucx/ucx/src/ucp/libucp.la"
+        ucxdir="modules/ucx"
+        ucxlib="modules/ucx/src/ucp/libucp.la"
 
         # embedded ucx is 1.4 or higher version, thus always set as defined.
         have_ucp_put_nb=yes
