@@ -28,8 +28,7 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
         /* use flat fallback */
         mpi_errno =
             MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -42,20 +41,17 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
             /* IN_PLACE and not root of reduce. Data supplied to this
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
             mpi_errno = MPIR_Ireduce_sched(recvbuf, NULL, count, datatype, op, 0, nc, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, 0, nc, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     } else {
         /* only one process on the node. copy sendbuf to recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype, recvbuf, count, datatype, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     }
@@ -63,16 +59,14 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (nrc != NULL) {
         mpi_errno = MPIR_Iallreduce_sched(MPI_IN_PLACE, recvbuf, count, datatype, op, nrc, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 

@@ -106,8 +106,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
             if (recv_size > 0) {
                 mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + relative_rank * scatter_size),
                                             recv_size, MPI_BYTE, src, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
             break;
@@ -132,8 +131,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
                 mpi_errno =
                     MPIR_Sched_send(((char *) tmp_buf + scatter_size * (relative_rank + mask)),
                                     send_size, MPI_BYTE, dst, comm_ptr, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;
             }

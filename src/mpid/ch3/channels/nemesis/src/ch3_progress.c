@@ -117,7 +117,7 @@ static int check_terminating_vcs(void)
         TERMQ_DEQUEUE(&ep);
         MPIR_Request_free(ep->req);
         mpi_errno = shm_connection_terminated(ep->vc);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPL_free(ep);
     }
     
@@ -251,22 +251,20 @@ int MPIDI_CH3I_Shm_send_progress(void)
 #endif
 
         mpi_errno = MPID_Request_complete(sreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* MT - clear the current active send before dequeuing/destroying the current request */
         MPIDI_CH3I_shm_active_send = NULL;
         MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         mpi_errno = check_terminating_vcs();
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else
     {
         int complete = 0;
         mpi_errno = sreq->dev.OnDataAvail(sreq->ch.vc, sreq, &complete);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (complete)
         {
@@ -274,7 +272,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
             MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
             mpi_errno = check_terminating_vcs();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
         
@@ -406,7 +404,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     if (sigusr1_count > my_sigusr1_count) {
         my_sigusr1_count = sigusr1_count;
         mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     
 #ifdef ENABLE_CHECKPOINTING
@@ -414,12 +412,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         if (MPIDI_nem_ckpt_start_checkpoint) {
             MPIDI_nem_ckpt_start_checkpoint = FALSE;
             mpi_errno = MPIDI_nem_ckpt_start();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         if (MPIDI_nem_ckpt_finish_checkpoint) {
             MPIDI_nem_ckpt_finish_checkpoint = FALSE;
             mpi_errno = MPIDI_nem_ckpt_finish();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 #endif
@@ -517,7 +515,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     MPIR_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
 
                     mpi_errno = pktArray[pkt->type](vc, pkt, cell_buf, &buflen, &rreq);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     if (!rreq)
                     {
@@ -533,7 +531,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     MPIR_Assert(payload_len >= 0);
 
                     mpi_errno = MPID_nem_handle_pkt(vc, cell_buf, payload_len);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPID_nem_mpich_release_fbox(cell);
 
                     /* the whole message should have been handled */
@@ -548,7 +546,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_CELL_SOURCE(cell), &vc);
 
                 mpi_errno = MPID_nem_handle_pkt(vc, cell_buf, payload_len);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPID_nem_mpich_release_cell(cell, vc);
 
                 break; /* break out of recv progress block */
@@ -561,21 +559,21 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 	/* make progress sending */
         if (MPIDI_CH3I_shm_active_send || MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq)) {
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         
         /* make progress on LMTs */
         if (MPID_nem_local_lmt_pending)
         {
             mpi_errno = MPID_nem_local_lmt_progress();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (progress_hooks[i].active == TRUE) {
                 MPIR_Assert(progress_hooks[i].func_ptr != NULL);
                 mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (made_progress)
                     MPIDI_CH3_Progress_signal_completion();
             }
@@ -739,7 +737,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 MPIR_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
 
                 mpi_errno = pktArray[pkt->type](vc, pkt, buf, &len, &rreq);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 buflen -= len;
                 buf    += len;
 
@@ -793,7 +791,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
             MPIR_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
 
             mpi_errno = pktArray[pkt->type](vc, pkt, NULL, &datalen, &rreq);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_Assert(datalen == 0);
 
             vc_ch->pending_pkt_len = 0;
@@ -874,16 +872,14 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                     MPIR_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
 #endif
                     mpi_errno = MPID_Request_complete(rreq);
-                    if (mpi_errno != MPI_SUCCESS) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     complete = TRUE;
                 }
                 else
                 {
                     mpi_errno = reqFn(vc, rreq, &complete);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
 
                 if (!complete)
@@ -951,15 +947,15 @@ int MPIDI_CH3I_Progress_init(void)
     }
     /* pkt handlers from CH3 */
     mpi_errno = MPIDI_CH3_PktHandler_Init(pktArray, PKTARRAY_SIZE);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* pkt handlers for LMT */
     mpi_errno = MPID_nem_lmt_pkthandler_init(pktArray, PKTARRAY_SIZE);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     
 #ifdef ENABLE_CHECKPOINTING
     mpi_errno = MPIDI_nem_ckpt_pkthandler_init(pktArray, PKTARRAY_SIZE);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     /* other pkt handlers */
@@ -1017,7 +1013,7 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 
     if (vc->ch.lmt_vc_terminated) {
         mpi_errno = vc->ch.lmt_vc_terminated(vc);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     
     mpi_errno = MPL_shm_hnd_finalize(&(vc->ch.lmt_copy_buf_handle));
@@ -1026,7 +1022,7 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
     
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
-    if(mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
  fn_exit:
@@ -1061,10 +1057,10 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
                connection immediately. */
             MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC terminated due to fault");
             mpi_errno = MPIDI_CH3I_Complete_sendq_with_error(vc);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno = shm_connection_terminated(vc);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* VC is terminated as a result of the close protocol.
                Wait for sends to complete, then terminate. */
@@ -1074,7 +1070,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
                    the connection. */
                 MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue empty, terminating immediately");
                 mpi_errno = shm_connection_terminated(vc);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 /* There may be sends from this VC on the send queue.
                    Since there is one send queue, we don't want to
@@ -1097,7 +1093,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
     } else {
         MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is remote");
         mpi_errno = MPID_nem_netmod_func->vc_terminate(vc);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     
  fn_exit:
@@ -1135,9 +1131,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
             
             MPIR_Request_free(req); /* ref count was incremented when added to queue */
             mpi_errno = MPID_Request_complete(req);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
             req = next;
         } else {
             prev = req;

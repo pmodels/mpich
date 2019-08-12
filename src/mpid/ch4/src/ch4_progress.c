@@ -23,8 +23,7 @@ int MPIDI_Progress_test(int flags)
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
         MPIDI_global.my_sigusr1_count = MPIDI_global.sigusr1_count;
         mpi_errno = MPIDI_check_for_failed_procs();
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
 
@@ -37,8 +36,7 @@ int MPIDI_Progress_test(int flags)
                 func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
                 MPIR_Assert(func_ptr != NULL);
                 mpi_errno = func_ptr(&made_progress);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
             } else {
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
@@ -48,8 +46,7 @@ int MPIDI_Progress_test(int flags)
     /* todo: progress unexp_list */
 
     mpi_errno = MPIDI_workq_vci_progress();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 

@@ -105,8 +105,7 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
 
     byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, &count_x);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* clip the value if it cannot be correctly returned to the user */
     *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;

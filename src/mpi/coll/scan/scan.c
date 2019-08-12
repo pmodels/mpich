@@ -80,8 +80,7 @@ int MPIR_Scan_intra_auto(const void *sendbuf, void *recvbuf, int count,
                                                errflag);
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -114,8 +113,7 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Scan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

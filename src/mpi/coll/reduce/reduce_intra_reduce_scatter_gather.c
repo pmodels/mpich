@@ -77,9 +77,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -144,8 +142,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             /* This algorithm is used only for predefined ops
              * and predefined ops are always commutative. */
             mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* change the rank */
             newrank = rank / 2;
         }
@@ -228,8 +225,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             mpi_errno = MPIR_Reduce_local((char *) tmp_buf + disps[recv_idx] * extent,
                                           (char *) recvbuf + disps[recv_idx] * extent,
                                           recv_cnt, datatype, op);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* update send_idx for next iteration */
             send_idx = recv_idx;
             mask <<= 1;

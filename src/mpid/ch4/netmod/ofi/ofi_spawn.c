@@ -187,9 +187,7 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
 
     /* set mapping for remote group */
     mpi_errno = MPIDIU_alloc_mlut(&mlut, remote_size);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
     MPIDI_COMM(tmp_comm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
     MPIDI_COMM(tmp_comm_ptr, map).size = remote_size;
     MPIDI_COMM(tmp_comm_ptr, map).avtid = -1;
@@ -260,8 +258,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                             FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), trecv);
             do {
                 mpi_errno = MPID_Progress_test();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 MPID_Wtime(&time_now);
                 MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
@@ -289,8 +286,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
         MPID_Wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_test();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPID_Wtime(&time_now);
             MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
@@ -578,8 +574,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         if (mpi_errno == MPI_ERR_PORT || mpi_errno == MPI_SUCCESS) {
             root_errno = mpi_errno;
             mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             if (root_errno != MPI_SUCCESS) {
                 mpi_errno = root_errno;
                 MPIR_ERR_POP(mpi_errno);
@@ -602,8 +597,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
 
     if (rank != root) {
         mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (root_errno != MPI_SUCCESS) {
             mpi_errno = root_errno;
             MPIR_ERR_POP(mpi_errno);

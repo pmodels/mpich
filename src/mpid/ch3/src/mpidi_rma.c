@@ -162,19 +162,16 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
            (*win_ptr)->target_lock_queue_head != NULL ||
            (*win_ptr)->current_target_lock_data_bytes != 0 || (*win_ptr)->sync_request_cnt != 0) {
         mpi_errno = wait_progress_engine();
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Barrier((*win_ptr)->comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Free window resources in lower layer. */
     if (MPIDI_CH3U_Win_hooks.win_free != NULL) {
         mpi_errno = MPIDI_CH3U_Win_hooks.win_free(win_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* dequeue window from the global list */
@@ -184,15 +181,12 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         /* this is the last window, de-register RMA progress hook */
         mpi_errno = MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Progress_hook_id);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free((*win_ptr)->basic_info_table);
     MPL_free((*win_ptr)->op_pool_start);

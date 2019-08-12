@@ -86,16 +86,14 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
      * recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (sendbuf != MPI_IN_PLACE)
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, partial_scan, count, datatype);
     else
         mpi_errno = MPIR_Localcopy(recvbuf, count, datatype, partial_scan, count, datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mask = 0x1;
     while (mask < comm_size) {
@@ -117,24 +115,19 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
 
             if (rank > dst) {
                 mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     mpi_errno = MPIR_Reduce_local(partial_scan, tmp_buf, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                partial_scan, count, datatype);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }

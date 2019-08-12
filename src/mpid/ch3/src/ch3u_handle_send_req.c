@@ -26,9 +26,7 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *comple
     else {
         mpi_errno = reqFn(vc, sreq, complete);
     }
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_SEND_REQ);
@@ -78,9 +76,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     /* mark data transfer as complete and decrement CC */
     mpi_errno = MPID_Request_complete(sreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -88,8 +84,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     pkt_flags, MPI_WIN_NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *complete = TRUE;
 
@@ -139,9 +134,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIR_Assert(win_ptr->at_completion_counter >= 0);
 
     mpi_errno = MPID_Request_complete(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -149,8 +142,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     pkt_flags, MPI_WIN_NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *complete = TRUE;
 
@@ -203,9 +195,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Assert(win_ptr->at_completion_counter >= 0);
 
     mpi_errno = MPID_Request_complete(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -213,8 +203,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     pkt_flags, MPI_WIN_NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *complete = TRUE;
 
@@ -266,9 +255,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Assert(win_ptr->at_completion_counter >= 0);
 
     mpi_errno = MPID_Request_complete(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -276,8 +263,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
      * completed will prevent us from processing the same request twice. */
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     pkt_flags, MPI_WIN_NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *complete = TRUE;
 

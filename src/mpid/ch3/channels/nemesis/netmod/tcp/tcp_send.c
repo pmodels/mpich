@@ -93,8 +93,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
             MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                           vc->pg_rank);
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;       /* this vc is closed now, just bail out */
         }
         if (offset == -1) {
@@ -109,8 +108,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
                 MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                               vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;   /* this vc is closed now, just bail out */
             }
         }
@@ -141,9 +139,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
             if (!reqFn) {
                 MPIR_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete(sreq);
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPIR_ERR_POP(mpi_errno);
-                }
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                 MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
                 continue;
@@ -151,8 +147,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
 
             complete = 0;
             mpi_errno = reqFn(vc, sreq, &complete);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             if (complete) {
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
@@ -204,8 +199,7 @@ int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc)
     if (!MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
         SET_PLFD(vc_tcp);
         mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_fail:
@@ -228,8 +222,7 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const MPL_IOV * iov, int iov
         MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                       vc->pg_rank);
         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_fail;
     }
     if (*offset_ptr == -1) {
@@ -242,8 +235,7 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const MPL_IOV * iov, int iov
             MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail",
                           "**comm_fail %d", vc->pg_rank);
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             goto fn_fail;
         }
     }
@@ -265,15 +257,12 @@ static inline int tcp_complete_sreq(MPIDI_VC_t * vc, MPIR_Request * sreq, int *c
     if (!reqFn) {
         MPIR_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
         mpi_errno = MPID_Request_complete(sreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         *complete_ptr = 1;
     } else {
         *complete_ptr = 0;
         mpi_errno = reqFn(vc, sreq, complete_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -304,8 +293,7 @@ static inline int tcp_enqueue_sreq(MPIDI_VC_t * vc, MPIR_Request * sreq, bool pa
                 /* there are other sends in the queue before this one: try to send from the queue */
                 MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
                 mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else {
             MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
@@ -345,8 +333,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
                 iov[1].MPL_IOV_LEN = data_sz;
 
                 mpi_errno = tcp_large_writev(vc, iov, 2, &offset);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz) {
@@ -359,8 +346,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
              * appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -393,8 +379,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     }
 
     mpi_errno = tcp_enqueue_sreq(vc, sreq, false);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *sreq_ptr = sreq;
 
@@ -432,8 +417,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
             iov[1].MPL_IOV_LEN = data_sz;
 
             mpi_errno = tcp_large_writev(vc, iov, 2, &offset);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
 
             if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz) {
@@ -446,8 +430,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
         /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
          * appropriate error code. */
         mpi_errno = MPID_nem_tcp_connect(vc);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* create and enqueue request */
@@ -479,8 +462,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
     }
 
     mpi_errno = tcp_enqueue_sreq(vc, sreq, true);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *sreq_ptr = sreq;
 
@@ -522,16 +504,14 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
                 iov_n++;
 
                 mpi_errno = tcp_large_writev(vc, iov, iov_n, &offset);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz) {
                     /* sent whole message, complete request */
                     int complete = 0;
                     mpi_errno = tcp_complete_sreq(vc, sreq, &complete);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (complete) {
                         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
@@ -543,8 +523,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
              * appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -578,8 +557,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     sreq->dev.iov_offset = 0;
 
     mpi_errno = tcp_enqueue_sreq(vc, sreq, false);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
@@ -618,16 +596,14 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
                 }
 
                 mpi_errno = tcp_large_writev(vc, tcp_iov, tcp_iov_n, &offset);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz) {
                     /* sent whole message, complete request */
                     int complete = 0;
                     mpi_errno = tcp_complete_sreq(vc, sreq, &complete);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (complete) {
                         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
@@ -639,8 +615,7 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
              * appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -682,8 +657,7 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     sreq->dev.iov_offset = 0;
 
     mpi_errno = tcp_enqueue_sreq(vc, sreq, false);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_ISENDIOV);
@@ -739,16 +713,14 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
         if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
             if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
                 mpi_errno = tcp_large_writev(vc, iov, iov_n, &offset);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write noncontig %" PRIdPTR, offset);
             }
         } else {
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
              * appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -778,8 +750,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
         /* sent whole iov, complete request */
         int req_complete = 0;
         mpi_errno = tcp_complete_sreq(vc, sreq, &req_complete);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (req_complete) {
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
@@ -793,8 +764,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
     sreq->dev.iov_offset = 0;
 
     mpi_errno = tcp_enqueue_sreq(vc, sreq, false);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
@@ -822,9 +792,7 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
         req->status.MPI_ERROR = req_errno;
 
         mpi_errno = MPID_Request_complete(req);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* paused send queue */
@@ -833,9 +801,7 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
         req->status.MPI_ERROR = req_errno;
 
         mpi_errno = MPID_Request_complete(req);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

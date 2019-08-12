@@ -129,8 +129,7 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, rank, maxneighbors, neighbors);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     /* ... end of body of routine ... */

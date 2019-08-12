@@ -35,10 +35,9 @@ typedef struct MPIDI_POSIX_fbox_arrays {
 
 typedef struct MPIDI_POSIX_eager_fbox_control {
 
+    int num_seg;
     MPIDU_shm_seg_t memory;
     MPIDU_shm_seg_info_t *seg;
-
-    int num_seg;
 
     MPIDI_POSIX_fbox_arrays_t mailboxes;        /* The array of buffers that make up the total collection
                                                  * of mailboxes */

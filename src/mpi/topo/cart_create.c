@@ -64,8 +64,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             MPIR_Comm *comm_self_ptr;
             MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
             mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &newcomm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the topology structure */
             MPIR_CHKPMEM_MALLOC(cart_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
@@ -98,8 +97,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
              * processes */
             mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims, (const int *) dims,
                                            (const int *) periods, &rank);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the new communicator with split, since we need to reorder
              * the ranks (including the related internals, such as the connection
@@ -107,13 +105,11 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             mpi_errno = MPIR_Comm_split_impl(comm_ptr,
                                              rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
                                              rank, &newcomm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
         } else {
             mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, newsize, &newcomm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             rank = comm_ptr->rank;
         }
 
@@ -151,8 +147,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
     /* Place this topology onto the communicator */
     mpi_errno = MPIR_Topology_put(newcomm_ptr, cart_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
 
@@ -176,14 +171,12 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         mpi_errno = comm_ptr->topo_fns->cartCreate(comm_ptr, ndims,
                                                    (const int *) dims,
                                                    (const int *) periods, reorder, comm_cart);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Cart_create(comm_ptr, ndims,
                                      (const int *) dims, (const int *) periods, reorder, comm_cart);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

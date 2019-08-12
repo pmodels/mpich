@@ -54,8 +54,7 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPIR_Tre
 
         val = (val + root) % nranks;
         mpi_errno = tree_add_child(ct, val);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -145,8 +144,7 @@ int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
                                 (MPL_DBG_FDEST, "adding child %d to rank %d",
                                  (crank + root) % nranks, rank));
                 mpi_errno = tree_add_child(ct, (crank + root) % nranks);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             crank += MPL_ipow(k, maxstep - i - 1);
         }

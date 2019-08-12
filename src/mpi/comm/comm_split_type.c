@@ -45,8 +45,7 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     /* split out the undefined processes */
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (split_type == MPI_UNDEFINED) {
         *newcomm_ptr = NULL;
@@ -56,8 +55,7 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, newcomm_ptr);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (comm_ptr)
@@ -78,8 +76,7 @@ int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key
     /* split out the undefined processes */
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (split_type == MPI_UNDEFINED) {
         *newcomm_ptr = NULL;
@@ -87,12 +84,10 @@ int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key
     }
 
     mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (comm_ptr)
@@ -192,8 +187,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
 
   split_id:
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -233,8 +227,7 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
         color = MPI_UNDEFINED;
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -308,8 +301,7 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -349,8 +341,7 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -422,8 +413,7 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
         color = MPI_UNDEFINED;
     }
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -495,8 +485,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                                                        MPIR_Process.netloc_topology, network_node,
                                                        &node_index, &num_nodes);
 
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
             num_processes_at_node[node_index] = 1;
@@ -595,8 +584,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
         }
 
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* There are more processes in the subset than requested within the node.
          * Split further inside each node */
@@ -679,8 +667,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                                                  num_hwloc_objs_at_depth, subcomm_min_size);
 
                 mpi_errno = MPIR_Comm_split_impl(node_comm, color, key, newcomm_ptr);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPL_free(processes_cpuset);
                 MPL_free(parent_idx);
                 MPL_free(obj_idx_at_depth);
@@ -797,16 +784,14 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
      * comparison is successful on all processes. */
     mpi_errno =
         MPID_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     hintval_equal = (hintval_size == hintval_size_max);
 
     mpi_errno =
         MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!hintval_equal_global)
         goto fn_exit;
@@ -819,16 +804,14 @@ static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *inf
     mpi_errno =
         MPID_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
                        MPI_MAX, comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
 
     mpi_errno =
         MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPL_free(hintval_global);
@@ -851,8 +834,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     *newcomm_ptr = NULL;
 
     mpi_errno = MPIR_Comm_split_type_node(user_comm_ptr, split_type, key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (comm_ptr == NULL) {
         MPIR_Assert(split_type == MPI_UNDEFINED);
@@ -870,8 +852,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 
     mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* if all processes do not have the same hintval, skip
      * topology-aware comm split */
@@ -899,8 +880,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         else
             mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
 
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Comm_free_impl(comm_ptr);
 
@@ -954,8 +934,7 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     /* split out the undefined processes */
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (split_type == MPI_UNDEFINED) {
         *newcomm_ptr = NULL;
@@ -964,13 +943,11 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno =
             MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
     }
@@ -993,8 +970,7 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
     MPIR_Comm *dummycomm_ptr;
 
     mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
     *newcomm_ptr = dummycomm_ptr;
@@ -1028,8 +1004,7 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     *newcomm_ptr = NULL;
     mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (info_args_are_equal && flag) {
         MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hintval, newcomm_ptr);
@@ -1045,8 +1020,7 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
 
         mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* if all processes have the same hintval, perform
          * topology-aware comm split */
@@ -1077,8 +1051,7 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     } else {
         mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -1162,8 +1135,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, split_type, key, info_ptr, &newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (newcomm_ptr)
         MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     else

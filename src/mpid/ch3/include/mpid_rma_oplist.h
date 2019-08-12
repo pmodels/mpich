@@ -282,8 +282,7 @@ static inline int MPIDI_CH3I_Win_create_target(MPIR_Win * win_ptr, int target_ra
     t = MPIDI_CH3I_Win_target_alloc(win_ptr);
     if (t == NULL) {
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_target_aggressive(win_ptr, &t);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     t->target_rank = target_rank;
@@ -336,12 +335,10 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t *
     MPIDI_RMA_Target_t *target = NULL;
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, op->target_rank, &target);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (target == NULL) {
         mpi_errno = MPIDI_CH3I_Win_create_target(win_ptr, op->target_rank, &target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
             win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED) {
@@ -419,8 +416,7 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPIR_Win * win_ptr, MPI
     DL_DELETE(slot->target_list_head, e);
 
     mpi_errno = MPIDI_CH3I_Win_target_free(win_ptr, e);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -437,8 +433,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPIR_Win * win_ptr)
         for (target = win_ptr->slots[i].target_list_head; target;) {
             next_target = target->next;
             mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             target = next_target;
         }
     }
@@ -462,8 +457,7 @@ static inline int MPIDI_CH3I_Win_get_op(MPIR_Win * win_ptr, MPIDI_RMA_Op_t ** e)
             break;
 
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     (*e) = new_ptr;

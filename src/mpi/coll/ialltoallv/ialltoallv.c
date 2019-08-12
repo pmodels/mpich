@@ -227,8 +227,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                                                                 sendtype, recvbuf, recvcounts,
                                                                 rdispls, recvtype, comm_ptr,
                                                                 request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -238,8 +237,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                         MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
                                                               rdispls, recvtype, comm_ptr, request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -249,8 +247,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                         MPIR_Ialltoallv_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
                                                               rdispls, recvtype, comm_ptr, request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     goto fn_exit;
                 }
                 break;
@@ -266,21 +263,17 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                               recvtype, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -416,8 +409,7 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
     mpi_errno = MPIR_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                 recvcounts, rdispls, recvtype, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

@@ -22,9 +22,9 @@
  * current platform, even though this may not be true at all. */
 
 #define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME)                                \
-typedef struct MPL_atomic_ ## NAME ## _t {                                     \
+struct MPL_atomic_ ## NAME ## _t {                                             \
     TYPE volatile v;                                                           \
-} MPL_atomic_ ## NAME ## _t;                                                   \
+};                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
                                        (const MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \

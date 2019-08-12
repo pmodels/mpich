@@ -38,8 +38,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     if (!comm_ptr->remote_group) {
         n = comm_ptr->remote_size;
         mpi_errno = MPIR_Group_create(n, group_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n; i++) {
             (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, TRUE);
@@ -139,8 +138,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr, &group_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *group = group_ptr->handle;
 

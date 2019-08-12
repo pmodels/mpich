@@ -422,7 +422,7 @@ int MPIDI_nem_ckpt_start(void)
 
         if (!vc_ch->is_local) {
             mpi_errno = vc_ch->ckpt_pause_send_vc(vc);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     
@@ -449,7 +449,7 @@ int MPIDI_nem_ckpt_finish(void)
        channels, just make sure no one is sending or receiving during
        the checkpoint */
     mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, MPID_nem_mem_region.num_local);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     do {
         ret = sem_post(&ckpt_sem);
@@ -462,7 +462,7 @@ int MPIDI_nem_ckpt_finish(void)
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIR_Strerror(errno));
 
     mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, MPID_nem_mem_region.num_local);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (ckpt_result == CKPT_CONTINUE) {
         for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
@@ -476,7 +476,7 @@ int MPIDI_nem_ckpt_finish(void)
             vc_ch = &vc->ch;
             if (!vc_ch->is_local) {
                 mpi_errno = vc_ch->ckpt_continue_vc(vc);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -503,7 +503,7 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
 
     if (!checkpointing) {
         mpi_errno = MPIDI_nem_ckpt_start();
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Assert(current_wave == ckpt_pkt->wave);

@@ -30,8 +30,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
         mpi_errno = MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator gather, and then sends the data
@@ -54,8 +53,7 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
         /* all processes in remote group form new intracommunicator */
         if (!comm_ptr->local_comm) {
             mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         newcomm_ptr = comm_ptr->local_comm;
@@ -64,14 +62,12 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
         mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
                                        tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
                                        0, newcomm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {
             mpi_errno = MPIR_Sched_send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
                                         root, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

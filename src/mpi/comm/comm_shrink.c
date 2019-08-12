@@ -64,8 +64,7 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
          * with failed procs */
 
         mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         if (MPIR_Group_empty != global_failed)
             MPIR_Group_release(global_failed);
 
@@ -172,8 +171,7 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
 
     /* ... body of routine ... */
     mpi_errno = MPIR_Comm_shrink(comm_ptr, &newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (newcomm_ptr)
         MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);

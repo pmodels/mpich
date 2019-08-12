@@ -98,8 +98,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
 
     *message = MPI_MESSAGE_NULL;
     mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &msgp, status);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(msgp != NULL);
     *message = msgp->handle;

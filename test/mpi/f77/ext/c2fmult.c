@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Cancel(&cRequest);
-    MPI_Test(&cRequest, &tFlag, &st);
+    MPI_Wait(&cRequest, &st);
     MPI_Test_cancelled(&st, &tFlag);
     if (!tFlag) {
         errs++;

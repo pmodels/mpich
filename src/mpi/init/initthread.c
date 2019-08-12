@@ -407,8 +407,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 #if defined(MPICH_IS_THREADED)
     mpi_errno = thread_cs_init();
     cs_initialized = true;
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     /* FIXME: Move to os-dependent interface? */
@@ -574,13 +573,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;

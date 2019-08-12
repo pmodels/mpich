@@ -65,8 +65,7 @@ int MPI_Info_create(MPI_Info * info)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Info_alloc(&info_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *info = info_ptr->handle;
     /* (info_ptr)->cookie = MPIR_INFO_COOKIE; */

@@ -40,8 +40,7 @@ int MPIR_Type_create_indexed_block_impl(int count,
 
     mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 0,   /* dispinbytes */
                                        oldtype, &new_handle);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 2) * sizeof(int), mpi_errno,
                                "content description", MPL_MEM_BUFFER);
@@ -57,8 +56,7 @@ int MPIR_Type_create_indexed_block_impl(int count,
                                            0,   /* aints */
                                            1,   /* types */
                                            ints, NULL, &oldtype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 

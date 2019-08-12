@@ -36,8 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
         mpi_errno = MPIDIG_compute_acc_op(origin_addr, origin_count, origin_datatype, target_addr,
                                           target_count, target_datatype, op,
                                           MPIDIG_ACC_SRCBUF_DEFAULT);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         goto fn_exit;
     }
@@ -71,8 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     MPI_Aint actual_pack_bytes;
     mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0,
                                   packed_buf, total_len, &actual_pack_bytes);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == total_len);
 
     mpi_errno = MPIDIG_compute_acc_op((void *) packed_buf, (int) predefined_dtp_count, basic_type,
@@ -219,16 +217,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
 
     mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
                                target_datatype, result_addr, result_count, result_datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (op != MPI_NO_OP) {
         mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count,
                                                    origin_datatype,
                                                    (char *) base + disp_unit * target_disp,
                                                    target_count, target_datatype, op);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -368,8 +364,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
 
     mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
@@ -474,8 +469,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
     mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
@@ -524,8 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
@@ -636,8 +629,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
 
     mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);

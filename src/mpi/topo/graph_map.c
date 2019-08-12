@@ -50,14 +50,12 @@ int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
         /* --BEGIN USEREXTENSION-- */
         mpi_errno = comm_ptr->topo_fns->graphMap(comm_ptr, nnodes,
                                                  (const int *) indx, (const int *) edges, newrank);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         /* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Graph_map(comm_ptr, nnodes,
                                    (const int *) indx, (const int *) edges, newrank);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -140,8 +138,7 @@ int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[]
 
     mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, (const int *) indx,
                                     (const int *) edges, newrank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

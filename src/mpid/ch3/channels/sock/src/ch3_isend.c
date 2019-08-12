@@ -59,14 +59,11 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                     if (!reqFn) {
                         MPIR_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
-                        if (mpi_errno != MPI_SUCCESS) {
-                            MPIR_ERR_POP(mpi_errno);
-                        }
+                        MPIR_ERR_CHECK(mpi_errno);
                     } else {
                         int complete;
                         mpi_errno = reqFn(vc, sreq, &complete);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         if (!complete) {
                             MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
                             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
@@ -153,9 +150,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
         update_request(sreq, hdr, hdr_sz, 0);
         MPIDI_CH3I_SendQ_enqueue(vcch, sreq);
         mpi_errno = MPIDI_CH3I_VC_post_connect(vc);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (vcch->state != MPIDI_CH3I_VC_STATE_FAILED) {
         /* Unable to send data at the moment, so queue it for later */
         MPL_DBG_VCUSE(vc, "still connecting. Enqueuing request");

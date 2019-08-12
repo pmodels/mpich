@@ -23,7 +23,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
      * creating a request unnecessarily for messages that are already present
      * and eligible for immediate completion. */
     mpi_errno = MPID_Imrecv(buf, count, datatype, message, rreq);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 fn_exit:
     return mpi_errno;

@@ -236,9 +236,7 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
     }
 
     mpi_errno = MPIR_Localcopy(src, scount, stype, dest, dcount, dtype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -273,9 +271,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 
     mpi_errno = shm_copy(origin_addr, origin_count, origin_datatype,
                          (char *) base + disp_unit * target_disp, target_count, target_datatype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
@@ -330,8 +326,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         goto fn_exit;
     }
@@ -383,8 +378,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_free(packed_buf);
     }
@@ -441,9 +435,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     /* Perform the local get first, then the accumulate */
     mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
                          result_addr, result_count, result_datatype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
 
@@ -455,8 +447,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         goto fn_exit;
     }
@@ -500,8 +491,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
                                      target_count, target_datatype, stream_offset, op,
                                      MPIDI_RMA_ACC_SRCBUF_PACKED);
 
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_free(packed_buf);
     }
@@ -549,9 +539,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
 
     mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
                          origin_addr, origin_count, origin_datatype);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
