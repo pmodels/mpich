@@ -1333,9 +1333,9 @@ elif test "$with_hwloc_prefix" = "embedded" ; then
    # Disable visibility when setting up hwloc
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
-   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
+   HWLOC_SETUP_CORE([modules/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
    if test "$have_hwloc" = "yes" ; then
-      hwlocsrcdir="src/hwloc"
+      hwlocsrcdir="modules/hwloc"
       hwloclib="$HWLOC_EMBEDDED_LDADD"
       PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
       PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
