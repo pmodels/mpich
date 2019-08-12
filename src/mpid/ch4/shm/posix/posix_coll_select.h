@@ -101,7 +101,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
     }
 
     /* Choose from pt2pt based algorithms */
-    pof2 = comm->pof2;
+    pof2 = comm->coll.pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
         return &MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt;
@@ -147,7 +147,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
 
     /* Choose from pt2pt based algorithms */
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    pof2 = comm->pof2;
+    pof2 = comm->coll.pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         return &MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_cnt;
