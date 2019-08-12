@@ -218,7 +218,6 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         MPIR_Group_add_ref(group_ptr);
         (*newcomm_ptr)->context_id = (*newcomm_ptr)->recvcontext_id;
         (*newcomm_ptr)->remote_size = (*newcomm_ptr)->local_size = n;
-        (*newcomm_ptr)->pof2 = MPL_pof2(n);
 
         /* Setup the communicator's network address mapping.  This is for the remote group,
          * which is the same as the local group for intracommunicators */
@@ -308,7 +307,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
         MPIR_Group_add_ref(group_ptr);
 
         (*newcomm_ptr)->local_size = group_ptr->size;
-        (*newcomm_ptr)->pof2 = MPL_pof2((*newcomm_ptr)->local_size);
         (*newcomm_ptr)->remote_group = 0;
 
         (*newcomm_ptr)->is_low_group = comm_ptr->is_low_group;
