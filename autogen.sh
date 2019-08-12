@@ -616,8 +616,8 @@ if [ "yes" = "$do_ucx" ] ; then
 fi
 
 if [ "yes" = "$do_ofi" ] ; then
-    check_submodule_presence src/mpid/ch4/netmod/ofi/libfabric
-    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+    check_submodule_presence modules/libfabric
+    externals="${externals} modules/libfabric"
 fi
 
 if [ "yes" = "$do_json" ] ; then
