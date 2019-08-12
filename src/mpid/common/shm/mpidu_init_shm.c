@@ -83,7 +83,7 @@ int MPIDU_Init_shm_put(void *orig, size_t len)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_PUT);
 
     MPIR_Assert(len <= sizeof(MPIDU_Init_shm_block_t));
-    MPIR_Memcpy(baseaddr + my_local_rank * sizeof(MPIDU_Init_shm_block_t), orig, len);
+    MPIR_Memcpy((char *) baseaddr + my_local_rank * sizeof(MPIDU_Init_shm_block_t), orig, len);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_PUT);
 
@@ -98,7 +98,7 @@ int MPIDU_Init_shm_get(int local_rank, void **target)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_GET);
 
     MPIR_Assert(local_rank < local_size);
-    *target = baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
+    *target = (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_GET);
 
