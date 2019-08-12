@@ -371,7 +371,7 @@ out:
 err_obj:
     dfs_release(cont->obj);
     if (fd->access_mode & ADIO_CREATE)
-        dfs_remove(cont->dfs, NULL, cont->obj_name, true);
+        dfs_remove(cont->dfs, NULL, cont->obj_name, true, NULL);
 err_dfs:
     dfs_umount(cont->dfs);
 err_cont:
@@ -600,7 +600,7 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     }
 
     /* Remove the file from the flat namespace */
-    rc = dfs_remove(dfs, NULL, obj_name, true);
+    rc = dfs_remove(dfs, NULL, obj_name, true, NULL);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
         goto out_dfs;
