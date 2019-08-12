@@ -312,6 +312,26 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
     /* --END ERROR HANDLING-- */
 }
 
+static inline void MPIR_NODEMAP_update_cliques(int sz, int *node_map, int *max_node_id)
+{
+    if (MPIR_CVAR_NUM_CLIQUES > 1) {
+        for (i = 0; i < sz; ++i) {
+            if (i % MPIR_CVAR_NUM_CLIQUES) {
+                node_map[i] += (*max_node_id + 1) * (i % MPIR_CVAR_NUM_CLIQUES);
+            }
+        }
+        *max_node_id = (*max_node_id + 1) * MPIR_CVAR_NUM_CLIQUES - 1;
+    } else if (odd_even_cliques) {
+        /* Create new processes for all odd numbered processes. This
+         * may leave nodes ids with no processes assigned to them, but
+         * I think this is OK */
+        for (i = 0; i < sz; ++i)
+            if (i & 0x1)
+                node_map[i] += *max_node_id + 1;
+        *max_node_id = *max_node_id * 2 + 1;
+    }
+}
+
 /* Fills in the node_id info from PMI info.  Adapted from MPIU_Get_local_procs.
    This function is collective over the entire PG because PMI_Barrier is called.
 
@@ -529,22 +549,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     }
 
   cliques:
-    if (MPIR_CVAR_NUM_CLIQUES > 1) {
-        for (i = 0; i < sz; ++i) {
-            if (i % MPIR_CVAR_NUM_CLIQUES) {
-                out_nodemap[i] += (g_max_node_id + 1) * (i % MPIR_CVAR_NUM_CLIQUES);
-            }
-        }
-        g_max_node_id = (g_max_node_id + 1) * MPIR_CVAR_NUM_CLIQUES - 1;
-    } else if (odd_even_cliques) {
-        /* Create new processes for all odd numbered processes. This
-         * may leave nodes ids with no processes assigned to them, but
-         * I think this is OK */
-        for (i = 0; i < sz; ++i)
-            if (i & 0x1)
-                out_nodemap[i] += g_max_node_id + 1;
-        g_max_node_id = g_max_node_id * 2 + 1;
-    }
+    MPIR_NODEMAP_update_cliques(sz, out_nodemap, &g_max_node_id);
     *out_max_node_id = g_max_node_id;
 #endif
 
