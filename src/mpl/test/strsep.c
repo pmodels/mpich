@@ -8,7 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "mpl.h"
+
+/* TEST: MPL_strsep.h */
+/* CFLAGS: -I include */
+/* SOURCE: src/str/mpl_str.c */
+
+#include "mpl_str.h"
 
 int main(void)
 {
