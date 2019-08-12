@@ -4,8 +4,8 @@
 [submodule "modules/libfabric"]
 	path = modules/libfabric
 	url = https://github.com/pmodels/libfabric
-[submodule "src/hwloc"]
-	path = src/hwloc
+[submodule "modules/hwloc"]
+	path = modules/hwloc
 	url = https://github.com/pmodels/hwloc
 [submodule "modules/ucx"]
 	path = modules/ucx
