@@ -606,8 +606,8 @@ check_submodule_presence src/hwloc
 externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c modules/yaksa"
 
 if [ "yes" = "$do_izem" ] ; then
-    check_submodule_presence src/izem
-    externals="${externals} src/izem"
+    check_submodule_presence modules/izem
+    externals="${externals} modules/izem"
 fi
 
 if [ "yes" = "$do_ucx" ] ; then
