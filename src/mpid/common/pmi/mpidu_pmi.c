@@ -127,16 +127,119 @@ void MPIDU_pmi_finalize(void)
 
 /**** pmi allgather *************/
 
-int MPIDU_pmi_allgather(const void *sendbuf, int size, void *recvbuf, PMI_DOMAIN domain)
+static int pmi_algather_index;
+int MPIDU_pmi_allgather(const void *sendbuf, int bufsize, void *recvbuf, PMI_DOMAIN domain)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rc, pmi_errno;
 
+    int myrank = MPIR_Process.rank;
+    int sz = MPIR_Process.size;
+    int *node_map = MPIR_Process.node_map;
+
+    int local_size, local_rank, local_leader;
+    MPIR_NODEMAP_get_local_info(myrank, sz, node_map, &local_size, &local_rank, &local_leader);
+
+    if (domain == PMI_DOMAIN_NODE_ROOTS && myrank != local_leader) {
+        /* not a node root, just participate in the barrier, unless we have pmi root-only barrier */
+        mpi_errno = MPIDU_pmi_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    if (domain == PMI_DOMAIN_NODE_ROOTS) {
+        sz = MPIR_Process.max_node_id + 1;
+    }
+
+    /**** Prepare key/val **********/
+    char key[50];
+    pmi_algather_index++;
+#if !defined USE_PMIX_API
+    if (domain == PMI_DOMAIN_ALL) {
+        sprintf(key, "allgather-%d-%d", pmi_algather_index, myrank);
+    } else if (domain == PMI_DOMAIN_NODE_ROOTS) {
+        sprintf(key, "allgather-%d-%d", pmi_algather_index, node_map[myrank]);
+    }
+#else
+    sprintf(key, "allgather-%d", pmi_algather_index);
+#endif 
+
+    char *val = MPL_malloc(pmi_val_size, MPL_MEM_ADDRESS);
+    memset(val, 0, pmi_val_size);
+    char *val_p = val;
+    int rem = pmi_val_size;
+    rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) sendbuf, bufsize);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
+    MPIR_Assert(rem >= 0);
+
+    /**** Put key/val **********/
 #if defined USE_PMI1_API
+    pmi_errno = PMI_KVS_Put(pmi_kvs_name, key, sendbuf);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+    pmi_errno = PMI_KVS_Commit(pmi_kvs_name);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+
 #elif defined USE_PMI2_API
+    pmi_errno = PMI2_KVS_Put(key, val);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
+
 #elif defined USE_PMIX_API
+    pmix_value_t value, *pvalue;
+    pmix_info_t *info;
+    pmix_proc_t proc;
+
+    value.type = PMIX_STRING;
+    value.data.string = val;
+    pmi_errno = PMIx_Put(PMIX_LOCAL, "");
 #endif
 
+    /**** Barrier **********/
+    mpi_errno = MPIDU_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /**** Retrieve key/val **********/
+    int i;
+    for (i = 0; i < sz; i++) {
+#if defined USE_PMI1_API
+        sprintf(key, "allgather-%d-%d", pmi_algather_index, i);
+        pmi_errno = PMI_KVS_Get(pmi_kvs_name, key, val, pmi_val_size);
+        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+        int out_len;
+        rc = MPL_str_get_binary_arg(val, "mpi", (char *)recvbuf + (i * bufsize), bufsize, &out_len);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+#elif defined USE_PMI2_API
+        sprintf(key, "allgather-%d-%d", pmi_algather_index, i);
+        int out_len;
+        pmi_errno = PMI2_KVS_Get(NULL, -1, key, val, PMI2_MAX_VALLEN, &out_len);
+        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget");
+        rc = MPL_str_get_binary_arg(val, "mpi", (char *)recvbuf + (i * bufsize), bufsize, &out_len);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+#elif defined USE_PMIX_API
+        pmix_proc_t proc;
+        PMIX_PROC_CONSTRUCT(&proc);
+        if (domain == PMI_DOMAIN_ALL) {
+            proc.rank = i;
+        } else if (domain == PMI_DOMAIN_NODE_ROOTS) {
+            int j;
+            proc.rank = -1;
+            for (j = 0; j < MPIR_Process.size; j++) {
+                if (node_map[j] == i) {
+                    proc.rank = j;
+                    break;
+                }
+            }
+            MPIR_Assert(proc.rank >= 0);
+        }
+        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
+        rc = MPL_str_get_binary_arg(pval->data.string, "mpi", (char *)recvbuf + (i * bufsize), bufsize, &out_len);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+        PMIX_VALUE_RELEASE(pvalue);
+#endif
+    }
+
   fn_exit:
+    MPL_free(val);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -239,7 +342,7 @@ void MPIDU_pmi_check_for_failed_procs(char **failed_procs_string_ptr)
 
 #if defined USE_PMI1_API
 /* this function is not used in pmi2 or pmix */
-static int pmi_build_nodemap_fallback()
+static int pmi_build_nodemap_fallback(int *out_nodemap, int *out_max_node_id)
 {
     mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -273,12 +376,24 @@ static int pmi_build_nodemap_fallback()
             node_names[max_node_id + 1][0] = '\0';
         out_nodemap[i] = j;
     }
+
+    *out_max_node_id = max_node_id;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif
 
 static int MPIDU_pmi_build_node_map()
 {
+    int myrank = MPIR_Process.rank;
+    int sz = MPIR_Process.size;
+    int *out_nodemap = MPL_malloc(sizeof(int) * sz, MPL_MEM_GROUP);
+    int max_node_id = 0;
+
     /* See if the user wants to override our default values */
     MPL_env2int("PMI_VERSION", &pmi_version);
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
@@ -290,11 +405,19 @@ static int MPIDU_pmi_build_node_map()
 
     /* See if process manager supports PMI_process_mapping keyval */
     if (pmi_version == 1 && pmi_subversion == 1) {
-        pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
-        if (pmi_errno) {
-            mpi_errno = pmi_build_nodemap_fallback();
-            goto fn_exit;
+        char *process_mapping = MPL_malloc(pmi_val_size, MPL_MEM_STRINGS);
+        pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", process_mapping, pmi_val_size);
+        if (pmi_errno == PMI_SUCCESS) {
+            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap,
+                                                   &max_node_id, &did_map);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+                                 "unable to populate node ids from PMI_process_mapping");
+        } else {
+            mpi_errno = pmi_build_nodemap_fallback(out_nodemap, &max_node_id);
+            MPIR_ERR_CHECK(mpi_errno);
         }
+        MPL_free(process_mapping);
     }
 #elif defined USE_PMI2_API
     {
@@ -316,7 +439,7 @@ static int MPIDU_pmi_build_node_map()
         /* this code currently assumes pg is comm_world */
         mpi_errno =
             MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap,
-                                                   out_max_node_id, &did_map);
+                                                   &max_node_id, &did_map);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
                              "unable to populate node ids from PMI_process_mapping");
@@ -344,12 +467,21 @@ static int MPIDU_pmi_build_node_map()
             node_id++;
             node = strtok(NULL, ",");
         }
-        *out_max_node_id = node_id - 1;
+        max_node_id = node_id - 1;
         /* PMIx latest adds pmix_free. We should switch to that at some point */
         MPL_external_free(nodelist);
         PMIX_PROC_FREE(procs, nprocs);
     }
 #endif
+    
+    MPIR_NODEMAP_update_cliques(sz, out_nodemap, &max_node_id);
+    MPIR_Process.node_map = out_nodemap;
+    MPIR_Process.max_node_id = max_node_id;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /**** PMI wrappers **********/
