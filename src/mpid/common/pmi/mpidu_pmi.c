@@ -18,6 +18,8 @@ typedef enum PMI_DOMAIN_t {
 static char* pmi_kvs_name;
 static int pmi_key_size, pmi_val_size;
 
+static int MPIDU_pmi_build_node_map();
+
 /**** init/finalize ******************************/
 
 /* rank, size, kvs_name */
@@ -106,6 +108,8 @@ int MPIDU_pmi_init(void)
     MPIR_Process.attrs.appnum = appnum;
     /* MPIDI_global.jobid = kvs_name; */
     pmi_kvs_name = kvs_name;
+
+    MPIDU_pmi_build_node_map();
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -220,14 +224,7 @@ int MPIDU_pmi_allgather(const void *sendbuf, int bufsize, void *recvbuf, PMI_DOM
         if (domain == PMI_DOMAIN_ALL) {
             proc.rank = i;
         } else if (domain == PMI_DOMAIN_NODE_ROOTS) {
-            int j;
-            proc.rank = -1;
-            for (j = 0; j < MPIR_Process.size; j++) {
-                if (node_map[j] == i) {
-                    proc.rank = j;
-                    break;
-                }
-            }
+            proc.rank = MPIR_Process.node_leader_map[i];
             MPIR_Assert(proc.rank >= 0);
         }
         pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
@@ -387,6 +384,58 @@ static int pmi_build_nodemap_fallback(int *out_nodemap, int *out_max_node_id)
 
 #endif
 
+/**** PMI wrappers **********/
+
+void MPIDU_pmi_abort(int exit_code, const char *error_msg)
+{
+#if defined USE_PMI1_API
+    PMI_Abort(exit_code, error_msg);
+#elif defined(USE_PMI2_API)
+    PMI2_Abort(TRUE, error_msg);
+#elif defined USE_PMIX_API
+    PMIx_Abort(exit_code, error_msg, NULL, 0);
+#endif
+}
+
+int MPIDU_pmi_barrier()
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#if defined USE_PMI1_API
+    int pmi_errno = PMI_Barrier();
+    if (pmi_errno != PMI2_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d");
+    }
+#elif defined(USE_PMI2_API)
+    int pmi_errno = PMI2_KVS_Fence();
+    if (pmi_errno != PMI2_SUCCESS) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
+    }
+#elif defined USE_PMIX_API
+    pmix_value_t value;
+    pmix_info_t *info;
+    int flag = 1;
+
+    PMIX_INFO_CREATE(info, 1);
+    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    int pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
+    if (pmi_errno != PMIX_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
+                             pmi_errno);
+    }
+    PMIX_INFO_FREE(info, 1);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/**** static functions **********/
+
+static void build_node_leader_map(int *node_map, int *node_leader_map, int num_ranks, int num_nodes);
+
 static int MPIDU_pmi_build_node_map()
 {
     int myrank = MPIR_Process.rank;
@@ -477,6 +526,9 @@ static int MPIDU_pmi_build_node_map()
     MPIR_NODEMAP_update_cliques(sz, out_nodemap, &max_node_id);
     MPIR_Process.node_map = out_nodemap;
     MPIR_Process.max_node_id = max_node_id;
+    int num_nodes = max_node_id + 1;
+    MPIR_Process.node_leader_map = MPL_malloc(sizeof(int) * num_nodes, MPL_MEM_ADDRESS);
+    build_node_leader_map(MPIR_Process.node_map, MPIR_Process.node_leader_map, sz, num_nodes);
 
   fn_exit:
     return mpi_errno;
@@ -484,51 +536,16 @@ static int MPIDU_pmi_build_node_map()
     goto fn_exit;
 }
 
-/**** PMI wrappers **********/
-
-void MPIDU_pmi_abort(int exit_code, const char *error_msg)
+static void build_node_leader_map(int *node_map, int *node_leader_map, int num_ranks, int num_nodes)
 {
-#if defined USE_PMI1_API
-    PMI_Abort(exit_code, error_msg);
-#elif defined(USE_PMI2_API)
-    PMI2_Abort(TRUE, error_msg);
-#elif defined USE_PMIX_API
-    PMIx_Abort(exit_code, error_msg, NULL, 0);
-#endif
+    int i, j;
+    for (i = 0; i < num_nodes; i++) {
+        MPIR_Process.node_leader_map[i] = -1;
+        for (j = 0; j < sz; j++) {
+            if (MPIR_Process.node_map[j] == i) {
+                MPIR_Process.node_leader_map[i] = j;
+                break;
+            }
+        }
+    }
 }
-
-int MPIDU_pmi_barrier()
-{
-    int mpi_errno = MPI_SUCCESS;
-
-#if defined USE_PMI1_API
-    int pmi_errno = PMI_Barrier();
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d");
-    }
-#elif defined(USE_PMI2_API)
-    int pmi_errno = PMI2_KVS_Fence();
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
-    }
-#elif defined USE_PMIX_API
-    pmix_value_t value;
-    pmix_info_t *info;
-    int flag = 1;
-
-    PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-    int pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
-    if (pmi_errno != PMIX_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
-                             pmi_errno);
-    }
-    PMIX_INFO_FREE(info, 1);
-#endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
