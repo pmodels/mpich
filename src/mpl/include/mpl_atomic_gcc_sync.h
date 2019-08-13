@@ -26,12 +26,12 @@ struct MPL_atomic_ ## NAME ## _t {                                             \
     TYPE volatile v;                                                           \
 };                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
-                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return ptr->v;                                                             \
 }                                                                              \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
-                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     volatile int i = 0;                                                        \
     TYPE val = ptr->v;                                                         \
@@ -39,25 +39,25 @@ static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
     return val;                                                                \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     ptr->v = val;                                                              \
 }                                                                              \
 static inline void MPL_atomic_release_store_ ## NAME                           \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     volatile int i = 1;                                                        \
     __sync_lock_release(&i); /* guarantees release semantics */                \
     ptr->v = val;                                                              \
 }                                                                              \
-static inline TYPE MPL_atomic_cas_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,    \
-                                           TYPE oldv, TYPE newv)               \
+static inline TYPE MPL_atomic_cas_ ## NAME                                     \
+                (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE oldv, TYPE newv) \
 {                                                                              \
     return __sync_val_compare_and_swap(&ptr->v, oldv, newv,                    \
                                        /* protected variables: */ &ptr->v);    \
 }                                                                              \
-static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,   \
-                                            TYPE val)                          \
+static inline TYPE MPL_atomic_swap_ ## NAME                                    \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     TYPE cmp;                                                                  \
     TYPE prev = MPL_atomic_acquire_load_ ## NAME(ptr);                         \
@@ -70,13 +70,13 @@ static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * p
 
 #define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME)                                   \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return __sync_fetch_and_add(&ptr->v, val,                                  \
                                 /* protected variables: */ &ptr->v);           \
 }                                                                              \
 static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return __sync_fetch_and_sub(&ptr->v, val,                                  \
                                 /* protected variables: */ &ptr->v);           \
