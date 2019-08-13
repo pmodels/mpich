@@ -30,26 +30,26 @@ struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE v;                                                             \
 };                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return (TYPE)atomic_load_explicit(&ptr->v, memory_order_relaxed);          \
 }                                                                              \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return (TYPE)atomic_load_explicit(&ptr->v, memory_order_acquire);          \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     atomic_store_explicit(&ptr->v, (CAST_TYPE)val, memory_order_relaxed);      \
 }                                                                              \
 static inline void MPL_atomic_release_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     atomic_store_explicit(&ptr->v, (CAST_TYPE)val, memory_order_release);      \
 }                                                                              \
-static inline TYPE MPL_atomic_cas_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,    \
+static inline TYPE MPL_atomic_cas_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,    \
                                            TYPE oldv, TYPE newv)               \
 {                                                                              \
     CAST_TYPE oldv_tmp = (CAST_TYPE)oldv;                                      \
@@ -59,7 +59,7 @@ static inline TYPE MPL_atomic_cas_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,    \
                                             memory_order_acquire);             \
     return (TYPE)oldv_tmp;                                                     \
 }                                                                              \
-static inline TYPE MPL_atomic_swap_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,   \
+static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,   \
                                             TYPE val)                          \
 {                                                                              \
     return (TYPE)atomic_exchange_explicit(&ptr->v, (CAST_TYPE)val,             \
@@ -68,13 +68,13 @@ static inline TYPE MPL_atomic_swap_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,   \
 
 #define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)           \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return (TYPE)atomic_fetch_add_explicit(&ptr->v, (CAST_TYPE)val,            \
                                            memory_order_acq_rel);              \
 }                                                                              \
 static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return (TYPE)atomic_fetch_sub_explicit(&ptr->v, (CAST_TYPE)val,            \
                                            memory_order_acq_rel);              \

@@ -46,36 +46,36 @@ struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE volatile v;                                                    \
 };                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return CAST_FROM_ATOMIC(ptr->v);                                           \
 }                                                                              \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     TYPE val = CAST_FROM_ATOMIC(ptr->v);                                       \
     _ReadWriteBarrier();                                                       \
     return val;                                                                \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     ptr->v = CAST_TO_ATOMIC(val);                                              \
 }                                                                              \
 static inline void MPL_atomic_release_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     _ReadWriteBarrier();                                                       \
     ptr->v = CAST_TO_ATOMIC(val);                                              \
 }                                                                              \
-static inline TYPE MPL_atomic_cas_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,    \
+static inline TYPE MPL_atomic_cas_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,    \
                                            TYPE oldv, TYPE newv)               \
 {                                                                              \
     return CAST_FROM_ATOMIC(_InterlockedCompareExchange ## SUFFIX              \
                             ((ATOMIC_TYPE volatile *)&ptr->v,                  \
                              CAST_TO_ATOMIC(newv), CAST_TO_ATOMIC(oldv)));     \
 }                                                                              \
-static inline TYPE MPL_atomic_swap_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,   \
+static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,   \
                                             TYPE val)                          \
 {                                                                              \
     return CAST_FROM_ATOMIC(_InterlockedExchange ## SUFFIX                     \
@@ -86,13 +86,13 @@ static inline TYPE MPL_atomic_swap_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,   \
 #define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC,    \
                                  CAST_TO_ATOMIC, SUFFIX)                       \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return CAST_FROM_ATOMIC(_InterlockedExchangeAdd ## SUFFIX                  \
                              (&ptr->v, CAST_TO_ATOMIC(val)));                  \
 }                                                                              \
 static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
-                                    (MPL_atomic_ ## NAME ## _t *ptr, TYPE val) \
+                                    (struct MPL_atomic_ ## NAME ## _t *ptr, TYPE val) \
 {                                                                              \
     return CAST_FROM_ATOMIC(_InterlockedExchangeAdd ## SUFFIX                  \
                              (&ptr->v, -CAST_TO_ATOMIC(val)));                 \
