@@ -41,7 +41,7 @@ struct MPL_atomic_ ## NAME ## _t {                                             \
     volatile TYPE v;                                                           \
 };                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
-                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     TYPE val;                                                                  \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
@@ -50,7 +50,7 @@ static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
     return val;                                                                \
 }                                                                              \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
-                                       (const struct MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     TYPE val;                                                                  \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
@@ -59,21 +59,21 @@ static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
     return val;                                                                \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
     ptr->v = val;                                                              \
     MPL_ATOMIC_IPC_SINGLE_CS_EXIT();                                           \
 }                                                                              \
 static inline void MPL_atomic_release_store_ ## NAME                           \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
     ptr->v = val;                                                              \
     MPL_ATOMIC_IPC_SINGLE_CS_EXIT();                                           \
 }                                                                              \
-static inline TYPE MPL_atomic_cas_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,    \
-                                           TYPE oldv, TYPE newv)               \
+static inline TYPE MPL_atomic_cas_ ## NAME                                     \
+                (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE oldv, TYPE newv) \
 {                                                                              \
     TYPE prev;                                                                 \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
@@ -83,8 +83,8 @@ static inline TYPE MPL_atomic_cas_ ## NAME(struct MPL_atomic_ ## NAME ## _t * pt
     MPL_ATOMIC_IPC_SINGLE_CS_EXIT();                                           \
     return prev;                                                               \
 }                                                                              \
-static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * ptr,   \
-                                            TYPE val)                          \
+static inline TYPE MPL_atomic_swap_ ## NAME                                    \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     TYPE prev;                                                                 \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
@@ -96,7 +96,7 @@ static inline TYPE MPL_atomic_swap_ ## NAME(struct MPL_atomic_ ## NAME ## _t * p
 
 #define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME)                                   \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     TYPE prev;                                                                 \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
@@ -106,7 +106,7 @@ static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
     return prev;                                                               \
 }                                                                              \
 static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
-                                   (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     TYPE prev;                                                                 \
     MPL_ATOMIC_IPC_SINGLE_CS_ENTER();                                          \
