@@ -15,7 +15,13 @@
             readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
             ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE,         \
                             ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code); \
-            if (*error_code != MPI_SUCCESS) return;                     \
+            if (*error_code != MPI_SUCCESS) {                           \
+                *error_code = MPIO_Err_create_code(*error_code,         \
+                                          MPIR_ERR_RECOVERABLE, myname, \
+                                                  __LINE__, MPI_ERR_IO, \
+                                                   "**iorsrc", 0);      \
+                return;                                                 \
+            }                                                           \
         }                                                               \
         while (req_len > readbuf_off + readbuf_len - req_off) {         \
             ADIOI_Assert((readbuf_off + readbuf_len - req_off) == (int) (readbuf_off + readbuf_len - req_off)); \
@@ -32,7 +38,13 @@
             ADIO_ReadContig(fd, readbuf+partial_read, readbuf_len-partial_read, \
                             MPI_BYTE, ADIO_EXPLICIT_OFFSET, readbuf_off+partial_read, \
                             &status1, error_code);                      \
-            if (*error_code != MPI_SUCCESS) return;                     \
+            if (*error_code != MPI_SUCCESS) {                           \
+                *error_code = MPIO_Err_create_code(*error_code,         \
+                                          MPIR_ERR_RECOVERABLE, myname, \
+                                                  __LINE__, MPI_ERR_IO, \
+                                                   "**iorsrc", 0);      \
+                return;                                                 \
+            }                                                           \
         }                                                               \
         ADIOI_Assert(req_len == (size_t)req_len);                       \
         memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
@@ -64,6 +76,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
     int info_flag;
     unsigned max_bufsize, readbuf_len;
     ADIO_Status status1;
+    static char myname[] = "ADIOI_GEN_ReadStrided";
 
     if (fd->hints->ds_read == ADIOI_HINT_DISABLE) {
         /* if user has disabled data sieving on reads, use naive
@@ -389,5 +402,4 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually read and placed in buf
    by ADIOI_BUFFERED_READ. */
 #endif
-
 }
