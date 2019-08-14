@@ -270,7 +270,7 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_tree;
             struct {
@@ -310,10 +310,10 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
             } intra_gentran_tree;
             struct {
-                int maxbytes;
+                int chunk_size;
             } intra_gentran_ring;
             struct {
                 int scatterv_k;
@@ -329,11 +329,11 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_tree;
             struct {
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_ring;
         } ireduce;

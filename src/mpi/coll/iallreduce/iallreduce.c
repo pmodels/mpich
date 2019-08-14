@@ -205,7 +205,7 @@ int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                    cnt->u.iallreduce.intra_gentran_tree.tree_type,
                                                    cnt->u.iallreduce.intra_gentran_tree.k,
-                                                   cnt->u.iallreduce.intra_gentran_tree.maxbytes,
+                                                   cnt->u.iallreduce.intra_gentran_tree.chunk_size,
                                                    cnt->u.iallreduce.
                                                    intra_gentran_tree.buffer_per_child, request);
             break;
