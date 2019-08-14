@@ -23,46 +23,46 @@ struct MPL_atomic_ ## NAME ## _t {                                             \
      TYPE volatile v;                                                          \
 };                                                                             \
 static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return __atomic_load_n(&ptr->v, __ATOMIC_RELAXED);                         \
 }                                                                              \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
-                                       (const MPL_atomic_ ## NAME ## _t * ptr) \
+                                (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
     return __atomic_load_n(&ptr->v, __ATOMIC_ACQUIRE);                         \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     __atomic_store_n(&ptr->v, val, __ATOMIC_RELAXED);                          \
 }                                                                              \
 static inline void MPL_atomic_release_store_ ## NAME                           \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     __atomic_store_n(&ptr->v, val, __ATOMIC_RELEASE);                          \
 }                                                                              \
-static inline TYPE MPL_atomic_cas_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,    \
-                                           TYPE oldv, TYPE newv)               \
+static inline TYPE MPL_atomic_cas_ ## NAME                                     \
+                (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE oldv, TYPE newv) \
 {                                                                              \
     __atomic_compare_exchange_n(&ptr->v, &oldv, newv, 0, __ATOMIC_ACQ_REL,     \
                                 __ATOMIC_ACQUIRE);                             \
     return oldv;                                                               \
 }                                                                              \
-static inline TYPE MPL_atomic_swap_ ## NAME(MPL_atomic_ ## NAME ## _t * ptr,   \
-                                            TYPE val)                          \
+static inline TYPE MPL_atomic_swap_ ## NAME                                    \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return __atomic_exchange_n(&ptr->v, val, __ATOMIC_ACQ_REL);                \
 }
 
 #define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME)                                   \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return __atomic_fetch_add(&ptr->v, val, __ATOMIC_ACQ_REL);                 \
 }                                                                              \
 static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
-                                   (MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
+                            (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
     return __atomic_fetch_sub(&ptr->v, val, __ATOMIC_ACQ_REL);                 \
 }
