@@ -796,7 +796,7 @@ PAC_ARG_ATOMIC_PRIMITIVES
 AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
         #include "$1"
     ]],[[
-        MPL_atomic_int_t a, b;
+        struct MPL_atomic_int_t a, b;
         int c;
 
         MPL_atomic_relaxed_store_int(&a, 0);
