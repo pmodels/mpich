@@ -165,7 +165,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
                                                 comm_ptr,
                                                 cnt->u.ireduce.intra_gentran_tree.tree_type,
                                                 cnt->u.ireduce.intra_gentran_tree.k,
-                                                cnt->u.ireduce.intra_gentran_tree.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_tree.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_tree.buffer_per_child,
                                                 request);
             break;
@@ -174,7 +174,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
             mpi_errno =
                 MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                 comm_ptr,
-                                                cnt->u.ireduce.intra_gentran_ring.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_ring.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_ring.buffer_per_child,
                                                 request);
             break;

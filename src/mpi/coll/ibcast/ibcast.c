@@ -174,7 +174,8 @@ int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int
                 MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
                                                cnt->u.ibcast.intra_gentran_tree.tree_type,
                                                cnt->u.ibcast.intra_gentran_tree.k,
-                                               cnt->u.ibcast.intra_gentran_tree.maxbytes, request);
+                                               cnt->u.ibcast.intra_gentran_tree.chunk_size,
+                                               request);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv:
@@ -191,7 +192,8 @@ int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_ring:
             mpi_errno =
                 MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
-                                               cnt->u.ibcast.intra_gentran_ring.maxbytes, request);
+                                               cnt->u.ibcast.intra_gentran_ring.chunk_size,
+                                               request);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_auto:
