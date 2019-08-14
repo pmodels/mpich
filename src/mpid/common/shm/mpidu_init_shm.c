@@ -18,8 +18,8 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
     int mpi_errno = MPI_SUCCESS;
     int local_leader;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_SEG_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_INIT);
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &my_local_rank, &local_leader);
 
@@ -36,7 +36,7 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -46,8 +46,8 @@ int MPIDU_Init_shm_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_SEG_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -55,7 +55,7 @@ int MPIDU_Init_shm_finalize(void)
     mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -65,12 +65,12 @@ int MPIDU_Init_shm_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_SEG_BARRIER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_BARRIER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_BARRIER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
     return mpi_errno;
 }
@@ -79,28 +79,43 @@ int MPIDU_Init_shm_put(void *orig, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_SEG_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_PUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_PUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_PUT);
 
     MPIR_Assert(len <= sizeof(MPIDU_Init_shm_block_t));
     MPIR_Memcpy((char *) baseaddr + my_local_rank * sizeof(MPIDU_Init_shm_block_t), orig, len);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_PUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_PUT);
 
     return mpi_errno;
 }
 
-int MPIDU_Init_shm_get(int local_rank, void **target)
+int MPIDU_Init_shm_get(int local_rank, size_t len, void *target)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_SEG_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_SEG_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_GET);
+
+    MPIR_Assert(local_rank < local_size && len <= sizeof(MPIDU_Init_shm_block_t));
+    MPIR_Memcpy(target, (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t), len);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_GET);
+
+    return mpi_errno;
+}
+
+int MPIDU_Init_shm_query(int local_rank, void **target_addr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_QUERY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_QUERY);
 
     MPIR_Assert(local_rank < local_size);
-    *target = (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
+    *target_addr = (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_SEG_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_QUERY);
 
     return mpi_errno;
 }
