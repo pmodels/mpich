@@ -31,6 +31,13 @@ typedef struct MPIR_Process_t {
     OPA_int_t mpich_state;      /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
                                  * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
     int do_error_checks;        /* runtime error check control */
+
+    /* NOTE: nodemap currently lives in MPIDIG_global_t */
+    int rank, size;             /* global rank/size (equivalent in comm_world) */
+    int local_size, max_node_id;
+    int *node_map;              /* global node_map (init time node_map) */
+    int *node_leader_map;
+
     struct MPIR_Comm *comm_world;       /* Easy access to comm_world for
                                          * error handler */
     struct MPIR_Comm *comm_self;        /* Easy access to comm_self */
