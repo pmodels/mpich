@@ -249,7 +249,6 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
     MPIR_Sched_t s = MPIR_SCHED_NULL;
     int is_commutative = MPIR_Op_is_commutative(op);
 
-    *request = NULL;
 
     /* If the user picks one of the transport-enabled algorithms, branch there
      * before going down to the MPIR_Sched-based algorithms. */

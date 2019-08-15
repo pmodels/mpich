@@ -259,9 +259,6 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
 
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
-
-    *request = NULL;
-
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);

@@ -122,8 +122,6 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = NULL;
-
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
