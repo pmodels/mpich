@@ -264,6 +264,187 @@ int MPIR_Datatype_builtin_fillin(void)
     return mpi_errno;
 }
 
+/* This routine initializes all of the name fields in the predefined
+   datatypes */
+typedef struct mpi_names_t {
+    MPI_Datatype dtype;
+    const char *name;
+} mpi_names_t;
+/* The MPI standard specifies that the names must be the MPI names,
+   not the related language names (e.g., MPI_CHAR, not char) */
+#define type_name_entry(x_) { x_, #x_ }
+static mpi_names_t mpi_names[] = {
+    type_name_entry(MPI_CHAR),
+    type_name_entry(MPI_SIGNED_CHAR),
+    type_name_entry(MPI_UNSIGNED_CHAR),
+    type_name_entry(MPI_BYTE),
+    type_name_entry(MPI_WCHAR),
+    type_name_entry(MPI_SHORT),
+    type_name_entry(MPI_UNSIGNED_SHORT),
+    type_name_entry(MPI_INT),
+    type_name_entry(MPI_UNSIGNED),
+    type_name_entry(MPI_LONG),
+    type_name_entry(MPI_UNSIGNED_LONG),
+    type_name_entry(MPI_FLOAT),
+    type_name_entry(MPI_DOUBLE),
+    type_name_entry(MPI_LONG_DOUBLE),
+    /* LONG_LONG is a synonym of LONG_LONG_INT; we don't make it a separate
+     * type */
+/*    type_name_entry(MPI_LONG_LONG), */
+    type_name_entry(MPI_LONG_LONG_INT),
+    type_name_entry(MPI_UNSIGNED_LONG_LONG),
+    type_name_entry(MPI_PACKED),
+    type_name_entry(MPI_LB),
+    type_name_entry(MPI_UB),
+
+/* The maxloc/minloc types are not builtin because their size and
+   extent may not be the same. */
+/*
+    type_name_entry(MPI_FLOAT_INT),
+    type_name_entry(MPI_DOUBLE_INT),
+    type_name_entry(MPI_LONG_INT),
+    type_name_entry(MPI_SHORT_INT),
+*/
+    /* Fortran */
+    type_name_entry(MPI_COMPLEX),
+    type_name_entry(MPI_DOUBLE_COMPLEX),
+    type_name_entry(MPI_LOGICAL),
+    type_name_entry(MPI_REAL),
+    type_name_entry(MPI_DOUBLE_PRECISION),
+    type_name_entry(MPI_INTEGER),
+    type_name_entry(MPI_2INTEGER),
+#ifdef MPICH_DEFINE_2COMPLEX
+    type_name_entry(MPI_2COMPLEX),
+    type_name_entry(MPI_2DOUBLE_COMPLEX),
+#endif
+    type_name_entry(MPI_2REAL),
+    type_name_entry(MPI_2DOUBLE_PRECISION),
+    type_name_entry(MPI_CHARACTER),
+    /* Size-specific types (C, Fortran, and C++) */
+    type_name_entry(MPI_REAL4),
+    type_name_entry(MPI_REAL8),
+    type_name_entry(MPI_REAL16),
+    type_name_entry(MPI_COMPLEX8),
+    type_name_entry(MPI_COMPLEX16),
+    type_name_entry(MPI_COMPLEX32),
+    type_name_entry(MPI_INTEGER1),
+    type_name_entry(MPI_INTEGER2),
+    type_name_entry(MPI_INTEGER4),
+    type_name_entry(MPI_INTEGER8),
+    type_name_entry(MPI_INTEGER16),
+
+    /* C99 types */
+    type_name_entry(MPI_INT8_T),
+    type_name_entry(MPI_INT16_T),
+    type_name_entry(MPI_INT32_T),
+    type_name_entry(MPI_INT64_T),
+    type_name_entry(MPI_UINT8_T),
+    type_name_entry(MPI_UINT16_T),
+    type_name_entry(MPI_UINT32_T),
+    type_name_entry(MPI_UINT64_T),
+    type_name_entry(MPI_C_BOOL),
+    /* C_FLOAT_COMPLEX is a synonym of C_COMPLEX; we don't make it a separate
+     * type */
+/*    type_name_entry(MPI_C_FLOAT_COMPLEX), */
+    type_name_entry(MPI_C_COMPLEX),
+    type_name_entry(MPI_C_DOUBLE_COMPLEX),
+    type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
+
+    /* C++ types */
+    type_name_entry(MPI_CXX_BOOL),
+    type_name_entry(MPI_CXX_FLOAT_COMPLEX),
+    type_name_entry(MPI_CXX_DOUBLE_COMPLEX),
+    type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX),
+
+    /* address/offset types */
+    type_name_entry(MPI_AINT),
+    type_name_entry(MPI_OFFSET),
+    type_name_entry(MPI_COUNT),
+
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
+};
+
+static mpi_names_t mpi_maxloc_names[] = {
+    type_name_entry(MPI_FLOAT_INT),
+    type_name_entry(MPI_DOUBLE_INT),
+    type_name_entry(MPI_LONG_INT),
+    type_name_entry(MPI_SHORT_INT),
+    type_name_entry(MPI_2INT),
+    type_name_entry(MPI_LONG_DOUBLE_INT),
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
+};
+
+#undef type_name_entry
+
+/* used in type_get_name.c and type_set_name.c */
+int MPIR_Datatype_init_names(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIR_Datatype *datatype_ptr = NULL;
+    static volatile int needsInit = 1;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    if (needsInit) {
+        /* Make sure that the basics have datatype structures allocated
+         * and filled in for them.  They are just integers prior to this
+         * call.
+         */
+        mpi_errno = MPIR_Datatype_builtin_fillin();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+
+        /* For each predefined type, ensure that there is a corresponding
+         * object and that the object's name is set */
+        for (i = 0; mpi_names[i].name != 0; i++) {
+            /* The size-specific types may be DATATYPE_NULL, as might be those
+             * based on 'long long' and 'long double' if those types were
+             * disabled at configure time. */
+            if (mpi_names[i].dtype == MPI_DATATYPE_NULL)
+                continue;
+
+            MPIR_Datatype_get_ptr(mpi_names[i].dtype, datatype_ptr);
+
+            if (datatype_ptr < MPIR_Datatype_builtin ||
+                datatype_ptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
+                MPIR_ERR_SETFATALANDJUMP1(mpi_errno, MPI_ERR_INTERN,
+                                          "**typeinitbadmem", "**typeinitbadmem %d", i);
+            }
+            if (!datatype_ptr) {
+                MPIR_ERR_SETFATALANDJUMP1(mpi_errno, MPI_ERR_INTERN,
+                                          "**typeinitfail", "**typeinitfail %d", i - 1);
+            }
+
+            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
+                                                         "mpi_names[%d].name = %p", i,
+                                                         mpi_names[i].name));
+
+            MPL_strncpy(datatype_ptr->name, mpi_names[i].name, MPI_MAX_OBJECT_NAME);
+        }
+        /* Handle the minloc/maxloc types */
+        for (i = 0; mpi_maxloc_names[i].name != 0; i++) {
+            /* types based on 'long long' and 'long double' may be disabled at
+             * configure time, and their values set to MPI_DATATYPE_NULL.  skip
+             * those types. */
+            if (mpi_maxloc_names[i].dtype == MPI_DATATYPE_NULL)
+                continue;
+
+            MPIR_Datatype_get_ptr(mpi_maxloc_names[i].dtype, datatype_ptr);
+            if (!datatype_ptr) {
+                MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_INTERN, "**typeinitminmaxloc");
+            }
+            MPL_strncpy(datatype_ptr->name, mpi_maxloc_names[i].name, MPI_MAX_OBJECT_NAME);
+        }
+        needsInit = 0;
+    }
+
+  fn_fail:
+    /* empty statement */ ;
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    return mpi_errno;
+}
+
 /* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
