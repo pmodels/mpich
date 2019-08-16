@@ -201,7 +201,7 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
    That routine calls it from within a single-init section to
    ensure thread-safety. */
 
-int MPIR_Datatype_builtin_fillin(void)
+static int builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned int i;
@@ -390,7 +390,7 @@ int MPIR_Datatype_init_names(void)
          * and filled in for them.  They are just integers prior to this
          * call.
          */
-        mpi_errno = MPIR_Datatype_builtin_fillin();
+        mpi_errno = builtin_fillin();
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
