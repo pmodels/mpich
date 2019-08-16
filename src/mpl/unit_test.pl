@@ -84,10 +84,12 @@ sub gather_tests {
                     @common = @$source;
                 }
                 else{
-                    my %t_opts = %opts;
-                    push @tests, {opts=>\%t_opts, source=>$source};
-                    $source = [];
-                    push @$source, @common;
+                    my $opt_list = opt_multiplex(\%opts);
+                    foreach my $t_opt (@$opt_list){
+                        push @tests, {opts=>$t_opt, source=>$source};
+                        $source = [];
+                        push @$source, @common;
+                    }
                 }
             }
             $opts{$1}=$2;
@@ -100,8 +102,12 @@ sub gather_tests {
         }
     }
     close In;
-    my %t_opts = %opts;
-    push @tests, {opts=>\%t_opts, source=>$source};
+    my $opt_list = opt_multiplex(\%opts);
+    foreach my $t_opt (@$opt_list){
+        push @tests, {opts=>$t_opt, source=>$source};
+        $source = [];
+        push @$source, @common;
+    }
 
     return \@tests;
 }
@@ -171,5 +177,31 @@ sub run_test {
         }
     }
     return $result;
+}
+
+sub opt_multiplex {
+    my ($opts) = @_;
+    my (@all_opts, @CFLAGS_list, @LDFLAGS_list);
+    if($opts->{CFLAGS}){
+        @CFLAGS_list = split /\s*\|\s*/, $opts->{CFLAGS};
+    }
+    else{
+        @CFLAGS_list = (undef);
+    }
+    if($opts->{LDFLAGS}){
+        @LDFLAGS_list = split /\s*\|\s*/, $opts->{LDFLAGS};
+    }
+    else{
+        @LDFLAGS_list = (undef);
+    }
+    foreach my $cflags (@CFLAGS_list){
+        foreach my $ldflags (@LDFLAGS_list){
+            my %t_opts = %$opts;
+            $t_opts{CFLAGS} = $cflags;
+            $t_opts{LDFLAGS} = $ldflags;
+            push @all_opts, \%t_opts;
+        }
+    }
+    return \@all_opts;
 }
 
