@@ -113,7 +113,7 @@ static MPI_Datatype mpi_dtypes[] = {
 };
 
 /*
-  MPIR_Datatype_init()
+  MPIR_Datatype_pairtypes_init()
 
   Main purpose of this function is to set up the following pair types:
   - MPI_FLOAT_INT
@@ -138,7 +138,7 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) - 1
 };
 
-int MPIR_Datatype_init(void)
+int MPIR_Datatype_pairtypes_init(void)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;

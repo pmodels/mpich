@@ -108,7 +108,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
-    MPIR_Datatype_init();
+    MPIR_Datatype_pairtypes_init();
     MPIR_Group_init();
 
     /* initialization routine for ch3u_comm.c */

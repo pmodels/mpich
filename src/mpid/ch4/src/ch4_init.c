@@ -448,7 +448,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
-    MPIR_Datatype_init();
+    MPIR_Datatype_pairtypes_init();
     MPIR_Group_init();
 
     /* Override split_type */
