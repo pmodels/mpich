@@ -9,15 +9,14 @@
 #include <string.h>
 #include <assert.h>
 
-/* TEST: MPL_strsep.h */
 /* CFLAGS: -I include */
 /* SOURCE: src/str/mpl_str.c */
 
 #include "mpl_str.h"
 
+/* TEST: MPL_strsep - NULL */
 int main(void)
 {
-    char *orig;
     char *str;
     char *next;
 
@@ -25,6 +24,15 @@ int main(void)
     next = MPL_strsep(&str, "|");
     assert(next == NULL);
     assert(str == NULL);
+    return 0;
+}
+
+/* TEST: MPL_strsep - empty */
+int main(void)
+{
+    char *orig;
+    char *str;
+    char *next;
 
     orig = strdup("");
     str = orig;
@@ -32,6 +40,16 @@ int main(void)
     assert(str == NULL);
     assert(next == orig);
     free(orig);
+
+    return 0;
+}
+
+/* TEST: MPL_strsep - a|b|c */
+int main(void)
+{
+    char *orig;
+    char *str;
+    char *next;
 
     orig = strdup("a|b|c");
     str = orig;
@@ -47,6 +65,16 @@ int main(void)
     assert(str == NULL);
     free(orig);
 
+    return 0;
+}
+
+/* TEST: MPL_strsep - a|b:c */
+int main(void)
+{
+    char *orig;
+    char *str;
+    char *next;
+
     orig = strdup("a|b:c");
     str = orig;
     next = MPL_strsep(&str, ":|");
@@ -60,6 +88,16 @@ int main(void)
     assert(next == NULL);
     assert(str == NULL);
     free(orig);
+
+    return 0;
+}
+
+/* TEST: MPL_strsep - a|:b:c */
+int main(void)
+{
+    char *orig;
+    char *str;
+    char *next;
 
     orig = strdup("a|:b:c");
     str = orig;
