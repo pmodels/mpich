@@ -547,10 +547,9 @@ typedef struct {
     MPIDI_av_entry_t table[0];
 } MPIDI_av_table_t;
 
+#define MPIDIU_get_node_map(avtid) (MPIDI_global.node_map_list[(avtid)])
 #define MPIDIU_get_av_table(avtid) (MPIDI_global.av_table_list[(avtid)])
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_global.av_table_list[(avtid)]->table[(lpid)])
-
-#define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
 
 #define MPID_Progress_register_hook(fn_, id_) MPID_Progress_register(fn_, id_)
 #define MPID_Progress_deregister_hook(id_) MPID_Progress_deregister(id_)

@@ -72,7 +72,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     void *table;
     int recv_bc_len;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map,
                                       MPIDI_UCX_global.if_address,
                                       (int) MPIDI_UCX_global.addrname_len, FALSE,
                                       MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);

@@ -35,7 +35,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
                  * new process groups are always assumed to be remote,
                  * so CH4 don't care what node they are on
                  */
-                MPIDI_global.node_map[_avtid][_lpid] = remote_node_ids[i];
+                MPIDI_global.node_map_list[_avtid][_lpid] = remote_node_ids[i];
                 if (remote_node_ids[i] > MPIDI_global.max_node_id) {
                     MPIDI_global.max_node_id = remote_node_ids[i];
                 }
