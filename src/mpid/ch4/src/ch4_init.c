@@ -320,15 +320,10 @@ static int init_av_table(void)
                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     MPIDI_global.av_table->size = size;
 
+    MPIDI_global.node_map = MPIR_Process.node_map;
+
     /* av_table management */
     MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
-    MPIDI_global.av_table_list[0] = MPIDI_global.av_table;
-    MPIR_Object_set_ref(MPIDI_global.av_table_list[0], 1);
-
-    MPIDI_global.node_map = MPIR_Process.node_map;
-    MPIDI_global.node_map_list[0] = MPIR_Process.node_map;
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;

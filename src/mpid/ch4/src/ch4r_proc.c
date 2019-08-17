@@ -281,6 +281,14 @@ int MPIDIU_avt_init(void)
     }
     MPIDI_global.avt_mgr.free_avtid[MPIDI_global.avt_mgr.max_n_avts - 1] = -1;
 
+    int tmp_id;
+    MPIDIU_get_next_avtid(&tmp_id);
+    MPIR_Assert(tmp_id == 0);
+    MPIDI_global.av_table_list[0] = MPIDI_global.av_table;
+    MPIDI_global.node_map_list[0] = MPIDI_global.node_map;
+    /* Why set_ref to 1? -1 seems more sensible as it really doesn't need the ref_count */
+    MPIR_Object_set_ref(MPIDI_global.av_table_list[0], 1);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_INIT);
     return mpi_errno;
