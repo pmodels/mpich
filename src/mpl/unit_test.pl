@@ -100,7 +100,12 @@ sub parse_options {
         if($g_opts->{SRCDIR}){
             $dir = "$g_opts->{SRCDIR}";
         }
-        @src_list = glob("$dir/*.c");
+        open In, "find $dir -name '*.c' |" or die "Can't open find $dir -name '*.c' |.\n";
+        while(<In>){
+            chomp;
+            push @src_list, $_;
+        }
+        close In;
     }
     return \@src_list;
 }
@@ -111,7 +116,7 @@ sub gather_tests {
     my @common;
     my %opts = %g_opts;
     my $source = [];
-    my ($title) = $f=~/^.*\/(.+)\.c$/;
+    my ($title) = $f=~/^(.+)\.c$/;
     open In, "$f" or die "Can't open $f.\n";
     while(<In>){
         if(/^\/\*\s+(\w+):\s*(.+?)\s*\*\//){
@@ -121,11 +126,16 @@ sub gather_tests {
                 }
                 else{
                     my $opt_list = opt_multiplex(\%opts);
-                    foreach my $t_opt (@$opt_list){
-                        push @tests, {title=> $title, opts=>$t_opt, source=>$source};
-                        $source = [];
-                        push @$source, @common;
+                    if(@$opt_list == 1){
+                        push @tests, {title=> $title, opts=>$opt_list->[0], source=>$source};
                     }
+                    else{
+                        foreach my $t_opt (@$opt_list){
+                            push @tests, {title=> "$title - $t_opt->{subtitle}", opts=>$t_opt, source=>$source};
+                        }
+                    }
+                    $source = [];
+                    push @$source, @common;
                 }
                 $title = $2;
             }
@@ -140,10 +150,13 @@ sub gather_tests {
     }
     close In;
     my $opt_list = opt_multiplex(\%opts);
-    foreach my $t_opt (@$opt_list){
-        push @tests, {title=> $title, opts=>$t_opt, source=>$source};
-        $source = [];
-        push @$source, @common;
+    if(@$opt_list == 1){
+        push @tests, {title=> $title, opts=>$opt_list->[0], source=>$source};
+    }
+    else{
+        foreach my $t_opt (@$opt_list){
+            push @tests, {title=> "$title - $t_opt->{subtitle}", opts=>$t_opt, source=>$source};
+        }
     }
 
     return \@tests;
@@ -234,8 +247,10 @@ sub opt_multiplex {
     foreach my $cflags (@CFLAGS_list){
         foreach my $ldflags (@LDFLAGS_list){
             my %t_opts = %$opts;
+            my $subtitle = "[$cflags $ldflags]";
             $t_opts{CFLAGS} = $cflags;
             $t_opts{LDFLAGS} = $ldflags;
+            $t_opts{subtitle} = $subtitle;
             push @all_opts, \%t_opts;
         }
     }
