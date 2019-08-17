@@ -14,37 +14,72 @@ mkdir ".test";
 
 #-------------------------------------------
 my ($cnt, $n_ok, $n_fail, $n_xfail, $n_skip) = (0, 0, 0, 0, 0);
+my $alltests=[];
 my $i=0;
 foreach my $f (@$src_list){
-    my ($base_name) = $f=~/^.*\/(.+)\.c$/;
     my $testlist = gather_tests($f);
+    push @$alltests, @$testlist;
+}
 
-    foreach my $test (@$testlist){
-        my $test_opts = $test->{opts};
-        my ($title, $result);
-        $cnt ++;
-        if($test_opts->{TEST}){
-            $title = $test_opts->{TEST};
-        }
-        else{
-            $title = $base_name;
-        }
+foreach my $test (@$alltests){
+    my $test_opts = $test->{opts};
+    my ($title, $result);
+    $cnt ++;
+    $i++;
+    print "Test $i: $test->{title} ... ";
 
-        $i++;
-        print "Test $i: $title ... ";
-
-        if($test_opts->{skip}){
-            $result = "SKIP";
-            $n_skip++;
-        }
-        else{
-            $result = run_test($test, $i);
-        }
-        print "$result\n";
+    if($test_opts->{SKIP}){
+        $result = "SKIP";
+        $n_skip++;
     }
+    else{
+        $result = run_test($test, $i);
+    }
+    $test->{result} = $result;
+    print "$result\n";
 }
 
 print "Ran $cnt tests, $n_ok OK, $n_fail FAIL, $n_xfail XFAIL, $n_skip SKIP\n";
+my $date = `date "+%Y-%m-%d-%H-%M"`;
+$date =~ s/\r?\n//;
+
+my $junitfile = "unit_test.xml";
+open Out, ">$junitfile" or die "Can't write $junitfile.\n";
+print "  --> [$junitfile]\n";
+print Out "<testsuites>\n";
+print Out "  <testsuite failures=\"$n_fail\"\n";
+print Out "             skipped=\"$n_skip\"\n";
+print Out "             tests=\"$cnt\"\n";
+print Out "             date=\"$date\"\n";
+print Out "             name=\"unit_test\">\n";
+my $i = -1;
+foreach my $test (@$alltests){
+    $i++;
+    my $name= "$i - $test->{title}";
+    if($test->{result} eq "SKIP"){
+        print Out "    <testcase name=\"$name\">\n";
+        my $msg = $test->{opts}->{SKIP};
+        print Out "      <skipped type=\"TodoTestSkipped\"\n";
+        print Out "             message=\"$msg\"></skipped>\n";
+        print Out "    </testcase>\n";
+    }
+    elsif($test->{result} eq "OK"){
+        print Out "    <testcase name=\"$name\" ></testcase>\n";
+    }
+    else{
+        print Out "    <testcase name=\"$name\" >\n";
+        print Out "      <failure type=\"TestFailed\"\n";
+        print Out "               message=\"$test->{result}: $name\">\n";
+        print Out "    </failure>\n";
+        print Out "    </testcase>\n";
+    }
+}
+print Out "    <system-out></system-out>\n";
+print Out "    <system-err></system-err>\n";
+print Out "  </testsuite>\n";
+print Out "</testsuites>\n";
+
+close Out;
 
 # ---- subroutines --------------------------------------------
 sub parse_options {
@@ -76,6 +111,7 @@ sub gather_tests {
     my @common;
     my %opts = %g_opts;
     my $source = [];
+    my ($title) = $f=~/^.*\/(.+)\.c$/;
     open In, "$f" or die "Can't open $f.\n";
     while(<In>){
         if(/^\/\*\s+(\w+):\s*(.+?)\s*\*\//){
@@ -86,11 +122,12 @@ sub gather_tests {
                 else{
                     my $opt_list = opt_multiplex(\%opts);
                     foreach my $t_opt (@$opt_list){
-                        push @tests, {opts=>$t_opt, source=>$source};
+                        push @tests, {title=> $title, opts=>$t_opt, source=>$source};
                         $source = [];
                         push @$source, @common;
                     }
                 }
+                $title = $2;
             }
             $opts{$1}=$2;
         }
@@ -104,7 +141,7 @@ sub gather_tests {
     close In;
     my $opt_list = opt_multiplex(\%opts);
     foreach my $t_opt (@$opt_list){
-        push @tests, {opts=>$t_opt, source=>$source};
+        push @tests, {title=> $title, opts=>$t_opt, source=>$source};
         $source = [];
         push @$source, @common;
     }
