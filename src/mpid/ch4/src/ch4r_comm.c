@@ -40,7 +40,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
                     MPIDI_global.max_node_id = remote_node_ids[i];
                 }
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-                MPIDI_av_table[_avtid]->table[_lpid].is_local = 0;
+                MPIDI_global.av_table_list[_avtid]->table[_lpid].is_local = 0;
 #endif
             }
         }

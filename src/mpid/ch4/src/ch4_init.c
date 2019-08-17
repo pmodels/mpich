@@ -314,20 +314,20 @@ static int init_av_table(void)
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
 
+    /* av_table[0] is special, make it independent of av_table manager */
+    MPIDI_global.av_table = (MPIDI_av_table_t *)
+        MPL_malloc(size * sizeof(MPIDI_av_entry_t)
+                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
+    MPIDI_global.av_table->size = size;
+
+    /* av_table management */
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);
     MPIR_Assert(avtid == 0);
-
-    MPIDI_av_table[0] = (MPIDI_av_table_t *)
-        MPL_malloc(size * sizeof(MPIDI_av_entry_t)
-                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
-
-    MPIDI_av_table[0]->size = size;
-    MPIR_Object_set_ref(MPIDI_av_table[0], 1);
+    MPIDI_global.av_table_list[0] = MPIDI_global.av_table;
+    MPIR_Object_set_ref(MPIDI_global.av_table_list[0], 1);
 
     MPIDI_global.node_map[0] = MPIR_Process.node_map;
-
-    MPIDI_av_table0 = MPIDI_av_table[0];
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
@@ -336,11 +336,11 @@ static int init_av_table(void)
                     (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
 
     for (i = 0; i < size; i++) {
-        MPIDI_av_table0->table[i].is_local =
+        MPIDI_global.av_table->table[i].is_local =
             (MPIDI_global.node_map[0][i] == MPIDI_global.node_map[0][rank]) ? 1 : 0;
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
-                         MPIDI_av_table0->table[i].is_local ? "is" : "is not"));
+                         MPIDI_global.av_table->table[i].is_local ? "is" : "is not"));
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_global.node_map[0][i],
                          MPIDI_global.node_map[0][rank]));
@@ -525,7 +525,7 @@ static void finalize_av_table(void)
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
     for (i = 0; i < max_n_avts; i++) {
-        if (MPIDI_av_table[i] != NULL) {
+        if (MPIDI_global.av_table_list[i] != NULL) {
             MPIDIU_avt_release_ref(i);
         }
     }

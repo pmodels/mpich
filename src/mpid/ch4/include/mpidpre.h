@@ -547,11 +547,8 @@ typedef struct {
     MPIDI_av_entry_t table[0];
 } MPIDI_av_table_t;
 
-extern MPIDI_av_table_t **MPIDI_av_table;
-extern MPIDI_av_table_t *MPIDI_av_table0;
-
-#define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
+#define MPIDIU_get_av_table(avtid) (MPIDI_global.av_table_list[(avtid)])
+#define MPIDIU_get_av(avtid, lpid) (MPIDI_global.av_table_list[(avtid)]->table[(lpid)])
 
 #define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
 
