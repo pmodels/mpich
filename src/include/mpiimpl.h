@@ -102,17 +102,11 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #define __func__ "__func__"
 #endif
 
-#ifdef USE_PMIX_API
 /* pmix.h contains inline functions that calls malloc, calloc, and free,
    and it will break with MPL's memory tracing when enabled.
    Make sure it is included *before* mpl.h.
 */
-#include <pmix.h>
-#elif defined(USE_PMI2_API)
-#include <pmi2.h>
-#else
-#include <pmi.h>
-#endif
+#include "mpir_pmi.h"
 
 /*****************************************************************************
  * We use the following ordering of information in this file:

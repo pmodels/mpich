@@ -61,6 +61,7 @@ noinst_HEADERS +=                   \
     src/include/mpir_thread.h       \
     src/include/mpir_nbc.h          \
     src/include/mpir_op.h           \
+    src/include/mpir_pmi.h          \
     src/include/mpir_process.h      \
     src/include/mpir_misc.h         \
     src/include/mpir_tags.h         \
