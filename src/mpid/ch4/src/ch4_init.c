@@ -517,16 +517,8 @@ static void finalize_builtin_comms(void)
 
 static void finalize_av_table(void)
 {
-    int i;
-    int max_n_avts;
-    max_n_avts = MPIDIU_get_max_n_avts();
-    for (i = 0; i < max_n_avts; i++) {
-        if (MPIDI_global.av_table_list[i] != NULL) {
-            MPIDIU_avt_release_ref(i);
-        }
-    }
-
     MPIDIU_avt_destroy();
+    MPL_free(MPIDI_global.av_table);
 }
 
 int MPID_Finalize(void)
