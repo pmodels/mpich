@@ -155,24 +155,6 @@ int MPI_Finalize(void)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-#ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
-    hwloc_bitmap_free(MPIR_Process.bindset);
-#endif
-
-#ifdef HAVE_NETLOC
-    switch (MPIR_Process.network_attr.type) {
-        case MPIR_NETLOC_NETWORK_TYPE__TORUS:
-            MPL_free(MPIR_Process.network_attr.u.torus.geometry);
-            break;
-        case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
-        case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
-        default:
-            MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
-            break;
-    }
-#endif
-
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -333,6 +315,24 @@ int MPI_Finalize(void)
         int thread_err;
         MPL_thread_finalize(&thread_err);
         MPIR_Assert(thread_err == 0);
+    }
+#endif
+
+#ifdef HAVE_HWLOC
+    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
+    hwloc_bitmap_free(MPIR_Process.bindset);
+#endif
+
+#ifdef HAVE_NETLOC
+    switch (MPIR_Process.network_attr.type) {
+        case MPIR_NETLOC_NETWORK_TYPE__TORUS:
+            MPL_free(MPIR_Process.network_attr.u.torus.geometry);
+            break;
+        case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
+        case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
+        default:
+            MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
+            break;
     }
 #endif
 
