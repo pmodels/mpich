@@ -449,7 +449,7 @@ typedef int MPI_Errhandler;
 #define MPI_TYPE_NULL_DELETE_FN ((MPI_Type_delete_attr_function*)0)
 #define MPI_TYPE_DUP_FN ((MPI_Type_copy_attr_function*)MPI_DUP_FN)
 
-/* MPI request opjects */
+/* MPI request objects */
 typedef int MPI_Request;
 
 /* MPI message objects for Mprobe and related functions */
