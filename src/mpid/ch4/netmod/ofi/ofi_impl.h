@@ -112,21 +112,6 @@ int MPIDI_OFI_progress(int vci, int blocking);
             (_ret) = FUNC;                                              \
         } while (0)
 
-#define MPIDI_OFI_PMI_CALL_POP(FUNC,STR)                    \
-  do                                                          \
-    {                                                         \
-      pmi_errno  = FUNC;                                      \
-      MPIDI_OFI_ERR(pmi_errno!=PMI_SUCCESS,           \
-                            mpi_errno,                        \
-                            MPI_ERR_OTHER,                    \
-                            "**ofid_"#STR,                    \
-                            "**ofid_"#STR" %s %d %s %s",      \
-                            __SHORT_FILE__,                   \
-                            __LINE__,                         \
-                            __func__,                           \
-                            #STR);                            \
-    } while (0)
-
 #define MPIDI_OFI_MPI_CALL_POP(FUNC)                               \
   do                                                                 \
     {                                                                \
