@@ -971,22 +971,10 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
-    /* -------------------------------- */
-    /* Initialize Dynamic Tasking       */
-    /* -------------------------------- */
-#if !defined(USE_PMIX_API) && !defined(USE_PMI2_API)
+    /* ------------------------------------------------- */
+    /* Initialize Connection Manager for Dynamic Tasking */
+    /* ------------------------------------------------- */
     conn_manager_init();
-    if (spawned) {
-        char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_OFI_global.kvsname,
-                                           MPIDI_PARENT_PORT_KVSKEY,
-                                           parent_port, MPIDI_MAX_KVS_VALUE_LEN), pmi);
-        MPIDI_OFI_MPI_CALL_POP(MPID_Comm_connect
-                               (parent_port, NULL, 0, comm_world, &MPIR_Process.comm_parent));
-        MPIR_Assert(MPIR_Process.comm_parent != NULL);
-        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-    }
-#endif
 
     mpi_errno = MPIR_Comm_register_hint("eagain", set_eagain, NULL);
     MPIR_ERR_CHECK(mpi_errno);
