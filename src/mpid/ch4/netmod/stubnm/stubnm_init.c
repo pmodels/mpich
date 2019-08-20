@@ -13,8 +13,7 @@
 #include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
-                               MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
-                               int *n_vcis_provided)
+                               MPIR_Comm * comm_world, MPIR_Comm * comm_self, int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 

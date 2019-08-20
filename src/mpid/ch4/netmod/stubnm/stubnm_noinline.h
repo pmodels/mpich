@@ -86,8 +86,7 @@ int MPIDI_STUBNM_mpi_win_free_hook(MPIR_Win * win);
 
 /* stubnm_init.h */
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
-                               MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
-                               int *n_vcis_provided);
+                               MPIR_Comm * comm_world, MPIR_Comm * comm_self, int *n_vcis_provided);
 int MPIDI_STUBNM_mpi_finalize_hook(void);
 int MPIDI_STUBNM_get_vci_attr(int vci);
 void *MPIDI_STUBNM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);

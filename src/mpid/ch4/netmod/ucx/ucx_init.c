@@ -23,7 +23,7 @@ static void request_init_callback(void *request)
 }
 
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                            MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
+                            MPIR_Comm * comm_self, int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
