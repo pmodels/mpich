@@ -345,14 +345,14 @@ int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win
 }
 
 int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                           MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
+                           MPIR_Comm * comm_self, int *n_vcis_provided)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
 
-    ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, comm_world, comm_self, spawned,
+    ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, comm_world, comm_self,
                                   n_vcis_provided);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
