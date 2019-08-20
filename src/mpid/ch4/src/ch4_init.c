@@ -464,6 +464,18 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (has_parent) {
+        pmi_errno = PMI_KVS_Get(MPIDI_global.jobid, MPIDI_PARENT_PORT_KVSKEY,
+                                MPIDI_global.parent_port, MPIDI_MAX_KVS_VALUE_LEN);
+        if (pmi_errno != PMI_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_parent_port",
+                                 "**pmi_kvs_get_parent_port %d", pmi_errno);
+        }
+        MPID_Comm_connect(MPIDI_global.parent_port, NULL, 0, MPIR_Process.comm_world,
+                          &MPIR_Process.comm_parent);
+        MPIR_Assert(MPIR_Process.comm_parent != NULL);
+        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+    }
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */
