@@ -287,8 +287,10 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 
         MPID_Request_create_hook(req);
     } else {
-        /* FIXME: This fails to fail if debugging is turned off */
         MPL_DBG_MSG(MPIR_DBG_REQUEST, TYPICAL, "unable to allocate a request");
+        /* This assertion will always be false here. The alternative to this is to put checks after
+         * every request creation call. */
+        MPIR_Assert(req != NULL);
     }
 
     return req;
