@@ -24,12 +24,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Err
 
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Barrier(comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    {
+        mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     return mpi_errno;
 }
@@ -46,12 +46,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Dat
 
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    {
+        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);
     return mpi_errno;
 }
@@ -68,12 +68,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
 
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    {
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     return mpi_errno;
 }
@@ -92,13 +92,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgather(const void *sendbuf, int sen
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
-                                    recvcount, recvtype, comm_ptr, errflag);
+    {
+        mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcount, recvtype, comm_ptr, errflag);
+    }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     return mpi_errno;
 }
@@ -210,13 +210,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoall(const void *sendbuf, int send
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
-                                   recvcount, recvtype, comm_ptr, errflag);
-
-  fn_exit:
+    {
+        mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                       recvcount, recvtype, comm_ptr, errflag);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     return mpi_errno;
 }
@@ -236,13 +235,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const i
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                 recvcounts, rdispls, recvtype, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
-                                    recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
-
-  fn_exit:
+    {
+        mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
+                                        recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     return mpi_errno;
 }
@@ -279,12 +277,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
 
 #ifdef HAVE_LIBHCOLL
     mpi_errno = hcoll_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-    if (mpi_errno == MPI_SUCCESS)
-        goto fn_exit;
+    if (mpi_errno != MPI_SUCCESS)
 #endif
-    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-
-  fn_exit:
+    {
+        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                     errflag);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     return mpi_errno;
 }

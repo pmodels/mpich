@@ -51,7 +51,7 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int src, dst;
-    int i, j, ww, index = 0;
+    int i, j, ww;
     int invtcs;
     void *data_buf;
     int *vtcs, *recv_id, *send_id;
@@ -128,13 +128,13 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
     /* Post more send/recv pairs as the previous ones finish */
     for (i = bblock; i < size; i += batch_size) {
         ww = MPL_MIN(size - i, batch_size);
-        index = 0;      /* Store vtcs array from the start */
+        int idx = 0;            /* Store vtcs array from the start */
         /* Get the send and recv ids from previous sends/recvs.
          * ((i + j) % bblock) would ensure extracting and storing
          * dependencies in order from '0, 1,...,bblock' */
         for (j = 0; j < ww; j++) {
-            vtcs[index++] = recv_id[(i + j) % bblock];
-            vtcs[index++] = send_id[(i + j) % bblock];
+            vtcs[idx++] = recv_id[(i + j) % bblock];
+            vtcs[idx++] = send_id[(i + j) % bblock];
         }
         invtcs = MPIR_TSP_sched_selective_sink(sched, 2 * ww, vtcs);
         for (j = 0; j < ww; j++) {
