@@ -347,7 +347,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     MPIR_Process.comm_self->rank = 0;
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
-    MPIR_Process.comm_self->coll.pof2 = MPL_pof2(1);
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_WORLD          */
@@ -355,7 +354,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     MPIR_Process.comm_world->rank = rank;
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
-    MPIR_Process.comm_world->coll.pof2 = MPL_pof2(size);
 
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);
@@ -436,8 +434,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
 #endif
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
-                                           MPIR_Process.comm_world,
-                                           MPIR_Process.comm_self, has_parent, &n_nm_vcis_provided);
+                                           MPIR_Process.comm_world, MPIR_Process.comm_self,
+                                           &n_nm_vcis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -464,6 +462,18 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (has_parent) {
+        pmi_errno = PMI_KVS_Get(MPIDI_global.jobid, MPIDI_PARENT_PORT_KVSKEY,
+                                MPIDI_global.parent_port, MPIDI_MAX_KVS_VALUE_LEN);
+        if (pmi_errno != PMI_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_parent_port",
+                                 "**pmi_kvs_get_parent_port %d", pmi_errno);
+        }
+        MPID_Comm_connect(MPIDI_global.parent_port, NULL, 0, MPIR_Process.comm_world,
+                          &MPIR_Process.comm_parent);
+        MPIR_Assert(MPIR_Process.comm_parent != NULL);
+        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+    }
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */

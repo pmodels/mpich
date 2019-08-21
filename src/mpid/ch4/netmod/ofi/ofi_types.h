@@ -394,7 +394,6 @@ typedef struct {
     int pname_len;
     char addrname[FI_NAME_MAX];
     size_t addrnamelen;
-    char kvsname[MPIDI_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
