@@ -40,25 +40,21 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
     return error_class;
 }
 
-int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
+int MPIO_Err_return_file(ADIO_File adio_fh, int error_code)
 {
-    ADIO_File adio_fh;
-
-    if (mpi_fh == MPI_FILE_NULL) {
-        if (ADIOI_DFLT_ERR_HANDLER != MPI_ERRORS_RETURN) {
+    if (adio_fh == ADIO_FILE_NULL) {
+        if (ADIOI_DFLT_ERR_HANDLER == MPI_ERRORS_ARE_FATAL ||
+            ADIOI_DFLT_ERR_HANDLER != MPI_ERRORS_RETURN) {
             MPI_Abort(MPI_COMM_WORLD, 1);
         } else {
             return error_code;
         }
     }
 
-    adio_fh = MPIO_File_resolve(mpi_fh);
-
-    if (adio_fh->err_handler != MPI_ERRORS_RETURN) {
+    if (adio_fh->err_handler == MPI_ERRORS_ARE_FATAL || adio_fh->err_handler != MPI_ERRORS_RETURN)
         MPI_Abort(MPI_COMM_WORLD, 1);
-    } else {
-        return error_code;
-    }
+
+    return error_code;
 }
 
 int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code)

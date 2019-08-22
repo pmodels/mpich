@@ -6,17 +6,17 @@
 #include "adio.h"
 #include "adio_extern.h"
 
-static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
+static int MPIOI_Type_block(const int *array_of_gsizes, int dim, int ndims, int nprocs,
                             int rank, int darg, int order, MPI_Aint orig_extent,
                             MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
-static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
+static int MPIOI_Type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nprocs,
                              int rank, int darg, int order, MPI_Aint orig_extent,
                              MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
 
 
 int ADIO_Type_create_darray(int size, int rank, int ndims,
-                            int *array_of_gsizes, int *array_of_distribs,
-                            int *array_of_dargs, int *array_of_psizes,
+                            const int *array_of_gsizes, const int *array_of_distribs,
+                            const int *array_of_dargs, const int *array_of_psizes,
                             int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     MPI_Datatype type_old, type_new = MPI_DATATYPE_NULL, types[1];
@@ -139,7 +139,7 @@ int ADIO_Type_create_darray(int size, int rank, int ndims,
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
-static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
+static int MPIOI_Type_block(const int *array_of_gsizes, int dim, int ndims, int nprocs,
                             int rank, int darg, int order, MPI_Aint orig_extent,
                             MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
 {
@@ -210,7 +210,7 @@ static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
-static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
+static int MPIOI_Type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nprocs,
                              int rank, int darg, int order, MPI_Aint orig_extent,
                              MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
 {

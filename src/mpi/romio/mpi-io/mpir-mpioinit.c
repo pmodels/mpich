@@ -32,12 +32,13 @@ void MPIR_MPIOInit(int *error_code)
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE, myname, __LINE__,
                                                MPI_ERR_OTHER, "**initialized", 0);
-            *error_code = MPIO_Err_return_file(MPI_FILE_NULL, *error_code);
+            *error_code = MPIO_Err_return_file(ADIO_FILE_NULL, *error_code);
             return;
         }
         /* --END ERROR HANDLING-- */
 
-        MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval, (void *) 0);
+        MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval,
+                               (void *) 0);
 
         /* put a dummy attribute on MPI_COMM_SELF, because we want the delete
          * function to be called when MPI_COMM_SELF is freed. Clarified

@@ -7,9 +7,9 @@
 #include "adio_extern.h"
 
 int ADIO_Type_create_subarray(int ndims,
-                              int *array_of_sizes,
-                              int *array_of_subsizes,
-                              int *array_of_starts,
+                              const int *array_of_sizes,
+                              const int *array_of_subsizes,
+                              const int *array_of_starts,
                               int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     MPI_Aint lb, ub, extent, disps[1], size;
