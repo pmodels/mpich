@@ -47,8 +47,6 @@ int MPI_File_write_all_begin(MPI_File fh, ROMIO_CONST void *buf, int count, MPI_
     return error_code;
 }
 
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_write_all_begin(MPI_File fh,
                                MPI_Offset offset,
                                int file_ptr_type,
@@ -119,4 +117,3 @@ int MPIOI_File_write_all_begin(MPI_File fh,
 
     return error_code;
 }
-#endif
