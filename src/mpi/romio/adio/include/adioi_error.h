@@ -19,7 +19,7 @@
                                           myname, __LINE__,             \
                                           MPI_ERR_FILE,                 \
                                           "**iobadfh", 0);              \
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);   \
+        error_code = MPIO_Err_return_file(ADIO_FILE_NULL, error_code);  \
         goto fn_exit;                                                   \
     }
 
@@ -33,7 +33,7 @@
                                               (myname_), __LINE__,      \
                                               MPI_ERR_COMM,             \
                                               "**commnull", 0);         \
-            error_code_ = MPIO_Err_return_file(MPI_FILE_NULL, (error_code_)); \
+            error_code_ = MPIO_Err_return_file(ADIO_FILE_NULL, (error_code_)); \
             goto fn_exit;                                               \
         }                                                               \
     } while (0)

@@ -59,7 +59,7 @@ int MPI_File_close(MPI_File * fh)
          * but a race condition in GPFS necessated this.  See ticket #2214 */
         MPI_Barrier((adio_fh)->comm);
         if ((adio_fh)->shared_fp_fd != ADIO_FILE_NULL) {
-            MPI_File *fh_shared = &(adio_fh->shared_fp_fd);
+            ADIO_File *fh_shared = &(adio_fh->shared_fp_fd);
             ADIO_Close((adio_fh)->shared_fp_fd, &error_code);
             MPIO_File_free(fh_shared);
             /* --BEGIN ERROR HANDLING-- */
@@ -74,12 +74,16 @@ int MPI_File_close(MPI_File * fh)
      * somehow inform the MPI library that we no longer hold a reference to any
      * user defined error handler.  We do this by setting the errhandler at this
      * point to MPI_ERRORS_RETURN. */
+#ifdef MPIO_BUILD_PROFILING
     error_code = PMPI_File_set_errhandler(*fh, MPI_ERRORS_RETURN);
+#else
+    error_code = MPI_File_set_errhandler(*fh, MPI_ERRORS_RETURN);
+#endif
     if (error_code != MPI_SUCCESS)
         goto fn_fail;
 
     ADIO_Close(adio_fh, &error_code);
-    MPIO_File_free(fh);
+    MPIO_File_free(&adio_fh);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
         goto fn_fail;

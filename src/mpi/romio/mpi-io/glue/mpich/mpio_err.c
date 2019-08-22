@@ -28,7 +28,7 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
     return error_code;
 }
 
-int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
+int MPIO_Err_return_file(ADIO_File adio_fh, int error_code)
 {
     MPI_Errhandler e;
     void (*c_errhandler) (MPI_File *, int *, ...);
@@ -43,14 +43,10 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
      */
 
     /* First, get the handler and the corresponding function */
-    if (mpi_fh == MPI_FILE_NULL) {
+    if (adio_fh == ADIO_FILE_NULL)
         e = ADIOI_DFLT_ERR_HANDLER;
-    } else {
-        ADIO_File fh;
-
-        fh = MPIO_File_resolve(mpi_fh);
-        e = fh->err_handler;
-    }
+    else
+        e = adio_fh->err_handler;
 
     /* Actually, e is just the value provide by the MPICH routines
      * file_set_errhandler.  This is actually a *pointer* to the
@@ -70,7 +66,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(error_code) || kind == 0) {
-        ADIO_File fh = MPIO_File_resolve(mpi_fh);
+        ADIO_File fh = MPIO_File_resolve(adio_fh);
 
         MPL_snprintf(error_msg, 4096, "I/O error: ");
         len = (int) strlen(error_msg);
@@ -79,9 +75,9 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
     }
     /* --END ERROR HANDLING-- */
     else if (kind == 2) {
-        (*c_errhandler) (&mpi_fh, &error_code, 0);
+        (*c_errhandler) (&adio_fh, &error_code, 0);
     } else if (kind == 3) {
-        MPIR_File_call_cxx_errhandler(&mpi_fh, &error_code, c_errhandler);
+        MPIR_File_call_cxx_errhandler(&adio_fh, &error_code, c_errhandler);
     }
 
     /* kind == 1 just returns */
