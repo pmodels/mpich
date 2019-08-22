@@ -62,8 +62,6 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 }
 
 /* Note: MPIOI_File_read_all also used by MPI_File_read_at_all */
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_read_all(MPI_File fh,
                         MPI_Offset offset,
                         int file_ptr_type,
@@ -130,4 +128,3 @@ int MPIOI_File_read_all(MPI_File fh,
 
     return error_code;
 }
-#endif

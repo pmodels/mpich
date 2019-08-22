@@ -49,8 +49,6 @@ int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status * status)
     return error_code;
 }
 
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * status)
 {
     int error_code = MPI_SUCCESS;
@@ -84,4 +82,3 @@ int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * s
 
     return error_code;
 }
-#endif

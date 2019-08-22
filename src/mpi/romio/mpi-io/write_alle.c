@@ -48,8 +48,6 @@ int MPI_File_write_all_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status * stat
     return error_code;
 }
 
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_write_all_end(MPI_File fh, const void *buf, char *myname, MPI_Status * status)
 {
     int error_code;
@@ -88,4 +86,3 @@ int MPIOI_File_write_all_end(MPI_File fh, const void *buf, char *myname, MPI_Sta
 
     return error_code;
 }
-#endif
