@@ -20,7 +20,9 @@ static void handle_error(int errcode, const char *str)
 
 #define MPI_CHECK(fn) { int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
 
-
+#define REPORT_DIFF(index, got, expect) \
+    fprintf(stderr, "rank %d (line %d): buf[%d] is %d, should be %d\n", \
+            mynod, __LINE__, index, got, expect);
 
 #define SIZE 5000
 
@@ -28,13 +30,13 @@ static void handle_error(int errcode, const char *str)
 
 int main(int argc, char **argv)
 {
-    int *buf, i, mynod, nprocs, len, b[3];
+    int *buf, i, mynod, nprocs, len;
     int err, errs = 0, toterrs;
-    MPI_Aint d[3];
+    MPI_Aint disp, extent;
     MPI_File fh;
     MPI_Status status;
     char *filename;
-    MPI_Datatype typevec, newtype, t[3];
+    MPI_Datatype typevec, newtype, tmptype;
     MPIO_Request req;
 
     MPI_Init(&argc, &argv);
@@ -74,17 +76,18 @@ int main(int argc, char **argv)
 
     MPI_Type_vector(SIZE / 2, 1, 2, MPI_INT, &typevec);
 
-    b[0] = b[1] = b[2] = 1;
-    d[0] = 0;
-    d[1] = mynod * sizeof(int);
-    d[2] = SIZE * sizeof(int);
-    t[0] = MPI_LB;
-    t[1] = typevec;
-    t[2] = MPI_UB;
+    extent = SIZE * sizeof(int);
 
-    MPI_Type_struct(3, b, d, t, &newtype);
-    MPI_Type_commit(&newtype);
+    len = 1;
+    disp = mynod * sizeof(int);
+
+    /* keep the struct, ditch the vector */
+    MPI_Type_create_struct(1, &len, &disp, &typevec, &tmptype);
     MPI_Type_free(&typevec);
+
+    MPI_Type_create_resized(tmptype, 0, extent, &newtype);
+    MPI_Type_free(&tmptype);
+    MPI_Type_commit(&newtype);
 
     if (!mynod) {
 #if VERBOSE
@@ -131,21 +134,24 @@ int main(int argc, char **argv)
         if (!mynod) {
             if ((i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
+                REPORT_DIFF(i, buf[i], -1);
+                break;
             }
             if (!(i % 2) && (buf[i] != i)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
+                REPORT_DIFF(i, buf[i], i);
+                break;
             }
         } else {
             if ((i % 2) && (buf[i] != i + mynod * SIZE)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i + mynod * SIZE);
+                REPORT_DIFF(i, buf[i], i + mynod * SIZE);
+                break;
             }
             if (!(i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
+                REPORT_DIFF(i, buf[i], -1);
+                break;
             }
         }
     }
@@ -197,21 +203,24 @@ int main(int argc, char **argv)
         if (!mynod) {
             if ((i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
+                REPORT_DIFF(i, buf[i], -1);
+                break;
             }
             if (!(i % 2) && (buf[i] != i)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
+                REPORT_DIFF(i, buf[i], i);
+                break;
             }
         } else {
             if ((i % 2) && (buf[i] != i + mynod * SIZE)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i + mynod * SIZE);
+                REPORT_DIFF(i, buf[i], i + mynod * SIZE);
+                break;
             }
             if (!(i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
+                REPORT_DIFF(i, buf[i], -1);
+                break;
             }
         }
     }
@@ -265,13 +274,14 @@ int main(int argc, char **argv)
         if (!mynod) {
             if (buf[i] != i) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
+                REPORT_DIFF(i, buf[i], i);
+                break;
             }
         } else {
             if (buf[i] != i + mynod * SIZE) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i + mynod * SIZE);
+                REPORT_DIFF(i, buf[i], i + mynod * SIZE);
+                break;
             }
         }
     }
