@@ -12,7 +12,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -58,8 +58,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_delete_(char *FORT_MIXED_LEN_DECL, MP
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
