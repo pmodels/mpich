@@ -7,7 +7,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -55,8 +55,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_read_at_all_(MPI_Fint *, MPI_Offset *
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -102,15 +100,6 @@ void mpi_file_read_at_all_(MPI_Fint * fh, MPI_Offset * offset, void *buf,
 void mpi_file_read_at_all_(MPI_Fint * fh, MPI_Offset * offset, void *buf,
                            MPI_Fint * count, MPI_Fint * datatype,
                            MPI_Status * status, MPI_Fint * ierr)
-{
-    MPI_File fh_c;
-    MPI_Datatype datatype_c;
-
-    fh_c = MPI_File_f2c(*fh);
-    datatype_c = MPI_Type_f2c(*datatype);
-
-    *ierr = MPI_File_read_at_all(fh_c, *offset, buf, *count, datatype_c, status);
-}
 #else
 /* Prototype to keep compiler happy */
 FORTRAN_API void FORT_CALL mpi_file_read_at_all_(MPI_Fint * fh, MPI_Offset * offset, void *buf,
@@ -120,10 +109,13 @@ FORTRAN_API void FORT_CALL mpi_file_read_at_all_(MPI_Fint * fh, MPI_Offset * off
 FORTRAN_API void FORT_CALL mpi_file_read_at_all_(MPI_Fint * fh, MPI_Offset * offset, void *buf,
                                                  MPI_Fint * count, MPI_Fint * datatype,
                                                  MPI_Status * status, MPI_Fint * ierr)
+#endif
 {
     MPI_File fh_c;
+    MPI_Datatype datatype_c;
 
     fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_read_at_all(fh_c, *offset, buf, *count, (MPI_Datatype) * datatype, status);
+    datatype_c = MPI_Type_f2c(*datatype);
+
+    *ierr = MPI_File_read_at_all(fh_c, *offset, buf, *count, datatype_c, status);
 }
-#endif

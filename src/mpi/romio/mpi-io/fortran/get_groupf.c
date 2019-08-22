@@ -7,7 +7,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -49,8 +49,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint *, MPI_Group *, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -92,6 +90,12 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint *, MPI_Group *, M
 void mpi_file_get_group_(MPI_Fint * fh, MPI_Fint * group, MPI_Fint * ierr);
 
 void mpi_file_get_group_(MPI_Fint * fh, MPI_Fint * group, MPI_Fint * ierr)
+#else
+/* Prototype to keep compiler happy */
+FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint * fh, MPI_Fint * group, MPI_Fint * ierr);
+
+FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint * fh, MPI_Fint * group, MPI_Fint * ierr)
+#endif
 {
     MPI_File fh_c;
     MPI_Group group_c;
@@ -100,15 +104,3 @@ void mpi_file_get_group_(MPI_Fint * fh, MPI_Fint * group, MPI_Fint * ierr)
     *ierr = MPI_File_get_group(fh_c, &group_c);
     *group = MPI_Group_c2f(group_c);
 }
-#else
-/* Prototype to keep compiler happy */
-FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint * fh, MPI_Group * group, MPI_Fint * ierr);
-
-FORTRAN_API void FORT_CALL mpi_file_get_group_(MPI_Fint * fh, MPI_Group * group, MPI_Fint * ierr)
-{
-    MPI_File fh_c;
-
-    fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_get_group(fh_c, group);
-}
-#endif

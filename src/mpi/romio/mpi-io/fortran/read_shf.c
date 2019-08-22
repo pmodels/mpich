@@ -7,7 +7,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -53,8 +53,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_read_shared_(MPI_Fint *, void *, MPI_
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -97,6 +95,15 @@ void mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
                            MPI_Fint * datatype, MPI_Status * status, MPI_Fint * ierr);
 void mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
                            MPI_Fint * datatype, MPI_Status * status, MPI_Fint * ierr)
+#else
+/* Prototype to keep compiler happy */
+FORTRAN_API void FORT_CALL mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
+                                                 MPI_Fint * datatype, MPI_Status * status,
+                                                 MPI_Fint * ierr);
+FORTRAN_API void FORT_CALL mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
+                                                 MPI_Fint * datatype, MPI_Status * status,
+                                                 MPI_Fint * ierr)
+#endif
 {
     MPI_File fh_c;
     MPI_Datatype datatype_c;
@@ -106,18 +113,3 @@ void mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
 
     *ierr = MPI_File_read_shared(fh_c, buf, *count, datatype_c, status);
 }
-#else
-/* Prototype to keep compiler happy */
-FORTRAN_API void FORT_CALL mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
-                                                 MPI_Fint * datatype, MPI_Status * status,
-                                                 MPI_Fint * ierr);
-FORTRAN_API void FORT_CALL mpi_file_read_shared_(MPI_Fint * fh, void *buf, MPI_Fint * count,
-                                                 MPI_Fint * datatype, MPI_Status * status,
-                                                 MPI_Fint * ierr)
-{
-    MPI_File fh_c;
-
-    fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_read_shared(fh_c, buf, *count, (MPI_Datatype) * datatype, status);
-}
-#endif

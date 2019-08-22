@@ -6,7 +6,7 @@
 #include "adio.h"
 #include "mpio.h"
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -48,8 +48,6 @@ FORTRAN_API void FORT_CALL mpio_wait_(MPI_Fint * request, MPI_Status * status, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
