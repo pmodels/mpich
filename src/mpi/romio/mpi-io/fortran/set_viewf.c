@@ -10,7 +10,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -60,8 +60,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_set_view_(MPI_Fint *, MPI_Offset *, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -108,6 +106,29 @@ void mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
                         MPI_Fint * filetype, char *datarep, MPI_Fint * info, MPI_Fint * ierr,
                         int str_len)
 {
+#else
+
+#ifdef _UNICOS
+void mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Datatype * etype,
+                        MPI_Datatype * filetype, _fcd datarep_fcd, MPI_Fint * info, MPI_Fint * ierr)
+{
+    char *datarep = _fcdtocp(datarep_fcd);
+    int str_len = _fcdlen(datarep_fcd);
+#else
+/* Prototype to keep compiler happy */
+FORTRAN_API void FORT_CALL mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
+                                              MPI_Fint * filetype,
+                                              char *datarep FORT_MIXED_LEN_DECL, MPI_Fint * info,
+                                              MPI_Fint * ierr FORT_END_LEN_DECL);
+
+FORTRAN_API void FORT_CALL mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
+                                              MPI_Fint * filetype,
+                                              char *datarep FORT_MIXED_LEN(str_len),
+                                              MPI_Fint * info,
+                                              MPI_Fint * ierr FORT_END_LEN(str_len))
+{
+#endif
+#endif
     char *newstr;
     MPI_File fh_c;
     int i, real_len;
@@ -142,58 +163,3 @@ void mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
 
     ADIOI_Free(newstr);
 }
-
-#else
-
-#ifdef _UNICOS
-void mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Datatype * etype,
-                        MPI_Datatype * filetype, _fcd datarep_fcd, MPI_Fint * info, MPI_Fint * ierr)
-{
-    char *datarep = _fcdtocp(datarep_fcd);
-    int str_len = _fcdlen(datarep_fcd);
-#else
-/* Prototype to keep compiler happy */
-FORTRAN_API void FORT_CALL mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
-                                              MPI_Fint * filetype,
-                                              char *datarep FORT_MIXED_LEN_DECL, MPI_Fint * info,
-                                              MPI_Fint * ierr FORT_END_LEN_DECL);
-
-FORTRAN_API void FORT_CALL mpi_file_set_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
-                                              MPI_Fint * filetype,
-                                              char *datarep FORT_MIXED_LEN(str_len),
-                                              MPI_Fint * info,
-                                              MPI_Fint * ierr FORT_END_LEN(str_len))
-{
-#endif
-    char *newstr;
-    MPI_File fh_c;
-    int i, real_len;
-    MPI_Info info_c;
-
-    info_c = MPI_Info_f2c(*info);
-
-    /* strip trailing blanks in datarep */
-    if (datarep <= (char *) 0) {
-        FPRINTF(stderr, "MPI_File_set_view: datarep is an invalid address\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    for (i = str_len - 1; i >= 0; i--)
-        if (datarep[i] != ' ')
-            break;
-    if (i < 0) {
-        FPRINTF(stderr, "MPI_File_set_view: datarep is a blank string\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    real_len = i + 1;
-
-    newstr = (char *) ADIOI_Malloc((real_len + 1) * sizeof(char));
-    ADIOI_Strncpy(newstr, datarep, real_len);
-    newstr[real_len] = '\0';
-
-    fh_c = MPI_File_f2c(*fh);
-
-    *ierr = MPI_File_set_view(fh_c, *disp, *etype, *filetype, newstr, info_c);
-
-    ADIOI_Free(newstr);
-}
-#endif

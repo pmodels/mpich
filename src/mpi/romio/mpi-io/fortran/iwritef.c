@@ -7,7 +7,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -53,8 +53,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_iwrite_(MPI_Fint *, void *, MPI_Fint 
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -98,6 +96,16 @@ void mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
 
 void mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
                       MPI_Fint * datatype, MPI_Fint * request, MPI_Fint * ierr)
+#else
+/* Prototype to keep compiler happy */
+FORTRAN_API void FORT_CALL mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
+                                            MPI_Fint * datatype, MPI_Fint * request,
+                                            MPI_Fint * ierr);
+
+FORTRAN_API void FORT_CALL mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
+                                            MPI_Fint * datatype, MPI_Fint * request,
+                                            MPI_Fint * ierr)
+#endif
 {
     MPI_File fh_c;
     MPIO_Request req_c;
@@ -109,21 +117,3 @@ void mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
     *ierr = MPI_File_iwrite(fh_c, buf, *count, datatype_c, &req_c);
     *request = MPIO_Request_c2f(req_c);
 }
-#else
-/* Prototype to keep compiler happy */
-FORTRAN_API void FORT_CALL mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
-                                            MPI_Datatype * datatype, MPI_Fint * request,
-                                            MPI_Fint * ierr);
-
-FORTRAN_API void FORT_CALL mpi_file_iwrite_(MPI_Fint * fh, void *buf, MPI_Fint * count,
-                                            MPI_Datatype * datatype, MPI_Fint * request,
-                                            MPI_Fint * ierr)
-{
-    MPI_File fh_c;
-    MPIO_Request req_c;
-
-    fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_iwrite(fh_c, buf, *count, *datatype, &req_c);
-    *request = MPIO_Request_c2f(req_c);
-}
-#endif

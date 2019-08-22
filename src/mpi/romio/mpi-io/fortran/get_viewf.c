@@ -10,7 +10,7 @@
 #include "mpio.h"
 
 
-#if defined(MPIO_BUILD_PROFILING) || defined(HAVE_WEAK_SYMBOLS)
+#if defined(MPIO_BUILD_PROFILING) && defined(HAVE_WEAK_SYMBOLS)
 
 #if defined(HAVE_WEAK_SYMBOLS)
 #if defined(HAVE_PRAGMA_WEAK)
@@ -60,8 +60,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_view_(MPI_Fint *, MPI_Offset *, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
@@ -106,39 +104,6 @@ void mpi_file_get_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
 void mpi_file_get_view_(MPI_Fint * fh, MPI_Offset * disp, MPI_Fint * etype,
                         MPI_Fint * filetype, char *datarep, MPI_Fint * ierr, int str_len)
 {
-    MPI_File fh_c;
-    MPI_Datatype etype_c, filetype_c;
-    int i, tmpreplen;
-    char *tmprep;
-
-    if (datarep <= (char *) 0) {
-        FPRINTF(stderr, "MPI_File_get_view: datarep is an invalid address\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-
-    tmprep = (char *) ADIOI_Malloc((MPI_MAX_DATAREP_STRING + 1) * sizeof(char));
-    fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_get_view(fh_c, disp, &etype_c, &filetype_c, tmprep);
-
-    tmpreplen = strlen(tmprep);
-    if (tmpreplen <= str_len) {
-        ADIOI_Strncpy(datarep, tmprep, tmpreplen);
-
-        /* blank pad the remaining space */
-        for (i = tmpreplen; i < str_len; i++)
-            datarep[i] = ' ';
-    } else {
-        /* not enough space */
-        ADIOI_Strncpy(datarep, tmprep, str_len);
-        /* this should be flagged as an error. */
-        *ierr = MPI_ERR_UNKNOWN;
-    }
-
-    *etype = MPI_Type_c2f(etype_c);
-    *filetype = MPI_Type_c2f(filetype_c);
-    ADIOI_Free(tmprep);
-}
-
 #else
 
 #ifdef _UNICOS
@@ -160,13 +125,12 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_(MPI_Fint * fh, MPI_Offset * disp, 
                                               MPI_Fint * ierr FORT_END_LEN(str_len))
 {
 #endif
+#endif
     MPI_File fh_c;
-    int i, tmpreplen;
     MPI_Datatype etype_c, filetype_c;
-
+    int i, tmpreplen;
     char *tmprep;
 
-/* Initialize the string to all blanks */
     if (datarep <= (char *) 0) {
         FPRINTF(stderr, "MPI_File_get_view: datarep is an invalid address\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -174,8 +138,6 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_(MPI_Fint * fh, MPI_Offset * disp, 
 
     tmprep = (char *) ADIOI_Malloc((MPI_MAX_DATAREP_STRING + 1) * sizeof(char));
     fh_c = MPI_File_f2c(*fh);
-    etype_c = MPI_Type_f2c(*etype);
-    filetype_c = MPI_Type_f2c(*filetype);
     *ierr = MPI_File_get_view(fh_c, disp, &etype_c, &filetype_c, tmprep);
 
     tmpreplen = strlen(tmprep);
@@ -196,4 +158,3 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_(MPI_Fint * fh, MPI_Offset * disp, 
     *filetype = MPI_Type_c2f(filetype_c);
     ADIOI_Free(tmprep);
 }
-#endif
