@@ -9,6 +9,8 @@
 
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
+
+int MPIR_Thread_CS_Init(void);
 int MPIR_Thread_CS_Finalize(void);
 
 extern int MPIR_async_thread_initialized;
