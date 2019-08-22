@@ -62,6 +62,7 @@ int MPI_File_iwrite_all(MPI_File fh, ROMIO_CONST void *buf, int count,
                         MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
+    ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_IWRITE_ALL";
 #ifdef MPI_hpux
     int fl_xmpi;
@@ -69,7 +70,9 @@ int MPI_File_iwrite_all(MPI_File fh, ROMIO_CONST void *buf, int count,
     HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITEALL, TRDTBLOCK, fh, datatype, count);
 #endif /* MPI_hpux */
 
-    error_code = MPIOI_File_iwrite_all(fh, (MPI_Offset) 0,
+    adio_fh = MPIO_File_resolve(fh);
+
+    error_code = MPIOI_File_iwrite_all(adio_fh, (MPI_Offset) 0,
                                        ADIO_INDIVIDUAL, buf, count, datatype, myname, request);
 
 #ifdef MPI_hpux
@@ -122,9 +125,7 @@ int MPI_File_iwrite_all_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
 }
 
 /* Note: MPIOI_File_iwrite_all also used by MPI_File_iwrite_at_all */
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
-int MPIOI_File_iwrite_all(MPI_File fh,
+int MPIOI_File_iwrite_all(ADIO_File adio_fh,
                           MPI_Offset offset,
                           int file_ptr_type,
                           const void *buf,
@@ -133,13 +134,10 @@ int MPIOI_File_iwrite_all(MPI_File fh,
 {
     int error_code;
     MPI_Count datatype_size;
-    ADIO_File adio_fh;
     void *e32buf = NULL;
     const void *xbuf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
-
-    adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
@@ -187,4 +185,3 @@ int MPIOI_File_iwrite_all(MPI_File fh,
 
     return error_code;
 }
-#endif

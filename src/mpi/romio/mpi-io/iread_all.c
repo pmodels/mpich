@@ -74,7 +74,8 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count,
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {
-        error_code = MPIO_Err_return_file(fh, error_code);
+        ADIO_File adio_fh = MPIO_File_resolve(fh);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
     }
     /* --END ERROR HANDLING-- */
 
@@ -134,8 +135,6 @@ int MPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count,
 }
 
 /* Note: MPIOI_File_iread_all also used by MPI_File_iread_at_all */
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_iread_all(MPI_File fh,
                          MPI_Offset offset,
                          int file_ptr_type,
@@ -202,4 +201,3 @@ int MPIOI_File_iread_all(MPI_File fh,
 
     return error_code;
 }
-#endif

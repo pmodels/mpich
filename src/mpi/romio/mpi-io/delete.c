@@ -62,7 +62,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
          * the error up.  In the PRINT_ERR_MSG case MPI_Abort has already
          * been called as well, so we probably didn't even make it this far.
          */
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        error_code = MPIO_Err_return_file(ADIO_FILE_NULL, error_code);
         goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
@@ -82,7 +82,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     (fsops->ADIOI_xxx_Delete) (filename, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        error_code = MPIO_Err_return_file(ADIO_FILE_NULL, error_code);
     /* --END ERROR HANDLING-- */
 
 #ifdef MPI_hpux

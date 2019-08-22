@@ -75,8 +75,10 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
                                   count, datatype, myname, request);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(fh, error_code);
+    if (error_code != MPI_SUCCESS) {
+        ADIO_File adio_fh = MPIO_File_resolve(fh);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+    }
     /* --END ERROR HANDLING-- */
 
 #ifdef MPI_hpux

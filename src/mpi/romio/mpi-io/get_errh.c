@@ -49,10 +49,10 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler * errhandler)
     } else {
         fh = MPIO_File_resolve(mpi_fh);
         /* --BEGIN ERROR HANDLING-- */
-        if ((fh <= (MPI_File) 0) || ((fh)->cookie != ADIOI_FILE_COOKIE)) {
+        if ((fh <= (ADIO_File) 0) || ((fh)->cookie != ADIOI_FILE_COOKIE)) {
             error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                               myname, __LINE__, MPI_ERR_ARG, "**iobadfh", 0);
-            error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+            error_code = MPIO_Err_return_file(ADIO_FILE_NULL, error_code);
             goto fn_exit;
         }
         /* --END ERROR HANDLING-- */

@@ -364,10 +364,10 @@ typedef struct {
 
 void ADIO_Init(int *argc, char ***argv, int *error_code);
 void ADIO_End(int *error_code);
-MPI_File ADIO_Open(MPI_Comm orig_comm, MPI_Comm comm, const char *filename,
-                   int file_system, ADIOI_Fns * ops,
-                   int access_mode, ADIO_Offset disp, MPI_Datatype etype,
-                   MPI_Datatype filetype, MPI_Info info, int perm, int *error_code);
+ADIO_File ADIO_Open(MPI_Comm orig_comm, MPI_Comm comm, const char *filename,
+                    int file_system, ADIOI_Fns * ops,
+                    int access_mode, ADIO_Offset disp, MPI_Datatype etype,
+                    MPI_Datatype filetype, MPI_Info info, int perm, int *error_code);
 void ADIOI_OpenColl(ADIO_File fd, int rank, int acces_mode, int *error_code);
 void ADIO_ImmediateOpen(ADIO_File fd, int *error_code);
 void ADIO_Close(ADIO_File fd, int *error_code);
@@ -452,17 +452,17 @@ int ADIO_Type_create_darray(int size, int rank, int ndims,
 /* MPI_File management functions (in mpio_file.c) */
 MPI_File MPIO_File_create(int size);
 ADIO_File MPIO_File_resolve(MPI_File mpi_fh);
-void MPIO_File_free(MPI_File * mpi_fh);
+void MPIO_File_free(ADIO_File * fd);
 MPI_File MPIO_File_f2c(MPI_Fint fh);
 MPI_Fint MPIO_File_c2f(MPI_File fh);
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
                          int line, int error_class, const char generic_msg[],
                          const char specific_msg[], ...);
-int MPIO_Err_return_file(MPI_File mpi_fh, int error_code);
+int MPIO_Err_return_file(ADIO_File adio_fh, int error_code);
 int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code);
 
 /* request management helper functions */
-void MPIO_Completed_request_create(MPI_File * fh, MPI_Offset nbytes,
+void MPIO_Completed_request_create(ADIO_File * fd, MPI_Offset nbytes,
                                    int *error_code, MPI_Request * request);
 
 #include "adioi.h"

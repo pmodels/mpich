@@ -803,7 +803,7 @@ int MPIOI_File_write_all_begin(MPI_File fh, MPI_Offset offset, int file_ptr_type
                                MPI_Aint count, MPI_Datatype datatype, char *myname);
 int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * status);
 int MPIOI_File_write_all_end(MPI_File fh, const void *buf, char *myname, MPI_Status * status);
-int MPIOI_File_iwrite(MPI_File fh,
+int MPIOI_File_iwrite(ADIO_File adio_fh,
                       MPI_Offset offset,
                       int file_ptr_type,
                       const void *buf,
@@ -813,7 +813,7 @@ int MPIOI_File_iread(MPI_File fh,
                      int file_ptr_type,
                      void *buf,
                      MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Request * request);
-int MPIOI_File_iwrite_all(MPI_File fh,
+int MPIOI_File_iwrite_all(ADIO_File adio_fh,
                           MPI_Offset offset,
                           int file_ptr_type,
                           const void *buf,
