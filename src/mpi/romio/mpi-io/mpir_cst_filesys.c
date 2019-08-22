@@ -13,6 +13,9 @@
 #include <dirent.h>
 #endif
 
+#ifdef ROMIO_INSIDE_MPICH
+extern int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id);
+
 static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
                                             const char *dirname, MPI_Comm * newcomm)
 {
@@ -252,3 +255,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
     }
     return mpi_errno;
 }
+#endif
+/*
+ * vim: ts=8 sts=4 sw=4 noexpandtab
+ */
