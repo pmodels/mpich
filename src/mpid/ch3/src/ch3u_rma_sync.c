@@ -490,7 +490,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             goto finish_fence;
         }
         else {
-            MPIR_Request* fence_sync_req_ptr;
+            MPIR_Request* fence_sync_req_ptr = NULL;
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
@@ -611,7 +611,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             win_ptr->states.access_state = MPIDI_RMA_NONE;
         }
         else {
-            MPIR_Request* fence_sync_req_ptr;
+            MPIR_Request* fence_sync_req_ptr = NULL;
 
             /* Prepare for the next possible epoch */
             mpi_errno = MPIR_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
