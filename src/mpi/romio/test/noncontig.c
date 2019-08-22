@@ -28,13 +28,13 @@ static void handle_error(int errcode, const char *str)
 
 int main(int argc, char **argv)
 {
-    int *buf, i, mynod, nprocs, len, b[3];
+    int *buf, i, mynod, nprocs, len;
     int err, errs = 0, toterrs;
-    MPI_Aint d[3];
+    MPI_Aint disp, extent;
     MPI_File fh;
     MPI_Status status;
     char *filename;
-    MPI_Datatype typevec, newtype, t[3];
+    MPI_Datatype typevec, newtype, tmptype;
     MPI_Info info;
 
     MPI_Init(&argc, &argv);
@@ -78,18 +78,18 @@ int main(int argc, char **argv)
      * of typevec are such that the types for the two processes won't
      * overlap.
      */
-    b[0] = b[1] = b[2] = 1;
-    d[0] = 0;
-    d[1] = mynod * sizeof(int);
-    d[2] = SIZE * sizeof(int);
-    t[0] = MPI_LB;
-    t[1] = typevec;
-    t[2] = MPI_UB;
+    extent = SIZE * sizeof(int);
+
+    len = 1;
+    disp = mynod * sizeof(int);
 
     /* keep the struct, ditch the vector */
-    MPI_Type_struct(3, b, d, t, &newtype);
-    MPI_Type_commit(&newtype);
+    MPI_Type_create_struct(1, &len, &disp, &typevec, &tmptype);
     MPI_Type_free(&typevec);
+
+    MPI_Type_create_resized(tmptype, 0, extent, &newtype);
+    MPI_Type_free(&tmptype);
+    MPI_Type_commit(&newtype);
 
     MPI_Info_create(&info);
     /* I am setting these info values for testing purposes only. It is
