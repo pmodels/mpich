@@ -225,4 +225,3 @@ int MPIOI_File_read(MPI_File fh,
 
     return error_code;
 }
-#endif

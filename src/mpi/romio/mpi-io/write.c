@@ -224,4 +224,3 @@ int MPIOI_File_write(MPI_File fh,
 
     return error_code;
 }
-#endif

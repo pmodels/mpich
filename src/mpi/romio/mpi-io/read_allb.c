@@ -165,4 +165,3 @@ int MPIOI_File_read_all_begin(MPI_File fh,
 
     return error_code;
 }
-#endif

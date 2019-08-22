@@ -178,4 +178,3 @@ int MPIOI_File_write_all(MPI_File fh,
 
     return error_code;
 }
-#endif
