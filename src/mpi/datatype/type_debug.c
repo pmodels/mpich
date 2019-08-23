@@ -319,11 +319,15 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
         return;
     }
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
-    string = MPIR_Datatype_builtin_to_string(type);
-    MPIR_Assert(string != NULL);
+    if (is_builtin) {
+        string = MPIR_Datatype_builtin_to_string(type);
+        MPIR_Assert(string != NULL);
+    } else {
+        string = "derived";
+    }
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                         "# MPIU_Datatype_debug: MPI_Datatype = 0x%0x (%s)", type,
-                                        (is_builtin) ? string : "derived"));
+                                        string));
 #endif
 
     if (is_builtin)
