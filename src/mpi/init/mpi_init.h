@@ -10,8 +10,12 @@
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
 
-int MPIR_Thread_CS_Init(void);
-int MPIR_Thread_CS_Finalize(void);
+void init_thread_and_enter_cs(int thread_required);
+void init_thread_and_exit_cs(int thread_provided);
+void init_thread_failed_exit_cs(void);
+void finalize_thread_cs(void);
+void MPIR_Thread_CS_Init(void);
+void MPIR_Thread_CS_Finalize(void);
 
 extern int MPIR_async_thread_initialized;
 
