@@ -251,7 +251,6 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
     static char c_f90_complex[] = "f90_complex";
     static char c_f90_integer[] = "f90_integer";
     static char c_resized[] = "resized";
-    static char c_other[] = "not builtin";
 
     if (combiner == MPI_COMBINER_NAMED)
         return c_named;
@@ -292,7 +291,7 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
     if (combiner == MPI_COMBINER_RESIZED)
         return c_resized;
 
-    return c_other;
+    return NULL;
 }
 
 /* --BEGIN DEBUG-- */
@@ -321,6 +320,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     }
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     string = MPIR_Datatype_builtin_to_string(type);
+    MPIR_Assert(string != NULL);
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                         "# MPIU_Datatype_debug: MPI_Datatype = 0x%0x (%s)", type,
                                         (is_builtin) ? string : "derived"));
