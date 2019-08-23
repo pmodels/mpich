@@ -262,10 +262,6 @@ int MPI_Finalize(void)
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
-#if defined(MPICH_IS_THREADED)
-    MPIR_Thread_CS_Finalize();
-#endif
-
     /* We place the memory tracing at the very end because any of the other
      * steps may have allocated memory that they still need to release */
 #ifdef USE_MEMORY_TRACING
@@ -308,15 +304,7 @@ int MPI_Finalize(void)
     }
 #endif
 
-#if defined(MPICH_IS_THREADED)
-    /* Finalize the threading library after releasing all synchronization
-     * objects (e.g., mutexes) */
-    {
-        int thread_err;
-        MPL_thread_finalize(&thread_err);
-        MPIR_Assert(thread_err == 0);
-    }
-#endif
+    finalize_thread_cs();
 
 #ifdef HAVE_HWLOC
     hwloc_topology_destroy(MPIR_Process.hwloc_topology);

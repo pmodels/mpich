@@ -221,8 +221,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int has_args;
     int has_env;
     int thread_provided = 0;
-    int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
+
+    init_thread_and_enter_cs(required);
 
     int rc ATTRIBUTE((unused));
     rc = MPID_Wtime_init();
@@ -233,31 +234,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Temporarily disable thread-safety.  This is needed because the
-     * mutexes are not initialized yet, and we don't want to
-     * accidentally use them before they are initialized.  We will
-     * reset this value once it is properly initialized. */
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = 0;
-#endif /* MPICH_IS_THREADED */
-
+#if defined(MPICH_IS_THREADED)
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
     if (MPIR_CVAR_ASYNC_PROGRESS)
         required = MPI_THREAD_MULTIPLE;
-
-#if defined(MPICH_IS_THREADED)
-    bool cs_initialized = false;
-
-    /* The threading library must be initialized at the very beginning because
-     * it manages all synchronization objects (e.g., mutexes) that will be
-     * initialized later */
-    {
-        int thread_err;
-        MPL_thread_init(&thread_err);
-        if (thread_err)
-            goto fn_fail;
-    }
 #endif
 
 #ifdef HAVE_HWLOC
@@ -284,18 +265,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
             MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology, &MPIR_Process.network_attr);
         }
     }
-#endif
-    /* For any code in the device that wants to check for runtime
-     * decisions on the value of isThreaded, set a provisional
-     * value here. We could let the MPID_Init routine override this */
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = required == MPI_THREAD_MULTIPLE;
-#endif /* MPICH_IS_THREADED */
-
-#if defined(MPICH_IS_THREADED)
-    mpi_errno = MPIR_Thread_CS_Init();
-    cs_initialized = true;
-    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     /* FIXME: Move to os-dependent interface? */
@@ -431,11 +400,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * MPID_Init if necessary */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
-    /* We can't acquire any critical sections until this point.  Any
-     * earlier the basic data structures haven't been initialized */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    exit_init_cs_on_failure = 1;
-
     /* create MPI_INFO_NULL object */
     /* FIXME: Currently this info object is empty, we need to add data to this
      * as defined by the standard. */
@@ -550,7 +514,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     if (mpi_errno == MPI_SUCCESS)
         mpi_errno = MPID_InitCompleted();
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    init_thread_and_exit_cs(thread_provided);
     /* Make fields of MPIR_Process global visible and set mpich_state
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
@@ -579,15 +543,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
-
-    if (exit_init_cs_on_failure) {
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    }
-#if defined(MPICH_IS_THREADED)
-    if (cs_initialized) {
-        MPIR_Thread_CS_Finalize();
-    }
-#endif
+    init_thread_failed_exit_cs();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }
