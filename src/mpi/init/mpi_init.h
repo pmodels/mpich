@@ -30,6 +30,7 @@ void init_dbg_logging(void);
 void init_topo(void);
 void finalize_topo(void);
 
-extern int MPIR_async_thread_initialized;
+int init_async(int thread_provided);
+int finalize_async(void);
 
 #endif /* MPI_INIT_H_INCLUDED */
