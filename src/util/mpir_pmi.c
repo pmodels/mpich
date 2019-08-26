@@ -167,6 +167,82 @@ const char *MPIR_pmi_job_id(void)
 #endif
 }
 
+/* wrapper functions */
+int MPIR_pmi_kvs_put(char *key, char *val)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI1_API
+    pmi_errno = PMI_KVS_Put(pmi_kvs_name, key, val);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
+    pmi_errno = PMI_KVS_Commit(pmi_kvs_name);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+#elif defined(USE_PMI2_API)
+    pmi_errno = PMI2_KVS_Put(key, val);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvsput", "**pmi_kvsput %d", pmi_errno);
+#elif defined(USE_PMIX_API)
+    pmix_value_t value;
+    value.type = PMIX_STRING;
+    value.data.string = val;
+    pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_put", "**pmix_put %d", pmi_errno);
+    pmi_errno = PMIx_Commit();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_commit", "**pmix_commit %d", pmi_errno);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* NOTE: src is a hint, use src = -1 if not known */
+int MPIR_pmi_kvs_get(int src, char *key, char *val, int val_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI1_API
+    /* src is not used in PMI1 */
+    pmi_errno = PMI_KVS_Get(pmi_kvs_name, key, val, val_size);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+#elif defined(USE_PMI2_API)
+    if (src < 0)
+        src = PMI2_ID_NULL;
+    int out_len;
+    pmi_errno = PMI2_KVS_Get(pmi_jobid, src, key, val, val_size, &out_len);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
+#elif defined(USE_PMIX_API)
+    pmix_value_t *pvalue;
+    if (src < 0) {
+        pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+    } else {
+        pmix_proc_t proc;
+        PMIX_PROC_CONSTRUCT(&proc);
+        proc.rank = src;
+
+        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+    }
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_get", "**pmix_get %d", pmi_errno);
+    strncpy(val, pvalue->data.string, val_size);
+    PMIX_VALUE_RELEASE(pvalue);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* ---- utils functions ---- */
 
 int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain)
