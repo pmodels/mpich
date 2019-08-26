@@ -119,13 +119,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     if (comm != MPIR_Process.comm_world) {
         MPIDIG_comm_abort(comm, exit_code);
     } else {
-#ifdef USE_PMIX_API
-        PMIx_Abort(exit_code, error_msg, NULL, 0);
-#elif defined(USE_PMI2_API)
-        PMI2_Abort(TRUE, error_msg);
-#else
-        PMI_Abort(exit_code, error_msg);
-#endif
+        MPIR_pmi_abort(exit_code, error_msg);
     }
     return 0;
 }
