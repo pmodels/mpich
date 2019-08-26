@@ -12,6 +12,9 @@
 #include "mpidimpl.h"
 #include "posix_types.h"
 #include "posix_am_impl.h"
+#include <posix_eager.h>
+#include "shm_types.h"
+#include "shm_control.h"
 
 /* unused prototypes to supress -Wmissing-prototypes */
 int MPIDI_POSIX_progress_test(void);
@@ -70,6 +73,15 @@ static int progress_recv(int blocking)
 
         in_total_data_sz = msg_hdr->data_sz;
         p_data_sz = msg_hdr->data_sz;
+
+        /* This is a SHM internal control header */
+        if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
+            mpi_errno = MPIDI_SHM_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
+
+            /* TODO: discard payload for now as we only handle header in
+             * current internal control protocols. */
+            goto recv_commit;
+        }
 
         /* Call the MPIDIG function to handle the initial receipt of the message. This will attempt
          * to match the message (if appropriate) and return a request if the message was matched. */
@@ -245,6 +257,7 @@ static int progress_recv(int blocking)
         }
     }
 
+  recv_commit:
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:

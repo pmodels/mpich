@@ -156,7 +156,9 @@ typedef enum MPII_Object_kind {
     MPIR_PROCGROUP = 0xc,       /* These are internal device objects */
     MPIR_VCONN = 0xd,
     MPIR_WORKQ_ELEM = 0xe,      /* Work queue element, currently only meaningful in CH4 */
-    MPIR_GREQ_CLASS = 0xf
+    MPIR_GREQ_CLASS = 0xf,
+    MPIR_XPMEM_SEG = 0x10,      /* XPMEM segment, only meaningful in CH4
+                                 * when XPMEM shmmod is enabled */
 } MPII_Object_kind;
 
 
