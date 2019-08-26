@@ -11,7 +11,6 @@
 
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
-#include "mpir_nodemap.h"
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
@@ -39,19 +38,6 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_MAX_NODE_ID);
     return mpi_errno;
-}
-
-int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP);
-
-    ret = MPIR_NODEMAP_build_nodemap(sz, myrank, out_nodemap, sz_out);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP);
-    return ret;
 }
 
 int MPIDIU_get_n_avts(void)
@@ -297,17 +283,4 @@ int MPIDIU_avt_destroy(void)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_DESTROY);
     return MPI_SUCCESS;
-}
-
-int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
-    ret = MPIDIU_build_nodemap(myrank, comm, sz, MPIDI_global.node_map[avtid],
-                               &MPIDI_global.max_node_id);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
-    return ret;
 }
