@@ -239,6 +239,9 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
     /* --END ERROR HANDLING-- */
 }
 
+/* FIXME: This is the only function we need keep. The rest can be thrown away
+ * once ch3 init is switched over to MPIR_pmi_init.
+ */
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
                                                          int *out_nodemap,
