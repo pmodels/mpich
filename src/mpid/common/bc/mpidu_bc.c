@@ -12,12 +12,13 @@
 static MPIDU_shm_seg_t memory;
 static MPIDU_shm_barrier_t *barrier;
 static size_t *indices;
-static int local_size;
 static char *segment;
 
 int MPIDU_bc_table_destroy(void *bc_table)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    int local_size = MPIR_Process.local_size;
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -32,13 +33,19 @@ int MPIDU_bc_table_destroy(void *bc_table)
     goto fn_exit;
 }
 
-
+/* allgather (local_size - 1) bc over node roots */
 int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
                        void **bc_table, size_t ** bc_indices)
 {
     int mpi_errno = MPI_SUCCESS;
-    int local_rank = -1, local_leader = -1;
-    int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
+
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+    int local_rank = MPIR_Process.local_rank;
+    int local_size = MPIR_Process.local_size;
+
+    int node_id = MPIR_Process.node_map[rank];
+    int local_leader = MPIR_Process.node_root_map[node_id];
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -48,9 +55,8 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
         *bc_indices = indices;
     }
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
-    if (rank != local_leader) {
-        size_t start = local_leader - nodemap[comm->rank] + (local_rank - 1);
+    if (local_rank > 0) {
+        int start = local_leader - node_id + (local_rank - 1);
 
         memcpy(&segment[start * bc_len], bc, bc_len);
     }
@@ -60,6 +66,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 
     if (rank == local_leader) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        /* TODO: assume comm is node roots comm */
         MPIR_Comm *allgather_comm = comm->node_roots_comm ? comm->node_roots_comm : comm;
 
         MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, segment, (local_size - 1) * bc_len,
@@ -80,18 +87,19 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
 {
-    int rc, mpi_errno = MPI_SUCCESS;
-    int start, end, i;
-    char *val = NULL, *val_p;
-    int out_len, val_len, rem;
-    pmix_value_t value, *pvalue;
-    pmix_proc_t proc;
-    int local_rank, local_leader;
-    size_t my_bc_len = bc_len;
+    int mpi_errno = MPI_SUCCESS;
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+    int local_rank = MPIR_Process.local_rank;
+    int local_size = MPIR_Process.local_size;
+
+    int node_id = MPIR_Process.node_map[rank];
+    int local_leader = MPIR_Process.node_root_map[node_id];
 
     int max_val_size = MPIR_pmi_max_val_size();
+
+    int my_bc_len = bc_len;
     /* if business cards can be different length, use the max value length */
     if (!same_len)
         bc_len = max_val_size;
