@@ -32,9 +32,7 @@ char *MPIDI_DBG_parent_str = "?";
 
 int MPIDI_Use_pmi2_api = 0;
 
-static int init_pg( int *argc_p, char ***argv_p,
-		   int *has_args, int *has_env, int *has_parent, 
-		   int *pg_rank_p, MPIDI_PG_t **pg_p );
+static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
 static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state);
@@ -90,8 +88,7 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
 }
 
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided, 
-	      int *has_args, int *has_env)
+int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -157,8 +154,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = init_pg( argc, argv,
-			has_args, has_env, &has_parent, &pg_rank, &pg );
+    mpi_errno = init_pg(argc, argv, &has_parent, &pg_rank, &pg);
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -375,9 +371,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int init_pg( int *argc, char ***argv,
-		   int *has_args, int *has_env, int *has_parent, 
-		   int *pg_rank_p, MPIDI_PG_t **pg_p )
+static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -530,10 +524,6 @@ static int init_pg( int *argc, char ***argv,
 #ifdef USE_MPIDI_DBG_PRINT_VC
     MPIDI_DBG_parent_str = (*has_parent) ? "+" : "";
 #endif
-
-    /* FIXME: has_args and has_env need to come from PMI eventually... */
-    *has_args = TRUE;
-    *has_env  = TRUE;
 
     *pg_p      = pg;
     *pg_rank_p = pg_rank;

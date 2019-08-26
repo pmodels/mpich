@@ -119,8 +119,6 @@ MPL_dbg_class MPIR_DBG_STRING;
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    int has_args;
-    int has_env;
     int thread_provided = 0;
     MPIR_Info *info_ptr;
 
@@ -293,7 +291,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
-    mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
+    mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collectives infrastructure */
@@ -336,11 +334,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
 #ifdef MPICH_IS_THREADED
-    MPL_dbg_init(argc, argv, has_args, has_env,
+    MPL_dbg_init(argc, argv, TRUE, TRUE,
                  MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
                  MPIR_ThreadInfo.isThreaded);
 #else
-    MPL_dbg_init(argc, argv, has_args, has_env,
+    MPL_dbg_init(argc, argv, TRUE, TRUE,
                  MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank, 0);
 #endif
 
