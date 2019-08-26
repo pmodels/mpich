@@ -58,16 +58,6 @@ cvars:
         to MPI routines.  Only effective when MPICH is configured with
         --enable-error-checking=runtime .
 
-    - name        : MPIR_CVAR_NETLOC_NODE_FILE
-      category    : DEBUGGER
-      type        : string
-      default     : auto
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Subnet json file
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -120,32 +110,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         required = MPI_THREAD_MULTIPLE;
 #endif
 
-#ifdef HAVE_HWLOC
-    MPIR_Process.bindset = hwloc_bitmap_alloc();
-    hwloc_topology_init(&MPIR_Process.hwloc_topology);
-    MPIR_Process.bindset_is_valid = 0;
-    hwloc_topology_set_io_types_filter(MPIR_Process.hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);
-    if (!hwloc_topology_load(MPIR_Process.hwloc_topology)) {
-        MPIR_Process.bindset_is_valid =
-            !hwloc_get_proc_cpubind(MPIR_Process.hwloc_topology, getpid(), MPIR_Process.bindset,
-                                    HWLOC_CPUBIND_PROCESS);
-    }
-#endif
-
-#ifdef HAVE_NETLOC
-    MPIR_Process.network_attr.u.tree.node_levels = NULL;
-    MPIR_Process.network_attr.network_endpoint = NULL;
-    MPIR_Process.netloc_topology = NULL;
-    MPIR_Process.network_attr.type = MPIR_NETLOC_NETWORK_TYPE__INVALID;
-    if (strlen(MPIR_CVAR_NETLOC_NODE_FILE)) {
-        mpi_errno =
-            netloc_parse_topology(&MPIR_Process.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
-        if (mpi_errno == NETLOC_SUCCESS) {
-            MPIR_Netloc_parse_topology(MPIR_Process.netloc_topology, &MPIR_Process.network_attr);
-        }
-    }
-#endif
-
+    init_topo();
     init_windows();
 
     /* We need this inorder to implement IS_THREAD_MAIN */

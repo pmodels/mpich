@@ -305,24 +305,7 @@ int MPI_Finalize(void)
 #endif
 
     finalize_thread_cs();
-
-#ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
-    hwloc_bitmap_free(MPIR_Process.bindset);
-#endif
-
-#ifdef HAVE_NETLOC
-    switch (MPIR_Process.network_attr.type) {
-        case MPIR_NETLOC_NETWORK_TYPE__TORUS:
-            MPL_free(MPIR_Process.network_attr.u.torus.geometry);
-            break;
-        case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
-        case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
-        default:
-            MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
-            break;
-    }
-#endif
+    finalize_topo();
 
     /* ... end of body of routine ... */
   fn_exit:
