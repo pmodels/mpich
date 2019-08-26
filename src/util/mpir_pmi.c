@@ -150,6 +150,17 @@ void MPIR_pmi_finalize(void)
     MPL_free(MPIR_Process.node_local_map);
 }
 
+void MPIR_pmi_abort(int exit_code, const char *error_msg)
+{
+#ifdef USE_PMI1_API
+    PMI_Abort(exit_code, error_msg);
+#elif defined(USE_PMI2_API)
+    PMI2_Abort(TRUE, error_msg);
+#elif defined(USE_PMIX_API)
+    PMIx_Abort(exit_code, error_msg, NULL, 0);
+#endif
+}
+
 /* getters for internal constants */
 int MPIR_pmi_max_val_size(void)
 {
