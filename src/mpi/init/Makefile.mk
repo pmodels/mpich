@@ -18,9 +18,9 @@ mpi_sources +=                 \
 mpi_core_sources += \
     src/mpi/init/globals.c        \
     src/mpi/init/initinfo.c       \
-    src/mpi/init/async.c          \
     src/mpi/init/init_global.c    \
     src/mpi/init/init_thread_cs.c \
+    src/mpi/init/init_async.c     \
     src/mpi/init/init_windows.c   \
     src/mpi/init/init_bindings.c  \
     src/mpi/init/init_dbg_logging.c \

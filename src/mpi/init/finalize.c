@@ -162,13 +162,8 @@ int MPI_Finalize(void)
 
     /* ... body of routine ... */
 
-    /* If the user requested for asynchronous progress, we need to
-     * shutdown the progress thread */
-    if (MPIR_async_thread_initialized) {
-        mpi_errno = MPID_Finalize_async_thread();
-        if (mpi_errno)
-            goto fn_fail;
-    }
+    mpi_errno = finalize_async();
+    MPIR_ERR_CHECK(mpi_errno);
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /* We need to get the rank before freeing MPI_COMM_WORLD */
     rank = MPIR_Process.comm_world->rank;

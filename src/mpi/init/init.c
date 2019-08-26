@@ -17,27 +17,6 @@ categories:
       description : multi-threading cvars
 
 cvars:
-    - name        : MPIR_CVAR_ASYNC_PROGRESS
-      category    : THREADS
-      type        : boolean
-      default     : false
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If set to true, MPICH will initiate an additional thread to
-        make asynchronous progress on all communication operations
-        including point-to-point, collective, one-sided operations and
-        I/O.  Setting this variable will automatically increase the
-        thread-safety level to MPI_THREAD_MULTIPLE.  While this
-        improves the progress semantics, it might cause a small amount
-        of performance overhead for regular MPI operations.  The user
-        is encouraged to leave one or more hardware threads vacant in
-        order to prevent contention between the application threads
-        and the progress thread(s).  The impact of oversubscription is
-        highly system dependent but may be substantial in some cases,
-        hence this recommendation.
-
     - name        : MPIR_CVAR_DEFAULT_THREAD_LEVEL
       category    : THREADS
       type        : string
@@ -75,8 +54,6 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 
 /* Any internal routines can go here.  Make them static if possible */
 
-/* must go inside this #ifdef block to prevent duplicate storage on darwin */
-int MPIR_async_thread_initialized = 0;
 #endif
 
 /*@

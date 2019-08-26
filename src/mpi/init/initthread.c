@@ -153,6 +153,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPII_Wait_for_debugger();
 #endif
 
+    /* dup comm_self and creates progress thread (if needed) */
+    mpi_errno = init_async(thread_provided);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Let the device know that the rest of the init process is completed */
     if (mpi_errno == MPI_SUCCESS)
         mpi_errno = MPID_InitCompleted();
@@ -162,23 +166,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
-
-    if (MPIR_CVAR_ASYNC_PROGRESS) {
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
-        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
-        goto fn_fail;
-#else
-        if (thread_provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPID_Init_async_thread();
-            if (mpi_errno)
-                goto fn_fail;
-
-            MPIR_async_thread_initialized = 1;
-        } else {
-            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
-        }
-#endif
-    }
 
     if (provided)
         *provided = thread_provided;
