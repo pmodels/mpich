@@ -22,7 +22,7 @@
 #endif
 #include <ctype.h>
 
-#include "build_nodemap.h"
+#include "mpir_nodemap.h"
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 

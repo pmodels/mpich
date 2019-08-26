@@ -5,7 +5,7 @@
  */
 #include <mpidimpl.h>
 #include "mpidu_init_shm.h"
-#include "build_nodemap.h"
+#include "mpir_nodemap.h"
 
 static int local_size;
 static int my_local_rank;

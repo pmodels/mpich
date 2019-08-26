@@ -485,7 +485,7 @@ static int dynproc_send_disconnect(int conn_id)
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
                             MPIR_Comm * comm_self, int *n_vcis_provided)
 {
-    int mpi_errno = MPI_SUCCESS, pmi_errno, i, ofi_version;
+    int mpi_errno = MPI_SUCCESS, i, ofi_version;
     int thr_err = 0;
     void *table = NULL;
     const char *provname = NULL;
