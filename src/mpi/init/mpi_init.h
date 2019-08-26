@@ -23,6 +23,8 @@ void init_binding_cxx(void);
 void init_binding_f08(void);
 void pre_init_dbg_logging(int *argc, char ***argv);
 void init_dbg_logging(void);
+void init_topo(void);
+void finalize_topo(void);
 
 extern int MPIR_async_thread_initialized;
 
