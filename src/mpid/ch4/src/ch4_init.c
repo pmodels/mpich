@@ -207,7 +207,7 @@ static int set_runtime_configurations(void)
     return mpi_errno;
 }
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_args, int *has_env)
+int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
@@ -493,8 +493,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
             break;
     }
 
-    *has_args = TRUE;
-    *has_env = TRUE;
     MPIDI_global.is_initialized = 0;
 
     mpi_errno = MPIDU_Init_shm_finalize();
