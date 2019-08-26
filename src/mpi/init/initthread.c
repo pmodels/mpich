@@ -98,24 +98,6 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
-#if defined (MPL_USE_DBG_LOGGING)
-MPL_dbg_class MPIR_DBG_INIT;
-MPL_dbg_class MPIR_DBG_PT2PT;
-MPL_dbg_class MPIR_DBG_THREAD;
-MPL_dbg_class MPIR_DBG_DATATYPE;
-MPL_dbg_class MPIR_DBG_HANDLE;
-MPL_dbg_class MPIR_DBG_COMM;
-MPL_dbg_class MPIR_DBG_BSEND;
-MPL_dbg_class MPIR_DBG_ERRHAND;
-MPL_dbg_class MPIR_DBG_COLL;
-MPL_dbg_class MPIR_DBG_OTHER;
-MPL_dbg_class MPIR_DBG_REQUEST;
-
-/* these classes might need to move out later */
-MPL_dbg_class MPIR_DBG_ASSERT;
-MPL_dbg_class MPIR_DBG_STRING;
-#endif /* MPL_USE_DBG_LOGGING */
-
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -124,11 +106,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     init_thread_and_enter_cs(required);
 
-    int rc ATTRIBUTE((unused));
-    rc = MPID_Wtime_init();
-#ifdef MPL_USE_DBG_LOGGING
-    MPL_dbg_pre_init(argc, argv, rc);
-#endif
+    MPID_Wtime_init();
+
+    pre_init_dbg_logging(argc, argv);
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -329,34 +309,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * separate memory leaks in the initialization code from
      * leaks in the "active" code */
 #endif
-#ifdef MPL_USE_DBG_LOGGING
-    /* FIXME: This is a hack to handle the common case of two worlds.
-     * If the parent comm is not NULL, we always give the world number
-     * as "1" (false). */
-#ifdef MPICH_IS_THREADED
-    MPL_dbg_init(argc, argv, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
-                 MPIR_ThreadInfo.isThreaded);
-#else
-    MPL_dbg_init(argc, argv, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank, 0);
-#endif
 
-    MPIR_DBG_INIT = MPL_dbg_class_alloc("INIT", "init");
-    MPIR_DBG_PT2PT = MPL_dbg_class_alloc("PT2PT", "pt2pt");
-    MPIR_DBG_THREAD = MPL_dbg_class_alloc("THREAD", "thread");
-    MPIR_DBG_DATATYPE = MPL_dbg_class_alloc("DATATYPE", "datatype");
-    MPIR_DBG_HANDLE = MPL_dbg_class_alloc("HANDLE", "handle");
-    MPIR_DBG_COMM = MPL_dbg_class_alloc("COMM", "comm");
-    MPIR_DBG_BSEND = MPL_dbg_class_alloc("BSEND", "bsend");
-    MPIR_DBG_ERRHAND = MPL_dbg_class_alloc("ERRHAND", "errhand");
-    MPIR_DBG_OTHER = MPL_dbg_class_alloc("OTHER", "other");
-    MPIR_DBG_REQUEST = MPL_dbg_class_alloc("REQUEST", "request");
-    MPIR_DBG_COLL = MPL_dbg_class_alloc("COLL", "coll");
-
-    MPIR_DBG_ASSERT = MPL_dbg_class_alloc("ASSERT", "assert");
-    MPIR_DBG_STRING = MPL_dbg_class_alloc("STRING", "string");
-#endif
+    init_dbg_logging();
 
     /* FIXME: Does this need to come before the call to MPID_InitComplete?
      * For some debugger support, MPII_Wait_for_debugger may want to use
