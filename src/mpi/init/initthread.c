@@ -46,18 +46,6 @@ cvars:
         in order to allow the process to continue (e.g., in gdb, "set
         hold=0").
 
-    - name        : MPIR_CVAR_ERROR_CHECKING
-      category    : ERROR_HANDLING
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, perform checks for errors, typically to verify valid inputs
-        to MPI routines.  Only effective when MPICH is configured with
-        --enable-error-checking=runtime .
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -92,7 +80,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int thread_provided = 0;
-    MPIR_Info *info_ptr;
 
     init_thread_and_enter_cs(required);
 
@@ -103,95 +90,15 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-#if defined(MPICH_IS_THREADED)
-    /* If the user requested for asynchronous progress, request for
-     * THREAD_MULTIPLE. */
-    if (MPIR_CVAR_ASYNC_PROGRESS)
-        required = MPI_THREAD_MULTIPLE;
-#endif
-
     init_topo();
     init_windows();
 
-    /* We need this inorder to implement IS_THREAD_MAIN */
-#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED) && defined(MPICH_IS_THREADED)
-    {
-        MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
-    }
-#endif
-
-#ifdef HAVE_ERROR_CHECKING
-    /* Because the PARAM system has not been initialized, temporarily
-     * uncondtionally enable error checks.  Once the PARAM system is
-     * initialized, this may be reset */
-    MPIR_Process.do_error_checks = 1;
-#else
-    MPIR_Process.do_error_checks = 0;
-#endif
-
-    /* Initialize necessary subsystems and setup the predefined attribute
-     * values.  Subsystems may change these values. */
-    MPIR_Process.attrs.appnum = -1;
-    MPIR_Process.attrs.host = MPI_PROC_NULL;
-    MPIR_Process.attrs.io = MPI_PROC_NULL;
-    MPIR_Process.attrs.lastusedcode = MPI_ERR_LASTCODE;
-    MPIR_Process.attrs.universe = MPIR_UNIVERSE_SIZE_NOT_SET;
-    MPIR_Process.attrs.wtime_is_global = 0;
-
-    /* Set the functions used to duplicate attributes.  These are
-     * when the first corresponding keyval is created */
-    MPIR_Process.attr_dup = 0;
-    MPIR_Process.attr_free = 0;
+    mpi_errno = init_global(&required);
+    MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
     init_binding_fortran();
     init_binding_cxx();
     init_binding_f08();
-
-    /* This allows the device to select an alternative function for
-     * dimsCreate */
-    MPIR_Process.dimsCreate = 0;
-
-    /* "Allocate" from the reserved space for builtin communicators and
-     * (partially) initialize predefined communicators.  comm_parent is
-     * intially NULL and will be allocated by the device if the process group
-     * was started using one of the MPI_Comm_spawn functions. */
-    MPIR_Process.comm_world = MPIR_Comm_builtin + 0;
-    MPII_Comm_init(MPIR_Process.comm_world);
-    MPIR_Process.comm_world->handle = MPI_COMM_WORLD;
-    MPIR_Process.comm_world->context_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_world->recvcontext_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-    /* This initialization of the comm name could be done only when
-     * comm_get_name is called */
-    MPL_strncpy(MPIR_Process.comm_world->name, "MPI_COMM_WORLD", MPI_MAX_OBJECT_NAME);
-
-    MPIR_Process.comm_self = MPIR_Comm_builtin + 1;
-    MPII_Comm_init(MPIR_Process.comm_self);
-    MPIR_Process.comm_self->handle = MPI_COMM_SELF;
-    MPIR_Process.comm_self->context_id = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_self->recvcontext_id = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_self->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-    MPL_strncpy(MPIR_Process.comm_self->name, "MPI_COMM_SELF", MPI_MAX_OBJECT_NAME);
-
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    MPIR_Process.icomm_world = MPIR_Comm_builtin + 2;
-    MPII_Comm_init(MPIR_Process.icomm_world);
-    MPIR_Process.icomm_world->handle = MPIR_ICOMM_WORLD;
-    MPIR_Process.icomm_world->context_id = 2 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.icomm_world->recvcontext_id = 2 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.icomm_world->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-    MPL_strncpy(MPIR_Process.icomm_world->name, "MPI_ICOMM_WORLD", MPI_MAX_OBJECT_NAME);
-
-    /* Note that these communicators are not ready for use - MPID_Init
-     * will setup self and world, and icomm_world if it desires it. */
-#endif
-
-    MPIR_Process.comm_parent = NULL;
-
-    /* Setup the initial communicator list in case we have
-     * enabled the debugger message-queue interface */
-    MPII_COMML_REMEMBER(MPIR_Process.comm_world);
-    MPII_COMML_REMEMBER(MPIR_Process.comm_self);
 
     /* MPIU_Timer_pre_init(); */
 
@@ -204,37 +111,14 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 #endif
         ;
     }
-#if defined(HAVE_ERROR_CHECKING) && (HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME)
-    MPIR_Process.do_error_checks = MPIR_CVAR_ERROR_CHECKING;
-#endif
 
     /* define MPI as initialized so that we can use MPI functions within
      * MPID_Init if necessary */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
-    /* create MPI_INFO_NULL object */
-    /* FIXME: Currently this info object is empty, we need to add data to this
-     * as defined by the standard. */
-    info_ptr = MPIR_Info_builtin + 1;
-    info_ptr->handle = MPI_INFO_ENV;
-    MPIR_Object_set_ref(info_ptr, 1);
-    info_ptr->next = NULL;
-    info_ptr->key = NULL;
-    info_ptr->value = NULL;
-
 #ifdef USE_MEMORY_TRACING
     MPL_trinit();
 #endif
-
-    /* Set the number of tag bits. The device may override this value. */
-    MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
-
-    /* Create complete request to return in the event of immediately complete
-     * operations. Use a SEND request to cover all possible use-cases. */
-    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-    MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                        "**nomemreq");
-    MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
@@ -243,23 +127,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_Coll_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Set tag_ub as function of tag_bits set by the device */
-    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
-
-    /* Assert: tag_ub should be a power of 2 minus 1 */
-    MPIR_Assert(((unsigned) MPIR_Process.
-                 attrs.tag_ub & ((unsigned) MPIR_Process.attrs.tag_ub + 1)) == 0);
-
-    /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
-    MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
-
-    /* Capture the level of thread support provided */
-    MPIR_ThreadInfo.thread_provided = thread_provided;
-    if (provided)
-        *provided = thread_provided;
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = (thread_provided == MPI_THREAD_MULTIPLE);
-#endif /* MPICH_IS_THREADED */
+    mpi_errno = post_init_global(thread_provided);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: Define these in the interface.  Does Timer init belong here? */
     MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
@@ -299,7 +168,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         printf("WARNING: Asynchronous progress is not supported with Argobots\n");
         goto fn_fail;
 #else
-        if (*provided == MPI_THREAD_MULTIPLE) {
+        if (thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
                 goto fn_fail;
@@ -311,6 +180,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 #endif
     }
 
+    if (provided)
+        *provided = thread_provided;
     return mpi_errno;
 
   fn_fail:
