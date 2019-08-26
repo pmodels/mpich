@@ -144,6 +144,10 @@ void MPIR_pmi_finalize(void)
     PMIx_Finalize(NULL, 0);
     /* pmix_proc does not need free */
 #endif
+
+    MPL_free(MPIR_Process.node_map);
+    MPL_free(MPIR_Process.node_root_map);
+    MPL_free(MPIR_Process.node_local_map);
 }
 
 /* getters for internal constants */
