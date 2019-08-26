@@ -774,6 +774,75 @@ char *MPIR_pmi_get_failed_procs(void)
     goto fn_exit;
 }
 
+/* static functions only for MPIR_pmi_spawn_multiple */
+static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
+static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
+
+/* NOTE: MPIR_pmi_spawn_multiple is to be called by a single root spawning process */
+int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
+                            const int maxprocs[], MPIR_Info * info_ptrs[],
+                            int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals,
+                            int *pmi_errcodes)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI1_API
+    int *info_keyval_sizes = NULL;
+    PMI_keyval_t **info_keyval_vectors = NULL;
+
+    info_keyval_sizes = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDJUMP(!info_keyval_sizes, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    info_keyval_vectors =
+        (PMI_keyval_t **) MPL_malloc(count * sizeof(PMI_keyval_t *), MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDJUMP(!info_keyval_vectors, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    if (!info_ptrs) {
+        int i;
+        for (i = 0; i < count; i++) {
+            info_keyval_vectors[i] = 0;
+            info_keyval_sizes[i] = 0;
+        }
+    } else {
+        int i;
+        for (i = 0; i < count; i++) {
+            mpi_errno = mpi_to_pmi_keyvals(info_ptrs[i], &info_keyval_vectors[i],
+                                           &info_keyval_sizes[i]);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+    pmi_errno = PMI_Spawn_multiple(count, (const char **) commands, (const char ***) argvs,
+                                   maxprocs,
+                                   info_keyval_sizes,
+                                   (const PMI_keyval_t **) info_keyval_vectors,
+                                   num_preput_keyval, (PMI_keyval_t *) preput_keyvals,
+                                   pmi_errcodes);
+
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
+#elif defined(USE_PMI2_API)
+    /* not supported yet */
+    MPIR_Assert(0);
+#elif defined(USE_PMIX_API)
+    /* not supported yet */
+    MPIR_Assert(0);
+#endif
+
+  fn_exit:
+    if (info_keyval_vectors) {
+        free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
+        MPL_free(info_keyval_vectors);
+    }
+
+    MPL_free(info_keyval_sizes);
+
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* ---- static functions ---- */
 
 /* The following static function declares are only for build_nodemap() */
@@ -1060,4 +1129,61 @@ static void decode(int size, const char *src, char *dest)
         src += 2;
         dest++;
     }
+}
+
+/* static functions used in MPIR_pmi_spawn_multiple */
+static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
+{
+    char key[MPI_MAX_INFO_KEY];
+    PMI_keyval_t *kv = 0;
+    int i, nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
+
+    if (!info_ptr || info_ptr->handle == MPI_INFO_NULL)
+        goto fn_exit;
+
+    MPIR_Info_get_nkeys_impl(info_ptr, &nkeys);
+
+    if (nkeys == 0)
+        goto fn_exit;
+
+    kv = (PMI_keyval_t *) MPL_malloc(nkeys * sizeof(PMI_keyval_t), MPL_MEM_BUFFER);
+
+    for (i = 0; i < nkeys; i++) {
+        mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
+        kv[i].key = (const char *) MPL_strdup(key);
+        kv[i].val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
+        MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
+    }
+
+  fn_exit:
+    *kv_ptr = kv;
+    *nkeys_ptr = nkeys;
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
+{
+    int i, j;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
+
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < counts[i]; j++) {
+            MPL_free((char *) kv[i][j].key);
+            MPL_free(kv[i][j].val);
+        }
+        MPL_free(kv[i]);
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
 }
