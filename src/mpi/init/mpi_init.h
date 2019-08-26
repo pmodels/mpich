@@ -17,6 +17,10 @@ void finalize_thread_cs(void);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
+int init_global(int *p_thread_required);
+int post_init_global(int thread_provided);
+int finalize_global(void);
+
 void init_windows(void);
 void init_binding_fortran(void);
 void init_binding_cxx(void);
