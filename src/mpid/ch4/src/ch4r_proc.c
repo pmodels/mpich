@@ -115,7 +115,9 @@ int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    MPL_free(MPIDI_global.node_map[avtid]);
+    if (avtid > 0) {
+        MPL_free(MPIDI_global.node_map[avtid]);
+    }
     MPIDI_global.node_map[avtid] = NULL;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     return MPI_SUCCESS;
@@ -237,7 +239,6 @@ int MPIDIU_avt_release_ref(int avtid)
     MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
     if (!in_use) {
         MPIDIU_free_avt(avtid);
-        MPIDIU_free_globals_for_avtid(avtid);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
