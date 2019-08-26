@@ -18,6 +18,9 @@ void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
 void init_windows(void);
+void init_binding_fortran(void);
+void init_binding_cxx(void);
+void init_binding_f08(void);
 
 extern int MPIR_async_thread_initialized;
 

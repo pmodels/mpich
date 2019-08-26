@@ -21,6 +21,7 @@ mpi_core_sources += \
     src/mpi/init/async.c          \
     src/mpi/init/init_thread_cs.c \
     src/mpi/init/init_windows.c   \
+    src/mpi/init/init_bindings.c  \
     src/mpi/init/netloc_util.c
 
 noinst_HEADERS += src/mpi/init/mpi_init.h
