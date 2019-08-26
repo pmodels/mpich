@@ -17,6 +17,8 @@ void finalize_thread_cs(void);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
+void init_windows(void);
+
 extern int MPIR_async_thread_initialized;
 
 #endif /* MPI_INIT_H_INCLUDED */

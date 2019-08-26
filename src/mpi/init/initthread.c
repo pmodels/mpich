@@ -115,47 +115,6 @@ void mpirinitf_(void);
    do not test MPIR_F_NeedInit when HAVE_MPI_F_INIT_WORKS_WITH_C is set */
 #endif
 
-#ifdef HAVE_WINDOWS_H
-/* User-defined abort hook function.  Exiting here will prevent the system from
- * bringing up an error dialog box.
- */
-/* style: allow:fprintf:1 sig:0 */
-static int assert_hook(int reportType, char *message, int *returnValue)
-{
-    MPL_UNREFERENCED_ARG(reportType);
-    fprintf(stderr, "%s", message);
-    if (returnValue != NULL)
-        ExitProcess((UINT) (*returnValue));
-    ExitProcess((UINT) (-1));
-    return TRUE;
-}
-
-/* MPICH dll entry point */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
-{
-    BOOL result = TRUE;
-    hinstDLL;
-    lpReserved;
-
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            break;
-
-        case DLL_THREAD_ATTACH:
-            /* allocate thread specific data */
-            break;
-
-        case DLL_THREAD_DETACH:
-            /* free thread specific data */
-            break;
-
-        case DLL_PROCESS_DETACH:
-            break;
-    }
-    return result;
-}
-#endif
-
 #ifdef HAVE_F08_BINDING
 int *MPIR_C_MPI_UNWEIGHTED;
 int *MPIR_C_MPI_WEIGHTS_EMPTY;
@@ -240,26 +199,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     }
 #endif
 
-    /* FIXME: Move to os-dependent interface? */
-#ifdef HAVE_WINDOWS_H
-    /* prevent the process from bringing up an error message window if mpich
-     * asserts */
-    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-    _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, assert_hook);
-#ifdef _WIN64
-    {
-        /* FIXME: (Windows) This severly degrades performance but fixes alignment
-         * issues with the datatype code. */
-        /* Prevent misaligned faults on Win64 machines */
-        UINT mode, old_mode;
-
-        old_mode = SetErrorMode(SEM_NOALIGNMENTFAULTEXCEPT);
-        mode = old_mode | SEM_NOALIGNMENTFAULTEXCEPT;
-        SetErrorMode(mode);
-    }
-#endif
-#endif
+    init_windows();
 
     /* We need this inorder to implement IS_THREAD_MAIN */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED) && defined(MPICH_IS_THREADED)
