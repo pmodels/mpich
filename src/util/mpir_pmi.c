@@ -667,14 +667,92 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
             int rank = (domain == PMI_DOMAIN_ALL ? i : MPIR_Process.node_root_map[i]);
             mpi_errno = MPIR_pmi_kvs_get(MPIR_Process.node_root_map[i], key, val, pmi_max_val_size);
             MPIR_ERR_CHECK(mpi_errno);
-
-            int rc, out_len;
-            rc = MPL_str_get_binary_arg(val, "mpi", (char *) (recvbuf + i * size), size, &out_len);
-            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
+            _PMI_VAL_DECODE(recvbuf + i * recvsize, recvsize);
         }
     }
 
   fn_exit:
+    _PMI_VAL_FREE;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* This version assumes shm_buf is shared across local procs. Each process
+ * participate in the gather part by distributing the task over local procs.
+ *
+ * NOTE: the behavior is different with MPIR_pmi_allgather when domain is
+ * PMI_DOMAIN_NODE_ROOTS. With MPIR_pmi_allgather, only the root_nodes participate.
+ */
+int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int recvsize,
+                           PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int i;
+
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+    int local_size = MPIR_Process.local_size;
+    int local_rank = MPIR_Process.local_rank;
+
+    int in_domain = 1;
+    if (domain == PMI_DOMAIN_NODE_ROOTS && !is_node_root) {
+        in_domain = 0;
+    }
+
+    char key[50];
+    _PMI_VAL_INIT;
+
+    if (in_domain) {
+        _PMI_VAL_ENCODE(sendbuf, sendsize);
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+        sprintf(key, "_allgather_shm-%d", rank);
+        MPIR_pmi_kvs_put(key, val);
+#elif defined USE_PMIX_API
+        strcpy(key, "_allgather_shm");
+        value.type = PMIX_STRING;
+        value.data.string = val;
+        pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_put", "**pmix_put %d", pmi_errno);
+        pmi_errno = PMIx_Put(PMIX_REMOTE, key, &value);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_put", "**pmix_put %d", pmi_errno);
+        pmi_errno = PMIx_Commit();
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_commit", "**pmix_commit %d", pmi_errno);
+#endif
+    }
+
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Each rank need get val from "size" ranks, divide the task evenly over local ranks */
+    int per_local_rank = size / local_size;
+    if (per_local_rank * local_size < size) {
+        per_local_rank++;
+    }
+    int start = local_rank * per_local_rank;
+    int end = start + per_local_rank;
+    if (end > size) {
+        end = size;
+    }
+    int node_id = MPIR_Process.node_map[i];
+    for (i = start; i < end; i++) {
+        int src = MPIR_Process.node_root_map[node_id];
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+        sprintf(key, "_allgather_shm-%d", src);
+#elif defined USE_PMIX_API
+        /* strcpy(key, "_allgather_shm"); */
+#endif
+        mpi_errno = MPIR_pmi_kvs_get(src, key, val, pmi_max_val_size);
+        MPIR_ERR_CHECK(mpi_errno);
+        _PMI_VAL_DECODE(shm_buf + i * recvsize, recvsize);
+    }
+
+  fn_exit:
+    _PMI_VAL_FREE;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
