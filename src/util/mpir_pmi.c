@@ -554,3 +554,123 @@ static int build_locality(void)
 
     return MPI_SUCCESS;
 }
+
+#define _PMI_VAL_INIT \
+    char *val = MPL_calloc(pmi_max_val_size, 1, MPL_MEM_OTHER)
+
+#define _PMI_VAL_ENCODE(_buf, _sz) \
+    do { \
+        char *pval = val; \
+        int rem = pmi_max_val_size; \
+        int rc; \
+        rc = MPL_str_add_binary_arg(&pval, &rem, "mpi", (char *) (_buf), _sz); \
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard"); \
+        MPIR_Assert(rem >= 0); \
+    } while (0)
+
+#define _PMI_VAL_DECODE(_buf, _sz) \
+    do { \
+        int rc, out_len; \
+        rc = MPL_str_get_binary_arg(val, "mpi", (char *) (_buf), _sz, &out_len); \
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard"); \
+    } while (0)
+
+#define _PMI_VAL_FREE \
+    MPL_free(val)
+
+int MPIR_pmi_bcast(void *buf, int bufsize, PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    static int bcast_seq = 0;
+    bcast_seq++;
+
+    int local_node_id = MPIR_Process.node_map[MPIR_Process.rank];
+    int is_node_root = (MPIR_Process.node_root_map[local_node_id] == MPIR_Process.rank);
+    int in_domain = 1;
+    if (domain == PMI_DOMAIN_NODE_ROOTS && !is_node_root) {
+        in_domain = 0;
+    }
+
+    char key[50];
+    sprintf(key, "_bcast-%d", bcast_seq);
+
+    _PMI_VAL_INIT;
+    if (in_domain && MPIR_Process.rank == 0) {
+        _PMI_VAL_ENCODE(buf, bufsize);
+        mpi_errno = MPIR_pmi_kvs_put(key, val);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#ifndef USE_PMIX_API
+    /* PMIx will wait, so barrier unnecessary */
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+    if (in_domain && MPIR_Process.rank != 0) {
+        mpi_errno = MPIR_pmi_kvs_get(0, key, val, pmi_max_val_size);
+        MPIR_ERR_CHECK(mpi_errno);
+        _PMI_VAL_DECODE(buf, bufsize);
+    }
+
+  fn_exit:
+    _PMI_VAL_FREE;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int recvsize,
+                       PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    static int allgather_seq = 0;
+    allgather_seq++;
+
+    int local_node_id = MPIR_Process.node_map[MPIR_Process.rank];
+    int is_node_root = (MPIR_Process.node_root_map[local_node_id] == MPIR_Process.rank);
+    int in_domain = 1;
+    if (domain == PMI_DOMAIN_NODE_ROOTS && !is_node_root) {
+        in_domain = 0;
+    }
+
+    char key[50];
+    if (domain == PMI_DOMAIN_ALL) {
+        sprintf(key, "_allgather-%d-%d", allgather_seq, MPIR_Process.rank);
+    } else {
+        sprintf(key, "_allgather-%d-%d", allgather_seq, local_node_id);
+    }
+
+    _PMI_VAL_INIT;
+    if (in_domain) {
+        _PMI_VAL_ENCODE(sendbuf, sendsize);
+        mpi_errno = MPIR_pmi_kvs_put(key, val);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#ifndef USE_PMIX_API
+    /* PMIx will wait, so barrier unnecessary */
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+    if (in_domain) {
+        int domain_size = (domain == PMI_DOMAIN_ALL ? MPIR_Process.size : MPIR_Process.num_nodes);
+        int i;
+        for (i = 0; i < domain_size; i++) {
+            sprintf(key, "_allgather-%d-%d", allgather_seq, i);
+            int rank = (domain == PMI_DOMAIN_ALL ? i : MPIR_Process.node_root_map[i]);
+            mpi_errno = MPIR_pmi_kvs_get(MPIR_Process.node_root_map[i], key, val, pmi_max_val_size);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            int rc, out_len;
+            rc = MPL_str_get_binary_arg(val, "mpi", (char *) (recvbuf + i * size), size, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
