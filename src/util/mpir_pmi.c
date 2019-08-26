@@ -743,6 +743,37 @@ int MPIR_pmi_get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
+char *MPIR_pmi_get_failed_procs(void)
+{
+    int pmi_errno;
+    char *failed_procs_string = NULL;
+
+    failed_procs_string = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    MPIR_Assert(failed_procs_string);
+#ifdef USE_PMI1_API
+    pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_dead_processes",
+                            failed_procs_string, pmi_max_val_size);
+    if (pmi_errno != PMI_SUCCESS)
+        goto fn_fail;
+#elif defined(USE_PMI2_API)
+    int out_len;
+    pmi_errno = PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "PMI_dead_processes",
+                             failed_procs_string, pmi_max_val_size, &out_len);
+    if (pmi_errno != PMI_SUCCESS)
+        goto fn_fail;
+#elif defined(USE_PMIX_API)
+    goto fn_fail;
+#endif
+
+  fn_exit:
+    return failed_procs_string;
+  fn_fail:
+    /* FIXME: approprate error messages here? */
+    MPL_free(failed_procs_string);
+    failed_procs_string = NULL;
+    goto fn_exit;
+}
+
 /* ---- static functions ---- */
 
 /* The following static function declares are only for build_nodemap() */
