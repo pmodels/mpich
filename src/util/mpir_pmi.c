@@ -132,6 +132,11 @@ int MPIR_pmi_init(void)
     goto fn_exit;
 }
 
+int MPIR_pmi_max_val_size(void)
+{
+    return pmi_max_val_size;
+}
+
 void MPIR_pmi_finalize(void)
 {
 #ifdef USE_PMI1_API
@@ -669,6 +674,88 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
         }
     }
 
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* A special function used to bcast serialized shm segment handle */
+int MPIR_pmi_bcast_local(char *val, int val_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+    MPIR_Assert(val_size <= pmi_max_val_size);
+
+    int rank = MPIR_Process.rank;
+    int local_node_id = MPIR_Process.node_map[rank];
+    int local_size = MPIR_Process.local_size;
+    int local_node_root = MPIR_Process.node_root_map[local_node_id];
+    int is_node_root = (rank == local_node_root);
+
+    char key[50];
+#ifdef USE_PMI1_API
+    if (is_node_root && local_size > 1) {
+        sprintf(key, "_bcast_local-%d", rank);
+        mpi_errno = MPIR_pmi_kvs_put(key, val);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+    if (!is_node_root) {
+        sprintf(key, "_bcast_local-%d", local_node_root);
+        mpi_errno = MPIR_pmi_kvs_get(local_node_root, key, val, pmi_max_val_size);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#elif defined USE_PMI2_API
+    static int bcast_local_seq = 0;
+    bcast_local_seq++;
+    sprintf(key, "_bcast_local-%d", bcast_local_seq);
+    if (local_size == 1) {
+        /* nothing to do */
+    } else if (is_node_root) {
+        pmi_errno = PMI2_Info_PutNodeAttr(key, val);
+        MPIR_ERR_CHKANDJUMP(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**pmi_putnodeattr");
+    } else {
+        int found = 0;
+        /* set last param, waitfor, to TRUE */
+        pmi_errno = PMI2_Info_GetNodeAttr(key, val, PMI2_MAX_VALLEN, &found, TRUE);
+        MPIR_ERR_CHKANDJUMP(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**pmi_getnodeattr");
+        MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
+    }
+#elif defined USE_PMIX_API
+    static int bcast_local_seq = 0;
+    bcast_local_seq++;
+    sprintf(key, "_bcast_local-%d", bcast_local_seq);
+    if (local_size == 1) {
+        /* nothing to do */
+    } else if (is_node_root) {
+        pmix_value_t value;
+        value.type = PMIX_STRING;
+        value.data.string = val;
+        pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_put", "**pmix_put %d", pmi_errno);
+        pmi_errno = PMIx_Commit();
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_commit", "**pmix_commit %d", pmi_errno);
+    } else {
+        pmix_proc_t proc;
+        PMIX_PROC_CONSTRUCT(&proc);
+        proc.rank = local_node_root;
+
+        pmix_value_t *pvalue;
+        /* blocking, waits until the value arrives */
+        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_get", "**pmix_get %d", pmi_errno);
+        strncpy(val, pvalue->data.string, val_size);
+        PMIX_VALUE_RELEASE(pvalue);
+    }
+#endif
   fn_exit:
     return mpi_errno;
   fn_fail:
