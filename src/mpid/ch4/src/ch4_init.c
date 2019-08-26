@@ -12,6 +12,7 @@
 #include "mpidimpl.h"
 #include "mpidch4r.h"
 #include "datatype.h"
+#include "mpidu_init_shm.h"
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -423,6 +424,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     }
 #endif
 
+    mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
+    MPIR_ERR_CHECK(mpi_errno);
+
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -492,6 +496,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided, int *has_ar
     *has_args = TRUE;
     *has_env = TRUE;
     MPIDI_global.is_initialized = 0;
+
+    mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);

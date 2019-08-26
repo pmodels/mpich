@@ -28,6 +28,7 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size);
 int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win, const void *base);
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win);
 
 int MPIDI_POSIX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
