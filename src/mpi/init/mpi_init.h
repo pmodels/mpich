@@ -56,6 +56,25 @@ static inline void post_init_memory_tracing(void)
 #endif
 }
 
+static inline void finalize_memory_tracing(void)
+{
+#ifdef USE_MEMORY_TRACING
+    /* FIXME: We'd like to arrange for the mem dump output to
+     * go to separate files or to be sorted by rank (note that
+     * the rank is at the head of the line) */
+    {
+        if (MPIR_CVAR_MEMDUMP) {
+            /* The second argument is the min id to print; memory allocated
+             * after MPI_Init is given an id of one.  This allows us to
+             * ignore, if desired, memory leaks in the MPID_Init call */
+            MPL_trdump((void *) 0, -1);
+        }
+        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
+            MPL_trcategorydump(stderr);
+    }
+#endif
+}
+
 static inline void debugger_hold(void)
 {
     volatile int hold = 1;
@@ -73,6 +92,37 @@ static inline void wait_for_debugger(void)
      * MPI communication routines to collect information for the debugger */
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPII_Wait_for_debugger();
+#endif
+}
+
+static inline void debugger_set_aborting(void)
+{
+    /* Signal the debugger that we are about to exit. */
+    /* FIXME: Should this also be a finalize callback? */
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIR_Debugger_set_aborting((char *) 0);
+#endif
+}
+
+static inline void final_coverage_delay(int rank)
+{
+#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
+    /*
+     * On some systems, a 0.1 second delay appears to be too short for
+     * the file system.  This code allows the use of the environment
+     * variable MPICH_FINALDELAY, which is the delay in milliseconds.
+     * It must be an integer value.
+     */
+    {
+        int microseconds = 100000;
+        char *delayStr = getenv("MPICH_FINALDELAY");
+        if (delayStr) {
+            /* Because this is a maintainer item, we won't check for
+             * errors in the delayStr */
+            microseconds = 1000 * atoi(delayStr);
+        }
+        usleep(rank * microseconds);
+    }
 #endif
 }
 

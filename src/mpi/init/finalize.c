@@ -148,9 +148,7 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 int MPI_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
-    int rank = 0;
-#endif
+    int rank = MPIR_Process.comm_world->rank;
     MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -164,30 +162,24 @@ int MPI_Finalize(void)
 
     mpi_errno = finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
-    /* We need to get the rank before freeing MPI_COMM_WORLD */
-    rank = MPIR_Process.comm_world->rank;
-#endif
 
     mpi_errno = finalize_global();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
-     * pre and post MPID_Finalize callbacks? */
     MPII_Timer_finalize();
 
     /* Call the high-priority callbacks */
     MPIR_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
 
-    /* Signal the debugger that we are about to exit. */
-    /* FIXME: Should this also be a finalize callback? */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_Debugger_set_aborting((char *) 0);
-#endif
+    debugger_set_aborting();
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* MPID_Finalize or MPIDI_OFI_mpi_finalize_hook will call MPIR_Allreduce
+     * which will still depend on lw_req.
+     * FIXME: there should not be MPIR collective calls inside MPID_Finaize.
+     */
     /* Free complete request */
     MPIR_Request_free(MPIR_Process.lw_req);
 
@@ -197,66 +189,23 @@ int MPI_Finalize(void)
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
-    /* At this point, if there has been a failure, exit before
-     * completing the finalize */
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
     if (!MPIR_T_is_initialized())
         MPIR_T_env_finalize();
 
-    /* FIXME: Many of these debugging items could/should be callbacks,
-     * added to the finalize callback list */
-    /* FIXME: the memory tracing code block should be a finalize callback */
-    /* If memory debugging is enabled, check the memory here, after all
-     * finalize callbacks */
+    /* All memory should be freed at this point */
+    finalize_memory_tracing();
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
-    /* We place the memory tracing at the very end because any of the other
-     * steps may have allocated memory that they still need to release */
-#ifdef USE_MEMORY_TRACING
-    /* FIXME: We'd like to arrange for the mem dump output to
-     * go to separate files or to be sorted by rank (note that
-     * the rank is at the head of the line) */
-    {
-        if (MPIR_CVAR_MEMDUMP) {
-            /* The second argument is the min id to print; memory allocated
-             * after MPI_Init is given an id of one.  This allows us to
-             * ignore, if desired, memory leaks in the MPID_Init call */
-            MPL_trdump((void *) 0, -1);
-        }
-        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
-            MPL_trcategorydump(stderr);
-    }
-#endif
-
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /* If performing coverage analysis, make each process sleep for
      * rank * 100 ms, to give time for the coverage tool to write out
      * any files.  It would be better if the coverage tool and runtime
      * was more careful about file updates, though the lack of OS support
      * for atomic file updates makes this harder. */
-    /*
-     * On some systems, a 0.1 second delay appears to be too short for
-     * the file system.  This code allows the use of the environment
-     * variable MPICH_FINALDELAY, which is the delay in milliseconds.
-     * It must be an integer value.
-     */
-    {
-        int microseconds = 100000;
-        char *delayStr = getenv("MPICH_FINALDELAY");
-        if (delayStr) {
-            /* Because this is a maintainer item, we won't check for
-             * errors in the delayStr */
-            microseconds = 1000 * atoi(delayStr);
-        }
-        usleep(rank * microseconds);
-    }
-#endif
+    final_coverage_delay(rank);
 
     finalize_thread_cs();
     finalize_topo();
