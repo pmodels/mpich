@@ -169,49 +169,8 @@ int MPI_Finalize(void)
     rank = MPIR_Process.comm_world->rank;
 #endif
 
-    /* Remove the attributes, executing the attribute delete routine.
-     * Do this only if the attribute functions are defined. */
-    /* The standard (MPI-2, section 4.8) says that the attributes on
-     * MPI_COMM_SELF are deleted before almost anything else happens */
-    /* Note that the attributes need to be removed from the communicators
-     * so that they aren't freed twice. (The communicators are released
-     * in MPID_Finalize) */
-    if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
-        mpi_errno = MPIR_Process.attr_free(MPI_COMM_SELF, &MPIR_Process.comm_self->attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Process.comm_self->attributes = 0;
-    }
-    if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
-        mpi_errno = MPIR_Process.attr_free(MPI_COMM_WORLD, &MPIR_Process.comm_world->attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Process.comm_world->attributes = 0;
-    }
-
-    /*
-     * Now that we're finalizing, we need to take control of the error handlers
-     * At this point, we will release any user-defined error handlers on
-     * comm self and comm world
-     */
-    if (MPIR_Process.comm_world->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
-        int in_use;
-        MPIR_Errhandler_release_ref(MPIR_Process.comm_world->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, MPIR_Process.comm_world->errhandler);
-        }
-        /* always set to NULL to avoid a double-release later in finalize */
-        MPIR_Process.comm_world->errhandler = NULL;
-    }
-    if (MPIR_Process.comm_self->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_self->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
-        int in_use;
-        MPIR_Errhandler_release_ref(MPIR_Process.comm_self->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, MPIR_Process.comm_self->errhandler);
-        }
-        /* always set to NULL to avoid a double-release later in finalize */
-        MPIR_Process.comm_self->errhandler = NULL;
-    }
+    mpi_errno = finalize_global();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
      * pre and post MPID_Finalize callbacks? */
