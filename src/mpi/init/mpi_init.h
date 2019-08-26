@@ -33,4 +33,47 @@ void finalize_topo(void);
 int init_async(int thread_provided);
 int finalize_async(void);
 
+static inline void pre_init_memory_tracing(void)
+{
+#ifdef USE_MEMORY_TRACING
+    MPL_trinit();
+#endif
+}
+
+static inline void post_init_memory_tracing(void)
+{
+    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
+#ifdef USE_MEMORY_TRACING
+#ifdef MPICH_IS_THREADED
+    MPL_trconfig(MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded);
+#else
+    MPL_trconfig(MPIR_Process.comm_world->rank, 0);
+#endif
+    /* Indicate that we are near the end of the init step; memory
+     * allocated already will have an id of zero; this helps
+     * separate memory leaks in the initialization code from
+     * leaks in the "active" code */
+#endif
+}
+
+static inline void debugger_hold(void)
+{
+    volatile int hold = 1;
+    while (hold) {
+#ifdef HAVE_USLEEP
+        usleep(100);
+#endif
+    }
+}
+
+static inline void wait_for_debugger(void)
+{
+    /* FIXME: Does this need to come before the call to MPID_InitComplete?
+     * For some debugger support, MPII_Wait_for_debugger may want to use
+     * MPI communication routines to collect information for the debugger */
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPII_Wait_for_debugger();
+#endif
+}
+
 #endif /* MPI_INIT_H_INCLUDED */

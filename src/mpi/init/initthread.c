@@ -79,47 +79,40 @@ extern const char MPII_Version_device[];
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    int thread_provided = 0;
 
     init_thread_and_enter_cs(required);
 
     MPID_Wtime_init();
-
     pre_init_dbg_logging(argc, argv);
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    init_topo();
-    init_windows();
-
     mpi_errno = init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
+    init_topo();
+    init_windows();
     init_binding_fortran();
     init_binding_cxx();
     init_binding_f08();
 
-    /* MPIU_Timer_pre_init(); */
-
     /* Wait for debugger to attach if requested. */
     if (MPIR_CVAR_DEBUG_HOLD) {
-        volatile int hold = 1;
-        while (hold)
-#ifdef HAVE_USLEEP
-            usleep(100);
-#endif
-        ;
+        debugger_hold();
     }
 
-    /* define MPI as initialized so that we can use MPI functions within
-     * MPID_Init if necessary */
+    /* Setting MPICH_MPI_STATE__IN_INIT allows MPI_Initialized and
+     * MPI_Finalized to call MPIR_Err_return_comm(0, ...) on error,
+     * which checks errhandler in comm_world structure, which should
+     * NULL by default before or during init, and treated as fatal.
+     */
+    /* FIXME: remove MPICH_MPI_STATE__IN_INIT */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
-#ifdef USE_MEMORY_TRACING
-    MPL_trinit();
-#endif
+    pre_init_memory_tracing();
 
+    int thread_provided = 0;
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -130,36 +123,16 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = post_init_global(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* FIXME: Define these in the interface.  Does Timer init belong here? */
-    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
-#ifdef USE_MEMORY_TRACING
-#ifdef MPICH_IS_THREADED
-    MPL_trconfig(MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded);
-#else
-    MPL_trconfig(MPIR_Process.comm_world->rank, 0);
-#endif
-    /* Indicate that we are near the end of the init step; memory
-     * allocated already will have an id of zero; this helps
-     * separate memory leaks in the initialization code from
-     * leaks in the "active" code */
-#endif
-
+    post_init_memory_tracing();
     init_dbg_logging();
-
-    /* FIXME: Does this need to come before the call to MPID_InitComplete?
-     * For some debugger support, MPII_Wait_for_debugger may want to use
-     * MPI communication routines to collect information for the debugger */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPII_Wait_for_debugger();
-#endif
+    wait_for_debugger();
 
     /* dup comm_self and creates progress thread (if needed) */
     mpi_errno = init_async(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Let the device know that the rest of the init process is completed */
-    if (mpi_errno == MPI_SUCCESS)
-        mpi_errno = MPID_InitCompleted();
+    mpi_errno = MPID_InitCompleted();
 
     init_thread_and_exit_cs(thread_provided);
     /* Make fields of MPIR_Process global visible and set mpich_state
