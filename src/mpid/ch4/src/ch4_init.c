@@ -584,55 +584,13 @@ int MPID_CS_finalize(void)
 int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
 
-#ifdef USE_PMIX_API
-    {
-        pmix_value_t *pvalue = NULL;
+    mpi_errno = MPIR_pmi_get_universe_size(universe_size);
 
-        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_UNIV_SIZE, NULL, 0, &pvalue);
-        if (pmi_errno != PMIX_SUCCESS)
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                                 "**pmix_get", "**pmix_get %d", pmi_errno);
-        *universe_size = pvalue->data.uint32;
-        PMIX_VALUE_RELEASE(pvalue);
-    }
-#elif defined(USE_PMI2_API)
-    {
-        char val[PMI2_MAX_VALLEN];
-        int found = 0;
-        char *endptr;
-
-        pmi_errno = PMI2_Info_GetJobAttr("universeSize", val, sizeof(val), &found);
-        if (pmi_errno)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_getjobattr");
-
-        if (!found) {
-            *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
-        } else {
-            *universe_size = strtol(val, &endptr, 0);
-            MPIR_ERR_CHKINTERNAL(endptr - val != strlen(val), mpi_errno,
-                                 "can't parse universe size");
-        }
-    }
-#else
-    pmi_errno = PMI_Get_universe_size(universe_size);
-
-    if (pmi_errno)
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                             "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
-#endif
-
-    if (*universe_size < 0)
-        *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
