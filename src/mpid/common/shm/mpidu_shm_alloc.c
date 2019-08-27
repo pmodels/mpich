@@ -311,6 +311,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         mpi_errno =
             MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
         MPIR_ERR_CHECK(mpi_errno);
+
+        /* we still need to call barrier
+         * (for the case when node_local != clique_local, although fixable) */
+        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         pmix_proc_t proc, *procs;
         char *nodename = NULL;
@@ -361,24 +366,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                  "**pmix_commit", "**pmix_commit %d", pmi_errno);
         }
 
-        pmi_errno = PMIx_Get(&MPIR_Process.pmix_proc, PMIX_HOSTNAME, NULL, 0, &pvalue);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
-                             "**pmix_get %d", pmi_errno);
-        nodename = MPL_strdup(pvalue->data.string);
-        PMIX_VALUE_RELEASE(pvalue);
-
-        pmi_errno = PMIx_Resolve_peers(nodename, MPIR_Process.pmix_proc.nspace, &procs, &nprocs);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                             "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
-
-        PMIX_INFO_CREATE(info, 1);
-        PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-        pmi_errno = PMIx_Fence(procs, nprocs, info, 1);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
-                             "**pmix_fence %d", pmi_errno);
-        PMIX_INFO_FREE(info, 1);
-        MPL_free(nodename);
-        PMIX_PROC_FREE(procs, nprocs);
+        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank != 0) {
             /* get name of shared file */
@@ -443,9 +432,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         memory->symmetrical = 0;
 
         /* we still need to call barrier */
-        pmi_errno = PMI_Barrier();
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier",
-                             "**pmi_barrier %d", pmi_errno);
+        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
@@ -500,15 +488,12 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
             MPIR_ERR_CHECK(mpi_errno);
+        }
 
-            pmi_errno = PMI_Barrier();
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
-        } else {
-            pmi_errno = PMI_Barrier();
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        MPIR_ERR_CHECK(mpi_errno);
 
+        if (local_rank > 0) {
             /* get name of shared file */
             MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", local_procs_0, num_segments);
             pmi_errno = PMI_KVS_Get(kvs_name, key, val, val_max_sz);
