@@ -207,7 +207,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_CHKLMEM_MALLOC(key, char *, PMI2_MAX_KEYLEN, mpi_errno, "key", MPL_MEM_SHM);
-        MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename-%d", num_segments);
+        int node_id = MPIR_Process.node_map[MPIR_Process.rank];
+        MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename[%d]-%d", node_id, num_segments);
 
         if (local_rank == 0) {
             mpl_err =
