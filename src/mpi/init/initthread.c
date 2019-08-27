@@ -80,26 +80,26 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    init_thread_and_enter_cs(required);
+    MPII_init_thread_and_enter_cs(required);
 
     MPID_Wtime_init();
-    pre_init_dbg_logging(argc, argv);
+    MPII_pre_init_dbg_logging(argc, argv);
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = init_global(&required);
+    mpi_errno = MPII_init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
-    init_topo();
-    init_windows();
-    init_binding_fortran();
-    init_binding_cxx();
-    init_binding_f08();
+    MPII_init_topo();
+    MPII_init_windows();
+    MPII_init_binding_fortran();
+    MPII_init_binding_cxx();
+    MPII_init_binding_f08();
 
     /* Wait for debugger to attach if requested. */
     if (MPIR_CVAR_DEBUG_HOLD) {
-        debugger_hold();
+        MPII_debugger_hold();
     }
 
     /* Setting MPICH_MPI_STATE__IN_INIT allows MPI_Initialized and
@@ -110,7 +110,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* FIXME: remove MPICH_MPI_STATE__IN_INIT */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
-    pre_init_memory_tracing();
+    MPII_pre_init_memory_tracing();
 
     int thread_provided = 0;
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
@@ -120,21 +120,21 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_Coll_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = post_init_global(thread_provided);
+    mpi_errno = MPII_post_init_global(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    post_init_memory_tracing();
-    init_dbg_logging();
-    wait_for_debugger();
+    MPII_post_init_memory_tracing();
+    MPII_init_dbg_logging();
+    MPII_wait_for_debugger();
 
     /* dup comm_self and creates progress thread (if needed) */
-    mpi_errno = init_async(thread_provided);
+    mpi_errno = MPII_init_async(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
-    init_thread_and_exit_cs(thread_provided);
+    MPII_init_thread_and_exit_cs(thread_provided);
     /* Make fields of MPIR_Process global visible and set mpich_state
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
@@ -148,7 +148,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
-    init_thread_failed_exit_cs();
+    MPII_init_thread_failed_exit_cs();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

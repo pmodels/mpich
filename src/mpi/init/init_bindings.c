@@ -40,7 +40,7 @@ MPI_F08_status *MPI_F08_STATUS_IGNORE = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
 MPI_F08_status *MPI_F08_STATUSES_IGNORE = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
 #endif
 
-void init_binding_cxx(void)
+void MPII_init_binding_cxx(void)
 {
 #ifdef HAVE_CXX_BINDING
     /* Set the functions used to call functions in the C++ binding
@@ -54,7 +54,7 @@ void init_binding_cxx(void)
 #endif
 }
 
-void init_binding_f08(void)
+void MPII_init_binding_f08(void)
 {
 #ifdef HAVE_F08_BINDING
     MPIR_C_MPI_UNWEIGHTED = MPI_UNWEIGHTED;
@@ -62,7 +62,7 @@ void init_binding_f08(void)
 #endif
 }
 
-void init_binding_fortran(void)
+void MPII_init_binding_fortran(void)
 {
 #ifdef HAVE_FORTRAN_BINDING
     /* Initialize the C versions of the Fortran link-time constants.

@@ -19,7 +19,7 @@ MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 static int required_is_threaded;
 
 /* called the first thing in init so it can enter critical section immediately */
-void init_thread_and_enter_cs(int thread_required)
+void MPII_init_thread_and_enter_cs(int thread_required)
 {
     int thread_err;
     MPL_thread_init(&thread_err);
@@ -39,7 +39,7 @@ void init_thread_and_enter_cs(int thread_required)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
-void init_thread_and_exit_cs(int thread_provided)
+void MPII_init_thread_and_exit_cs(int thread_provided)
 {
     /* create the rest of the mutexes */
     MPIR_Thread_CS_Init();
@@ -52,7 +52,7 @@ void init_thread_and_exit_cs(int thread_provided)
 }
 
 /* called only when encounter failure during during init */
-void init_thread_failed_exit_cs(void)
+void MPII_init_thread_failed_exit_cs(void)
 {
     int err;
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
@@ -60,7 +60,7 @@ void init_thread_failed_exit_cs(void)
 }
 
 /* called in MPI_Finalize after exiting critical section */
-void finalize_thread_cs(void)
+void MPII_finalize_thread_cs(void)
 {
     /* destroy (all) mutex locks */
     MPIR_Thread_CS_Finalize();
@@ -194,15 +194,19 @@ void MPIR_Thread_CS_Finalize(void)
 
 #else
 /* not MPICH_IS_THREADED, empty stubs */
-void pre_init_thread_cs(void)
+void MPII_init_thread_and_enter_cs(void)
 {
 }
 
-void finalize_thread_cs(void)
+void MPII_init_thread_and_exit_cs(int thread_provided)
 {
 }
 
-void destroy_allfunc_mutex(void)
+void MPII_init_thread_failed_exit_cs(void)
+{
+}
+
+void MPII_finalize_thread_cs(void)
 {
 }
 

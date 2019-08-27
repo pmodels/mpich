@@ -47,7 +47,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     return result;
 }
 
-void init_windows(void)
+void MPII_init_windows(void)
 {
 
     /* FIXME: Move to os-dependent interface? */
@@ -74,7 +74,7 @@ void init_windows(void)
 
 #else
 /* no HAVE_WINDOWS_H, empty stubs */
-void init_windows(void)
+void MPII_init_windows(void)
 {
 }
 #endif

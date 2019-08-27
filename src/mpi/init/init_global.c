@@ -26,7 +26,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int init_global(int *p_thread_required)
+int MPII_init_global(int *p_thread_required)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -141,7 +141,7 @@ int init_global(int *p_thread_required)
     goto fn_exit;
 }
 
-int post_init_global(int thread_provided)
+int MPII_post_init_global(int thread_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -161,7 +161,7 @@ int post_init_global(int thread_provided)
     return mpi_errno;
 }
 
-int finalize_global(void)
+int MPII_finalize_global(void)
 {
     int mpi_errno = MPI_SUCCESS;
 

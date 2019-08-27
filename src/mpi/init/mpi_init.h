@@ -43,37 +43,37 @@ cvars:
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
 
-void init_thread_and_enter_cs(int thread_required);
-void init_thread_and_exit_cs(int thread_provided);
-void init_thread_failed_exit_cs(void);
-void finalize_thread_cs(void);
+void MPII_init_thread_and_enter_cs(int thread_required);
+void MPII_init_thread_and_exit_cs(int thread_provided);
+void MPII_init_thread_failed_exit_cs(void);
+void MPII_finalize_thread_cs(void);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
-int init_global(int *p_thread_required);
-int post_init_global(int thread_provided);
-int finalize_global(void);
+int MPII_init_global(int *p_thread_required);
+int MPII_post_init_global(int thread_provided);
+int MPII_finalize_global(void);
 
-void init_windows(void);
-void init_binding_fortran(void);
-void init_binding_cxx(void);
-void init_binding_f08(void);
-void pre_init_dbg_logging(int *argc, char ***argv);
-void init_dbg_logging(void);
-void init_topo(void);
-void finalize_topo(void);
+void MPII_init_windows(void);
+void MPII_init_binding_fortran(void);
+void MPII_init_binding_cxx(void);
+void MPII_init_binding_f08(void);
+void MPII_pre_init_dbg_logging(int *argc, char ***argv);
+void MPII_init_dbg_logging(void);
+void MPII_init_topo(void);
+void MPII_finalize_topo(void);
 
-int init_async(int thread_provided);
-int finalize_async(void);
+int MPII_init_async(int thread_provided);
+int MPII_finalize_async(void);
 
-static inline void pre_init_memory_tracing(void)
+static inline void MPII_pre_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
     MPL_trinit();
 #endif
 }
 
-static inline void post_init_memory_tracing(void)
+static inline void MPII_post_init_memory_tracing(void)
 {
     MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
@@ -89,7 +89,7 @@ static inline void post_init_memory_tracing(void)
 #endif
 }
 
-static inline void finalize_memory_tracing(void)
+static inline void MPII_finalize_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
     /* FIXME: We'd like to arrange for the mem dump output to
@@ -108,7 +108,7 @@ static inline void finalize_memory_tracing(void)
 #endif
 }
 
-static inline void debugger_hold(void)
+static inline void MPII_debugger_hold(void)
 {
     volatile int hold = 1;
     while (hold) {
@@ -118,7 +118,7 @@ static inline void debugger_hold(void)
     }
 }
 
-static inline void wait_for_debugger(void)
+static inline void MPII_wait_for_debugger(void)
 {
     /* FIXME: Does this need to come before the call to MPID_InitComplete?
      * For some debugger support, MPII_Wait_for_debugger may want to use
@@ -128,7 +128,7 @@ static inline void wait_for_debugger(void)
 #endif
 }
 
-static inline void debugger_set_aborting(void)
+static inline void MPII_debugger_set_aborting(void)
 {
     /* Signal the debugger that we are about to exit. */
     /* FIXME: Should this also be a finalize callback? */
@@ -137,7 +137,7 @@ static inline void debugger_set_aborting(void)
 #endif
 }
 
-static inline void final_coverage_delay(int rank)
+static inline void MPII_final_coverage_delay(int rank)
 {
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /*
