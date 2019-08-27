@@ -27,7 +27,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-void init_topo(void)
+void MPII_init_topo(void)
 {
 #ifdef HAVE_HWLOC
     MPIR_Process.bindset = hwloc_bitmap_alloc();
@@ -56,7 +56,7 @@ void init_topo(void)
 #endif
 }
 
-void finalize_topo(void)
+void MPII_finalize_topo(void)
 {
 #ifdef HAVE_HWLOC
     hwloc_topology_destroy(MPIR_Process.hwloc_topology);

@@ -180,7 +180,7 @@ int MPIR_Finalize_async_thread(void)
 }
 
 /* called inside MPIR_Init_thread */
-int init_async(int thread_provided)
+int MPII_init_async(int thread_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -207,7 +207,7 @@ int init_async(int thread_provided)
 }
 
 /* called inside MPI_Finalize */
-int finalize_async(void)
+int MPII_finalize_async(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -231,12 +231,12 @@ int MPIR_Init_async_thread(void)
     return MPI_SUCCESS;
 }
 
-int init_async(int thread_provided ATTRIBUTE((unused)))
+int MPII_init_async(int thread_provided ATTRIBUTE((unused)))
 {
     return MPI_SUCCESS;
 }
 
-int finalize_async(void)
+int MPII_finalize_async(void)
 {
     return MPI_SUCCESS;
 }

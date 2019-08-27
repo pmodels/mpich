@@ -25,7 +25,7 @@ MPL_dbg_class MPIR_DBG_REQUEST;
 MPL_dbg_class MPIR_DBG_ASSERT;
 MPL_dbg_class MPIR_DBG_STRING;
 
-void pre_init_dbg_logging(int *argc, char ***argv)
+void MPII_pre_init_dbg_logging(int *argc, char ***argv)
 {
     /* set last arg, wtimeNotReady, to 0 will cause reset time_origin
      * (for dbg messages), which should be OK here.
@@ -34,7 +34,7 @@ void pre_init_dbg_logging(int *argc, char ***argv)
     MPL_dbg_pre_init(argc, argv, 0);
 }
 
-void init_dbg_logging(void)
+void MPII_init_dbg_logging(void)
 {
     /* FIXME: This is a hack to handle the common case of two worlds.
      * If the parent comm is not NULL, we always give the world number
@@ -66,11 +66,11 @@ void init_dbg_logging(void)
 
 #else
 
-void pre_init_dbg_logging(int *argc, char ***argv)
+void MPII_pre_init_dbg_logging(int *argc, char ***argv)
 {
 }
 
-void init_dbg_logging(void)
+void MPII_init_dbg_logging(void)
 {
 }
 

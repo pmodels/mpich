@@ -127,10 +127,10 @@ int MPI_Finalize(void)
 
     /* ... body of routine ... */
 
-    mpi_errno = finalize_async();
+    mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = finalize_global();
+    mpi_errno = MPII_finalize_global();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPII_Timer_finalize();
@@ -138,7 +138,7 @@ int MPI_Finalize(void)
     /* Call the high-priority callbacks */
     MPIR_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
 
-    debugger_set_aborting();
+    MPII_debugger_set_aborting();
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -162,7 +162,7 @@ int MPI_Finalize(void)
         MPIR_T_env_finalize();
 
     /* All memory should be freed at this point */
-    finalize_memory_tracing();
+    MPII_finalize_memory_tracing();
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
@@ -172,10 +172,10 @@ int MPI_Finalize(void)
      * any files.  It would be better if the coverage tool and runtime
      * was more careful about file updates, though the lack of OS support
      * for atomic file updates makes this harder. */
-    final_coverage_delay(rank);
+    MPII_final_coverage_delay(rank);
 
-    finalize_thread_cs();
-    finalize_topo();
+    MPII_finalize_thread_cs();
+    MPII_finalize_topo();
 
     /* ... end of body of routine ... */
   fn_exit:
