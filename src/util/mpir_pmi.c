@@ -6,6 +6,13 @@
 
 #include <mpir_pmi.h>
 #include <mpiimpl.h>
+#include "mpir_nodemap.h"
+
+static int build_nodemap(int *nodemap, int sz, int *p_max_node_id);
+static int build_locality(void);
+
+static int pmi_version = 1;
+static int pmi_subversion = 1;
 
 static int pmi_max_key_size;
 static int pmi_max_val_size;
@@ -25,8 +32,11 @@ int MPIR_pmi_init(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-    int has_parent, rank, size, appnum;
+    /* See if the user wants to override our default values */
+    MPL_env2int("PMI_VERSION", &pmi_version);
+    MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
+    int has_parent, rank, size, appnum;
 #ifdef USE_PMI1_API
     pmi_errno = PMI_Init(&has_parent);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -106,6 +116,16 @@ int MPIR_pmi_init(void)
     MPIR_Process.size = size;
     MPIR_Process.appnum = appnum;
 
+    static int g_max_node_id = -1;
+    MPIR_Process.node_map = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
+
+    mpi_errno = build_nodemap(MPIR_Process.node_map, size, &g_max_node_id);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Process.num_nodes = g_max_node_id + 1;
+
+    /* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
+    mpi_errno = build_locality();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -141,4 +161,256 @@ const char *MPIR_pmi_job_id(void)
 #elif defined USE_PMIX_API
     return (const char *) pmix_proc.nspace;
 #endif
+}
+
+/* ---- static functions ---- */
+
+/* The following static function declares are only for build_nodemap() */
+static int get_option_no_local(void);
+static int get_option_num_cliques(void);
+static int build_nodemap_nolocal(int *nodemap, int sz, int *p_max_node_id);
+static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *p_max_node_id);
+
+#ifdef USE_PMI1_API
+static int build_nodemap_pmi1(int *nodemap, int sz, int *p_max_node_id);
+static int build_nodemap_fallback(int *nodemap, int sz, int *p_max_node_id);
+#elif defined(USE_PMI2_API)
+static int build_nodemap_pmi2(int *nodemap, int sz, int *p_max_node_id);
+#elif defined(USE_PMIX_API)
+static int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id);
+#endif
+
+static int build_nodemap(int *nodemap, int sz, int *p_max_node_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (sz == 1 || get_option_no_local()) {
+        mpi_errno = build_nodemap_nolocal(nodemap, sz, p_max_node_id);
+        goto fn_exit;
+    }
+#ifdef USE_PMI1_API
+    mpi_errno = build_nodemap_pmi1(nodemap, sz, p_max_node_id);
+#elif defined(USE_PMI2_API)
+    mpi_errno = build_nodemap_pmi2(nodemap, sz, p_max_node_id);
+#elif defined(USE_PMIX_API)
+    mpi_errno = build_nodemap_pmix(nodemap, sz, p_max_node_id);
+#endif
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int num_cliques = get_option_num_cliques();
+    if (num_cliques > sz) {
+        num_cliques = sz;
+    }
+    if (*p_max_node_id == 0 && num_cliques > 1) {
+        mpi_errno = build_nodemap_roundrobin(num_cliques, nodemap, sz, p_max_node_id);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int get_option_no_local(void)
+{
+    /* Used for debugging only.  This disables communication over shared memory */
+#ifdef ENABLED_NO_LOCAL
+    return 1;
+#else
+    return MPIR_CVAR_NOLOCAL;
+#endif
+}
+
+static int get_option_num_cliques(void)
+{
+    /* Used for debugging on a single machine: split procs into num_cliques nodes.
+     * If ODD_EVEN_CLIQUES were enabled, split procs into 2 nodes.
+     */
+    if (MPIR_CVAR_NUM_CLIQUES > 1) {
+        return MPIR_CVAR_NUM_CLIQUES;
+    } else {
+#ifdef ENABLED_ODD_EVEN_CLIQUES
+        return 2;
+#else
+        return MPIR_CVAR_ODD_EVEN_CLIQUES ? 2 : 1;
+#endif
+    }
+}
+
+/* one process per node */
+int build_nodemap_nolocal(int *nodemap, int sz, int *p_max_node_id)
+{
+    int i;
+    for (i = 0; i < sz; ++i) {
+        nodemap[i] = i;
+    }
+    *p_max_node_id = sz - 1;
+    return MPI_SUCCESS;
+}
+
+/* assign processes to num_cliques nodes in a round-robin fashion */
+static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *p_max_node_id)
+{
+    int i;
+    for (i = 0; i < sz; ++i) {
+        nodemap[i] = i % num_cliques;
+    }
+    *p_max_node_id = num_cliques - 1;
+    return MPI_SUCCESS;
+}
+
+#ifdef USE_PMI1_API
+
+/* build nodemap based on allgather hostnames */
+/* FIXME: migrate the function */
+static int build_nodemap_fallback(int *nodemap, int sz, int *p_max_node_id)
+{
+    return MPIR_NODEMAP_build_nodemap(sz, MPIR_Process.rank, nodemap, p_max_node_id);
+}
+
+/* build nodemap using PMI1 process_mapping or fallback with hostnames */
+static int build_nodemap_pmi1(int *nodemap, int sz, int *p_max_node_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int did_map = 0;
+    if (pmi_version == 1 && pmi_subversion == 1) {
+        char *process_mapping = MPL_malloc(pmi_max_val_size, MPL_MEM_ADDRESS);
+        pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_process_mapping",
+                                process_mapping, pmi_max_val_size);
+        if (pmi_errno == PMI_SUCCESS) {
+            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, nodemap,
+                                                               p_max_node_id, &did_map);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+                                 "unable to populate node ids from PMI_process_mapping");
+        }
+        MPL_free(process_mapping);
+    }
+    if (!did_map) {
+        mpi_errno = build_nodemap_fallback(nodemap, sz, p_max_node_id);
+    }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#elif defined USE_PMI2_API
+
+/* build nodemap using PMI2 process_mapping or error */
+static int build_nodemap_pmi2(int *nodemap, int sz, int *p_max_node_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    char process_mapping[PMI2_MAX_VALLEN];
+    int found;
+
+    pmi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, PMI2_MAX_VALLEN,
+                                     &found);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi2_info_getjobattr", "**pmi2_info_getjobattr %d", pmi_errno);
+    MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
+
+    int did_map;
+    mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, nodemap,
+                                                       p_max_node_id, &did_map);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+                         "unable to populate node ids from PMI_process_mapping");
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#elif defined USE_PMIX_API
+
+/* build nodemap using PMIx_Resolve_nodes */
+int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    char *nodelist = NULL, *node = NULL;
+    pmix_proc_t *procs = NULL;
+    size_t nprocs, node_id = 0;
+    int i;
+
+    pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_resolve_nodes", "**pmix_resolve_nodes %d", pmi_errno);
+    MPIR_Assert(nodelist);
+
+    node = strtok(nodelist, ",");
+    while (node) {
+        pmi_errno = PMIx_Resolve_peers(node, pmix_proc.nspace, &procs, &nprocs);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
+        for (i = 0; i < nprocs; i++) {
+            nodemap[procs[i].rank] = node_id;
+        }
+        node_id++;
+        node = strtok(NULL, ",");
+    }
+    *p_max_node_id = node_id - 1;
+    /* PMIx latest adds pmix_free. We should switch to that at some point */
+    MPL_external_free(nodelist);
+    PMIX_PROC_FREE(procs, nprocs);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif
+
+/* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
+static int build_locality(void)
+{
+    int i;
+    int local_rank = -1;
+    int local_size = 0;
+    int *node_root_map, *node_local_map;
+
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+    int *node_map = MPIR_Process.node_map;
+    int num_nodes = MPIR_Process.num_nodes;
+    int local_node_id = node_map[rank];
+
+    node_root_map = MPL_malloc(num_nodes * sizeof(int), MPL_MEM_ADDRESS);
+    for (i = 0; i < num_nodes; i++) {
+        node_root_map[i] = -1;
+    }
+
+    for (i = 0; i < size; i++) {
+        int node_id = node_map[i];
+        if (node_root_map[node_id] < 0) {
+            node_root_map[node_id] = i;
+        }
+        if (node_id == local_node_id) {
+            local_size++;
+        }
+    }
+
+    node_local_map = MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
+    int j = 0;
+    for (i = 0; i < size; i++) {
+        int node_id = node_map[i];
+        if (node_id == local_node_id) {
+            node_local_map[j] = i;
+            if (i == rank) {
+                local_rank = j;
+            }
+            j++;
+        }
+    }
+
+    MPIR_Process.node_root_map = node_root_map;
+    MPIR_Process.node_local_map = node_local_map;
+    MPIR_Process.local_size = local_size;
+    MPIR_Process.local_rank = local_rank;
+
+    return MPI_SUCCESS;
 }
