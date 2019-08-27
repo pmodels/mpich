@@ -167,6 +167,65 @@ const char *MPIR_pmi_job_id(void)
 #endif
 }
 
+/* ---- utils functions ---- */
+
+int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI1_API
+    pmi_errno = PMI_Barrier();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+#elif defined(USE_PMI2_API)
+    pmi_errno = PMI2_KVS_Fence();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_kvsfence", "**pmi_kvsfence %d", pmi_errno);
+#elif defined(USE_PMIX_API)
+    pmix_info_t *info;
+    PMIX_INFO_CREATE(info, 1);
+    int flag = 1;
+    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+
+    if (domain == MPIR_PMI_DOMAIN_LOCAL) {
+        /* use local proc set */
+        /* FIXME: we could simply construct the proc set from MPIR_Process.node_local_map */
+        pmix_proc_t *procs;
+        size_t nprocs;
+        pmix_value_t *pvalue = NULL;
+
+        pmi_errno = PMIx_Get(&pmix_proc, PMIX_HOSTNAME, NULL, 0, &pvalue);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
+                             "**pmix_get %d", pmi_errno);
+        const char *nodename = (const char *) pvalue->data.string;
+
+        pmi_errno = PMIx_Resolve_peers(nodename, pmix_proc.nspace, &procs, &nprocs);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
+
+        pmi_errno = PMIx_Fence(procs, nprocs, info, 1);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
+                             "**pmix_fence %d", pmi_errno);
+
+        PMIX_VALUE_RELEASE(pvalue);
+        PMIX_PROC_FREE(procs, nprocs);
+
+    } else {
+        /* use global wildcard proc set */
+        pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_fence", "**pmix_fence %d", pmi_errno);
+    }
+    PMIX_INFO_FREE(info, 1);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* ---- static functions ---- */
 
 /* The following static function declares are only for build_nodemap() */
@@ -361,6 +420,7 @@ int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id)
     /* PMIx latest adds pmix_free. We should switch to that at some point */
     MPL_external_free(nodelist);
     PMIX_PROC_FREE(procs, nprocs);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
