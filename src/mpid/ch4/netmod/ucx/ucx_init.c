@@ -157,29 +157,8 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-#ifdef USE_PMIX_API
-    pmix_value_t value;
-    pmix_info_t *info;
-    int flag = 1;
-
-    PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-    pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
-    if (pmi_errno != PMIX_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
-                             pmi_errno);
-    }
-    PMIX_INFO_FREE(info, 1);
-#elif defined(USE_PMI2_API)
-    pmi_errno = PMI2_KVS_Fence();
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
-    }
-#else
-    pmi_errno = PMI_Barrier();
-    MPIDI_UCX_PMI_ERROR(pmi_errno);
-#endif
-
+    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_UCX_global.worker != NULL)
         ucp_worker_destroy(MPIDI_UCX_global.worker);
