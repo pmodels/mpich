@@ -284,7 +284,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIDI_av_table[0]->size = size;
     MPIR_Object_set_ref(MPIDI_av_table[0], 1);
 
-    MPIDIU_alloc_globals_for_avtid(avtid);
+    MPIDI_global.node_map[0] = MPIR_Process.node_map;
 
     MPIDI_av_table0 = MPIDI_av_table[0];
 
@@ -320,10 +320,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
-    mpi_errno = MPIDIU_build_nodemap(MPIR_Process.comm_world->rank, MPIR_Process.comm_world,
-                                     MPIR_Process.comm_world->local_size,
-                                     MPIDI_global.node_map[0], &MPIDI_global.max_node_id);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
