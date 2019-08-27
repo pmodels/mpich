@@ -376,6 +376,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (has_parent) {
+#ifdef USE_PMI1_API
         const char *kvs_name = MPIR_pmi_job_id();
         int pmi_errno;
         pmi_errno = PMI_KVS_Get(kvs_name, MPIDI_PARENT_PORT_KVSKEY,
@@ -388,6 +389,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
                           &MPIR_Process.comm_parent);
         MPIR_Assert(MPIR_Process.comm_parent != NULL);
         MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+#else
+        MPIR_Assert(0);
+#endif
     }
     /* -------------------------------- */
     /* Return MPICH Parameters          */
