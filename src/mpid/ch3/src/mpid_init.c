@@ -103,11 +103,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
     MPIR_ERR_CHECK(mpi_errno);
