@@ -25,7 +25,7 @@ subset_only=0
 FILENAME=test
 # Using shifts should remove args from the list.
 for arg in "$@" ; do
-    case $arg in 
+    case $arg in
 	-checkonly)
 	shift
 	runtests=0
@@ -86,13 +86,13 @@ done
 
 # MakeExe program-name
 MakeExe() {
-    if [ -s $STOPFILE ] ; then 
+    if [ -s $STOPFILE ] ; then
         echo "Found stopfile; exiting"
         exit 0
     fi
     if [ ! -x $1 ] ; then
 	$MAKE $1
-        if [ ! -x $1 ] ; then 
+        if [ ! -x $1 ] ; then
 	    echo "Could not build executable $1; aborting tests"
 	    exit 1
         fi
@@ -129,7 +129,7 @@ CheckOutput() {
 	grep -v 'FORTRAN STOP' ${bfile}.out > ${bfile}.tout
         if diff -b $bfile.tout $stdfile > /dev/null ; then
 	    true
-	elif [ -s $stdfile2 ] ; then 
+	elif [ -s $stdfile2 ] ; then
 	    # check for alternate in case configuration has fewer datatypes
 	    if diff -b $bfile.tout $stdfile2 > /dev/null ; then
 	        true
@@ -158,7 +158,7 @@ RunTest() {
       rm -rf $FILENAME*
       echo "**** Testing ${1}.c ****"
       mpirun -np 4 ./${1} -fname $FILENAME "$@" >>${1}.out 2>1
-      CheckOutput ${1} 
+      CheckOutput ${1}
       CleanExe ${1}
 }
 
@@ -203,13 +203,13 @@ $mpirun -np 4 ./async-multiple -fname $FILENAME
 CleanExe async-multiple
 #
 OutTime
-if [ $subset_only -eq 0 ] ; then 
+if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles atomicity.out"
 	\rm -f atomicity.out
 	MakeExe atomicity
 	\rm -f $FILENAME*
 	echo '**** Testing atomicity.c ****'
-	# Atomicity test recommends at least 8 processes (separate processors 
+	# Atomicity test recommends at least 8 processes (separate processors
 	# even better)
 	$mpirun -np 4 ./atomicity -fname $FILENAME
 	# CheckOutput atomicity
@@ -236,15 +236,25 @@ $mpirun -np 4 ./excl -fname $FILENAME
 # CheckOutput excl
 CleanExe excl
 #
-OutTime
 testfiles="$testfiles file_info.out"
 \rm -f file_info.out
 MakeExe file_info
 \rm -f $FILENAME*
-echo '**** Testing file_info.c ****'
-$mpirun -np 4 ./file_info -fname $FILENAME
-# CheckOutput file_info
-CleanExe file_info
+for fs in @FILE_SYSTEM@ ; do
+   OutTime
+   echo "**** Testing file_info.c - file system = $fs ****"
+   if [ $fs = "testfs" ] ; then
+      $mpirun -np 4 ./file_info -fname $FILENAME
+   elif [ $fs = "ufs" ] ; then
+      $mpirun -np 4 ./file_info -u -fname $FILENAME
+   elif [ $fs = "gpfs" ] ; then
+      $mpirun -np 4 ./file_info -b -fname $FILENAME
+   elif [ $fs = "lustre" ] ; then
+      $mpirun -np 4 ./file_info -l -fname $FILENAME
+   fi
+   # CheckOutput file_info
+   CleanExe file_info
+done
 #
 OutTime
 testfiles="$testfiles i_noncontig.out"
@@ -285,16 +295,19 @@ echo '**** Testing noncontig_coll2.c ****'
 $mpirun -np 4 ./noncontig_coll2 -fname $FILENAME
 # CheckOutput noncontig_coll2
 CleanExe noncontig_coll2
+OutTime
 MakeExe aggregation1
 echo '**** Testing aggregation1 ****'
 $mpirun -np 4 ./aggregation1 -h -f $FILENAME
 # CheckOutput aggregation1
 CleanExe aggregation1
+OutTime
 MakeExe aggregation2
 echo '**** Testing aggregation2 ****'
 $mpirun -np 4 ./aggregation2 $FILENAME
 # CheckOutput aggregation2
 CleanExe aggregation2
+OutTime
 MakeExe hindexed
 echo '**** Testing hindexed ****'
 $mpirun -np 4 ./hindexed $FILENAME
@@ -309,7 +322,7 @@ CleanExe hindexed
 #	-offm 4 -hints romio_cb_write enable -fname $FILENAME
 #CleanExe write_all_test
 OutTime
-if [ $subset_only -eq 0 ] ; then 
+if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles misc.out"
 	\rm -f misc.out
 	MakeExe misc
@@ -351,15 +364,17 @@ $mpirun -np 4 ./split_coll -fname $FILENAME
 # CheckOutput split_coll
 CleanExe split_coll
 #
-OutTime
-testfiles="$testfiles psimple.out"
-\rm -f psimple.out
-MakeExe psimple
-\rm -f $FILENAME*
-echo '**** Testing psimple.c ****'
-$mpirun -np 4 ./psimple -fname $FILENAME
-# CheckOutput psimple
-CleanExe psimple
+if [ @NOPROFILE@ = 0 ] ; then
+	OutTime
+	testfiles="$testfiles psimple.out"
+	\rm -f psimple.out
+	MakeExe psimple
+	\rm -f $FILENAME*
+	echo '**** Testing psimple.c ****'
+	$mpirun -np 4 ./psimple -fname $FILENAME
+	# CheckOutput psimple
+	CleanExe psimple
+fi
 #
 OutTime
 testfiles="$testfiles error.out"
@@ -381,6 +396,7 @@ echo '**** Testing status.c ****'
 $mpirun -np 1 ./status -fname $FILENAME
 # CheckOutput status
 CleanExe status
+OutTime
 testfiles="$testfiles types_with_zeros.out"
 \rm -f types_with_zeros.out
 MakeExe types_with_zeros
@@ -388,6 +404,7 @@ MakeExe types_with_zeros
 echo '**** Testing types_with_zeros ****'
 $mpirun -np 2 ./types_with_zeros $FILENAME
 CleanExe types_with_zeros
+OutTime
 testfiles="$testfiles darray_read.out"
 \rm -f darray_read.out
 MakeExe darray_read
@@ -395,13 +412,15 @@ MakeExe darray_read
 echo '**** Testing darray_read ****'
 $mpirun -np 4 ./darray_read $FILENAME
 CleanExe darray_read
+\rm -f $FILENAME*
+OutTime
 MakeExe syshints
 echo '**** Testing syshints ****'
-$mpirun -np 1 ./syshints $srcdir/test_hintfile
+$mpirun -np 1 ./syshints $srcdir/romio_hintfile
 CleanExe syshints
 
 #
-if [ @NOF77@ = 0 ] ; then 
+if [ @NOF77@ = 0 ] ; then
     echo ""
     echo "FORTRAN TESTS"
     OutTime
@@ -435,6 +454,7 @@ if [ @NOF77@ = 0 ] ; then
     $mpirun -np 4 ./pfcoll_test -fname $FILENAME
     # CheckOutput pfcoll_test
     CleanExe pfcoll_test
+    \rm -f $FILENAME*
 #
 echo ""
 fi
@@ -454,7 +474,7 @@ fi
 # nodiff=1
 # for file in $testfiles ; do
 #     stdfile="${srcdir}/std/`basename $file .out`.std"
-#     # if basename is sendrecv or isndrcv, then we may want to test 
+#     # if basename is sendrecv or isndrcv, then we may want to test
 #     # with .std2 as well.  We should really separate out the long double
 #     # tests ...
 #     if [ -s $stdfile ] ; then
@@ -465,7 +485,7 @@ fi
 # 	grep -v 'FORTRAN STOP' ${file} > ${bfile}
 #         if diff -b $bfile $stdfile > /dev/null ; then
 # 	    true
-# 	elif [ -s $stdfile2 ] ; then 
+# 	elif [ -s $stdfile2 ] ; then
 # 	    # check for alternate in case configuration has fewer datatypes
 # 	    if diff -b $bfile $stdfile2 > /dev/null ; then
 # 	        true
@@ -491,4 +511,4 @@ fi
 #    echo "-- No differences found; test successful"
 # fi
  exit 0
- 
+

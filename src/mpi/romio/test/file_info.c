@@ -52,6 +52,15 @@ hint_defaults BLUEGENE_DEFAULTS = {
     .cb_config_list = NULL
 };
 
+hint_defaults LUSTRE_DEFAULTS = {
+    .cb_buffer_size = 16777216,
+    .ind_rd_buffer_size = 4194304,
+    .ind_wr_buffer_size = 524288,
+    .romio_cb_read = "automatic",
+    .romio_cb_write = "automatic",
+    .cb_config_list = "*:1"
+};
+
 /* #undef INFO_DEBUG */
 
 /* Test will print out information about unexpected hint keys or values that
@@ -62,6 +71,7 @@ hint_defaults BLUEGENE_DEFAULTS = {
 static int verbose = 0;
 static int test_ufs = 0;
 static int test_bluegene = 0;
+static int test_lustre = 0;
 
 int main(int argc, char **argv)
 {
@@ -88,11 +98,13 @@ int main(int argc, char **argv)
                 test_ufs = 1;
             else if (!strcmp("-b", *argv))
                 test_bluegene = 1;
+            else if (!strcmp("-l", *argv))
+                test_lustre = 1;
             i++;
             argv++;
         }
         if (i >= argc) {
-            fprintf(stderr, "\n*#  Usage: file_info [-v] -fname filename\n\n");
+            fprintf(stderr, "\n*#  Usage: file_info [-v|-u|-b|-l] -fname filename\n\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         argv++;
@@ -100,22 +112,21 @@ int main(int argc, char **argv)
         filename = (char *) malloc(len + 1);
         strcpy(filename, *argv);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&verbose, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&test_ufs, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&test_bluegene, 1, MPI_INT, 0, MPI_COMM_WORLD);
     } else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         filename = (char *) malloc(len + 1);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&verbose, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&test_ufs, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(&test_bluegene, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
+    MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&verbose, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&test_ufs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&test_bluegene, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&test_lustre, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (test_ufs) {
         defaults = &UFS_DEFAULTS;
     } else if (test_bluegene) {
         defaults = &BLUEGENE_DEFAULTS;
+    } else if (test_lustre) {
+        defaults = &LUSTRE_DEFAULTS;
     } else {
         defaults = NULL;
     }
@@ -175,15 +186,15 @@ int main(int argc, char **argv)
                 if (atoi(value) != defaults->ind_rd_buffer_size) {
                     errs++;
                     if (verbose)
-                        fprintf(stderr, "ind_rd_buffer_size is %d; should be %d\n",
-                                atoi(value), defaults->ind_rd_buffer_size);
+                        fprintf(stderr, "ind_rd_buffer_size is %s; should be %d\n",
+                                value, defaults->ind_rd_buffer_size);
                 }
             } else if (!strcmp("ind_wr_buffer_size", key)) {
                 if (atoi(value) != defaults->ind_wr_buffer_size) {
                     errs++;
                     if (verbose)
-                        fprintf(stderr, "ind_wr_buffer_size is %d; should be %d\n",
-                                atoi(value), defaults->ind_wr_buffer_size);
+                        fprintf(stderr, "ind_wr_buffer_size is %s; should be %d\n",
+                                value, defaults->ind_wr_buffer_size);
                 }
             } else if (!strcmp("romio_ds_read", key)) {
                 if (strcmp("automatic", value)) {
@@ -215,6 +226,10 @@ int main(int argc, char **argv)
                     fprintf(stderr, "unexpected key %s (not counted as an error)\n", key);
             }
         }
+    } else {
+        MPI_Info_get(info_used, "striping_factor", MPI_MAX_INFO_VAL - 1, value, &flag);
+        if (flag)
+            default_striping_factor = atoi(value);
     }
     MPI_Info_free(&info_used);
 
@@ -252,12 +267,9 @@ int main(int argc, char **argv)
    they will be ignored. */
 
     /* number of I/O devices across which the file will be striped.
-     * accepted only if 0 < value < default_striping_factor;
-     * ignored otherwise */
-    if (default_striping_factor - 1 > 0) {
-        sprintf(value, "%d", default_striping_factor - 1);
-        MPI_Info_set(info, "striping_factor", value);
-    } else {
+     * If not set by the file system, the default value is 0.
+     */
+    if (default_striping_factor > 0) {
         sprintf(value, "%d", default_striping_factor);
         MPI_Info_set(info, "striping_factor", value);
     }
@@ -271,11 +283,13 @@ int main(int argc, char **argv)
 #endif
 
     /* the I/O device number from which to start striping the file.
-     * accepted only if 0 <= value < default_striping_factor;
+     * accepted only if 0 <= value < default_striping_factor - 1
      * ignored otherwise */
-    sprintf(value, "%d", default_striping_factor - 2);
+    if (default_striping_factor > 1)
+        sprintf(value, "%d", default_striping_factor - 2);
+    else
+        strcpy(value, "0");
     MPI_Info_set(info, "start_iodevice", value);
-
 
 /* The following hint about PFS server buffering is accepted only on
    Intel PFS. It can be specified anytime. */
@@ -299,13 +313,19 @@ int main(int argc, char **argv)
         if (!mynod)
             fprintf(stderr, "Process %d, key = %s, value = %s\n", mynod, key, value);
 #endif
-        if (!strcmp("striping_factor", key)) {
-            if ((default_striping_factor - 1 > 0) && (atoi(value) != default_striping_factor - 1)) {
+        if (!strcmp("start_iodevice", key)) {
+            if (default_striping_factor > 1 && atoi(value) != default_striping_factor - 2) {
                 errs++;
                 if (verbose)
-                    fprintf(stderr, "striping_factor is %d; should be %d\n",
-                            atoi(value), default_striping_factor - 1);
-            } else if (atoi(value) != default_striping_factor) {
+                    fprintf(stderr, "start_iodevice is %d; should be %d\n",
+                            atoi(value), default_striping_factor - 2);
+            } else if (atoi(value) != 0) {
+                errs++;
+                if (verbose)
+                    fprintf(stderr, "start_iodevice is %d; should be 0\n", atoi(value));
+            }
+        } else if (!strcmp("striping_factor", key)) {
+            if (atoi(value) != default_striping_factor) {
                 errs++;
                 if (verbose)
                     fprintf(stderr, "striping_factor is %d; should be %d\n",

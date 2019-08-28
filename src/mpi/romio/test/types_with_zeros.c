@@ -23,11 +23,11 @@ static void handle_error(int errcode, const char *str)
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-enum {
+enum testcases {
     INDEXED,
     HINDEXED,
     STRUCT
-} testcases;
+};
 
 static int test_indexed_with_zeros(char *filename, int testcase)
 {
