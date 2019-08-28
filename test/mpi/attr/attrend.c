@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     int errs = 0, wrank;
 
-    MTest_Init(&argc, &argv);
+    MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     MPI_Keyval_free(&exit_key);
 
     /* Now, exit MPI */
-    MTest_Finalize(errs);
+    MPI_Finalize();
 
     /* Check that the exit handler was called, and without error */
     if (wrank == 0) {
