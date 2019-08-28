@@ -114,14 +114,16 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* Call any and all MPIR_Init type functions */
     MPIR_Err_init();
-    MPIR_Group_init();
+    mpi_errno = MPIR_Group_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
     int thread_provided = 0;
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* init datatypes after MPID_Init because MPID_Type_commit_hook is used */
-    MPIR_Datatype_init();
+    mpi_errno = MPIR_Datatype_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collectives infrastructure */
     mpi_errno = MPII_Coll_init();
