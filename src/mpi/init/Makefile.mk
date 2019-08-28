@@ -16,8 +16,15 @@ mpi_sources +=                 \
     src/mpi/init/querythread.c
 
 mpi_core_sources += \
+    src/mpi/init/globals.c        \
     src/mpi/init/initinfo.c       \
-    src/mpi/init/async.c          \
+    src/mpi/init/init_global.c    \
+    src/mpi/init/init_thread_cs.c \
+    src/mpi/init/init_async.c     \
+    src/mpi/init/init_windows.c   \
+    src/mpi/init/init_bindings.c  \
+    src/mpi/init/init_dbg_logging.c \
+    src/mpi/init/init_topo.c      \
     src/mpi/init/netloc_util.c
 
 noinst_HEADERS += src/mpi/init/mpi_init.h

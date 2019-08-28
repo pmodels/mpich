@@ -5,6 +5,8 @@
  *
  */
 
+/* FIXME: this file should be moved to a topology utility folder */
+
 #include "mpiimpl.h"
 
 #ifdef HAVE_NETLOC
