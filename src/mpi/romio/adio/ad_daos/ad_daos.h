@@ -84,24 +84,6 @@ struct ADIO_DAOS_req {
     d_iov_t *iovs;
 };
 
-static inline void
-adio_daos_sync_ranks(MPI_Comm comm)
-{
-	daos_epoch_t e = daos_ts2epoch();
-	daos_epoch_t ge;
-
-	MPI_Allreduce(&e, &ge, 1, MPI_UINT64_T, MPI_MAX, comm);
-
-	e = daos_ts2epoch();
-	if (ge > e) {
-		struct timespec ts;
-
-		ts.tv_sec = 0;
-		ts.tv_nsec = ge - e;
-		nanosleep(&ts, NULL);
-	}
-}
-
 enum {
 	HANDLE_POOL,
 	HANDLE_CO,

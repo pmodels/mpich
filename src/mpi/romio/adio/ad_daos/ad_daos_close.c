@@ -20,11 +20,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     static char myname[] = "ADIOI_DAOS_CLOSE";
     int rc;
 
-    if (cont->amode == DAOS_COO_RW)
-        adio_daos_sync_ranks(fd->comm);
-    else
-        MPI_Barrier(fd->comm);
-
+    MPI_Barrier(fd->comm);
     MPI_Comm_rank(fd->comm, &rank);
 
     if (rank == 0) {

@@ -20,19 +20,13 @@ void ADIOI_DAOS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     static char myname[] = "ADIOI_DAOS_RESIZE";
 
     *error_code = MPI_SUCCESS;
-
     MPI_Comm_rank(fd->comm, &rank);
-    adio_daos_sync_ranks(fd->comm);
+    MPI_Barrier(fd->comm);
 
-    if (rank == fd->hints->ranklist[0]) {
+    if (rank == fd->hints->ranklist[0])
 	ret = daos_array_set_size(cont->oh, DAOS_TX_NONE, size, NULL);
-	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
-    } else  {
-	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
-    }
 
-    adio_daos_sync_ranks(fd->comm);
-
+    MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     if (ret != 0)
         *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
 }

@@ -533,26 +533,8 @@ err_free:
 void
 ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 {
-    int rank, rc, err;
-    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    static char myname[] = "ADIOI_DAOS_FLUSH";
-
+    MPI_Barrier(fd->comm);
     *error_code = MPI_SUCCESS;
-    MPI_Comm_rank(fd->comm, &rank);
-
-    if (fd->is_open <= 0)
-        return;
-
-    adio_daos_sync_ranks(fd->comm);
-
-    if (rank == 0) {
-        rc = dfs_sync(cont->dfs);
-        if (rc)
-            PRINT_MSG(stderr, "dfs_sync() failed (%d)\n", rc);
-    }
-
-    MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
-    *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
 }
 
 void
