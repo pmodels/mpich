@@ -7,7 +7,6 @@
       implicit none
 
       include 'mpif.h'
-      @F77MPIOINC@
 
 !     Fortran equivalent of perf.c
 
@@ -22,7 +21,6 @@
       integer fh, status(MPI_STATUS_SIZE), ierr, argc, iargc, i
       character*1024 str    ! used to store the filename
       @FORTRAN_MPI_OFFSET@ offset
-      @FTESTDEFINE@
 
       ntimes = 5
       min_read_tim = 10000000.0D0

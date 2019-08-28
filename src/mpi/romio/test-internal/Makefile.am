@@ -9,16 +9,16 @@
 # friends.
 
 # override the normal compilers for the tests
-CC = $(TEST_CC)
+CC = @TEST_CC@
 
 # because := is not universally avalible, we have to play games to use the
 # user-specified LDFLAGS and OUR_LIBS env. variables (if set)
-OUR_LIBS = $(TEST_LIBNAME) $(MPI_LIB) $(ROMIO_LIBLIST)
+OUR_LIBS = @TEST_LIBNAME@ @MPI_LIB@ $(ROMIO_LIBLIST)
 
 LDADD = $(OUR_LIBS)
 
-AM_CPPFLAGS = $(ROMIO_INCLUDE)
-AM_CFLAGS = $(USER_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/adio/include \
+              -I$(top_builddir)/include -I$(top_builddir)/adio/include
 
 CTESTS = file_realms_test io_bounds_test heap_test
 
