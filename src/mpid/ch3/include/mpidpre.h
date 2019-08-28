@@ -537,8 +537,7 @@ typedef struct {
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
-int MPID_Init( int *argc_p, char ***argv_p, int requested,
-	       int *provided, int *has_args, int *has_env );
+int MPID_Init(int *argc_p, char ***argv_p, int requested, int *provided);
 
 int MPID_InitCompleted( void );
 
