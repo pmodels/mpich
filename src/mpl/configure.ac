@@ -827,7 +827,7 @@ AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
     AC_MSG_CHECKING([for support for $3])
 
     PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$CFLAGS -I${srcdir}/include"
+    CFLAGS="$CFLAGS -I${srcdir}/include -Werror"
     AC_LINK_IFELSE([MPL_ATOMIC_TEST_PROGRAM([$1])],
         [AC_DEFINE([HAVE_$2], [1], [Define to 1 if we have support for $3])]
         [AC_MSG_RESULT([yes])]
