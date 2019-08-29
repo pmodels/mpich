@@ -448,11 +448,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* Override split_type */
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
