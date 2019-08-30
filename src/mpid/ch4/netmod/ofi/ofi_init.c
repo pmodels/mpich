@@ -267,6 +267,18 @@ cvars:
       description : >-
         Specifies the number of buffers for receiving active messages.
 
+    - name        : MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL
+      category    : CH4_OFI
+      type        : int
+      default     : 100
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the interval for manually flushing RMA operations when automatic progress is not
+        enabled. It the underlying OFI provider supports auto data progress, this value is ignored.
+        If the value is -1, this optimization will be turned off.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -345,7 +357,7 @@ static int conn_manager_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
 
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, MPI_ANY_SOURCE, 1);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (max_n_conn > 0) {
@@ -377,8 +389,7 @@ static int conn_manager_destroy()
                                                   NULL,
                                                   conn[j],
                                                   match_bits,
-                                                  mask_bits, &req[j].context),
-                                         trecv, MPIDI_OFI_CALL_LOCK, FALSE);
+                                                  mask_bits, &req[j].context), trecv, FALSE);
                     j++;
                     break;
                 default:
@@ -415,7 +426,6 @@ static int dynproc_send_disconnect(int conn_id)
     MPIDI_OFI_dynamic_process_request_t req;
     uint64_t match_bits = 0;
     int close_msg = 0xcccccccc;
-    int rank = MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank;
     struct fi_msg_tagged msg;
     struct iovec msg_iov;
 
@@ -426,7 +436,7 @@ static int dynproc_send_disconnect(int conn_id)
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
-        match_bits = MPIDI_OFI_init_sendtag(context_id, rank, 1, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(context_id, 1, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
         /* we need to get this connection from the sockname     */
@@ -444,7 +454,7 @@ static int dynproc_send_disconnect(int conn_id)
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
-                             tsendmsg, MPIDI_OFI_CALL_LOCK, FALSE);
+                             tsendmsg, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
@@ -473,9 +483,9 @@ static int dynproc_send_disconnect(int conn_id)
 }
 
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                            MPIR_Comm * comm_self, int spawned, int *n_vcis_provided)
+                            MPIR_Comm * comm_self, int *n_vcis_provided)
 {
-    int mpi_errno = MPI_SUCCESS, pmi_errno, i, ofi_version;
+    int mpi_errno = MPI_SUCCESS, i, ofi_version;
     int thr_err = 0;
     void *table = NULL;
     const char *provname = NULL;
@@ -627,7 +637,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             prov_use->domain_attr->av_type == FI_AV_TABLE;
         MPIDI_OFI_global.settings.enable_scalable_endpoints =
             MPIDI_OFI_global.settings.enable_scalable_endpoints &&
-            prov_use->domain_attr->max_ep_tx_ctx > 1;
+            prov_use->domain_attr->max_ep_tx_ctx > 1 &&
+            (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX;
         MPIDI_OFI_global.settings.enable_mr_scalable =
             MPIDI_OFI_global.settings.enable_mr_scalable &&
             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
@@ -659,8 +670,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Print some debugging output to give the user some hints */
     mpi_errno = application_hints(rank);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_OFI_global.prov_use = fi_dupinfo(prov_use);
     MPIR_Assert(MPIDI_OFI_global.prov_use);
@@ -856,8 +866,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                           &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
                                           TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -912,8 +921,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* Initialize Active Message          */
     /* ---------------------------------- */
     mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
@@ -950,8 +958,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_OFI_global.am_msg[i].iov_count = 1;
             MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                             &MPIDI_OFI_global.am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), prepost,
-                                 MPIDI_OFI_CALL_LOCK, FALSE);
+                                            FI_MULTI_RECV | FI_COMPLETION), prepost, FALSE);
         }
 
         /* Grow the header handlers down */
@@ -964,26 +971,13 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
-    /* -------------------------------- */
-    /* Initialize Dynamic Tasking       */
-    /* -------------------------------- */
-#if !defined(USE_PMIX_API) && !defined(USE_PMI2_API)
+    /* ------------------------------------------------- */
+    /* Initialize Connection Manager for Dynamic Tasking */
+    /* ------------------------------------------------- */
     conn_manager_init();
-    if (spawned) {
-        char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_OFI_global.kvsname,
-                                           MPIDI_PARENT_PORT_KVSKEY,
-                                           parent_port, MPIDI_MAX_KVS_VALUE_LEN), pmi);
-        MPIDI_OFI_MPI_CALL_POP(MPID_Comm_connect
-                               (parent_port, NULL, 0, comm_world, &MPIR_Process.comm_parent));
-        MPIR_Assert(MPIR_Process.comm_parent != NULL);
-        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-    }
-#endif
 
     mpi_errno = MPIR_Comm_register_hint("eagain", set_eagain, NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
 
@@ -1293,6 +1287,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
             tx_attr.caps |= FI_ATOMICS;
         /* MSG */
         tx_attr.caps |= FI_MSG;
+        tx_attr.caps |= FI_NAMED_RX_CTX;        /* Required for scalable endpoints indexing */
 
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx, &tx_attr, &MPIDI_OFI_global.ctx[idx].tx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
@@ -1315,6 +1310,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
             rx_attr.caps |= FI_ATOMICS;
         rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
+        rx_attr.caps |= FI_NAMED_RX_CTX;        /* Required for scalable endpoints indexing */
 
         MPIDI_OFI_CALL(fi_rx_context(*ep, idx, &rx_attr, &MPIDI_OFI_global.ctx[idx].rx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind
@@ -1564,6 +1560,8 @@ static int init_hints(struct fi_info *hints)
     /*           MSG|MULTI_RECV:  Supports synchronization protocol for 1-sided */
     /*           FI_DIRECTED_RECV: Support not putting the source in the match  */
     /*                             bits                                         */
+    /*           FI_NAMED_RX_CTX: Necessary to specify receiver-side SEP index  */
+    /*                            when scalable endpoint (SEP) is enabled.      */
     /*           We expect to register all memory up front for use with this    */
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
@@ -1606,6 +1604,11 @@ static int init_hints(struct fi_info *hints)
         hints->caps |= FI_MSG;  /* Message Queue apis      */
         hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
     }
+
+    /* With scalable endpoints, FI_NAMED_RX_CTX is needed to specify a destination receive context
+     * index */
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
+        hints->caps |= FI_NAMED_RX_CTX;
 
     /* ------------------------------------------------------------------------ */
     /* Set object options to be filtered by getinfo                             */
@@ -1697,7 +1700,9 @@ static struct fi_info *pick_provider(struct fi_info *hints, const char *provname
                                                          prov_use->fabric_attr->prov_name));
 
         /* Check that this provider meets the minimum requirements for the user */
-        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS &&
+            (prov_use->domain_attr->max_ep_tx_ctx <= 1 ||
+             (prov_use->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
             prov = prov_use->next;

@@ -16,14 +16,6 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 
     *message = NULL;
 
-    if (source == MPI_PROC_NULL)
-    {
-        MPIR_Status_set_procnull(status);
-        found = TRUE;
-        *message = NULL; /* should be interpreted as MPI_MESSAGE_NO_PROC */
-        goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
@@ -42,14 +34,14 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, &found, message, status);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (found) goto fn_exit;
 
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
                 /* FIXME could this be replaced with a progress_wait? */
                 mpi_errno = MPIDI_CH3_Progress_test();
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } while (1);
         }
         else {
@@ -62,14 +54,14 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
                 do {
                     mpi_errno = vc->comm_ops->improbe(vc, source, tag, comm, context_offset, &found,
                                                       message, status);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (found) goto fn_exit;
 
                     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
                     /* FIXME could this be replaced with a progress_wait? */
                     mpi_errno = MPIDI_CH3_Progress_test();
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } while (1);
             }
             /* fall-through to shm case */
@@ -99,7 +91,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     }
     while(mpi_errno == MPI_SUCCESS);
     MPIDI_CH3_Progress_end(&progress_state);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (*message) {
         (*message)->kind = MPIR_REQUEST_KIND__MPROBE;

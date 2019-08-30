@@ -571,9 +571,7 @@ int MPID_Request_complete(MPIR_Request *req)
         /* trigger request_completed callback function */
         if (req->dev.request_completed_cb != NULL) {
             mpi_errno = req->dev.request_completed_cb(req);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* decrement completion_notification counter */

@@ -69,19 +69,16 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
 
     /* Try to cancel the underlying request */
     mpi_errno = MPIR_Cancel(req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Wait(&req_hdl, &status);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     ibsend_info->cancelled = MPIR_STATUS_GET_CANCEL_BIT(status);
 
     /* If the cancelation is successful, free the memory in the
      * attached buffer used by the request */
     if (ibsend_info->cancelled) {
         mpi_errno = MPIR_Bsend_free_req_seg(ibsend_info->req);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:
     return mpi_errno;
@@ -96,9 +93,6 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     MPIR_Request *request_ptr, *new_request_ptr;
     ibsend_req_info *ibinfo = 0;
 
-    /* We don't try tbsend in for MPI_Ibsend because we must create a
-     * request even if we can send the message */
-
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, IBSEND, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -110,8 +104,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     ibinfo->cancelled = 0;
     mpi_errno = MPIR_Grequest_start(MPIR_Ibsend_query, MPIR_Ibsend_free,
                                     MPIR_Ibsend_cancel, ibinfo, &new_request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* The request is immediately complete because the MPIR_Bsend_isend has
      * already moved the data out of the user's buffer */
     MPIR_Grequest_complete(new_request_ptr);
@@ -218,6 +211,15 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
         MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
+
+    /* Create a completed request and return immediately for dummy process */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT(request_ptr == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
 
     /* ... body of routine ...  */
 

@@ -115,17 +115,6 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
 
     comm_size = comm_ptr->local_size;
 
-    /* set op_errno to 0. stored in perthread structure */
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        per_thread->op_errno = 0;
-    }
-
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     is_commutative = MPIR_Op_is_commutative(op);
@@ -151,8 +140,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
         mpi_errno =
             MPIR_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf, recvcounts, datatype, op,
                                                         comm_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
@@ -162,8 +150,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
         mpi_errno =
             MPIR_Reduce_scatter_intra_pairwise(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
                                                errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
     }
 
@@ -204,17 +191,6 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        if (per_thread->op_errno)
-            mpi_errno = per_thread->op_errno;
-    }
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -301,8 +277,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

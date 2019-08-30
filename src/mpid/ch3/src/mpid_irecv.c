@@ -21,12 +21,6 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 			"rank=%d, tag=%d, context=%d", 
 			rank, tag, comm->recvcontext_id + context_offset));
 
-    if (rank == MPI_PROC_NULL)
-    {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
-        goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
@@ -69,7 +63,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    {
 		MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 		mpi_errno = MPIDI_CH3_EagerSyncAck( vc, rreq );
-		if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+		MPIR_ERR_CHECK(mpi_errno);
 	    }
 
             /* the request was found in the unexpected queue, so it has a
@@ -123,7 +117,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
 	{
 	    mpi_errno = MPIDI_CH3_RecvFromSelf( rreq, buf, count, datatype );
-	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+	    MPIR_ERR_CHECK(mpi_errno);
 	}
 	else
 	{

@@ -93,7 +93,7 @@ int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint coun
     if (vc->ch.lmt_initiate_lmt == NULL)
     {
         mpi_errno = MPIDI_CH3_RndvSend(sreq_p, buf, count, datatype, dt_contig, data_sz, dt_true_lb, rank, tag, comm, context_offset);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -121,7 +121,7 @@ int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint coun
             MPID_nem_lmt_rtsq_enqueue(&vc->ch.lmt_rts_queue, sreq);
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_RNDVSEND);
@@ -146,14 +146,14 @@ int MPID_nem_lmt_RndvRecv(MPIDI_VC_t *vc, MPIR_Request *rreq)
     if (vc->ch.lmt_initiate_lmt == NULL)
     {
         mpi_errno = MPIDI_CH3_RecvRndv(vc, rreq);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE, "lmt RTS in the request");
 
     mpi_errno = do_cts(vc, rreq, &complete);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(complete);
 
@@ -256,7 +256,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, int
             int complete;
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
             mpi_errno = do_cts(vc, rreq, &complete);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_Assert(complete);
         }
         else
@@ -390,14 +390,14 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATT
     {
     case MPIDI_REQUEST_TYPE_RECV:
         mpi_errno = vc->ch.lmt_done_recv(vc, req);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         break;
     case MPIDI_REQUEST_TYPE_SEND:
     case MPIDI_REQUEST_TYPE_RSEND:
     case MPIDI_REQUEST_TYPE_SSEND:
     case MPIDI_REQUEST_TYPE_BSEND:
         mpi_errno = vc->ch.lmt_done_send(vc, req);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         break;
     default:
         MPIR_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
@@ -450,7 +450,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             *rreqp = NULL;
             *buflen = cookie_pkt->cookie_len;
@@ -480,7 +480,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         *buflen = 0;
         *rreqp = NULL;
     }
@@ -522,7 +522,7 @@ static int do_cts(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     mpi_errno = vc->ch.lmt_start_recv(vc, rreq, s_cookie);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* free cookie buffer allocated in RTS handler */
     if (rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN)
@@ -554,7 +554,7 @@ static int do_send(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     mpi_errno = vc->ch.lmt_start_send(vc, sreq, r_cookie);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* free cookie buffer allocated in CTS handler */
     MPL_free(sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);

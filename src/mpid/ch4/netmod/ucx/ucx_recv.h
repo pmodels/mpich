@@ -248,19 +248,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
-                                                    int count,
-                                                    MPI_Datatype datatype,
-                                                    int rank,
-                                                    int tag,
-                                                    MPIR_Comm * comm,
-                                                    int context_offset,
-                                                    MPIDI_av_entry_t * addr,
-                                                    MPIR_Request ** request)
-{
-    return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {

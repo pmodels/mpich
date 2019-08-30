@@ -38,7 +38,7 @@ bcastzerotype 4
 bcastzerotype 5
 bcastzerotype 10
 coll2 5
-coll3 5
+gatherv 5
 coll4 4
 coll5 4
 coll6 5
@@ -168,5 +168,3 @@ neighb_allgatherv 4 mpiversion=3.0
 neighb_alltoall 4 mpiversion=3.0
 neighb_alltoallv 4 mpiversion=3.0
 neighb_alltoallw 4 mpiversion=3.0
-
-@coll_algo_tests@

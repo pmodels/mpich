@@ -19,19 +19,6 @@
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
-
-    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    const void *am_hdr, size_t am_hdr_sz)
 {
@@ -177,16 +164,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_REQUEST_FINALIZE);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_prequest_free_hook(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PREQUEST_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PREQUEST_FREE_HOOK);
-
-    MPIDI_SHM_src_funcs.prequest_free_hook(req);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PREQUEST_FREE_HOOK);
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
@@ -202,6 +179,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
                                             addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_send_coll(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, int rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr,
+                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_SEND_COLL);
+    ret =
+        MPIDI_SHM_native_src_funcs.send_coll(buf, count, datatype, rank, tag, comm,
+                                             context_offset, addr, request, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_SEND_COLL);
     return ret;
 }
 
@@ -223,91 +218,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_startall(count, requests);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_send_init(buf, count, datatype, rank, tag, comm,
-                                                   context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_ssend_init(buf, count, datatype, rank, tag, comm,
-                                                    context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rsend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_rsend_init(buf, count, datatype, rank, tag, comm,
-                                                    context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bsend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_bsend_init(buf, count, datatype, rank, tag, comm,
-                                                    context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
@@ -323,6 +233,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
                                              addr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISEND);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_isend_coll(const void *buf, MPI_Aint count,
+                                                  MPI_Datatype datatype, int rank, int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIDI_av_entry_t * addr,
+                                                  MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_ISEND_COLL);
+
+    ret =
+        MPIDI_SHM_native_src_funcs.isend_coll(buf, count, datatype, rank, tag, comm,
+                                              context_offset, addr, request, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_ISEND_COLL);
     return ret;
 }
 
@@ -354,22 +283,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
     ret = MPIDI_SHM_native_src_funcs.mpi_cancel_send(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
-                                                     int rank, int tag, MPIR_Comm * comm,
-                                                     int context_offset, MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
-
-    ret = MPIDI_SHM_native_src_funcs.mpi_recv_init(buf, count, datatype, rank, tag, comm,
-                                                   context_offset, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
     return ret;
 }
 

@@ -98,6 +98,11 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
 
     DTPI_ERR_ARG_CHECK(!dtpi, rc);
 
+    /* The code will enter deadloop if maxbufsize is too small or overflown to negative.
+     * Use 100000 as an arbitary sanity guard.
+     */
+    DTPI_ERR_ARG_CHECK(maxbufsize < 100000, rc);
+
     /* find number of nestings */
     if (getenv("DTP_MAX_TREE_DEPTH"))
         max_tree_depth = atoi(getenv("DTP_MAX_TREE_DEPTH"));

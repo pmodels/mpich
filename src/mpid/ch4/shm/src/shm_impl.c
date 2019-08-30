@@ -4,11 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpl.h"
-
-MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
-
 #include "posix_impl.h"
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
@@ -473,6 +470,19 @@ int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
     ret = MPIDI_SHM_native_src_funcs.mpi_op_free_hook(op_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_OP_FREE_HOOK);
+    return ret;
+}
+
+int MPIDI_SHM_progress(int vci, int blocking)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
+
+    ret = MPIDI_SHM_src_funcs.progress(vci, blocking);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
     return ret;
 }
 

@@ -119,6 +119,11 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr,
@@ -131,8 +136,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
     }
 
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);

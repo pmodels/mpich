@@ -31,17 +31,6 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* set op_errno to 0. stored in perthread structure */
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        per_thread->op_errno = 0;
-    }
-
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
@@ -73,8 +62,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
         /* copy local data into recvbuf */
         mpi_errno = MPIR_Localcopy(((char *) sendbuf + disps[rank] * extent),
                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* allocate temporary buffer to store incoming data */
@@ -124,6 +112,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
              * end, we will copy back the result to the
              * beginning of recvbuf. */
         }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* if MPI_IN_PLACE, move output data to the beginning of
@@ -132,23 +121,11 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
         mpi_errno = MPIR_Localcopy(((char *) recvbuf +
                                     disps[rank] * extent),
                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        if (per_thread->op_errno)
-            mpi_errno = per_thread->op_errno;
-    }
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

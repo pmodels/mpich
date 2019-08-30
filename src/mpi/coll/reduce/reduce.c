@@ -205,7 +205,7 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = comm_ptr->pof2;
+    pof2 = comm_ptr->coll.pof2;
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
@@ -300,8 +300,7 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -485,8 +484,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

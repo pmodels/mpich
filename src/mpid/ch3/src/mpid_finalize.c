@@ -99,7 +99,7 @@ int MPID_Finalize(void)
     /* FIXME: The close actions should use the same code as the other
        connection close code */
     mpi_errno = MPIDI_PG_Close_VCs();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /*
      * Wait for all VCs to finish the close protocol
      */
@@ -109,14 +109,14 @@ int MPID_Finalize(void)
 
 #ifdef MPID_NEEDS_ICOMM_WORLD
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Note that the CH3I_Progress_finalize call has been removed; the
        CH3_Finalize routine should call it */

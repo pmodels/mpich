@@ -18,7 +18,7 @@
 */
 MPI_Aint MTestDefaultMaxBufferSize()
 {
-    MPI_Aint max_size = 2147483648;
+    MPI_Aint max_size = 1073741824;
     char *envval = NULL;
     envval = getenv("MPITEST_MAXBUFFER");
     if (envval) {

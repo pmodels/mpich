@@ -52,16 +52,14 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
                                     ((char *) tmp_buf + position * recvtype_sz),
                                     recvcounts[rank] * recvtype_sz, MPI_BYTE, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* if in_place specified, local data is found in recvbuf */
         mpi_errno = MPIR_Sched_copy(((char *) recvbuf + displs[rank] * recvtype_extent),
                                     recvcounts[rank], recvtype,
                                     ((char *) tmp_buf + position * recvtype_sz),
                                     recvcounts[rank] * recvtype_sz, MPI_BYTE, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     curr_count = recvcounts[rank];
@@ -109,13 +107,11 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
 
             mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset * recvtype_sz),
                                         curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset * recvtype_sz),
                                         incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             curr_count += incoming_count;
@@ -180,8 +176,7 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
                     mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
                                                 dst, comm_ptr, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
                 /* recv only if this proc. doesn't have data and sender
@@ -203,8 +198,7 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
                     mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset * recvtype_sz),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
                                                 dst, comm_ptr, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     curr_count += incoming_count;
                 }
@@ -231,8 +225,7 @@ int MPIR_Iallgatherv_sched_intra_recursive_doubling(const void *sendbuf, int sen
                                         recvcounts[j] * recvtype_sz, MPI_BYTE,
                                         ((char *) recvbuf + displs[j] * recvtype_extent),
                                         recvcounts[j], recvtype, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         position += recvcounts[j];
     }

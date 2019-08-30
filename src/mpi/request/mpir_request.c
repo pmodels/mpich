@@ -247,9 +247,9 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            rc = (request_ptr->u.ureq.greq_fns->cancel_fn) (request_ptr->u.ureq.
-                                                            greq_fns->grequest_extra_state,
-                                                            complete);
+            rc = (request_ptr->u.ureq.greq_fns->U.C.cancel_fn) (request_ptr->u.ureq.
+                                                                greq_fns->grequest_extra_state,
+                                                                complete);
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;, "**user",
                                  "**usercancel %d", rc);
             break;
@@ -260,10 +260,9 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
                 MPI_Fint ierr;
                 MPI_Fint icomplete = complete;
 
-                ((MPIR_Grequest_f77_cancel_function *) (request_ptr->u.ureq.
-                                                        greq_fns->cancel_fn)) (request_ptr->u.ureq.
-                                                                               greq_fns->grequest_extra_state,
-                                                                               &icomplete, &ierr);
+                (request_ptr->u.ureq.greq_fns->U.F.cancel_fn) (request_ptr->u.ureq.
+                                                               greq_fns->grequest_extra_state,
+                                                               &icomplete, &ierr);
                 rc = (int) ierr;
                 MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}, "**user",
                                      "**usercancel %d", rc);
@@ -296,9 +295,9 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            rc = (request_ptr->u.ureq.greq_fns->query_fn) (request_ptr->u.ureq.
-                                                           greq_fns->grequest_extra_state,
-                                                           &request_ptr->status);
+            rc = (request_ptr->u.ureq.greq_fns->U.C.query_fn) (request_ptr->u.ureq.
+                                                               greq_fns->grequest_extra_state,
+                                                               &request_ptr->status);
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);
             break;
@@ -308,10 +307,9 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
             {
                 MPI_Fint ierr;
                 MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
-                ((MPIR_Grequest_f77_query_function *) (request_ptr->u.ureq.
-                                                       greq_fns->query_fn)) (request_ptr->u.ureq.
-                                                                             greq_fns->grequest_extra_state,
-                                                                             is, &ierr);
+                (request_ptr->u.ureq.greq_fns->U.F.query_fn) (request_ptr->u.ureq.
+                                                              greq_fns->grequest_extra_state, is,
+                                                              &ierr);
                 rc = (int) ierr;
                 if (rc == MPI_SUCCESS)
                     PMPI_Status_f2c(is, &request_ptr->status);
@@ -345,8 +343,8 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
-            rc = (request_ptr->u.ureq.greq_fns->free_fn) (request_ptr->u.ureq.
-                                                          greq_fns->grequest_extra_state);
+            rc = (request_ptr->u.ureq.greq_fns->U.C.free_fn) (request_ptr->u.ureq.
+                                                              greq_fns->grequest_extra_state);
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userfree %d", rc);
             break;
@@ -356,10 +354,8 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
             {
                 MPI_Fint ierr;
 
-                ((MPIR_Grequest_f77_free_function *) (request_ptr->u.ureq.
-                                                      greq_fns->free_fn)) (request_ptr->u.ureq.
-                                                                           greq_fns->grequest_extra_state,
-                                                                           &ierr);
+                (request_ptr->u.ureq.greq_fns->U.F.free_fn) (request_ptr->u.ureq.
+                                                             greq_fns->grequest_extra_state, &ierr);
                 rc = (int) ierr;
                 MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}, "**user",
                                      "**userfree %d", rc);

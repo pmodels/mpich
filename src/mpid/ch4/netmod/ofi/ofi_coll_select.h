@@ -56,7 +56,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    pof2 = comm->pof2;
+    pof2 = comm->coll.pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
         return &MPIDI_OFI_Allreduce_intra_recursive_doubling_cnt;
@@ -82,7 +82,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    pof2 = comm->pof2;
+    pof2 = comm->coll.pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         return &MPIDI_OFI_Reduce_intra_reduce_scatter_gather_cnt;

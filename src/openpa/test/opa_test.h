@@ -13,8 +13,8 @@
 #define OPA_PRIMITIVES_H_INCLUDED
 #include "opa_config.h"
 #include "opa_util.h"
-#ifndef _opa_inline
-#define _opa_inline inline
+#ifndef inline
+#define inline inline
 #endif
 #endif /* OPA_TEST_NAIVE */
 #include <assert.h>
@@ -59,7 +59,7 @@ typedef void *volatile OPA_ptr_t;
 #define OPA_decr_int(A) ((void) (--(*(A))))
 
 #define OPA_decr_and_test_int(A) (0 == --(*(A)))
-static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
+static inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 {
     int prev = *ptr;
     *ptr += val;
@@ -72,7 +72,7 @@ static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 #define OPA_cas_ptr(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : *(A))
 #define OPA_cas_int(A, B, C) (*(A) == (B) ? (*(A) = (C), (B)) : *(A))
 
-static _opa_inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
+static inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
 {
     void *prev;
     prev = *ptr;
@@ -80,7 +80,7 @@ static _opa_inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
     return prev;
 }
 
-static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
+static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 {
     int prev;
     prev = *ptr;

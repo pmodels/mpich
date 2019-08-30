@@ -15,14 +15,12 @@ int MPIR_Reduce_allcomm_nb(const void *sendbuf, void *recvbuf, int count, MPI_Da
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &req_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     if (req_ptr)
         req = req_ptr->handle;
 
     mpi_errno = MPIR_Wait(&req, MPI_STATUS_IGNORE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

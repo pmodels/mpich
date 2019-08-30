@@ -91,20 +91,23 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (source == MPI_PROC_NULL) {
+        MPIR_Status_set_procnull(status);
+        *flag = TRUE;
+        *message = MPI_MESSAGE_NO_PROC;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     *message = MPI_MESSAGE_NULL;
     mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (*flag) {
-        if (msgp == NULL) {
-            MPIR_Assert(source == MPI_PROC_NULL);
-            *message = MPI_MESSAGE_NO_PROC;
-        } else {
-            *message = msgp->handle;
-        }
+        MPIR_Assert(msgp != NULL);
+        *message = msgp->handle;
     }
 
     /* ... end of body of routine ... */

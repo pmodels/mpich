@@ -32,9 +32,7 @@ char *MPIDI_DBG_parent_str = "?";
 
 int MPIDI_Use_pmi2_api = 0;
 
-static int init_pg( int *argc_p, char ***argv_p,
-		   int *has_args, int *has_env, int *has_parent, 
-		   int *pg_rank_p, MPIDI_PG_t **pg_p );
+static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
 static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state);
@@ -61,7 +59,7 @@ static int finalize_failed_procs_group(void *param)
     int mpi_errno = MPI_SUCCESS;
     if (MPIDI_Failed_procs_group != MPIR_Group_empty) {
         mpi_errno = MPIR_Group_free_impl(MPIDI_Failed_procs_group);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     
  fn_fail:
@@ -90,8 +88,7 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
 }
 
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided, 
-	      int *has_args, int *has_env)
+int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -106,14 +103,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     
     /* init group of failed processes, and set finalize callback */
     MPIDI_Failed_procs_group = MPIR_Group_empty;
@@ -157,8 +149,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = init_pg( argc, argv,
-			has_args, has_env, &has_parent, &pg_rank, &pg );
+    mpi_errno = init_pg(argc, argv, &has_parent, &pg_rank, &pg);
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -178,7 +169,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* Ideally this wouldn't be needed.  Once we have PMIv2 support for node
        information we should probably eliminate this function. */
     mpi_errno = MPIDI_Populate_vc_node_ids(pg, pg_rank);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize Window functions table with defaults, then call the channel's
        init function. */
@@ -210,7 +201,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 
     /* setup receive queue statistics */
     mpi_errno = MPIDI_CH3U_Recvq_init();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Ask channel to expose Window packet ordering. */
     MPIDI_CH3_Win_pkt_orderings_init(&MPIDI_CH3U_Win_pkt_orderings);
@@ -223,7 +214,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = pg_rank;
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
-    comm->pof2        = MPL_pof2(comm->local_size);
     
     mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
@@ -240,7 +230,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     }
 
     mpi_errno = MPIR_Comm_commit(comm);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /*
      * Initialize the MPI_COMM_SELF object
@@ -249,7 +239,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = 0;
     comm->remote_size = 1;
     comm->local_size  = 1;
-    comm->pof2        = 0;
     
     mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
@@ -261,7 +250,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_VCR_Dup(&pg->vct[pg_rank], &comm->dev.vcrt->vcr_table[0]);
 
     mpi_errno = MPIR_Comm_commit(comm);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Currently, mpidpre.h always defines MPID_NEEDS_ICOMM_WORLD. */
 #ifdef MPID_NEEDS_ICOMM_WORLD
@@ -274,12 +263,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = pg_rank;
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
-    comm->pof2        = MPL_pof2(comm->local_size);
     MPIDI_VCRT_Add_ref( MPIR_Process.comm_world->dev.vcrt );
     comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
     
     mpi_errno = MPIR_Comm_commit(comm);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
     
     /*
@@ -348,10 +336,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
                                         set_eager_threshold,
                                         NULL);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_RMA_init();
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
@@ -378,9 +366,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int init_pg( int *argc, char ***argv,
-		   int *has_args, int *has_env, int *has_parent, 
-		   int *pg_rank_p, MPIDI_PG_t **pg_p )
+static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -421,7 +407,7 @@ static int init_pg( int *argc, char ***argv,
 
 #ifdef USE_PMI2_API
         mpi_errno = PMI2_Init(has_parent, &pg_size, &pg_rank, &appnum);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 #else
 	pmi_errno = PMI_Init(has_parent);
 	if (pmi_errno != PMI_SUCCESS) {
@@ -463,7 +449,7 @@ static int init_pg( int *argc, char ***argv,
 	}
 
         mpi_errno = PMI2_Job_GetId(pg_id, MAX_JOBID_LEN);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         
 
 #else
@@ -526,17 +512,13 @@ static int init_pg( int *argc, char ***argv,
     if (usePMI) {
 	/* Tell the process group how to get connection information */
         mpi_errno = MPIDI_PG_InitConnKVS( pg );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* FIXME: Who is this for and where does it belong? */
 #ifdef USE_MPIDI_DBG_PRINT_VC
     MPIDI_DBG_parent_str = (*has_parent) ? "+" : "";
 #endif
-
-    /* FIXME: has_args and has_env need to come from PMI eventually... */
-    *has_args = TRUE;
-    *has_env  = TRUE;
 
     *pg_p      = pg;
     *pg_rank_p = pg_rank;

@@ -17,11 +17,13 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__ISEND,
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IMCAST,
+    MPII_GENUTIL_VTX_KIND__ISSEND,
     MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL,
     MPII_GENUTIL_VTX_KIND__LOCALCOPY,
     MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK,
     MPII_GENUTIL_VTX_KIND__SINK,
     MPII_GENUTIL_VTX_KIND__FENCE,
+    MPII_GENUTIL_VTX_KIND__LAST,        /* marks the last built-in kind */
 } MPII_Genutil_vtx_kind_e;
 
 typedef enum {
@@ -71,6 +73,15 @@ typedef struct MPII_Genutil_vtx_t {
             int last_complete;
         } imcast;
         struct {
+            const void *buf;
+            int count;
+            MPI_Datatype dt;
+            int dest;
+            int tag;
+            MPIR_Comm *comm;
+            MPIR_Request *req;
+        } issend;
+        struct {
             const void *inbuf;
             void *inoutbuf;
             int count;
@@ -85,6 +96,9 @@ typedef struct MPII_Genutil_vtx_t {
             MPI_Aint recvcount;
             MPI_Datatype recvtype;
         } localcopy;
+        struct {
+            void *data;
+        } generic;
     } u;
 
     struct MPII_Genutil_vtx_t *next;
@@ -102,8 +116,22 @@ typedef struct {
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;
+
+    /* list of new type */
+    UT_array generic_types;
 } MPII_Genutil_sched_t;
 
 typedef MPII_Genutil_vtx_t vtx_t;
+
+typedef int (*MPII_Genutil_sched_issue_fn) (MPII_Genutil_vtx_t * vtxp, int *done);
+typedef int (*MPII_Genutil_sched_complete_fn) (MPII_Genutil_vtx_t * vtxp, int *is_completed);
+typedef int (*MPII_Genutil_sched_free_fn) (MPII_Genutil_vtx_t * vtxp);
+
+typedef struct {
+    int id;
+    MPII_Genutil_sched_issue_fn issue_fn;
+    MPII_Genutil_sched_complete_fn complete_fn;
+    MPII_Genutil_sched_free_fn free_fn;
+} MPII_Genutil_vtx_type_t;
 
 #endif /* TSP_GENTRAN_TYPES_H_INCLUDED */

@@ -53,10 +53,6 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     if (data_sz == 0) {
@@ -85,15 +81,12 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_put_op(origin_addr, origin_count, origin_datatype, target_rank,
                                           target_disp, target_count, target_datatype, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
             mpi_errno = MPID_Request_complete(ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     else {
@@ -104,8 +97,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
@@ -173,26 +165,22 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(put_pkt->info.data);
             mpi_errno = immed_copy(src, dest, data_sz);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -226,10 +214,6 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, orig_data_sz, dtp,
                             dt_true_lb);
 
@@ -259,15 +243,12 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_get_op(origin_addr, origin_count, origin_datatype, target_rank,
                                           target_disp, target_count, target_datatype, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
             mpi_errno = MPID_Request_complete(ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     else {
@@ -279,8 +260,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
@@ -345,19 +325,16 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -392,10 +369,6 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     if (data_sz == 0) {
@@ -425,15 +398,12 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         mpi_errno = MPIDI_CH3I_Shm_acc_op(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count, target_datatype,
                                           op, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
             mpi_errno = MPID_Request_complete(ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     else {
@@ -448,8 +418,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
@@ -545,26 +514,22 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(accum_pkt->info.data);
             mpi_errno = immed_copy(src, dest, data_sz);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -601,10 +566,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, target_data_sz, dtp,
                             dt_true_lb);
 
@@ -636,15 +597,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
             mpi_errno = MPID_Request_complete(ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     else {
@@ -665,8 +623,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         /* Append the operation to the window's RMA ops queue */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
@@ -793,26 +750,22 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(get_accum_pkt->info.data);
             mpi_errno = immed_copy(src, dest, orig_data_sz);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -940,10 +893,6 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     rank = win_ptr->comm_ptr->rank;
 
     if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
@@ -971,8 +920,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_cas_op(origin_addr, compare_addr, result_addr,
                                           datatype, target_rank, target_disp, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
@@ -982,8 +930,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
@@ -1016,30 +963,25 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         src = (void *) origin_addr, dest = (void *) (&(cas_pkt->origin_data));
         mpi_errno = immed_copy(src, dest, type_size);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         src = (void *) compare_addr, dest = (void *) (&(cas_pkt->compare_data));
         mpi_errno = immed_copy(src, dest, type_size);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -1070,10 +1012,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if (target_rank == MPI_PROC_NULL) {
-        goto fn_exit;
-    }
-
     rank = win_ptr->comm_ptr->rank;
 
     if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
@@ -1100,8 +1038,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_fop_op(origin_addr, result_addr, datatype,
                                           target_rank, target_disp, op, win_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
@@ -1112,8 +1049,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
@@ -1158,26 +1094,22 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) &(fop_pkt->info.data);
             mpi_errno = immed_copy(src, dest, type_size);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
                 mpi_errno = wait_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }

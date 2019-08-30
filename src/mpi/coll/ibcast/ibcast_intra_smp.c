@@ -56,12 +56,10 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
                                        MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
                                        &ibcast_state->status, s);
         }
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
@@ -70,8 +68,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
         mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype,
                                       MPIR_Get_internode_rank(comm_ptr, root),
                                       comm_ptr->node_roots_comm, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* don't allow the local ops for the intranode phase to start until this has completed */
         MPIR_SCHED_BARRIER(s);
@@ -79,8 +76,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);

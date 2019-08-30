@@ -120,8 +120,7 @@ int MPIR_Allgatherv_intra_auto(const void *sendbuf,
             MPIR_Allgatherv_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
                                                      recvcounts, displs, recvtype, comm_ptr,
                                                      errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     else if (total_count * recvtype_size < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
@@ -130,8 +129,7 @@ int MPIR_Allgatherv_intra_auto(const void *sendbuf,
         mpi_errno =
             MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                          recvtype, comm_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
     } else {
         /* long message or medium-size message and non-power-of-two
@@ -140,8 +138,7 @@ int MPIR_Allgatherv_intra_auto(const void *sendbuf,
         mpi_errno =
             MPIR_Allgatherv_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                        recvtype, comm_ptr, errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -232,8 +229,7 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

@@ -63,17 +63,6 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* set op_errno to 0. stored in perthread structure */
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        per_thread->op_errno = 0;
-    }
-
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* need to allocate temporary buffer to store partial scan */
@@ -97,16 +86,14 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
      * recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (sendbuf != MPI_IN_PLACE)
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, partial_scan, count, datatype);
     else
         mpi_errno = MPIR_Localcopy(recvbuf, count, datatype, partial_scan, count, datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mask = 0x1;
     while (mask < comm_size) {
@@ -128,42 +115,23 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
 
             if (rank > dst) {
                 mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     mpi_errno = MPIR_Reduce_local(partial_scan, tmp_buf, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                partial_scan, count, datatype);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }
         mask <<= 1;
-    }
-
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        if (per_thread->op_errno) {
-            mpi_errno = per_thread->op_errno;
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-        }
     }
 
   fn_exit:

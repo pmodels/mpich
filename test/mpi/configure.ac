@@ -246,11 +246,6 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
-AC_ARG_ENABLE(collalgo-tests,
-              [AC_HELP_STRING([--enable-collalgo-tests],
-                              [Run extended collective algorithm tests])],,
-              [enable_collalgo_tests=no])
-
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
     [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
@@ -263,6 +258,8 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
+#Test collectives algorithms with CVARs
+AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
@@ -721,18 +718,6 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
     largetest=""
 fi
 AC_SUBST(largetest)
-
-# Extended collectives test
-if test "$enable_collalgo_tests" = "yes" ; then
-    AC_MSG_NOTICE([running $srcdir/coll/test_coll_algos.sh])
-    . $srcdir/coll/test_coll_algos.sh
-    test $? != 0 &&  AC_MSG_ERROR([$srcdir/coll/test_coll_algos.sh failed.])
-else
-    coll_algo_tests=""
-fi
-AC_SUBST(coll_algo_tests)
-AM_SUBST_NOTMAKE(coll_algo_tests)
-
 
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
@@ -1393,6 +1378,9 @@ if test "$enable_cxx" = yes ; then
 fi
 
 AC_LANG_C
+
+LT_INIT()
+
 # IO
 iodir="#"
 if test "$enable_romio" != no ; then

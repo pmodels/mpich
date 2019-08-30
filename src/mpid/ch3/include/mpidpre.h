@@ -537,8 +537,7 @@ typedef struct {
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
-int MPID_Init( int *argc_p, char ***argv_p, int requested,
-	       int *provided, int *has_args, int *has_env );
+int MPID_Init(int *argc_p, char ***argv_p, int requested, int *provided);
 
 int MPID_InitCompleted( void );
 
@@ -570,6 +569,10 @@ int MPID_Send( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 	       int dest, int tag, MPIR_Comm *comm, int context_offset,
 	       MPIR_Request **request );
 
+int MPID_Send_coll( const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                    int dest, int tag, MPIR_Comm *comm, int context_offset,
+                    MPIR_Request **request, MPIR_Errflag_t * errflag );
+
 int MPID_Rsend( const void *buf, int count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
 		MPIR_Request **request );
@@ -578,12 +581,13 @@ int MPID_Ssend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
 		MPIR_Request **request );
 
-int MPID_tBsend( const void *buf, int count, MPI_Datatype datatype,
-		 int dest, int tag, MPIR_Comm *comm, int context_offset );
-
 int MPID_Isend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
 		MPIR_Request **request );
+
+int MPID_Isend_coll( const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                     int dest, int tag, MPIR_Comm *comm, int context_offset,
+                     MPIR_Request **request, MPIR_Errflag_t * errflag );
 
 int MPID_Irsend( const void *buf, int count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,

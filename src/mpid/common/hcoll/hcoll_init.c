@@ -98,14 +98,12 @@ int hcoll_initialize(void)
 #endif
 
     mpi_errno = hcoll_init_with_opts(&init_opts);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!hcoll_initialized) {
         hcoll_initialized = 1;
         mpi_errno = MPID_Progress_register_hook(hcoll_do_progress, &hcoll_progress_hook_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPID_Progress_activate_hook(hcoll_progress_hook_id);
     }
@@ -138,8 +136,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
 
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (0 == hcoll_enable) {

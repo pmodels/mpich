@@ -102,8 +102,7 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
 
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (split_type == MPI_UNDEFINED) {
         *newcomm_ptr = NULL;
@@ -118,8 +117,7 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     }
 
     mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (comm_ptr)
@@ -185,16 +183,21 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+#ifdef HAVE_DEBUGGER_SUPPORT
+#ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
+    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.posted_list);
+    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDI_global.unexp_list);
+#else
+    MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDIG_COMM(comm, posted_list));
+    MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDIG_COMM(comm, unexp_list));
+#endif
+#endif
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATE_HOOK);
     return mpi_errno;
@@ -264,14 +267,10 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -345,8 +344,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                   remote_leader, cts_tag,
                                   &remote_size_recv, 1, MPI_INT,
                                   remote_leader, cts_tag, peer_comm, MPI_STATUS_IGNORE, &errflag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (remote_size_recv & MPIDI_DYNPROC_MASK)
             pure_intracomm = 0;
@@ -373,15 +371,13 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                 mpi_errno, "remote_upid_size", MPL_MEM_ADDRESS);
 
             mpi_errno = MPIDI_NM_get_local_upids(local_comm, &local_upid_size, &local_upids);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIC_Sendrecv(local_upid_size, local_size, MPI_UNSIGNED_LONG,
                                       remote_leader, cts_tag,
                                       remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             upid_send_size = 0;
             for (i = 0; i < local_size; i++)
                 upid_send_size += local_upid_size[i];
@@ -395,8 +391,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       remote_upids, upid_recv_size, MPI_BYTE,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_CHKLMEM_MALLOC(local_node_ids, int *,
                                 local_size * sizeof(int), mpi_errno, "local_node_ids",
@@ -411,8 +406,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       remote_node_ids, (*remote_size) * sizeof(int),
                                       MPI_BYTE, remote_leader, cts_tag, peer_comm,
                                       MPI_STATUS_IGNORE, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* Stage 1.2 convert remote UPID to LUPID and get LUPID for local group */
             MPIDIU_upids_to_lupids(*remote_size, remote_upid_size, remote_upids,
@@ -424,8 +418,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       *remote_lupids, *remote_size, MPI_INT,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, &errflag);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         /* Stage 1.3 check if local/remote groups are disjoint */
 
@@ -449,8 +442,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                  * check for any overlap */
                 mpi_errno = MPIDI_check_disjoint_lupids(local_lupids, local_size,
                                                         *remote_lupids, *remote_size);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             MPID_END_ERROR_CHECKS;
         }
@@ -492,8 +484,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                                  remote_size, is_low_group, pure_intracomm,
                                                  remote_upid_size, remote_upids,
                                                  remote_lupids, remote_node_ids);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:

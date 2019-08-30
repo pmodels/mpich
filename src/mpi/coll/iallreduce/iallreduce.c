@@ -85,6 +85,8 @@ cvars:
         gentran_recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
         gentran_recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
         gentran_tree                     - Force generic transport tree algorithm
+        gentran_ring                     - Force generic transport ring algorithm
+        gentran_recexch_reduce_scatter_recexch_allgatherv  - Force generic transport recursive exchange with reduce scatter and allgatherv
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -147,7 +149,7 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = comm_ptr->pof2;
+    pof2 = comm_ptr->coll.pof2;
 
     /* If op is user-defined or count is less than pof2, use
      * recursive doubling algorithm. Otherwise do a reduce-scatter
@@ -164,15 +166,13 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
         mpi_errno =
             MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                            comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* do a reduce-scatter followed by allgather */
         mpi_errno =
             MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype,
                                                                  op, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -271,6 +271,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
+    int is_commutative = MPIR_Op_is_commutative(op);
+    int nranks = comm_ptr->local_size;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
@@ -287,8 +289,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
                                                                         datatype, op, comm_ptr,
                                                                         request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_multiple_buffer:
@@ -296,17 +297,36 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                     MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype,
                                                        op, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
+                if (is_commutative) {
+                    mpi_errno =
+                        MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
+                                                           op, comm_ptr, request);
+                    MPIR_ERR_CHECK(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
+                if (is_commutative &&
+                    count >= nranks) {
+                    /*  This algorithm will work for commutative operations and if the count is
+                     * bigger than total number of ranks. If it not commutative or if the count < nranks,
+                     * MPIR_Iallreduce_sched algorithm will be run */
+                    mpi_errno =
+                        MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv
+                        (sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+                    MPIR_ERR_CHECK(mpi_errno);
+                    goto fn_exit;
+                }
                 break;
             default:
                 /* go down to the MPIR_Sched-based algorithms */
@@ -315,19 +335,15 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -451,8 +467,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

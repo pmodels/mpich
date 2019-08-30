@@ -13,7 +13,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 int MPIDI_POSIX_mpi_finalize_hook(void);
 int MPIDI_POSIX_get_vci_attr(int vci);
 
-int collective_cvars_init(void);
 int MPIDI_POSIX_coll_init(int rank, int size);
 int MPIDI_POSIX_coll_finalize(void);
 
@@ -29,6 +28,7 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size);
 int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win, const void *base);
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win);
 int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win);
 
 int MPIDI_POSIX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
@@ -59,4 +59,7 @@ int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, c
 
 void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_POSIX_mpi_free_mem(void *ptr);
+
+int MPIDI_POSIX_progress(int blocking);
+
 #endif

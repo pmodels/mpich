@@ -46,13 +46,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
     return op_index;
 }
 
+int MPIDI_OFI_progress(int vci, int blocking);
 /*
  * Helper routines and macros for request completion
  */
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        mpi_errno = MPIDI_NM_progress(0, 0);                      \
-        if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
+        mpi_errno = MPIDI_OFI_progress(0, 0);                     \
+        MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
@@ -74,23 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
                               fi_strerror(-_ret));          \
     } while (0)
 
-#define MPIDI_OFI_CALL_NOLOCK(FUNC,STR)                              \
-    do {                                                    \
-        ssize_t _ret = FUNC;                                \
-        MPIDI_OFI_ERR(_ret<0,                       \
-                              mpi_errno,                    \
-                              MPI_ERR_OTHER,                \
-                              "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
-                              fi_strerror(-_ret));          \
-    } while (0)
-
-#define MPIDI_OFI_CALL_LOCK 1
-#define MPIDI_OFI_CALL_NO_LOCK 0
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN)          \
+#define MPIDI_OFI_CALL_RETRY(FUNC,STR,EAGAIN)               \
     do {                                                    \
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
@@ -117,34 +102,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
-        if (mpi_errno != MPI_SUCCESS)                                \
-            MPIR_ERR_POP(mpi_errno);                                 \
+        MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
-    } while (_ret == -FI_EAGAIN);                           \
-    } while (0)
-
-#define MPIDI_OFI_CALL_RETRY2(FUNC1,FUNC2,STR)                       \
-    do {                                                    \
-    ssize_t _ret;                                           \
-    FUNC1;                                                  \
-    do {                                                    \
-        _ret = FUNC2;                                       \
-        if (likely(_ret==0)) break;                          \
-        MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,             \
-                              mpi_errno,                    \
-                              MPI_ERR_OTHER,                \
-                              "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
-                              fi_strerror(-_ret));          \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
-        mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
-        if (mpi_errno != MPI_SUCCESS)                                \
-            MPIR_ERR_POP(mpi_errno);                                 \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
@@ -153,26 +112,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
             (_ret) = FUNC;                                              \
         } while (0)
 
-#define MPIDI_OFI_PMI_CALL_POP(FUNC,STR)                    \
-  do                                                          \
-    {                                                         \
-      pmi_errno  = FUNC;                                      \
-      MPIDI_OFI_ERR(pmi_errno!=PMI_SUCCESS,           \
-                            mpi_errno,                        \
-                            MPI_ERR_OTHER,                    \
-                            "**ofid_"#STR,                    \
-                            "**ofid_"#STR" %s %d %s %s",      \
-                            __SHORT_FILE__,                   \
-                            __LINE__,                         \
-                            __func__,                           \
-                            #STR);                            \
-    } while (0)
-
 #define MPIDI_OFI_MPI_CALL_POP(FUNC)                               \
   do                                                                 \
     {                                                                \
       mpi_errno = FUNC;                                              \
-      if (unlikely(mpi_errno!=MPI_SUCCESS)) MPIR_ERR_POP(mpi_errno); \
+      MPIR_ERR_CHECK(mpi_errno); \
     } while (0)
 
 #define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \
@@ -391,7 +335,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+                                                         int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -403,8 +347,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                         MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+                                                         MPIR_Context_id_t contextid, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
@@ -429,27 +372,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 {
     char *base = (char *) context;
     return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint32_t src, fi_addr_t dest_addr,
-                                                    uint64_t tag, void *context, int is_inject,
-                                                    int do_lock, int do_eagain)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (is_inject) {
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                             do_lock, do_eagain);
-    } else {
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                             tsenddata, do_lock, do_eagain);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 struct MPIDI_OFI_contig_blocks_params {

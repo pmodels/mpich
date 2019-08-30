@@ -19,6 +19,69 @@
 #include "../shm/include/shm.h"
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node bcast
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
+
+    - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node reduce
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
+
+    - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node allreduce
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
+
+    - name        : MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 8192
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum message size for which release, gather primivites based allreduce is used when all
+        the ranks in the communicator are on the same node. This CVAR is used only when
+        MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM is set to "release_gather". Default value of this
+        CVAR is same as cellsize of reduce buffers, because beyond that large messages are getting
+        chuncked and performance can be compromised.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -89,8 +152,8 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
     if (comm->node_comm != NULL && MPIR_Comm_size(comm) == MPIR_Comm_size(comm->node_comm)) {
         /* All the ranks in comm are on the same node */
         if (!((count * type_size) > MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
-              MPIDI_POSIX_Bcast_algo_choice == MPIDI_POSIX_Bcast_intra_release_gather_id &&
-              MPIDI_POSIX_Reduce_algo_choice == MPIDI_POSIX_Reduce_intra_release_gather_id)) {
+              MPIR_CVAR_ENUM_IS(BCAST_POSIX_INTRA_ALGORITHM, release_gather) &&
+              MPIR_CVAR_ENUM_IS(REDUCE_POSIX_INTRA_ALGORITHM, release_gather))) {
             /* gamma is selected if the msg size is less than threshold or release_gather based
              * shm_bcast and shm_reduce is not chosen for msg sizes larger than threshold */
             return &MPIDI_Allreduce_intra_composition_gamma_cnt;

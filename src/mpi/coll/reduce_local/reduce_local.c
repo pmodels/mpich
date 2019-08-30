@@ -44,17 +44,12 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     if (count == 0)
         goto fn_exit;
 
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        per_thread->op_errno = MPI_SUCCESS;
-    }
-
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        /* --BEGIN ERROR HANDLING-- */
+        mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_exit;
+        /* --END ERROR HANDLING-- */
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(op);
     } else {
@@ -99,19 +94,6 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
         (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
 #endif
     }
-
-    /* --BEGIN ERROR HANDLING-- */
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        if (per_thread->op_errno)
-            mpi_errno = per_thread->op_errno;
-    }
-    /* --END ERROR HANDLING-- */
 
   fn_exit:
     return mpi_errno;
@@ -187,8 +169,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, count, datatype, op);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

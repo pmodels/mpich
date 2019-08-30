@@ -111,8 +111,7 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle * handl
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_pvar_handle_free_impl(session, handle);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

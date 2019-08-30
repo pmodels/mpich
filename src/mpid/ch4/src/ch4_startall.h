@@ -15,40 +15,80 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, i;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_STARTALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_STARTALL);
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_startall(count, requests);
-#else
-    int i;
+
     for (i = 0; i < count; i++) {
-        MPIR_Request *req = requests[i];
-        /* This is sub-optimal, can we do better? */
-        if (MPIDI_REQUEST_ANYSOURCE_PARTNER(req)) {
-            mpi_errno = MPIDI_SHM_mpi_startall(1, &req);
-            if (mpi_errno == MPI_SUCCESS) {
-                mpi_errno = MPIDI_NM_mpi_startall(1, &MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(req->u.persist.real_request) =
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(req)->u.persist.real_request;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER
-                                                (req)->u.persist.real_request) =
-                    req->u.persist.real_request;
-            }
-        } else if (MPIDI_REQUEST(req, is_local))
-            mpi_errno = MPIDI_SHM_mpi_startall(1, &req);
-        else
-            mpi_errno = MPIDI_NM_mpi_startall(1, &req);
+        MPIR_Request *const preq = requests[i];
+        /* continue if the source/dest is MPI_PROC_NULL */
+        if (MPIDIG_REQUEST(preq, rank) == MPI_PROC_NULL)
+            continue;
+
+        switch (MPIDI_PREQUEST(preq, p_type)) {
+
+            case MPIDI_PTYPE_RECV:
+                mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                       MPIDI_PREQUEST(preq, tag), preq->comm,
+                                       MPIDI_prequest_get_context_offset(preq),
+                                       &preq->u.persist.real_request);
+                break;
+
+            case MPIDI_PTYPE_SEND:
+                mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                       MPIDI_PREQUEST(preq, tag), preq->comm,
+                                       MPIDI_prequest_get_context_offset(preq),
+                                       &preq->u.persist.real_request);
+                break;
+
+            case MPIDI_PTYPE_SSEND:
+                mpi_errno = MPID_Issend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                        MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                        MPIDI_PREQUEST(preq, tag), preq->comm,
+                                        MPIDI_prequest_get_context_offset(preq),
+                                        &preq->u.persist.real_request);
+                break;
+
+            case MPIDI_PTYPE_BSEND:{
+                    MPI_Request sreq_handle;
+                    mpi_errno =
+                        MPIR_Ibsend_impl(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                         MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                         MPIDI_PREQUEST(preq, tag), preq->comm, &sreq_handle);
+                    if (mpi_errno == MPI_SUCCESS)
+                        MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
+
+                    break;
+                }
+
+            default:
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FUNCTION__,
+                                                 __LINE__, MPI_ERR_INTERN, "**ch4|badreqtype",
+                                                 "**ch4|badreqtype %d", MPIDI_PREQUEST(preq,
+                                                                                       p_type));
+        }
+
+        if (mpi_errno == MPI_SUCCESS) {
+            preq->status.MPI_ERROR = MPI_SUCCESS;
+
+            if (MPIDI_PREQUEST(preq, p_type) == MPIDI_PTYPE_BSEND) {
+                preq->cc_ptr = &preq->cc;
+                MPID_Request_set_completed(preq);
+            } else
+                preq->cc_ptr = &preq->u.persist.real_request->cc;
+        } else {
+            preq->u.persist.real_request = NULL;
+            preq->status.MPI_ERROR = mpi_errno;
+            preq->cc_ptr = &preq->cc;
+            MPID_Request_set_completed(preq);
+        }
     }
-#endif
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* CH4_STARTALL_H_INCLUDED */

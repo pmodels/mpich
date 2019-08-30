@@ -19,8 +19,8 @@
 #include "ibcast_tsp_tree_algos_undef.h"
 
 /* instantiate ibcast ring algorithms for the gentran transport */
-#include "ibcast_tsp_scatter_recexch_allgather_algos_prototypes.h"
-#include "ibcast_tsp_scatter_recexch_allgather_algos.h"
-#include "ibcast_tsp_scatter_recexch_allgather_algos_undef.h"
+#include "ibcast_tsp_scatterv_allgatherv_algos_prototypes.h"
+#include "ibcast_tsp_scatterv_allgatherv_algos.h"
+#include "ibcast_tsp_scatterv_allgatherv_algos_undef.h"
 
 #include "tsp_undef.h"

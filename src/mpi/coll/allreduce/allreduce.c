@@ -178,7 +178,7 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
         goto fn_exit;
     }
 
-    pof2 = comm_ptr->pof2;
+    pof2 = comm_ptr->coll.pof2;
     if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
         mpi_errno =
@@ -277,8 +277,7 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -412,8 +411,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

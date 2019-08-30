@@ -167,7 +167,7 @@
 #define MPL_VG_PRINTF_BACKTRACE(...)              do {} while (0)
 #else
 #define MPL_VG_PRINTF_BACKTRACE MPL_VG_printf_do_nothing_func
-static mpl_inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
+static inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
 {
     /* do nothing */
 }

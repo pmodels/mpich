@@ -19,12 +19,18 @@
 
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     (32)
 
-#define MPIDI_POSIX_AM_HANDLER_ID_BITS  (8)
+#define MPIDI_POSIX_AM_KIND_BITS  (1)   /* 0 or 1 */
+#define MPIDI_POSIX_AM_HANDLER_ID_BITS  (7)     /* up to 64 */
 #define MPIDI_POSIX_AM_HDR_SZ_BITS      (8)
 #define MPIDI_POSIX_AM_DATA_SZ_BITS     (48)
 
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
 #define MPIDI_POSIX_MAX_IOV_NUM         (2)
+
+typedef enum {
+    MPIDI_POSIX_AM_HDR_SHM = 0, /* SHM internal AM header */
+    MPIDI_POSIX_AM_HDR_CH4 = 1  /* CH4 level AM header */
+} MPIDI_POSIX_am_header_kind_t;
 
 typedef enum {
     MPIDI_POSIX_EAGER_RECV_POSTED_HOOK_STATE_INITIALIZED,
@@ -57,7 +63,8 @@ typedef struct {
 } MPIDI_POSIX_request_t;
 
 typedef struct MPIDI_POSIX_am_header {
-    uint64_t handler_id:MPIDI_POSIX_AM_HANDLER_ID_BITS;
+    MPIDI_POSIX_am_header_kind_t kind:MPIDI_POSIX_AM_KIND_BITS;
+    uint32_t handler_id:MPIDI_POSIX_AM_HANDLER_ID_BITS;
     uint64_t am_hdr_sz:MPIDI_POSIX_AM_HDR_SZ_BITS;
     uint64_t data_sz:MPIDI_POSIX_AM_DATA_SZ_BITS;
 #ifdef POSIX_AM_DEBUG

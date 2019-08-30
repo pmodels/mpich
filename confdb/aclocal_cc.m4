@@ -1651,3 +1651,69 @@ AC_DEFUN([PAC_C_STATIC_ASSERT], [
     AC_MSG_RESULT([no])
     ])
 ])
+
+dnl
+dnl PAC_CC_CHECK_TLS - Test for thread local storage support
+dnl
+dnl will AC_DEFINE([TLS]) to a compiler supported TLS keyword
+dnl
+AC_DEFUN([PAC_CC_CHECK_TLS], [
+    AC_CACHE_CHECK([for thread local storage], [pac_cv_tls], [
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([_Thread_local int foo=0;],[foo=1])],
+            [pac_cv_tls=_Thread_local])
+    fi
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE( [AC_LANG_PROGRAM([__thread int foo=0;],[foo=1])],
+            [pac_cv_tls=__thread])
+    fi
+    if test -z $pac_cv_tls ; then
+        AC_LINK_IFELSE( [AC_LANG_PROGRAM([__declspec(thread) int foo=0;],[foo=1])],
+            [pac_cv_tls="__declspec(thread)"])
+    fi])
+    if test -z $pac_cv_tls ; then
+        AC_MSG_WARN([Compiler does not support thread local storage])
+    else
+        AC_DEFINE_UNQUOTED([TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
+    fi
+])
+
+dnl Test whether pointers can be aligned on a int boundary or require
+dnl a pointer boundary.
+AC_DEFUN([PAC_CHECK_PTR_ALIGN]), [
+    AC_MSG_CHECKING([for alignment restrictions on pointers])
+    AC_TRY_RUN(
+    changequote(<<,>>)
+    struct foo { int a; void *b; };
+    int main() {
+        int buf[10];
+        struct foo *p1;
+        p1=(struct foo*)&buf[0];
+        p1->b = (void *)0;
+        p1=(struct foo*)&buf[1];
+        p1->b = (void *)0;
+        return 0;
+    changequote([,])
+    },pac_cv_pointers_have_int_alignment=yes,pac_cv_pointers_have_int_alignment=no,pac_cv_pointers_have_int_alignment=unknown)
+
+    if test "$pac_cv_pointers_have_int_alignment" != "yes" ; then
+        AC_DEFINE(NEEDS_POINTER_ALIGNMENT_ADJUST,1,[define if pointers must be aligned on pointer boundaries])
+        AC_MSG_RESULT([pointer])
+    else
+        AC_MSG_RESULT([int or better])
+    fi
+])
+
+dnl PAC_ARG_ATOMIC_PRIMITIVES
+dnl  - Provide configure option to select atomic primitives. Defaults to auto.
+AC_DEFUN([PAC_ARG_ATOMIC_PRIMITIVES], [
+     AC_ARG_WITH([mpl-atomic-primitives],
+     [  --with-mpl-atomic-primitives=package  Atomic primitives to use. The following is include:
+        auto - Automatically choose the best one (default)
+        c11 - C11 atomics
+        gcc_atomic - GCC atomic builtins
+        gcc_sync - GCC sync builtins
+        win - Windows builtins
+        lock - Mutex-based synchronization
+        no|none - atomic operations are performed without synchronization
+     ],,with_mpl_atomic_primitives=auto)])

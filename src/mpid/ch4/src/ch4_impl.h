@@ -14,7 +14,7 @@
 #include "ch4_types.h"
 #include "mpidig.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 /* Collectively allocate shared memory region.
@@ -29,16 +29,22 @@ int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_seg
 
 
 /* Static inlines */
-static inline int MPIDIG_request_get_context_offset(MPIR_Request * req)
+
+/* Reconstruct context offset associated with a persistent request.
+ * Input must be a persistent request. */
+static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
 {
     int context_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
 
-    context_offset = MPIDIG_REQUEST(req, context_id) - req->comm->context_id;
+    MPIR_Assert(preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
+                preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_GET_CONTEXT_OFFSET);
+    context_offset = MPIDI_PREQUEST(preq, context_id) - preq->comm->context_id;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PREQUEST_GET_CONTEXT_OFFSET);
 
     return context_offset;
 }
@@ -377,6 +383,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
+/* We assume this routine is never called with rank=MPI_PROC_NULL. */
 static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
@@ -386,12 +393,6 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
-
-    if (unlikely(rank == MPI_PROC_NULL)) {
-        /* Treat PROC_NULL as always valid */
-        ret = 1;
-        goto fn_exit;
-    }
 
     MPIDI_NM_comm_get_lpid(comm, rank, &lpid, FALSE);
 
@@ -413,7 +414,7 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 #define MPIDIU_PROGRESS()                                   \
     do {                                                        \
         mpi_errno = MPID_Progress_test();                       \
-        if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);  \
+        MPIR_ERR_CHECK(mpi_errno);  \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
@@ -577,14 +578,14 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
         }                                                               \
     } while (0)
 
-/* Generic routine for checking synchronization at every RMA operation.*/
+/* Generic routine for checking synchronization at every RMA operation.
+ * Assuming no RMA operation with target_rank=PROC_NULL will call it. */
 #define MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win)                                 \
     do {                                                                               \
         MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
         MPIDIG_EPOCH_OP_REFENCE(win);                                              \
-        /* Check target sync status for any target_rank except PROC_NULL. */           \
-        if (target_rank != MPI_PROC_NULL)                                              \
-            MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);  \
+        /* Check target sync status for target_rank. */       \
+        MPIDIG_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail); \
     } while (0);
 
 /*
@@ -912,7 +913,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
-    if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
+    if ((HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN)
+        && ((*MPIR_OP_HDL_TO_DTYPE_FN(acc_op)) (source_dtp) == MPI_SUCCESS)) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(acc_op);
     } else {

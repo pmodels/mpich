@@ -41,8 +41,7 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
 
@@ -97,8 +96,7 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
 
@@ -150,8 +148,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
 
@@ -201,8 +198,7 @@ static inline int MPIDI_POSIX_mpi_allgather(const void *sendbuf, int sendcount,
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLGATHER);
 
@@ -253,8 +249,7 @@ static inline int MPIDI_POSIX_mpi_allgatherv(const void *sendbuf, int sendcount,
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLGATHERV);
 
@@ -291,8 +286,7 @@ static inline int MPIDI_POSIX_mpi_gather(const void *sendbuf, int sendcount, MPI
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GATHER);
 
@@ -331,8 +325,7 @@ static inline int MPIDI_POSIX_mpi_gatherv(const void *sendbuf, int sendcount, MP
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GATHERV);
 
@@ -370,8 +363,7 @@ static inline int MPIDI_POSIX_mpi_scatter(const void *sendbuf, int sendcount, MP
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_SCATTER);
 
@@ -410,8 +402,7 @@ static inline int MPIDI_POSIX_mpi_scatterv(const void *sendbuf, const int *sendc
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_SCATTERV);
 
@@ -465,8 +456,7 @@ static inline int MPIDI_POSIX_mpi_alltoall(const void *sendbuf, int sendcount,
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLTOALL);
 
@@ -515,8 +505,7 @@ static inline int MPIDI_POSIX_mpi_alltoallv(const void *sendbuf, const int *send
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLTOALLV);
 
@@ -566,8 +555,7 @@ static inline int MPIDI_POSIX_mpi_alltoallw(const void *sendbuf, const int sendc
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLTOALLW);
 
@@ -622,8 +610,7 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
 
@@ -676,8 +663,7 @@ static inline int MPIDI_POSIX_mpi_reduce_scatter(const void *sendbuf, void *recv
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
 
@@ -733,8 +719,7 @@ static inline int MPIDI_POSIX_mpi_reduce_scatter_block(const void *sendbuf, void
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
 
@@ -770,8 +755,7 @@ static inline int MPIDI_POSIX_mpi_scan(const void *sendbuf, void *recvbuf, int c
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_SCAN);
 
@@ -807,8 +791,7 @@ static inline int MPIDI_POSIX_mpi_exscan(const void *sendbuf, void *recvbuf, int
             break;
     }
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_EXSCAN);
 

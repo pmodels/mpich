@@ -55,9 +55,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
 
     if ((rank != root) || (sendbuf != MPI_IN_PLACE)) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -121,17 +119,13 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                  * the second argument (in the noncommutative case). */
                 if (is_commutative) {
                     mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     mpi_errno = MPIR_Reduce_local(recvbuf, tmp_buf, count, datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype, recvbuf, count, datatype);
-                    if (mpi_errno) {
-                        MPIR_ERR_POP(mpi_errno);
-                    }
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         } else {

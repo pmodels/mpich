@@ -94,8 +94,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     for (i = 0; i < size - 1; i++) {
         /* Get new tag for each cycle so that the send-recv pairs are matched correctly */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;
         if (i == 0) {
@@ -175,13 +174,11 @@ int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datat
     mpi_errno =
         MPIR_TSP_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,
                                              recvcount, recvtype, comm, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RING);

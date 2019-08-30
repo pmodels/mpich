@@ -40,20 +40,16 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     MPIR_Object_set_ref(ureq, 2);
 
     /* Enqueue or perform the RMA operation */
-    if (target_rank != MPI_PROC_NULL && data_sz != 0) {
+    if (data_sz != 0) {
         mpi_errno = MPIDI_CH3I_Put(origin_addr, origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -98,20 +94,16 @@ int MPID_Rget(void *origin_addr, int origin_count,
     MPIR_Object_set_ref(ureq, 2);
 
     /* Enqueue or perform the RMA operation */
-    if (target_rank != MPI_PROC_NULL && data_sz != 0) {
+    if (data_sz != 0) {
         mpi_errno = MPIDI_CH3I_Get(origin_addr, origin_count,
                                    origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -156,20 +148,16 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     /* Enqueue or perform the RMA operation */
-    if (target_rank != MPI_PROC_NULL && data_sz != 0) {
+    if (data_sz != 0) {
         mpi_errno = MPIDI_CH3I_Accumulate(origin_addr, origin_count,
                                           origin_datatype, target_rank,
                                           target_disp, target_count,
                                           target_datatype, op, win_ptr, ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;
@@ -217,21 +205,17 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, trg_data_sz, dtp, dt_true_lb);
 
     /* Enqueue or perform the RMA operation */
-    if (target_rank != MPI_PROC_NULL && (data_sz != 0 || trg_data_sz != 0)) {
+    if (data_sz != 0 || trg_data_sz != 0) {
         mpi_errno = MPIDI_CH3I_Get_accumulate(origin_addr, origin_count,
                                               origin_datatype, result_addr,
                                               result_count, result_datatype,
                                               target_rank, target_disp,
                                               target_count, target_datatype, op, win_ptr, ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *request = ureq;

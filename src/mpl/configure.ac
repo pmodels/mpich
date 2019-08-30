@@ -44,7 +44,7 @@ else
 fi
 
 AC_CONFIG_HEADER([include/config.h])
-AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
+AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -579,7 +579,9 @@ AC_ARG_ENABLE([yield],
      AS_CASE([$host],
         [*-*-darwin*],
             [# In Lion, sched_yield worked but none of the other options had any effect
-             AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
+             # In Mojave x86_64, sched_yield may yield to threads in thread_wait_barrier which is slow to yield back,
+             #    usleep(0) seems work well.
+             AS_IF([test "x$ac_cv_func_usleep" = "xyes"], [enable_yield=usleep],
                    [enable_yield=nothing])],
         [*-*-linux*],
             [# sched_yield() has been broken in linux since 2.6.23, and no good alternative exists.
@@ -684,7 +686,7 @@ AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
+    PAC_CC_CHECK_TLS
 fi
 
 #######################################################################
@@ -786,6 +788,102 @@ fi
 #######################################################################
 
 #######################################################################
+## START OF ATOMIC CODE
+#######################################################################
+
+PAC_ARG_ATOMIC_PRIMITIVES
+
+AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
+        #include "$1"
+    ]],[[
+        struct MPL_atomic_int_t a, b;
+        int c;
+
+        MPL_atomic_relaxed_store_int(&a, 0);
+        MPL_atomic_relaxed_store_int(&b, 1);
+        c = MPL_atomic_relaxed_load_int(&a);
+
+        MPL_atomic_release_store_int(&a, 0);
+        MPL_atomic_release_store_int(&b, 1);
+        c = MPL_atomic_acquire_load_int(&a);
+
+        MPL_atomic_fetch_add_int(&a, 10);
+        MPL_atomic_fetch_sub_int(&a, 10);
+
+        c = MPL_atomic_cas_int(&a, 10, 11);
+        c = MPL_atomic_swap_int(&a, 10);
+
+        MPL_atomic_write_barrier();
+        MPL_atomic_read_barrier();
+        MPL_atomic_read_write_barrier();
+    ]])]
+)
+
+dnl MPL_TRY_ATOMIC_HEADER([header file from src/ dir],
+dnl                       [HAVE_ macro suffix],[feature description])
+dnl Does an AC_LINK_IFELSE() to see if the header file works.
+AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
+    checked_specified_primitive=yes
+    AC_MSG_CHECKING([for support for $3])
+
+    PAC_PUSH_FLAG([CFLAGS])
+    CFLAGS="$CFLAGS -I${srcdir}/include -Werror"
+    AC_LINK_IFELSE([MPL_ATOMIC_TEST_PROGRAM([$1])],
+        [AC_DEFINE([HAVE_$2], [1], [Define to 1 if we have support for $3])]
+        [AC_MSG_RESULT([yes])]
+        [mpl_atomic_primitives_set=true]
+    ,
+        [AC_MSG_RESULT([no])]
+    )
+    PAC_POP_FLAG([CFLAGS])
+])
+
+AC_CHECK_SIZEOF([void *])
+
+mpl_atomic_primitives_set=false
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "gcc_sync"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_gcc_sync.h], [GCC_INTRINSIC_SYNC],
+                          [gcc __sync intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "gcc_atomic"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_gcc_atomic.h], [GCC_INTRINSIC_ATOMIC],
+                          [gcc __atomic intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "c11"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_c11.h], [C11_ATOMICS],
+                          [C11 atomic intrinsics])
+fi
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "windows"; then
+    MPL_TRY_ATOMIC_HEADER([mpl_atomic_nt_intrinsics.h], [NT_INTRINSICS],
+                          [Windows NT atomic intrinsics])
+fi
+
+if test "$with_mpl_atomic_primitives" = "auto" \
+        -o "$with_mpl_atomic_primitives" = "lock" ; then
+    AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
+             [Define to 1 if mutex-based synchronization is used])
+    mpl_atomic_primitives_set=true
+elif test "$with_mpl_atomic_primitives" = "no" \
+          -o "$with_mpl_atomic_primitives" = "none" ; then
+    AC_DEFINE(USE_NO_ATOMIC_PRIMITIVES, 1,
+             [Define to 1 if no atomic primitives are used])
+    mpl_atomic_primitives_set=true
+fi
+
+if test "$mpl_atomic_primitives_set" = "false"; then
+    AC_MSG_ERROR([cannot support atomic primitives (argument: \
+`--with-mpl-atomic-primitives=$with_mpl_atomic_primitives`)])
+fi
+
+#######################################################################
+## END OF ATOMIC CODE
+#######################################################################
+
+#######################################################################
 ## START OF DBG CODE
 #######################################################################
 
@@ -797,7 +895,7 @@ fi
 # fdopen() converts from an fd to a FILE*
 AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],fdopen)
 fi
 
 AC_CHECK_FUNCS(getpid)

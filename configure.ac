@@ -838,26 +838,9 @@ changequote([,])
 
 devicedir=$use_top_srcdir/src/mpid/$device_name
 devicereldir=src/mpid/$device_name
-case "$device_name" in
-     /*)
-     devicedir=$DEVICE
-     # Get the name from the leaf
-     device_name=`echo $device_name ~ sed -e 's%.*/%%'`
-     # FIXME: should the devicereldir be different (perhaps not -
-     # this allows use to build within our tree, even when other data
-     # is outside of the tree)
-     ;;
-     *)
-     ;;
-esac
 export device_name
 export device_args
 export devicedir
-
-# See if the device wants to say something about the compilers
-if test -f $devicedir/mpichprereq ; then
-    . $devicedir/mpichprereq
-fi
 
 # expand all of the prereq macros in the correct order
 m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
@@ -989,16 +972,6 @@ AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable e
 #error-tags
 if test "$enable_tag_error_bits" = "yes" ; then
     AC_DEFINE([HAVE_TAG_ERROR_BITS],[1],[Define to enable tag error bits])
-fi
-
-# ----------------------------------------------------------------------------
-# Check to see if the device does not support spawn.
-# FIXME: This should provide the option of not building the dynamic
-# process routines.  It could also allow us to specialize support
-# for all processes are members of MPI_COMM_WORLD (only one comm_world).
-# ----------------------------------------------------------------------------
-if test "$MPID_NO_SPAWN" = yes ; then
-    AC_MSG_WARN([The device $with_device does not support MPI dynamic process routines])
 fi
 
 # MPL
@@ -1653,7 +1626,7 @@ if test "$with_cross" != "no" ; then
 	rm -f confcross
 	(set) 2>&1 | grep CROSS_ | \
 	      sed -e 's/^/export /g' -e 's/=.*//g' > confcross
-	. confcross
+	. ./confcross
 	rm -f confcross
     fi
 fi
@@ -1696,13 +1669,6 @@ if test ! -d $devicedir ; then
 elif test -f $devicedir/subconfigure.m4 ; then
     # this is a new-style subconfigure device, don't add it as a subsystem
     :
-elif test ! -x $devicedir/configure ; then
-    if test -s $devicedir/configure ; then
-        AC_MSG_WARN([The configure in $devicedir exists but is not executable])
-    else
-        AC_MSG_WARN([Device $device_name has no configure])
-    fi
-    device_name=""
 else
     # Add the device to the configure list
     devsubsystems="$devsubsystems $devicereldir"
@@ -2774,6 +2740,13 @@ on all link lines (consider adding it to LDFLAGS)])
     ## most Unix versions, libtvmpich.dylib for Mac OSX).
     ##ENVVAR END:
 
+    # We need when building CH4. The debugger interface need to build with CH4
+    # AM message queue which is not exposed through abstract device interface.
+    # This is very hacky (unfortunately) but sufficient for now.
+    if test "$device_name" = "ch4" ; then
+        AC_DEFINE(HAVE_CH4_DEBUGGER_SUPPORT,1,[Define if debugger support is included for CH4])
+    fi
+
     if test -z "$MPICH_DEBUGLIBNAME" ; then
         DEBUGLIBNAME=libtvmpich$SHLIB_EXT
     else
@@ -3057,30 +3030,6 @@ fi
 PAC_C_DOUBLE_ALIGNMENT_EXCEPTION
 if test "$pac_cv_c_double_alignment_exception" = "four" ; then
    AC_DEFINE_UNQUOTED(HAVE_DOUBLE_ALIGNMENT_EXCEPTION,4,[Controls how alignment of doubles is performed, separate from other FP values])
-fi
-
-# Test whether pointers can be aligned on a int boundary or require
-# a pointer boundary.
-AC_MSG_CHECKING([for alignment restrictions on pointers])
-AC_TRY_RUN(
-changequote(<<,>>)
-struct foo { int a; void *b; };
-int main() {
-    int buf[10];
-    struct foo *p1;
-    p1=(struct foo*)&buf[0];
-    p1->b = (void *)0;
-    p1=(struct foo*)&buf[1];
-    p1->b = (void *)0;
-    return 0;
-changequote([,])
-},pac_cv_pointers_have_int_alignment=yes,pac_cv_pointers_have_int_alignment=no,pac_cv_pointers_have_int_alignment=unknown)
-
-if test "$pac_cv_pointers_have_int_alignment" != "yes" ; then
-   AC_DEFINE(NEEDS_POINTER_ALIGNMENT_ADJUST,1,[define if pointers must be aligned on pointer boundaries])
-   AC_MSG_RESULT([pointer])
-else
-   AC_MSG_RESULT([int or better])
 fi
 
 # Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)

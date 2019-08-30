@@ -18,7 +18,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .mpi_init = MPIDI_STUBNM_mpi_init_hook,
     .mpi_finalize = MPIDI_STUBNM_mpi_finalize_hook,
-    .progress = MPIDI_NM_progress,
+    .progress = MPIDI_STUBNM_progress,
     .mpi_comm_connect = MPIDI_STUBNM_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_STUBNM_mpi_comm_disconnect,
     .mpi_open_port = MPIDI_STUBNM_mpi_open_port,
@@ -48,7 +48,6 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_NM_am_request_init,
     .am_request_finalize = MPIDI_NM_am_request_finalize,
-    .prequest_free_hook = MPIDI_NM_prequest_free_hook,
     /* Active Message Routines */
     .am_send_hdr = MPIDI_NM_am_send_hdr,
     .am_isend = MPIDI_NM_am_isend,
@@ -62,15 +61,9 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
 MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {
     .mpi_send = MPIDI_NM_mpi_send,
     .mpi_ssend = MPIDI_NM_mpi_ssend,
-    .mpi_startall = MPIDI_NM_mpi_startall,
-    .mpi_send_init = MPIDI_NM_mpi_send_init,
-    .mpi_ssend_init = MPIDI_NM_mpi_ssend_init,
-    .mpi_rsend_init = MPIDI_NM_mpi_rsend_init,
-    .mpi_bsend_init = MPIDI_NM_mpi_bsend_init,
     .mpi_isend = MPIDI_NM_mpi_isend,
     .mpi_issend = MPIDI_NM_mpi_issend,
     .mpi_cancel_send = MPIDI_NM_mpi_cancel_send,
-    .mpi_recv_init = MPIDI_NM_mpi_recv_init,
     .mpi_recv = MPIDI_NM_mpi_recv,
     .mpi_irecv = MPIDI_NM_mpi_irecv,
     .mpi_imrecv = MPIDI_NM_mpi_imrecv,

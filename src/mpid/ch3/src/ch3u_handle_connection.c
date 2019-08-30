@@ -68,7 +68,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		    {
 			MPIDI_CH3_Progress_signal_completion();
                         mpi_errno = MPIDI_CH3_Channel_close();
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 		    }
 
 		    break;
@@ -133,7 +133,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		    if (MPIDI_Outstanding_close_ops == 0) {
 			MPIDI_CH3_Progress_signal_completion();
                         mpi_errno = MPIDI_CH3_Channel_close();
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
 		    }
                     
                     break;
@@ -390,7 +390,7 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
         /* FIXME: This won't work for dynamic procs */
         MPIDI_PG_Get_vc(MPIDI_Process.my_pg, new_failed_group->lrank_to_lpid[i].lpid, &vc);
         mpi_errno = MPIDI_CH3_Connection_terminate(vc);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     
  fn_exit:
@@ -462,13 +462,13 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
     /* Create group of failed processes for comm_world.  Failed groups for other
        communicators can be created from this one using group_intersection. */
     mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world, &world_group);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Group_incl_impl(world_group, i, ut_int_array(failed_procs), failed_group);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Group_release(world_group);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_FAILED_GROUP);
@@ -497,7 +497,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
        with the rank, then we need to create the failed group from
        something bigger than comm_world. */
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 #ifdef USE_PMI2_API
     {
         int vallen = 0;
@@ -527,23 +527,23 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 
     /* get group of newly failed processes */
     mpi_errno = MPIR_Group_difference_impl(MPIDI_Failed_procs_group, prev_failed_group, &new_failed_group);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (new_failed_group != MPIR_Group_empty) {
         mpi_errno = MPIDI_CH3I_Comm_handle_failed_procs(new_failed_group);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = terminate_failed_VCs(new_failed_group);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Group_release(new_failed_group);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* free prev group */
     if (prev_failed_group != MPIR_Group_empty) {
         mpi_errno = MPIR_Group_release(prev_failed_group);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
  fn_exit:

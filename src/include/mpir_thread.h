@@ -59,8 +59,6 @@ extern OPA_int_t num_server_thread;
  * structure must be externally cleaned up.
  * */
 typedef struct {
-    int op_errno;               /* For errors in predefined MPI_Ops */
-
     /* error string storage for MPIR_Strerror */
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 

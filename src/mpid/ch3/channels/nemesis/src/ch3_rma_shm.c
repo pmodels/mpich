@@ -19,9 +19,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 
     if (win_ptr->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -92,8 +90,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
                 MPL_shm_seg_detach((*win_ptr)->shm_segment_handle,
                                      &(*win_ptr)->shm_base_addr,
                                      (*win_ptr)->shm_segment_len);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPL_shm_hnd_finalize(&(*win_ptr)->shm_segment_handle);
         }
@@ -122,8 +119,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
         mpi_errno =
             MPL_shm_seg_detach((*win_ptr)->shm_mutex_segment_handle,
                                  (void **) &(*win_ptr)->shm_mutex, sizeof(MPIDI_CH3I_SHM_MUTEX));
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_shm_hnd_finalize(&(*win_ptr)->shm_mutex_segment_handle);
     }
@@ -133,8 +129,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
         mpi_errno = MPL_shm_seg_detach((*win_ptr)->info_shm_segment_handle,
                                          &(*win_ptr)->info_shm_base_addr,
                                          (*win_ptr)->info_shm_segment_len);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_shm_hnd_finalize(&(*win_ptr)->info_shm_segment_handle);
 

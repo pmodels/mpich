@@ -40,8 +40,7 @@ int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     if (!comm_ptr->local_group) {
         n = comm_ptr->local_size;
         mpi_errno = MPIR_Group_create(n, group_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         (*group_ptr)->is_local_dense_monotonic = TRUE;
         for (i = 0; i < n; i++) {

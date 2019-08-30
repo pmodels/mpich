@@ -13,6 +13,7 @@
 
 #include "posix_impl.h"
 #include "posix_am_impl.h"
+#include "posix_eager.h"
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_init(MPIR_Request * req)
 {

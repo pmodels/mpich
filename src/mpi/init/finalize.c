@@ -8,39 +8,6 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories:
-    - name        : DEVELOPER
-      description : useful for developers working on MPICH itself
-
-cvars:
-    - name        : MPIR_CVAR_MEMDUMP
-      category    : DEVELOPER
-      type        : boolean
-      default     : true
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, list any memory that was allocated by MPICH and that
-        remains allocated when MPI_Finalize completes.
-
-    - name        : MPIR_CVAR_MEM_CATEGORY_INFORMATION
-      category    : DEVELOPER
-      type        : boolean
-      default     : false
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, print a summary of memory allocation by category. The category
-        definitions are found in mpl_trmem.h.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 /* -- Begin Profiling Symbol Block for routine MPI_Finalize */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Finalize = PMPI_Finalize
@@ -148,30 +115,10 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 int MPI_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
-    int rank = 0;
-#endif
+    int rank = MPIR_Process.comm_world->rank;
     MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-#ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
-    hwloc_bitmap_free(MPIR_Process.bindset);
-#endif
-
-#ifdef HAVE_NETLOC
-    switch (MPIR_Process.network_attr.type) {
-        case MPIR_NETLOC_NETWORK_TYPE__TORUS:
-            MPL_free(MPIR_Process.network_attr.u.torus.geometry);
-            break;
-        case MPIR_NETLOC_NETWORK_TYPE__FAT_TREE:
-        case MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK:
-        default:
-            MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
-            break;
-    }
-#endif
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
@@ -180,166 +127,55 @@ int MPI_Finalize(void)
 
     /* ... body of routine ... */
 
-    /* If the user requested for asynchronous progress, we need to
-     * shutdown the progress thread */
-    if (MPIR_async_thread_initialized) {
-        mpi_errno = MPID_Finalize_async_thread();
-        if (mpi_errno)
-            goto fn_fail;
-    }
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
-    /* We need to get the rank before freeing MPI_COMM_WORLD */
-    rank = MPIR_Process.comm_world->rank;
-#endif
+    mpi_errno = MPII_finalize_async();
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Remove the attributes, executing the attribute delete routine.
-     * Do this only if the attribute functions are defined. */
-    /* The standard (MPI-2, section 4.8) says that the attributes on
-     * MPI_COMM_SELF are deleted before almost anything else happens */
-    /* Note that the attributes need to be removed from the communicators
-     * so that they aren't freed twice. (The communicators are released
-     * in MPID_Finalize) */
-    if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
-        mpi_errno = MPIR_Process.attr_free(MPI_COMM_SELF, &MPIR_Process.comm_self->attributes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        MPIR_Process.comm_self->attributes = 0;
-    }
-    if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
-        mpi_errno = MPIR_Process.attr_free(MPI_COMM_WORLD, &MPIR_Process.comm_world->attributes);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        MPIR_Process.comm_world->attributes = 0;
-    }
+    mpi_errno = MPII_finalize_global();
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /*
-     * Now that we're finalizing, we need to take control of the error handlers
-     * At this point, we will release any user-defined error handlers on
-     * comm self and comm world
-     */
-    if (MPIR_Process.comm_world->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
-        int in_use;
-        MPIR_Errhandler_release_ref(MPIR_Process.comm_world->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, MPIR_Process.comm_world->errhandler);
-        }
-        /* always set to NULL to avoid a double-release later in finalize */
-        MPIR_Process.comm_world->errhandler = NULL;
-    }
-    if (MPIR_Process.comm_self->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_self->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
-        int in_use;
-        MPIR_Errhandler_release_ref(MPIR_Process.comm_self->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, MPIR_Process.comm_self->errhandler);
-        }
-        /* always set to NULL to avoid a double-release later in finalize */
-        MPIR_Process.comm_self->errhandler = NULL;
-    }
-
-    /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
-     * pre and post MPID_Finalize callbacks? */
     MPII_Timer_finalize();
 
     /* Call the high-priority callbacks */
     MPIR_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
 
-    /* Signal the debugger that we are about to exit. */
-    /* FIXME: Should this also be a finalize callback? */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_Debugger_set_aborting((char *) 0);
-#endif
+    MPII_debugger_set_aborting();
 
     mpi_errno = MPID_Finalize();
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
+    /* MPID_Finalize or MPIDI_OFI_mpi_finalize_hook will call MPIR_Allreduce
+     * which will still depend on lw_req.
+     * FIXME: there should not be MPIR collective calls inside MPID_Finaize.
+     */
     /* Free complete request */
     MPIR_Request_free(MPIR_Process.lw_req);
 
     mpi_errno = MPII_Coll_finalize();
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
-
-    /* At this point, if there has been a failure, exit before
-     * completing the finalize */
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
     if (!MPIR_T_is_initialized())
         MPIR_T_env_finalize();
 
-    /* FIXME: Many of these debugging items could/should be callbacks,
-     * added to the finalize callback list */
-    /* FIXME: the memory tracing code block should be a finalize callback */
-    /* If memory debugging is enabled, check the memory here, after all
-     * finalize callbacks */
+    /* All memory should be freed at this point */
+    MPII_finalize_memory_tracing();
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
-#if defined(MPICH_IS_THREADED)
-    MPIR_Thread_CS_Finalize();
-#endif
-
-    /* We place the memory tracing at the very end because any of the other
-     * steps may have allocated memory that they still need to release */
-#ifdef USE_MEMORY_TRACING
-    /* FIXME: We'd like to arrange for the mem dump output to
-     * go to separate files or to be sorted by rank (note that
-     * the rank is at the head of the line) */
-    {
-        if (MPIR_CVAR_MEMDUMP) {
-            /* The second argument is the min id to print; memory allocated
-             * after MPI_Init is given an id of one.  This allows us to
-             * ignore, if desired, memory leaks in the MPID_Init call */
-            MPL_trdump((void *) 0, -1);
-        }
-        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
-            MPL_trcategorydump(stderr);
-    }
-#endif
-
-#if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     /* If performing coverage analysis, make each process sleep for
      * rank * 100 ms, to give time for the coverage tool to write out
      * any files.  It would be better if the coverage tool and runtime
      * was more careful about file updates, though the lack of OS support
      * for atomic file updates makes this harder. */
-    /*
-     * On some systems, a 0.1 second delay appears to be too short for
-     * the file system.  This code allows the use of the environment
-     * variable MPICH_FINALDELAY, which is the delay in milliseconds.
-     * It must be an integer value.
-     */
-    {
-        int microseconds = 100000;
-        char *delayStr = getenv("MPICH_FINALDELAY");
-        if (delayStr) {
-            /* Because this is a maintainer item, we won't check for
-             * errors in the delayStr */
-            microseconds = 1000 * atoi(delayStr);
-        }
-        usleep(rank * microseconds);
-    }
-#endif
+    MPII_final_coverage_delay(rank);
 
-#if defined(MPICH_IS_THREADED)
-    /* Finalize the threading library after releasing all synchronization
-     * objects (e.g., mutexes) */
-    {
-        int thread_err;
-        MPL_thread_finalize(&thread_err);
-        MPIR_Assert(thread_err == 0);
-    }
-#endif
+    MPII_finalize_thread_cs();
+    MPII_finalize_topo();
 
     /* ... end of body of routine ... */
   fn_exit:

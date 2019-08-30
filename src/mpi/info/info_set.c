@@ -153,8 +153,7 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
     if (!curr_ptr) {
         /* Key not present, insert value */
         mpi_errno = MPIR_Info_alloc(&curr_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /*printf("Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id); */
         prev_ptr->next = curr_ptr;

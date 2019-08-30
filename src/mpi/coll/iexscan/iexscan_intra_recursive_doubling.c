@@ -86,8 +86,7 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
     mpi_errno =
         MPIR_Sched_copy((sendbuf == MPI_IN_PLACE ? (const void *) recvbuf : sendbuf), count,
                         datatype, partial_scan, count, datatype, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     flag = 0;
     mask = 0x1;
@@ -96,18 +95,15 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
             mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             if (rank > dst) {
                 mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
@@ -121,34 +117,29 @@ int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvb
                         /* simply copy data recd from rank 0 into recvbuf */
                         mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                                     recvbuf, count, datatype, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
 
                         flag = 1;
                     } else {
                         mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
                     }
                 }
             } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 } else {
                     mpi_errno = MPIR_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
                     mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                                 partial_scan, count, datatype, s);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
             }

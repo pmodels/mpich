@@ -88,8 +88,7 @@ int MPIX_Comm_revoke(MPI_Comm comm)
     /* ... body of routine ... */
 
     mpi_errno = MPID_Comm_revoke(comm_ptr, 0);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 
