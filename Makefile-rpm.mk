@@ -1,7 +1,7 @@
 NAME    := mpich
 SRC_EXT := gz
 SOURCE   = https://www.mpich.org/static/downloads/$(VERSION)/$(NAME)-$(VERSION).tar.$(SRC_EXT)
-PATCHES := mpich.macros mpich.pth.py2 mpich.pth.py3 mpich-modules.patch
+PATCHES := mpich.macros mpich.pth.py2 mpich.pth.py3 mpich-modules.patch fix-version.patch
 #	   0003-soften-version-check.patch daos_adio.patch \
 #	   daos_adio-hwloc.patch daos_adio-izem.patch daos_adio-ucx.patch      \
 #	   daos_adio-libfabric.patch

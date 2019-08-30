@@ -18,6 +18,7 @@ Patch0:         mpich-modules.patch
 #Patch12:        daos_adio-izem.patch
 #Patch13:        daos_adio-libfabric.patch
 #Patch14:        daos_adio-ucx.patch
+Patch1:         fix-version.patch
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -162,6 +163,7 @@ mpich support for Python 3.
 # we patched autoconf.ac (and friends) so need to regnerate configure
 ./autogen.sh
 %patch0 -p1
+%patch1 -p1
 
 %build
 %configure      \
@@ -332,6 +334,9 @@ make check VERBOSE=1
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Fri Aug 30 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-0.04
+- Fix ABI version after upstream master merge
+
 * Sat Jul 13 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-0.03
 - Update python3 requirements to python36
 
