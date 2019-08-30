@@ -472,7 +472,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -574,5 +574,5 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_FREE);
-    return mpi_errno;
+    return mpi_errno_ret;
 }

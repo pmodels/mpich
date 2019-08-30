@@ -184,7 +184,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -340,7 +340,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
