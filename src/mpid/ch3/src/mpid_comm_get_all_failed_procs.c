@@ -101,7 +101,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     MPIDI_CH3U_Check_for_failed_procs();
 
     mpi_errno = MPIDI_CH3U_Get_failed_group(-2, &local_fail);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Generate a bitarray based on the list of failed procs */
     group_to_bitarray(local_fail, comm_ptr, &bitarray, &bitarray_size);

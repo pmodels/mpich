@@ -77,8 +77,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     /* initialize the tree */
     my_tree.children = NULL;
     mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
     /* Allocate buffers to receive data from children. Any memory required for execution
@@ -127,8 +126,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
             void *recv_address = (char *) child_buffer[i] + offset * extent;
@@ -251,13 +249,11 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, comm,
                                              tree_type, k, maxbytes, sched);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */
     mpi_errno = MPIR_TSP_sched_start(sched, comm, req);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_TREE);

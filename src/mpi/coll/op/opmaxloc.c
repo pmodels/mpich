@@ -74,7 +74,6 @@ typedef struct MPIR_longdoubleint_loctype {
 
 void MPIR_MAXLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
-    int mpi_errno = MPI_SUCCESS;
     int i, len = *Len;
 
 #ifdef HAVE_FORTRAN_BINDING
@@ -111,22 +110,9 @@ void MPIR_MAXLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
             MPIR_MAXLOC_F_CASE(MPIR_FC_DOUBLE_CTYPE);
 #endif
 #endif
-            /* --BEGIN ERROR HANDLING-- */
-        default:{
-                MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s",
-                              "MPI_MAXLOC");
-                {
-                    MPIR_Per_thread_t *per_thread = NULL;
-                    int err = 0;
-
-                    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                                 MPIR_Per_thread, per_thread, &err);
-                    MPIR_Assert(err == 0);
-                    per_thread->op_errno = mpi_errno;
-                }
-                break;
-            }
-            /* --END ERROR HANDLING-- */
+        default:
+            MPIR_Assert(0);
+            break;
     }
 
 }

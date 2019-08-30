@@ -21,7 +21,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .mpi_init = MPIDI_SHMI_mpi_init_hook,
     .mpi_finalize = MPIDI_SHMI_mpi_finalize_hook,
     .get_vci_attr = MPIDI_SHMI_get_vci_attr,
-    .progress = MPIDI_SHM_progress,
+    .progress = MPIDI_SHMI_progress,
     .mpi_comm_connect = MPIDI_SHMI_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_SHMI_mpi_comm_disconnect,
     .mpi_open_port = MPIDI_SHMI_mpi_open_port,
@@ -52,7 +52,6 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_SHM_am_request_init,
     .am_request_finalize = MPIDI_SHM_am_request_finalize,
-    .prequest_free_hook = MPIDI_SHM_prequest_free_hook,
     /* Active Message Routines */
     .am_send_hdr = MPIDI_SHM_am_send_hdr,
     .am_isend = MPIDI_SHM_am_isend,
@@ -65,16 +64,12 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
 
 MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs = {
     .mpi_send = MPIDI_SHM_mpi_send,
+    .send_coll = MPIDI_SHM_send_coll,
     .mpi_ssend = MPIDI_SHM_mpi_ssend,
-    .mpi_startall = MPIDI_SHM_mpi_startall,
-    .mpi_send_init = MPIDI_SHM_mpi_send_init,
-    .mpi_ssend_init = MPIDI_SHM_mpi_ssend_init,
-    .mpi_rsend_init = MPIDI_SHM_mpi_rsend_init,
-    .mpi_bsend_init = MPIDI_SHM_mpi_bsend_init,
     .mpi_isend = MPIDI_SHM_mpi_isend,
+    .isend_coll = MPIDI_SHM_isend_coll,
     .mpi_issend = MPIDI_SHM_mpi_issend,
     .mpi_cancel_send = MPIDI_SHM_mpi_cancel_send,
-    .mpi_recv_init = MPIDI_SHM_mpi_recv_init,
     .mpi_recv = MPIDI_SHM_mpi_recv,
     .mpi_irecv = MPIDI_SHM_mpi_irecv,
     .mpi_imrecv = MPIDI_SHM_mpi_imrecv,

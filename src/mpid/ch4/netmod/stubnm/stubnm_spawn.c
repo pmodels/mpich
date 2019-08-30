@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "stubnm_impl.h"
 #include "mpidimpl.h"
+#include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                   MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)

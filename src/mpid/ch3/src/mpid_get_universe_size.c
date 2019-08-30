@@ -28,7 +28,7 @@ int MPID_Get_universe_size(int  * universe_size)
     char *endptr;
     
     mpi_errno = PMI2_Info_GetJobAttr("universeSize", val, sizeof(val), &found);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!found)
 	*universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;

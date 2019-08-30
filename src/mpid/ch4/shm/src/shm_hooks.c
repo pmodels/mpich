@@ -8,6 +8,9 @@
 #include "mpidimpl.h"
 #include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#include "../xpmem/xpmem_noinline.h"
+#endif
 
 int MPIDI_SHMI_mpi_comm_create_hook(MPIR_Comm * comm)
 {
@@ -95,9 +98,18 @@ int MPIDI_SHMI_mpi_win_create_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_MPI_WIN_CREATE_HOOK);
 
     ret = MPIDI_POSIX_mpi_win_create_hook(win);
+    MPIR_ERR_CHECK(ret);
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    ret = MPIDI_XPMEM_mpi_win_create_hook(win);
+    MPIR_ERR_CHECK(ret);
+#endif
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_MPI_WIN_CREATE_HOOK);
     return ret;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_SHMI_mpi_win_allocate_hook(MPIR_Win * win)
@@ -172,8 +184,16 @@ int MPIDI_SHMI_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHMI_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_MPI_WIN_FREE_HOOK);
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    ret = MPIDI_XPMEM_mpi_win_free_hook(win);
+    MPIR_ERR_CHECK(ret);
+#endif
     ret = MPIDI_POSIX_mpi_win_free_hook(win);
+    MPIR_ERR_CHECK(ret);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_MPI_WIN_FREE_HOOK);
     return ret;
+  fn_fail:
+    goto fn_exit;
 }

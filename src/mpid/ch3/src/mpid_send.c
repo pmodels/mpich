@@ -60,11 +60,6 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	goto fn_exit;
     }
 
-    if (rank == MPI_PROC_NULL)
-    {
-	goto fn_exit;
-    }
-
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
 
@@ -185,5 +180,31 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 		  );
     
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND);
+    return mpi_errno;
+}
+
+int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
+                   MPIR_Comm * comm, int context_offset, MPIR_Request ** request,
+                   MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_COLL);
+
+    switch (*errflag) {
+    case MPIR_ERR_NONE:
+        break;
+    case MPIR_ERR_PROC_FAILED:
+        MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        break;
+    default:
+        MPIR_TAG_SET_ERROR_BIT(tag);
+    }
+
+    mpi_errno = MPID_Send(buf, count, datatype, rank, tag, comm, context_offset, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND_COLL);
+
     return mpi_errno;
 }

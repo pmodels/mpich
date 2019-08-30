@@ -36,9 +36,7 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
     if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {
         /* create a new type and commit it. */
         mpi_errno = MPIR_Type_contiguous(1, oldtype, newtype);
-        if (mpi_errno) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* allocate new datatype object and handle */
         new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
@@ -167,9 +165,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
                                            NULL, NULL, &oldtype);
 
     mpi_errno = MPIR_Type_commit(&new_handle);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Copy attributes, executing the attribute copy functions */
     /* This accesses the attribute dup function through the perprocess

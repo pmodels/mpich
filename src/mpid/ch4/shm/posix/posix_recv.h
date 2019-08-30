@@ -12,6 +12,7 @@
 #define POSIX_RECV_H_INCLUDED
 
 #include "posix_impl.h"
+#include "posix_eager.h"
 #include "ch4_impl.h"
 
 /* Hook triggered after posting a SHM receive request.
@@ -39,17 +40,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
         MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv_init(void *buf,
-                                                       MPI_Aint count,
-                                                       MPI_Datatype datatype,
-                                                       int rank,
-                                                       int tag,
-                                                       MPIR_Comm * comm, int context_offset,
-                                                       MPIR_Request ** request)
-{
-    return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,

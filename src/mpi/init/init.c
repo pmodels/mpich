@@ -17,27 +17,6 @@ categories:
       description : multi-threading cvars
 
 cvars:
-    - name        : MPIR_CVAR_ASYNC_PROGRESS
-      category    : THREADS
-      type        : boolean
-      default     : false
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If set to true, MPICH will initiate an additional thread to
-        make asynchronous progress on all communication operations
-        including point-to-point, collective, one-sided operations and
-        I/O.  Setting this variable will automatically increase the
-        thread-safety level to MPI_THREAD_MULTIPLE.  While this
-        improves the progress semantics, it might cause a small amount
-        of performance overhead for regular MPI operations.  The user
-        is encouraged to leave one or more hardware threads vacant in
-        order to prevent contention between the application threads
-        and the progress thread(s).  The impact of oversubscription is
-        highly system dependent but may be substantial in some cases,
-        hence this recommendation.
-
     - name        : MPIR_CVAR_DEFAULT_THREAD_LEVEL
       category    : THREADS
       type        : string
@@ -75,8 +54,6 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 
 /* Any internal routines can go here.  Make them static if possible */
 
-/* must go inside this #ifdef block to prevent duplicate storage on darwin */
-int MPIR_async_thread_initialized = 0;
 #endif
 
 /*@
@@ -117,15 +94,7 @@ The Fortran binding for 'MPI_Init' has only the error return
 int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc ATTRIBUTE((unused));
-    int threadLevel, provided;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
-
-    rc = MPID_Wtime_init();
-#ifdef MPL_USE_DBG_LOGGING
-    MPL_dbg_pre_init(argc, argv, rc);
-#endif
-
     MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -145,54 +114,27 @@ int MPI_Init(int *argc, char ***argv)
 
     /* ... body of routine ... */
 
-    /* Temporarily disable thread-safety.  This is needed because the
-     * mutexes are not initialized yet, and we don't want to
-     * accidentally use them before they are initialized.  We will
-     * reset this value once it is properly initialized. */
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = 0;
-#endif /* MPICH_IS_THREADED */
-
-    MPIR_T_env_init();
-
-    if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
-        threadLevel = MPI_THREAD_MULTIPLE;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SERIALIZED"))
-        threadLevel = MPI_THREAD_SERIALIZED;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_FUNNELED"))
-        threadLevel = MPI_THREAD_FUNNELED;
-    else if (!strcasecmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SINGLE"))
-        threadLevel = MPI_THREAD_SINGLE;
-    else {
-        MPL_error_printf("Unrecognized thread level %s\n", MPIR_CVAR_DEFAULT_THREAD_LEVEL);
-        exit(1);
+    int threadLevel = MPI_THREAD_SINGLE;
+    const char *tmp_str;
+    if (MPL_env2str("MPIR_CVAR_DEFAULT_THREAD_LEVEL", &tmp_str)) {
+        if (!strcasecmp(tmp_str, "MPI_THREAD_MULTIPLE"))
+            threadLevel = MPI_THREAD_MULTIPLE;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_SERIALIZED"))
+            threadLevel = MPI_THREAD_SERIALIZED;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_FUNNELED"))
+            threadLevel = MPI_THREAD_FUNNELED;
+        else if (!strcasecmp(tmp_str, "MPI_THREAD_SINGLE"))
+            threadLevel = MPI_THREAD_SINGLE;
+        else {
+            MPL_error_printf("Unrecognized thread level %s\n", tmp_str);
+            exit(1);
+        }
     }
 
-    /* If the user requested for asynchronous progress, request for
-     * THREAD_MULTIPLE. */
-    if (MPIR_CVAR_ASYNC_PROGRESS)
-        threadLevel = MPI_THREAD_MULTIPLE;
-
+    int provided;
     mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-
-    if (MPIR_CVAR_ASYNC_PROGRESS) {
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
-        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
-        goto fn_fail;
-#else
-        if (provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPID_Init_async_thread();
-            if (mpi_errno)
-                goto fn_fail;
-
-            MPIR_async_thread_initialized = 1;
-        } else {
-            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
-        }
-#endif
-    }
 
     /* ... end of body of routine ... */
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);

@@ -32,8 +32,7 @@ int MPIR_Group_free_impl(MPIR_Group * group_ptr)
     /* Do not free MPI_GROUP_EMPTY */
     if (group_ptr->handle != MPI_GROUP_EMPTY) {
         mpi_errno = MPIR_Group_release(group_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

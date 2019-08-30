@@ -120,8 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
     mpi_errno = MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
 
     MPIR_Thread_sync_free(sync);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -150,8 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
     mpi_errno = MPIR_Wait_impl(request_ptr, status);
 
     MPIR_Thread_sync_free(sync);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

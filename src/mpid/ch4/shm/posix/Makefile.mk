@@ -20,7 +20,6 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
                   src/mpid/ch4/shm/posix/shm_inline.h      \
                   src/mpid/ch4/shm/posix/posix_noinline.h  \
-                  src/mpid/ch4/shm/posix/posix_progress.h  \
                   src/mpid/ch4/shm/posix/posix_recv.h      \
                   src/mpid/ch4/shm/posix/posix_rma.h       \
                   src/mpid/ch4/shm/posix/posix_win.h       \
@@ -28,7 +27,6 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_probe.h     \
                   src/mpid/ch4/shm/posix/posix_request.h   \
                   src/mpid/ch4/shm/posix/posix_send.h      \
-                  src/mpid/ch4/shm/posix/posix_startall.h  \
                   src/mpid/ch4/shm/posix/posix_unimpl.h    \
                   src/mpid/ch4/shm/posix/posix_am_impl.h   \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
@@ -39,14 +37,14 @@ if ENABLE_IZEM_ATOMIC
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_coll_release_gather.h
 endif
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
+                    src/mpid/ch4/shm/posix/posix_progress.c \
                     src/mpid/ch4/shm/posix/posix_comm.c \
                     src/mpid/ch4/shm/posix/posix_init.c \
                     src/mpid/ch4/shm/posix/posix_op.c \
                     src/mpid/ch4/shm/posix/posix_datatype.c \
                     src/mpid/ch4/shm/posix/posix_spawn.c \
                     src/mpid/ch4/shm/posix/posix_win.c \
-                    src/mpid/ch4/shm/posix/posix_eager_array.c \
-                    src/mpid/ch4/shm/posix/posix_coll_init.c
+                    src/mpid/ch4/shm/posix/posix_eager_array.c
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/Makefile.mk
 

@@ -56,8 +56,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
             continue;
 
         mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

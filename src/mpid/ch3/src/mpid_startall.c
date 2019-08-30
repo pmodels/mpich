@@ -60,6 +60,10 @@ int MPID_Startall(int count, MPIR_Request * requests[])
     {
 	MPIR_Request * const preq = requests[i];
 
+        /* continue if the source/dest is MPI_PROC_NULL */
+        if (preq->dev.match.parts.rank == MPI_PROC_NULL)
+            continue;
+
 	/* FIXME: The odd 7th arg (match.context_id - comm->context_id) 
 	   is probably to get the context offset.  Do we really need the
 	   context offset? Is there any case where the offset isn't zero? */

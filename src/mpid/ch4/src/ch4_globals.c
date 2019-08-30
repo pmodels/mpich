@@ -107,6 +107,9 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
                  exit_code, world_str, comm_str, error_msg, sys_str);
     MPL_error_printf("%s", error_str);
 
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIR_Debugger_set_aborting(error_msg);
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
     fflush(stderr);
     fflush(stdout);

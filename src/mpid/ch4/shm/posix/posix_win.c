@@ -266,6 +266,44 @@ int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win ATTRIBUTE((unused)),
     return MPI_SUCCESS;
 }
 
+/* Initialize internal components for POSIX based SHM RMA.
+ * It is called by another shmmod (e.g., xpmem) who can enable memory sharing
+ * for the window but want to reuse the POSIX RMA operations. */
+int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    bool mapfail_flag = false;
+    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
+    MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_SHM_WIN_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_SHM_WIN_INIT_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    posix_win->shm_mutex_ptr = NULL;
+
+    if (shm_comm_ptr == NULL || !MPL_proc_mutex_enabled())
+        goto fn_exit;
+
+    /* allocate interprocess mutex for RMA atomics over shared memory */
+    mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
+                                            &posix_win->shm_mutex_segment_handle,
+                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!mapfail_flag) {
+        if (shm_comm_ptr->rank == 0)
+            MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+
+        MPIDIG_WIN(win, shm_allocated) = 1;
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_SHM_WIN_INIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -283,8 +321,7 @@ int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
         mpi_errno = MPIDIU_destroy_shm_segment(sizeof(MPL_proc_mutex_t),
                                                &posix_win->shm_mutex_segment_handle,
                                                (void **) &posix_win->shm_mutex_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

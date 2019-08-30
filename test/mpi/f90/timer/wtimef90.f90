@@ -24,8 +24,8 @@
 ! pass this test by mistake).
           if (time1 .lt. 0.0d0) then
              print *, ' Negative time result'
-          else
-                print *, ' No Errors'
+             err = 1
           endif
           
+          call mtest_finalize(err)
         end

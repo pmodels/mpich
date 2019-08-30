@@ -126,6 +126,7 @@ typedef struct MPIDIG_hdr_t {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int error_bits;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_long_req_mst_t {
@@ -282,6 +283,7 @@ typedef struct MPIDI_CH4_Global_t {
     int pname_set;
     int pname_len;
     char pname[MPI_MAX_PROCESSOR_NAME];
+    char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
     int is_initialized;
     MPIDIU_avt_manager avt_mgr;
     int is_ch4u_initialized;

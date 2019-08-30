@@ -60,15 +60,13 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                    tmp_buf, recvcounts[rank] * recvtype_sz, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno = MPIR_Localcopy(((char *) recvbuf +
                                     displs[rank] * recvtype_extent),
                                    recvcounts[rank], recvtype, tmp_buf,
                                    recvcounts[rank] * recvtype_sz, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* do the first \floor(\lg p) steps */
@@ -135,8 +133,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                    recvcounts[j] * recvtype_sz, MPI_BYTE,
                                    (char *) recvbuf + displs[j] * recvtype_extent,
                                    recvcounts[j], recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         send_cnt += recvcounts[j];
     }
 
@@ -145,8 +142,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                    recvcounts[i] * recvtype_sz, MPI_BYTE,
                                    (char *) recvbuf + displs[i] * recvtype_extent,
                                    recvcounts[i], recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         send_cnt += recvcounts[i];
     }
 

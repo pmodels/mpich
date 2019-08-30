@@ -208,8 +208,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
                                winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         first = winfo[0].disp_unit;
@@ -540,6 +539,7 @@ static int win_init(MPIR_Win * win)
     MPIDIU_map_set(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
+    MPIDI_OFI_WIN(win).progress_counter = 1;
 
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
@@ -711,12 +711,10 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = win_init(win);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -736,12 +734,10 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = win_init(win);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -766,12 +762,10 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
         win->size = (uintptr_t) UINTPTR_MAX - (uintptr_t) MPI_BOTTOM;
 
         mpi_errno = win_init(win);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

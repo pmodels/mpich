@@ -62,8 +62,7 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype)
         goto fn_exit;
 
     mpi_errno = MPIR_Type_commit(datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -131,8 +130,7 @@ int MPI_Type_commit(MPI_Datatype * datatype)
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Type_commit_impl(datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

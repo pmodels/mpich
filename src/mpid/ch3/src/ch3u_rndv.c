@@ -279,9 +279,7 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
     if (req->dev.recv_data_sz == 0) {
         *buflen = 0;
         mpi_errno = MPID_Request_complete(req);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 	*rreqp = NULL;
     }
     else {
@@ -297,9 +295,7 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
         if (complete) 
         {
             mpi_errno = MPID_Request_complete(req);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
             *rreqp = NULL;
         }
         else

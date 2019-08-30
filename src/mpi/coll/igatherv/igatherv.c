@@ -19,8 +19,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igatherv algorithm
-        auto   - Internal algorithm selection
-        linear - Force linear algorithm
+        auto           - Internal algorithm selection
+        linear         - Force linear algorithm
+        gentran_linear - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_IGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -82,8 +83,7 @@ int MPIR_Igatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datat
     mpi_errno =
         MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                            displs, recvtype, root, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -102,8 +102,7 @@ int MPIR_Igatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
     mpi_errno =
         MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                            displs, recvtype, root, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -181,23 +180,42 @@ int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_CVAR_IGATHERV_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IGATHERV_INTRA_ALGORITHM_gentran_linear:
+                mpi_errno =
+                    MPIR_Igatherv_allcomm_gentran_linear(sendbuf, sendcount, sendtype, recvbuf,
+                                                         recvcounts, displs, recvtype, root,
+                                                         comm_ptr, request);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
                             root, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -395,8 +413,7 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     mpi_errno =
         MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root,
                       comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

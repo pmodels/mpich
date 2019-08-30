@@ -85,8 +85,7 @@ int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const i
     mpi_errno =
         MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
                                      recvtype, root, comm_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -107,8 +106,7 @@ int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const i
     mpi_errno =
         MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
                                      recvtype, root, comm_ptr, errflag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)
@@ -167,8 +165,7 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                 break;
         }
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (*errflag != MPIR_ERR_NONE)

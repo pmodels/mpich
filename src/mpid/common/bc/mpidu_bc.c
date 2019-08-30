@@ -7,7 +7,6 @@
 
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
-#include "mpl.h"
 #include "mpidu_bc.h"
 
 static MPIDU_shm_seg_t memory;
@@ -21,11 +20,9 @@ int MPIDU_bc_table_destroy(void *bc_table)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPL_free(indices);
@@ -44,8 +41,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!same_len) {
         bc_len *= 2;
@@ -60,8 +56,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     }
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (rank == local_leader) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -72,8 +67,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
     }
 
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *bc_table = segment;
 
@@ -84,7 +78,6 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 }
 
 #ifdef USE_PMIX_API
-#include <pmix.h>
 
 #define VALLEN 1024
 #define KEYLEN 64
@@ -108,13 +101,11 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (!same_len)
         bc_len = VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
                              MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {
         memcpy(segment, bc, my_bc_len);
@@ -157,7 +148,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             proc.rank = i;
             rc = PMIx_Get(&proc, "bc", NULL, 0, &pvalue);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
-            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            rc = MPL_str_get_binary_arg(pvalue->data.string, "mpi", &segment[i * bc_len], bc_len,
+                                        &out_len);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
             PMIX_VALUE_RELEASE(pvalue);
         }
@@ -175,14 +167,14 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
             proc.rank = i;
             rc = PMIx_Get(&proc, "bc", NULL, 0, &pvalue);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
-            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            rc = MPL_str_get_binary_arg(pvalue->data.string, "mpi", &segment[i * bc_len], bc_len,
+                                        &out_len);
             MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
             PMIX_VALUE_RELEASE(pvalue);
         }
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   single:
     if (!same_len) {
@@ -202,7 +194,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 }
 
 #elif defined(USE_PMI2_API)
-#include <pmi2.h>
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, size_t ** bc_indices)
@@ -220,13 +211,11 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (!same_len)
         bc_len = PMI2_MAX_VALLEN;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
                              MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {
         memcpy(segment, bc, my_bc_len);
@@ -281,8 +270,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPL_free(node_roots);
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   single:
     if (!same_len) {
@@ -328,13 +316,11 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (!same_len)
         bc_len = val_max;
     mpi_errno = MPIDU_shm_seg_alloc(bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno =
         MPIDU_shm_seg_commit(&memory, &barrier, local_size, local_rank, local_leader, rank,
                              MPL_MEM_ADDRESS);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {
         memcpy(segment, bc, my_bc_len);
@@ -396,8 +382,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPL_free(node_roots);
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   single:
     if (!same_len) {

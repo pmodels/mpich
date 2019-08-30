@@ -126,9 +126,13 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
     if (is_contig) {
         if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
+            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
+                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
+                                                          "**truncate %d %d %d %d",
+                                                          rreq->status.MPI_SOURCE,
+                                                          rreq->status.MPI_TAG, data_sz,
+                                                          in_data_sz);
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
@@ -148,9 +152,13 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
         }
 
         if (rem) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
+            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
+                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
+                                                          "**truncate %d %d %d %d",
+                                                          rreq->status.MPI_SOURCE,
+                                                          rreq->status.MPI_TAG, data_sz,
+                                                          in_data_sz);
         }
 
         MPIR_STATUS_SET_COUNT(rreq->status, done);
@@ -239,8 +247,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
             .data = 0
         };
 
-        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[0].tx,
-                                           &msg, FI_COMPLETION), FALSE /* no lock */ , read);
+        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[0].tx, &msg, FI_COMPLETION), read);
 
         done += curr_len;
         rem -= curr_len;
@@ -274,11 +281,10 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     if (!rreq)
         goto fn_exit;
 
-    MPIDI_OFI_AMREQUEST(rreq, req_hdr) = NULL;
+    MPIDI_OFI_am_clear_request(rreq);
     mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_cc_incr(rreq->cc_ptr, &c);
 
@@ -296,9 +302,13 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     if (is_contig) {
         if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
+            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                          MPIR_ERR_RECOVERABLE, __func__,
+                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
+                                                          "**truncate %d %d %d %d",
+                                                          rreq->status.MPI_SOURCE,
+                                                          rreq->status.MPI_TAG, data_sz,
+                                                          in_data_sz);
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
@@ -337,9 +347,13 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
         }
 
         if (rem) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
+            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                          MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                                          MPI_ERR_TRUNCATE, "**truncate",
+                                                          "**truncate %d %d %d %d",
+                                                          rreq->status.MPI_SOURCE,
+                                                          rreq->status.MPI_TAG, data_sz,
+                                                          in_data_sz);
         }
 
         MPIR_STATUS_SET_COUNT(rreq->status, done);
@@ -363,8 +377,7 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
     lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ((char *) msg_hdr->payload + msg_hdr->am_hdr_sz);
     mpi_errno = MPIDI_OFI_do_handle_long_am(msg_hdr, lmt_msg, msg_hdr->payload);
 
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
@@ -390,7 +403,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
         uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
         MPIDI_OFI_mr_key_free(mr_key);
     }
-    MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
 
     MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
@@ -399,8 +412,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
     mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
@@ -428,8 +440,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
     msg.pyld.sreq_ptr = sreq_ptr;
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank)),
-                            FALSE /* no lock */ , inject);
+                                      MPIDI_OFI_comm_to_phys(comm, rank)), inject);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     return mpi_errno;

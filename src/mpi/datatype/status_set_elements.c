@@ -80,8 +80,7 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Status_set_elements_x_impl(status, datatype, (MPI_Count) count);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
 

@@ -146,7 +146,7 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = comm_ptr->pof2;
+    pof2 = comm_ptr->coll.pof2;
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
@@ -154,15 +154,13 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
         mpi_errno =
             MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
                                                            root, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* use a binomial tree algorithm */
         mpi_errno =
             MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                               s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -271,16 +269,14 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                     comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                     comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -292,19 +288,15 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     /* If the user doesn't pick a transport-enabled algorithm, go to the old
      * sched function. */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -438,8 +430,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

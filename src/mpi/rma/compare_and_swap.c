@@ -128,6 +128,11 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(target_rank == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Compare_and_swap(origin_addr,

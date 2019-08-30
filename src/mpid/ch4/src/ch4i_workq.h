@@ -16,7 +16,7 @@
 #include <utlist.h>
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
-struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
+extern struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 extern MPIR_Object_alloc_t MPIDI_workq_elemt_mem;
 
 /* Forward declarations of the routines that can be pushed to a work-queue */
@@ -33,6 +33,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_unsafe(const void *, MPI_Aint, MPI_Data
 MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
                                                  MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                  MPIR_Request **);
+MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
+                                                    MPIR_Comm *, int, MPIDI_av_entry_t *,
+                                                    MPIR_Request **, MPIR_Errflag_t *);
+MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
+                                                     MPIR_Comm *, int, MPIDI_av_entry_t *,
+                                                     MPIR_Request **, MPIR_Errflag_t *);
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *, MPI_Aint, MPI_Datatype, int, int,
                                                MPIR_Comm *, int, MPIDI_av_entry_t *, MPI_Status *,
                                                MPIR_Request **);
@@ -175,6 +181,43 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
+                                                        const void *send_buf,
+                                                        MPI_Aint count,
+                                                        MPI_Datatype datatype,
+                                                        int rank,
+                                                        int tag,
+                                                        MPIR_Comm * comm_ptr,
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPIR_Request * request,
+                                                        MPIR_Errflag_t * errflag)
+{
+    MPIDI_workq_elemt_t *pt2pt_elemt;
+    struct MPIDI_workq_csend *wd;
+
+    MPIR_Assert(request != NULL);
+    MPIR_Assert(op == CSEND || op == ICSEND);
+
+    MPIR_Request_add_ref(request);
+    pt2pt_elemt = &request->dev.ch4.command;
+    pt2pt_elemt->op = op;
+
+    wd = &pt2pt_elemt->params.pt2pt.csend;
+    wd->send_buf = send_buf;
+    wd->count = count;
+    wd->datatype = datatype;
+    wd->rank = rank;
+    wd->tag = tag;
+    wd->comm_ptr = comm_ptr;
+    wd->context_offset = context_offset;
+    wd->addr = addr;
+    wd->request = request;
+    wd->errflag = *errflag;
+
+    MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                                                       const void *origin_addr,
                                                       int origin_count,
@@ -289,6 +332,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
+        case CSEND:{
+                struct MPIDI_workq_csend *wd = &workq_elemt->params.pt2pt.csend;
+                req = wd->request;
+                datatype = wd->datatype;
+                MPIDI_send_coll_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
+                                       wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
+                                       &(wd->errflag));
+                MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+                break;
+            }
+        case ICSEND:{
+                struct MPIDI_workq_csend *wd = &workq_elemt->params.pt2pt.csend;
+                req = wd->request;
+                datatype = wd->datatype;
+                MPIDI_isend_coll_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
+                                        wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
+                                        &(wd->errflag));
+                MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+                break;
+            }
         case RECV:{
                 struct MPIDI_workq_recv *wd = &workq_elemt->params.pt2pt.recv;
                 req = wd->request;
@@ -387,6 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress(void)
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 #define MPIDI_workq_pt2pt_enqueue(...)
 #define MPIDI_workq_rma_enqueue(...)
+#define MPIDI_workq_csend_enqueue(...)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vci_progress_unsafe(void)
 {

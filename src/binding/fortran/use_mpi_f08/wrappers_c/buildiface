@@ -343,6 +343,7 @@ int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype
              * MPI indexed datatype to describle the irregular region, which is not supported yet.
              */
             mpi_errno = MPI_ERR_INTERN;
+            last = 0;
             goto fn_fail;
         }
 

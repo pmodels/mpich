@@ -379,8 +379,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
     mpi_errno = MPIR_Type_struct(count,
                                  array_of_blocklengths,
                                  array_of_displacements, array_of_types, &new_handle);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 
     MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array",
@@ -397,8 +396,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
                                            count,       /* types */
                                            ints, array_of_displacements, array_of_types);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 

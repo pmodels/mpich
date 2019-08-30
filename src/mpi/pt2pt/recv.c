@@ -127,6 +127,12 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(source == MPI_PROC_NULL)) {
+        MPIR_Status_set_procnull(status);
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     /* MT: Note that MPID_Recv may release the SINGLE_CS if it

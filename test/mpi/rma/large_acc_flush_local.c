@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
         if (rank != 0) {
             for (data_size = MIN_DATA_SIZE; data_size <= MAX_DATA_SIZE; data_size *= 2) {
                 for (i = 0; i < OPS_NUM; i++) {
-                    MPI_Accumulate(orig_buf, data_size, MPI_BYTE,
-                                   0, 0, data_size, MPI_BYTE, MPI_SUM, win);
+                    MPI_Accumulate(orig_buf, data_size, MPI_CHAR,
+                                   0, 0, data_size, MPI_CHAR, MPI_SUM, win);
                     MPI_Win_flush_local(0, win);
                 }
                 MPI_Win_flush(0, win);

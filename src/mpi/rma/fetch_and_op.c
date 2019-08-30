@@ -142,6 +142,11 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(target_rank == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Fetch_and_op(origin_addr,

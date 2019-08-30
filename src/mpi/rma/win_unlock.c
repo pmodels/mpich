@@ -93,6 +93,11 @@ int MPI_Win_unlock(int rank, MPI_Win win)
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Win_unlock(rank, win_ptr);

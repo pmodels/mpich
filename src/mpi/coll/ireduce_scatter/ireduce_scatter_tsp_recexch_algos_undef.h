@@ -15,3 +15,4 @@
 
 #undef MPIR_TSP_Ireduce_scatter_intra_recexch
 #undef MPIR_TSP_Ireduce_scatter_sched_intra_recexch
+#undef MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2

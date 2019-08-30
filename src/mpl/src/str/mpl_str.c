@@ -20,10 +20,10 @@
 #endif
 
 #if !defined MPL_HAVE_SNPRINTF
-int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
+int MPL_snprintf(char *str, size_t size, const char *format, ...)
 {
     int n;
-    mpl_const char *p;
+    const char *p;
     char *out_str = str;
     va_list list;
 
@@ -169,7 +169,7 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
 
   Synopsis:
 .vb
-    char *MPL_strdup(mpl_const char *str)
+    char *MPL_strdup(const char *str)
 .ve
 
 Input Parameters:
@@ -183,10 +183,10 @@ Input Parameters:
   Utility
   @*/
 #if !defined MPL_HAVE_STRDUP
-char *MPL_strdup(mpl_const char *str)
+char *MPL_strdup(const char *str)
 {
-    char *mpl_restrict p = (char *) malloc(strlen(str) + 1);
-    mpl_const char *mpl_restrict in_p = str;
+    char *restrict p = (char *) malloc(strlen(str) + 1);
+    const char *restrict in_p = str;
     char *save_p;
 
     save_p = p;
@@ -241,8 +241,8 @@ Output Parameters:
   @*/
 int MPL_strncpy(char *dest, const char *src, size_t n)
 {
-    char *mpl_restrict d_ptr = dest;
-    const char *mpl_restrict s_ptr = src;
+    char *restrict d_ptr = dest;
+    const char *restrict s_ptr = src;
     register int i;
 
     if (n == 0)
@@ -343,8 +343,8 @@ Output Parameters:
   @*/
 int MPL_strnapp(char *dest, const char *src, size_t n)
 {
-    char *mpl_restrict d_ptr = dest;
-    const char *mpl_restrict s_ptr = src;
+    char *restrict d_ptr = dest;
+    const char *restrict s_ptr = src;
     register int i;
 
     /* Get to the end of dest */

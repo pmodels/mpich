@@ -26,6 +26,7 @@ cvars:
         permuted_sendrecv - Force permuted sendrecv algorithm
         gentran_ring      - Force generic transport based ring algorithm
         gentran_brucks    - Force generic transport based brucks algorithm
+        gentran_scattered - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -150,8 +151,7 @@ int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Data
             MPIR_Ialltoall_sched_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                 recvtype, comm_ptr, s);
     }
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -268,16 +268,22 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_ring(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcount, recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                         recvcount, recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_scattered:
+                mpi_errno =
+                    MPIR_Ialltoall_intra_gentran_scattered(sendbuf, sendcount,
+                                                           sendtype, recvbuf,
+                                                           recvcount, recvtype, comm_ptr, request);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -292,21 +298,17 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Ialltoall_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr,
                              s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -436,8 +438,7 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     mpi_errno =
         MPIR_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr,
                        &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

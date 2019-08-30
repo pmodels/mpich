@@ -16,12 +16,6 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
 
-    if (source == MPI_PROC_NULL)
-    {
-	MPIR_Status_set_procnull(status);
-	goto fn_exit;
-    }
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
@@ -44,13 +38,13 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (found) goto fn_exit;
 
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 
                 mpi_errno = MPIDI_CH3_Progress_test();
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             } while (1);
         } else {
             /* it's not anysource, see if this is for the netmod */
@@ -64,13 +58,13 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
                     
                     mpi_errno = vc->comm_ops->iprobe(vc, source, tag, comm, context_offset, &found,
                                                      status);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (found) goto fn_exit;
                     
                     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                     
                     mpi_errno = MPIDI_CH3_Progress_test();
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } while (1);
             }
             /* fall-through to shm case */

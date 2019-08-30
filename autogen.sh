@@ -630,11 +630,13 @@ confdb_dirs=
 confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
 confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/mpl/confdb"
+confdb_dirs="${confdb_dirs} src/openpa/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
+confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
 
 # hydra's copies of mpl and hwloc
 sync_external src/mpl src/pm/hydra/mpl

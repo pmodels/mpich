@@ -21,14 +21,14 @@ int main(void)
     assert(next == NULL);
     assert(str == NULL);
 
-    orig = strdup("");
+    orig = MPL_strdup("");
     str = orig;
     next = MPL_strsep(&str, "|");
     assert(str == NULL);
     assert(next == orig);
-    free(orig);
+    MPL_free(orig);
 
-    orig = strdup("a|b|c");
+    orig = MPL_strdup("a|b|c");
     str = orig;
     next = MPL_strsep(&str, "|");
     assert(next == orig);
@@ -40,9 +40,9 @@ int main(void)
     next = MPL_strsep(&str, "|");
     assert(next == NULL);
     assert(str == NULL);
-    free(orig);
+    MPL_free(orig);
 
-    orig = strdup("a|b:c");
+    orig = MPL_strdup("a|b:c");
     str = orig;
     next = MPL_strsep(&str, ":|");
     assert(next == orig);
@@ -54,9 +54,9 @@ int main(void)
     next = MPL_strsep(&str, ":|");
     assert(next == NULL);
     assert(str == NULL);
-    free(orig);
+    MPL_free(orig);
 
-    orig = strdup("a|:b:c");
+    orig = MPL_strdup("a|:b:c");
     str = orig;
     next = MPL_strsep(&str, ":|");
     assert(next == orig);
@@ -70,7 +70,7 @@ int main(void)
     next = MPL_strsep(&str, ":|");
     assert(next == NULL);
     assert(str == NULL);
-    free(orig);
+    MPL_free(orig);
 
     return 0;
 }

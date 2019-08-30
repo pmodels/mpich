@@ -34,16 +34,14 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__SEND:
             {
                 mpi_errno = MPID_Cancel_send(request_ptr);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 
         case MPIR_REQUEST_KIND__RECV:
             {
                 mpi_errno = MPID_Cancel_recv(request_ptr);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 
@@ -67,8 +65,7 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
                          */
                         request_ptr->cc_ptr = request_ptr->u.persist.real_request->cc_ptr;
                         mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     } else {
                         /* This is needed for persistent Bsend requests */
                         /* FIXME why do we directly access the partner request's
@@ -78,8 +75,7 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
                                                          MPIR_cc_is_complete(&request_ptr->
                                                                              u.persist.
                                                                              real_request->cc));
-                        if (mpi_errno)
-                            MPIR_ERR_POP(mpi_errno);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                 } else {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
@@ -91,8 +87,7 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
             {
                 if (request_ptr->u.persist.real_request != NULL) {
                     mpi_errno = MPID_Cancel_recv(request_ptr->u.persist.real_request);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
                 }
@@ -103,8 +98,7 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
             {
                 mpi_errno =
                     MPIR_Grequest_cancel(request_ptr, MPIR_cc_is_complete(&request_ptr->cc));
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 break;
             }
 

@@ -40,17 +40,6 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    /* set op_errno to 0. stored in perthread structure */
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        per_thread->op_errno = 0;
-    }
-
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
@@ -94,8 +83,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
         mpi_errno = MPIR_Localcopy(recvbuf, total_count, datatype,
                                    tmp_results, total_count, datatype);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mask = 0x1;
     i = 0;
@@ -130,12 +118,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
             dis[1] += recvcounts[j];
 
         mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* calculate recvtype */
         blklens[0] = blklens[1] = 0;
@@ -150,12 +136,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
             dis[1] += recvcounts[j];
 
         mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         received = 0;
         if (dst < comm_size) {
@@ -261,32 +245,27 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                 {
                     mpi_errno = MPIR_Reduce_local(tmp_recvbuf, tmp_results, blklens[0],
                                                   datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Reduce_local(((char *) tmp_recvbuf + dis[1] * extent),
                                                   ((char *) tmp_results + dis[1] * extent),
                                                   blklens[1], datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             } else {
                 {
                     mpi_errno = MPIR_Reduce_local(tmp_results, tmp_recvbuf, blklens[0],
                                                   datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_Reduce_local(((char *) tmp_results + dis[1] * extent),
                                                   ((char *) tmp_recvbuf + dis[1] * extent),
                                                   blklens[1], datatype, op);
-                    if (mpi_errno)
-                        MPIR_ERR_POP(mpi_errno);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* copy result back into tmp_results */
                 mpi_errno = MPIR_Localcopy(tmp_recvbuf, 1, recvtype, tmp_results, 1, recvtype);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
@@ -300,22 +279,10 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     /* now copy final results from tmp_results to recvbuf */
     mpi_errno = MPIR_Localcopy(((char *) tmp_results + disps[rank] * extent),
                                recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    {
-        MPIR_Per_thread_t *per_thread = NULL;
-        int err = 0;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        if (per_thread->op_errno)
-            mpi_errno = per_thread->op_errno;
-    }
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

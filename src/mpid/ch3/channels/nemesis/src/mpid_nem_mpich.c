@@ -101,8 +101,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
 
         /* header and remaining iovs */
         mpi_errno = vc->ch.iSendIov(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, &iov[1], n_iov - 1);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         *sreq_ptr = sreq;
         goto fn_exit;
@@ -137,7 +136,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     }
 
     mpi_errno = vc->ch.iSendContig(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, sreq->dev.tmpbuf, data_sz);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *sreq_ptr = sreq;
 

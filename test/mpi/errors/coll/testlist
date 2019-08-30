@@ -7,3 +7,17 @@ nb_rerr 2  mpiversion=3.0
 reduce_local 1
 bcastlength 4
 ibcastlength 4 mpiversion=3.0
+reducelength 4
+ireducelength 4 mpiversion=3.0
+allreducelength 4
+iallreducelength 4 mpiversion=3.0
+reduceop 4
+ireduceop 4 mpiversion=3.0
+gatherlength 4
+igatherlength 4 mpiversion=3.0
+scatterlength 4
+iscatterlength 4 mpiversion=3.0
+allgatherlength 4
+iallgatherlength 4 mpiversion=3.0
+alltoalllength 4
+

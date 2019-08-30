@@ -21,7 +21,7 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     MPIR_DATATYPE_PREALLOC
 };
 
-static int MPIR_Datatype_finalize(void *dummy);
+static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
 
 /* Call this routine to associate a MPIR_Datatype with each predefined
@@ -113,9 +113,9 @@ static MPI_Datatype mpi_dtypes[] = {
 };
 
 /*
-  MPIR_Datatype_init()
+  MPII_create_pairtypes()
 
-  Main purpose of this function is to set up the following pair types:
+  The purpose of this function is to set up the following pair types:
   - MPI_FLOAT_INT
   - MPI_DOUBLE_INT
   - MPI_LONG_INT
@@ -138,7 +138,7 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) - 1
 };
 
-int MPIR_Datatype_init(void)
+int MPII_create_pairtypes(void)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
@@ -173,17 +173,16 @@ int MPIR_Datatype_init(void)
                     (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
 
         mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i], (MPIR_Datatype *) ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_Add_finalize(MPIR_Datatype_finalize, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
   fn_fail:
     return mpi_errno;
 }
 
-static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
+static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 {
     int i;
     MPIR_Datatype *dptr;

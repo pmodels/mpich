@@ -166,19 +166,16 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
         MPIR_Comm *comm_self_ptr;
         MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
         mpi_errno = MPIR_Comm_accept_impl(local_port, NULL, 0, comm_self_ptr, &intercomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIR_Comm *comm_self_ptr;
         MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
         mpi_errno = MPIR_Comm_connect_impl(remote_port, NULL, 0, comm_self_ptr, &intercomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Close_port_impl(local_port);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
 

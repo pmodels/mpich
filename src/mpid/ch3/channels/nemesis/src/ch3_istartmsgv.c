@@ -171,7 +171,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
                check to see if we can send any now */
             MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

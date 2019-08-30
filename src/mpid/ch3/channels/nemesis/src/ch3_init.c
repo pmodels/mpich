@@ -27,8 +27,7 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
 
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, stype == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (stype == MPI_UNDEFINED) {
         *newcomm_ptr = NULL;
@@ -49,7 +48,7 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
         mpi_errno = MPIR_Comm_split_type(comm_ptr, stype, key, info_ptr, newcomm_ptr);
     }
 
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     if (comm_ptr)
@@ -110,7 +109,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     for (i = 0; i < pg_p->size; i++)
     {
 	mpi_errno = MPIDI_CH3_VC_Init(&pg_p->vct[i]);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
  fn_exit:
@@ -142,7 +141,7 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
     MPIR_FUNC_VERBOSE_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
 
     mpi_errno = MPID_nem_get_business_card(myRank, value, length);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
@@ -338,7 +337,7 @@ int MPIDI_CH3_InitCompleted(void)
     while (ep)
     {
         mpi_errno = ep->callback();
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         ep_tmp = ep;
         ep = ep->next;
         MPL_free(ep_tmp);

@@ -48,8 +48,7 @@ int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_
                                 sendcount, sendtype,
                                 ((char *) recvbuf + rank * recvcount * recvtype_extent),
                                 recvcount, recvtype, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     is_pof2 = MPL_is_pof2(comm_size, NULL);
 
@@ -65,12 +64,10 @@ int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_
 
         mpi_errno = MPIR_Sched_send(((char *) sendbuf + dst * sendcount * sendtype_extent),
                                     sendcount, sendtype, dst, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_recv(((char *) recvbuf + src * recvcount * recvtype_extent),
                                     recvcount, recvtype, src, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 

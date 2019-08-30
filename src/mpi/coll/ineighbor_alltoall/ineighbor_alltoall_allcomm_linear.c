@@ -29,28 +29,24 @@ int MPIR_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int sendco
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_CHKLMEM_MALLOC(srcs, int *, indegree * sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
     MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree * sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + k * sendcount * sendtype_extent;
         mpi_errno = MPIR_Sched_send(sb, sendcount, sendtype, dsts[k], comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_SCHED_BARRIER(s);

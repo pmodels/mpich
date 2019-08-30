@@ -18,24 +18,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#if defined _mpl_restrict
-#define mpl_restrict _mpl_restrict
-#else
-#define mpl_restrict restrict
-#endif /* _mpl_restrict */
-
-#if defined _mpl_const
-#define mpl_const _mpl_const
-#else
-#define mpl_const const
-#endif /* _mpl_const */
-
-#if defined _mpl_inline
-#define mpl_inline _mpl_inline
-#else
-#define mpl_inline inline
-#endif /* _mpl_inline */
-
 #if defined MPL_HAVE_CTYPE_H
 #include <ctype.h>
 #endif /* MPL_HAVE_CTYPE_H */

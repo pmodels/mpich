@@ -22,6 +22,8 @@ cvars:
         auto              - Internal algorithm selection
         blocked           - Force blocked algorithm
         inplace           - Force inplace algorithm
+        gentran_blocked   - Force genereic transport based blocked algorithm
+        gentran_inplace   - Force genereic transport based inplace algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -187,23 +189,53 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        switch (MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM) {
+            case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_blocked:
+                if (sendbuf != MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
+                                                              sendtypes, recvbuf, recvcounts,
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              request);
+                    MPIR_ERR_CHECK(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_inplace:
+                if (sendbuf == MPI_IN_PLACE) {
+                    mpi_errno =
+                        MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
+                                                              sendtypes, recvbuf, recvcounts,
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              request);
+                    MPIR_ERR_CHECK(mpi_errno);
+                    goto fn_exit;
+                }
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno =
         MPIR_Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
                               recvtypes, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -319,8 +351,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 
     mpi_errno = MPIR_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                 recvcounts, rdispls, recvtypes, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

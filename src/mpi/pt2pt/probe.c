@@ -93,6 +93,12 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(source == MPI_PROC_NULL)) {
+        MPIR_Status_set_procnull(status);
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Probe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, status);

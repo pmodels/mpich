@@ -72,8 +72,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                    ((char *) tmp_buf + position *
                                     recvtype_sz), recvcounts[rank] * recvtype_sz, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* if in_place specified, local data is found in recvbuf */
         mpi_errno = MPIR_Localcopy(((char *) recvbuf +
@@ -81,8 +80,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                    recvcounts[rank], recvtype,
                                    ((char *) tmp_buf + position *
                                     recvtype_sz), recvcounts[rank] * recvtype_sz, MPI_BYTE);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     curr_cnt = recvcounts[rank];
@@ -244,8 +242,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                        recvcounts[j] * recvtype_sz, MPI_BYTE,
                                        ((char *) recvbuf + displs[j] * recvtype_extent),
                                        recvcounts[j], recvtype);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         position += recvcounts[j];
     }

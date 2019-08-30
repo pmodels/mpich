@@ -90,14 +90,10 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 			       rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, &data_sz, &rreq->status.MPI_ERROR);
 	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
         mpi_errno = MPID_Request_complete(rreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPID_Request_complete(sreq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
     else
     {
@@ -134,9 +130,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	    
 	    /* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
             mpi_errno = MPID_Request_complete(sreq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_CHECK(mpi_errno);
 	    /* --END ERROR HANDLING-- */
 	}
 	    

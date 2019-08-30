@@ -135,8 +135,7 @@ int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
     *newcomm_ptr = newptr;
 
     mpi_errno = MPII_Comm_init(newptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Insert this new communicator into the list of known communicators.
      * Make this conditional on debugger support to match the test in
@@ -165,8 +164,7 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 
     /* get sensible default values for most fields (usually zeros) */
     mpi_errno = MPII_Comm_init(localcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* use the parent intercomm's recv ctx as the basis for our ctx */
     localcomm_ptr->recvcontext_id =
@@ -185,7 +183,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     /* Set the sizes and ranks */
     localcomm_ptr->remote_size = intercomm_ptr->local_size;
     localcomm_ptr->local_size = intercomm_ptr->local_size;
-    localcomm_ptr->pof2 = intercomm_ptr->pof2;
     localcomm_ptr->rank = intercomm_ptr->rank;
 
     MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR__L2L);
@@ -198,8 +195,7 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 
     /* sets up the SMP-aware sub-communicators and tables */
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
@@ -327,20 +323,15 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     /* Notify device of communicator creation */
     if (comm != MPIR_Process.comm_world) {
         mpi_errno = MPID_Comm_create_hook(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Create collectives-specific infrastructure */
+        mpi_errno = MPIR_Coll_comm_init(comm);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         MPIR_Comm_map_free(comm);
     }
-
-    /* Create collectives-specific infrastructure */
-    mpi_errno = MPIR_Coll_comm_init(comm);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    MPIR_Comm_map_free(comm);
-
-    comm->pof2 = MPL_pof2(comm->local_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
 
@@ -394,8 +385,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         /* we don't need a local comm if this process is the only one on this node */
         if (num_local > 1) {
             mpi_errno = MPIR_Comm_create(&comm->node_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             comm->node_comm->context_id = comm->context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
@@ -406,7 +396,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
-            comm->node_comm->pof2 = MPL_pof2(comm->node_comm->local_size);
             comm->node_comm->remote_size = num_local;
 
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
@@ -414,14 +403,12 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             /* Notify device of communicator creation */
             mpi_errno = MPID_Comm_create_hook(comm->node_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
             /* Create collectives-specific infrastructure */
             mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_Comm_map_free(comm->node_comm);
         }
@@ -430,8 +417,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         /* this process may not be a member of the node_roots_comm */
         if (local_rank == 0) {
             mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             comm->node_roots_comm->context_id = comm->context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
@@ -443,7 +429,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                           comm->node_roots_comm);
 
             comm->node_roots_comm->local_size = num_external;
-            comm->node_roots_comm->pof2 = MPL_pof2(comm->node_roots_comm->local_size);
             comm->node_roots_comm->remote_size = num_external;
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
@@ -451,14 +436,12 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             /* Notify device of communicator creation */
             mpi_errno = MPID_Comm_create_hook(comm->node_roots_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
             /* Create collectives-specific infrastructure */
             mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_Comm_map_free(comm->node_roots_comm);
         }
@@ -469,6 +452,10 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
   fn_exit:
     if (comm == MPIR_Process.comm_world) {
         mpi_errno = MPID_Comm_create_hook(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Create collectives-specific infrastructure */
+        mpi_errno = MPIR_Coll_comm_init(comm);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -542,13 +529,11 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
      * of intercomms here */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIR_Get_intercomm_contextid(comm_ptr, &new_context_id, &new_recvcontext_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, &new_context_id, FALSE);
         new_recvcontext_id = new_context_id;
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Assert(new_context_id != 0);
     }
 
@@ -616,7 +601,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
         newcomm_ptr->local_size = size;
         newcomm_ptr->remote_size = size;
     }
-    newcomm_ptr->pof2 = MPL_pof2(newcomm_ptr->local_size);
 
     /* Inherit the error handler (if any) */
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
@@ -627,19 +611,16 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
 
     /* Copy over the info hints from the original communicator. */
     mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *outcomm_ptr = newcomm_ptr;
 
@@ -690,7 +671,6 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     /* Set the sizes and ranks */
     newcomm_ptr->rank = comm_ptr->rank;
     newcomm_ptr->local_size = comm_ptr->local_size;
-    newcomm_ptr->pof2 = comm_ptr->pof2;
     newcomm_ptr->remote_size = comm_ptr->remote_size;
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 
@@ -754,14 +734,12 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* Cleanup collectives-specific infrastructure */
         mpi_errno = MPII_Coll_comm_cleanup(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Notify the device that the communicator is about to be
          * destroyed */
         mpi_errno = MPID_Comm_free_hook(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Free info hints */
         if (comm_ptr->info != NULL) {
@@ -851,8 +829,7 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
     MPIR_Object_release_ref_always(comm_ptr, &in_use);
     if (!in_use) {
         mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -886,8 +863,7 @@ int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
         /* Skip hints that MPICH doesn't recognize. */
         if (hint_fn) {
             mpi_errno = hint_fn->fn(comm_ptr, hint, hint_fn->state);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

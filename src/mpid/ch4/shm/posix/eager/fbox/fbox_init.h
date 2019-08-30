@@ -48,14 +48,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
 #endif /* MPL_USE_DBG_LOGGING */
 
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL(4);
 
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
-    MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks =
-        MPL_malloc(sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
-                   MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1, MPL_MEM_SHM);
-    if (NULL == MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks,
+                        int16_t *,
+                        sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
+                        MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1, mpi_errno,
+                        "fist_poll_local_ranks", MPL_MEM_SHM);
 
     /* -1 means we aren't looking for anything in particular. */
     for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
@@ -76,16 +76,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     mpi_errno =
         MPIDU_shm_seg_alloc(MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local *
                             sizeof(MPIDI_POSIX_fastbox_t), (void **) &fastboxes_p, MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
                                      &MPIDI_POSIX_global.barrier,
                                      MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
                                      MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Allocate table of pointers to fastboxes */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in,
@@ -109,8 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     }
 
     mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
 
@@ -133,8 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 
     mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
 
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.seg);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);

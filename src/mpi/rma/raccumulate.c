@@ -156,6 +156,15 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Create a completed request and return immediately for dummy process */
+    if (unlikely(target_rank == MPI_PROC_NULL)) {
+        request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT(request_ptr == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        *request = request_ptr->handle;
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Raccumulate(origin_addr, origin_count,

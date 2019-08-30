@@ -88,21 +88,18 @@
 #define FDTYPE int
 #endif
 
+typedef MPI_Offset ADIO_Offset;
 #ifdef MPI_OFFSET_IS_INT
-typedef int ADIO_Offset;
 #define ADIO_OFFSET MPI_INT
 #elif defined(HAVE_LONG_LONG_64)
-typedef long long ADIO_Offset;
 #ifdef HAVE_MPI_LONG_LONG_INT
 #define ADIO_OFFSET MPI_LONG_LONG_INT
 #else
 #define ADIO_OFFSET MPI_DOUBLE
 #endif
 #elif defined(HAVE_INT64)
-typedef __int64 ADIO_Offset;
 #define ADIO_OFFSET MPI_DOUBLE
 #else
-typedef long ADIO_Offset;
 #define ADIO_OFFSET MPI_LONG
 #endif
 

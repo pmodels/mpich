@@ -17,7 +17,7 @@
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
-                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
+                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self,
                                     int *n_vcis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef int (*MPIDI_NM_get_vci_attr_t) (int vci);
@@ -69,36 +69,27 @@ typedef int (*MPIDI_NM_rma_target_cmpl_hook_t) (int rank, MPIR_Win * win);
 typedef int (*MPIDI_NM_rma_target_local_cmpl_hook_t) (int rank, MPIR_Win * win);
 typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
-typedef void (*MPIDI_NM_prequest_free_hook_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_mpi_send_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPIR_Request ** request);
+typedef int (*MPIDI_NM_send_coll_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                     MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_NM_mpi_ssend_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_startall_t) (int count, MPIR_Request * requests[]);
-typedef int (*MPIDI_NM_mpi_send_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                         int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                         MPIDI_av_entry_t * addr, MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_ssend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                          MPIDI_av_entry_t * addr, MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_rsend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                          MPIDI_av_entry_t * addr, MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_bsend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                          MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
+typedef int (*MPIDI_NM_isend_coll_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                      MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                      MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_NM_mpi_issend_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
                                       MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_cancel_send_t) (MPIR_Request * sreq);
-typedef int (*MPIDI_NM_mpi_recv_init_t) (void *buf, int count, MPI_Datatype datatype, int rank,
-                                         int tag, MPIR_Comm * comm, int context_offset,
-                                         MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_recv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                     int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPI_Status * status,
@@ -505,7 +496,6 @@ typedef struct MPIDI_NM_funcs {
     /* Request allocation routines */
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
-    MPIDI_NM_prequest_free_hook_t prequest_free_hook;
     /* Active Message Routines */
     MPIDI_NM_am_send_hdr_t am_send_hdr;
     MPIDI_NM_am_isend_t am_isend;
@@ -518,16 +508,12 @@ typedef struct MPIDI_NM_funcs {
 
 typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_send_t mpi_send;
+    MPIDI_NM_send_coll_t send_coll;
     MPIDI_NM_mpi_ssend_t mpi_ssend;
-    MPIDI_NM_mpi_startall_t mpi_startall;
-    MPIDI_NM_mpi_send_init_t mpi_send_init;
-    MPIDI_NM_mpi_ssend_init_t mpi_ssend_init;
-    MPIDI_NM_mpi_rsend_init_t mpi_rsend_init;
-    MPIDI_NM_mpi_bsend_init_t mpi_bsend_init;
     MPIDI_NM_mpi_isend_t mpi_isend;
+    MPIDI_NM_isend_coll_t isend_coll;
     MPIDI_NM_mpi_issend_t mpi_issend;
     MPIDI_NM_mpi_cancel_send_t mpi_cancel_send;
-    MPIDI_NM_mpi_recv_init_t mpi_recv_init;
     MPIDI_NM_mpi_recv_t mpi_recv;
     MPIDI_NM_mpi_irecv_t mpi_irecv;
     MPIDI_NM_mpi_imrecv_t mpi_imrecv;
@@ -656,10 +642,10 @@ extern int MPIDI_num_netmods;
 extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
 int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                           MPIR_Comm * comm_self, int spawned, int *n_vcis_provided);
+                           MPIR_Comm * comm_self, int *n_vcis_provided);
 int MPIDI_NM_mpi_finalize_hook(void);
 int MPIDI_NM_get_vci_attr(int vci);
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking) MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_NM_progress(int vci, int blocking);
 int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                               MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr);
@@ -717,61 +703,37 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank,
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request *
                                                            req) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_prequest_free_hook(MPIR_Request *
-                                                          req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr,
                                                MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
+                                                MPI_Datatype datatype, int rank, int tag,
+                                                MPIR_Comm * comm, int context_offset,
+                                                MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count,
-                                                   MPIR_Request *
-                                                   requests[]) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count,
-                                                    MPI_Datatype datatype, int rank, int tag,
-                                                    MPIR_Comm * comm, int context_offset,
-                                                    MPIDI_av_entry_t * addr,
-                                                    MPIR_Request **
-                                                    request) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request **
-                                                     request) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request **
-                                                     request) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request **
-                                                     request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, int rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                 MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
                                                  MPIDI_av_entry_t * addr,
                                                  MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
-                                                    int rank, int tag, MPIR_Comm * comm,
-                                                    int context_offset, MPIDI_av_entry_t * addr,
-                                                    MPIR_Request **
-                                                    request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                int rank, int tag, MPIR_Comm * comm,
                                                int context_offset, MPIDI_av_entry_t * addr,

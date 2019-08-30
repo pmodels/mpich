@@ -112,8 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     MPI_Aint actual_pack_bytes;
     mpi_errno = MPIR_Typerep_pack(origin_addr, origin_count, origin_datatype, 0, buffer, size,
                                   &actual_pack_bytes);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == size);
 
     base = win_info->addr;
@@ -325,12 +324,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_PUT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
@@ -359,12 +354,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     }
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_GET);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
@@ -377,15 +368,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                                MPIR_Win * win,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
+    /* request based PUT relies on UCX 1.4 function ucp_put_nb */
+#if defined(MPICH_UCX_AM_ONLY) || !defined(HAVE_UCP_PUT_NB)
+    return MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
+                           target_disp, target_count, target_datatype, win, request);
+#else
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_RGET);
 
-    /* request based PUT relies on UCX 1.4 function ucp_put_nb */
-#if defined(MPICH_UCX_AM_ONLY) || !defined(HAVE_UCP_PUT_NB)
-    mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
-                                target_disp, target_count, target_datatype, win, request);
-#else
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
@@ -395,8 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
         mpi_errno = MPIDI_UCX_do_put(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype,
                                      win, addr, &sreq);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (sreq == NULL) {
             /* create a completed request for user if issuing is completed immediately. */
@@ -406,13 +396,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
         }
         *request = sreq;
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_RGET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 
@@ -483,15 +473,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                                MPIR_Win * win,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
+    /* request based GET relies on UCX 1.4 function ucp_get_nb */
+#if defined(MPICH_UCX_AM_ONLY) || !defined(HAVE_UCP_GET_NB)
+    return MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
+                           target_disp, target_count, target_datatype, win, request);
+#else
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_RGET);
 
-    /* request based GET relies on UCX 1.4 function ucp_get_nb */
-#if defined(MPICH_UCX_AM_ONLY) || !defined(HAVE_UCP_GET_NB)
-    mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
-                                target_disp, target_count, target_datatype, win, request);
-#else
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
@@ -501,8 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
         mpi_errno = MPIDI_UCX_do_get(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype,
                                      win, addr, &sreq);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (sreq == NULL) {
             /* create a completed request for user if issuing is completed immediately. */
@@ -512,13 +501,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
         }
         *request = sreq;
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_RGET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 

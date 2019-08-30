@@ -88,7 +88,7 @@ int MPIR_Sched_barrier(MPIR_Sched_t s);
 #define MPIR_SCHED_BARRIER(sched_)              \
     do {                                        \
         mpi_errno = MPIR_Sched_barrier(sched_); \
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno); \
+        MPIR_ERR_CHECK(mpi_errno);              \
     } while (0)
 
 /* Defers evaluating (*count) until the entry actually begins to execute.  This
@@ -153,7 +153,7 @@ int MPIR_Sched_cb_free_buf(MPIR_Comm * comm, int tag, void *state);
             mpi_errno = MPIR_Sched_cb(&MPIR_Sched_cb_free_buf,                                 \
                                       (mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]), \
                                       (sched_));                                               \
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);                                            \
+            MPIR_ERR_CHECK(mpi_errno);                                                         \
         }                                                                                      \
     } while (0)
 

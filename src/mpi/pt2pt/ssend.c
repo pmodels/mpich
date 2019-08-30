@@ -113,6 +113,11 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    /* Return immediately for dummy process */
+    if (unlikely(dest == MPI_PROC_NULL)) {
+        goto fn_exit;
+    }
+
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
@@ -127,8 +132,7 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* If a request was returned, then we need to block until the request
      * is complete */
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);

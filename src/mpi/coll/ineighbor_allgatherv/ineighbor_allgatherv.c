@@ -85,8 +85,7 @@ int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcoun
     mpi_errno = MPIR_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcounts, displs,
                                                                recvtype, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -106,8 +105,7 @@ int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcoun
     mpi_errno = MPIR_Ineighbor_allgatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcounts, displs,
                                                                recvtype, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -203,8 +201,7 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                     MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,
                                                                      recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -219,8 +216,7 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                     MPIR_Ineighbor_allgatherv_allcomm_gentran_linear(sendbuf, sendcount, sendtype,
                                                                      recvbuf, recvcounts, displs,
                                                                      recvtype, comm_ptr, request);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
                 break;
             default:
@@ -233,19 +229,15 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
      * sched function. */
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Ineighbor_allgatherv_sched(sendbuf, sendcount, sendtype,
                                                 recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -368,8 +360,7 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
     mpi_errno =
         MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                   recvtype, comm_ptr, &request_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* create a complete request, if needed */
     if (!request_ptr)

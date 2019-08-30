@@ -31,24 +31,6 @@ static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_recv_init(void *buf,
-                                              int count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
-    return MPI_SUCCESS;
-}
-
-
 static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
                                            MPI_Aint count,
                                            MPI_Datatype datatype,

@@ -94,8 +94,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
             /* MPI_MESSAGE_NO_PROC should yield a "proc null" status */
             if (*message != MPI_MESSAGE_NO_PROC) {
                 MPIR_Request_valid_ptr(msgp, mpi_errno);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_ERR_CHKANDJUMP((msgp->kind != MPIR_REQUEST_KIND__MPROBE),
                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
             }
@@ -110,19 +109,16 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 
 
     mpi_errno = MPID_Mrecv(buf, count, datatype, msgp, status, &rreq);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
     /* rreq == NULL implies message = MPI_MESSAGE_NO_PROC.
      * I.e, status was set and no need to wait on rreq */
     if (rreq != NULL) {
         mpi_errno = MPID_Wait(rreq, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Request_completion_processing(rreq, status);
         MPIR_Request_free(rreq);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *message = MPI_MESSAGE_NULL;

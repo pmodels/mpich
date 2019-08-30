@@ -16,19 +16,6 @@
 #ifndef NETMOD_INLINE
 #ifndef NETMOD_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
-
-    ret = MPIDI_NM_func->progress(vci, blocking);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr, size_t am_hdr_sz)
 {
@@ -222,16 +209,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_REQUEST_FINALIZE);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_prequest_free_hook(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PREQUEST_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PREQUEST_FREE_HOOK);
-
-    MPIDI_NM_func->prequest_free_hook(req);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PREQUEST_FREE_HOOK);
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
@@ -247,6 +224,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                        request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
+                                                MPI_Datatype datatype, int rank, int tag,
+                                                MPIR_Comm * comm, int context_offset,
+                                                MPIDI_av_entry_t * addr,
+                                                MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_SEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_SEND_COLL);
+    ret =
+        MPIDI_NM_native_func->send_coll(buf, count, datatype, rank, tag, comm, context_offset,
+                                        addr, request, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_SEND_COLL);
     return ret;
 }
 
@@ -268,91 +263,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_STARTALL);
-
-    ret = MPIDI_NM_native_func->mpi_startall(count, requests);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_STARTALL);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count,
-                                                    MPI_Datatype datatype, int rank, int tag,
-                                                    MPIR_Comm * comm, int context_offset,
-                                                    MPIDI_av_entry_t * addr,
-                                                    MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
-
-    ret = MPIDI_NM_native_func->mpi_send_init(buf, count, datatype, rank, tag, comm,
-                                              context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
-
-    ret = MPIDI_NM_native_func->mpi_ssend_init(buf, count, datatype, rank, tag, comm,
-                                               context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
-
-    ret = MPIDI_NM_native_func->mpi_rsend_init(buf, count, datatype, rank, tag, comm,
-                                               context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
-
-    ret = MPIDI_NM_native_func->mpi_bsend_init(buf, count, datatype, rank, tag, comm,
-                                               context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
@@ -368,6 +278,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                         request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, int rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr,
+                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_ISEND_COLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_ISEND_COLL);
+
+    ret =
+        MPIDI_NM_native_func->isend_coll(buf, count, datatype, rank, tag, comm, context_offset,
+                                         addr, request, errflag);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
     return ret;
 }
 
@@ -399,23 +328,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     ret = MPIDI_NM_native_func->mpi_cancel_send(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_SEND);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
-                                                    int rank, int tag, MPIR_Comm * comm,
-                                                    int context_offset, MPIDI_av_entry_t * addr,
-                                                    MPIR_Request ** request)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
-
-    ret = MPIDI_NM_native_func->mpi_recv_init(buf, count, datatype, rank, tag, comm,
-                                              context_offset, addr, request);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
     return ret;
 }
 
