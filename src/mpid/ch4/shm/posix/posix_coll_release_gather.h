@@ -46,6 +46,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (mpi_errno) {
         /* Fall back to other algo as release_gather based bcast cannot be used */
         mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+        if (mpi_errno) {
+            *errflag = MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
         goto fn_exit;
     }
 
@@ -150,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BCAST_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -268,7 +273,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -380,7 +385,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
 }
 
 #endif /* POSIX_COLL_RELEASE_GATHER_H_INCLUDED */
