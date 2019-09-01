@@ -1003,12 +1003,19 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
     int i = 0;
-    int barrier[2] = { 0 };
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FINALIZE);
+
+    /* There is no way to ensure remote-completion of fi_inject. If we proceed
+     * tearing down here, the remote recv may be left hanging. Use barrier to
+     * synchronize, but force non-immediate send so MPIDI_OFI_PROGRESS may
+     * ensure send completion) */
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPIDI_OFI_global.max_buffered_send = 0;
+    mpi_errno = MPIR_Barrier_fallback(MPIR_Process.comm_world, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* clean dynamic process connections */
     conn_manager_destroy();
@@ -1019,13 +1026,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
-
-    /* Barrier over allreduce, but force non-immediate send */
-    MPIDI_OFI_global.max_buffered_send = 0;
-    mpi_errno =
-        MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM, MPIR_Process.comm_world,
-                       &errflag);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
     while (OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
