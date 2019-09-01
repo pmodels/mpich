@@ -81,6 +81,17 @@ int MPI_Barrier(MPI_Comm comm) __attribute__ ((weak, alias("PMPI_Barrier")));
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 
+/* We may need to run collectives during MPI_Init/Finalize, where a full
+ * run-time dependency is not guaranteed. MPIR_Barrier_fallback
+ * implements or selects an algorithm that have least runtime dependency.
+ */
+int MPIR_Barrier_fallback(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+{
+    /* only depends on MPID_Send/Recv */
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    return MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
+}
+
 int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int size, mpi_errno = MPI_SUCCESS;

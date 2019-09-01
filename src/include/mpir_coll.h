@@ -285,6 +285,7 @@ int MPIR_Alltoallw_allcomm_nb(const void *sendbuf, const int *sendcnts, const in
 /******************************** Barrier ********************************/
 int MPIR_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Barrier_fallback(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
 /* intracomm-only functions */
 int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
