@@ -119,15 +119,60 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
     const void *bcast_node_container = MPIDI_coll_get_next_container(bcast_roots_container);
 
+#ifdef HAVE_ERROR_CHECKING
+    MPI_Status status;
+    MPI_Aint nbytes, type_size, recvd_size;
+#endif
+
     if (comm->node_roots_comm == NULL && comm->rank == root) {
-        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
+        coll_ret = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
+        if (coll_ret) {
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(coll_ret) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(coll_ret, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
     }
 
     if (comm->node_roots_comm != NULL && comm->rank != root &&
         MPIR_Get_intranode_rank(comm, root) != -1) {
-        mpi_errno =
+#ifndef HAVE_ERROR_CHECKING
+        coll_ret =
             MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
                       comm->node_comm, MPI_STATUS_IGNORE, errflag);
+        if (coll_ret) {
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(coll_ret) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(coll_ret, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+#else
+        coll_ret =
+            MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
+                      comm->node_comm, &status, errflag);
+        if (coll_ret) {
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(coll_ret) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+            MPIR_ERR_SET(coll_ret, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+        nbytes = type_size * count;
+        /* check that we received as much as we expected */
+        MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+        if (recvd_size != nbytes) {
+            if (*errflag == MPIR_ERR_NONE)
+                *errflag = MPIR_ERR_OTHER;
+            MPIR_ERR_SET2(coll_ret, MPI_ERR_OTHER,
+                          "**collective_size_mismatch",
+                          "**collective_size_mismatch %d %d", recvd_size, nbytes);
+            MPIR_ERR_ADD(mpi_errno, coll_ret);
+        }
+#endif
     }
 
     if (comm->node_roots_comm != NULL) {
