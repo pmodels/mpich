@@ -845,10 +845,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     }
 
     for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
-        MPIDI_OFI_MPI_CALL_POP(create_endpoint(prov_use, MPIDI_OFI_global.domain,
-                                               MPIDI_OFI_global.p2p_cq,
-                                               MPIDI_OFI_global.rma_cmpl_cntr,
-                                               MPIDI_OFI_global.av, &MPIDI_OFI_global.ep, i));
+        mpi_errno =
+            create_endpoint(prov_use, MPIDI_OFI_global.domain, MPIDI_OFI_global.p2p_cq,
+                            MPIDI_OFI_global.rma_cmpl_cntr, MPIDI_OFI_global.av,
+                            &MPIDI_OFI_global.ep, i);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *n_vcis_provided = MPIDI_OFI_global.max_ch4_vcis;
@@ -1021,8 +1022,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     /* Barrier over allreduce, but force non-immediate send */
     MPIDI_OFI_global.max_buffered_send = 0;
-    MPIDI_OFI_MPI_CALL_POP(MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT,
-                                          MPI_SUM, MPIR_Process.comm_world, &errflag));
+    mpi_errno =
+        MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM, MPIR_Process.comm_world,
+                       &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
     while (OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
@@ -1208,7 +1211,8 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     /* create new av_table, insert processes */
     if (n_new_procs > 0) {
         int avtid;
-        MPIDI_OFI_MPI_CALL_POP(MPIDIU_new_avt(n_new_procs, &avtid));
+        mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, new_upids[i],

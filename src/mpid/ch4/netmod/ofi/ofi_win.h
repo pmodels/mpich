@@ -300,7 +300,8 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
 
-    MPIDI_OFI_MPI_CALL_POP(MPIDIG_mpi_win_flush_all(win));
+    mpi_errno = MPIDIG_mpi_win_flush_all(win);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
@@ -329,7 +330,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -346,7 +348,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -364,7 +367,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank ATTRIBUTE((u
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -382,7 +386,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank ATTRIB
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_LOCAL_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
