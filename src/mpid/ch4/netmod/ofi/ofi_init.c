@@ -1013,7 +1013,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
      * synchronize, but force non-immediate send so MPIDI_OFI_PROGRESS may
      * ensure send completion) */
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIDI_OFI_global.max_buffered_send = 0;
+    MPIDI_OFI_global.max_buffered_send = -1;    /* all messages use unbuffered send */
     mpi_errno = MPIR_Barrier_fallback(MPIR_Process.comm_world, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
