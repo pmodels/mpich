@@ -442,6 +442,10 @@ int MPID_Finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    /* Release builtin comms */
+    MPIR_Comm_release_always(MPIR_Process.comm_world);
+    MPIR_Comm_release_always(MPIR_Process.comm_self);
+
     int i;
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
