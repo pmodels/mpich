@@ -88,9 +88,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     char *val = NULL, *val_p;
-    int out_len, val_len, rem, flag;
+    int out_len, val_len, rem;
     pmix_value_t value, *pvalue;
-    pmix_info_t *info;
     pmix_proc_t proc;
     int local_rank, local_leader;
     size_t my_bc_len = bc_len;
@@ -131,11 +130,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_commit");
     }
 
-    PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-    rc = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_fence");
-    PMIX_INFO_FREE(info, 1);
+    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
         start = local_rank * (size / local_size);
@@ -237,8 +233,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         rc = PMI2_KVS_Put(key, val);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
     }
-    rc = PMI2_KVS_Fence();
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
+
+    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
         start = local_rank * (size / local_size);
@@ -349,8 +346,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         rc = PMI_KVS_Commit(kvsname);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
     }
-    rc = PMI_Barrier();
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier");
+
+    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
         start = local_rank * (size / local_size);

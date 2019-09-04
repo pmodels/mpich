@@ -30,6 +30,20 @@ typedef struct PreDefined_attrs {
 typedef struct MPIR_Process_t {
     OPA_int_t mpich_state;      /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
                                  * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
+
+    /* Fields to be initialized by MPIR_pmi_init() */
+    int has_parent;
+    int appnum;
+    int rank;
+    int size;
+    int local_rank;
+    int local_size;
+    int num_nodes;
+    int *node_map;              /* int[size], maps rank to node_id */
+    int *node_local_map;        /* int[local_size], maps local_id to rank of local proc */
+    int *node_root_map;         /* int[num_nodes], maps node_id to the rank of node root */
+
+    /* -------------- */
     int do_error_checks;        /* runtime error check control */
     struct MPIR_Comm *comm_world;       /* Easy access to comm_world for
                                          * error handler */
