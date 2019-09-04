@@ -145,12 +145,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
-        char parent_port[MPI_MAX_PORT_NAME];
-        mpi_errno = MPIR_pmi_get_parent_port(parent_port);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
-        MPIR_Assert(MPIR_Process.comm_parent != NULL);
-        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+        mpi_errno = MPID_Init_spawn();
     }
 
     /* Let the device know that the rest of the init process is completed */
