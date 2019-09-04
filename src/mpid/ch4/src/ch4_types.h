@@ -294,7 +294,6 @@ typedef struct MPIDI_CH4_Global_t {
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[3];
     MPIDIU_map_t *win_map;
-    char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
