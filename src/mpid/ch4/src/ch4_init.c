@@ -202,7 +202,7 @@ static int set_runtime_configurations(void)
 
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
-    int mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
+    int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
     int avtid;
     int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -241,7 +241,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
     rank = MPIR_Process.rank;
     size = MPIR_Process.size;
-    has_parent = MPIR_Process.has_parent;
     appnum = MPIR_Process.appnum;
 
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
@@ -375,24 +374,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (has_parent) {
-#ifdef USE_PMI1_API
-        const char *kvs_name = MPIR_pmi_job_id();
-        int pmi_errno;
-        pmi_errno = PMI_KVS_Get(kvs_name, MPIDI_PARENT_PORT_KVSKEY,
-                                MPIDI_global.parent_port, MPIDI_MAX_KVS_VALUE_LEN);
-        if (pmi_errno != PMI_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_parent_port",
-                                 "**pmi_kvs_get_parent_port %d", pmi_errno);
-        }
-        MPID_Comm_connect(MPIDI_global.parent_port, NULL, 0, MPIR_Process.comm_world,
-                          &MPIR_Process.comm_parent);
-        MPIR_Assert(MPIR_Process.comm_parent != NULL);
-        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-#else
-        MPIR_Assert(0);
-#endif
-    }
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */
