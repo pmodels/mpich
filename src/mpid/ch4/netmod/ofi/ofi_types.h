@@ -330,23 +330,23 @@ typedef struct {
     struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
     /* Queryable limits */
-    uint64_t max_buffered_send;
-    uint64_t max_buffered_write;
-    uint64_t max_msg_size;
-    uint64_t max_short_send;
-    uint64_t max_mr_key_size;
-    uint64_t max_rma_key_bits;
-    uint64_t max_huge_rmas;
+    MPI_Aint max_buffered_send;
+    MPI_Aint max_buffered_write;
+    MPI_Aint max_msg_size;
+    MPI_Aint max_short_send;
+    MPI_Aint max_mr_key_size;
+    MPI_Aint max_rma_key_bits;
+    MPI_Aint max_huge_rmas;
     int rma_key_type_bits;
     int context_shift;
-    size_t tx_iov_limit;
-    size_t rx_iov_limit;
-    size_t rma_iov_limit;
+    MPI_Aint tx_iov_limit;
+    MPI_Aint rx_iov_limit;
+    MPI_Aint rma_iov_limit;
     int max_ch4_vcis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
-    size_t max_order_raw;
-    size_t max_order_war;
-    size_t max_order_waw;
+    MPI_Aint max_order_raw;
+    MPI_Aint max_order_war;
+    MPI_Aint max_order_waw;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];

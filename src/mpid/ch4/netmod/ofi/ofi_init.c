@@ -675,16 +675,16 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_OFI_global.prov_use = fi_dupinfo(prov_use);
     MPIR_Assert(MPIDI_OFI_global.prov_use);
 
-    MPIDI_OFI_global.max_buffered_send = prov_use->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov_use->tx_attr->inject_size;
-    MPIDI_OFI_global.max_msg_size = prov_use->ep_attr->max_msg_size;
-    MPIDI_OFI_global.max_order_raw = prov_use->ep_attr->max_order_raw_size;
-    MPIDI_OFI_global.max_order_war = prov_use->ep_attr->max_order_war_size;
-    MPIDI_OFI_global.max_order_waw = prov_use->ep_attr->max_order_waw_size;
+    MPIDI_OFI_global.max_buffered_send = MIN(prov_use->tx_attr->inject_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_buffered_write = MIN(prov_use->tx_attr->inject_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_msg_size = MIN(prov_use->ep_attr->max_msg_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_order_raw = MIN(prov_use->ep_attr->max_order_raw_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_order_war = MIN(prov_use->ep_attr->max_order_war_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_order_waw = MIN(prov_use->ep_attr->max_order_waw_size, MPIR_AINT_MAX);
     MPIDI_OFI_global.tx_iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rx_iov_limit = MIN(prov_use->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
+    MPIDI_OFI_global.max_mr_key_size = MIN(prov_use->domain_attr->mr_key_size, MPIR_AINT_MAX);
 
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
