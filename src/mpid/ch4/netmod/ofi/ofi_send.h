@@ -299,7 +299,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
+    /* FIXME: hack until we switch all internal size_t to MPI_Aint */
+    MPI_Aint sz = (MPI_Aint) data_sz;
+    if (sz <= MPIDI_OFI_global.max_buffered_send) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
                                             send_buf,
                                             data_sz,
@@ -307,7 +309,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             MPIDI_OFI_av_to_phys(addr),
                                             match_bits), tinjectdata, FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
+    } else if (sz <= MPIDI_OFI_global.max_msg_size) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           comm->rank,
@@ -394,7 +396,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
+    /* FIXME: hack until we switch all internal size_t to MPI_Aint */
+    MPI_Aint sz = (MPI_Aint) data_sz;
+    if (likely(!syncflag && dt_contig && (sz <= MPIDI_OFI_global.max_buffered_send)))
         if (noreq)
             mpi_errno =
                 MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, comm->rank, dst_rank,
@@ -449,7 +453,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
     src_rank = comm->rank;
     MPIDI_OFI_idata_set_error_bits(&src_rank, *errflag);
 
-    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
+    /* FIXME: hack until we switch all internal size_t to MPI_Aint */
+    MPI_Aint sz = (MPI_Aint) data_sz;
+    if (likely(!syncflag && dt_contig && (sz <= MPIDI_OFI_global.max_buffered_send)))
         if (noreq)
             mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
                                                    src_rank, dst_rank, tag, comm, context_offset,
