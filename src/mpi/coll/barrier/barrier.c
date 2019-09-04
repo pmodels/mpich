@@ -89,7 +89,7 @@ int MPIR_Barrier_fallback(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     /* only depends on MPID_Send/Recv */
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-    return MPIR_Barrier_intra_fallback(comm_ptr, errflag);
+    return MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
 }
 
 int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
