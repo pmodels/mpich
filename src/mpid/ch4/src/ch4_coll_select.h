@@ -35,7 +35,6 @@ cvars:
         Variable to select algorithm for intra-node bcast
         auto           - Internal algorithm selection from pt2pt based algorithms
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -49,7 +48,6 @@ cvars:
         Variable to select algorithm for intra-node reduce
         auto           - Internal algorithm selection from pt2pt based algorithms
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -63,7 +61,6 @@ cvars:
         Variable to select algorithm for intra-node allreduce
         auto           - Internal algorithm selection from pt2pt based algorithms
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE
       category    : COLLECTIVE

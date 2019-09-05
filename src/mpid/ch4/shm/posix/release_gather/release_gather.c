@@ -260,7 +260,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         if (rank == 0) {
             /* rank 0 decides if more memory can be created and broadcasts the decision to other ranks */
-            tmp_shm_counter = zm_atomic_load(MPIDI_POSIX_shm_limit_counter, zm_memord_acquire);
+            tmp_shm_counter = MPL_atomic_acquire_load_uint64(MPIDI_POSIX_shm_limit_counter);
 
             /* Check if it is allowed to create more shm on this node */
             if ((tmp_shm_counter + memory_to_be_allocated) >
@@ -271,8 +271,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             } else {
                 /* More shm can be created, update the shared counter */
-                zm_atomic_fetch_add(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated,
-                                    zm_memord_seq_cst);
+                MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
                 fallback = 0;
                 mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
                 if (mpi_errno) {
@@ -403,8 +402,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(rank);
         release_gather_info_ptr->release_flag_addr =
             MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(rank);
-        *(release_gather_info_ptr->gather_flag_addr) = (release_gather_info_ptr->gather_state);
-        *(release_gather_info_ptr->release_flag_addr) = (release_gather_info_ptr->release_state);
+        MPL_atomic_release_store_uint64((release_gather_info_ptr->gather_flag_addr),
+                                        release_gather_info_ptr->gather_state);
+        MPL_atomic_release_store_uint64((release_gather_info_ptr->release_flag_addr),
+                                        release_gather_info_ptr->release_state);
 
         /* Make sure all the flags are set before ranks start reading each other's flags from shm */
         mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
