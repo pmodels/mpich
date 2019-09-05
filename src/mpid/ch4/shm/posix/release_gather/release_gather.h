@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
-    volatile MPL_atomic_uint64_t *parent_flag_addr;
+    MPL_atomic_uint64_t *parent_flag_addr;
     /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
@@ -207,9 +207,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
-    volatile void *child_data_addr;
-    volatile MPL_atomic_uint64_t *child_flag_addr;
-    volatile void *reduce_data_addr = NULL;
+    void *child_data_addr;
+    MPL_atomic_uint64_t *child_flag_addr;
+    void *reduce_data_addr = NULL;
     int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     bool skip_checking = false;
     /* Set the relaxation to 0 because in Reduce, release step is "relaxed" to make sure multiple
