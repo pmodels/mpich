@@ -122,7 +122,7 @@ int MPI_Finalize(void)
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPII_finalize_thread_and_enter_cs();
     MPIR_FUNC_TERSE_FINALIZE_ENTER(MPID_STATE_MPI_FINALIZE);
 
     /* ... body of routine ... */
@@ -156,16 +156,12 @@ int MPI_Finalize(void)
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
+    MPII_finalize_topo();
+
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
     if (!MPIR_T_is_initialized())
         MPIR_T_env_finalize();
-
-    /* All memory should be freed at this point */
-    MPII_finalize_memory_tracing();
-
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
     /* If performing coverage analysis, make each process sleep for
      * rank * 100 ms, to give time for the coverage tool to write out
@@ -174,8 +170,11 @@ int MPI_Finalize(void)
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
 
-    MPII_finalize_thread_cs();
-    MPII_finalize_topo();
+    /* All memory should be freed at this point */
+    MPII_finalize_memory_tracing();
+
+    MPII_finalize_thread_and_exit_cs();
+    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
     /* ... end of body of routine ... */
   fn_exit:
@@ -191,9 +190,7 @@ int MPI_Finalize(void)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-    if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_MPI_STATE__POST_FINALIZED) {
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    }
+    MPII_finalize_thread_failed_exit_cs();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

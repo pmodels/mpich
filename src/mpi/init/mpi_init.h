@@ -46,7 +46,9 @@ int MPIR_Init_thread(int *, char ***, int, int *);
 void MPII_init_thread_and_enter_cs(int thread_required);
 void MPII_init_thread_and_exit_cs(int thread_provided);
 void MPII_init_thread_failed_exit_cs(void);
-void MPII_finalize_thread_cs(void);
+void MPII_finalize_thread_and_enter_cs(void);
+void MPII_finalize_thread_and_exit_cs(void);
+void MPII_finalize_thread_failed_exit_cs(void);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
