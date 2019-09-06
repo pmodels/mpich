@@ -6,6 +6,10 @@ PATCHES := mpich.macros mpich.pth.py2 mpich.pth.py3 mpich-modules.patch fix-vers
 #	   daos_adio-hwloc.patch daos_adio-izem.patch daos_adio-ucx.patch      \
 #	   daos_adio-libfabric.patch
 # daos_adio-all.patch
+ADD_REPOS := openpa libfabric pmix ompi mercury spdk isa-l fio dpdk   \
+	     protobuf-c fuse pmdk argobots raft cart@daos_devel1 daos \
+	     automake libtool
+
 GIT_TAG := v3.3
 
 TOPDIR  := $(shell echo $$PWD)
@@ -33,7 +37,6 @@ daos_adio-all.patch:
 	         --exclude \*.gz            \
 	         pristine/* . > $@ || true
 	echo rm -rf pristine
-
 # so instead we get a patch for each submodule
 define gen_submod_patch
 	set -e;                                              \
@@ -81,42 +84,13 @@ daos_adio.patch:
 	    -x src/mpid/ch4/netmod/ucx/ucx                 \
 	    > $@
 
-COMMON_RPM_ARGS := --define "%_topdir $$PWD/_topdir"
-DIST    := $(shell rpm $(COMMON_RPM_ARGS) --eval %{?dist})
-ifeq ($(DIST),)
-SED_EXPR := 1p
-else
-SED_EXPR := 1s/$(DIST)//p
-endif
-SPEC    := $(NAME).spec
-VERSION := $(shell rpm $(COMMON_RPM_ARGS) --specfile --qf '%{version}\n' $(SPEC) | sed -n '1p')
-RELEASE := $(shell rpm $(COMMON_RPM_ARGS) --specfile --qf '%{release}\n' $(SPEC) | sed -n '$(SED_EXPR)')
-SRPM    := _topdir/SRPMS/$(NAME)-$(VERSION)-$(RELEASE)$(DIST).src.rpm
-RPMS    := $(addsuffix .rpm,$(addprefix _topdir/RPMS/x86_64/,$(shell rpm --specfile $(SPEC))))
-SOURCES := $(addprefix _topdir/SOURCES/,$(notdir $(SOURCE)) $(PATCHES))
-TARGETS := $(RPMS) $(SRPM)
+include packaging/Makefile_packaging.mk
 
-all: $(TARGETS)
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
-%/:
-	mkdir -p $@
-
-_topdir/SOURCES/%: % | _topdir/SOURCES/
-	rm -f $@
-	ln $< $@
-
-$(NAME)-$(VERSION).tar.$(SRC_EXT).asc:
-	curl -f -L -O '$(SOURCE).asc'
-
-%.gz: %
-	rm -f $@
-	gzip $<
-
-#$(NAME)-$(VERSION).tar.$(SRC_EXT):
-#	curl -f -L -O '$(SOURCE)'
-$(NAME)-$(VERSION).tar: Makefile-rpm.mk
+$(NAME)-$(DL_VERSION)-$(GIT_COMMIT).tar:
 	mkdir -p rpmbuild
-	git archive --prefix=$(subst .tar,,$@)/ -o $@ HEAD
+	git archive --prefix=$(subst -$(GIT_COMMIT).tar,,$@)/ -o $@ HEAD
 	git submodule update --init
 	set -x; p=$$PWD && (echo .; git submodule foreach) |                          \
 	    while read junk path; do                                          \
@@ -124,59 +98,18 @@ $(NAME)-$(VERSION).tar: Makefile-rpm.mk
 	    temp="$${temp#\'}";                                               \
 	    path=$$temp;                                                      \
 	    [ "$$path" = "" ] && continue;                                    \
-	    (cd $$path && git archive --prefix=$(subst .tar,,$@)/$$path/ HEAD \
+	    (cd $$path && git archive --prefix=$(subst -$(GIT_COMMIT).tar,,$@)/$$path/ HEAD \
 	      > $$p/rpmbuild/tmp.tar &&                                       \
 	     tar --concatenate --file=$$p/$@                                  \
 	       $$p/rpmbuild/tmp.tar && rm $$p/rpmbuild/tmp.tar);              \
 	done
-	tar tvf $@
+	#tar tvf $@
 
-v$(VERSION).tar.$(SRC_EXT):
-	curl -f -L -O '$(SOURCE)'
-
-$(VERSION).tar.$(SRC_EXT):
-	curl -f -L -O '$(SOURCE)'
-
-# see https://stackoverflow.com/questions/2973445/ for why we subst
-# the "rpm" for "%" to effectively turn this into a multiple matching
-# target pattern rule
-$(subst rpm,%,$(RPMS)): $(SPEC) $(SOURCES)
-	rpmbuild -bb $(COMMON_RPM_ARGS) $(RPM_BUILD_OPTIONS) $(SPEC)
-
-$(SRPM): $(SPEC) $(SOURCES)
-	rpmbuild -bs $(COMMON_RPM_ARGS) $(SPEC)
-
-srpm: $(SRPM) $(NAME).spec
-
-$(RPMS): Makefile-rpm.mk
-
-rpms: $(RPMS)
-
-ls: $(TARGETS)
-	ls -ld $^
-
-mockbuild: $(SRPM) Makefile-rpm.mk
-	mock $(MOCK_OPTIONS) $<
-
-rpmlint: $(SPEC)
-	rpmlint $<
-
-show_version:
-	@echo $(VERSION)
-
-show_release:
-	@echo $(RELEASE)
-
-show_rpms:
-	@echo $(RPMS)
-
-show_source:
-	@echo $(SOURCE)
-
-show_sources:
-	@echo $(SOURCES)
-
-show_spec:
-	@ls -l $(SPEC)
-
-.PHONY: srpm rpms ls mockbuild rpmlint FORCE show_version show_release show_rpms show_source show_sources
+$(NAME)-$(DL_VERSION).tar.$(SRC_EXT): $(NAME)-$(DL_VERSION)-$(GIT_COMMIT).tar
+	older_tarballs=$$(ls $(NAME)-$(DL_VERSION)-*.tar |                   \
+	                  grep -v $(NAME)-$(DL_VERSION)-$(GIT_COMMIT).tar) ; \
+	if [ -n "$$older_tarballs" ]; then                                   \
+	    rm -f "$$older_tarballs";                                        \
+	fi
+	rm -f $@
+	gzip < $< > $@
