@@ -123,7 +123,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
-    int mpi_errno = MPI_SUCCESS, pmi_errno;
+    int mpi_errno = MPI_SUCCESS;
     int i, p = 0, completed;
     MPIR_Comm *comm;
     ucs_status_ptr_t ucp_request;
