@@ -413,8 +413,6 @@ sub ProcessDir {
 sub RunList { 
     my $LIST = "LIST$depth"; $depth++;
     my $listfile = $_[0];
-    my $ResultTest = "";
-    my $InitForRun = "";
     my @TYPES = "";
     my $DTP_SWITCH = "@DTP_SWITCH@";
 
@@ -464,18 +462,13 @@ sub RunList {
             # See files errhan/testlist, init/testlist, and spawn/testlist
             # for examples of using the key=value form
             my @args = split(/\s+/,$_);
+            my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
+
             my $programname = $args[0];
             my $np = "";
-            my $ResultTest = "";
-            my $InitForRun = "";
-            my $timeLimit  = "";
-            my $progArgs   = "";
-            my $mpiexecArgs = "";
             my $requiresStrict = "";
             my $requiresMPIX   = "";
-            my $progEnv    = "";
             my $mpiVersion = "";
-            my $xfail = "";
 
             my $dtp_match_type = 0;
             my $dtp_test_type = "";    # this test type
@@ -491,14 +484,8 @@ sub RunList {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
                     my $key = $1;
                     my $value = $2;
-                    if ($key eq "resultTest") {
-                        $ResultTest = $value;
-                    }
-                    elsif ($key eq "init") {
-                        $InitForRun = $value;
-                    }
-                    elsif ($key eq "timeLimit") {
-                        $timeLimit = $value;
+                    if ($key =~ /^(resultTest|init|timeLimit|xfail)$/) {
+                        $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
                         # match allowed datatypes here
@@ -509,18 +496,13 @@ sub RunList {
                             }
                         }
 
-                        $progArgs = "$progArgs $value";
+                        push @{$test_opt->{args}}, $value;
                     }
                     elsif ($key eq "mpiexecarg") {
-                        $mpiexecArgs = "$mpiexecArgs $value";
+                        push @{$test_opt->{mpiexecargs}}, $value;
                     }
                     elsif ($key eq "env") {
-                        if ($progEnv eq "") {
-                            $progEnv = "$value";
-                        }
-                        else {
-                            $progEnv = "$progEnv $value";
-                        }
+                        push @{$test_opt->{envs}}, $value;
                     }
                     elsif ($key eq "mpiversion") {
                         $mpiVersion = $value;
@@ -531,16 +513,14 @@ sub RunList {
                     elsif ($key eq "mpix") {
                         $requiresMPIX = $value
                     }
-                    elsif ($key eq "xfail") {
-                        if ($value eq "") {
-                            print STDERR "\"xfail=\" requires an argument\n";
-                        }
-                        $xfail = $value;
-                    }
                     else {
                         print STDERR "Unrecognized key $key in $listfileSource\n";
                     }
                 }
+            }
+
+            if (defined $test_opt->{xfail} and !$test_opt->{xfail}) {
+                print STDERR "\"xfail=\" requires an argument\n";
             }
 
             if ($DTP_SWITCH eq "ON") {
@@ -581,7 +561,7 @@ sub RunList {
                     ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
                 {
                     unless (-d $programname) {
-                        SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "requires MPI version $mpiVersion");
+                        SkippedTest($programname, $np, $test_opt, $curdir, "requires MPI version $mpiVersion");
                     }
                     next;
                 }
@@ -590,7 +570,7 @@ sub RunList {
             # test (use strict=false for tests that use non-standard extensions)
             if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "non-strict test, strict MPI mode requested");
+                    SkippedTest($programname, $np, $test_opt, $curdir, "non-strict test, strict MPI mode requested");
                 }
                 next;
             }
@@ -599,21 +579,21 @@ sub RunList {
                 # Strict MPI testing was requested, so assume that a non-MPICH MPI
                 # implementation is being tested and the "xfail" implementation
                 # assumptions do not hold.
-                $xfail = '';
+                delete($test_opt->{xfail});
             }
 
-            if ($xfail ne '' && $runxfail eq "false") {
+            if ($test_opt->{xfail} && $runxfail eq "false") {
                 # Skip xfail tests if they are not configured. Strict MPI tests that are
                 # marked xfail will still run with --enable-strictmpi.
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "xfail tests disabled");
+                    SkippedTest($programname, $np, $test_opt, $curdir, "xfail tests disabled");
                 }
                 next;
             }
 
             if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "tests MPIX extensions, MPIX testing disabled");
+                    SkippedTest($programname, $np, $test_opt, $curdir, "tests MPIX extensions, MPIX testing disabled");
                 }
                 next;
             }
@@ -632,19 +612,15 @@ sub RunList {
                     $programname = $2;
                     chdir $1 or warn "Can't chdir $1\n";
                 }
-                if (&BuildMPIProgram( $programname, $xfail ) == 0) {
+                if (&BuildMPIProgram( $programname, $test_opt ) == 0) {
                     if ($batchRun == 1) {
-                        &AddMPIProgram( $programname, $np, $ResultTest, 
-                                        $InitForRun, $timeLimit, $progArgs,
-                                        $progEnv, $mpiexecArgs, $xfail );
+                        &AddMPIProgram( $programname, $np, $test_opt );
                     }
                     else {
-                        &RunMPIProgram( $programname, $np, $ResultTest, 
-                                        $InitForRun, $timeLimit, $progArgs, 
-                                        $progEnv, $mpiexecArgs, $xfail );
+                        &RunMPIProgram( $programname, $np, $test_opt );
                     }
                 }
-                elsif ($xfail eq '') {
+                elsif ($test_opt->{xfail} eq '') {
                     # We expected to run this program, so failure to build
                     # is an error
                     $found_error = 1;
@@ -685,6 +661,7 @@ sub ProcessImplicitList {
     }
     close PGMS;
     
+    my $default_test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
     if ($found_exec) {
         print "Found executables\n" if $debug;
         open (PGMS, "ls -1 |" ) || die "Cannot list programs\n";
@@ -701,7 +678,7 @@ sub ProcessImplicitList {
             if ($programname eq "runtests") { next; } # Ignore self
             if (-x $programname) {
                 $total_run++;
-                &RunMPIProgram( $programname, $np_default, "", "", "", "", "", "", "" );
+                &RunMPIProgram( $programname, $np_default, $default_test_opt);
             }
         }
         close PGMS;
@@ -722,7 +699,7 @@ sub ProcessImplicitList {
             $programname =~ s/\.c//;
             $total_run++;
             if (&BuildMPIProgram( $programname, "") == 0) {
-                &RunMPIProgram( $programname, $np_default, "", "", "", "", "", "", "" );
+                &RunMPIProgram( $programname, $np_default, $default_test_opt);
             }
             else {
                 # We expected to run this program, so failure to build
@@ -743,21 +720,25 @@ sub ProcessImplicitList {
 # If the 3rd arg is not present, the a default that simply checks that the
 # return status is 0 and that the output is " No Errors" is used.
 sub RunMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs,$xfail) = @_;
+    my ($programname,$np,$test_opt) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $progEnv = join(' ', @{$test_opt->{envs}});
+    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
+
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
     my $extraArgs = "";
     my $runtime = 0;
 
-    &RunPreMsg( $programname, $np, $progArgs, $curdir );
+    &RunPreMsg( $programname, $np, $test_opt, $curdir );
 
     unlink "err";
 
     # Set a default timeout on tests (3 minutes for now)
     my $timeout = $defaultTimeLimit;
-    if (defined($timeLimit) && $timeLimit =~ /^\d+$/) {
-        $timeout = $timeLimit;
+    if (defined($test_opt->{timeLimit}) && $test_opt->{timeLimit} =~ /^\d+$/) {
+        $timeout = $test_opt->{timeLimit};
     }
     $timeout *= $defaultTimeLimitMultiplier;
     $ENV{"MPIEXEC_TIMEOUT"} = $timeout;
@@ -784,16 +765,18 @@ sub RunMPIProgram {
 
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
-    if ($InitForTest ne "") {
-        &$InitForTest();
+    # FIXME: bad practice, remove
+    if ($test_opt->{init}) {
+        $test_opt->{init}->();
     }
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
-    if ($progEnv ne "") {
+    my %saveEnv;
+    if ($test_opt->{envs}) {    
         %saveEnv = %ENV;
-        foreach $val (split(/\s+/, $progEnv)) {
+        foreach my $val (@{$test_opt->{envs}}) {
             if ($val =~ /([^=]+)=(.*)/) {
                 $ENV{$1} = $2;
             }
@@ -805,12 +788,23 @@ sub RunMPIProgram {
     my $start_time = gettimeofday();
     open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
         die "Could not run ./$programname\n";
-    if ($progEnv ne "") {
+    if ($test_opt->{envs}) {    
         %ENV = %saveEnv;
     }
-    if ($ResultTest ne "") {
+    if ($test_opt->{resultTest}) {
         # Read and process the output
-        ($found_error, $inline) = &$ResultTest( MPIOUT, $programname );
+        my %test_actions = (
+            TestStatus => \&TestStatus,
+            TestStatusNoErrors => \&TestStatusNoErrors,
+            TestErrFatal => \&TestErrFatal,
+        );
+
+        my $F = $test_actions{$test_opt->{resultTest}};
+        if ($F) {
+            ($found_error, $inline) = $F->( MPIOUT, $programname );
+        } else {
+            die "resultTest $test_opt->{resultTest} not defined!\n";
+        }
     }
     else {
         if ($verbose) {
@@ -866,46 +860,50 @@ sub RunMPIProgram {
         }
     }
     if ($found_error) {
-        &RunTestFailed( $programname, $np, $progArgs, $progEnv, $timeout, $curdir, $inline, $xfail, $runtime );
+        &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, $inline, $runtime );
     }
     else { 
-        &RunTestPassed( $programname, $np, $progArgs, $progEnv, $curdir, $xfail, $runtime );
+        &RunTestPassed( $programname, $np, $test_opt, $curdir, $runtime );
     }
-    &RunPostMsg( $programname, $np, $curdir );
+    &RunPostMsg( $programname, $np, $test_opt, $curdir );
 }
 
 # This version simply writes the mpiexec command out, with the output going
 # into a file, and recording the output status of the run.
 sub AddMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs, $xfail) = @_;
+    my ($programname,$np,$test_opt) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $progEnv = join(' ', @{$test_opt->{envs}});
+    my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
 
     if (! -x $programname) {
         print STDERR "Could not find $programname!";
         return;
     }
 
-    if ($ResultTest ne "") {
+    if ($test_opt->{resultTest}) {
         # This test really needs to be run manually, with this test
         # Eventually, we can update this to include handleing in checktests.
-        print STDERR "Run $curdir/$programname with $np processes and use $ResultTest to check the results\n";
+        print STDERR "Run $curdir/$programname with $np processes and use $test_opt->{resultTest} to check the results\n";
         return;
     }
 
     # Set a default timeout on tests (3 minutes for now)
     my $timeout = $defaultTimeLimit;
-    if (defined($timeLimit) && $timeLimit =~ /^\d+$/) {
+    if (defined($test_opt->{timeLimit}) && $test_opt->{timeLimit} =~ /^\d+$/) {
         # On some systems, there is no effective time limit on 
         # individual mpi program runs.  In that case, we may
         # want to treat these also as "run manually".
-        $timeout = $timeLimit;
+        $timeout = $test_opt->{timeLimit};
     }
     $timeout *= $defaultTimeLimitMultiplier;
     print BATOUT "export MPIEXEC_TIMEOUT=$timeout\n";
     
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
-    if ($InitForTest ne "") {
-        &$InitForTest();
+    # FIXME: very bad practice, remove.
+    if ($test_opt->{init}) {
+        $test_opt->{init}->();
     }
 
     # For non-MPICH versions of mpiexec, a timeout may require a different
@@ -967,8 +965,8 @@ sub AddMPIProgram {
 # 
 # Return value is 0 on success, non zero on failure
 sub BuildMPIProgram {
-    my $programname = shift;
-    my $xfail = shift;
+    my ($programname, $test_opt) = @_;
+
     my $rc = 0;
     if ($verbose) { print STDERR "making $programname\n"; }
     if (! -x $programname) { $remove_this_pgm = 1; }
@@ -985,9 +983,9 @@ sub BuildMPIProgram {
         # This will ensure that failures to build will end up 
         # in the summary file (which is otherwise written by the
         # RunMPIProgram step)
-        &RunPreMsg( $programname, $np, $curdir );
-    &RunTestFailed( $programname, $np, "", "", $timeout, $curdir, "Failed to build $programname; $output", $xfail );
-        &RunPostMsg( $programname, $np, $curdir );
+        &RunPreMsg( $programname, $np, $test_opt, $curdir );
+        &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, "Failed to build $programname; $output" );
+        &RunPostMsg( $programname, $np, $test_opt, $curdir );
     }
     return $rc;
 }
@@ -1186,22 +1184,27 @@ sub TestErrFatal {
 #  RunPostMsg               - Call at end of each test
 #
 sub RunPreMsg {
-    my ($programname,$np,$progArgs,$workdir) = @_;
+    my ($programname,$np,$test_opt,$workdir) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+
     if ($xmloutput) {
         print XMLOUT "<MPITEST>$newline<NAME>$programname</NAME>$newline";
-    print XMLOUT "<ARGS>$progArgs</ARGS>$newline";
+        print XMLOUT "<ARGS>$progArgs</ARGS>$newline";
         print XMLOUT "<NP>$np</NP>$newline";
         print XMLOUT "<WORKDIR>$workdir</WORKDIR>$newline";
     }
 }
 sub RunPostMsg {
-    my ($programname, $np, $workdir) = @_;
+    my ($programname, $np, $test_opt, $workdir) = @_;
     if ($xmloutput) {
         print XMLOUT "</MPITEST>$newline";
     }
 }
 sub RunTestPassed {
-    my ($programname, $np, $progArgs, $progEnv, $workdir, $xfail, $runtime) = @_;
+    my ($programname, $np, $test_opt, $workdir, $runtime) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $progEnv = join(' ', @{$test_opt->{envs}});
+
     if ($xmloutput) {
         print XMLOUT "<STATUS>pass</STATUS>$newline";
     print XMLOUT "<TIME>$runtime</TIME>$newline";
@@ -1214,15 +1217,9 @@ sub RunTestPassed {
     }
 }
 sub RunTestFailed {
-    my $programname = shift;
-    my $np = shift;
-    my $progArgs = shift;
-    my $progEnv = shift;
-    my $timeout = shift;
-    my $workdir = shift;
-    my $output = shift;
-    my $xfail = shift;
-    my $runtime = shift;
+    my ($programname, $np, $test_opt, $timeout, $workdir, $output, $runtime) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $progEnv = join(' ', @{$test_opt->{envs}});
 
     if ($xmloutput) {
         my $xout = $output;
@@ -1240,8 +1237,8 @@ sub RunTestFailed {
 
     if ($tapoutput) {
         my $xfailstr = '';
-        if ($xfail ne '') {
-            $xfailstr = " # TODO $xfail";
+        if ($test_opt->{xfail}) {
+            $xfailstr = " # TODO $test_opt->{xfail}";
         }
         print TAPOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr} # time=$runtime\n";
         print TAPOUT "  ---\n";
@@ -1279,8 +1276,8 @@ sub RunTestFailed {
     if ($junitoutput) {
         my $xfailstr = '';
         my $testtag = "failure";
-        if ($xfail ne '') {
-            $xfailstr = " # TODO $xfail";
+        if ($test_opt->{xfail}) {
+            $xfailstr = " # TODO $test_opt->{xfail}";
             $testtag  = "skipped";
         }
         print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\">\n";
@@ -1311,12 +1308,9 @@ sub RunTestFailed {
 }
 
 sub SkippedTest {
-    my $programname = shift;
-    my $np = shift;
-    my $progArgs = shift;
-    my $progEnv = shift;
-    my $workdir = shift;
-    my $reason = shift;
+    my ($programname, $np, $test_opt, $workdir, $reason) = @_;
+    my $progArgs = join(' ', @{$test_opt->{args}});
+    my $progEnv = join(' ', @{$test_opt->{envs}});
 
     # simply omit from the XML output
 
