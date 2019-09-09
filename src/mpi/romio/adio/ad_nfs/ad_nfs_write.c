@@ -327,7 +327,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                 userbuf_off = j * buftype_extent + flat_buf->indices[i];
                 req_off = off;
                 req_len = flat_buf->blocklens[i];
-                ADIOI_BUFFERED_WRITE_WITHOUT_READ off += flat_buf->blocklens[i];
+                ADIOI_BUFFERED_WRITE_WITHOUT_READ;
+                off += flat_buf->blocklens[i];
             }
 
         /* write the buffer out finally */
@@ -536,7 +537,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                     req_off = off;
                     req_len = fwr_size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_WRITE}
+                    ADIOI_BUFFERED_WRITE;
+                }
                 i_offset += fwr_size;
 
                 if (off + fwr_size < disp + flat_file->indices[j] +
@@ -578,7 +580,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                     req_off = off;
                     req_len = size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_WRITE}
+                    ADIOI_BUFFERED_WRITE;
+                }
 
                 new_fwr_size = fwr_size;
                 new_bwr_size = bwr_size;
