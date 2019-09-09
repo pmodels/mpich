@@ -44,6 +44,10 @@ use File::Copy qw(move);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 # Global variables
+our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
+$g_opt->{memory_total} = 20;      # Total memory in GB
+$g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
+
 $MPIMajorVersion = "@MPI_VERSION@";
 $MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
@@ -141,6 +145,13 @@ if (defined($ENV{"MPITEST_TIMEOUT"})) {
  
 if (defined($ENV{"MPITEST_TIMEOUT_MULTIPLIER"})) {
     $defaultTimeLimitMultiplier = $ENV{"MPITEST_TIMEOUT_MULTIPLIER"};
+}
+
+for my $key ("memory_total", "memory_multiplier") {
+    my $k = "MPITEST_".uc($key);
+    if (defined($ENV{$k})) {
+        $g_opt->{$key} = $ENV{$k};
+    }
 }
 
 # Define this to leave the XML output file open to receive additional data
@@ -484,7 +495,7 @@ sub RunList {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
                     my $key = $1;
                     my $value = $2;
-                    if ($key =~ /^(resultTest|init|timeLimit|xfail)$/) {
+                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem)$/) {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
@@ -769,9 +780,32 @@ sub RunMPIProgram {
     if ($test_opt->{init}) {
         $test_opt->{init}->();
     }
+
+    # acquire lock if requested
+    my $lockfile="/tmp/runtests-mem.lock";
+    my ($lock_sh, $lock_ex) = (1, 2);
+    my $got_lock;
+    if ($test_opt->{lock}) {
+        if ($test_opt->{lock} eq "shared") {
+            $got_lock = get_lock($lockfile, $lock_sh);
+        } else {
+            $got_lock = get_lock($lockfile, $lock_ex);
+        }
+    } elsif ($test_opt->{mem}) {
+        if ($test_opt->{mem} > $g_opt->{memory_total}) {
+            SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
+            next;
+        } elsif ($test_opt->{mem} * $g_opt->{memory_multiplier} > $g_opt->{memory_total} ) {
+            $got_lock = get_lock($lockfile, $lock_ex);
+        } else {
+            $got_lock = get_lock($lockfile, $lock_sh);
+        }
+    }
+
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
+
     # Save and restore the environment if necessary before running mpiexec.
     my %saveEnv;
     if ($test_opt->{envs}) {    
@@ -859,6 +893,12 @@ sub RunMPIProgram {
             }
         }
     }
+
+    # release lock if needed
+    if ($got_lock) {
+        relese_lock($lockfile);
+    }
+
     if ($found_error) {
         &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, $inline, $runtime );
     }
@@ -1331,4 +1371,31 @@ sub SkippedTest {
 # Alternate init routines
 sub InitQuickTimeout {
     $ENV{"MPIEXEC_TIMEOUT"} = 10;
+}
+
+# ----------------------------------------------------------------------------
+# util routines
+
+sub get_lock {
+    my ($lockfile, $lock_type) = @_;
+    if ($verbose) {
+        print "Taking lock [$lockfile], type $lock_type\n";
+    }
+    if(open LOCK, ">$lockfile"){
+        flock(LOCK, $lock_type);
+        print LOCK "$$\n";
+        return 1;
+    }
+    else{
+        warn "failed to open lockfile $lockfile\n";
+        return 0;
+    }
+}
+
+sub relese_lock {
+    my ($lockfile) = @_;
+    if ($verbose) {
+        print "Releasing lock [$lockfile]\n";
+    }
+    close(LOCK);
 }
