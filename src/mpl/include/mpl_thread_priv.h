@@ -60,6 +60,7 @@ void MPLI_cleanup_tls(void *a);
         }                                                               \
         else {                                                          \
             addr = &(var);                                              \
+            *((int *) err_ptr_) = MPL_THREAD_SUCCESS;                   \
         }                                                               \
     } while (0)
 
