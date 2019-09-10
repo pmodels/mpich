@@ -71,6 +71,33 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 /* Any internal routines can go here.  Make them static if possible */
 
 /* Global variables can be initialized here */
+MPIR_Process_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
+
+/* all other fields in MPIR_Process are irrelevant */
+MPIR_Thread_info_t MPIR_ThreadInfo;
+
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
+MPL_TLS MPIR_Per_thread_t MPIR_Per_thread;
+#else
+MPIR_Per_thread_t MPIR_Per_thread;
+#endif
+
+MPID_Thread_tls_t MPIR_Per_thread_key;
+
+#ifdef MPICH_THREAD_USE_MDTA
+/* This counts how many threads allowed to stay in the progress engine. */
+OPA_int_t num_server_thread;
+
+/* Other threads will wait in a sync object, and are recorded here. */
+MPIR_Thread_sync_list_t sync_wait_list;
+#endif
+
+/* These are initialized as null (avoids making these into common symbols).
+   If the Fortran binding is supported, these can be initialized to
+   their Fortran values (MPI only requires that they be valid between
+   MPI_Init and MPI_Finalize) */
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPL_USED = 0;
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPL_USED = 0;
 
 /* This will help force the load of initinfo.o, which contains data about
    how MPICH was configured. */
