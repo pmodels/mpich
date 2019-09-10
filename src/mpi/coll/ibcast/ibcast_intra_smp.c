@@ -58,8 +58,10 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
         }
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
+#ifdef HAVE_ERROR_CHECKING
         mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
         MPIR_ERR_CHECK(mpi_errno);
+#endif
         MPIR_SCHED_BARRIER(s);
     }
 

@@ -132,6 +132,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
+#ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
     if (curr_size != nbytes) {
         if (*errflag == MPIR_ERR_NONE)
@@ -141,6 +142,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                       "**collective_size_mismatch %d %d", curr_size, nbytes);
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
+#endif
 
     if (!is_contig) {
         if (rank != root) {
