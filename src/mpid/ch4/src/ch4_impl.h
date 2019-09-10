@@ -728,7 +728,8 @@ static inline void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
         target_ptr = MPIDIG_win_target_find(win, rank);
         if (!target_ptr)
             continue;
-        if (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0) {
+        if (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+            MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) {
             *allcompleted = 0;
             break;
         }
