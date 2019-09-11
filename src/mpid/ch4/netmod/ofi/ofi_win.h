@@ -98,11 +98,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win, 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
 
     if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
+        MPIDI_OFI_WIN(win).progress_counter++;
         if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
             MPIDI_OFI_win_do_progress(win, vni);
-            MPIDI_OFI_WIN(win).progress_counter = 1;
+            MPIDI_OFI_WIN(win).progress_counter = 0;
         }
-        MPIDI_OFI_WIN(win).progress_counter++;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_TRIGGER_RMA_PROGRESS);
