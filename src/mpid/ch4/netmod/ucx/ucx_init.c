@@ -166,11 +166,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
 
-    MPIR_Comm_release_always(comm);
-
-    comm = MPIR_Process.comm_self;
-    MPIR_Comm_release_always(comm);
-
     MPIDIG_finalize();
 
   fn_exit:

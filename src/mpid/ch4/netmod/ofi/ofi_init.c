@@ -1005,7 +1005,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int i = 0;
     int barrier[2] = { 0 };
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_Comm *comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FINALIZE);
@@ -1058,15 +1057,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
     fi_freeinfo(MPIDI_OFI_global.prov_use);
-
-    /* --------------------------------------- */
-    /* Free comm world addr table              */
-    /* --------------------------------------- */
-    comm = MPIR_Process.comm_world;
-    MPIR_Comm_release_always(comm);
-
-    comm = MPIR_Process.comm_self;
-    MPIR_Comm_release_always(comm);
 
     MPIDIG_finalize();
 
