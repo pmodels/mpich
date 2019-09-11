@@ -158,6 +158,8 @@ int MPII_post_init_global(int thread_provided)
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
 
+    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
+
     return mpi_errno;
 }
 

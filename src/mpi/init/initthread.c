@@ -140,6 +140,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_init_async(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* create fine-grained mutexes */
+    MPIR_Thread_CS_Init();
+
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 

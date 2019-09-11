@@ -170,6 +170,9 @@ int MPI_Finalize(void)
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
 
+    /* destroy fine-grained mutex (including dynamic ones) */
+    MPIR_Thread_CS_Finalize();
+
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();
 
