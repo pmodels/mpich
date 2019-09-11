@@ -32,3 +32,20 @@ MPIR_Thread_sync_list_t sync_wait_list;
    MPI_Init and MPI_Finalize) */
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPL_USED = 0;
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPL_USED = 0;
+
+/* ** HACK **
+ * Hack to workaround an Intel compiler bug on macOS. Touching
+ * MPIR_Per_thread in this file forces the compiler to allocate it as TLS.
+ * See https://github.com/pmodels/mpich/issues/3437.
+ */
+void _dummy_touch_tls(void);
+void _dummy_touch_tls(void)
+{
+    MPIR_Per_thread_t *per_thread = NULL;
+    int err;
+
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                 MPIR_Per_thread, per_thread, &err);
+    MPIR_Assert(err == 0);
+    memset(per_thread, 0, sizeof(MPIR_Per_thread_t));
+}
