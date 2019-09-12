@@ -12,18 +12,16 @@
 #include <pthread.h>
 
 /* defined in mpl_atomic.c */
-extern pthread_mutex_t *MPL_emulation_lock;
+extern pthread_mutex_t MPL_emulation_lock;
 
-#define MPL_ATOMIC_IPC_SINGLE_CS_ENTER()        \
-    do {                                        \
-        assert(MPL_emulation_lock);             \
-        pthread_mutex_lock(MPL_emulation_lock); \
+#define MPL_ATOMIC_IPC_SINGLE_CS_ENTER()         \
+    do {                                         \
+        pthread_mutex_lock(&MPL_emulation_lock); \
     } while (0)
 
-#define MPL_ATOMIC_IPC_SINGLE_CS_EXIT()             \
-    do {                                            \
-        assert(MPL_emulation_lock);                 \
-        pthread_mutex_unlock(MPL_emulation_lock);   \
+#define MPL_ATOMIC_IPC_SINGLE_CS_EXIT()              \
+    do {                                             \
+        pthread_mutex_unlock(&MPL_emulation_lock);   \
     } while (0)
 
 
