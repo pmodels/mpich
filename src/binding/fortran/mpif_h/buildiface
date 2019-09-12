@@ -5293,7 +5293,7 @@ sub specialInitStatement {
 sub HelperForRegister_datarep {
     my $OUTFD = $_[0]; 
 
-    my $proto_params = "void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr";
+    my $proto_params = "void *v1, MPI_Datatype v2, int v3, void *v4, MPI_Offset v5, void *v6";
     print $OUTFD "\
     /* There is a dummy routine, mpi_conversion_fn_null, that is available 
        for use as the conversion function for MPI_Register_datarep.  
