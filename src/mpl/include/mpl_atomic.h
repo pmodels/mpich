@@ -80,12 +80,6 @@ static void MPL_atomic_read_barrier(void);
 static void MPL_atomic_read_write_barrier(void);
 static void MPL_atomic_compiler_barrier(void);
 
-#ifdef MPL_HAVE_PTHREAD_H
-#include <pthread.h>
-typedef pthread_mutex_t MPL_atomic_emulation_ipl_t;
-int MPL_atomic_interprocess_lock_init(MPL_atomic_emulation_ipl_t * shm_lock, int isLeader);
-#endif /* HAVE_PTHREAD_H */
-
 #if defined(MPL_USE_NO_ATOMIC_PRIMITIVES)
 #include "mpl_atomic_none.h"
 #elif defined(MPL_HAVE_C11_ATOMICS)
