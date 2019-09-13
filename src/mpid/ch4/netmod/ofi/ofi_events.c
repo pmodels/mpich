@@ -7,6 +7,11 @@
 #include "ofi_am_events.h"
 #include "ofi_events.h"
 
+/* We can use a generic length fi_info.max_err_data returned by fi_getinfo()
+ * However, currently we do not use the error data, we set the length to a
+ * value that is generally common across the different providers. */
+#define MPIDI_OFI_MAX_ERR_DATA_SIZE 64
+
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
@@ -765,6 +770,7 @@ int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
+    char err_data[MPIDI_OFI_MAX_ERR_DATA_SIZE];
     MPIR_Request *req;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vni_idx, nic);
@@ -774,6 +780,12 @@ int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 
     switch (ret) {
         case -FI_EAVAIL:
+            /* Provide separate error buffer for each thread. This makes the
+             * call to fi_cq_readerr threadsafe. If we don't provide the buffer,
+             * OFI passes an internal buffer to the threads, which can lead to
+             * the threads sharing the buffer. */
+            e.err_data = err_data;
+            e.err_data_size = sizeof(err_data);
             ret_cqerr = fi_cq_readerr(MPIDI_OFI_global.ctx[ctx_idx].cq, &e, 0);
             /* The error was already consumed, most likely by another thread,
              *  possible in case of lockless MT model */
