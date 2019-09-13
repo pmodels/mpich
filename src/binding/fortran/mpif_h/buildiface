@@ -1136,7 +1136,7 @@ sub print_header {
 	print $OUTFD $extra;
     }
     &print_profiling_block( $out_prefix, $routine_name, $lcname, $args );
-    &print_name_map_block( $out_prefix, $routine_name, $lcname );
+    &print_name_map_block( $out_prefix, $routine_name, $lcname, $args );
 
     my $fn = "HelperFor" . $routine_name ;
     if (defined(&$fn)) {
@@ -1289,6 +1289,7 @@ sub print_name_map_block {
     my $out_prefix = shift;
     my $routine_name = shift;
     my $lcname = shift;
+    my $args = shift;
     my $ucname = uc($lcname);
     my $lcprefix = lc($out_prefix);
     my $ucprefix = uc($out_prefix);
