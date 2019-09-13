@@ -12,9 +12,7 @@
 
 if BUILD_SHM_POSIX
 
-if ENABLE_IZEM_ATOMIC
 include $(top_srcdir)/src/mpid/ch4/shm/posix/release_gather/Makefile.mk
-endif
 
 noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
@@ -31,11 +29,9 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_am_impl.h   \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
                   src/mpid/ch4/shm/posix/posix_proc.h      \
-                  src/mpid/ch4/shm/posix/posix_types.h
+                  src/mpid/ch4/shm/posix/posix_types.h     \
+                  src/mpid/ch4/shm/posix/posix_coll_release_gather.h
 
-if ENABLE_IZEM_ATOMIC
-noinst_HEADERS += src/mpid/ch4/shm/posix/posix_coll_release_gather.h
-endif
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_progress.c \
                     src/mpid/ch4/shm/posix/posix_comm.c \
