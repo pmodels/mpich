@@ -531,6 +531,8 @@ typedef struct MPIDI_OFI_huge_recv {
     int event_id;               /* fixed field, do not move */
     int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
+    bool peek;                  /* Flag to indicate whether this struct has been created to track an uncompleted peek
+                                 * operation. */
     size_t cur_offset;
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
