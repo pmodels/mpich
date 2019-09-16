@@ -79,7 +79,7 @@ int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int
 
 #ifdef USE_PMIX_API
 
-#define VALLEN 1024
+#define VALLEN 2048
 #define KEYLEN 64
 
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
