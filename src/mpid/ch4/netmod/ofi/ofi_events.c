@@ -237,6 +237,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* Plug the information for the huge event into the receive request and go
      * to the MPIDI_OFI_get_huge_event function. */
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+    recv_elem->comm_ptr = comm_ptr;
     recv_elem->localreq = rreq;
     recv_elem->done_fn = recv_event;
     recv_elem->wc = *wc;
