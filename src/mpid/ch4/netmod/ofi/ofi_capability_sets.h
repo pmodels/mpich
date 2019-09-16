@@ -104,6 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_SYNC_SEND                 The bit to indicate a sync send
  * MPIDI_OFI_SYNC_SEND_ACK             The bit to indicate a sync send ack
  * MPIDI_OFI_DYNPROC_SEND              The bit to indicate a dynamic process send
+ * MPIDI_OFI_HUGE_SEND                 The bit to indicate a huge messge
  * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 
@@ -156,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_PSM2
-#define MPIDI_OFI_PROTOCOL_MASK             (0x0060000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM2 does support immediate data
                                                                          * so this field is zeroed */
@@ -167,6 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0020000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND              (0x0040000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND                 (0x0080000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM2
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM2
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -221,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_SOCKETS
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS
-#define MPIDI_OFI_PROTOCOL_MASK             (0x0060000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* Sockets does support immediate data
                                                                          * so this field is zeroed */
@@ -232,6 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0020000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND              (0x0040000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND                 (0x0080000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_SOCKETS
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_SOCKETS
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -286,7 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_BGQ
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_BGQ
-#define MPIDI_OFI_PROTOCOL_MASK             (0x0060000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_MASK             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* BGQ does support immediate data
                                                                          * so this field is zeroed */
@@ -297,6 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                 (0x0020000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND              (0x0040000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND                 (0x0080000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_BGQ
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_BGQ
 #define MPIDI_OFI_CONTEXT_STRUCTS           2
@@ -351,7 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_RXM
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK           MPIDI_OFI_ENABLE_PT2PT_NOPACK_RXM
 #define MPIDI_OFI_NUM_AM_BUFFERS                MPIDI_OFI_NUM_AM_BUFFERS_RXM
-#define MPIDI_OFI_PROTOCOL_MASK                 (0x0060000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_MASK                 (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK                  (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK                   (0x0000000000000000ULL) /* RxM does support immediate data
                                                                          * so this field is zeroed */
@@ -362,6 +366,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_ACK                 (0x0010000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND                     (0x0020000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND                  (0x0040000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND                     (0x0080000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION                 MPIDI_OFI_MAJOR_VERSION_RXM
 #define MPIDI_OFI_MINOR_VERSION                 MPIDI_OFI_MINOR_VERSION_RXM
 #define MPIDI_OFI_CONTEXT_STRUCTS                1
@@ -387,7 +392,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_DEFAULT  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_DEFAULT       MPIDI_OFI_ON
 #define MPIDI_OFI_NUM_AM_BUFFERS_DEFAULT            MPIDI_OFI_MAX_NUM_AM_BUFFERS
-#define MPIDI_OFI_PROTOCOL_MASK_DEFAULT             (0x0060000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_MASK_DEFAULT             (0x00E0000000000000ULL)
 #define MPIDI_OFI_CONTEXT_MASK_DEFAULT              (0x000FFFFF00000000ULL)
 #define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
                                                                                  * so this field is zeroed */
@@ -398,6 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_ACK_DEFAULT             (0x0010000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND_DEFAULT                 (0x0020000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND_DEFAULT              (0x0040000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND_DEFAULT                 (0x0080000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION_DEFAULT             FI_MAJOR_VERSION
 #define MPIDI_OFI_MINOR_VERSION_DEFAULT             FI_MINOR_VERSION
 
@@ -431,6 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SYNC_SEND_MINIMAL                 (0x1000000000000000ULL)
 #define MPIDI_OFI_SYNC_SEND_ACK_MINIMAL             (0x2000000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND_MINIMAL              (0x4000000000000000ULL)
+#define MPIDI_OFI_HUGE_SEND_MINIMAL                 (0x8000000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION_MINIMAL             FI_MAJOR_VERSION
 #define MPIDI_OFI_MINOR_VERSION_MINIMAL             FI_MINOR_VERSION
 
