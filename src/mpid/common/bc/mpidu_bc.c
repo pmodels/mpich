@@ -296,7 +296,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     int key_max, val_max, name_max, out_len, rem;
-    char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
+    char *kvsname = NULL, *key = NULL, *val = NULL, *val2 = NULL, *val_p;
     int local_rank = -1, local_leader = -1;
     size_t my_bc_len = bc_len;
 
@@ -308,6 +308,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_key_length_max");
     rc = PMI_KVS_Get_value_length_max(&val_max);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+    val_max = val_max - key_max - 50;
 
     /* if business cards can be different length, use the max value length */
     if (!same_len)
@@ -329,22 +330,40 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     rc = PMI_KVS_Get_my_name(kvsname, name_max);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
 
-    val = MPL_malloc(val_max, MPL_MEM_ADDRESS);
-    memset(val, 0, val_max);
+    val = MPL_malloc(val_max * 2, MPL_MEM_ADDRESS);
+    val2 = MPL_malloc(val_max, MPL_MEM_ADDRESS);
+    memset(val, 0, val_max * 2);
+    memset(val2, 0, val_max);
     val_p = val;
-    rem = val_max;
+    rem = val_max * 2;
+
     rc = MPL_str_add_binary_arg(&val_p, &rem, "mpi", (char *) bc, my_bc_len);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**buscard");
     MPIR_Assert(rem >= 0);
 
     key = MPL_malloc(key_max, MPL_MEM_ADDRESS);
     MPIR_Assert(key);
+
+    size_t encoded_len = strnlen(val, val_max * 2);
     if (!roots_only || rank == local_leader) {
-        sprintf(key, "bc-%d", rank);
-        rc = PMI_KVS_Put(kvsname, key, val);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
-        rc = PMI_KVS_Commit(kvsname);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+        if (encoded_len > val_max) {
+            sprintf(key, "bc-%d-1", rank);
+            snprintf(val2, val_max, "%s", val);
+            rc = PMI_KVS_Put(kvsname, key, val2);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+            sprintf(key, "bc-%d-2", rank);
+            snprintf(val2, val_max, "%s", val + val_max - 1);
+            rc = PMI_KVS_Put(kvsname, key, val2);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+            rc = PMI_KVS_Commit(kvsname);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+        } else {
+            sprintf(key, "bc-%d", rank);
+            rc = PMI_KVS_Put(kvsname, key, val);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+            rc = PMI_KVS_Commit(kvsname);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+        }
     }
 
     mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
@@ -356,11 +375,22 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         if (local_rank == local_size - 1)
             end += size % local_size;
         for (i = start; i < end; i++) {
-            sprintf(key, "bc-%d", i);
-            rc = PMI_KVS_Get(kvsname, key, val, val_max);
-            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
-            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+            if (encoded_len > val_max) {
+                sprintf(key, "bc-%d-1", i);
+                rc = PMI_KVS_Get(kvsname, key, val, val_max);
+                MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+                sprintf(key, "bc-%d-2", i);
+                rc = PMI_KVS_Get(kvsname, key, val + val_max - 1, val_max);
+                MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+                rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+                MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+            } else {
+                sprintf(key, "bc-%d", i);
+                rc = PMI_KVS_Get(kvsname, key, val, val_max);
+                MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+                rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+                MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+            }
         }
     } else {
         int num_nodes, *node_roots;
@@ -395,6 +425,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPL_free(kvsname);
     MPL_free(key);
     MPL_free(val);
+    MPL_free(val2);
     *bc_table = segment;
 
     return mpi_errno;
