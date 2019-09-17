@@ -20,6 +20,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t
     MPIDI_CH4_REQUEST_CREATE(req, kind, 0, ref_count);
     if (req == NULL)
         goto fn_fail;
+    MPIDI_REQUEST(req, am_in_use) = true;       /* flag tells that AM is used. */
 
     MPIDI_NM_am_request_init(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -63,6 +64,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIDIG_REQUEST(req, req->status) = 0;
     MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
     MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;
+    MPIDI_REQUEST(req, am_in_use) = true;       /* flag tells that AM is used. */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
     return req;

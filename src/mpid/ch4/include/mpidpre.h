@@ -282,6 +282,10 @@ typedef struct MPIDI_Devreq_t {
     struct MPIR_Request *anysource_partner_request;
 #endif
 
+    /* Used to track AM request is allocated.
+     * True: ch4.am is being used.
+     * False: ch4.am is not being used. */
+    bool am_in_use;
     union {
         /* The first fields are used by the MPIDIG apis */
         MPIDIG_req_t am;
