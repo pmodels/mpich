@@ -79,6 +79,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        int curr, node;
         int *node_roots, num_nodes;
 
         MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
@@ -91,6 +92,29 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPL_free(node_roots);
+        /* if this is MPI_COMM_WORLD, finish bc exchange */
+
+        MPIR_Assert(MPII_Comm_is_node_consecutive(comm_world));
+        MPIDU_bc_allgather(comm_world, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
+                           (int) MPIDI_UCX_global.addrname_len, FALSE,
+                           (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+
+        /* insert new addresses, skipping over node roots */
+        for (i = 1, curr = 0, node = 0; i < MPIR_Comm_size(comm_world); i++) {
+            if (comm_world->internode_table[i] == node + 1) {
+                node++;
+                continue;
+            }
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+            ep_params.address =
+                (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[curr]];
+            ucx_status =
+                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+            MPIDI_UCX_CHK_STATUS(ucx_status);
+            curr++;
+        }
+        MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -102,8 +126,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         }
         MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
     }
-
-    MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
@@ -165,8 +187,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
-
-    MPIDIG_finalize();
 
   fn_exit:
     MPL_free(pending);
