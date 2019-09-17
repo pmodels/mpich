@@ -40,6 +40,11 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     MPE_Log_event(5036, 0, NULL);
 #endif
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset) datatype_size *(ADIO_Offset) count;
 
