@@ -84,6 +84,8 @@ cvars:
 
 static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
+static int init_av_table(int world_rank, int world_size);
+static void finalize_av_table(void);
 static void print_runtime_configurations(void);
 #ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name);
@@ -200,6 +202,43 @@ static int set_runtime_configurations(void)
     return mpi_errno;
 }
 
+static int init_av_table(int world_rank, int world_size)
+{
+    int i;
+    int avtid = -1;
+
+    MPIDIU_avt_init();
+    MPIDIU_get_next_avtid(&avtid);
+    MPIR_Assert(avtid == 0);
+
+    MPIDI_av_table[0] = (MPIDI_av_table_t *)
+        MPL_malloc(world_size * sizeof(MPIDI_av_entry_t)
+                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
+
+    MPIDI_av_table[0]->size = world_size;
+    MPIR_Object_set_ref(MPIDI_av_table[0], 1);
+
+    MPIDI_global.node_map[0] = MPIR_Process.node_map;
+
+    MPIDI_av_table0 = MPIDI_av_table[0];
+
+#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
+    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
+
+    for (i = 0; i < world_size; i++) {
+        MPIDI_av_table0->table[i].is_local = (MPIDI_global.node_map[0][i]
+                                              == MPIDI_global.node_map[0][world_rank]) ? 1 : 0;
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
+                                                         MPIDI_av_table0->
+                                                         table[i].is_local ? "is" : "is not"));
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_global.node_map[0][i],
+                         MPIDI_global.node_map[0][world_rank]));
+    }
+#endif
+    return avtid;
+}
+
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
@@ -258,6 +297,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
 
+    avtid = init_av_table(rank, size);
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
     /* ---------------------------------- */
@@ -271,21 +311,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_Process.comm_world->rank = rank;
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
-
-    MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
-
-    MPIDI_av_table[0] = (MPIDI_av_table_t *)
-        MPL_malloc(size * sizeof(MPIDI_av_entry_t)
-                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
-
-    MPIDI_av_table[0]->size = size;
-    MPIR_Object_set_ref(MPIDI_av_table[0], 1);
-
-    MPIDI_global.node_map[0] = MPIR_Process.node_map;
-
-    MPIDI_av_table0 = MPIDI_av_table[0];
 
     /* initialize rank_map */
     MPIDI_COMM(MPIR_Process.comm_world, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
@@ -313,29 +338,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
     MPIR_ERR_CHECK(mpi_errno);
-
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-    int i;
-    for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
-        MPIDI_av_table0->table[i].is_local = 0;
-    }
-    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
-
-    for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
-        MPIDI_av_table0->table[i].is_local =
-            (MPIDI_global.node_map[0][i] ==
-             MPIDI_global.node_map[0][MPIR_Process.comm_world->rank]) ? 1 : 0;
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
-                         MPIDI_av_table0->table[i].is_local ? "is" : "is not"));
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_global.node_map[0][i],
-                         MPIDI_global.node_map[0][MPIR_Process.comm_world->rank]));
-    }
-#endif
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
     MPIR_ERR_CHECK(mpi_errno);
@@ -430,6 +432,19 @@ int MPID_InitCompleted(void)
     return MPI_SUCCESS;
 }
 
+static void finalize_av_table(void)
+{
+    int i;
+    int max_n_avts;
+    max_n_avts = MPIDIU_get_max_n_avts();
+    for (i = 0; i < max_n_avts; i++) {
+        if (MPIDI_av_table[i] != NULL) {
+            MPIDIU_avt_release_ref(i);
+        }
+    }
+    MPIDIU_avt_destroy();
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -443,20 +458,9 @@ int MPID_Finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    /* Release builtin comms */
-    MPIR_Comm_release_always(MPIR_Process.comm_world);
-    MPIR_Comm_release_always(MPIR_Process.comm_self);
-
-    int i;
-    int max_n_avts;
-    max_n_avts = MPIDIU_get_max_n_avts();
-    for (i = 0; i < max_n_avts; i++) {
-        if (MPIDI_av_table[i] != NULL) {
-            MPIDIU_avt_release_ref(i);
-        }
-    }
-
-    MPIDIU_avt_destroy();
+    finalize_builtin_comms();
+    MPIDIG_finalize();
+    finalize_av_table();
 
     MPIR_pmi_finalize();
 
