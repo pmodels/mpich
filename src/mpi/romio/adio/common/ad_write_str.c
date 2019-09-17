@@ -201,8 +201,10 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
         }
 
         /* write the buffer out finally */
-        ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
-                         writebuf_off, &status1, error_code);
+        if (writebuf_len) {
+            ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+                             writebuf_off, &status1, error_code);
+        }
 
         if (fd->atomicity)
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);
