@@ -89,6 +89,8 @@ static int init_av_table(int world_rank, int world_size);
 static void finalize_av_table(void);
 static int init_builtin_comms(int world_rank, int world_size);
 static void finalize_builtin_comms(void);
+static int create_init_comm(int world_rank, int world_size, MPIR_Comm **);
+static void destroy_init_comm(MPIR_Comm **);
 static void print_runtime_configurations(void);
 #ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name);
@@ -293,10 +295,76 @@ static int init_builtin_comms(int world_rank, int world_size)
 
 }
 
+static int create_init_comm(int world_rank, int world_size, MPIR_Comm ** comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *init_comm = NULL;
+    MPIR_Comm_create(&init_comm);
+    init_comm->context_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
+    init_comm->recvcontext_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
+    init_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+    init_comm->rank = world_rank;
+    init_comm->remote_size = world_size;
+    init_comm->local_size = world_size;
+    init_comm->coll.pof2 = MPL_pof2(world_size);
+    MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
+    MPIDI_COMM(init_comm, map).avtid = 0;
+    MPIDI_COMM(init_comm, map).size = world_size;
+    MPIDI_COMM(init_comm, local_map).mode = MPIDI_RANK_MAP_NONE;
+    mpi_errno = MPIR_Comm_create_subcomms(init_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (init_comm->node_comm != NULL) {
+        init_comm->node_comm->coll.pof2 = MPL_pof2(init_comm->node_comm->local_size);
+        MPIDI_comm_create_rank_map(init_comm->node_comm);
+        MPIR_Comm_map_free(init_comm->node_comm);
+    }
+    if (init_comm->node_roots_comm != NULL) {
+        init_comm->node_roots_comm->coll.pof2 = MPL_pof2(init_comm->node_roots_comm->local_size);
+        MPIDI_comm_create_rank_map(init_comm->node_roots_comm);
+        MPIR_Comm_map_free(init_comm->node_roots_comm);
+    }
+    MPIR_Comm_map_free(init_comm);
+
+    *comm = init_comm;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void destroy_init_comm(MPIR_Comm ** comm_ptr)
+{
+    int in_use;
+    MPIR_Comm *comm = *comm_ptr;
+    MPIR_Object_release_ref(comm, &in_use);
+    MPIR_Assert(MPIR_Object_get_ref(comm) == 0);
+    if (comm->node_comm) {
+        MPIR_Object_release_ref(comm->node_comm, &in_use);
+        MPII_COMML_FORGET(comm->node_comm);
+        MPIR_Handle_obj_free(&MPIR_Comm_mem, comm->node_comm);
+    }
+    if (comm->node_roots_comm) {
+        MPIR_Object_release_ref(comm->node_roots_comm, &in_use);
+        MPII_COMML_FORGET(comm->node_roots_comm);
+        MPIR_Handle_obj_free(&MPIR_Comm_mem, comm->node_roots_comm);
+    }
+    if (comm->intranode_table) {
+        MPL_free(comm->intranode_table);
+    }
+    if (comm->internode_table) {
+        MPL_free(comm->internode_table);
+    }
+    MPII_COMML_FORGET(comm);
+    MPIR_Handle_obj_free(&MPIR_Comm_mem, comm);
+    *comm_ptr = NULL;
+}
+
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
     int avtid;
+    MPIR_Comm *init_comm = NULL;
     int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vcis_provided;
@@ -352,14 +420,13 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         print_runtime_configurations();
 
     avtid = init_av_table(rank, size);
+    mpi_errno = create_init_comm(rank, size, &init_comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDIG_init(1);
     MPIR_ERR_CHECK(mpi_errno);
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = init_builtin_comms(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
@@ -376,8 +443,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 #endif
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
-                                           MPIR_Process.comm_world, MPIR_Process.comm_self,
-                                           &n_nm_vcis_provided);
+                                           init_comm, NULL, &n_nm_vcis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -385,6 +451,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    destroy_init_comm(&init_comm);
+    mpi_errno = init_builtin_comms(rank, size);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Override split_type */
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
