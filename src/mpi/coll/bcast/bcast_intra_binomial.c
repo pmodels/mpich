@@ -22,8 +22,14 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint nbytes = 0;
-    MPI_Aint recvd_size;
+    MPI_Status *status_p;
+#ifdef HAVE_ERROR_CHECKING
     MPI_Status status;
+    status_p = &status;
+    MPI_Aint recvd_size;
+#else
+    status_p = MPI_STATUS_IGNORE;
+#endif
     int is_contig;
     MPI_Aint type_size;
     void *tmp_buf = NULL;
@@ -93,10 +99,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, status_p, errflag);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
-                                      MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, status_p, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag =
@@ -105,9 +111,9 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
-
+#ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
-            MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+            MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
             if (recvd_size != nbytes) {
                 if (*errflag == MPIR_ERR_NONE)
                     *errflag = MPIR_ERR_OTHER;
@@ -116,6 +122,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                               "**collective_size_mismatch %d %d", recvd_size, nbytes);
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
+#endif
             break;
         }
         mask <<= 1;
