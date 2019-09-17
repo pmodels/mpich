@@ -37,6 +37,12 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5034, 0, NULL);
 #endif
+
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset) count;
 

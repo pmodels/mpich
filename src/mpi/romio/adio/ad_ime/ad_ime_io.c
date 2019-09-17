@@ -30,6 +30,11 @@ static void IME_IOContig(ADIO_File fd,
     uint64_t file_offset = offset;
     static char myname[] = "ADIOI_IME_IOCONTIG";
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     mem_len = datatype_size * count;
 
