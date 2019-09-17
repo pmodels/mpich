@@ -873,7 +873,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Table is constructed.  Map it    */
         /* -------------------------------- */
         if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-            int *node_roots, num_nodes;
+            int *node_roots;
+            size_t rem_bcs, num_nodes = MPIR_Process.num_nodes;
+            int i, curr, node;
 
             MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
@@ -893,6 +895,32 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             }
             MPL_free(mapped_table);
             MPL_free(node_roots);
+
+            MPIR_Assert(MPII_Comm_is_node_consecutive(comm_world));
+            rem_bcs = MPIR_Comm_size(comm_world) - num_nodes;
+            MPIDU_bc_allgather(comm_world, MPIDI_global.node_map[0], &MPIDI_OFI_global.addrname,
+                               MPIDI_OFI_global.addrnamelen, TRUE, &table, NULL);
+            mapped_table = (fi_addr_t *) MPL_malloc(rem_bcs * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, rem_bcs, mapped_table, 0ULL,
+                                        NULL), avmap);
+
+            /* insert new addresses, skipping over node roots */
+            for (i = 1, curr = 0, node = 0; i < MPIR_Comm_size(comm_world); i++) {
+                if (comm_world->internode_table[i] == node + 1) {
+                    node++;
+                    continue;
+                }
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[curr];
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+#endif
+                curr++;
+            }
+            MPIDU_bc_table_destroy(table);
         } else {
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, size, mapped_table, 0ULL, NULL),
