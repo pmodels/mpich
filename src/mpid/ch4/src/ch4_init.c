@@ -338,6 +338,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 #endif
 
     mpi_errno = MPIDIG_init(MPIR_Process.comm_world, MPIR_Process.comm_self);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
@@ -371,11 +374,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_Process.attrs.appnum = appnum;
     MPIR_Process.attrs.wtime_is_global = 1;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
-
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* -------------------------------- */
     /* Return MPICH Parameters          */
